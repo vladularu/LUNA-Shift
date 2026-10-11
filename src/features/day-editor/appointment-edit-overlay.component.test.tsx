@@ -3,6 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
 
 async function renderOverlay(
   overrides: Partial<React.ComponentProps<typeof AppointmentEditOverlay>> = {},
@@ -52,7 +53,19 @@ describe("AppointmentEditOverlay", () => {
   it("shows the appointment map and preserves location selection", async () => {
     const { screen, props } = await renderOverlay({
       location: { name: "Heppenheim", latitude: 49.64, longitude: 8.64 },
+      note: "Unterlagen mitbringen.\nEingang neben der Apotheke.",
     });
+    expect(screen.getByText("Unterlagen mitbringen.\nEingang neben der Apotheke.")).toBeTruthy();
+    expect(screen.queryByLabelText("Notizen")).toBeNull();
+    await fireEvent.press(
+      screen.getByRole("button", {
+        name: "Notiz bearbeiten: Unterlagen mitbringen.\nEingang neben der Apotheke.",
+      }),
+    );
+    expect(screen.getByLabelText("Notizen")).toHaveProp("autoFocus", true);
+    expect(
+      screen.getByDisplayValue("Unterlagen mitbringen.\nEingang neben der Apotheke."),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Heppenheim in Karten öffnen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Heppenheim" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
@@ -70,10 +83,11 @@ describe("AppointmentEditOverlay", () => {
 
     expect(screen.getByTestId("appointment-edit-overlay")).toBeTruthy();
     expect(screen.getByTestId("appointment-edit-card")).toHaveStyle({
-      borderRadius: 22,
-      shadowOpacity: 0.28,
+      borderRadius: 0,
+      borderCurve: CORNER_CURVE,
+      boxShadow: "none",
     });
-    expect(screen.getByTestId("appointment-edit-drag-handle")).toHaveStyle({ minHeight: 56 });
+    expect(screen.queryByTestId("appointment-edit-backdrop")).toBeNull();
     expect(screen.getByTestId("appointment-edit-sheet")).toHaveProp(
       "accessibilityViewIsModal",
       true,
@@ -88,9 +102,9 @@ describe("AppointmentEditOverlay", () => {
     expect(screen.getByText("Kalender")).toBeTruthy();
     expect(screen.getByText("Termine")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Benachrichtigung: Keine" })).toBeTruthy();
-    expect(screen.getByPlaceholderText("Notizen")).toBeTruthy();
+    expect(screen.queryByPlaceholderText("Notizen")).toBeNull();
     expect(screen.getByRole("button", { name: "Ort: Nicht festgelegt" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Termin löschen" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
 
     await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
@@ -100,16 +114,14 @@ describe("AppointmentEditOverlay", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Wiederholen: Niemals" }));
     expect(screen.getByTestId("appointment-recurrence-presets")).toBeTruthy();
     expect(screen.getByTestId("appointment-recurrence-sheet")).toHaveStyle({
-      borderTopLeftRadius: 34,
-      borderTopRightRadius: 34,
+      borderTopLeftRadius: RADII.sheet,
+      borderTopRightRadius: RADII.sheet,
     });
     expect(screen.getByTestId("appointment-recurrence-preset-card")).toHaveStyle({
-      borderRadius: 24,
+      borderRadius: RADII.control,
     });
-    expect(screen.getByTestId("appointment-recurrence-custom-row")).toHaveStyle({ minHeight: 58 });
-    expect(screen.getByRole("radio", { name: "Nie" }).props.accessibilityState).toEqual({
-      selected: true,
-    });
+    expect(screen.getByTestId("appointment-recurrence-custom-row")).toHaveStyle({ minHeight: 44 });
+    expect(screen.getByRole("radio", { name: "Nie", checked: true })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "Benutzerdefiniert" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Wiederholung schließen" }));
 
@@ -125,9 +137,11 @@ describe("AppointmentEditOverlay", () => {
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Nicht festgelegt" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     const deleteAction = screen.getByRole("button", { name: "Termin löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
     expect(within(deleteAction).getByText("Termin löschen")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
     const notes = screen.getByLabelText("Notizen");
     expect(notes).toHaveStyle({ minHeight: 88 });
     expect(within(notes.parent!).queryByRole("button", { name: "Termin löschen" })).toBeNull();
@@ -150,6 +164,18 @@ describe("AppointmentEditOverlay", () => {
 
     expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
     expect(screen.getByRole("button", { name: "Ort: Nicht festgelegt" })).toBeTruthy();
+  });
+
+  it("blocks close and delete while saving without losing the visible close label", async () => {
+    const { screen, props } = await renderOverlay({ busy: true });
+    expect(screen.getByText("Schließen")).toBeTruthy();
+    const close = screen.getByRole("button", { name: "Schließen und speichern" });
+    expect(close.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+    await fireEvent.press(close);
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
+    expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
+    expect(props.onRequestClose).not.toHaveBeenCalled();
+    expect(props.onDelete).not.toHaveBeenCalled();
   });
 
   it("keeps custom recurrence behind Benutzerdefiniert and applies its wheel selection", async () => {

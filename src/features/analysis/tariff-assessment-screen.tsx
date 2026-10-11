@@ -1,11 +1,12 @@
+import { Text } from "@/ui/text";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
 import { selectVkaEAssessmentShifts } from "@/engine/simple-vka-e-pay";
 import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-training-pay";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import {
   usePflegeShiftEntries,
@@ -47,7 +48,7 @@ import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
 import { ReportScrollView } from "@/ui/report-layout";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 const ALLOWANCE_LABELS: Readonly<Record<AllowanceStatus, string>> = {
   NONE: "Keine Zulage",
@@ -163,33 +164,39 @@ function TariffAssessmentForm({
 
   if (!calculation.ok) {
     return (
-      <ReportScrollView>
-        <AnalysisDetailSummaryCard
-          caption="Deine Angaben bleiben erhalten."
-          period={formatMonthTitle(month)}
-          title="Nicht verfügbar"
-        />
-        <RuleComputationNotice
-          failure={calculation}
-          onRetry={() => setRuleRetryRevision((value) => value + 1)}
-          title="Tarifprüfung nicht verfügbar"
-        />
-        <SheetBackFooter onPress={() => router.back()} />
-      </ReportScrollView>
+      <BackFooterLayout onPress={() => router.back()}>
+        {(bottomPadding) => (
+          <ReportScrollView bottomPadding={bottomPadding}>
+            <AnalysisDetailSummaryCard
+              caption="Deine Angaben bleiben erhalten."
+              period={formatMonthTitle(month)}
+              title="Nicht verfügbar"
+            />
+            <RuleComputationNotice
+              failure={calculation}
+              onRetry={() => setRuleRetryRevision((value) => value + 1)}
+              title="Tarifprüfung nicht verfügbar"
+            />
+          </ReportScrollView>
+        )}
+      </BackFooterLayout>
     );
   }
   const assessmentResult = calculation.value;
   if (!assessmentResult.available || assessmentResult.assessment === null) {
     return (
-      <ReportScrollView>
-        <AnalysisDetailSummaryCard
-          caption="Deine Angaben bleiben erhalten."
-          period={formatMonthTitle(month)}
-          title="Nicht verfügbar"
-        />
-        <AnalysisCoverageNote message="Die Tarifprüfung ist für diesen Monat ohne gültigen Tarifstand deaktiviert." />
-        <SheetBackFooter onPress={() => router.back()} />
-      </ReportScrollView>
+      <BackFooterLayout onPress={() => router.back()}>
+        {(bottomPadding) => (
+          <ReportScrollView bottomPadding={bottomPadding}>
+            <AnalysisDetailSummaryCard
+              caption="Deine Angaben bleiben erhalten."
+              period={formatMonthTitle(month)}
+              title="Nicht verfügbar"
+            />
+            <AnalysisCoverageNote message="Die Tarifprüfung ist für diesen Monat ohne gültigen Tarifstand deaktiviert." />
+          </ReportScrollView>
+        )}
+      </BackFooterLayout>
     );
   }
   const assessment = assessmentResult.assessment;
@@ -238,223 +245,231 @@ function TariffAssessmentForm({
   }
 
   return (
-    <ReportScrollView>
-      <AnalysisDetailSummaryCard
-        caption={
-          decision
-            ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
-            : (assessment.estimateNote ??
-              "Wir schätzen dein Dienstmuster automatisch ein. Deine Angaben zum Arbeitsplatz bleiben gespeichert.")
-        }
-        period={formatMonthTitle(month)}
-        title={resultTitle}
-      />
+    <BackFooterLayout onPress={() => router.back()} disabled={saving}>
+      {(bottomPadding) => (
+        <ReportScrollView bottomPadding={bottomPadding}>
+          <AnalysisDetailSummaryCard
+            caption={
+              decision
+                ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
+                : (assessment.estimateNote ??
+                  "Wir schätzen dein Dienstmuster automatisch ein. Deine Angaben zum Arbeitsplatz bleiben gespeichert.")
+            }
+            period={formatMonthTitle(month)}
+            title={resultTitle}
+          />
 
-      <SurfaceCard>
-        {assessment.criteria.map((criterion, index) => (
-          <View key={criterion.key}>
-            {index > 0 ? (
-              <CardSeparator inset={SPACING.lg + CRITERION_ICON_SIZE + SPACING.md} />
-            ) : null}
-            <View
-              style={{
-                minHeight: 64,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: SPACING.md,
-                paddingHorizontal: SPACING.lg,
-                paddingVertical: SPACING.sm,
-              }}
-            >
-              <View
-                style={{
-                  width: CRITERION_ICON_SIZE,
-                  height: CRITERION_ICON_SIZE,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: RADII.pill,
-                  backgroundColor:
-                    criterion.state === "MET"
-                      ? palette.primarySoft
-                      : criterion.state === "NOT_MET"
-                        ? `${palette.danger}1A`
-                        : palette.surfaceMuted,
-                }}
-              >
-                <Ionicons
-                  accessibilityElementsHidden
-                  color={
-                    criterion.state === "MET"
-                      ? palette.primary
-                      : criterion.state === "NOT_MET"
-                        ? palette.danger
-                        : palette.textMuted
-                  }
-                  name={
-                    criterion.state === "MET"
-                      ? "checkmark"
-                      : criterion.state === "NOT_MET"
-                        ? "remove"
-                        : "help"
-                  }
-                  size={16}
-                />
-              </View>
-              <View style={{ flex: 1, gap: SPACING.xxs }}>
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  selectable
-                  style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-                >
-                  {criterion.label}
-                </Text>
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  selectable
-                  style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                >
-                  {criterion.detail}
-                </Text>
-              </View>
-            </View>
-          </View>
-        ))}
-      </SurfaceCard>
-
-      {profile?.tariff?.sector === "BT_K" ? (
-        <NightSequenceExplanationCard
-          key={month}
-          entries={entries}
-          month={month}
-          timeZone={profile.timeZone}
-          explanation={assessmentResult.nightSequence}
-          estimateNote={
-            decision
-              ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
-              : assessment.estimateNote
-          }
-        />
-      ) : null}
-
-      <TariffQuestion
-        title="Wird dein Arbeitsbereich rund um die Uhr betrieben?"
-        caption="Zum Beispiel Station, Intensivbereich oder Notaufnahme mit 24/7-Besetzung."
-        options={[
-          { value: "AROUND_THE_CLOCK", label: "Ja" },
-          { value: "NOT_AROUND_THE_CLOCK", label: "Nein" },
-          { value: "UNKNOWN", label: "Unsicher" },
-        ]}
-        value={coverage}
-        onChange={(value) => setCoverage(value as TvoedWorkplaceCoverage)}
-      />
-
-      <TariffQuestion
-        title="Gehört das Schichtmodell dauerhaft zu deiner Stelle?"
-        caption="Nicht nur einzelne Vertretungen oder gelegentliche Zusatzdienste."
-        options={[
-          { value: "PERMANENT", label: "Dauerhaft" },
-          { value: "TEMPORARY", label: "Gelegentlich" },
-          { value: "UNKNOWN", label: "Unsicher" },
-        ]}
-        value={assignment}
-        onChange={(value) => setAssignment(value as TvoedAssignment)}
-      />
-
-      <FormStatus error={error} />
-
-      <PrimaryButton
-        busy={saving}
-        busyLabel="Angaben werden gespeichert"
-        onPress={() => void saveSettings()}
-      >
-        Angaben speichern
-      </PrimaryButton>
-
-      <Pressable
-        accessibilityLabel="Monatswert manuell festlegen"
-        accessibilityRole="button"
-        accessibilityState={{ expanded: showOverride }}
-        onPress={() => setShowOverride((current) => !current)}
-        style={({ pressed }) => ({
-          minHeight: 56,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: SPACING.md,
-          opacity: pressed ? 0.7 : 1,
-          paddingHorizontal: SPACING.xxs,
-        })}
-      >
-        <View style={{ flex: 1, gap: SPACING.xxs }}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-          >
-            Monatswert manuell festlegen
-          </Text>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-          >
-            Nur verwenden, wenn die automatische Einordnung abweicht.
-          </Text>
-        </View>
-        <Ionicons
-          accessibilityElementsHidden
-          color={palette.textMuted}
-          name={showOverride ? "chevron-up" : "chevron-down"}
-          size={20}
-        />
-      </Pressable>
-
-      {showOverride ? (
-        <SurfaceCard>
-          <View accessibilityLabel="Monatswert manuell festlegen" accessibilityRole="radiogroup">
-            {ALLOWANCE_STATUSES.map((status, index) => (
-              <View key={status}>
-                {index > 0 ? <CardSeparator inset={SPACING.lg} /> : null}
-                <Pressable
-                  accessibilityLabel={`Monatswert manuell festlegen: ${ALLOWANCE_LABELS[status]}`}
-                  accessibilityRole="radio"
-                  accessibilityState={{
-                    checked: decision?.allowanceStatus === status,
-                    disabled: saving,
-                  }}
-                  disabled={saving}
-                  onPress={() => void confirmOverride(status)}
-                  style={({ pressed }) => ({
-                    minHeight: 56,
+          <SurfaceCard>
+            {assessment.criteria.map((criterion, index) => (
+              <View key={criterion.key}>
+                {index > 0 ? (
+                  <CardSeparator inset={SPACING.lg + CRITERION_ICON_SIZE + SPACING.md} />
+                ) : null}
+                <View
+                  style={{
+                    minHeight: 64,
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "space-between",
                     gap: SPACING.md,
-                    backgroundColor: pressed ? palette.surfaceMuted : "transparent",
                     paddingHorizontal: SPACING.lg,
-                  })}
+                    paddingVertical: SPACING.sm,
+                  }}
                 >
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+                  <View
+                    style={{
+                      width: CRITERION_ICON_SIZE,
+                      height: CRITERION_ICON_SIZE,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: RADII.pill,
+                      backgroundColor:
+                        criterion.state === "MET"
+                          ? palette.primarySoft
+                          : criterion.state === "NOT_MET"
+                            ? `${palette.danger}1A`
+                            : palette.surfaceMuted,
+                    }}
                   >
-                    {ALLOWANCE_LABELS[status]}
-                  </Text>
-                  <Ionicons
-                    accessibilityElementsHidden
-                    color={
-                      decision?.allowanceStatus === status ? palette.primary : palette.textMuted
-                    }
-                    name={
-                      decision?.allowanceStatus === status ? "radio-button-on" : "radio-button-off"
-                    }
-                    size={20}
-                  />
-                </Pressable>
+                    <Ionicons
+                      accessibilityElementsHidden
+                      color={
+                        criterion.state === "MET"
+                          ? palette.primary
+                          : criterion.state === "NOT_MET"
+                            ? palette.danger
+                            : palette.textMuted
+                      }
+                      name={
+                        criterion.state === "MET"
+                          ? "checkmark"
+                          : criterion.state === "NOT_MET"
+                            ? "remove"
+                            : "help"
+                      }
+                      size={16}
+                    />
+                  </View>
+                  <View style={{ flex: 1, gap: SPACING.xxs }}>
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      selectable
+                      style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+                    >
+                      {criterion.label}
+                    </Text>
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      selectable
+                      style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+                    >
+                      {criterion.detail}
+                    </Text>
+                  </View>
+                </View>
               </View>
             ))}
-          </View>
-        </SurfaceCard>
-      ) : null}
-      <SheetBackFooter disabled={saving} onPress={() => router.back()} />
-    </ReportScrollView>
+          </SurfaceCard>
+
+          {profile?.tariff?.sector === "BT_K" ? (
+            <NightSequenceExplanationCard
+              key={month}
+              entries={entries}
+              month={month}
+              timeZone={profile.timeZone}
+              explanation={assessmentResult.nightSequence}
+              estimateNote={
+                decision
+                  ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
+                  : assessment.estimateNote
+              }
+            />
+          ) : null}
+
+          <TariffQuestion
+            title="Wird dein Arbeitsbereich rund um die Uhr betrieben?"
+            caption="Zum Beispiel Station, Intensivbereich oder Notaufnahme mit 24/7-Besetzung."
+            options={[
+              { value: "AROUND_THE_CLOCK", label: "Ja" },
+              { value: "NOT_AROUND_THE_CLOCK", label: "Nein" },
+              { value: "UNKNOWN", label: "Unsicher" },
+            ]}
+            value={coverage}
+            onChange={(value) => setCoverage(value as TvoedWorkplaceCoverage)}
+          />
+
+          <TariffQuestion
+            title="Gehört das Schichtmodell dauerhaft zu deiner Stelle?"
+            caption="Nicht nur einzelne Vertretungen oder gelegentliche Zusatzdienste."
+            options={[
+              { value: "PERMANENT", label: "Dauerhaft" },
+              { value: "TEMPORARY", label: "Gelegentlich" },
+              { value: "UNKNOWN", label: "Unsicher" },
+            ]}
+            value={assignment}
+            onChange={(value) => setAssignment(value as TvoedAssignment)}
+          />
+
+          <FormStatus error={error} />
+
+          <PrimaryButton
+            busy={saving}
+            busyLabel="Angaben werden gespeichert"
+            onPress={() => void saveSettings()}
+          >
+            Angaben speichern
+          </PrimaryButton>
+
+          <Pressable
+            accessibilityLabel="Monatswert manuell festlegen"
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showOverride }}
+            onPress={() => setShowOverride((current) => !current)}
+            style={({ pressed }) => ({
+              minHeight: 56,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: SPACING.md,
+              opacity: pressed ? 0.7 : 1,
+              paddingHorizontal: SPACING.xxs,
+            })}
+          >
+            <View style={{ flex: 1, gap: SPACING.xxs }}>
+              <Text
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+              >
+                Monatswert manuell festlegen
+              </Text>
+              <Text
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+              >
+                Nur verwenden, wenn die automatische Einordnung abweicht.
+              </Text>
+            </View>
+            <Ionicons
+              accessibilityElementsHidden
+              color={palette.textMuted}
+              name={showOverride ? "chevron-up" : "chevron-down"}
+              size={20}
+            />
+          </Pressable>
+
+          {showOverride ? (
+            <SurfaceCard>
+              <View
+                accessibilityLabel="Monatswert manuell festlegen"
+                accessibilityRole="radiogroup"
+              >
+                {ALLOWANCE_STATUSES.map((status, index) => (
+                  <View key={status}>
+                    {index > 0 ? <CardSeparator inset={SPACING.lg} /> : null}
+                    <Pressable
+                      accessibilityLabel={`Monatswert manuell festlegen: ${ALLOWANCE_LABELS[status]}`}
+                      accessibilityRole="radio"
+                      accessibilityState={{
+                        checked: decision?.allowanceStatus === status,
+                        disabled: saving,
+                      }}
+                      disabled={saving}
+                      onPress={() => void confirmOverride(status)}
+                      style={({ pressed }) => ({
+                        minHeight: 56,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: SPACING.md,
+                        backgroundColor: pressed ? palette.surfaceMuted : "transparent",
+                        paddingHorizontal: SPACING.lg,
+                      })}
+                    >
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+                      >
+                        {ALLOWANCE_LABELS[status]}
+                      </Text>
+                      <Ionicons
+                        accessibilityElementsHidden
+                        color={
+                          decision?.allowanceStatus === status ? palette.primary : palette.textMuted
+                        }
+                        name={
+                          decision?.allowanceStatus === status
+                            ? "radio-button-on"
+                            : "radio-button-off"
+                        }
+                        size={20}
+                      />
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </SurfaceCard>
+          ) : null}
+        </ReportScrollView>
+      )}
+    </BackFooterLayout>
   );
 }

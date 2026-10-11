@@ -1,18 +1,15 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SelectionControl, type SelectionControlProps } from "@/ui/selection-control";
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import type { PropsWithChildren, ReactNode } from "react";
-import {
-  Pressable,
-  Text,
-  View,
-  type PressableStateCallbackType,
-  type ViewStyle,
-} from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { Pressable, View, type PressableStateCallbackType, type ViewStyle } from "react-native";
+import Animated from "react-native-reanimated";
 
 import { usePalette } from "@/theme/palette";
-import { MOTION } from "@/theme/motion";
+
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CARD_HEADER_INSET, CONTROL_HEIGHT, RADII, SHADOWS, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CARD_HEADER_INSET, RADII, SHADOWS, SPACING } from "@/theme/tokens";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
 import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
 import { ShiftSymbol } from "@/ui/shift-symbol";
@@ -35,9 +32,9 @@ export function SurfaceCard({
       style={{
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: palette.surface,
+        borderColor: palette.separator,
         borderRadius: RADII.card,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: palette.surface,
         boxShadow: SHADOWS.card,
         ...style,
@@ -61,19 +58,20 @@ export function CardHeader({
   return (
     <View
       style={{
+        borderCurve: CORNER_CURVE,
         minHeight: palette.dark ? 56 : 50,
         justifyContent: "center",
         flexDirection: "row",
         alignItems: "center",
         gap: SPACING.sm,
-        paddingHorizontal: palette.dark ? SPACING.lg : SPACING.lg - CARD_HEADER_INSET,
-        paddingVertical: palette.dark ? SPACING.sm : SPACING.xs,
+        paddingHorizontal: SPACING.xl,
+        paddingVertical: SPACING.lg,
         marginHorizontal: palette.dark ? 0 : CARD_HEADER_INSET,
         marginTop: palette.dark ? 0 : CARD_HEADER_INSET,
         borderTopLeftRadius: palette.dark ? 0 : RADII.card - CARD_HEADER_INSET,
         borderTopRightRadius: palette.dark ? 0 : RADII.card - CARD_HEADER_INSET,
         backgroundColor: palette.cardHeader,
-        borderBottomWidth: 1,
+        borderBottomWidth: 0,
         borderBottomColor: palette.cardSeparator,
       }}
     >
@@ -170,7 +168,7 @@ export function MetricCard({
         borderWidth: 1,
         borderColor: palette.separator,
         borderRadius: RADII.card,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: palette.surface,
         padding: compact ? SPACING.md : SPACING.lg,
       }}
@@ -187,6 +185,7 @@ export function MetricCard({
         style={{
           color: accent ?? palette.text,
           ...TYPOGRAPHY.value,
+          fontFamily: INTER_FONTS.regular,
           fontSize: compact ? 18 : TYPOGRAPHY.value.fontSize,
           fontVariant: ["tabular-nums"],
           letterSpacing: -0.4,
@@ -368,6 +367,7 @@ export function EmptyState({
       <View
         accessibilityElementsHidden
         style={{
+          borderCurve: CORNER_CURVE,
           width: 44,
           height: 44,
           alignItems: "center",
@@ -422,7 +422,7 @@ export function InlineNotice({
         borderWidth: 1,
         borderColor: `${accent}52`,
         borderRadius: RADII.control,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: `${accent}14`,
         paddingHorizontal: SPACING.md,
         paddingVertical: 10,
@@ -451,88 +451,8 @@ export function InlineNotice({
   );
 }
 
-export function SegmentedControl({
-  items,
-  value,
-  onChange,
-  disabled = false,
-  stacked = false,
-  accessibilityLabel,
-}: {
-  readonly items: readonly { readonly value: string; readonly label: string }[];
-  readonly value: string;
-  readonly onChange: (value: string) => void;
-  readonly disabled?: boolean;
-  readonly stacked?: boolean;
-  readonly accessibilityLabel?: string;
-}) {
-  const palette = usePalette();
-  return (
-    <View
-      accessibilityRole="tablist"
-      accessibilityLabel={accessibilityLabel}
-      style={{
-        flexDirection: stacked ? "column" : "row",
-        gap: SPACING.xxs,
-        borderRadius: RADII.control,
-        borderCurve: "continuous",
-        backgroundColor: palette.surfaceMuted,
-        padding: SPACING.xxs,
-      }}
-    >
-      {items.map((item) => {
-        const selected = item.value === value;
-        return (
-          <Pressable
-            key={item.value}
-            accessibilityRole="tab"
-            accessibilityState={{ selected, disabled }}
-            disabled={disabled}
-            onPress={() => onChange(item.value)}
-            style={({ pressed }) => ({
-              minHeight: CONTROL_HEIGHT.compact,
-              flex: stacked ? undefined : 1,
-              paddingVertical: stacked ? SPACING.sm : SPACING.xxs,
-              paddingHorizontal: SPACING.xs,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: selected ? 1 : 0,
-              borderColor: palette.border,
-              borderRadius: RADII.small,
-              borderCurve: "continuous",
-              backgroundColor: "transparent",
-              opacity: disabled ? 0.5 : pressed ? 0.72 : 1,
-            })}
-          >
-            {selected ? (
-              <Animated.View
-                entering={FadeIn.duration(MOTION.duration.fast).reduceMotion(MOTION.reduceMotion)}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  left: 0,
-                  borderRadius: RADII.small,
-                  backgroundColor: palette.surfaceRaised,
-                }}
-              />
-            ) : null}
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{
-                color: selected ? palette.primary : palette.textSecondary,
-                ...TYPOGRAPHY.label,
-                zIndex: 1,
-              }}
-            >
-              {item.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
+export function SegmentedControl(props: SelectionControlProps) {
+  return <SelectionControl {...props} />;
 }
 
 export function HeaderAction({
@@ -555,6 +475,7 @@ export function HeaderAction({
       onPressOut={pressMotion.onPressOut}
       style={({ pressed }: PressableStateCallbackType) => [
         {
+          borderCurve: CORNER_CURVE,
           minWidth: 44,
           minHeight: 44,
           alignItems: "center",

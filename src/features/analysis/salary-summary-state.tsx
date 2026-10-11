@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { View } from "react-native";
 
 import type { MonthlyPayEstimate } from "@/domain/types";
 import type { RuleResolutionFailure } from "@/rules/rule-resolver";

@@ -1,22 +1,18 @@
 import { createSimpleProfilePorts } from "./create-simple-profile-ports";
+import { createTemplatePorts } from "./create-template-ports";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
 import {
   deleteCalendarEntry,
-  deleteTemplate,
   listCalendarEntries,
   listMonthlyTariffDecisions,
-  listTemplates,
   loadTvoedWorkPatternSettings,
   restoreCalendarEntry,
-  restoreTemplate,
   saveAppointment,
   saveMonthlyTariffDecision,
   saveShift,
-  saveTemplate,
   saveTvoedWorkPatternSettings,
-  swapTemplateSortOrder,
 } from "@/infrastructure/database/repository";
 import { listTestBackupMonths } from "@/infrastructure/database/test-backup-status-repository";
 import { DEV_TOOLS_AVAILABLE, shouldLoadDevToolState } from "@/infrastructure/dev-tools-policy";
@@ -32,11 +28,7 @@ export function createPflegeShiftPorts(db: SQLiteDatabase): PflegeShiftPorts {
     ...profilePorts,
     repository: {
       ...profilePorts.repository,
-      listTemplates: () => listTemplates(db),
-      saveTemplate: (input) => saveTemplate(db, input),
-      deleteTemplate: (id, expectedRevision) => deleteTemplate(db, id, expectedRevision),
-      restoreTemplate: (template) => restoreTemplate(db, template),
-      swapTemplateSortOrder: (first, second) => swapTemplateSortOrder(db, first, second),
+      ...createTemplatePorts(db),
       listCalendarEntries: (startDate, endDate) => listCalendarEntries(db, startDate, endDate),
       saveShift: (input) => saveShift(db, input),
       saveAppointment: (input) => saveAppointment(db, input),

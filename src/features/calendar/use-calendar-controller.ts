@@ -96,7 +96,7 @@ export function useCalendarController({
       setBusy(true);
       progress.value = withTiming(
         end,
-        { duration: 420, easing: Easing.bezier(0.22, 0.68, 0, 1) },
+        { duration: 550, easing: Easing.bezier(0.42, 0, 0.58, 1) },
         (finished) => {
           if (finished && animationEpoch.value === id) {
             progress.value = end;

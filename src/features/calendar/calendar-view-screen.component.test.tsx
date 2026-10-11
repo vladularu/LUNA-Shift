@@ -102,18 +102,20 @@ describe("CalendarViewScreen", () => {
   it("offers separate full-name, short-label and symbol tabs", async () => {
     const screen = await renderView();
 
-    expect(within(screen.getByLabelText("Dienstbezeichnung")).getAllByRole("tab")).toHaveLength(3);
-    expect(screen.getByRole("tab", { name: "Name" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Kürzel" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Symbol" })).toBeTruthy();
+    expect(within(screen.getByLabelText("Dienstbezeichnung")).getAllByRole("radio")).toHaveLength(
+      3,
+    );
+    expect(screen.getByRole("radio", { name: "Name" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Kürzel" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Symbol" })).toBeTruthy();
 
     await act(async () => {
-      fireEvent.press(screen.getByRole("tab", { name: "Kürzel" }));
+      fireEvent.press(screen.getByRole("radio", { name: "Kürzel" }));
     });
     expect(mockPreferences.setLabelMode).toHaveBeenCalledWith("SHORT");
 
     await act(async () => {
-      fireEvent.press(screen.getByRole("tab", { name: "Symbol" }));
+      fireEvent.press(screen.getByRole("radio", { name: "Symbol" }));
     });
     expect(mockPreferences.setLabelMode).toHaveBeenCalledWith("SYMBOL");
   });

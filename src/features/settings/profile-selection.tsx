@@ -1,4 +1,5 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   createContext,
@@ -9,7 +10,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-import { Keyboard, Text, View } from "react-native";
+import { Keyboard, View } from "react-native";
 import { profileSelectionRoute } from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";

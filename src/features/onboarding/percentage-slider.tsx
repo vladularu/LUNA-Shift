@@ -1,5 +1,6 @@
+import { Text } from "@/ui/text";
 import { useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding";
 import { SelectField } from "./onboarding-controls";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";

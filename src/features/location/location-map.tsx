@@ -1,4 +1,4 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { View } from "react-native";
 
 import type { GeocodedEntryLocation } from "@/domain/types";

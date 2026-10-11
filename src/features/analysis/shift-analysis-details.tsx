@@ -1,4 +1,5 @@
-import { Text, View, useWindowDimensions } from "react-native";
+import { Text } from "@/ui/text";
+import { View, useWindowDimensions } from "react-native";
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import type { MonthlyShiftTypeAnalysis } from "./analysis-metrics";

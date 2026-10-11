@@ -1,6 +1,8 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SelectionRow } from "@/ui/selection-option";
+import { Text } from "@/ui/text";
+import { CONTROL_CORNERS, SHADOWS, SPACING } from "@/theme/tokens";
 import { useCallback, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
@@ -10,15 +12,25 @@ import { notificationLabel } from "@/features/day-editor/entry-options";
 import { DAY_EDITOR_SHIFT_TYPES } from "@/features/day-editor/day-editor-layout";
 import { ShiftNotificationOverlay } from "@/features/day-editor/shift-notification-overlay";
 import type { ShiftEditOverlayProps } from "@/features/day-editor/shift-edit-overlay.types";
-import { ShiftOvertimeFields } from "@/features/day-editor/shift-overtime-fields";
+import {
+  ShiftOvertimeFields,
+  ShiftOvertimeConfirmation,
+} from "@/features/day-editor/shift-overtime-fields";
 import { LocationPreview } from "@/features/location/location-preview";
-import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
+import { accessibleChipBackgroundColor } from "@/theme/color-contrast";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
-import { TimePickerField } from "@/ui/form-controls";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import {
+  EntryEditGroup,
+  EntryEditNotesLocation,
+  EntryEditTimePair,
+  EntryEditValueRow as ValueRow,
+  ENTRY_EDIT_FIELD_STYLES,
+} from "@/features/day-editor/entry-edit-fields";
 import { PauseWheel } from "@/ui/pause-wheel";
 import { ShiftSymbol } from "@/ui/shift-symbol";
+import { ResponsiveFieldRow } from "@/ui/form-controls";
 
 type Popup = "PAUSE" | "TYPE" | null;
 
@@ -27,74 +39,15 @@ export function shouldDismissShiftEditOverlay(translationY: number, velocityY: n
   return shouldDismissEntryEditOverlay(translationY, velocityY);
 }
 
-function ValueRow({
-  label,
+function PauseRow({
+  onLayout,
   onPress,
   value,
 }: {
-  readonly label: string;
-  readonly onPress?: () => void;
+  readonly onLayout: ViewProps["onLayout"];
+  readonly onPress: () => void;
   readonly value: string;
 }) {
-  const palette = usePalette();
-  const content = (
-    <>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.rowLabel, { color: palette.text }]}
-      >
-        {label}
-      </Text>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.rowValue, { color: palette.text }]}
-      >
-        {value}
-      </Text>
-    </>
-  );
-
-  if (!onPress) {
-    return (
-      <View style={[styles.valueRow, { borderBottomColor: palette.separator }]}>{content}</View>
-    );
-  }
-  return (
-    <Pressable
-      accessibilityLabel={`${label}: ${value}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.valueRow,
-        {
-          borderBottomColor: palette.separator,
-          backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-        },
-      ]}
-    >
-      {content}
-    </Pressable>
-  );
-}
-
-function TimeRow({
-  label,
-  onChange,
-  value,
-}: {
-  readonly label: string;
-  readonly onChange: (value: string) => void;
-  readonly value: string;
-}) {
-  const palette = usePalette();
-  return (
-    <View style={[styles.timeRow, { borderBottomColor: palette.separator }]}>
-      <TimePickerField label={label} onChange={onChange} value={value} />
-    </View>
-  );
-}
-
-function PauseRow({ onPress, value }: { readonly onPress: () => void; readonly value: string }) {
   const palette = usePalette();
   const minutes = Number(value) || 0;
   return (
@@ -102,6 +55,7 @@ function PauseRow({ onPress, value }: { readonly onPress: () => void; readonly v
       accessibilityLabel={`Pause: ${minutes} Minuten`}
       accessibilityRole="button"
       onPress={onPress}
+      onLayout={onLayout}
       style={({ pressed }) => [
         styles.valueRow,
         {
@@ -112,11 +66,11 @@ function PauseRow({ onPress, value }: { readonly onPress: () => void; readonly v
     >
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.rowLabel, { color: palette.text }]}
+        style={[styles.rowLabel, { color: palette.textMuted }]}
       >
         Pause
       </Text>
-      <View style={[styles.pauseValue, { backgroundColor: palette.surfaceMuted }]}>
+      <View style={styles.pauseValue}>
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={[styles.pauseValueText, { color: palette.text }]}
@@ -165,10 +119,11 @@ export function ShiftEditOverlay({
   endTime,
 }: ShiftEditOverlayProps) {
   const palette = usePalette();
-  const locationName = location?.name ?? null;
   const [popup, setPopup] = useState<Popup>(null);
   const [notificationVisible, setNotificationVisible] = useState(false);
-  const headerColor = accessibleChipBackgroundColor(shiftColor);
+  const [timeGroupTop, setTimeGroupTop] = useState(0);
+  const [pauseRowBottom, setPauseRowBottom] = useState(144);
+  const headerColor = palette.dark ? shiftColor : accessibleChipBackgroundColor(shiftColor);
   const serviceLabel = shiftType === "CUSTOM" ? shiftTitle : SHIFT_TYPE_LABELS[shiftType];
 
   const openPausePicker = useCallback(() => {
@@ -198,101 +153,79 @@ export function ShiftEditOverlay({
       cardContent={
         <>
           <View style={styles.body}>
-            <ValueRow label="Dienst" onPress={() => setPopup("TYPE")} value={serviceLabel} />
-            {shiftIsTimed ? (
-              <>
-                <TimeRow label="Beginn" onChange={onStartTimeChange} value={startTime} />
-                <TimeRow label="Ende" onChange={onEndTimeChange} value={endTime} />
-                <PauseRow onPress={openPausePicker} value={breakMinutes} />
-                <ShiftOvertimeFields
-                  confirmed={tariffOvertimeConfirmed}
-                  inputRef={overtimeInputRef}
-                  onConfirmedChange={onTariffOvertimeConfirmedChange}
-                  onMinutesChange={onOvertimeMinutesChange}
-                  overtimeMinutes={overtimeMinutes}
-                />
-              </>
-            ) : (
-              <ValueRow label="Dauer" value="Ganztägig" />
-            )}
-            <ValueRow
-              label="Benachrichtigung"
-              onPress={openNotificationPicker}
-              value={notificationLabel(notification)}
-            />
-            {shiftIsTimed ? (
-              <ValueRow
-                label="Wecker"
-                onPress={() => {
-                  setPopup(null);
-                  onAlarmPress();
-                }}
-                value={alarmEnabled ? "Zum Beginn" : "Aus"}
-              />
-            ) : null}
-
-            <View
-              style={[
-                styles.noteLocationGroup,
-                { borderColor: palette.border, backgroundColor: palette.surfaceRaised },
-              ]}
+            <EntryEditGroup
+              testID="shift-edit-time-group"
+              onLayout={({ nativeEvent: { layout } }) => setTimeGroupTop(layout.y)}
             >
-              <TextInput
-                accessibilityLabel="Notizen"
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                multiline
-                onChangeText={onNoteChange}
-                placeholder="Notizen"
-                placeholderTextColor={palette.textMuted}
-                style={[
-                  styles.noteInput,
-                  { color: palette.text, borderBottomColor: palette.separator },
-                ]}
-                value={note}
-              />
-              <View style={styles.locationActionsRow}>
-                <Pressable
-                  accessibilityLabel={`Ort: ${locationName ?? "Kein Ort"}`}
-                  accessibilityRole="button"
-                  onPress={onLocationPress}
-                  style={({ pressed }) => [
-                    styles.locationRow,
-                    { backgroundColor: pressed ? palette.surfaceMuted : "transparent" },
-                  ]}
-                >
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{
-                      color: locationName ? palette.text : palette.textMuted,
-                      fontSize: 16,
-                    }}
+              {shiftIsTimed ? (
+                <>
+                  <EntryEditTimePair
+                    startTime={startTime}
+                    endTime={endTime}
+                    onStartChange={onStartTimeChange}
+                    onEndChange={onEndTimeChange}
+                  />
+                  <View
+                    testID="shift-edit-pause-overtime-pair"
+                    onLayout={({ nativeEvent: { layout } }) =>
+                      setPauseRowBottom(layout.y + layout.height)
+                    }
                   >
-                    {locationName ?? "Ort"}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
+                    <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
+                      <PauseRow
+                        onLayout={undefined}
+                        onPress={openPausePicker}
+                        value={breakMinutes}
+                      />
+                      <ShiftOvertimeFields
+                        compact
+                        confirmed={tariffOvertimeConfirmed}
+                        inputRef={overtimeInputRef}
+                        onConfirmedChange={onTariffOvertimeConfirmedChange}
+                        onMinutesChange={onOvertimeMinutesChange}
+                        overtimeMinutes={overtimeMinutes}
+                      />
+                    </ResponsiveFieldRow>
+                  </View>
+                  {Number(overtimeMinutes) > 0 ? (
+                    <ShiftOvertimeConfirmation
+                      confirmed={tariffOvertimeConfirmed}
+                      onConfirmedChange={onTariffOvertimeConfirmedChange}
+                    />
+                  ) : null}
+                </>
+              ) : (
+                <ValueRow label="Dauer" separator={false} value="Ganztägig" />
+              )}
+            </EntryEditGroup>
+            <EntryEditGroup testID="shift-edit-reminder-group">
+              <ValueRow
+                label="Benachrichtigung"
+                onPress={openNotificationPicker}
+                separator={shiftIsTimed}
+                value={notificationLabel(notification)}
+              />
+              {shiftIsTimed ? (
+                <ValueRow
+                  label="Wecker"
+                  separator={false}
+                  onPress={() => {
+                    setPopup(null);
+                    onAlarmPress();
+                  }}
+                  value={alarmEnabled ? "Zum Beginn" : "Aus"}
+                />
+              ) : null}
+            </EntryEditGroup>
+            <EntryEditNotesLocation
+              emptyLocationLabel="Kein Ort"
+              location={location}
+              note={note}
+              onLocationPress={onLocationPress}
+              onNoteChange={onNoteChange}
+              testID="shift-edit-notes-location"
+            />
             {location ? <LocationPreview location={location} /> : null}
-            {onDelete ? (
-              <Pressable
-                accessibilityLabel="Dienst löschen"
-                accessibilityRole="button"
-                disabled={busy}
-                onPress={onDelete}
-                style={({ pressed }) => [
-                  styles.deleteButton,
-                  { backgroundColor: pressed ? `${palette.danger}18` : "transparent" },
-                ]}
-              >
-                <Ionicons color={palette.danger} name="trash-outline" size={20} />
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.deleteLabel, { color: palette.danger }]}
-                >
-                  Dienst löschen
-                </Text>
-              </Pressable>
-            ) : null}
           </View>
 
           {popup === "PAUSE" ? (
@@ -314,6 +247,7 @@ export function ShiftEditOverlay({
                   backgroundColor: palette.surfaceRaised,
                   borderColor: palette.border,
                   shadowColor: palette.shadow,
+                  top: timeGroupTop + pauseRowBottom + SPACING.xs,
                 },
               ]}
               testID="shift-edit-pause-popover"
@@ -337,36 +271,25 @@ export function ShiftEditOverlay({
                   backgroundColor: palette.surfaceRaised,
                   borderColor: palette.border,
                   shadowColor: palette.shadow,
+                  top: SPACING.xs,
                 },
               ]}
+              testID="shift-edit-type-popover"
             >
               <ScrollView style={styles.typeScroll}>
                 {DAY_EDITOR_SHIFT_TYPES.map((type) => {
                   const selected = type === shiftType;
                   return (
-                    <Pressable
+                    <SelectionRow
                       key={type}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected }}
+                      label={SHIFT_TYPE_LABELS[type]}
+                      selected={selected}
+                      separator
                       onPress={() => {
                         onShiftTypeChange(type);
                         setPopup(null);
                       }}
-                      style={({ pressed }) => [
-                        styles.typeItem,
-                        {
-                          borderBottomColor: palette.separator,
-                          backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.typeLabel, { color: palette.text }]}>
-                        {SHIFT_TYPE_LABELS[type]}
-                      </Text>
-                      {selected ? (
-                        <Ionicons color={palette.primary} name="checkmark" size={21} />
-                      ) : null}
-                    </Pressable>
+                    />
                   );
                 })}
               </ScrollView>
@@ -378,8 +301,12 @@ export function ShiftEditOverlay({
       durationMinutes={durationMinutes}
       error={error}
       headerColor={headerColor}
-      headerForeground={chipTextColor}
-      headerLeading={<ShiftSymbol color={chipTextColor} size={23} value={shiftSymbol} />}
+      headerSubtitle={serviceLabel}
+      headerAccessibilityLabel={`Dienst: ${serviceLabel}`}
+      headerLeading={<ShiftSymbol color={headerColor} size={22} value={shiftSymbol} />}
+      onHeaderPress={() => setPopup(popup === "TYPE" ? null : "TYPE")}
+      onDelete={onDelete}
+      deleteLabel="Dienst löschen"
       onBackdropPress={() => setPopup(null)}
       onClosingStart={() => {
         setPopup(null);
@@ -402,70 +329,23 @@ export function ShiftEditOverlay({
 }
 
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: 16 },
-  valueRow: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  body: ENTRY_EDIT_FIELD_STYLES.body,
+  valueRow: { minHeight: 44, alignItems: "flex-start", gap: 0 },
+  rowLabel: TYPOGRAPHY.small,
+  pauseValue: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    ...CONTROL_CORNERS,
+    paddingHorizontal: 0,
   },
-  rowLabel: { flexShrink: 0, fontSize: 16, lineHeight: 21, fontWeight: "500" },
-  rowValue: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 21,
+  pauseValueText: {
+    fontSize: TYPOGRAPHY.body.fontSize,
     fontWeight: "500",
-    textAlign: "right",
     fontVariant: ["tabular-nums"],
   },
-  timeRow: {
-    minHeight: 46,
-    justifyContent: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  pauseValue: {
-    minHeight: 36,
-    minWidth: 92,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-  pauseValueText: { fontSize: 16, fontWeight: "500", fontVariant: ["tabular-nums"] },
-  noteLocationGroup: {
-    overflow: "hidden",
-    minHeight: 94,
-    marginVertical: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 13,
-    borderCurve: "continuous",
-  },
-  noteInput: {
-    minHeight: 88,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    fontSize: 15,
-    textAlignVertical: "top",
-  },
-  locationActionsRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-  },
-  locationRow: { minHeight: 44, flex: 1, justifyContent: "center", paddingHorizontal: 12 },
-  deleteButton: {
-    minHeight: 44,
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 12,
-  },
-  deleteLabel: { fontSize: 15, fontWeight: "500" },
+  deleteLabel: { fontSize: TYPOGRAPHY.compact.fontSize, fontWeight: "500" },
   popupDismissLayer: {
     position: "absolute",
     top: 0,
@@ -476,38 +356,29 @@ const styles = StyleSheet.create({
   },
   pausePopup: {
     position: "absolute",
-    top: 194,
     right: 16,
     zIndex: 2,
     width: 210,
     height: 220,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 20,
-    borderCurve: "continuous",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 18,
+    ...CONTROL_CORNERS,
+
+    boxShadow: SHADOWS.overlay,
   },
   pauseWheelSelection: {
-    borderRadius: 13,
-    borderCurve: "continuous",
+    ...CONTROL_CORNERS,
   },
   typePopup: {
     position: "absolute",
-    top: 60,
     left: 16,
     right: 16,
     maxHeight: 330,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
-    borderCurve: "continuous",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 18,
+    ...CONTROL_CORNERS,
+
+    boxShadow: SHADOWS.overlay,
   },
   typeScroll: { maxHeight: 330 },
   typeItem: {
@@ -518,5 +389,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 15,
   },
-  typeLabel: { fontSize: 15, fontWeight: "500" },
+  typeLabel: { fontSize: TYPOGRAPHY.compact.fontSize, fontWeight: "500" },
 });

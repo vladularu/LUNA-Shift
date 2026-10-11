@@ -23,9 +23,13 @@ const repositoryMocks = vi.hoisted(() => ({
   saveTemplate: vi.fn(),
   saveTvoedWorkPatternSettings: vi.fn(),
   swapTemplateSortOrder: vi.fn(),
+  reorderTemplates: vi.fn(),
 }));
 vi.mock("@/infrastructure/database/simple-app-profile", () => ({
   projectStoredSimpleProfile: async (_db: SQLiteDatabase, profile: unknown) => profile,
+}));
+vi.mock("@/infrastructure/database/shift-template-order-repository", () => ({
+  reorderTemplates: repositoryMocks.reorderTemplates,
 }));
 
 const notificationMocks = vi.hoisted(() => ({
@@ -86,6 +90,15 @@ const database = {} as SQLiteDatabase;
 const entry = { id: "entry-1", kind: "APPOINTMENT" } as CalendarEntry;
 
 describe("createPflegeShiftPorts", () => {
+  it("binds one template permutation to the database without calendar or notification writes", async () => {
+    const ports = createPflegeShiftPorts(database);
+    const requested: readonly import("@/domain/types").ShiftTemplate[] = [];
+    repositoryMocks.reorderTemplates.mockResolvedValue(requested);
+    await expect(ports.repository.reorderTemplates(requested)).resolves.toBe(requested);
+    expect(repositoryMocks.reorderTemplates).toHaveBeenCalledWith(database, requested);
+    expect(repositoryMocks.saveShift).not.toHaveBeenCalled();
+    expect(notificationMocks.syncEntry).not.toHaveBeenCalled();
+  });
   it("binds TV-L confirmations to the shared database without changing services or notifications", async () => {
     const ports = createPflegeShiftPorts(database);
     const saved = tvlFact(false);

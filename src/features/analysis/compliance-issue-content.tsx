@@ -1,9 +1,10 @@
+import { Text } from "@/ui/text";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Temporal } from "@js-temporal/polyfill";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
-import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
@@ -69,6 +70,7 @@ export function ComplianceIssueContent({
     <View
       testID={`check-details-${issue.id}`}
       style={{
+        borderCurve: CORNER_CURVE,
         gap: SPACING.md,
         backgroundColor: palette.surfaceRaised,
         borderRadius: RADII.card,

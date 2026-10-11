@@ -1,6 +1,7 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { router } from "expo-router";
 
 import { DataBackupScreen } from "@/features/data-backup/data-backup-screen";
 import { BackupTempCleanupError } from "@/features/data-backup/backup-temp-file";
@@ -12,18 +13,21 @@ const mockSelectBackup = jest.fn<() => Promise<"canceled" | "selected">>();
 const mockRestoreSelected = jest.fn<() => Promise<void>>();
 const mockShowFeedback = jest.fn();
 let mockCandidate: LocalBackupRestoreCandidate | null = null;
+let mockExportBusy = false;
+let mockRestoreBusy = false;
 
 jest.mock("expo-router", () => ({
+  router: { back: jest.fn() },
   Stack: { Screen: () => null },
 }));
 
 jest.mock("@/features/data-backup/use-local-backup-export", () => ({
-  useLocalBackupExport: () => ({ busy: false, createAndShare: mockCreateAndShare }),
+  useLocalBackupExport: () => ({ busy: mockExportBusy, createAndShare: mockCreateAndShare }),
 }));
 
 jest.mock("@/features/data-backup/use-local-backup-restore", () => ({
   useLocalBackupRestore: () => ({
-    busy: false,
+    busy: mockRestoreBusy,
     candidate: mockCandidate,
     selectBackup: mockSelectBackup,
     restoreSelected: mockRestoreSelected,
@@ -36,6 +40,9 @@ jest.mock("@/ui/feedback", () => ({
 
 describe("DataBackupScreen", () => {
   beforeEach(() => {
+    jest.mocked(router.back).mockClear();
+    mockExportBusy = false;
+    mockRestoreBusy = false;
     mockCreateAndShare.mockReset();
     mockSelectBackup.mockReset();
     mockRestoreSelected.mockReset();
@@ -81,7 +88,31 @@ describe("DataBackupScreen", () => {
     expect(screen.getByText(/außerhalb der App nicht verschlüsselt/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Backup erstellen und teilen" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Backup-Datei auswählen" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockCreateAndShare).not.toHaveBeenCalled();
+    expect(mockSelectBackup).not.toHaveBeenCalled();
+    expect(mockRestoreSelected).not.toHaveBeenCalled();
   });
+
+  it.each(["export", "restore"])(
+    "blocks the footer during %s and enables it after completion",
+    async (operation) => {
+      mockExportBusy = operation === "export";
+      mockRestoreBusy = operation === "restore";
+      const screen = await render(<DataBackupScreen />);
+      const back = screen.getByRole("button", { name: "Zurück zu Mehr" });
+      expect(back.props.accessibilityState.disabled).toBe(true);
+      await fireEvent.press(back);
+      expect(router.back).not.toHaveBeenCalled();
+      mockExportBusy = false;
+      mockRestoreBusy = false;
+      await screen.rerender(<DataBackupScreen />);
+      await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
+      expect(router.back).toHaveBeenCalledTimes(1);
+      expect(mockRestoreSelected).not.toHaveBeenCalled();
+    },
+  );
 
   it("shows a validated backup preview before enabling replacement", async () => {
     mockCandidate = {

@@ -89,18 +89,28 @@ describe.each([
   ["light", LIGHT_PALETTE],
   ["dark", DARK_PALETTE],
 ] as const)("%s palette contrast", (_, palette) => {
+  it("keeps selection text readable and raises the active surface in both modes", () => {
+    for (const background of [palette.selectionTrack, palette.selectionActiveSurface]) {
+      for (const text of [palette.text, palette.textSecondary]) {
+        expect(colorContrastRatio(text, background)).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
+      }
+    }
+    expect(relativeLuminance(palette.selectionActiveSurface)).toBeGreaterThan(
+      relativeLuminance(palette.selectionTrack)!,
+    );
+  });
   it("uses readable mode-specific accents and calendar controls", () => {
-    expect(palette.accent).toBe(palette.dark ? "#FFE637" : "#0088FF");
+    expect(palette.accent).toBe(palette.primary);
     expect(palette.calendarYearAccent).toBe(palette.dark ? palette.primary : palette.accent);
-    expect(palette.onAccent).toBe("#0D0D0D");
+    expect(palette.onAccent).toBe(palette.onPrimary);
     expect(colorContrastRatio(palette.onAccent, palette.accent)).toBeGreaterThanOrEqual(
       MINIMUM_TEXT_CONTRAST,
     );
     expect(colorContrastRatio(palette.primary, palette.tabBar)).toBeGreaterThanOrEqual(
       MINIMUM_UI_CONTRAST,
     );
-    expect(palette.calendarToday).toBe(palette.dark ? "#FFE637" : "#0D0D0D");
-    expect(palette.floatingAction).toBe(palette.dark ? palette.accent : "#0D0D0D");
+    expect(palette.calendarToday).toBe(palette.accent);
+    expect(palette.floatingAction).toBe(palette.accent);
     expect(palette.onFloatingAction).toBe(palette.onCalendarToday);
     expect(
       colorContrastRatio(palette.onCalendarToday, palette.calendarToday),
@@ -108,7 +118,7 @@ describe.each([
     expect(
       colorContrastRatio(palette.onFloatingAction, palette.floatingAction),
     ).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
-    expect(palette.cardSeparator).toBe(palette.dark ? "#111113" : "#E5E5E5");
+    expect(palette.cardSeparator).toBe(palette.separator);
     expect(palette.onboardingBackground).toBe(palette.background);
   });
 
@@ -133,10 +143,20 @@ describe.each([
     );
   });
 
-  it.each(CONTENT_BACKGROUNDS)("keeps control borders visible on %s", (background) => {
+  it.each(CONTENT_BACKGROUNDS)("keeps decorative borders understated on %s", (background) => {
     expect(
       colorContrastRatio(palette.border, palette[background] as string),
       `border on ${background}`,
-    ).toBeGreaterThanOrEqual(MINIMUM_UI_CONTRAST);
+    ).toBeLessThan(MINIMUM_UI_CONTRAST);
+  });
+
+  it("separates the canvas, cards and raised controls with quiet tones", () => {
+    const surfaces = [palette.background, palette.surface, palette.surfaceRaised];
+    expect(new Set(surfaces).size).toBe(3);
+    for (const surface of surfaces.slice(1)) {
+      const contrast = colorContrastRatio(surface, palette.background);
+      expect(contrast).toBeGreaterThan(1);
+      expect(contrast).toBeLessThan(1.5);
+    }
   });
 });

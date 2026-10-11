@@ -1,8 +1,8 @@
+import { Text } from "@/ui/text";
 import { useCallback, useRef, useState } from "react";
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -21,7 +21,7 @@ import Animated, {
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII } from "@/theme/tokens";
+import { CONTROL_CORNERS } from "@/theme/tokens";
 
 const PAUSE_OPTIONS = [0, 15, 30, 45, 60] as const;
 export const PAUSE_WHEEL_ITEM_HEIGHT = 44;
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     right: 12,
     left: 12,
     height: PAUSE_WHEEL_ITEM_HEIGHT,
-    borderRadius: RADII.control,
+    ...CONTROL_CORNERS,
   },
   wheel: { flex: 1 },
   content: { paddingVertical: PAUSE_WHEEL_PADDING },

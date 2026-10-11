@@ -33,6 +33,7 @@ import type {
   UserProfile,
 } from "@/domain/types";
 import { compareCalendarEntries } from "@/engine/calendar-entry-order";
+import { useTemplateOrder } from "@/application/use-template-order";
 
 interface PflegeShiftProviderProps extends PropsWithChildren {
   readonly activeMonth: string;
@@ -64,6 +65,7 @@ interface PflegeShiftTemplatesValue {
   readonly removeTemplate: (template: ShiftTemplate) => Promise<void>;
   readonly restoreTemplate: (template: ShiftTemplate) => Promise<ShiftTemplate>;
   readonly moveTemplate: (template: ShiftTemplate, direction: -1 | 1) => Promise<void>;
+  readonly moveTemplateToIndex: (template: ShiftTemplate, targetIndex: number) => Promise<void>;
 }
 
 interface PflegeShiftEntriesValue {
@@ -248,21 +250,10 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     [repository],
   );
 
-  const moveTemplate = useCallback(
-    async (template: ShiftTemplate, direction: -1 | 1) => {
-      const currentIndex = templates.findIndex((item) => item.id === template.id);
-      const targetIndex = currentIndex + direction;
-      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= templates.length) return;
-
-      const target = templates[targetIndex];
-      const swapped = await repository.swapTemplateSortOrder(template, target);
-      setTemplates((current) =>
-        current
-          .map((item) => swapped.find((saved) => saved.id === item.id) ?? item)
-          .sort((left, right) => left.sortOrder - right.sortOrder),
-      );
-    },
-    [repository, templates],
+  const { moveTemplate, moveTemplateToIndex } = useTemplateOrder(
+    templates,
+    setTemplates,
+    repository,
   );
 
   const upsertShift = useCallback(
@@ -369,8 +360,16 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
       removeTemplate,
       restoreTemplate: restoreRemovedTemplate,
       moveTemplate,
+      moveTemplateToIndex,
     }),
-    [moveTemplate, removeTemplate, restoreRemovedTemplate, templates, upsertTemplate],
+    [
+      moveTemplate,
+      moveTemplateToIndex,
+      removeTemplate,
+      restoreRemovedTemplate,
+      templates,
+      upsertTemplate,
+    ],
   );
   const entriesValue = useMemo<PflegeShiftEntriesValue>(
     () => ({ entries, upsertShift, upsertAppointment, removeEntry, restoreEntry }),

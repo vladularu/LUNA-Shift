@@ -21,10 +21,33 @@ describe("profile page one-handed footer", () => {
         name: "Zurück zum Arbeitsprofil",
       }),
     ).toBeNull();
-    expect(footer.props.style.paddingBottom).toBeGreaterThanOrEqual(34);
+    const footerStyle = StyleSheet.flatten(footer.props.style);
+    expect(footerStyle.position).toBe("absolute");
+    expect(footerStyle.bottom).toBeGreaterThanOrEqual(34);
+    expect(footerStyle.borderTopWidth).toBeUndefined();
+    expect(footerStyle.backgroundColor).toBeUndefined();
     const button = within(footer).getByRole("button", { name: "Zurück zum Arbeitsprofil" });
     expect(StyleSheet.flatten(button.props.style).minHeight).toBeGreaterThanOrEqual(44);
+    expect(
+      StyleSheet.flatten(screen.getByTestId("profile-scroll-content").props.contentContainerStyle)
+        .paddingBottom,
+    ).toBeGreaterThanOrEqual(34 + 48);
     expect(screen.getByText("Entwurf")).toBeTruthy();
+  });
+  it("keeps the last content reachable when the floating action grows with larger text", async () => {
+    const screen = await render(
+      <ProfilePage title="Arbeitszeit" backLabel="Zurück zum Arbeitsprofil" onBack={() => {}}>
+        <Text>Letzter Eintrag</Text>
+      </ProfilePage>,
+    );
+    const scroll = () =>
+      StyleSheet.flatten(screen.getByTestId("profile-scroll-content").props.contentContainerStyle);
+    const initialPadding = scroll().paddingBottom;
+    await fireEvent(screen.getByTestId("back-footer-surface"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 345, height: 80 } },
+    });
+    expect(scroll().paddingBottom).toBeGreaterThanOrEqual(initialPadding + 32);
+    expect(screen.getByText("Letzter Eintrag")).toBeTruthy();
   });
   it("dismisses the keyboard and invokes the parent return action", async () => {
     const onBack = jest.fn();

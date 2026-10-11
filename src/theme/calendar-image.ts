@@ -22,5 +22,5 @@ export function calendarImageOverlayOpacity(strength: CalendarImageStrength): nu
   );
 }
 export function calendarImageLabelColor(palette: Palette, strength: CalendarImageStrength): string {
-  return strength === "subtle" ? palette.textMuted : palette.text;
+  return strength === "subtle" ? palette.textSecondary : palette.text;
 }

@@ -1,8 +1,9 @@
+import { Text } from "@/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import type { PropsWithChildren } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { usePalette } from "@/theme/palette";
-import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { selectionFeedback } from "@/ui/haptics";
 
@@ -40,7 +41,7 @@ export function OverviewCard({
         minHeight: MINIMUM_TOUCH_TARGET,
         padding: SPACING.xl,
         borderRadius: RADII.card,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         borderWidth: 1,
         borderColor: palette.separator,
         backgroundColor: palette.surface,

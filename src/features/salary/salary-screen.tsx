@@ -1,3 +1,5 @@
+import { Text } from "@/ui/text";
+import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
@@ -6,7 +8,7 @@ import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-t
 import { Temporal } from "@js-temporal/polyfill";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
 
 import {
   usePflegeShiftEntries,
@@ -36,7 +38,7 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { MonthNavigator } from "@/ui/month-navigator";
@@ -135,6 +137,7 @@ export function SalaryScreen() {
           onPrevious={() => moveMonth(-1)}
         />
         <ReportPeriodContent>
+          <ReportExportButton period={month} />
           <RuleComputationNotice
             failure={calculation}
             onRetry={() => setRuleRetryRevision((value) => value + 1)}
@@ -261,6 +264,7 @@ export function SalaryScreen() {
         onPrevious={() => moveMonth(-1)}
       />
       <ReportPeriodContent>
+        <ReportExportButton period={month} />
         {testMonths.includes(month) ? <ReportTestBadge /> : null}
 
         {!salaryReady ? (
@@ -350,7 +354,7 @@ function SetupCard() {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: RADII.control,
-          borderCurve: "continuous",
+          borderCurve: CORNER_CURVE,
           backgroundColor: palette.accent,
           opacity: pressed ? 0.75 : 1,
         })}

@@ -1,3 +1,4 @@
+import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
@@ -21,11 +22,13 @@ export function AppTabs() {
       labelStyle={{
         default: {
           color: palette.textMuted,
+          fontFamily: INTER_FONTS.medium,
           fontSize: TYPOGRAPHY.overline.fontSize,
           fontWeight: TYPOGRAPHY.overline.fontWeight,
         },
         selected: {
           color: palette.primary,
+          fontFamily: INTER_FONTS.medium,
           fontSize: TYPOGRAPHY.overline.fontSize,
           fontWeight: TYPOGRAPHY.overline.fontWeight,
         },

@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { View } from "react-native";
 import { RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 

@@ -1,9 +1,9 @@
+import { Text } from "@/ui/text";
 import { memo, useEffect, useMemo, useRef } from "react";
 import {
   findNodeHandle,
   Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type GestureResponderEvent,
@@ -39,13 +39,12 @@ import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarChipPalette } from "@/theme/color-contrast";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { COMPACT_TEXT_MAX_SCALE } from "@/theme/typography";
-import { CALENDAR_METRICS, SPACING } from "@/theme/tokens";
+import { COMPACT_TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import { CORNER_CURVE, CALENDAR_METRICS, RADII, SPACING } from "@/theme/tokens";
 import { usePressMotion } from "@/ui/press-motion";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { useMorphDayStyle, useCalendarMorphMeasurement } from "./calendar-morph-measurement";
 import { CalendarBackground } from "./calendar-background";
-
 const WEEKDAYS = ["M", "D", "M", "D", "F", "S", "S"];
 const EMPTY_ENTRIES: readonly CalendarEntry[] = Object.freeze([]);
 type CalendarCell = ReturnType<typeof createMonthGrid>[number];
@@ -133,7 +132,7 @@ const EntryMark = memo(function EntryMark({
         minHeight: detail ? CALENDAR_METRICS.entryRowHeight * 2 : CALENDAR_METRICS.entryRowHeight,
         overflow: "hidden",
         borderRadius: 4,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
       }}
     >
       <View
@@ -335,13 +334,14 @@ const DayCell = memo(
               collapsable={false}
               style={[
                 {
+                  borderCurve: CORNER_CURVE,
                   minWidth: 30,
                   height: 30,
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: isSelected && !isToday ? 1 : 0,
                   borderColor: isSelected && !isToday ? palette.calendarSelection : "transparent",
-                  borderRadius: 15,
+                  borderRadius: RADII.control,
                   backgroundColor: isToday
                     ? palette.calendarToday
                     : isSelected
@@ -401,7 +401,7 @@ const DayCell = memo(
               gap: 1,
               overflow: "hidden",
               borderRadius: 4,
-              borderCurve: "continuous",
+              borderCurve: CORNER_CURVE,
               pointerEvents: "box-none",
             }}
           >
@@ -590,8 +590,8 @@ export const MonthCard = memo(function MonthCard({
           <Text
             maxFontSizeMultiplier={COMPACT_TEXT_MAX_SCALE}
             style={{
+              fontSize: TYPOGRAPHY.overline.fontSize,
               color: palette.primary,
-              fontSize: 11,
               fontWeight: "700",
               letterSpacing: 0.7,
               paddingHorizontal: SPACING.md,
@@ -679,6 +679,6 @@ const styles = StyleSheet.create({
     left: 0,
     borderWidth: 1,
     borderRadius: 4,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
   },
 });

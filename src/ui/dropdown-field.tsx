@@ -1,10 +1,11 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { Fragment, useRef, useState } from "react";
-import { findNodeHandle, Keyboard, Pressable, Text, View } from "react-native";
+import { findNodeHandle, Keyboard, Pressable, View } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { SelectionSheet } from "@/ui/selection-sheet";
 
@@ -55,7 +56,7 @@ export function DropdownField<T extends string | number>({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
+        style={{ color: palette.text, ...TYPOGRAPHY.label }}
       >
         {label}
       </Text>
@@ -66,6 +67,7 @@ export function DropdownField<T extends string | number>({
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         onPress={openSelection}
+        hitSlop={2}
         style={({ pressed }) => ({
           minHeight: CONTROL_HEIGHT.regular,
           flexDirection: "row",
@@ -74,7 +76,7 @@ export function DropdownField<T extends string | number>({
           borderWidth: 1,
           borderColor: palette.border,
           borderRadius: RADII.control,
-          borderCurve: "continuous",
+          borderCurve: CORNER_CURVE,
           backgroundColor: palette.surfaceRaised,
           opacity: pressed ? 0.72 : 1,
           paddingHorizontal: SPACING.md,
@@ -119,6 +121,7 @@ export function DropdownField<T extends string | number>({
                     </Text>
                   ) : null}
                   <Pressable
+                    hitSlop={2}
                     accessibilityLabel={
                       option.selectionLabel ??
                       (option.subtitle ? `${option.label} · ${option.subtitle}` : option.label)

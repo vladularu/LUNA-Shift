@@ -1,7 +1,8 @@
+import { Text } from "@/ui/text";
 import { AnalysisViewControls } from "./analysis-view-controls";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { Temporal } from "@js-temporal/polyfill";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";

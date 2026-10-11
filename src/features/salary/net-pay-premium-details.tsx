@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { View } from "react-native";
 import type { SfnClassificationResult, SfnPremiumCategory } from "@/domain/net-pay-sfn";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";

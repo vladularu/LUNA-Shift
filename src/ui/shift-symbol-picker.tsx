@@ -1,11 +1,13 @@
+import { Text, TextInput } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { useMemo, useState, type Ref } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { isShiftSymbolId, SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { chipTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { selectionFeedback } from "@/ui/haptics";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 
@@ -101,7 +103,8 @@ export function ShiftSymbolPicker({
                     <Text
                       style={{
                         color: selected ? chipTextColor : palette.textSecondary,
-                        fontSize: 12,
+                        fontFamily: INTER_FONTS.semibold,
+                        fontSize: TYPOGRAPHY.caption.fontSize,
                         fontWeight: "600",
                       }}
                     >
@@ -174,7 +177,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     overflow: "hidden",
     borderRadius: RADII.large,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
     paddingVertical: SPACING.sm,
   },
   cell: {
@@ -199,6 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
   },
   customInput: {
+    borderCurve: CORNER_CURVE,
     minHeight: 48,
     borderWidth: 1,
     borderRadius: RADII.control,

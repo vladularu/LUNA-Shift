@@ -1,4 +1,6 @@
-import { ActivityIndicator, Pressable, ScrollView, Text } from "react-native";
+import { Text } from "@/ui/text";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { ActivityIndicator, Pressable, ScrollView } from "react-native";
 
 import { PRODUCT_NAME } from "@/brand";
 import { usePalette } from "@/theme/palette";
@@ -99,8 +101,8 @@ export function LoadFailureView({
           minHeight: 48,
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 15,
-          borderCurve: "continuous",
+          borderRadius: RADII.control,
+          borderCurve: CORNER_CURVE,
           backgroundColor: palette.accent,
           opacity: pressed ? 0.72 : 1,
           paddingHorizontal: 18,

@@ -1,6 +1,8 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { State } from "react-native-gesture-handler";
+import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import {
   DEFAULT_ANALYSIS_VIEW,
   moveAnalysisCard,
@@ -121,20 +123,95 @@ describe("analysis view preferences", () => {
     await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(2));
     expect(read(screen).hidden).toEqual(["PAY"]);
   });
-  it("does not replace saved preferences after a load failure", async () => {
-    mockLoad.mockRejectedValueOnce(new Error("locked"));
+  it("keeps customization stable while loading and recovers from a load failure", async () => {
+    let rejectLoad!: (cause: Error) => void;
+    mockLoad.mockImplementationOnce(
+      () =>
+        new Promise<AnalysisViewPreferences>((_resolve, reject) => {
+          rejectLoad = reject;
+        }),
+    );
     const screen = await render(
       <AnalysisViewProvider>
         <Harness />
+        <AnalysisViewControls />
       </AnalysisViewProvider>,
     );
+    expect(screen.getByText("Ansicht anpassen")).toBeTruthy();
+    expect(screen.queryByText("Ansicht wird geladen …")).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Ansicht anpassen" }).props.accessibilityState,
+    ).toEqual({ disabled: true, busy: true });
+    await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+    expect(screen.queryByTestId("analysis-setting-WORK")).toBeNull();
+    await act(async () => rejectLoad(new Error("locked")));
     await waitFor(() =>
-      expect(screen.getByText("Deine Ansicht konnte nicht geladen werden.")).toBeTruthy(),
+      expect(screen.getAllByText("Deine Ansicht konnte nicht geladen werden.")).not.toHaveLength(0),
     );
     await fireEvent.press(screen.getByRole("button", { name: "Hide pay" }));
     expect(mockSave).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Retry" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erneut versuchen" }));
     await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+    expect(
+      screen.getByRole("button", { name: "Ansicht anpassen" }).props.accessibilityState,
+    ).toEqual({ disabled: false, busy: false });
+    await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+    expect(screen.getByTestId("analysis-setting-WORK")).toBeTruthy();
+  });
+  it("shows only sustained saves without changing the status line layout or leaking a timer", async () => {
+    jest.useFakeTimers();
+    try {
+      let finishSave!: () => void;
+      mockSave.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishSave = resolve;
+          }),
+      );
+      const screen = await render(
+        <AnalysisViewProvider>
+          <Harness />
+          <AnalysisViewControls />
+        </AnalysisViewProvider>,
+      );
+      await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+      await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+      const hiddenStatus = screen.getByText("Wird gespeichert …", { includeHiddenElements: true });
+      const statusStyle = StyleSheet.flatten(hiddenStatus.props.style);
+      expect(hiddenStatus).toHaveStyle({ opacity: 0 });
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+
+      await fireEvent(screen.getByLabelText("Gehalt anzeigen"), "valueChange", false);
+      await act(async () => jest.advanceTimersByTime(100));
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+      await act(async () => finishSave());
+      await act(async () => jest.advanceTimersByTime(600));
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+      expect(read(screen).hidden).toEqual(["PAY"]);
+
+      await fireEvent(screen.getByLabelText("Gehalt anzeigen"), "valueChange", true);
+      await act(async () => jest.advanceTimersByTime(599));
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+      await act(async () => jest.advanceTimersByTime(1));
+      expect(screen.getByText("Wird gespeichert …")).toHaveStyle({ opacity: 1 });
+      expect(screen.getByText("Wird gespeichert …")).toHaveStyle({
+        ...statusStyle,
+        opacity: 1,
+      });
+      await act(async () => finishSave());
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+
+      await fireEvent(screen.getByLabelText("Gehalt anzeigen"), "valueChange", false);
+      await act(async () => jest.advanceTimersByTime(300));
+      await fireEvent.press(screen.getByRole("button", { name: "Ansicht schließen" }));
+      await act(async () => finishSave());
+      await act(async () => jest.advanceTimersByTime(1000));
+      await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+      expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+      await screen.unmount();
+    } finally {
+      jest.useRealTimers();
+    }
   });
   it.each([1, 3.1])("supports native customization at scale %s", async (fontScale) => {
     mockFontScale = fontScale;
@@ -154,14 +231,71 @@ describe("analysis view preferences", () => {
     expect(screen.queryByRole("button", { name: "Schichten nach oben" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Reihenfolge ändern" }));
     expect(screen.queryByLabelText("Gehalt anzeigen")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Schichten nach oben" }));
+    await waitFor(() => expect(mockSave).toHaveBeenCalled());
+    await fireEvent(screen.getByTestId("analysis-sort-row-SHIFTS"), "accessibilityAction", {
+      nativeEvent: { actionName: "decrement" },
+    });
     expect(read(screen)).toMatchObject({
       hidden: ["PAY"],
       order: ["WORK", "CHECK", "SHIFTS", "PAY"],
     });
-    await fireEvent.press(screen.getByRole("button", { name: "Standard wiederherstellen" }));
-    expect(read(screen)).toEqual(DEFAULT_ANALYSIS_VIEW);
+    expect(screen.queryByRole("button", { name: "Standard wiederherstellen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Auswahl anzeigen" }));
+    expect(screen.getByLabelText("Gehalt anzeigen")).toBeTruthy();
+    expect(read(screen)).toMatchObject({
+      hidden: ["PAY"],
+      order: ["WORK", "CHECK", "SHIFTS", "PAY"],
+    });
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     expect(screen.queryByText("Deine Karten für Monat und Jahr.")).toBeNull();
   });
+  it.each([false, true])(
+    "persists a multi-slot drag or rolls back a failed write (%s)",
+    async (fail) => {
+      jest.useFakeTimers();
+      try {
+        const initial: AnalysisViewPreferences = { ...DEFAULT_ANALYSIS_VIEW, hidden: ["PAY"] };
+        mockLoad.mockResolvedValue(initial);
+        if (fail) mockSave.mockRejectedValueOnce(new Error("disk full"));
+        const screen = await render(
+          <AnalysisViewProvider>
+            <Harness />
+            <AnalysisViewControls />
+          </AnalysisViewProvider>,
+        );
+        await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+        await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+        await fireEvent.press(screen.getByRole("button", { name: "Reihenfolge ändern" }));
+        await act(async () => {
+          fireGestureHandler(getByGestureTestId("analysis-sort-drag-WORK"), [
+            { state: State.BEGAN },
+            { state: State.ACTIVE, translationY: 0, translationX: 0 },
+            { state: State.ACTIVE, translationY: 220, translationX: 20 },
+            { state: State.END, translationY: 220, translationX: 20 },
+          ]);
+          jest.advanceTimersByTime(500);
+        });
+        expect(mockSave).toHaveBeenCalledTimes(1);
+        expect(mockSave.mock.calls[0][1]).toMatchObject({
+          order: ["CHECK", "PAY", "SHIFTS", "WORK"],
+          hidden: ["PAY"],
+        });
+        await waitFor(() =>
+          expect(read(screen).order).toEqual(
+            fail ? initial.order : ["CHECK", "PAY", "SHIFTS", "WORK"],
+          ),
+        );
+        expect(
+          screen.getByRole("adjustable", { name: `Arbeitszeit, Position ${fail ? 1 : 4} von 4` }),
+        ).toBeTruthy();
+        if (fail)
+          expect(
+            screen.getAllByText("Deine Ansicht konnte nicht gespeichert werden."),
+          ).not.toHaveLength(0);
+        await screen.unmount();
+      } finally {
+        jest.useRealTimers();
+      }
+    },
+  );
 });

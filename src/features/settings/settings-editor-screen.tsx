@@ -1,3 +1,5 @@
+import { Text, TextInput } from "@/ui/text";
+import { SelectionGroup } from "@/ui/selection-group";
 import { getTvalPflegeFullTimeMinutes } from "@/engine/simple-tval-pflege-pay";
 import {
   TVH_KR_GROUPS,
@@ -22,7 +24,7 @@ import { getTvlKrUniversityFullTimeMinutes } from "@/engine/simple-tvl-kr-pay";
 import { VKA_E_GROUPS, ePayLevels } from "@/domain/vka-e-tariff";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Children, Fragment, isValidElement, useEffect, useRef, useState } from "react";
-import { Text, TextInput, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
 import {
@@ -606,15 +608,8 @@ function SettingsEditorForm({
             title: pageTitle,
             headerTitle: compactHeader ? "" : pageTitle,
             presentation: "card",
-            headerBackVisible: false,
-            headerLeft: () => (
-              <HeaderSaveAction
-                busy={saving}
-                label="Abbrechen"
-                closes={false}
-                onPress={leave.cancel}
-              />
-            ),
+            headerBackVisible: true,
+            headerLeft: undefined,
             headerRight: () => (
               <HeaderSaveAction busy={saving} label="Speichern" onPress={() => void submit()} />
             ),
@@ -721,28 +716,28 @@ function SettingsEditorForm({
           </>
         ) : (
           <>
-            <ProfileGroup title="Gehaltsgrundlage">
-              <InputInset>
-                <SegmentedControl
-                  value={salaryMode === "MANUAL" ? "MANUAL" : "TARIFF"}
-                  items={[
-                    { value: "TARIFF", label: "Nach Tarif" },
-                    { value: "MANUAL", label: "Eigenes Brutto" },
-                  ]}
-                  onChange={(value) => {
-                    if (!saving) changeSalaryMode(value === "MANUAL" ? "MANUAL" : lastTariffMode);
-                  }}
-                />
-              </InputInset>
+            <SelectionGroup title="Gehaltsgrundlage">
+              <SegmentedControl
+                accessibilityLabel="Gehaltsgrundlage"
+                testID="salary-basis-selection"
+                disabled={saving}
+                value={salaryMode === "MANUAL" ? "MANUAL" : "TARIFF"}
+                items={[
+                  { value: "TARIFF", label: "Nach Tarif" },
+                  { value: "MANUAL", label: "Eigenes Brutto" },
+                ]}
+                onChange={(value) => {
+                  if (!saving) changeSalaryMode(value === "MANUAL" ? "MANUAL" : lastTariffMode);
+                }}
+              />
+
               {profile.salaryBasisConflict ? (
-                <InputInset>
-                  <Hint>
-                    Mehrere Gehaltsgrundlagen sind gespeichert. Bitte eine wählen; die übrigen
-                    werden erst beim Speichern abgelöst.
-                  </Hint>
-                </InputInset>
+                <Hint>
+                  Mehrere Gehaltsgrundlagen sind gespeichert. Bitte eine wählen; die übrigen werden
+                  erst beim Speichern abgelöst.
+                </Hint>
               ) : null}
-            </ProfileGroup>
+            </SelectionGroup>
             {salaryMode === "MANUAL" ? (
               <ProfileGroup title="Eigenes Brutto">
                 <InputInset>

@@ -1,11 +1,12 @@
+import { Text } from "@/ui/text";
 import { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
 import { RuleResolutionError, type RuleResolutionFailure } from "@/rules/rule-resolver";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView } from "@/ui/loading-view";
 
@@ -111,6 +112,7 @@ export function RuleComputationNotice({
             accessibilityRole="button"
             onPress={onRetry}
             style={({ pressed }) => ({
+              borderCurve: CORNER_CURVE,
               minHeight: 44,
               alignItems: "center",
               justifyContent: "center",

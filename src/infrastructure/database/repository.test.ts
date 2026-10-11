@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CalendarLabelMode } from "@/domain/types";
+import { reorderTemplates } from "@/infrastructure/database/shift-template-order-repository";
 import {
   migrateDatabase,
   LATEST_DATABASE_SCHEMA_VERSION,
@@ -395,6 +396,62 @@ describe("SQLite repository", () => {
     const restored = await restoreTemplate(db, updated);
     expect(restored).toMatchObject({ id: updated.id, revision: 4, deletedAt: null });
     expect((await listTemplates(db)).some((template) => template.id === updated.id)).toBe(true);
+  });
+
+  it("inserts a template across the whole list in one persisted permutation", async () => {
+    const before = await listTemplates(db);
+    const requested = [...before.slice(1), before[0]];
+    const saved = await reorderTemplates(db, requested);
+    expect(saved.map((template) => template.id)).toEqual(requested.map((template) => template.id));
+    expect(saved.map((template) => template.sortOrder)).toEqual(saved.map((_, index) => index));
+    for (const template of saved) {
+      const original = before.find((item) => item.id === template.id)!;
+      expect(template).toMatchObject({
+        name: original.name,
+        color: original.color,
+        symbol: original.symbol,
+        startTime: original.startTime,
+        endTime: original.endTime,
+        breakMinutes: original.breakMinutes,
+        notification: original.notification,
+      });
+    }
+    expect(await listTemplates(db)).toEqual(saved);
+    expect(await listCalendarEntries(db)).toEqual([]);
+  });
+
+  it("does not write or revise templates for a drop into the original position", async () => {
+    const before = await listTemplates(db);
+    expect(await reorderTemplates(db, before)).toEqual(before);
+    expect(await listTemplates(db)).toEqual(before);
+  });
+
+  it("rejects duplicate, incomplete and stale template permutations without overwriting newer data", async () => {
+    const before = await listTemplates(db);
+    await expect(reorderTemplates(db, [...before.slice(1), before[1]])).rejects.toThrow();
+    await expect(reorderTemplates(db, before.slice(1))).rejects.toThrow();
+    expect(await listTemplates(db)).toEqual(before);
+    const updated = await saveTemplate(db, {
+      ...before[0],
+      expectedRevision: before[0].revision,
+      name: "Aktualisiert",
+    });
+    const newer = await listTemplates(db);
+    await expect(reorderTemplates(db, [...before.slice(1), before[0]])).rejects.toThrow();
+    expect(await listTemplates(db)).toEqual(newer);
+    expect(newer.find((template) => template.id === updated.id)?.name).toBe("Aktualisiert");
+  });
+
+  it("rolls back the complete drop when a later template rank update fails", async () => {
+    const before = await listTemplates(db);
+    const requested = [...before.slice(1), before[0]];
+    testDb.database.exec(
+      `CREATE TRIGGER fail_template_drop BEFORE UPDATE OF sort_order ON shift_templates
+       WHEN OLD.id = '${requested[1].id}'
+       BEGIN SELECT RAISE(ABORT, 'injected drop failure'); END`,
+    );
+    await expect(reorderTemplates(db, requested)).rejects.toThrow("injected drop failure");
+    expect(await listTemplates(db)).toEqual(before);
   });
 
   it("swaps template sort order atomically", async () => {

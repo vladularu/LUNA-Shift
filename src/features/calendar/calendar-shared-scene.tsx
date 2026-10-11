@@ -1,15 +1,18 @@
-import { createContext, use, useMemo, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { createContext, use, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
+  withTiming,
   type SharedValue,
 } from "react-native-reanimated";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { today } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
-import { RADII } from "@/theme/tokens";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
 import type { CalendarAnchorRect } from "./calendar-layout";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import { PrototypeDates, PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
@@ -18,6 +21,10 @@ import { useCalendarHolidayResolution } from "./calendar-holidays";
 import { stampDayAccessibilityHint } from "./stamp-accessibility";
 import { useCalendarController, type CalendarController } from "./use-calendar-controller";
 import { CalendarMonthBackground } from "./calendar-background";
+import {
+  QUICK_PLANNER_EASING,
+  quickPlannerTransitionDuration,
+} from "./quick-planner-control-motion";
 
 interface SceneValue {
   progress: SharedValue<number>;
@@ -143,6 +150,7 @@ export function SharedCalendarMonth({
   accessibilityVisible,
   testData,
   stampMode = false,
+  stampTransitionProgress,
   stampToolLabel = null,
 }: {
   month: string;
@@ -157,11 +165,21 @@ export function SharedCalendarMonth({
   accessibilityVisible: boolean;
   testData: boolean;
   stampMode?: boolean;
+  stampTransitionProgress?: SharedValue<number>;
   stampToolLabel?: string | null;
 }) {
   const scene = use(Scene);
   const palette = usePalette();
   const still = useSharedValue(1);
+  const internalStampProgress = useSharedValue(stampMode ? 1 : 0);
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    if (stampTransitionProgress) return;
+    internalStampProgress.value = withTiming(stampMode ? 1 : 0, {
+      duration: quickPlannerTransitionDuration(stampMode, reduced),
+      easing: QUICK_PLANNER_EASING,
+    });
+  }, [internalStampProgress, reduced, stampMode, stampTransitionProgress]);
   const holidays = useCalendarHolidayResolution(month, profile, ruleResolver, showHolidays);
   if (!scene) throw new Error("SharedCalendarMonth requires SharedCalendarScene");
   return (
@@ -176,6 +194,7 @@ export function SharedCalendarMonth({
       accessibilityVisible={accessibilityVisible}
       testData={testData}
       stampMode={stampMode}
+      stampTransitionProgress={stampTransitionProgress ?? internalStampProgress}
       stampToolLabel={stampToolLabel}
       scene={scene}
       still={still}
@@ -200,6 +219,7 @@ function SharedMonthBody({
   holidays,
   separator,
   stampMode,
+  stampTransitionProgress,
   stampToolLabel,
 }: Omit<Parameters<typeof SharedCalendarMonth>[0], "ruleResolver" | "showHolidays"> & {
   scene: SceneValue;
@@ -234,7 +254,7 @@ function SharedMonthBody({
         layout={layout}
         progress={progress}
         currentDate={currentDate}
-        selectedDate={visible ? selectedDate : null}
+        selectedDate={scene.mode === "MONTH" ? selectedDate : null}
       />
       <View
         pointerEvents={visible ? "box-none" : "none"}
@@ -262,26 +282,60 @@ function SharedMonthBody({
               });
             }}
             style={{
+              borderCurve: CORNER_CURVE,
               position: "absolute",
               left: day.toX - layout.cellWidth / 2,
               top: day.toY - 20,
               width: layout.cellWidth,
               height: layout.weekHeight,
               borderRadius: RADII.small,
-              borderWidth:
-                stampMode &&
-                !entriesByDate.get(day.date)?.length &&
-                selectedDate !== day.date &&
-                day.date !== currentDate
-                  ? 1
-                  : 0,
+              borderWidth: 0,
               borderColor: separator,
             }}
-          />
+          >
+            {!entriesByDate.get(day.date)?.length &&
+            selectedDate !== day.date &&
+            day.date !== currentDate &&
+            stampTransitionProgress ? (
+              <StampDayOutline
+                date={day.date}
+                progress={stampTransitionProgress}
+                color={separator}
+              />
+            ) : null}
+          </Pressable>
         ))}
       </View>
       {testData ? <Text style={{ position: "absolute", bottom: 0 }}>Testdaten</Text> : null}
     </Animated.View>
+  );
+}
+
+function StampDayOutline({
+  date,
+  progress,
+  color,
+}: {
+  date: string;
+  progress: SharedValue<number>;
+  color: string;
+}) {
+  const motionStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      testID={`quick-stamp-outline-${date}`}
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          borderWidth: 1,
+          borderColor: color,
+          borderRadius: RADII.small,
+          borderCurve: CORNER_CURVE,
+        },
+        motionStyle,
+      ]}
+    />
   );
 }
 

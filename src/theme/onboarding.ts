@@ -25,10 +25,14 @@ export function useOnboardingPalette() {
   };
 }
 export const ONBOARDING_TYPOGRAPHY = {
-  body: { fontSize: 17, lineHeight: 24 },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: "500" },
+  body: TYPOGRAPHY.bodyLarge,
+  label: {
+    fontSize: TYPOGRAPHY.compact.fontSize,
+    lineHeight: TYPOGRAPHY.small.lineHeight,
+    fontWeight: "500",
+  },
   caption: { ...TYPOGRAPHY.highlightSummary, fontWeight: "400" },
-  title: { fontSize: 28, lineHeight: 34, fontWeight: "600", letterSpacing: -0.7 },
+  title: TYPOGRAPHY.dialogTitle,
   display: { fontSize: 34, lineHeight: 40, fontWeight: "600", letterSpacing: -1 },
   numericInput: { fontSize: 48, lineHeight: 56, fontWeight: "400", fontVariant: ["tabular-nums"] },
   button: { ...TYPOGRAPHY.highlightTitle, letterSpacing: 0 },

@@ -1,4 +1,4 @@
-import type { ComponentProps, Key, PropsWithChildren, ReactNode } from "react";
+import type { ComponentProps, Key, PropsWithChildren, ReactNode, RefObject } from "react";
 import { useContext } from "react";
 import {
   ScrollView,
@@ -25,6 +25,7 @@ export function ScreenScrollView({
   contentInsetAdjustmentBehavior = "automatic",
   style,
   surface = "background",
+  scrollRef,
   ...scrollViewProps
 }: PropsWithChildren<
   Omit<ScrollViewProps, "contentContainerStyle"> & {
@@ -32,6 +33,7 @@ export function ScreenScrollView({
     readonly contentContainerStyle?: StyleProp<ViewStyle>;
     readonly contentGap?: number;
     readonly surface?: ScreenSurface;
+    readonly scrollRef?: RefObject<ScrollView | null>;
   }
 >) {
   const palette = usePalette();
@@ -39,6 +41,7 @@ export function ScreenScrollView({
   return (
     <ScrollView
       {...scrollViewProps}
+      ref={scrollRef}
       contentInsetAdjustmentBehavior={contentInsetAdjustmentBehavior}
       contentContainerStyle={[
         {

@@ -11,6 +11,9 @@ import { NetPayAutomaticScreen } from "./net-pay-automatic-screen";
 import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
 import { NetPayScreen } from "./net-pay-screen";
 import { SalaryScreen } from "./salary-screen";
+jest.mock("@/features/report-export/report-export-button", () => ({
+  ReportExportButton: () => null,
+}));
 
 let mockSettings: MonthlyNetPaySettings | null = automatedSettings("2026-06");
 const mockProfile = forecastProfile;

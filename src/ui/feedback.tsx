@@ -1,4 +1,5 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import {
   createContext,
   useCallback,
@@ -9,14 +10,14 @@ import {
   use,
   type PropsWithChildren,
 } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { usePalette } from "@/theme/palette";
 import { MOTION } from "@/theme/motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, SHADOWS, RADII, SPACING } from "@/theme/tokens";
 
 interface FeedbackOptions {
   readonly message: string;
@@ -121,9 +122,9 @@ function FeedbackSnackbar({
         alignItems: "center",
         gap: SPACING.md,
         borderRadius: RADII.large,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: palette.text,
-        boxShadow: `0 12px 32px ${palette.shadow}`,
+        boxShadow: SHADOWS.overlay,
         paddingLeft: SPACING.lg,
         paddingRight: SPACING.sm,
         paddingVertical: SPACING.sm,
@@ -140,6 +141,7 @@ function FeedbackSnackbar({
           accessibilityRole="button"
           onPress={() => void runAction()}
           style={({ pressed }) => ({
+            borderCurve: CORNER_CURVE,
             minWidth: 44,
             minHeight: 44,
             alignItems: "center",

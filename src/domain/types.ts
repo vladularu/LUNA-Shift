@@ -439,6 +439,8 @@ export interface ComplianceIssue {
 }
 
 export interface MonthlyComplianceResult {
+  readonly prerequisites?: readonly ComplianceIssue[];
+  readonly prerequisiteCount?: number;
   readonly month: string;
   readonly issues: readonly ComplianceIssue[];
   readonly criticalCount: number;

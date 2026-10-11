@@ -1,33 +1,28 @@
 import type { CalendarAnchorRect, CalendarPopupPlacement } from "./calendar-layout";
+import { Easing } from "react-native-reanimated";
 import { MOTION } from "@/theme/motion";
-import { CALENDAR_METRICS, SPACING } from "@/theme/tokens";
+
+export const QUICK_ENTRY_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 
 export function quickEntryTransitionDuration(open: boolean, reduceMotion: boolean): number {
   if (reduceMotion) return MOTION.duration.instant;
-  return open ? MOTION.duration.scene : MOTION.duration.deliberate;
+  return open ? 320 : 240;
 }
 
 export interface QuickEntryAnchorMotion {
-  readonly translateX: number;
   readonly translateY: number;
-  readonly scale: number;
+  readonly pivotY: number;
 }
 
 export function quickEntryAnchorMotion(
   anchor: CalendarAnchorRect,
   placement: CalendarPopupPlacement,
-  popupWidth: number,
   popupHeight: number,
 ): QuickEntryAnchorMotion {
-  // The day number occupies the top of the measured cell, above its shift chips.
-  const dayHeadingHeight = Math.min(anchor.height, CALENDAR_METRICS.dayNumberHeight + SPACING.sm);
+  const below = placement.direction === "BELOW";
+  const edge = below ? 0 : popupHeight;
   return {
-    translateX: anchor.x + anchor.width / 2 - (placement.left + popupWidth / 2),
-    translateY: anchor.y + dayHeadingHeight / 2 - (placement.top + popupHeight / 2),
-    scale: Math.min(
-      1,
-      Math.max(1, anchor.width) / popupWidth,
-      Math.max(1, dayHeadingHeight) / popupHeight,
-    ),
+    translateY: anchor.y + (below ? anchor.height : 0) - (placement.top + edge),
+    pivotY: below ? -popupHeight / 2 : popupHeight / 2,
   };
 }

@@ -6,6 +6,14 @@ import type { KeyboardEvent, KeyboardEventName } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { EntryEditOverlayFrame } from "@/features/day-editor/entry-edit-overlay-frame";
+import { SPACING } from "@/theme/tokens";
+
+let mockReduceMotion = false;
+jest.mock("react-native-reanimated", () => ({
+  __esModule: true,
+  ...jest.requireActual<typeof import("react-native-reanimated")>("react-native-reanimated"),
+  useReducedMotion: () => mockReduceMotion,
+}));
 
 const keyboardEvent: KeyboardEvent = {
   duration: 250,
@@ -40,7 +48,6 @@ async function setup(visible = false) {
           durationMinutes={60}
           error={null}
           headerColor="#C93443"
-          headerForeground="#FFFFFF"
           onDismiss={onDismiss}
           onRequestClose={onRequestClose}
           testIDPrefix="test-edit"
@@ -60,6 +67,7 @@ async function setup(visible = false) {
 }
 
 afterEach(() => {
+  mockReduceMotion = false;
   jest.restoreAllMocks();
 });
 
@@ -69,10 +77,10 @@ describe("Entry editor keyboard action", () => {
     const fields = screen.getByTestId("test-edit-fields");
     expect(screen.getByTestId("test-edit-safe-viewport")).toHaveStyle({
       flex: 1,
-      paddingTop: 59,
-      paddingBottom: 0,
+      paddingTop: SPACING.sm,
     });
-    expect(fields).toHaveStyle({ flexGrow: 0, flexShrink: 1 });
+    // An explicit fallback flexGrow: 0 wins over flex: 1 in native Yoga.
+    expect(fields).toHaveStyle({ flexGrow: 1, flexShrink: 1, flexBasis: 0 });
     expect(fields).toHaveProp("contentContainerStyle", { paddingBottom: 72 });
     expect(screen.getByTestId("test-edit-card")).toHaveStyle({
       borderBottomLeftRadius: 0,
@@ -92,14 +100,18 @@ describe("Entry editor keyboard action", () => {
   it("offers only keyboard dismissal while typing and restores the save action afterward", async () => {
     const { screen, emit, onRequestClose } = await setup();
     expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
+    expect(screen.getByTestId("test-edit-close-arrival").props.entering).toBeUndefined();
+    expect(screen.getByTestId("test-edit-sheet").parent!.props.entering).toBeUndefined();
+    expect(screen.queryByTestId("test-edit-backdrop")).toBeNull();
     await emit("keyboardWillShow");
     expect(screen.queryByRole("button", { name: "Schließen und speichern" })).toBeNull();
     expect(screen.getByRole("button", { name: "Fertig, Tastatur schließen" })).toBeTruthy();
     await emit("keyboardWillHide");
     expect(screen.queryByRole("button", { name: "Fertig, Tastatur schließen" })).toBeNull();
     expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
-    expect(screen.getByTestId("test-edit-safe-viewport")).toHaveStyle({ paddingBottom: 34 });
-    expect(screen.getByTestId("test-edit-card")).toHaveStyle({ borderRadius: 22 });
+    expect(screen.getByTestId("test-edit-close-arrival").props.entering).toBeUndefined();
+    expect(screen.getByTestId("test-edit-close-arrival")).toHaveStyle({ paddingBottom: 34 });
+    expect(screen.getByTestId("test-edit-card")).toHaveStyle({ borderRadius: 0 });
     expect(screen.getByTestId("test-edit-fields").props.contentContainerStyle).toBeUndefined();
     expect(onRequestClose).not.toHaveBeenCalled();
   });
@@ -156,5 +168,14 @@ describe("Entry editor keyboard action", () => {
     await screen.unmount();
     expect(subscriptions.length).toBeGreaterThanOrEqual(2);
     for (const remove of subscriptions) expect(remove).toHaveBeenCalled();
+  });
+
+  it("omits the sheet slide and footer arrival when motion is reduced", async () => {
+    mockReduceMotion = true;
+    const { screen, onRequestClose } = await setup();
+    expect(screen.getByTestId("test-edit-close-arrival").props.entering).toBeUndefined();
+    expect(screen.getByTestId("test-edit-sheet").parent!.props.entering).toBeUndefined();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+    expect(onRequestClose).toHaveBeenCalledTimes(1);
   });
 });

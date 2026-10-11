@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Text } from "@/ui/text";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";

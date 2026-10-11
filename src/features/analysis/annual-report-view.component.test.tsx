@@ -7,6 +7,9 @@ import { annualDetailsRoute } from "@/navigation/routes";
 import type { ShiftType } from "@/domain/types";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { AnnualReportScreen, AnnualReportDetails } from "@/features/analysis/annual-report-view";
+jest.mock("@/features/report-export/report-export-button", () => ({
+  ReportExportButton: () => null,
+}));
 
 const report: AnnualReport = {
   year: 2026,
@@ -53,6 +56,40 @@ jest.mock("@/features/settings/check-preferences", () => ({
 const props = { report, testMonths: [], onBackToMonth: jest.fn(), onMoveYear: jest.fn() };
 
 describe("annual report view", () => {
+  it("keeps months with open prerequisites accessible without counting them as warnings", async () => {
+    const limited: AnnualReport = {
+      ...report,
+      months: report.months.map((month, index) => ({
+        ...month,
+        checkCounts: {
+          legal: {
+            criticalCount: 0,
+            warningCount: 0,
+            infoCount: 0,
+            ...(index === 7 ? { prerequisiteCount: 3 } : {}),
+          },
+          planning: { criticalCount: 0, warningCount: 0, infoCount: 0 },
+        },
+      })),
+    };
+    const screen = await render(<AnnualReportScreen {...props} report={limited} />);
+    expect(screen.getByRole("button", { name: "Prüfung, Prüfung eingeschränkt" })).toBeTruthy();
+    expect(screen.queryByText(/Warnungen/)).toBeNull();
+    const onSelectMonth = jest.fn();
+    await screen.rerender(
+      <AnnualReportDetails
+        report={limited}
+        section="CHECK"
+        testMonths={[]}
+        onSelectMonth={onSelectMonth}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Angaben ergänzen" })).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^August 2026, Prüfung eingeschränkt/ }),
+    );
+    expect(onSelectMonth).toHaveBeenCalledWith("2026-08");
+  });
   beforeEach(() => {
     mockPlanning = true;
   });

@@ -137,7 +137,7 @@ describe("grouped salary choice on iPhone", () => {
     );
     expect(TEXT_MAX_SCALE).toBe(0);
     expect(dialog.getByRole("button", { name: "TV-UK Pflege · Baden-Württemberg" })).toHaveStyle({
-      minHeight: 48,
+      minHeight: 40,
     });
     expect(screen.getByTestId("dropdown-modal-content")).toHaveStyle({ paddingBottom: 34 });
   });
@@ -168,7 +168,7 @@ describe("grouped salary choice on iPhone", () => {
     expect(dialog.getByRole("button", { name: "West" })).toHaveProp("accessibilityState", {
       selected: true,
     });
-    expect(dialog.getByRole("button", { name: "Ost" })).toHaveStyle({ minHeight: 48 });
+    expect(dialog.getByRole("button", { name: "Ost" })).toHaveStyle({ minHeight: 40 });
     expect(
       screen.getByTestId("selection-sheet-grabber", { includeHiddenElements: true }),
     ).toBeTruthy();

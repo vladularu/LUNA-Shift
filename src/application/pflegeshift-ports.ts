@@ -143,6 +143,9 @@ export interface PflegeShiftRepositoryPort {
     first: ShiftTemplate,
     second: ShiftTemplate,
   ) => Promise<readonly [ShiftTemplate, ShiftTemplate]>;
+  readonly reorderTemplates: (
+    templates: readonly ShiftTemplate[],
+  ) => Promise<readonly ShiftTemplate[]>;
   readonly listCalendarEntries: (
     startDate?: string,
     endDate?: string,

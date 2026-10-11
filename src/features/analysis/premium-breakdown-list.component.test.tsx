@@ -57,7 +57,7 @@ describe("premium details interaction", () => {
   it("opens individual services and filters without replacing the monthly total", async () => {
     const screen = await render(<PremiumBreakdownList pay={pay} shifts={[]} />);
     expect(screen.queryByText("Sonntagsarbeit")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: /Sonntag, 25/ }));
+    await fireEvent.press(screen.getByRole("radio", { name: /Sonntag, 25/ }));
     expect(screen.getByText(/Gefiltert: Sonntag/)).toBeTruthy();
     expect(within(screen.getByTestId("analysis-detail-summary")).getByText("45,00 €")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /Dienst, 25/ }));
@@ -65,7 +65,7 @@ describe("premium details interaction", () => {
     expect(screen.queryByText("Nachtarbeit")).toBeNull();
     expect(screen.getByText(/Berücksichtigte Zeit: 4:00 h/)).toBeTruthy();
     expect(screen.getByText(/25 % · Stundenbasis 25,00/)).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: /Alle, 45/ }));
+    await fireEvent.press(screen.getByRole("radio", { name: /Alle, 45/ }));
     expect(screen.queryByText(/Gefiltert:/)).toBeNull();
     expect(screen.queryByText("Sonntagsarbeit")).toBeNull();
     expect(screen.getAllByRole("button", { expanded: false })).toHaveLength(2);

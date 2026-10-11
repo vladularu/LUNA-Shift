@@ -1,13 +1,21 @@
+import { Text } from "@/ui/text";
 import type { PropsWithChildren } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { RADII, REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { ScreenScrollView } from "@/ui/screen-layout";
 
-export function ReportScrollView({ children }: PropsWithChildren) {
-  return <ScreenScrollView surface="groupedBackground">{children}</ScreenScrollView>;
+export function ReportScrollView({
+  children,
+  bottomPadding,
+}: PropsWithChildren<{ readonly bottomPadding?: number }>) {
+  return (
+    <ScreenScrollView surface="groupedBackground" bottomPadding={bottomPadding}>
+      {children}
+    </ScreenScrollView>
+  );
 }
 
 export function ReportTestBadge() {

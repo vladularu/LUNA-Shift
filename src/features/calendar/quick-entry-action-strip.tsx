@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { QuickEntryActionTile } from "@/features/calendar/quick-entry-action-tile";
 import { QUICK_PLANNER_METRICS } from "@/features/calendar/quick-planner-appearance";
-import { useInversePalette } from "@/theme/palette";
+import { usePalette } from "@/theme/palette";
 
 export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   actions,
@@ -19,7 +19,7 @@ export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   readonly onSelectAction: (action: QuickEntryAction) => void;
   readonly tileWidth: number;
 }) {
-  const palette = useInversePalette();
+  const palette = usePalette();
 
   return (
     <ScrollView

@@ -1,12 +1,13 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import type { PropsWithChildren } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import type { ShiftTemplate } from "@/domain/types";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 
 export function shiftTemplateSubtitle(template: ShiftTemplate): string {
@@ -176,8 +177,8 @@ const styles = StyleSheet.create({
   card: {
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: RADII.large,
-    borderCurve: "continuous",
+    borderRadius: RADII.card,
+    borderCurve: CORNER_CURVE,
   },
   row: {
     minHeight: 72,
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.sm,
   },
   select: {
+    borderCurve: CORNER_CURVE,
     minWidth: 0,
     minHeight: 72,
     flex: 1,

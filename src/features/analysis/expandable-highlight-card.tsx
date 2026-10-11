@@ -1,10 +1,11 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import type { ComponentProps, ReactNode } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { AnalysisCardDetails } from "@/features/analysis/analysis-card-details";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardFooterLine, CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { AnalysisCountBadge } from "./analysis-count-badge";
 
@@ -55,6 +56,7 @@ export function ExpandableHighlightCard({
             <View
               accessibilityElementsHidden
               style={{
+                borderCurve: CORNER_CURVE,
                 width: 28,
                 height: 28,
                 alignItems: "center",

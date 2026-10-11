@@ -1,12 +1,18 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { useEffect } from "react";
-import { AccessibilityInfo, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, View, useWindowDimensions } from "react-native";
 import { CALENDAR_IMAGE_STRENGTH_OPTIONS } from "@/theme/calendar-image";
 import { useCalendarBackground } from "./calendar-background-context";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, SPACING, RADII } from "@/theme/tokens";
-import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CardSeparator, InlineNotice, RowButton, SegmentedControl } from "@/ui/design-system";
+import { SPACING } from "@/theme/tokens";
+import {
+  CardSeparator,
+  InlineNotice,
+  RowButton,
+  SegmentedControl,
+  SurfaceCard,
+} from "@/ui/design-system";
+import { SelectionGroup } from "@/ui/selection-group";
 import { selectionFeedback } from "@/ui/haptics";
 
 export function CalendarBackgroundControl() {
@@ -21,7 +27,7 @@ export function CalendarBackgroundControl() {
   }, [background.canUndoRemoval]);
   return (
     <>
-      <View style={{ padding: SPACING.md }}>
+      <SelectionGroup title="Kalenderhintergrund" testID="calendar-background-settings">
         <SegmentedControl
           accessibilityLabel="Kalenderhintergrund"
           items={[
@@ -39,117 +45,82 @@ export function CalendarBackgroundControl() {
             }
           }}
         />
-      </View>
+      </SelectionGroup>
       {background.uri ? (
-        <>
-          <CardSeparator inset={0} />
-          <View style={{ padding: SPACING.md, gap: SPACING.sm }}>
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}
-            >
-              Bildsichtbarkeit
-            </Text>
-            <View
-              accessibilityRole="radiogroup"
-              accessibilityLabel="Bildsichtbarkeit"
-              style={{
-                flexDirection: stacked ? "column" : "row",
-                gap: SPACING.xxs,
-                padding: SPACING.xxs,
-                borderRadius: RADII.control,
-                backgroundColor: palette.surfaceMuted,
-              }}
-            >
-              {CALENDAR_IMAGE_STRENGTH_OPTIONS.map((option) => {
-                const selected = background.strength === option.value;
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="radio"
-                    accessibilityLabel={option.label}
-                    accessibilityState={{ checked: selected, disabled }}
-                    disabled={disabled}
-                    onPress={() => {
-                      if (!selected) {
-                        selectionFeedback();
-                        void background.setStrength(option.value);
-                      }
-                    }}
-                    style={({ pressed }) => ({
-                      minHeight: CONTROL_HEIGHT.regular,
-                      flex: stacked ? undefined : 1,
-                      paddingVertical: SPACING.sm,
-                      paddingHorizontal: SPACING.xs,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: RADII.small,
-                      backgroundColor: selected ? palette.surfaceRaised : "transparent",
-                      opacity: disabled ? 0.5 : pressed ? 0.72 : 1,
-                    })}
-                  >
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{
-                        ...TYPOGRAPHY.label,
-                        color: selected ? palette.primary : palette.textSecondary,
-                      }}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        </>
-      ) : null}
-      <CardSeparator inset={0} />
-      <RowButton
-        title={background.uri ? "Foto ändern" : "Foto auswählen"}
-        disabled={disabled}
-        onPress={() => void background.choose()}
-        accessibilityHint="Das Kalenderfoto bleibt nur auf diesem Gerät."
-        leading={
-          <Ionicons name="image-outline" size={24} color={palette.primary} accessible={false} />
-        }
-      />
-      {background.uri ? (
-        <>
-          <CardSeparator inset={0} />
-          <RowButton
-            title="Foto entfernen"
-            destructive
+        <SelectionGroup title="Bildsichtbarkeit" testID="calendar-image-strength-settings">
+          <SegmentedControl
+            accessibilityLabel="Bildsichtbarkeit"
+            value={String(background.strength)}
             disabled={disabled}
-            onPress={() => void background.remove()}
-            trailing={<></>}
-            accessibilityHint="Setzt nur den Kalenderhintergrund zurück. Du kannst das Entfernen rückgängig machen."
-            leading={
-              <Ionicons name="trash-outline" size={24} color={palette.danger} accessible={false} />
-            }
+            stacked={stacked}
+            items={CALENDAR_IMAGE_STRENGTH_OPTIONS.map((option) => ({
+              value: String(option.value),
+              label: option.label,
+            }))}
+            onChange={(value) => {
+              const option = CALENDAR_IMAGE_STRENGTH_OPTIONS.find(
+                (candidate) => String(candidate.value) === value,
+              );
+              if (option && background.strength !== option.value) {
+                selectionFeedback();
+                void background.setStrength(option.value);
+              }
+            }}
           />
-        </>
+        </SelectionGroup>
       ) : null}
-      {background.canUndoRemoval ? (
-        <>
-          <CardSeparator inset={0} />
-          <RowButton
-            title="Rückgängig"
-            disabled={disabled}
-            onPress={() => void background.undoRemove()}
-            trailing={<></>}
-            accessibilityHint="Stellt dein zuletzt entferntes Kalenderfoto wieder her."
-            leading={
-              <Ionicons
-                name="arrow-undo-outline"
-                size={24}
-                color={palette.primary}
-                accessible={false}
-              />
-            }
-          />
-        </>
-      ) : null}
+      <SurfaceCard testID="calendar-photo-actions">
+        <RowButton
+          title={background.uri ? "Foto ändern" : "Foto auswählen"}
+          disabled={disabled}
+          onPress={() => void background.choose()}
+          accessibilityHint="Das Kalenderfoto bleibt nur auf diesem Gerät."
+          leading={
+            <Ionicons name="image-outline" size={24} color={palette.primary} accessible={false} />
+          }
+        />
+        {background.uri ? (
+          <>
+            <CardSeparator inset={0} />
+            <RowButton
+              title="Foto entfernen"
+              destructive
+              disabled={disabled}
+              onPress={() => void background.remove()}
+              trailing={<></>}
+              accessibilityHint="Setzt nur den Kalenderhintergrund zurück. Du kannst das Entfernen rückgängig machen."
+              leading={
+                <Ionicons
+                  name="trash-outline"
+                  size={24}
+                  color={palette.danger}
+                  accessible={false}
+                />
+              }
+            />
+          </>
+        ) : null}
+        {background.canUndoRemoval ? (
+          <>
+            <CardSeparator inset={0} />
+            <RowButton
+              title="Rückgängig"
+              disabled={disabled}
+              onPress={() => void background.undoRemove()}
+              trailing={<></>}
+              accessibilityHint="Stellt dein zuletzt entferntes Kalenderfoto wieder her."
+              leading={
+                <Ionicons
+                  name="arrow-undo-outline"
+                  size={24}
+                  color={palette.primary}
+                  accessible={false}
+                />
+              }
+            />
+          </>
+        ) : null}
+      </SurfaceCard>
       {background.error ? (
         <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
           <InlineNotice message={background.error} />

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { View } from "react-native";
 import { usePflegeShiftEntries, usePflegeShiftProfile } from "@/application/pflegeshift-provider";
 import { premiumDetailsRoute, settingsEditorRoute } from "@/navigation/routes";
 import { SPACING } from "@/theme/tokens";

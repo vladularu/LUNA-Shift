@@ -47,7 +47,7 @@ jest.mock("@/application/pflegeshift-provider", () => ({
         deletedAt: null,
       },
     ],
-    moveTemplate: mockMoveTemplate,
+    moveTemplateToIndex: mockMoveTemplate,
     removeTemplate: mockRemoveTemplate,
   }),
 }));
@@ -80,7 +80,7 @@ describe("TemplatesManagerScreen", () => {
       ]),
     );
     expect(screen.getByTestId("template-manager-list")).toHaveStyle({
-      borderRadius: RADII.large,
+      borderRadius: RADII.card,
     });
     expect(screen.getByTestId("template-manager-row-early")).toHaveStyle({ minHeight: 72 });
     expect(screen.getByTestId("template-manager-row-early-badge")).toHaveStyle({
@@ -111,8 +111,9 @@ describe("TemplatesManagerScreen", () => {
       backgroundColor: LIGHT_PALETTE.sortAction,
     });
     expect(screen.queryByTestId("template-manager-add-row")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Früh sortieren" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Nach unten" }));
+    await fireEvent(screen.getByTestId("template-manager-sort-row-early"), "accessibilityAction", {
+      nativeEvent: { actionName: "increment" },
+    });
     expect(mockMoveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: "early" }), 1);
     await fireEvent.press(screen.getByRole("button", { name: "Sortieren beenden" }));
     expect(screen.getByTestId("template-manager-add-row")).toBeVisible();

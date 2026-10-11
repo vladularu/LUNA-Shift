@@ -72,6 +72,12 @@ function WorkProfileForm({ profile }: { readonly profile: UserProfile }) {
           />
           <CardSeparator />
           <RowButton
+            title="Dienstplanprüfung"
+            subtitle="Angaben ansehen oder ergänzen"
+            onPress={() => router.push("/check-profile")}
+          />
+          <CardSeparator />
+          <RowButton
             title="Tarif & Gehalt"
             subtitle={profileSalaryLabel(profile)}
             onPress={() => router.push(settingsEditorRoute("TARIFF"))}

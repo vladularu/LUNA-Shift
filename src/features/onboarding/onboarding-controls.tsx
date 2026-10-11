@@ -1,6 +1,7 @@
+import { Text, TextInput } from "@/ui/text";
 import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { RADII, SPACING, CONTROL_HEIGHT } from "@/theme/tokens";
+import MaterialCommunityIcons from "@/ui/icon";
+import { CORNER_CURVE, RADII, SPACING, CONTROL_HEIGHT } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { useState, type RefObject } from "react";
 import {
@@ -9,8 +10,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -282,6 +281,7 @@ const s = StyleSheet.create({
   field: { gap: SPACING.sm },
   error: ONBOARDING_TYPOGRAPHY.caption,
   choice: {
+    borderCurve: CORNER_CURVE,
     minHeight: 64,
     padding: SPACING.lg,
     borderRadius: RADII.control,
@@ -290,6 +290,7 @@ const s = StyleSheet.create({
     gap: 14,
   },
   radio: {
+    borderCurve: CORNER_CURVE,
     width: 20,
     height: 20,
     borderRadius: RADII.small,
@@ -299,6 +300,7 @@ const s = StyleSheet.create({
   },
   dot: { width: 10, height: 10, borderRadius: RADII.pill },
   select: {
+    borderCurve: CORNER_CURVE,
     minHeight: CONTROL_HEIGHT.large,
     padding: SPACING.md,
     borderWidth: 1,
@@ -309,6 +311,7 @@ const s = StyleSheet.create({
   },
   compactSelect: { minHeight: CONTROL_HEIGHT.compact, padding: 0, borderWidth: 0 },
   numericCard: {
+    borderCurve: CORNER_CURVE,
     borderWidth: 1,
     borderRadius: RADII.control,
     paddingVertical: SPACING.md,
@@ -320,6 +323,7 @@ const s = StyleSheet.create({
     paddingBottom: SPACING.sm,
   },
   input: {
+    borderCurve: CORNER_CURVE,
     minHeight: CONTROL_HEIGHT.large,
     padding: SPACING.md,
     borderWidth: 1,
@@ -335,7 +339,13 @@ const s = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   modal: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: SPACING.xl },
-  modalCard: { width: "100%", maxWidth: 420, borderRadius: RADII.card, overflow: "hidden" },
+  modalCard: {
+    borderCurve: CORNER_CURVE,
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: RADII.large,
+    overflow: "hidden",
+  },
   optionScroll: { flexGrow: 0, flexShrink: 1 },
   modalHeader: { flexDirection: "row", alignItems: "center", padding: SPACING.xl, gap: SPACING.md },
   modalTitle: { ...TYPOGRAPHY.screenTitle, flex: 1 },

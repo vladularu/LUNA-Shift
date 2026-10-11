@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "test:build-dependencies": "node --test scripts/build-dependencies.test.mjs",
+    "test:calendar-worklets": "node --test scripts/calendar-worklet-runtime.test.mjs",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -16,7 +17,7 @@
     "test:watch": "vitest",
     "test:rules": "vitest run src/rules/validation.test.ts",
     "test:components": "jest --runInBand",
-    "test:all": "npm run test && npm run test:components && npm run test:rules-publisher && npm run test:rules-delivery && npm run test:rules-production-preflight && npm run test:rules-production-provisioning && npm run test:rules-production-trust && npm run test:rules-operator && npm run test:tariff-inventory && npm run test:audit-policy && npm run test:runtime-policy && npm run test:build-dependencies",
+    "test:all": "npm run test && npm run test:components && npm run test:rules-publisher && npm run test:rules-delivery && npm run test:rules-production-preflight && npm run test:rules-production-provisioning && npm run test:rules-production-trust && npm run test:rules-operator && npm run test:tariff-inventory && npm run test:audit-policy && npm run test:runtime-policy && npm run test:build-dependencies && npm run test:calendar-worklets",
     "test:rules-publisher": "node --import tsx --test scripts/publish-rule-catalog.test.mjs",
     "test:rules-delivery": "node --import tsx --test scripts/deliver-rule-catalog.test.mjs",
     "test:rules-production-preflight": "node --import tsx --test scripts/production-rule-catalog-preflight.test.mjs",
@@ -90,7 +91,10 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "lucide-react-native": "0.577.0",
+    "react-native-svg": "15.15.4",
+    "expo-print": "~57.0.2"
   },
   "devDependencies": {
     "@react-native/jest-preset": "^0.86.3",

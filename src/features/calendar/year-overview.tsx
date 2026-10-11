@@ -1,10 +1,11 @@
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
   FlatList,
   Platform,
   Pressable,
-  Text,
   View,
   useWindowDimensions,
   type ListRenderItemInfo,
@@ -15,7 +16,7 @@ import type { UserProfile } from "@/domain/types";
 import { createMonthGrid, today } from "@/engine/calendar";
 import { yearMonths } from "@/features/calendar/calendar-display";
 import { usePalette } from "@/theme/palette";
-import { COMPACT_TEXT_MAX_SCALE } from "@/theme/typography";
+import { COMPACT_TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CalendarMorphMotion, useCalendarMorphMeasurement } from "./calendar-morph-measurement";
 import { MINI_MONTH_MOTION_METRICS } from "./calendar-morph-geometry";
 
@@ -112,7 +113,8 @@ const MiniMonth = memo(function MiniMonth({
           numberOfLines={1}
           style={{
             color: currentMonth ? palette.primary : palette.text,
-            fontSize: 19,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.pickerValue.fontSize,
             fontWeight: "700",
             marginBottom: 5,
           }}
@@ -164,6 +166,7 @@ const MiniMonth = memo(function MiniMonth({
                         : cell.weekend
                           ? palette.textMuted
                           : palette.text,
+                      fontFamily: INTER_FONTS.regular,
                       fontSize: MINI_MONTH_MOTION_METRICS.fontSize,
                       fontWeight: isToday ? "700" : "500",
                       fontVariant: ["tabular-nums"],

@@ -10,6 +10,20 @@ import {
   ShiftEditOverlay,
   shouldDismissShiftEditOverlay,
 } from "@/features/day-editor/shift-edit-overlay";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+
+let mockNativePresentation = true;
+jest.mock("@/features/day-editor/entry-edit-overlay-frame", () => {
+  const actual = jest.requireActual<
+    typeof import("@/features/day-editor/entry-edit-overlay-frame")
+  >("@/features/day-editor/entry-edit-overlay-frame");
+  return {
+    ...actual,
+    EntryEditOverlayFrame: (props: React.ComponentProps<typeof actual.EntryEditOverlayFrame>) => (
+      <actual.EntryEditOverlayFrame {...props} nativePresentation={mockNativePresentation} />
+    ),
+  };
+});
 
 async function renderOverlay(
   overrides: Partial<React.ComponentProps<typeof ShiftEditOverlay>> = {},
@@ -68,7 +82,17 @@ describe("ShiftEditOverlay", () => {
   it("shows the saved location map without changing the location action", async () => {
     const { screen, props } = await renderOverlay({
       location: { name: "Heppenheim", latitude: 49.64, longitude: 8.64 },
+      note: "Übergabe\nSchlüssel auf Station 3 abholen.",
     });
+    expect(screen.getByText("Übergabe\nSchlüssel auf Station 3 abholen.")).toBeTruthy();
+    expect(screen.queryByLabelText("Notizen")).toBeNull();
+    await fireEvent.press(
+      screen.getByRole("button", {
+        name: "Notiz bearbeiten: Übergabe\nSchlüssel auf Station 3 abholen.",
+      }),
+    );
+    expect(screen.getByLabelText("Notizen")).toHaveProp("autoFocus", true);
+    expect(screen.getByDisplayValue("Übergabe\nSchlüssel auf Station 3 abholen.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Heppenheim in Karten öffnen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Heppenheim" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
@@ -82,12 +106,20 @@ describe("ShiftEditOverlay", () => {
   });
 
   beforeEach(() => {
+    mockNativePresentation = true;
     jest.mocked(Notifications.getPermissionsAsync).mockResolvedValue({
       granted: true,
     } as Notifications.NotificationPermissionsStatus);
     jest.mocked(Notifications.requestPermissionsAsync).mockResolvedValue({
       granted: true,
     } as Notifications.NotificationPermissionsStatus);
+  });
+
+  it("lets native iOS navigation own dismissal without registering the fallback gesture", async () => {
+    const { screen } = await renderOverlay();
+    expect(screen.getByTestId("shift-edit-drag-handle")).toBeTruthy();
+    expect(() => getByGestureTestId("shift-edit-dismiss-gesture")).toThrow();
+    expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
   });
 
   it("supports the complete compact shift editing surface", async () => {
@@ -101,15 +133,16 @@ describe("ShiftEditOverlay", () => {
     expect(screen.getByRole("button", { name: "Pause: 0 Minuten" })).toBeTruthy();
     expect(screen.queryByLabelText("Pausendauer in 15-Minuten-Schritten")).toBeNull();
     expect(screen.getByRole("button", { name: "Wecker: Aus" })).toBeTruthy();
-    expect(screen.getByTestId("shift-edit-sheet")).toHaveStyle({ gap: 10 });
     expect(screen.getByTestId("shift-edit-sheet")).toHaveProp("accessibilityViewIsModal", true);
     expect(screen.getByTestId("shift-edit-card")).toHaveStyle({
-      borderRadius: 22,
-      shadowOpacity: 0.28,
+      borderRadius: 0,
+      borderCurve: CORNER_CURVE,
+      boxShadow: "none",
     });
-    expect(screen.getByTestId("shift-edit-drag-handle")).toHaveStyle({ minHeight: 56 });
+    expect(screen.queryByTestId("shift-edit-backdrop")).toBeNull();
     expect(screen.getByRole("button", { name: "Schließen und speichern" })).toHaveStyle({
-      minHeight: 50,
+      minHeight: 48,
+      borderRadius: RADII.pill,
     });
 
     await fireEvent.press(screen.getByRole("button", { name: "Pause: 0 Minuten" }));
@@ -182,9 +215,13 @@ describe("ShiftEditOverlay", () => {
     expect(props.onShiftTypeChange).toHaveBeenCalledWith("NIGHT");
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Station 3" }));
+    expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     const deleteAction = screen.getByRole("button", { name: "Dienst löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
     expect(within(deleteAction).getByText("Dienst löschen")).toBeTruthy();
+    expect(screen.queryByLabelText("Notizen")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
     const notes = screen.getByLabelText("Notizen");
     expect(notes).toHaveStyle({ minHeight: 88 });
     expect(within(notes.parent!).queryByRole("button", { name: "Dienst löschen" })).toBeNull();
@@ -202,6 +239,39 @@ describe("ShiftEditOverlay", () => {
 
     expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
     expect(screen.getByRole("button", { name: "Ort: Kein Ort" })).toBeTruthy();
+  });
+
+  it("keeps the action menu inside the sheet hit area after the header grows and cancels without deleting", async () => {
+    const { screen, props } = await renderOverlay();
+    await fireEvent(screen.getByTestId("shift-edit-drag-handle"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 430, height: 148 } },
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
+    const menu = screen.getByRole("button", { name: "Dienst löschen" }).parent!;
+    expect(menu).toHaveStyle({ top: 148 });
+    expect(menu.parent).toBe(screen.getByTestId("shift-edit-card"));
+    await fireEvent.press(screen.getByRole("button", { name: "Aktionsmenü schließen" }));
+    expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
+    expect(props.onDelete).not.toHaveBeenCalled();
+    expect(props.onRequestClose).not.toHaveBeenCalled();
+  });
+
+  it("anchors inline selectors to their measured groups after rows grow", async () => {
+    const { screen } = await renderOverlay();
+    await fireEvent(screen.getByTestId("shift-edit-time-group").parent!, "layout", {
+      nativeEvent: { layout: { x: 0, y: 108, width: 340, height: 260 } },
+    });
+    const pause = screen.getByRole("button", { name: "Pause: 0 Minuten" });
+    await fireEvent(screen.getByTestId("shift-edit-pause-overtime-pair"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 140, width: 312, height: 64 } },
+    });
+    await fireEvent.press(pause);
+    expect(screen.getByTestId("shift-edit-pause-popover")).toHaveStyle({ top: 318 });
+    await fireEvent.press(screen.getByLabelText("Auswahl schließen"));
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
+    expect(screen.getByTestId("shift-edit-type-popover")).toHaveStyle({ top: 6 });
+    expect(screen.getByRole("radio", { name: "Nacht" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "Nacht" }));
   });
 
   it("shows the iOS settings action when notifications are denied", async () => {
@@ -281,6 +351,7 @@ describe("ShiftEditOverlay", () => {
   it.each(["false", "rejection"])(
     "does not retry a failed gesture save (%s) without user action",
     async (failure) => {
+      mockNativePresentation = false;
       let finishSave!: (value: boolean) => void;
       let rejectSave!: (reason: Error) => void;
       const onRequestClose = jest.fn(
@@ -307,7 +378,7 @@ describe("ShiftEditOverlay", () => {
       });
       expect(onRequestClose).toHaveBeenCalledTimes(1);
       expect(props.onDismiss).not.toHaveBeenCalled();
-      expect(screen.getByDisplayValue("Meine Notiz")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Notiz bearbeiten: Meine Notiz" })).toBeTruthy();
       await act(async () => {
         drag();
       });
@@ -326,6 +397,7 @@ describe("ShiftEditOverlay", () => {
   });
 
   it("saves and dismisses after dragging the header down", async () => {
+    mockNativePresentation = false;
     const { props } = await renderOverlay();
 
     fireGestureHandler(getByGestureTestId("shift-edit-dismiss-gesture"), [

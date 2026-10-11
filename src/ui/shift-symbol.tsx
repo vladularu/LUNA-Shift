@@ -1,5 +1,7 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import MaterialCommunityIcons from "@/ui/icon";
+import { View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 
 import { shiftSymbolDefinition } from "@/theme/shift-symbols";
 import { COMPACT_TEXT_MAX_SCALE } from "@/theme/typography";
@@ -29,6 +31,7 @@ export function ShiftSymbol({
             {
               maxWidth: size * 1.5,
               color,
+              fontFamily: INTER_FONTS.bold,
               fontSize: size < 16 ? size : size * 0.72,
               fontWeight: "700",
               textAlign: "center",

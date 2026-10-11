@@ -76,6 +76,7 @@ export function AnnualOverview({
               criticalCount: report.criticalCount,
               warningCount: report.warningCount,
               infoCount: report.infoCount ?? 0,
+              prerequisiteCount: report.prerequisiteCount,
             }}
             categories={categories}
             showPlanning={checkPreferences.enabled !== false}

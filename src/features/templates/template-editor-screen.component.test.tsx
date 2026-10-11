@@ -91,7 +91,7 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(screen.queryByTestId("template-appearance-options")).toBeNull();
     expect(screen.queryByLabelText("Symbol auswählen")).toBeNull();
 
-    expect(screen.getByTestId("template-title-row")).toHaveStyle({ minHeight: 52 });
+    expect(screen.getByTestId("template-title-row")).toHaveStyle({ minHeight: 40 });
     expect(screen.getByTestId("template-appearance-toggle")).toHaveStyle({ minHeight: 56 });
     expect(screen.getByTestId("template-type-row")).toHaveStyle({ minHeight: 56 });
     expect(screen.getByTestId("template-all-day-row")).toHaveStyle({ minHeight: 56 });

@@ -1,11 +1,13 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import { CORNER_CURVE, SHADOWS, RADII } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import { memo, useEffect, useMemo, useRef } from "react";
 import {
   findNodeHandle,
   Platform,
   Pressable,
   ScrollView,
-  Text,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -14,24 +16,25 @@ import { FullWindowOverlay } from "react-native-screens";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { CalendarEntry } from "@/domain/types";
+import { calculateTimedShiftMinutes } from "@/engine/working-time";
+import { entryEditDurationLabel } from "@/features/day-editor/entry-edit-overlay-pattern";
 import {
   calculateCalendarPopupPlacement,
   type CalendarAnchorRect,
 } from "@/features/calendar/calendar-layout";
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
-import { usePalette, useInversePalette } from "@/theme/palette";
+import { useInversePalette } from "@/theme/palette";
 import { quickEntryAnchorMotion } from "./quick-entry-motion";
 import { useQuickEntryPopupMotion } from "./use-quick-entry-popup-motion";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 
-const HEADER_HEIGHT = 42;
-const HOLIDAY_HEADER_HEIGHT = 58;
-const ENTRY_ROW_HEIGHT = 54;
+const HOLIDAY_HEADER_HEIGHT = 28;
+const ENTRY_ROW_HEIGHT = 60;
 const OVERFLOW_ROW_HEIGHT = 30;
-const ACTION_ROW_HEIGHT = 64;
+const ACTION_ROW_HEIGHT = 56;
 
 function compactDate(date: string): string {
   return new Intl.DateTimeFormat("de-DE", {
@@ -55,13 +58,29 @@ function entrySubtitle(entry: CalendarEntry): string {
   return location ? `${time} · ${location}` : time;
 }
 
+function entryDuration(entry: CalendarEntry, timeZone: string): string | null {
+  if (entry.allDay || entry.startTime === null || entry.endTime === null) return null;
+  if (entry.kind === "SHIFT" && ["VACATION", "SICK", "FREE"].includes(entry.type)) return null;
+  return entryEditDurationLabel(
+    calculateTimedShiftMinutes(
+      {
+        ...entry,
+        breakMinutes: entry.kind === "SHIFT" ? entry.breakMinutes : 0,
+      },
+      timeZone,
+    ),
+  );
+}
+
 export const QuickEntryPopup = memo(function QuickEntryPopup({
   actions,
   active = true,
   animateEntry = true,
+  windowOverlay = true,
   anchor,
   busy,
   date,
+  timeZone = "Europe/Berlin",
   entries,
   holidayName,
   onClose,
@@ -73,9 +92,11 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   readonly actions: readonly QuickEntryAction[];
   readonly active?: boolean;
   readonly animateEntry?: boolean;
+  readonly windowOverlay?: boolean;
   readonly anchor: CalendarAnchorRect;
   readonly busy: boolean;
   readonly date: string;
+  readonly timeZone?: string;
   readonly entries: readonly CalendarEntry[];
   readonly holidayName?: string;
   readonly onClose: () => void;
@@ -84,7 +105,6 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   readonly onOpenShiftPicker: (date: string) => void;
   readonly onSelectAction: (action: QuickEntryAction, date: string) => void;
 }) {
-  const appPalette = usePalette();
   const palette = useInversePalette();
   const insets = useSafeAreaInsets();
   const { width, height, fontScale } = useWindowDimensions();
@@ -93,17 +113,16 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   const entryRowHeight = Math.ceil(ENTRY_ROW_HEIGHT * layoutScale);
   const overflowRowHeight = Math.ceil(OVERFLOW_ROW_HEIGHT * layoutScale);
   const actionRowHeight = Math.ceil(ACTION_ROW_HEIGHT * layoutScale);
-  const popupWidth = Math.min(420, width - 12);
+  const popupWidth = Math.min(420, width - 24);
   const visibleEntries = entries.slice(0, 2);
   const overflowCount = Math.max(0, entries.length - visibleEntries.length);
-  const headerHeight = Math.ceil(
-    (holidayName ? HOLIDAY_HEADER_HEIGHT : HEADER_HEIGHT) * layoutScale,
-  );
+  const headerHeight = Math.ceil((holidayName ? HOLIDAY_HEADER_HEIGHT : 0) * layoutScale);
   const desiredPopupHeight =
     headerHeight +
     visibleEntries.length * entryRowHeight +
     (overflowCount > 0 ? overflowRowHeight : 0) +
-    actionRowHeight;
+    actionRowHeight +
+    2;
   const maxPopupHeight = Math.max(240, height - insets.top - Math.max(insets.bottom + 68, 82) - 24);
   const popupHeight = Math.min(desiredPopupHeight, maxPopupHeight);
   const editorActions = actions.filter((action) => action.kind !== "TEMPLATE");
@@ -117,19 +136,19 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
         popupHeight,
         topInset: insets.top,
         bottomInset: Math.max(insets.bottom + 68, 82),
-        edgeInset: 6,
+        edgeInset: 12,
       }),
     [anchor, height, insets.bottom, insets.top, popupHeight, popupWidth, width],
   );
   const arrowLeft = Math.max(
     18,
-    Math.min(popupWidth - 28, anchor.x + anchor.width / 2 - placement.left - 6),
+    Math.min(popupWidth - 34, anchor.x + anchor.width / 2 - placement.left - 8),
   );
   const origin = useMemo(
-    () => quickEntryAnchorMotion(anchor, placement, popupWidth, popupHeight),
-    [anchor, placement, popupWidth, popupHeight],
+    () => quickEntryAnchorMotion(anchor, placement, popupHeight),
+    [anchor, placement, popupHeight],
   );
-  const { closing, closePopup, popupMotionStyle, backdropMotionStyle } = useQuickEntryPopupMotion({
+  const { closing, closePopup, popupMotionStyle } = useQuickEntryPopupMotion({
     animateEntry,
     origin,
     onClose,
@@ -156,24 +175,30 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
         elevation: 24,
       }}
     >
-      <Animated.View
-        style={[
-          { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
-          backdropMotionStyle,
-        ]}
-      >
-        <Pressable
-          accessible={false}
-          accessibilityElementsHidden
-          aria-hidden
-          importantForAccessibility="no-hide-descendants"
-          onPress={closePopup}
-          style={{ flex: 1, backgroundColor: appPalette.overlaySubtle }}
-        />
-      </Animated.View>
+      <Pressable
+        testID="quick-entry-backdrop"
+        accessible={false}
+        accessibilityElementsHidden
+        aria-hidden
+        importantForAccessibility="no-hide-descendants"
+        onPress={closePopup}
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundColor: "transparent",
+        }}
+      />
       <Animated.View
         accessibilityLabel={`Schnellauswahl für ${compactDate(date)}`}
-        accessibilityViewIsModal
+        accessibilityViewIsModal={windowOverlay}
+        onAccessibilityEscape={closePopup}
+        accessibilityActions={[{ name: "dismiss", label: "Schnellauswahl schließen" }]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === "dismiss") closePopup();
+        }}
         testID="quick-entry-popup"
         pointerEvents={closing ? "none" : "auto"}
         style={[
@@ -185,11 +210,11 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
             height: popupHeight,
             borderWidth: 1,
             borderColor: palette.border,
-            borderRadius: 22,
-            borderCurve: "continuous",
+            borderRadius: RADII.card,
+            borderCurve: CORNER_CURVE,
             backgroundColor: palette.surfaceRaised,
-            overflow: "hidden",
-            boxShadow: `0 14px 34px ${palette.shadow}`,
+            overflow: "visible",
+            boxShadow: SHADOWS.overlay,
             zIndex: 10_001,
             elevation: 25,
           },
@@ -197,17 +222,16 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
         ]}
       >
         <View
-          ref={dialogHeadingRef}
-          accessible
-          accessibilityLabel={`Schnellauswahl für ${compactDate(date)}, Überschrift`}
-          accessibilityRole="header"
+          accessible={false}
+          pointerEvents="none"
+          testID="quick-entry-pointer"
           style={{
             position: "absolute",
             left: arrowLeft,
-            top: placement.direction === "BELOW" ? -6 : undefined,
-            bottom: placement.direction === "ABOVE" ? -6 : undefined,
-            width: 12,
-            height: 12,
+            top: placement.direction === "BELOW" ? -8 : undefined,
+            bottom: placement.direction === "ABOVE" ? -8 : undefined,
+            width: 16,
+            height: 16,
             borderLeftWidth: 1,
             borderTopWidth: 1,
             borderColor: palette.border,
@@ -218,192 +242,227 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
 
         <View
           style={{
-            height: headerHeight,
-            flexDirection: "row",
-            alignItems: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: palette.separator,
-            paddingHorizontal: 16,
+            flex: 1,
+            overflow: "hidden",
+            borderRadius: RADII.card - 1,
+            borderCurve: CORNER_CURVE,
           }}
+          testID="quick-entry-clipped-content"
         >
-          <View style={{ minWidth: 0, flex: 1, gap: 2 }}>
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              selectable
-              style={{ color: palette.text, fontSize: 13, fontWeight: "700" }}
-            >
-              {compactDate(date)}
-            </Text>
-            {holidayName ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: palette.warning,
-                  }}
-                />
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  selectable
-                  style={{ flex: 1, color: palette.warning, fontSize: 11, fontWeight: "600" }}
-                >
-                  {holidayName}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <Pressable
-            accessibilityLabel="Schnellauswahl schließen"
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={closePopup}
-            style={({ pressed }) => ({
-              minWidth: 44,
-              minHeight: 44,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.58 : 1,
-            })}
-          >
-            <Ionicons
-              accessibilityElementsHidden
-              color={palette.textMuted}
-              name="close"
-              size={22}
-            />
-          </Pressable>
-        </View>
-
-        <ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={{ flexShrink: 1 }}>
-          {visibleEntries.map((entry) => {
-            return (
-              <Pressable
-                key={`${entry.kind}-${entry.id}`}
-                accessibilityLabel={`${entry.title} bearbeiten`}
-                accessibilityRole="button"
-                onPress={() => onOpenEntry(entry)}
-                style={({ pressed }) => ({
-                  minHeight: entryRowHeight,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  borderBottomWidth: 1,
-                  borderBottomColor: palette.separator,
-                  backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-                  paddingHorizontal: 14,
-                })}
-              >
-                <View
-                  style={{
-                    width: 30,
-                    height: 30,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 15,
-                    backgroundColor: accessibleChipBackgroundColor(entry.color),
-                  }}
-                >
-                  {entry.kind === "SHIFT" ? (
-                    <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
-                  ) : (
-                    <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
-                  )}
-                </View>
-                <View style={{ minWidth: 0, flex: 1, gap: 1 }}>
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ color: palette.text, fontSize: 13, fontWeight: "600" }}
-                  >
-                    {entry.title}
-                  </Text>
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ color: palette.textMuted, fontSize: 12 }}
-                  >
-                    {entrySubtitle(entry)}
-                  </Text>
-                </View>
-                <Ionicons color={palette.textMuted} name="chevron-forward" size={16} />
-              </Pressable>
-            );
-          })}
-
-          {overflowCount > 0 ? (
-            <Pressable
-              accessibilityLabel={`${overflowCount} weitere Einträge in den Tagesdetails anzeigen`}
-              accessibilityRole="button"
-              onPress={() => onOpenDetails(date)}
-              style={({ pressed }) => ({
-                minHeight: overflowRowHeight,
+          {holidayName ? (
+            <View
+              accessibilityLabel={holidayName}
+              style={{
+                height: headerHeight,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                borderBottomWidth: 1,
-                borderBottomColor: palette.separator,
-                opacity: pressed ? 0.58 : 1,
-              })}
+                gap: 5,
+                paddingHorizontal: 16,
+              }}
             >
+              <View
+                style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: palette.warning }}
+              />
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={{ color: palette.textMuted, fontSize: 12, fontWeight: "600" }}
+                style={{
+                  flex: 1,
+                  color: palette.warning,
+                  fontFamily: INTER_FONTS.semibold,
+                  fontSize: TYPOGRAPHY.overline.fontSize,
+                }}
               >
-                +{overflowCount} weitere
+                {holidayName}
               </Text>
-            </Pressable>
+            </View>
           ) : null}
 
-          <View
-            accessibilityRole="toolbar"
-            style={{
-              minHeight: actionRowHeight,
-              flexDirection: "row",
-              alignItems: "stretch",
-            }}
-          >
-            {editorActions.map((action, index) => (
+          <ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={{ flexShrink: 1 }}>
+            {visibleEntries.map((entry, index) => {
+              const duration = entryDuration(entry, timeZone);
+              return (
+                <Pressable
+                  key={`${entry.kind}-${entry.id}`}
+                  ref={index === 0 ? dialogHeadingRef : undefined}
+                  accessibilityLabel={`${entry.title} bearbeiten`}
+                  accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
+                  accessibilityRole="button"
+                  onPress={() => onOpenEntry(entry)}
+                  style={({ pressed }) => ({
+                    minHeight: entryRowHeight,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    backgroundColor: pressed ? palette.surfaceMuted : "transparent",
+                    paddingHorizontal: 14,
+                  })}
+                >
+                  <View
+                    style={{
+                      width: 30,
+                      height: 30,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 15,
+                      backgroundColor: accessibleChipBackgroundColor(entry.color),
+                    }}
+                  >
+                    {entry.kind === "SHIFT" ? (
+                      <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                    ) : (
+                      <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
+                    )}
+                  </View>
+                  <View style={{ minWidth: 0, flex: 1, gap: 1 }}>
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={{
+                        color: palette.text,
+                        fontFamily: INTER_FONTS.semibold,
+                        fontSize: TYPOGRAPHY.label.fontSize,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {entry.title}
+                    </Text>
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={{
+                        color: palette.textMuted,
+                        fontFamily: INTER_FONTS.regular,
+                        fontSize: TYPOGRAPHY.caption.fontSize,
+                      }}
+                    >
+                      {entrySubtitle(entry)}
+                    </Text>
+                  </View>
+                  {duration ? (
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={{
+                        alignSelf: "flex-start",
+                        paddingTop: 12,
+                        color: palette.textMuted,
+                        fontFamily: INTER_FONTS.regular,
+                        fontSize: TYPOGRAPHY.caption.fontSize,
+                      }}
+                    >
+                      {duration}
+                    </Text>
+                  ) : null}
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 54,
+                      right: 14,
+                      height: 1,
+                      backgroundColor: palette.separator,
+                    }}
+                  />
+                </Pressable>
+              );
+            })}
+
+            {overflowCount > 0 ? (
               <Pressable
-                key={action.key}
-                accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Schicht"} hinzufügen`}
+                accessibilityLabel={`${overflowCount} weitere Einträge in den Tagesdetails anzeigen`}
                 accessibilityRole="button"
-                accessibilityState={{ disabled: busy }}
-                disabled={busy}
-                onPress={() => {
-                  if (action.kind === "CUSTOM_SHIFT") {
-                    onOpenShiftPicker(date);
-                    return;
-                  }
-                  onSelectAction(action, date);
-                }}
+                onPress={() => onOpenDetails(date)}
                 style={({ pressed }) => ({
-                  minHeight: actionRowHeight,
-                  flex: 1,
-                  flexDirection: "row",
+                  minHeight: overflowRowHeight,
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 8,
-                  borderLeftWidth: index === 0 ? 0 : 1,
-                  borderLeftColor: palette.separator,
-                  backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-                  opacity: busy ? 0.38 : 1,
+                  borderBottomWidth: 1,
+                  borderBottomColor: palette.separator,
+                  opacity: pressed ? 0.58 : 1,
                 })}
               >
-                <Ionicons accessible={false} color={palette.text} name="add" size={21} />
                 <Text
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={{ color: palette.text, fontSize: 14, fontWeight: "500" }}
+                  style={{
+                    color: palette.textMuted,
+                    fontFamily: INTER_FONTS.semibold,
+                    fontSize: TYPOGRAPHY.caption.fontSize,
+                    fontWeight: "600",
+                  }}
                 >
-                  {action.kind === "APPOINTMENT" ? "Termin" : "Schicht"}
+                  +{overflowCount} weitere
                 </Text>
               </Pressable>
-            ))}
-          </View>
-        </ScrollView>
+            ) : null}
+
+            <View
+              accessibilityRole="toolbar"
+              style={{
+                minHeight: actionRowHeight,
+                flexDirection: "row",
+                alignItems: "stretch",
+              }}
+            >
+              {editorActions.map((action, index) => (
+                <Pressable
+                  key={action.key}
+                  ref={!visibleEntries.length && index === 0 ? dialogHeadingRef : undefined}
+                  accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Schicht"} hinzufügen`}
+                  accessibilityHint={compactDate(date)}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: busy }}
+                  disabled={busy}
+                  onPress={() => {
+                    if (action.kind === "CUSTOM_SHIFT") {
+                      onOpenShiftPicker(date);
+                      return;
+                    }
+                    onSelectAction(action, date);
+                  }}
+                  style={({ pressed }) => ({
+                    minHeight: actionRowHeight,
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    backgroundColor: pressed ? palette.surfaceMuted : "transparent",
+                    opacity: busy ? 0.38 : 1,
+                  })}
+                >
+                  {index > 0 ? (
+                    <View
+                      pointerEvents="none"
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 8,
+                        bottom: 8,
+                        width: 1,
+                        backgroundColor: palette.separator,
+                      }}
+                    />
+                  ) : null}
+                  <Ionicons accessible={false} color={palette.textMuted} name="add" size={21} />
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    style={{
+                      color: palette.textMuted,
+                      fontFamily: INTER_FONTS.regular,
+                      fontSize: TYPOGRAPHY.small.fontSize,
+                      fontWeight: "400",
+                    }}
+                  >
+                    {action.kind === "APPOINTMENT" ? "Termin" : "Schicht"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
       </Animated.View>
     </View>
   );
 
-  return Platform.OS === "ios" ? (
+  return windowOverlay && Platform.OS === "ios" ? (
     <FullWindowOverlay unstable_accessibilityContainerViewIsModal={active && !closing}>
       {content}
     </FullWindowOverlay>

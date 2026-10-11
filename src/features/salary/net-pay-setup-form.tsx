@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Keyboard, Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { Keyboard, View } from "react-native";
 import { formatMonthTitle } from "@/engine/calendar";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { NetPayPensionScheme } from "@/domain/net-pay-automation";

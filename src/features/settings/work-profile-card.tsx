@@ -1,9 +1,10 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import type { UserProfile } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { selectionFeedback } from "@/ui/haptics";
 import { profileSalaryLabel, profileWorkLabel } from "./work-profile-summary";
@@ -18,6 +19,7 @@ export function WorkProfileCard({ profile }: { readonly profile: UserProfile }) 
         router.push("/work-profile");
       }}
       style={({ pressed }) => ({
+        borderCurve: CORNER_CURVE,
         minHeight: CONTROL_HEIGHT.large,
         padding: SPACING.xl,
         gap: SPACING.lg,
@@ -30,6 +32,7 @@ export function WorkProfileCard({ profile }: { readonly profile: UserProfile }) 
         <View
           accessibilityElementsHidden
           style={{
+            borderCurve: CORNER_CURVE,
             width: 48,
             minHeight: 48,
             borderRadius: RADII.control,

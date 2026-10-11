@@ -1,3 +1,4 @@
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
 import { ActionSheetIOS, Linking, Pressable } from "react-native";
 
 import type { EntryLocation, GeocodedEntryLocation } from "@/domain/types";
@@ -40,11 +41,12 @@ export function LocationPreview({ location }: { readonly location: EntryLocation
       accessibilityRole="button"
       onPress={openMap}
       style={{
+        borderCurve: CORNER_CURVE,
         height: 126,
         overflow: "hidden",
         borderWidth: 1,
         borderColor: palette.border,
-        borderRadius: 16,
+        borderRadius: RADII.control,
       }}
     >
       <LocationMap location={geocodedLocation} />

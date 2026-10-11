@@ -1,9 +1,10 @@
+import { Text } from "@/ui/text";
 import type { PropsWithChildren, ReactNode } from "react";
-import { ActivityIndicator, Pressable, Text, View, type ScrollViewProps } from "react-native";
+import { ActivityIndicator, Pressable, View, type ScrollViewProps } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { ScreenScrollView } from "@/ui/screen-layout";
 
@@ -115,7 +116,7 @@ export function FormStatus({
         borderWidth: 1,
         borderColor: error ? palette.danger : palette.success,
         borderRadius: RADII.control,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: error ? `${palette.danger}14` : `${palette.success}14`,
         paddingHorizontal: SPACING.md,
         paddingVertical: 10,
@@ -144,6 +145,7 @@ export function DestructiveFormAction({
   const palette = usePalette();
   return (
     <Pressable
+      hitSlop={2}
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
@@ -154,7 +156,7 @@ export function DestructiveFormAction({
         borderWidth: 1,
         borderColor: `${palette.danger}70`,
         borderRadius: RADII.control,
-        borderCurve: "continuous",
+        borderCurve: CORNER_CURVE,
         backgroundColor: pressed ? `${palette.danger}16` : "transparent",
         opacity: disabled ? 0.45 : 1,
       })}

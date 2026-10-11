@@ -1,4 +1,4 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useContext, useEffect, useState, type ComponentProps } from "react";
@@ -19,7 +19,7 @@ import { usePalette } from "@/theme/palette";
 import { AppearanceContext } from "@/theme/appearance-context";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { WorkProfileCard } from "./work-profile-card";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
@@ -193,6 +193,7 @@ function SettingsIcon({ name }: { readonly name: ComponentProps<typeof Ionicons>
     <View
       accessibilityElementsHidden
       style={{
+        borderCurve: CORNER_CURVE,
         width: 34,
         height: 34,
         alignItems: "center",

@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { Pressable, View } from "react-native";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { CalendarBackgroundControl } from "./calendar-background-control";
 import { useCalendarBackground } from "./calendar-background-context";
@@ -7,13 +8,20 @@ import { AppearanceCalendarPreview } from "./appearance-calendar-preview";
 import { AppearanceModeControl } from "./appearance-mode-control";
 import { CalendarDisplayControls } from "./calendar-display-controls";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, SPACING } from "@/theme/tokens";
+import { CONTROL_HEIGHT, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CardSeparator, InlineNotice, RowButton, SurfaceCard } from "@/ui/design-system";
+import { InlineNotice, RowButton } from "@/ui/design-system";
+import { SelectionGroup } from "@/ui/selection-group";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 
-export function CalendarDesignScreen({ notice }: { readonly notice?: string }) {
+export function CalendarDesignScreen({
+  notice,
+  bottomPadding = SPACING.lg,
+}: {
+  readonly notice?: string;
+  readonly bottomPadding?: number;
+}) {
   const palette = usePalette();
   const appearance = useAppearancePreferences();
   const display = useCalendarPreferences();
@@ -39,28 +47,25 @@ export function CalendarDesignScreen({ notice }: { readonly notice?: string }) {
   return (
     <ScreenScrollView
       surface="groupedBackground"
-      contentGap={SPACING.md}
-      bottomPadding={SPACING.lg}
+      contentGap={SCREEN_LAYOUT.sectionGap}
+      bottomPadding={bottomPadding}
     >
       {notice ? <InlineNotice message={notice} /> : null}
       <AppearanceCalendarPreview />
-      <SurfaceCard testID="appearance-settings">
-        <View style={{ padding: SPACING.md }}>
-          <AppearanceModeControl
-            value={appearance.mode}
-            onChange={appearance.setMode}
-            disabled={!appearance.ready}
-          />
-        </View>
-        <CardSeparator inset={0} />
-        <CalendarBackgroundControl />
-      </SurfaceCard>
+      <SelectionGroup title="Darstellung" testID="appearance-settings">
+        <AppearanceModeControl
+          value={appearance.mode}
+          onChange={appearance.setMode}
+          disabled={!appearance.ready}
+        />
+      </SelectionGroup>
       {appearance.error ? (
         <View style={{ gap: SPACING.sm }}>
           <InlineNotice message={appearance.error} />
           <RowButton title="Modus erneut speichern" onPress={appearance.retry} />
         </View>
       ) : null}
+      <CalendarBackgroundControl />
       <CalendarDisplayControls />
       {display.error ? (
         <View style={{ gap: SPACING.sm }}>
@@ -69,6 +74,7 @@ export function CalendarDesignScreen({ notice }: { readonly notice?: string }) {
         </View>
       ) : null}
       <Pressable
+        hitSlop={2}
         accessibilityRole="button"
         disabled={resetDisabled}
         accessibilityState={{ disabled: resetDisabled }}

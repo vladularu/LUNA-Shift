@@ -1,9 +1,12 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { SelectionControl } from "@/ui/selection-control";
+import { SelectionRow } from "@/ui/selection-option";
+import { Text } from "@/ui/text";
+
+import { View, useWindowDimensions } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SCREEN_LAYOUT, SPACING, SELECTION_METRICS } from "@/theme/tokens";
 import { selectionFeedback } from "@/ui/haptics";
 
 export function TariffQuestion({
@@ -41,59 +44,47 @@ export function TariffQuestion({
           {caption}
         </Text>
       </View>
-      <View
-        accessibilityLabel={title}
-        accessibilityRole="radiogroup"
-        style={{ flexDirection: stacked ? "column" : "row", gap: SPACING.sm }}
-      >
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
+      {options.length <= SELECTION_METRICS.maxInlineOptions &&
+      options.every((option) => option.label.length <= SELECTION_METRICS.inlineLabelLimit) ? (
+        <SelectionControl
+          accessibilityLabel={title}
+          items={options.map((option) => ({
+            ...option,
+            accessibilityLabel: `${title}: ${option.label}`,
+          }))}
+          value={value}
+          stacked={stacked}
+          onChange={(next) => {
+            onChange(next);
+            selectionFeedback();
+          }}
+        />
+      ) : (
+        <View
+          accessibilityLabel={title}
+          accessibilityRole="radiogroup"
+          style={{
+            borderRadius: RADII.control,
+            borderCurve: CORNER_CURVE,
+            overflow: "hidden",
+            backgroundColor: palette.surface,
+          }}
+        >
+          {options.map((option) => (
+            <SelectionRow
               key={option.value}
+              label={option.label}
               accessibilityLabel={`${title}: ${option.label}`}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: selected }}
+              selected={option.value === value}
+              separator
               onPress={() => {
                 onChange(option.value);
                 selectionFeedback();
               }}
-              style={({ pressed }) => ({
-                minHeight: CONTROL_HEIGHT.compact,
-                flex: stacked ? undefined : 1,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: SPACING.xxs,
-                borderWidth: 1,
-                borderColor: selected ? palette.primary : palette.border,
-                borderRadius: RADII.control,
-                borderCurve: "continuous",
-                backgroundColor: selected ? palette.primarySoft : palette.surface,
-                opacity: pressed ? 0.72 : 1,
-                paddingHorizontal: SPACING.sm,
-              })}
-            >
-              <Ionicons
-                accessibilityElementsHidden
-                color={selected ? palette.primary : palette.textMuted}
-                name={selected ? "checkmark-circle" : "ellipse-outline"}
-                size={16}
-              />
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={{
-                  color: selected ? palette.primary : palette.textSecondary,
-                  ...TYPOGRAPHY.label,
-                  textAlign: "center",
-                }}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }

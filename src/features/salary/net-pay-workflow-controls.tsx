@@ -1,6 +1,7 @@
 import { useState, type ComponentProps, type PropsWithChildren } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import { Pressable, View, useWindowDimensions } from "react-native";
+import Ionicons from "@/ui/icon";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";

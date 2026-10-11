@@ -1,3 +1,4 @@
+import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { Temporal } from "@js-temporal/polyfill";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -195,6 +196,7 @@ export function AnalysisScreen({
       );
     return (
       <AnnualReportScreen
+        exportControl={<ReportExportButton period={String(year)} />}
         report={visibleReport}
         pending={annualReport.report === null}
         testMonths={testMonths}
@@ -260,6 +262,7 @@ export function AnalysisScreen({
             />
 
             <AnalysisViewControls />
+            <ReportExportButton period={month} />
           </ReportPeriodContent>
         </Animated.View>
       </ReportScrollView>
@@ -283,24 +286,37 @@ export function AssessmentSummaryCard({
   const palette = usePalette();
   const compliance = selectVisibleCompliance(sourceCompliance, showPlanning);
   const messageCount = compliance.criticalCount + compliance.warningCount + compliance.infoCount;
-  const clear = messageCount === 0;
+  const limited = (compliance.prerequisiteCount ?? 0) > 0;
+  const clear = messageCount === 0 && !limited;
   const accent = clear
     ? palette.success
     : compliance.criticalCount > 0
       ? palette.danger
       : compliance.warningCount > 0
         ? palette.warning
-        : palette.primary;
+        : palette.info;
 
   return (
     <ExpandableHighlightCard
       accent={accent}
-      countBadge={messageCount}
+      countBadge={!messageCount && limited ? undefined : messageCount}
       expanded={expanded}
-      icon={clear ? "shield-checkmark-outline" : "warning-outline"}
+      icon={
+        clear
+          ? "shield-checkmark-outline"
+          : messageCount
+            ? "warning-outline"
+            : "information-circle-outline"
+      }
       onToggle={onToggle}
       title="Prüfung"
-      value={messageCount === 1 ? "Meldung" : "Meldungen"}
+      value={
+        !messageCount && limited
+          ? "Prüfung eingeschränkt"
+          : messageCount === 1
+            ? "Meldung"
+            : "Meldungen"
+      }
     >
       <ComplianceDetails
         compliance={sourceCompliance}

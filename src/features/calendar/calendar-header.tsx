@@ -1,4 +1,4 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
@@ -21,7 +21,7 @@ import {
 import { usePalette } from "@/theme/palette";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
 import { MOTION } from "@/theme/motion";
-import { CONTROL_HEIGHT, RADII } from "@/theme/tokens";
+import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII } from "@/theme/tokens";
 import { TabScreenHeader } from "@/ui/screen-layout";
 
 function HeaderIconButton({
@@ -129,7 +129,7 @@ export const CalendarHeader = memo(function CalendarHeader({
             {
               borderColor: palette.separator,
               backgroundColor: palette.surfaceRaised,
-              boxShadow: palette.dark ? undefined : `0 5px 18px ${palette.shadow}`,
+              boxShadow: SHADOWS.overlay,
             },
             actionGroupMotionStyle,
           ]}
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderRadius: RADII.pill,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
   },
   action: {
     width: CONTROL_HEIGHT.compact,

@@ -1,11 +1,13 @@
+import { SelectionControl } from "@/ui/selection-control";
+import { Text } from "@/ui/text";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
 import type { ShiftMetric } from "@/domain/analysis-view";
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
-import { SPACING, RADII } from "@/theme/tokens";
+import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
@@ -29,45 +31,22 @@ export function ShiftAnalysisCard({
   const items = analysis.items.filter((item) => metric === "COUNT" || item.minutes > 0);
   return (
     <AnalysisListCard title="Schichten" onPress={onPress} caption={caption}>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          alignSelf: "flex-end",
-          paddingTop: SPACING.sm,
-          gap: SPACING.xxs,
-        }}
-      >
-        {(["COUNT", "HOURS"] as const).map((value) => (
-          <Pressable
-            key={value}
-            accessibilityRole="button"
-            accessibilityLabel={value === "COUNT" ? "Schichten: Anzahl" : "Schichten: Stunden"}
-            accessibilityState={{ selected: metric === value }}
-            onPress={() => {
-              selectionFeedback();
-              setLocalMetric(value);
-              view.update((current) => ({ ...current, shiftMetric: value }));
-            }}
-            style={({ pressed }) => ({
-              minHeight: 44,
-              justifyContent: "center",
-              borderRadius: RADII.control,
-              paddingHorizontal: SPACING.md,
-              backgroundColor: metric === value ? p.surfaceMuted : "transparent",
-              opacity: pressed ? 0.65 : 1,
-            })}
-          >
-            <Text
-              style={{
-                color: p.dark || metric === value ? p.text : p.textMuted,
-                ...TYPOGRAPHY.caption,
-              }}
-            >
-              {value === "COUNT" ? "Anzahl" : "Stunden"}
-            </Text>
-          </Pressable>
-        ))}
+      <View style={{ alignSelf: "flex-end", paddingTop: SPACING.sm }}>
+        <SelectionControl<ShiftMetric>
+          kind="view"
+          density="compact"
+          accessibilityLabel="Schichten anzeigen"
+          value={metric}
+          items={[
+            { value: "COUNT", label: "Anzahl", accessibilityLabel: "Schichten: Anzahl" },
+            { value: "HOURS", label: "Stunden", accessibilityLabel: "Schichten: Stunden" },
+          ]}
+          onChange={(value) => {
+            selectionFeedback();
+            setLocalMetric(value);
+            view.update((current) => ({ ...current, shiftMetric: value }));
+          }}
+        />
       </View>
       {items.length ? (
         items.map((item, index) => (

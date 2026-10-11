@@ -1,5 +1,6 @@
+import { Text } from "@/ui/text";
 import { useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import {
   usePflegeShiftEntries,
@@ -21,7 +22,7 @@ import { useCalendarPreferences } from "@/features/calendar/calendar-preferences
 import { calendarDesignPreviewData } from "./calendar-design-preview-data";
 import { useMeasuredCalendarEntries } from "@/features/calendar/use-calendar-performance";
 import { usePalette } from "@/theme/palette";
-import { CALENDAR_METRICS, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CALENDAR_METRICS, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 
 /** Uses the live month renderer, including its date markers, colors and entry chips. */
@@ -49,7 +50,8 @@ export function AppearanceCalendarPreview() {
     () => (preferences.showHolidays ? examples.holidays : new Map()),
     [examples.holidays, preferences.showHolidays],
   );
-  const rows = preferences.showShiftTimes || preferences.showShiftDuration ? 3 : 2;
+  // Reserve the detailed layout so toggling time labels never moves the preview.
+  const rows = 3;
   const weekHeight =
     CALENDAR_METRICS.dayNumberHeight +
     rows * (CALENDAR_METRICS.entryRowHeight + CALENDAR_METRICS.chipGap) +
@@ -71,6 +73,7 @@ export function AppearanceCalendarPreview() {
     <View
       testID="appearance-calendar-preview"
       style={{
+        borderCurve: CORNER_CURVE,
         borderRadius: RADII.card,
         overflow: "hidden",
         backgroundColor: palette.calendarBackground,

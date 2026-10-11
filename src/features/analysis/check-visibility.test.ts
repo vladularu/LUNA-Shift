@@ -3,6 +3,7 @@ import type { ComplianceIssue, MonthlyComplianceResult } from "@/domain/types";
 import { buildAnnualCoreReport } from "./annual-core-report";
 import {
   classifyChecks,
+  isCheckPrerequisite,
   selectAnnualCheckDisplay,
   selectVisibleCompliance,
 } from "./check-visibility";
@@ -49,6 +50,48 @@ const monthly: MonthlyComplianceResult = {
 };
 
 describe("display-only check selection", () => {
+  it("separates known prerequisites, retains actual findings and is stable on repeated selection", () => {
+    const open = {
+      ...issues[0],
+      id: "open",
+      rule: "ARBZG_10_ELIGIBILITY",
+      severity: "warning" as const,
+    };
+    const incomplete = { ...open, id: "work", rule: "ARBZG_DATA_ALL_EMPLOYMENT" };
+    const raw = { ...monthly, issues: [...issues, open, incomplete] };
+    const displayed = selectVisibleCompliance(raw, true);
+    expect(displayed.issues).toEqual(issues);
+    expect(displayed.prerequisites).toEqual([open, incomplete]);
+    expect(displayed.prerequisiteCount).toBe(2);
+    expect(displayed.warningCount).toBe(1);
+    expect(selectVisibleCompliance(displayed, true)).toEqual(displayed);
+    expect(raw.issues).toHaveLength(5);
+    expect(isCheckPrerequisite({ ...open, severity: "critical" })).toBe(false);
+    expect(isCheckPrerequisite({ ...open, rule: "UNKNOWN_LEGAL_RULE" })).toBe(false);
+    expect(selectVisibleCompliance(raw, false).criticalCount).toBe(1);
+    expect(selectVisibleCompliance(raw, false).prerequisiteCount).toBe(2);
+  });
+  it("keeps annual prerequisites separate from warning totals and preserves them when planning is hidden", () => {
+    const open = {
+      ...issues[0],
+      rule: "ARBZG_6_NIGHT_STATUS_UNKNOWN",
+      severity: "warning" as const,
+    };
+    const core = buildAnnualCoreReport(2026, [], { timeZone: "Europe/Berlin" });
+    const raw = {
+      ...core,
+      months: core.months.map((month, index) => ({
+        ...month,
+        checkCounts: classifyChecks(index === 8 ? [open, ...issues] : []),
+      })),
+    };
+    const displayed = selectAnnualCheckDisplay(raw, false);
+    expect(displayed.warningCount).toBe(0);
+    expect(displayed.criticalCount).toBe(1);
+    expect(displayed.prerequisiteCount).toBe(1);
+    expect(displayed.months[8].prerequisiteCount).toBe(1);
+    expect(selectAnnualCheckDisplay(displayed, true).warningCount).toBe(1);
+  });
   it("retains legal critical and informational issues and derives counts/dates without mutation", () => {
     expect(selectVisibleCompliance(monthly, false)).toEqual({
       ...monthly,
