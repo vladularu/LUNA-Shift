@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View } from "react-native";
+import Ionicons from "@/ui/icon";
+import { Text } from "@/ui/text";
+import { Pressable, View } from "react-native";
 import type { NetPayResult } from "@/domain/net-pay";
 import { formatMonthTitle } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";

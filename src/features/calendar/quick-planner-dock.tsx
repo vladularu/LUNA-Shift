@@ -1,18 +1,14 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import Ionicons from "@/ui/icon";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FullWindowOverlay } from "react-native-screens";
 import Animated, {
-  Extrapolation,
-  FadeIn,
   cancelAnimation,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
@@ -23,12 +19,16 @@ import {
 } from "@/features/calendar/calendar-layout";
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { QuickEntryActionStrip } from "@/features/calendar/quick-entry-action-strip";
-import { quickEntryTransitionDuration } from "./quick-entry-motion";
-import { quickPlannerControlMotion } from "./quick-planner-control-motion";
+import {
+  QUICK_PLANNER_EASING,
+  quickPlannerControlMotion,
+  quickPlannerDockMotion,
+  quickPlannerTransitionDuration,
+} from "./quick-planner-control-motion";
 import { QUICK_PLANNER_METRICS } from "@/features/calendar/quick-planner-appearance";
 import { MOTION } from "@/theme/motion";
 import { useInversePalette, usePalette } from "@/theme/palette";
-import { CALENDAR_METRICS } from "@/theme/tokens";
+import { CORNER_CURVE, SHADOWS, CALENDAR_METRICS } from "@/theme/tokens";
 import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
 
 const CONTROL_SIDE_INSET = 8;
@@ -45,7 +45,7 @@ const CLOSED_TARGET_INSET = (CLOSED_TARGET_SIZE - CALENDAR_METRICS.floatingActio
 const CLOSED_TARGET_RIGHT = CLOSED_SCREEN_RIGHT - CONTROL_SIDE_INSET - CLOSED_TARGET_INSET;
 const CLOSE_CENTER_OFFSET = (CLOSED_TARGET_SIZE - QUICK_PLANNER_METRICS.closeTargetSize) / 2;
 
-export const quickPlannerTransitionDuration = quickEntryTransitionDuration;
+export { quickPlannerTransitionDuration } from "./quick-planner-control-motion";
 
 export const QuickPlannerDock = memo(function QuickPlannerDock({
   actions,
@@ -53,6 +53,8 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
   busy,
   open,
   transitionProgress,
+  windowOverlay = true,
+  active = true,
   onOpen,
   onSelectAction,
   onClose,
@@ -62,6 +64,8 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
   readonly busy: boolean;
   readonly open: boolean;
   readonly transitionProgress?: SharedValue<number>;
+  readonly windowOverlay?: boolean;
+  readonly active?: boolean;
   readonly onOpen: () => void;
   readonly onSelectAction: (action: QuickEntryAction) => void;
   readonly onClose: () => void;
@@ -74,8 +78,6 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
   const [closing, setClosing] = useState(false);
   const internalProgress = useSharedValue(open ? 1 : 0);
   const progress = transitionProgress ?? internalProgress;
-  const controlProgress = useSharedValue(open ? 1 : 0);
-  const controlTarget = useRef(open);
   const pencilPressMotion = usePressMotion(1, MOTION.scale.press);
   const closePressMotion = usePressMotion(1, MOTION.scale.press);
   const baseOpenBottom = Platform.OS === "web" ? 8 : Math.max(insets.bottom - 16, 8);
@@ -93,47 +95,17 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
   const closedBottomWithinControl = closedVisualBottom - openBottom;
   const { tileWidth } = calculateQuickPlannerLayout(width);
 
-  const animateControls = useCallback(
-    (nextOpen: boolean) => {
-      if (controlTarget.current === nextOpen) return;
-      controlTarget.current = nextOpen;
-      cancelAnimation(controlProgress);
-      const duration = quickPlannerTransitionDuration(nextOpen, reduceMotion);
-      const destination = nextOpen ? 1 : 0;
-      if (reduceMotion) {
-        controlProgress.set(withTiming(destination, { duration, easing: MOTION.easing.standard }));
-        return;
-      }
-      const leg = { duration: duration / 2, easing: MOTION.easing.calm };
-      const current = controlProgress.get();
-      const crossesMiddle = nextOpen ? current < 0.5 : current > 0.5;
-      controlProgress.set(
-        crossesMiddle
-          ? withSequence(MOTION.reduceMotion, withTiming(0.5, leg), withTiming(destination, leg))
-          : withTiming(destination, leg),
-      );
-    },
-    [controlProgress, reduceMotion],
-  );
-
-  useEffect(() => () => cancelAnimation(controlProgress), [controlProgress]);
+  useEffect(() => () => cancelAnimation(progress), [progress]);
 
   useEffect(() => {
     if (closing) return;
-    animateControls(open);
     cancelAnimation(progress);
-    if (reduceMotion) {
-      progress.value = withTiming(open ? 1 : 0, {
-        duration: quickPlannerTransitionDuration(open, true),
-        easing: MOTION.easing.standard,
-      });
-      return;
-    }
+    if (progress.get() === (open ? 1 : 0)) return;
     progress.value = withTiming(open ? 1 : 0, {
-      duration: quickPlannerTransitionDuration(open, false),
-      easing: MOTION.easing.calm,
+      duration: quickPlannerTransitionDuration(open, reduceMotion),
+      easing: QUICK_PLANNER_EASING,
     });
-  }, [animateControls, closing, open, progress, reduceMotion]);
+  }, [closing, open, progress, reduceMotion]);
 
   const finishClose = useCallback(() => {
     setClosing(false);
@@ -143,58 +115,45 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
   const requestClose = useCallback(() => {
     if (!open || closing) return;
     setClosing(true);
-    animateControls(false);
     cancelAnimation(progress);
     progress.value = withTiming(
       0,
       {
         duration: quickPlannerTransitionDuration(false, reduceMotion),
-        easing: MOTION.easing.calm,
+        easing: QUICK_PLANNER_EASING,
       },
       (finished) => {
         if (finished) runOnJS(finishClose)();
       },
     );
-  }, [animateControls, closing, finishClose, open, progress, reduceMotion]);
+  }, [closing, finishClose, open, progress, reduceMotion]);
 
-  const dockMotionStyle = useAnimatedStyle(() => {
-    const value = progress.value;
-    return {
-      opacity: reduceMotion
-        ? value
-        : interpolate(value, [0, 0.12, 0.46], [0, 0.68, 1], Extrapolation.CLAMP),
-      transform: reduceMotion
-        ? []
-        : [
-            {
-              translateY: interpolate(
-                value,
-                [0, 1],
-                [MOTION.distance.scene, 0],
-                Extrapolation.CLAMP,
-              ),
-            },
-          ],
-    };
-  }, [openBottom, reduceMotion]);
+  const dockMotionStyle = useAnimatedStyle(
+    () =>
+      quickPlannerDockMotion(
+        progress.get(),
+        reduceMotion,
+        QUICK_PLANNER_METRICS.dockHeight + MOTION.distance.scene,
+      ),
+    [reduceMotion],
+  );
 
   const pencilMorphStyle = useAnimatedStyle(
-    () => quickPlannerControlMotion(controlProgress.get(), "add", reduceMotion),
+    () => quickPlannerControlMotion(progress.get(), "add", reduceMotion),
     [reduceMotion],
   );
 
   const closeMorphStyle = useAnimatedStyle(
-    () => quickPlannerControlMotion(controlProgress.get(), "close", reduceMotion),
+    () => quickPlannerControlMotion(progress.get(), "close", reduceMotion),
     [reduceMotion],
   );
 
   const control = (
     <Animated.View
-      entering={FadeIn.delay(MOTION.duration.fast)
-        .duration(MOTION.duration.fast)
-        .reduceMotion(MOTION.reduceMotion)}
-      pointerEvents="box-none"
-      style={StyleSheet.absoluteFill}
+      pointerEvents={active ? "box-none" : "none"}
+      accessibilityElementsHidden={!active}
+      importantForAccessibility={active ? "auto" : "no-hide-descendants"}
+      style={[StyleSheet.absoluteFill, { zIndex: 10_002, elevation: 26, opacity: active ? 1 : 0 }]}
       testID="quick-planner-mount-reveal"
     >
       <View
@@ -211,7 +170,7 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
             {
               backgroundColor: dockPalette.surface,
               borderColor: dockPalette.separator,
-              boxShadow: `0 10px 28px ${palette.shadow}`,
+              boxShadow: SHADOWS.overlay,
             },
             dockMotionStyle,
           ]}
@@ -255,7 +214,7 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
                 styles.pencilVisual,
                 {
                   backgroundColor: palette.floatingAction,
-                  boxShadow: `0 7px 20px ${palette.shadow}`,
+                  boxShadow: SHADOWS.overlay,
                 },
               ]}
             >
@@ -295,7 +254,7 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
                   {
                     backgroundColor: dockPalette.surface,
                     borderColor: dockPalette.separator,
-                    boxShadow: `0 4px 12px ${palette.shadow}`,
+                    boxShadow: SHADOWS.overlay,
                     opacity: pressed ? 0.72 : 1,
                   },
                 ]}
@@ -310,7 +269,7 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
     </Animated.View>
   );
 
-  if (Platform.OS === "ios") {
+  if (windowOverlay && Platform.OS === "ios") {
     return (
       <FullWindowOverlay unstable_accessibilityContainerViewIsModal={false}>
         {control}
@@ -338,7 +297,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: QUICK_PLANNER_METRICS.dockRadius,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
     paddingHorizontal: 5,
     paddingVertical: 4,
   },
@@ -378,6 +337,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: QUICK_PLANNER_METRICS.closeVisualSize / 2,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
   },
 });

@@ -1,17 +1,17 @@
+import { Text, TextInput } from "@/ui/text";
+import { CORNER_CURVE, RADII, SHADOWS, SPACING } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
 /* eslint-disable react-hooks/immutability -- Reanimated SharedValue.value is intentionally mutable on the UI thread. */
 import type { ReactNode } from "react";
 import type { KeyboardEvent } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -19,24 +19,28 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   FadeIn,
-  SlideInDown,
   cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 
+import { shouldDismissEntryEditOverlay } from "@/features/day-editor/entry-edit-overlay-pattern";
 import {
-  entryEditDurationLabel,
-  entryEditShortDate,
-  shouldDismissEntryEditOverlay,
-} from "@/features/day-editor/entry-edit-overlay-pattern";
+  EntryEditHeader,
+  EntryEditActionMenu,
+  type EntryEditHeaderProps,
+} from "@/features/day-editor/entry-edit-header";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import {
+  ENTRY_EDIT_CLOSE_DURATION,
+  ENTRY_EDIT_MOTION,
+} from "@/features/day-editor/entry-edit-overlay-motion";
 
 // Leave room below the focused field, with matching scrollable space at the end.
 const FOCUSED_FIELD_CLEARANCE = 72;
@@ -44,27 +48,20 @@ const FOCUSED_FIELD_CLEARANCE = 72;
 export function EntryEditOverlayFrame({
   busy,
   cardContent,
-  date,
-  durationMinutes,
   error,
-  headerColor,
-  headerForeground,
-  headerLeading,
+  nativePresentation = Platform.OS === "ios",
   onBackdropPress,
   onClosingStart,
   onDismiss,
   onRequestClose,
   overlay,
   testIDPrefix,
-}: {
+  ...header
+}: EntryEditHeaderProps & {
   readonly busy: boolean;
   readonly cardContent: ReactNode;
-  readonly date: string;
-  readonly durationMinutes: number | null;
   readonly error: string | null;
-  readonly headerColor: string;
-  readonly headerForeground: string;
-  readonly headerLeading?: ReactNode;
+  readonly nativePresentation?: boolean;
   readonly onBackdropPress?: () => void;
   readonly onClosingStart?: () => void;
   readonly onDismiss: () => void;
@@ -77,7 +74,10 @@ export function EntryEditOverlayFrame({
   const { height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const [closing, setClosing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(64);
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
+  const closingRef = useRef(false);
   const fieldsRef = useRef<ScrollView>(null);
   const toolbarHeight = useRef(44);
   const revealFocusedField = useCallback(() => {
@@ -137,8 +137,9 @@ export function EntryEditOverlayFrame({
   const restoreOpenPosition = useCallback(() => {
     cancelAnimation(sheetTranslateY);
     cancelAnimation(backdropProgress);
-    sheetTranslateY.value = withSpring(0, {
-      ...MOTION.spring.settle,
+    sheetTranslateY.value = withTiming(0, {
+      duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
+      easing: MOTION.easing.calm,
       reduceMotion: MOTION.reduceMotion,
     });
     backdropProgress.value = withTiming(1, {
@@ -147,6 +148,7 @@ export function EntryEditOverlayFrame({
       reduceMotion: MOTION.reduceMotion,
     });
     setClosing(false);
+    closingRef.current = false;
   }, [backdropProgress, reduceMotion, sheetTranslateY]);
 
   const handleSaveResult = useCallback(
@@ -162,9 +164,27 @@ export function EntryEditOverlayFrame({
   );
 
   const requestClose = useCallback(() => {
-    if (busy || closing) return;
+    if (busy || closingRef.current) return;
+    closingRef.current = true;
     setClosing(true);
+    setMenuVisible(false);
     onClosingStart?.();
+    if (nativePresentation) {
+      void onRequestClose().then(
+        (saved) => {
+          if (saved) onDismiss();
+          else {
+            closingRef.current = false;
+            setClosing(false);
+          }
+        },
+        () => {
+          closingRef.current = false;
+          setClosing(false);
+        },
+      );
+      return;
+    }
     exitAnimationFinishedRef.current = false;
     saveSucceededRef.current = null;
     cancelAnimation(sheetTranslateY);
@@ -172,8 +192,8 @@ export function EntryEditOverlayFrame({
     sheetTranslateY.value = withTiming(
       closedOffset,
       {
-        duration: reduceMotion ? MOTION.duration.instant : MOTION.duration.normal,
-        easing: MOTION.easing.standard,
+        duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
+        easing: MOTION.easing.calm,
         reduceMotion: MOTION.reduceMotion,
       },
       (finished) => {
@@ -181,8 +201,8 @@ export function EntryEditOverlayFrame({
       },
     );
     backdropProgress.value = withTiming(0, {
-      duration: reduceMotion ? MOTION.duration.instant : MOTION.duration.normal,
-      easing: MOTION.easing.standard,
+      duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
+      easing: MOTION.easing.calm,
       reduceMotion: MOTION.reduceMotion,
     });
     void onRequestClose().then(handleSaveResult, () => handleSaveResult(false));
@@ -190,7 +210,8 @@ export function EntryEditOverlayFrame({
     backdropProgress,
     busy,
     closedOffset,
-    closing,
+    nativePresentation,
+    onDismiss,
     handleSaveResult,
     markExitAnimationFinished,
     onClosingStart,
@@ -209,76 +230,111 @@ export function EntryEditOverlayFrame({
     requestClose();
   }, [gestureCloseRequest, requestClose]);
 
-  const dismissGesture = Gesture.Pan()
-    .withTestId(`${testIDPrefix}-dismiss-gesture`)
-    .enabled(!busy && !closing)
-    .activeOffsetY([-6, 6])
-    .failOffsetX([-28, 28])
-    .onBegin(() => {
-      cancelAnimation(sheetTranslateY);
-      cancelAnimation(backdropProgress);
-      dragOriginY.value = sheetTranslateY.value;
-    })
-    .onUpdate((event) => {
-      const nextTranslateY = Math.max(0, dragOriginY.value + event.translationY);
-      sheetTranslateY.value = nextTranslateY;
-      backdropProgress.value = Math.max(0, 1 - nextTranslateY / Math.max(closedOffset * 0.7, 1));
-    })
-    .onEnd((event) => {
-      if (shouldDismissEntryEditOverlay(event.translationY, event.velocityY)) {
-        runOnJS(queueGestureClose)();
-        return;
-      }
-      sheetTranslateY.value = withSpring(0, {
-        ...MOTION.spring.settle,
-        reduceMotion: MOTION.reduceMotion,
-      });
-      backdropProgress.value = withTiming(1, {
-        duration: MOTION.duration.fast,
-        easing: MOTION.easing.standard,
-        reduceMotion: MOTION.reduceMotion,
-      });
-    })
-    .onFinalize((_event, success) => {
-      if (success) return;
-      sheetTranslateY.value = withSpring(0, {
-        ...MOTION.spring.settle,
-        reduceMotion: MOTION.reduceMotion,
-      });
-      backdropProgress.value = withTiming(1, {
-        duration: MOTION.duration.fast,
-        easing: MOTION.easing.standard,
-        reduceMotion: MOTION.reduceMotion,
-      });
-    });
+  const dismissGesture = nativePresentation
+    ? null
+    : Gesture.Pan()
+        .withTestId(`${testIDPrefix}-dismiss-gesture`)
+        .enabled(!busy && !closing)
+        .activeOffsetY([-6, 6])
+        .failOffsetX([-28, 28])
+        .onBegin(() => {
+          cancelAnimation(sheetTranslateY);
+          cancelAnimation(backdropProgress);
+          dragOriginY.value = sheetTranslateY.value;
+        })
+        .onUpdate((event) => {
+          const nextTranslateY = Math.max(0, dragOriginY.value + event.translationY);
+          sheetTranslateY.value = nextTranslateY;
+          backdropProgress.value = Math.max(
+            0,
+            1 - nextTranslateY / Math.max(closedOffset * 0.7, 1),
+          );
+        })
+        .onEnd((event) => {
+          if (shouldDismissEntryEditOverlay(event.translationY, event.velocityY)) {
+            runOnJS(queueGestureClose)();
+            return;
+          }
+          sheetTranslateY.value = withTiming(0, {
+            duration: ENTRY_EDIT_CLOSE_DURATION,
+            easing: MOTION.easing.calm,
+            reduceMotion: MOTION.reduceMotion,
+          });
+          backdropProgress.value = withTiming(1, {
+            duration: MOTION.duration.fast,
+            easing: MOTION.easing.standard,
+            reduceMotion: MOTION.reduceMotion,
+          });
+        })
+        .onFinalize((_event, success) => {
+          if (success) return;
+          sheetTranslateY.value = withTiming(0, {
+            duration: ENTRY_EDIT_CLOSE_DURATION,
+            easing: MOTION.easing.calm,
+            reduceMotion: MOTION.reduceMotion,
+          });
+          backdropProgress.value = withTiming(1, {
+            duration: MOTION.duration.fast,
+            easing: MOTION.easing.standard,
+            reduceMotion: MOTION.reduceMotion,
+          });
+        });
 
   const backdropMotionStyle = useAnimatedStyle(() => ({ opacity: backdropProgress.value }));
   const sheetMotionStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslateY.value }],
   }));
 
+  const editorHeader = (
+    <Animated.View
+      style={{ flexShrink: 0, zIndex: 4 }}
+      onLayout={({ nativeEvent: { layout } }) => setHeaderHeight(layout.height)}
+      testID={`${testIDPrefix}-drag-handle`}
+    >
+      {!nativePresentation ? (
+        <View
+          accessibilityElementsHidden
+          style={[styles.grabber, { backgroundColor: palette.textMuted }]}
+        />
+      ) : null}
+      <EntryEditHeader
+        {...header}
+        busy={busy || closing}
+        menuVisible={menuVisible}
+        onMenuPress={() => {
+          onBackdropPress?.();
+          setMenuVisible(!menuVisible);
+        }}
+      />
+    </Animated.View>
+  );
+
   return (
     <View style={styles.overlay} testID={`${testIDPrefix}-overlay`}>
-      <Animated.View
-        entering={FadeIn.duration(MOTION.duration.normal).reduceMotion(MOTION.reduceMotion)}
-        pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-      >
+      {!nativePresentation ? (
         <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: palette.overlay },
-            backdropMotionStyle,
-          ]}
-          testID={`${testIDPrefix}-backdrop`}
+          entering={FadeIn.duration(MOTION.duration.normal).reduceMotion(MOTION.reduceMotion)}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        >
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: palette.overlay },
+              backdropMotionStyle,
+            ]}
+            testID={`${testIDPrefix}-backdrop`}
+          />
+        </Animated.View>
+      ) : null}
+      {!nativePresentation ? (
+        <Pressable
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          onPress={onBackdropPress}
+          style={StyleSheet.absoluteFill}
         />
-      </Animated.View>
-      <Pressable
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-        onPress={onBackdropPress}
-        style={StyleSheet.absoluteFill}
-      />
+      ) : null}
       <KeyboardAvoidingView
         behavior="padding"
         style={styles.keyboardLayer}
@@ -287,65 +343,48 @@ export function EntryEditOverlayFrame({
         <View
           testID={`${testIDPrefix}-safe-viewport`}
           style={[
-            styles.scrollContent,
+            nativePresentation ? styles.nativeViewport : styles.scrollContent,
             {
-              paddingTop: Math.max(insets.top, 16),
-              paddingBottom: keyboardVisible ? 0 : Math.max(insets.bottom, 12),
+              paddingTop: nativePresentation ? SPACING.sm : Math.max(insets.top, 16),
             },
           ]}
         >
           <Animated.View
-            entering={SlideInDown.duration(MOTION.duration.deliberate)
-              .easing(MOTION.easing.emphasized)
-              .reduceMotion(MOTION.reduceMotion)}
-            style={styles.shell}
+            entering={nativePresentation || reduceMotion ? undefined : ENTRY_EDIT_MOTION.sheet}
+            style={[styles.shell, nativePresentation && styles.nativeShell]}
           >
             <Animated.View
               accessibilityViewIsModal
-              pointerEvents={closing ? "none" : "auto"}
-              style={[styles.sheetContent, sheetMotionStyle]}
+              pointerEvents={busy || closing ? "none" : "auto"}
+              style={[
+                styles.sheetContent,
+                nativePresentation && styles.nativeShell,
+                !nativePresentation && sheetMotionStyle,
+              ]}
               testID={`${testIDPrefix}-sheet`}
             >
               <View
                 style={[
                   styles.card,
+                  nativePresentation && styles.nativeCard,
                   keyboardVisible && styles.keyboardDockedCard,
                   {
-                    backgroundColor: palette.surface,
+                    backgroundColor: palette.groupedBackground,
                     borderColor: palette.border,
                     shadowColor: palette.shadow,
                   },
                 ]}
                 testID={`${testIDPrefix}-card`}
               >
-                <GestureDetector gesture={dismissGesture}>
-                  <Animated.View
-                    style={[styles.header, { backgroundColor: headerColor }]}
-                    testID={`${testIDPrefix}-drag-handle`}
-                  >
-                    <View
-                      accessibilityElementsHidden
-                      style={[styles.grabber, { backgroundColor: headerForeground }]}
-                    />
-                    {headerLeading}
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={[styles.headerDate, { color: headerForeground }]}
-                    >
-                      {entryEditShortDate(date)}
-                    </Text>
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={[styles.headerDuration, { color: headerForeground }]}
-                    >
-                      {entryEditDurationLabel(durationMinutes)}
-                    </Text>
-                  </Animated.View>
-                </GestureDetector>
+                {dismissGesture ? (
+                  <GestureDetector gesture={dismissGesture}>{editorHeader}</GestureDetector>
+                ) : (
+                  editorHeader
+                )}
                 <ScrollView
                   ref={fieldsRef}
                   testID={`${testIDPrefix}-fields`}
-                  style={styles.fields}
+                  style={[styles.fields, nativePresentation && styles.nativeFields]}
                   contentContainerStyle={keyboardVisible ? styles.typingContent : undefined}
                   automaticallyAdjustKeyboardInsets={false}
                   contentInsetAdjustmentBehavior="never"
@@ -387,46 +426,41 @@ export function EntryEditOverlayFrame({
                     </Pressable>
                   </View>
                 ) : null}
+                {error ? (
+                  <View accessibilityLiveRegion="polite" accessibilityRole="alert">
+                    <Text style={[styles.errorText, { color: palette.danger }]}>{error}</Text>
+                  </View>
+                ) : null}
+
+                {!keyboardVisible ? (
+                  <View
+                    style={[styles.footer, { paddingBottom: Math.max(insets.bottom, SPACING.md) }]}
+                    testID={`${testIDPrefix}-close-arrival`}
+                  >
+                    <SheetBackFooter
+                      accessibilityLabel="Schließen und speichern"
+                      busy={busy || closing}
+                      disabled={closing}
+                      icon="close"
+                      label="Schließen"
+                      onPress={requestClose}
+                    />
+                  </View>
+                ) : null}
+                {menuVisible && header.onDelete && !busy && !closing ? (
+                  <EntryEditActionMenu
+                    top={headerHeight}
+                    label={header.deleteLabel ?? "Eintrag löschen"}
+                    onDelete={header.onDelete}
+                    onClose={() => setMenuVisible(false)}
+                  />
+                ) : null}
               </View>
-
-              {error ? (
-                <View accessibilityLiveRegion="polite" accessibilityRole="alert">
-                  <Text style={[styles.errorText, { color: palette.danger }]}>{error}</Text>
-                </View>
-              ) : null}
-
-              {!keyboardVisible ? (
-                <Pressable
-                  accessibilityLabel="Schließen und speichern"
-                  accessibilityRole="button"
-                  disabled={busy || closing}
-                  onPress={requestClose}
-                  style={({ pressed }) => [
-                    styles.closeButton,
-                    {
-                      borderColor: palette.border,
-                      backgroundColor: palette.surface,
-                      opacity: busy || closing ? 0.55 : pressed ? 0.72 : 1,
-                    },
-                  ]}
-                >
-                  {busy ? (
-                    <ActivityIndicator color={palette.text} size="small" />
-                  ) : (
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={[styles.closeLabel, { color: palette.text }]}
-                    >
-                      Schließen
-                    </Text>
-                  )}
-                </Pressable>
-              ) : null}
             </Animated.View>
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
-      {overlay}
+      {!busy && !closing ? overlay : null}
     </View>
   );
 }
@@ -437,7 +471,7 @@ const styles = StyleSheet.create({
   keyboardToolbar: {
     flexShrink: 0,
     alignItems: "flex-end",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   keyboardDone: {
@@ -451,10 +485,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     flex: 1,
     justifyContent: "flex-end",
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
   },
-  shell: { width: "100%", maxWidth: 510, alignSelf: "center", flexShrink: 1 },
-  sheetContent: { gap: 10, flexShrink: 1 },
+  shell: { width: "100%", alignSelf: "center", flexShrink: 1 },
+  sheetContent: { flexShrink: 1 },
+  nativeViewport: { flex: 1 },
+  nativeShell: { flex: 1 },
+  // Override the fallback's explicit flexGrow: 0; flex: 1 alone cannot override it.
+  nativeFields: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+  nativeCard: { flex: 1, borderRadius: 0, borderWidth: 0, boxShadow: "none" },
+  footer: { paddingHorizontal: SPACING.md, paddingTop: SPACING.xs, flexShrink: 0 },
   fields: { flexGrow: 0, flexShrink: 1 },
   typingContent: { paddingBottom: FOCUSED_FIELD_CLEARANCE },
   keyboardDockedCard: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
@@ -463,46 +503,29 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 22,
-    borderCurve: "continuous",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.28,
-    shadowRadius: 24,
-    elevation: 14,
-  },
-  header: {
-    flexShrink: 0,
-    minHeight: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingTop: 4,
+    borderTopLeftRadius: RADII.sheet,
+    borderTopRightRadius: RADII.sheet,
+    borderCurve: CORNER_CURVE,
+    boxShadow: SHADOWS.overlay,
   },
   grabber: {
-    position: "absolute",
-    top: 6,
-    left: "50%",
+    alignSelf: "center",
+    marginTop: SPACING.sm,
     width: 34,
     height: 4,
-    marginLeft: -17,
     borderRadius: 2,
     opacity: 0.62,
   },
-  headerDate: { flex: 1, fontSize: 17, fontWeight: "700" },
-  headerDuration: {
-    fontSize: 16,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
+  errorText: {
+    paddingHorizontal: 8,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.small.fontSize,
+    lineHeight: TYPOGRAPHY.small.lineHeight,
+    textAlign: "center",
   },
-  errorText: { paddingHorizontal: 8, fontSize: 14, lineHeight: 20, textAlign: "center" },
-  closeButton: {
-    minHeight: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 25,
-    borderCurve: "continuous",
+  closeLabel: {
+    fontFamily: INTER_FONTS.medium,
+    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+    fontWeight: "500",
   },
-  closeLabel: { fontSize: 17, fontWeight: "500" },
 });

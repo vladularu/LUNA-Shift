@@ -1,11 +1,13 @@
+import { SelectionChip } from "@/ui/selection-option";
+import { Text } from "@/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import type { MonthlyPayEstimate, ShiftEntry } from "@/domain/types";
 import { formatDateTitle, formatMonthTitle } from "@/engine/calendar";
 import { formatMinutes } from "@/engine/working-time";
 import { usePalette } from "@/theme/palette";
-import { MINIMUM_TOUCH_TARGET, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { MINIMUM_TOUCH_TARGET, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, EmptyState, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
@@ -56,46 +58,27 @@ export function PremiumBreakdownList({
             title="Nach Zuschlagsart"
             caption="Wähle eine Art für die zugehörigen Dienste."
           />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm }}>
+          <View
+            accessibilityRole="radiogroup"
+            accessibilityLabel="Zuschlagsart"
+            style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm }}
+          >
             {[{ key: null, label: "Alle", amount: pay.timePremiumAmount }, ...data.categories].map(
               (item) => {
                 const selected = item.key === data.activeFilter;
                 return (
-                  <Pressable
+                  <SelectionChip
                     key={item.key ?? "all"}
-                    accessibilityRole="button"
                     accessibilityLabel={`${item.label}, ${formatEuro(item.amount)}`}
-                    accessibilityState={{ selected }}
+                    selected={selected}
+                    label={item.label}
+                    caption={formatEuro(item.amount)}
                     onPress={() => {
                       setFilter(item.key);
                       setExpanded(null);
                       selectionFeedback();
                     }}
-                    style={({ pressed }) => ({
-                      minHeight: MINIMUM_TOUCH_TARGET,
-                      padding: SPACING.md,
-                      gap: SPACING.xxs,
-                      borderRadius: RADII.control,
-                      borderWidth: 1,
-                      borderColor: selected ? palette.primary : palette.border,
-                      backgroundColor: selected ? palette.primarySoft : palette.surface,
-                      opacity: pressed ? 0.75 : 1,
-                    })}
-                  >
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{ color: palette.text, ...TYPOGRAPHY.label }}
-                    >
-                      {selected ? "✓ " : ""}
-                      {item.label}
-                    </Text>
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                    >
-                      {formatEuro(item.amount)}
-                    </Text>
-                  </Pressable>
+                  />
                 );
               },
             )}

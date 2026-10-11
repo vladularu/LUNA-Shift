@@ -42,6 +42,7 @@ import {
 import { consumeShiftSelectionPopupRestore } from "@/features/calendar/quick-entry-navigation";
 import { QuickEntryPopup } from "@/features/calendar/quick-entry-popup";
 import { QuickPlannerDock } from "@/features/calendar/quick-planner-dock";
+import { CalendarQuickOverlay } from "./calendar-quick-overlay";
 import { stampToolSelectedAnnouncement } from "@/features/calendar/stamp-accessibility";
 import { useCalendarTodayScroll } from "@/features/calendar/use-calendar-today-scroll";
 import { useCalendarPaging } from "@/features/calendar/use-calendar-paging";
@@ -484,6 +485,7 @@ export function CalendarScreen() {
           showHolidays={preferences.showHolidays}
           testData={testMonths.includes(item)}
           stampMode={plannerMode}
+          stampTransitionProgress={plannerTransition}
           stampToolLabel={stampTool?.label ?? null}
         />
       ) : null,
@@ -493,6 +495,7 @@ export function CalendarScreen() {
       pageHeight,
       preferences,
       plannerMode,
+      plannerTransition,
       stampTool,
       profile,
       ruleResolver,
@@ -588,37 +591,43 @@ export function CalendarScreen() {
               />
             ) : null}
           </Animated.View>
-          {!isFocused || quickPopup !== null || preferences.viewMode !== "MONTH" ? null : (
-            <QuickPlannerDock
-              actions={quickPlannerActions}
-              activeKey={stampTool?.key ?? null}
-              busy={plannerBusy}
-              onOpen={beginPlanning}
-              onClose={closePlanning}
-              onSelectAction={selectPlannerAction}
-              open={plannerMode}
-              transitionProgress={plannerTransition}
-            />
-          )}
         </View>
       </SharedCalendarScene>
-      {quickPopup ? (
-        <QuickEntryPopup
-          key={quickPopup.revision}
-          active={isFocused}
-          actions={quickActions}
-          anchor={quickPopup.anchor}
-          busy={plannerBusy}
-          date={quickPopup.date}
-          entries={entriesByDate.get(quickPopup.date) ?? []}
-          holidayName={quickPopupHolidayName}
-          onClose={closeQuickPopup}
-          onOpenDetails={openDayDetails}
-          onOpenEntry={openEntry}
-          onOpenShiftPicker={openShiftPicker}
-          onSelectAction={selectPopupAction}
-        />
-      ) : null}
+      <CalendarQuickOverlay modal={quickPopup !== null && isFocused}>
+        {quickPopup ? (
+          <QuickEntryPopup
+            key={quickPopup.revision}
+            active={isFocused}
+            windowOverlay={false}
+            actions={quickActions}
+            anchor={quickPopup.anchor}
+            busy={plannerBusy}
+            date={quickPopup.date}
+            timeZone={timeZone}
+            entries={entriesByDate.get(quickPopup.date) ?? []}
+            holidayName={quickPopupHolidayName}
+            onClose={closeQuickPopup}
+            onOpenDetails={openDayDetails}
+            onOpenEntry={openEntry}
+            onOpenShiftPicker={openShiftPicker}
+            onSelectAction={selectPopupAction}
+          />
+        ) : null}
+        {preferences.viewMode !== "MONTH" ? null : (
+          <QuickPlannerDock
+            active={isFocused}
+            actions={quickPlannerActions}
+            activeKey={stampTool?.key ?? null}
+            busy={plannerBusy}
+            onOpen={beginPlanning}
+            onClose={closePlanning}
+            onSelectAction={selectPlannerAction}
+            open={plannerMode}
+            transitionProgress={plannerTransition}
+            windowOverlay={false}
+          />
+        )}
+      </CalendarQuickOverlay>
     </View>
   );
 }

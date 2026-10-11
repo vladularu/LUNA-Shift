@@ -1,7 +1,13 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SelectionControl } from "@/ui/selection-control";
+import { SelectionChip, SelectionRow } from "@/ui/selection-option";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { Text, TextInput } from "@/ui/text";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type {
@@ -12,7 +18,7 @@ import type {
   RecurrenceRule,
 } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 export function recurrenceLabel(rule: RecurrenceRule | null | undefined): string {
   if (!rule) return "Nie";
@@ -62,8 +68,27 @@ export function OptionRow({
       })}
     >
       <Ionicons color={palette.textMuted} name={icon} size={21} />
-      <Text style={{ flex: 1, color: palette.text, fontSize: 15, fontWeight: "600" }}>{label}</Text>
-      <Text style={{ maxWidth: "48%", color: palette.textMuted, fontSize: 14 }}>{value}</Text>
+      <Text
+        style={{
+          flex: 1,
+          color: palette.text,
+          fontFamily: INTER_FONTS.semibold,
+          fontSize: TYPOGRAPHY.compact.fontSize,
+          fontWeight: "600",
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          maxWidth: "48%",
+          color: palette.textMuted,
+          fontFamily: INTER_FONTS.regular,
+          fontSize: TYPOGRAPHY.small.fontSize,
+        }}
+      >
+        {value}
+      </Text>
       <Ionicons color={palette.textMuted} name="chevron-forward" size={17} />
     </Pressable>
   );
@@ -78,47 +103,50 @@ function SheetShell({
   const insets = useSafeAreaInsets();
   return (
     <Modal animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen" visible>
-      <View
-        style={{
-          flex: 1,
-          gap: 18,
-          backgroundColor: palette.background,
-          paddingHorizontal: 20,
-          paddingTop: Math.max(insets.top, 24),
-          paddingBottom: Math.max(insets.bottom, 20),
-        }}
-      >
-        <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center" }}>
-          <Pressable
-            accessibilityLabel="Zurück"
-            accessibilityRole="button"
-            onPress={onClose}
-            style={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
-          >
-            <Ionicons color={palette.text} name="close" size={26} />
-          </Pressable>
-          <Text
+      <BackFooterLayout onPress={onClose} style={{ backgroundColor: palette.background }}>
+        {(bottomPadding) => (
+          <View
             style={{
               flex: 1,
-              color: palette.text,
-              fontSize: 22,
-              fontWeight: "700",
-              textAlign: "center",
+              gap: 18,
+              backgroundColor: palette.background,
+              paddingHorizontal: 20,
+              paddingTop: Math.max(insets.top, 24),
             }}
           >
-            {title}
-          </Text>
-          <View style={{ width: 48 }} />
-        </View>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          style={{ flex: 1 }}
-          contentContainerStyle={{ gap: 18, paddingBottom: 18 }}
-        >
-          {children}
-        </ScrollView>
-        <SheetBackFooter onPress={onClose} />
-      </View>
+            <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center" }}>
+              <Pressable
+                accessibilityLabel="Zurück"
+                accessibilityRole="button"
+                onPress={onClose}
+                style={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
+              >
+                <Ionicons color={palette.text} name="close" size={26} />
+              </Pressable>
+              <Text
+                style={{
+                  flex: 1,
+                  color: palette.text,
+                  fontFamily: INTER_FONTS.bold,
+                  fontSize: TYPOGRAPHY.screenTitle.fontSize,
+                  fontWeight: "700",
+                  textAlign: "center",
+                }}
+              >
+                {title}
+              </Text>
+              <View style={{ width: 48 }} />
+            </View>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              style={{ flex: 1 }}
+              contentContainerStyle={{ gap: 18, paddingBottom: bottomPadding }}
+            >
+              {children}
+            </ScrollView>
+          </View>
+        )}
+      </BackFooterLayout>
     </Modal>
   );
 }
@@ -132,27 +160,7 @@ function ChoiceButton({
   onPress: () => void;
   selected: boolean;
 }) {
-  const palette = usePalette();
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 48,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderBottomWidth: 1,
-        borderBottomColor: palette.separator,
-        opacity: pressed ? 0.6 : 1,
-        paddingHorizontal: 16,
-      })}
-    >
-      <Text style={{ color: palette.text, fontSize: 16 }}>{label}</Text>
-      {selected ? <Ionicons color={palette.primary} name="checkmark" size={22} /> : null}
-    </Pressable>
-  );
+  return <SelectionRow label={label} onPress={onPress} selected={selected} separator />;
 }
 
 export function RecurrenceSheet({
@@ -177,7 +185,12 @@ export function RecurrenceSheet({
   return (
     <SheetShell onClose={onClose} title="Wiederholen">
       <View
-        style={{ overflow: "hidden", borderRadius: 20, backgroundColor: palette.surfaceRaised }}
+        style={{
+          borderCurve: CORNER_CURVE,
+          overflow: "hidden",
+          borderRadius: RADII.control,
+          backgroundColor: palette.surfaceRaised,
+        }}
       >
         {presets.map(([label, rule]) => (
           <ChoiceButton
@@ -191,23 +204,46 @@ export function RecurrenceSheet({
           />
         ))}
       </View>
-      <Text style={{ color: palette.textSecondary, fontSize: 15, fontWeight: "600" }}>
+      <Text
+        style={{
+          color: palette.textSecondary,
+          fontFamily: INTER_FONTS.semibold,
+          fontSize: TYPOGRAPHY.compact.fontSize,
+          fontWeight: "600",
+        }}
+      >
         Eigene Wiederholung
       </Text>
       <View
-        style={{ gap: 14, borderRadius: 20, backgroundColor: palette.surfaceRaised, padding: 16 }}
+        style={{
+          borderCurve: CORNER_CURVE,
+          gap: 14,
+          borderRadius: RADII.control,
+          backgroundColor: palette.surfaceRaised,
+          padding: 16,
+        }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Text style={{ color: palette.text, fontSize: 16 }}>Alle</Text>
+          <Text
+            style={{
+              color: palette.text,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.body.fontSize,
+            }}
+          >
+            Alle
+          </Text>
           <TextInput
             keyboardType="number-pad"
             onChangeText={setInterval}
             style={{
+              borderCurve: CORNER_CURVE,
               minWidth: 70,
-              borderRadius: 12,
+              borderRadius: RADII.control,
               backgroundColor: palette.surfaceMuted,
               color: palette.text,
-              fontSize: 18,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.metricValue.fontSize,
               padding: 12,
               textAlign: "center",
             }}
@@ -220,7 +256,8 @@ export function RecurrenceSheet({
               key={candidate}
               onPress={() => setFrequency(candidate)}
               style={{
-                borderRadius: 20,
+                borderCurve: CORNER_CURVE,
+                borderRadius: RADII.control,
                 backgroundColor:
                   frequency === candidate ? palette.primarySoft : palette.surfaceMuted,
                 paddingHorizontal: 14,
@@ -244,14 +281,24 @@ export function RecurrenceSheet({
             onClose();
           }}
           style={{
+            borderCurve: CORNER_CURVE,
             minHeight: 50,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 25,
+            borderRadius: RADII.control,
             backgroundColor: palette.accent,
           }}
         >
-          <Text style={{ color: palette.onAccent, fontSize: 16, fontWeight: "700" }}>Fertig</Text>
+          <Text
+            style={{
+              color: palette.onAccent,
+              fontFamily: INTER_FONTS.bold,
+              fontSize: TYPOGRAPHY.body.fontSize,
+              fontWeight: "700",
+            }}
+          >
+            Fertig
+          </Text>
         </Pressable>
       </View>
     </SheetShell>
@@ -290,7 +337,13 @@ export function NotificationSheet({
         selected={!enabled}
       />
       <View
-        style={{ gap: 16, borderRadius: 20, backgroundColor: palette.surfaceRaised, padding: 16 }}
+        style={{
+          borderCurve: CORNER_CURVE,
+          gap: 16,
+          borderRadius: RADII.control,
+          backgroundColor: palette.surfaceRaised,
+          padding: 16,
+        }}
       >
         <TextInput
           accessibilityLabel="Benachrichtigungsabstand"
@@ -300,54 +353,58 @@ export function NotificationSheet({
             setAmount(nextAmount);
           }}
           style={{
-            borderRadius: 12,
+            borderCurve: CORNER_CURVE,
+            borderRadius: RADII.control,
             backgroundColor: palette.surfaceMuted,
             color: palette.text,
-            fontSize: 20,
+            fontFamily: INTER_FONTS.regular,
+            fontSize: TYPOGRAPHY.value.fontSize,
             padding: 14,
             textAlign: "center",
           }}
           value={amount}
         />
-        <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: 8 }}>
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Benachrichtigungseinheit"
+          style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
+        >
           {(["MINUTE", "HOUR", "DAY", "WEEK"] as const).map((candidate) => (
-            <ChoicePill
+            <SelectionChip
               key={candidate}
               label={{ MINUTE: "Minuten", HOUR: "Stunden", DAY: "Tage", WEEK: "Wochen" }[candidate]}
+              selected={unit === candidate}
               onPress={() => {
                 setEnabled(true);
                 setUnit(candidate);
               }}
-              selected={unit === candidate}
             />
           ))}
         </View>
-        <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: 8 }}>
-          {(["BEFORE", "AFTER"] as const).map((candidate) => (
-            <ChoicePill
-              key={candidate}
-              label={candidate === "BEFORE" ? "vor" : "nach"}
-              selected={direction === candidate}
-              onPress={() => {
-                setEnabled(true);
-                setDirection(candidate);
-              }}
-            />
-          ))}
-        </View>
-        <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: 8 }}>
-          {(["START", "END"] as const).map((candidate) => (
-            <ChoicePill
-              key={candidate}
-              label={candidate === "START" ? "Beginn" : "Ende"}
-              selected={reference === candidate}
-              onPress={() => {
-                setEnabled(true);
-                setReference(candidate);
-              }}
-            />
-          ))}
-        </View>
+        <SelectionControl
+          accessibilityLabel="Benachrichtigungsrichtung"
+          value={direction}
+          items={[
+            { value: "BEFORE", label: "vor" },
+            { value: "AFTER", label: "nach" },
+          ]}
+          onChange={(candidate) => {
+            setEnabled(true);
+            setDirection(candidate);
+          }}
+        />
+        <SelectionControl
+          accessibilityLabel="Benachrichtigungsbezug"
+          value={reference}
+          items={[
+            { value: "START", label: "Beginn" },
+            { value: "END", label: "Ende" },
+          ]}
+          onChange={(candidate) => {
+            setEnabled(true);
+            setReference(candidate);
+          }}
+        />
         <Pressable
           accessibilityLabel="Benachrichtigung übernehmen"
           accessibilityRole="button"
@@ -365,14 +422,24 @@ export function NotificationSheet({
             onClose();
           }}
           style={{
+            borderCurve: CORNER_CURVE,
             minHeight: 50,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 25,
+            borderRadius: RADII.control,
             backgroundColor: palette.accent,
           }}
         >
-          <Text style={{ color: palette.onAccent, fontSize: 16, fontWeight: "700" }}>Fertig</Text>
+          <Text
+            style={{
+              color: palette.onAccent,
+              fontFamily: INTER_FONTS.bold,
+              fontSize: TYPOGRAPHY.body.fontSize,
+              fontWeight: "700",
+            }}
+          >
+            Fertig
+          </Text>
         </Pressable>
       </View>
     </SheetShell>
@@ -402,8 +469,9 @@ export function PauseSheet({
     <SheetShell onClose={onClose} title="Pause">
       <View
         style={{
+          borderCurve: CORNER_CURVE,
           overflow: "hidden",
-          borderRadius: 20,
+          borderRadius: RADII.control,
           backgroundColor: palette.surfaceRaised,
           padding: 16,
         }}
@@ -426,14 +494,24 @@ export function PauseSheet({
           onClose();
         }}
         style={{
+          borderCurve: CORNER_CURVE,
           minHeight: 50,
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 25,
+          borderRadius: RADII.control,
           backgroundColor: palette.accent,
         }}
       >
-        <Text style={{ color: palette.onAccent, fontSize: 16, fontWeight: "700" }}>Fertig</Text>
+        <Text
+          style={{
+            color: palette.onAccent,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.body.fontSize,
+            fontWeight: "700",
+          }}
+        >
+          Fertig
+        </Text>
       </Pressable>
     </SheetShell>
   );
@@ -453,7 +531,12 @@ export function AlarmSheet({
     <SheetShell onClose={onClose} title="Wecker">
       <View
         accessibilityRole="radiogroup"
-        style={{ overflow: "hidden", borderRadius: 20, backgroundColor: palette.surfaceRaised }}
+        style={{
+          borderCurve: CORNER_CURVE,
+          overflow: "hidden",
+          borderRadius: RADII.control,
+          backgroundColor: palette.surfaceRaised,
+        }}
       >
         <ChoiceButton
           label="Aus"
@@ -472,41 +555,17 @@ export function AlarmSheet({
           selected={value}
         />
       </View>
-      <Text style={{ color: palette.textSecondary, fontSize: 14, lineHeight: 20 }}>
+      <Text
+        style={{
+          color: palette.textSecondary,
+          fontFamily: INTER_FONTS.regular,
+          fontSize: TYPOGRAPHY.small.fontSize,
+          lineHeight: TYPOGRAPHY.small.lineHeight,
+        }}
+      >
         Der Wecker verwendet den iOS-Standardton. Fokusmodus und Stummschaltung können den Ton
         unterdrücken.
       </Text>
     </SheetShell>
-  );
-}
-
-function ChoicePill({
-  label,
-  onPress,
-  selected,
-}: {
-  label: string;
-  onPress: () => void;
-  selected: boolean;
-}) {
-  const palette = usePalette();
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={{
-        flex: 1,
-        minHeight: 46,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 23,
-        backgroundColor: selected ? palette.primarySoft : palette.surfaceMuted,
-      }}
-    >
-      <Text style={{ color: selected ? palette.primary : palette.text, fontWeight: "600" }}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }

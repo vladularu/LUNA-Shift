@@ -1,7 +1,8 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { Temporal } from "@js-temporal/polyfill";
 import { useMemo, useState, type ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import type {
   ComplianceIssue,
@@ -12,10 +13,11 @@ import type {
 import { AnalysisCoverageNote } from "./analysis-coverage-note";
 import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
 import { CheckClearStatus } from "./check-summary-card";
+import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import { usePalette } from "@/theme/palette";
 import { MOTION } from "@/theme/motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
 
@@ -107,10 +109,17 @@ export function ComplianceDetails({
     { ...compliance, issues: compliance.issues.filter((issue) => issue.kind === "PLANNING") },
     true,
   );
-  if (hideEmptyLegal && legal.issues.length === 0 && showPlanning && planning.issues.length === 0)
+  if (
+    hideEmptyLegal &&
+    legal.issues.length === 0 &&
+    !legal.prerequisiteCount &&
+    showPlanning &&
+    planning.issues.length === 0
+  )
     return null;
   return (
     <View style={{ gap: SPACING.xl }}>
+      {legal.prerequisiteCount ? <CheckPrerequisitesCard issues={legal.prerequisites} /> : null}
       {!showPlanning && !embedded ? (
         <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} />
       ) : null}
@@ -152,7 +161,10 @@ function ComplianceIssueList({
   if (compliance.issues.length === 0) {
     return (
       <DetailContainer embedded={embedded}>
-        <CheckClearStatus title={heading ?? "Arbeitszeitregeln"} />
+        <CheckClearStatus
+          title={heading ?? "Arbeitszeitregeln"}
+          limited={(compliance.prerequisiteCount ?? 0) > 0}
+        />
       </DetailContainer>
     );
   }
@@ -190,7 +202,7 @@ function ComplianceIssueList({
                 borderWidth: embedded ? 0 : 1,
                 borderColor: palette.separator,
                 borderRadius: embedded ? 0 : RADII.card,
-                borderCurve: "continuous",
+                borderCurve: CORNER_CURVE,
                 backgroundColor: embedded ? "transparent" : palette.surface,
               }}
             >

@@ -1,27 +1,19 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState, type ComponentProps } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Switch } from "@/ui/switch";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
+import { useEffect, useState, type ComponentProps } from "react";
+import { Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useReducedMotion } from "react-native-reanimated";
-import {
-  ANALYSIS_CARD_TITLES,
-  DEFAULT_ANALYSIS_VIEW,
-  moveAnalysisCard,
-  type AnalysisCardId,
-} from "@/domain/analysis-view";
+import { ANALYSIS_CARD_TITLES, type AnalysisCardId } from "@/domain/analysis-view";
+import { moveListItem } from "@/domain/reorder";
+import { ReorderableList } from "@/ui/reorderable-list";
+import { useReorderScroll } from "@/ui/use-reorder-scroll";
 import { usePalette } from "@/theme/palette";
 import { SPACING, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { SurfaceCard } from "@/ui/design-system";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { selectionFeedback } from "@/ui/haptics";
 import { useAnalysisView } from "./analysis-view-preferences";
 
@@ -37,9 +29,20 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
   const state = useAnalysisView();
   const [open, setOpen] = useState(false);
   const [sorting, setSorting] = useState(false);
+  const [savingVisible, setSavingVisible] = useState(false);
   const reduced = useReducedMotion();
   const { fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3;
+  const reorderScroll = useReorderScroll();
+  useEffect(() => {
+    if (!open || !state.saving) {
+      setSavingVisible(false);
+      return;
+    }
+    const timer = setTimeout(() => setSavingVisible(true), 600);
+    return () => clearTimeout(timer);
+  }, [open, state.saving]);
+  const showSaving = open && state.saving && savingVisible;
   const error = state.error ? (
     <View accessibilityRole="alert" style={{ gap: SPACING.sm }}>
       <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>{state.error}</Text>
@@ -59,7 +62,7 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
         accessibilityRole="button"
         accessibilityLabel="Ansicht anpassen"
         disabled={!state.ready}
-        accessibilityState={{ disabled: !state.ready }}
+        accessibilityState={{ disabled: !state.ready, busy: !state.ready }}
         onPress={() => {
           selectionFeedback();
           setSorting(false);
@@ -82,9 +85,7 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
       >
         <Ionicons name="options-outline" color={p.textMuted} size={19} />
         {compact ? null : (
-          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.body }}>
-            {state.ready ? "Ansicht anpassen" : "Ansicht wird geladen …"}
-          </Text>
+          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.body }}>Ansicht anpassen</Text>
         )}
       </Pressable>
       <Modal
@@ -94,225 +95,192 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
         onRequestClose={() => setOpen(false)}
       >
         <SafeAreaProvider>
-          <SafeAreaView style={{ flex: 1, backgroundColor: p.groupedBackground }}>
-            <View
-              style={{
-                padding: SPACING.lg,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: SPACING.md,
-              }}
-            >
-              <Text
-                accessibilityRole="header"
-                style={{ flex: 1, color: p.text, ...TYPOGRAPHY.screenTitle }}
+          <BackFooterLayout
+            onPress={() => setOpen(false)}
+            style={{ backgroundColor: p.groupedBackground }}
+          >
+            {(bottomPadding) => (
+              <SafeAreaView
+                edges={["top", "left", "right"]}
+                style={{ flex: 1, backgroundColor: p.groupedBackground }}
               >
-                Ansicht anpassen
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ansicht schließen"
-                onPress={() => setOpen(false)}
-                style={({ pressed }) => ({
-                  minHeight: 44,
-                  minWidth: 44,
-                  borderRadius: RADII.pill,
-                  backgroundColor: p.surfaceMuted,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Ionicons name="close" size={22} color={p.text} />
-              </Pressable>
-            </View>
-            <ScrollView contentContainerStyle={{ padding: SPACING.lg, gap: SPACING.md }}>
-              <View
-                style={{
-                  flexDirection: stacked ? "column" : "row",
-                  alignItems: stacked ? "stretch" : "center",
-                  justifyContent: "flex-end",
-                  gap: SPACING.sm,
-                }}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={sorting ? "Auswahl anzeigen" : "Reihenfolge ändern"}
-                  accessibilityState={{ selected: sorting }}
-                  onPress={() => {
-                    selectionFeedback();
-                    setSorting((value) => !value);
-                  }}
-                  style={({ pressed }) => ({
-                    minHeight: 44,
-                    paddingHorizontal: SPACING.md,
+                <View
+                  style={{
+                    padding: SPACING.lg,
                     flexDirection: "row",
-                    gap: SPACING.sm,
                     alignItems: "center",
-                    justifyContent: "center",
-                    alignSelf: "flex-end",
-                    borderRadius: RADII.control,
-                    backgroundColor: p.surface,
-                    borderColor: p.separator,
-                    borderWidth: 1,
-                    opacity: pressed ? 0.65 : 1,
-                  })}
+                    gap: SPACING.md,
+                  }}
                 >
-                  <Ionicons
-                    name={sorting ? "checkmark" : "swap-vertical-outline"}
-                    size={18}
-                    color={p.textMuted}
-                  />
-                  <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>
-                    {sorting ? "Auswahl" : "Sortieren"}
+                  <Text
+                    accessibilityRole="header"
+                    style={{ flex: 1, color: p.text, ...TYPOGRAPHY.screenTitle }}
+                  >
+                    Ansicht anpassen
                   </Text>
-                </Pressable>
-              </View>
-              <SurfaceCard>
-                {state.preferences.order.map((id, index) => {
-                  const visible = !state.preferences.hidden.includes(id);
-                  return (
-                    <View
-                      key={id}
-                      testID={`analysis-setting-${id}`}
-                      style={{
-                        minHeight: 72,
-                        borderTopWidth: index > 0 ? 1 : 0,
-                        borderTopColor: p.separator,
-                        paddingHorizontal: SPACING.lg,
-                        paddingVertical: SPACING.sm,
-                        gap: SPACING.md,
-                        flexDirection: stacked ? "column" : "row",
-                        alignItems: stacked ? "stretch" : "center",
-                      }}
-                    >
-                      <View
-                        style={{
-                          flex: stacked ? undefined : 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: SPACING.md,
-                        }}
-                      >
-                        <Ionicons name={CARD_ICONS[id]} size={22} color={p.textMuted} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>
-                            {ANALYSIS_CARD_TITLES[id]}
-                          </Text>
-                          {sorting && !visible ? (
-                            <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-                              Ausgeblendet
-                            </Text>
-                          ) : null}
-                        </View>
-                      </View>
-                      {sorting ? (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: SPACING.xs,
-                            alignSelf: stacked ? "flex-end" : undefined,
-                          }}
-                        >
-                          {([-1, 1] as const).map((delta) => {
-                            const disabled =
-                              index + delta < 0 || index + delta >= state.preferences.order.length;
-                            return (
-                              <Pressable
-                                key={delta}
-                                accessibilityRole="button"
-                                accessibilityLabel={
-                                  ANALYSIS_CARD_TITLES[id] +
-                                  (delta === -1 ? " nach oben" : " nach unten")
-                                }
-                                disabled={disabled}
-                                accessibilityState={{ disabled }}
-                                onPress={() => {
-                                  selectionFeedback();
-                                  state.update((current) => moveAnalysisCard(current, id, delta));
-                                }}
-                                style={({ pressed }) => ({
-                                  minWidth: 44,
-                                  minHeight: 44,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  borderRadius: RADII.control,
-                                  backgroundColor: p.surfaceMuted,
-                                  opacity: disabled ? 0.3 : pressed ? 0.6 : 1,
-                                })}
-                              >
-                                <Ionicons
-                                  name={delta === -1 ? "chevron-up" : "chevron-down"}
-                                  size={19}
-                                  color={p.text}
-                                />
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                      ) : (
-                        <View
-                          style={{
-                            minHeight: 44,
-                            justifyContent: "center",
-                            alignSelf: stacked ? "flex-end" : undefined,
-                          }}
-                        >
-                          <Switch
-                            accessibilityLabel={ANALYSIS_CARD_TITLES[id] + " anzeigen"}
-                            hitSlop={8}
-                            value={visible}
-                            trackColor={{ true: p.accent, false: p.surfaceMuted }}
-                            onValueChange={(enabled) => {
-                              selectionFeedback();
-                              state.update((current) => ({
-                                ...current,
-                                hidden: enabled
-                                  ? current.hidden.filter((key) => key !== id)
-                                  : [...current.hidden, id],
-                              }));
-                            }}
-                          />
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
-              </SurfaceCard>
-              {error}
-              {state.saving ? (
-                <Text
-                  accessibilityLiveRegion="polite"
-                  style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={sorting ? "Auswahl anzeigen" : "Reihenfolge ändern"}
+                    accessibilityState={{ selected: sorting }}
+                    onPress={() => {
+                      selectionFeedback();
+                      setSorting((value) => !value);
+                    }}
+                    testID="analysis-sort-button"
+                    style={({ pressed }) => ({
+                      width: 48,
+                      height: 48,
+                      borderRadius: RADII.pill,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: sorting ? p.sortAction : p.surface,
+                      borderWidth: sorting ? 0 : 1,
+                      borderColor: p.separator,
+                      opacity: pressed ? 0.65 : 1,
+                    })}
+                  >
+                    <Ionicons
+                      accessibilityElementsHidden
+                      name="swap-vertical"
+                      size={23}
+                      color={sorting ? p.onSortAction : p.text}
+                    />
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ansicht schließen"
+                    onPress={() => setOpen(false)}
+                    style={({ pressed }) => ({
+                      minHeight: 44,
+                      minWidth: 44,
+                      borderRadius: RADII.pill,
+                      backgroundColor: p.surfaceMuted,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: pressed ? 0.6 : 1,
+                    })}
+                  >
+                    <Ionicons name="close" size={22} color={p.text} />
+                  </Pressable>
+                </View>
+                <ScrollView
+                  ref={reorderScroll.scrollRef}
+                  {...reorderScroll.scrollProps}
+                  contentContainerStyle={{
+                    padding: SPACING.lg,
+                    paddingBottom: bottomPadding,
+                    gap: SPACING.md,
+                  }}
                 >
-                  Wird gespeichert …
-                </Text>
-              ) : null}
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  selectionFeedback();
-                  state.update(() => DEFAULT_ANALYSIS_VIEW);
-                }}
-                style={({ pressed }) => ({
-                  minHeight: 44,
-                  paddingHorizontal: SPACING.sm,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: SPACING.sm,
-                  opacity: pressed ? 0.65 : 1,
-                })}
-              >
-                <Ionicons name="refresh-outline" size={18} color={p.textMuted} />
-                <Text style={{ color: p.textMuted, ...TYPOGRAPHY.body }}>
-                  Standard wiederherstellen
-                </Text>
-              </Pressable>
-            </ScrollView>
-            <View style={{ padding: SPACING.lg }}>
-              <SheetBackFooter onPress={() => setOpen(false)} />
-            </View>
-          </SafeAreaView>
+                  {sorting ? (
+                    <ReorderableList
+                      testID="analysis-sort"
+                      scroll={reorderScroll.controller}
+                      disabled={state.saving}
+                      saveFailed={state.error !== null}
+                      items={state.preferences.order.map((id) => ({
+                        id,
+                        title: ANALYSIS_CARD_TITLES[id],
+                        subtitle: state.preferences.hidden.includes(id)
+                          ? "Ausgeblendet"
+                          : undefined,
+                        leading: <Ionicons name={CARD_ICONS[id]} size={24} color={p.textMuted} />,
+                      }))}
+                      onMove={(id, to) =>
+                        state.update((current) => ({
+                          ...current,
+                          order: moveListItem(
+                            current.order,
+                            current.order.indexOf(id as AnalysisCardId),
+                            to,
+                          ),
+                        }))
+                      }
+                    />
+                  ) : (
+                    <SurfaceCard>
+                      {state.preferences.order.map((id, index) => {
+                        const visible = !state.preferences.hidden.includes(id);
+                        return (
+                          <View
+                            key={id}
+                            testID={`analysis-setting-${id}`}
+                            style={{
+                              minHeight: 72,
+                              borderTopWidth: index > 0 ? 1 : 0,
+                              borderTopColor: p.separator,
+                              paddingHorizontal: SPACING.lg,
+                              paddingVertical: SPACING.sm,
+                              gap: SPACING.md,
+                              flexDirection: stacked ? "column" : "row",
+                              alignItems: stacked ? "stretch" : "center",
+                            }}
+                          >
+                            <View
+                              style={{
+                                flex: stacked ? undefined : 1,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: SPACING.md,
+                              }}
+                            >
+                              <Ionicons name={CARD_ICONS[id]} size={22} color={p.textMuted} />
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>
+                                  {ANALYSIS_CARD_TITLES[id]}
+                                </Text>
+                                {sorting && !visible ? (
+                                  <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
+                                    Ausgeblendet
+                                  </Text>
+                                ) : null}
+                              </View>
+                            </View>
+                            <View
+                              style={{
+                                minHeight: 44,
+                                justifyContent: "center",
+                                alignSelf: stacked ? "flex-end" : undefined,
+                              }}
+                            >
+                              <Switch
+                                accessibilityLabel={ANALYSIS_CARD_TITLES[id] + " anzeigen"}
+                                hitSlop={8}
+                                value={visible}
+                                trackColor={{ true: p.accent, false: p.surfaceMuted }}
+                                onValueChange={(enabled) => {
+                                  selectionFeedback();
+                                  state.update((current) => ({
+                                    ...current,
+                                    hidden: enabled
+                                      ? current.hidden.filter((key) => key !== id)
+                                      : [...current.hidden, id],
+                                  }));
+                                }}
+                              />
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </SurfaceCard>
+                  )}
+                  {error}
+                  <Text
+                    accessibilityElementsHidden={!showSaving}
+                    importantForAccessibility={showSaving ? "auto" : "no-hide-descendants"}
+                    accessibilityLiveRegion="polite"
+                    style={{
+                      color: p.textMuted,
+                      ...TYPOGRAPHY.caption,
+                      opacity: showSaving ? 1 : 0,
+                    }}
+                  >
+                    Wird gespeichert …
+                  </Text>
+                </ScrollView>
+              </SafeAreaView>
+            )}
+          </BackFooterLayout>
         </SafeAreaProvider>
       </Modal>
     </View>

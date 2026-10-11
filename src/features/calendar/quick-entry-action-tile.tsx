@@ -1,6 +1,8 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import {
@@ -8,7 +10,7 @@ import {
   QUICK_PLANNER_METRICS,
 } from "@/features/calendar/quick-planner-appearance";
 import { APPOINTMENT_COLOR, useInversePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
 import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
 
@@ -44,7 +46,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
       style={[styles.tile, { width }, pressMotion.animatedStyle]}
     >
       <View
-        style={[styles.badgeRing, active && styles.badgeRingActive]}
+        style={[styles.badgeRing, active && { borderColor: palette.primary }]}
         testID={`quick-planner-badge-${action.key}`}
       >
         {isStampAction ? (
@@ -69,7 +71,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
         style={[
           styles.label,
           {
-            color: active ? QUICK_PLANNER_COLORS.active : palette.text,
+            color: active ? palette.primary : palette.text,
             maxWidth: width - 6,
           },
           active && styles.labelActive,
@@ -97,9 +99,6 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderRadius: QUICK_PLANNER_METRICS.badgeRingSize / 2,
   },
-  badgeRingActive: {
-    borderColor: QUICK_PLANNER_COLORS.active,
-  },
   editorBadge: {
     width: QUICK_PLANNER_METRICS.badgeSize,
     height: QUICK_PLANNER_METRICS.badgeSize,
@@ -108,13 +107,13 @@ const styles = StyleSheet.create({
     borderRadius: QUICK_PLANNER_METRICS.badgeSize / 2,
   },
   label: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontFamily: INTER_FONTS.medium,
+    fontSize: TYPOGRAPHY.overline.fontSize,
+    lineHeight: TYPOGRAPHY.micro.lineHeight,
     fontWeight: "500",
     textAlign: "center",
   },
   labelActive: {
-    color: QUICK_PLANNER_COLORS.active,
     fontWeight: "600",
   },
 });

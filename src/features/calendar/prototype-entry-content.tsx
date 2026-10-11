@@ -1,9 +1,11 @@
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { CalendarEntry, CalendarPreferencesData } from "@/domain/types";
 import { calendarChipPalette } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
-import { CALENDAR_METRICS } from "@/theme/tokens";
+import { CORNER_CURVE, CALENDAR_METRICS } from "@/theme/tokens";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { calendarShiftDetail } from "./calendar-display";
 
@@ -69,13 +71,14 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
 const styles = StyleSheet.create({
   chip: {
     borderRadius: CALENDAR_METRICS.chipRadius,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
     overflow: "hidden",
   },
   main: { height: CALENDAR_METRICS.entryRowHeight, justifyContent: "center", alignItems: "center" },
   row: {
     height: CALENDAR_METRICS.entryRowHeight,
     lineHeight: CALENDAR_METRICS.entryRowHeight,
+    fontFamily: INTER_FONTS.medium,
     fontSize: CALENDAR_METRICS.entryFontSize,
     fontWeight: "500",
     fontVariant: ["tabular-nums"],

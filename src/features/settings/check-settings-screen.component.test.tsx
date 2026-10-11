@@ -1,6 +1,7 @@
 import { act, fireEvent, render as renderNative, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, jest } from "@jest/globals";
+import { router } from "expo-router";
 import { CheckSettingsScreen } from "./check-settings-screen";
 import { CheckPreferencesProvider, useCheckPreferences } from "./check-preferences";
 import { AssessmentSummaryCard } from "@/features/analysis/analysis-screen";
@@ -8,6 +9,9 @@ import { AnnualReportScreen } from "@/features/analysis/annual-report-view";
 import { buildAnnualCoreReport } from "@/features/analysis/annual-core-report";
 import { classifyChecks } from "@/features/analysis/check-visibility";
 import type { MonthlyComplianceResult } from "@/domain/types";
+jest.mock("@/features/report-export/report-export-button", () => ({
+  ReportExportButton: () => null,
+}));
 
 const render = (ui: ReactNode) =>
   renderNative(<CheckPreferencesProvider>{ui}</CheckPreferencesProvider>);
@@ -25,6 +29,7 @@ jest.mock("@/infrastructure/database/preferences-repository", () => ({
   savePlanningHintsPreference: (db: unknown, value: boolean) => mockSave(db, value),
 }));
 beforeEach(() => {
+  jest.spyOn(router, "back").mockImplementation(() => {});
   mockLoad.mockReset().mockResolvedValue(true);
   mockLoadYouth.mockReset().mockResolvedValue(false);
   mockSaveYouth.mockReset().mockResolvedValue();
@@ -34,9 +39,14 @@ beforeEach(() => {
 it("loads the saved choice and keeps mandatory checks clearly visible", async () => {
   mockLoad.mockResolvedValue(false);
   const screen = await render(<CheckSettingsScreen />);
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise").props.value).toBe(false));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+  );
   expect(screen.getByText("Gesetzliche Hinweise bleiben immer sichtbar.")).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
+  expect(router.back).toHaveBeenCalledTimes(1);
   expect(mockSave).not.toHaveBeenCalled();
+  expect(mockSaveYouth).not.toHaveBeenCalled();
 });
 
 it("updates already mounted month and year cards from the same saved selection", async () => {
@@ -143,10 +153,19 @@ it("saves the choice and prevents overlapping writes", async () => {
   const screen = await render(<CheckSettingsScreen />);
   await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
   await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
-  expect(screen.getByLabelText("Planungshinweise").props.disabled).toBe(true);
+  expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.disabled).toBe(true);
+  const back = screen.getByRole("button", { name: "Zurück zu Mehr" });
+  expect(back.props.accessibilityState.disabled).toBe(true);
+  await fireEvent.press(back);
+  expect(router.back).not.toHaveBeenCalled();
   expect(mockSave).toHaveBeenCalledWith(mockDb, false);
   await act(async () => resolve());
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise").props.value).toBe(false));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+  );
+  expect(
+    screen.getByRole("button", { name: "Zurück zu Mehr" }).props.accessibilityState.disabled,
+  ).toBe(false);
 });
 
 it("keeps the previous choice on write failure and permits retry", async () => {
@@ -155,9 +174,11 @@ it("keeps the previous choice on write failure and permits retry", async () => {
   await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
   await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
   await waitFor(() => expect(screen.getByText(/Nicht gespeichert/)).toBeTruthy());
-  expect(screen.getByLabelText("Planungshinweise").props.value).toBe(true);
+  expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(true);
   await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise").props.value).toBe(false));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+  );
 });
 
 it("shows a load error without writing defaults and can reload", async () => {
@@ -167,6 +188,7 @@ it("shows a load error without writing defaults and can reload", async () => {
     expect(screen.getByText("Prüfungseinstellungen konnten nicht geladen werden.")).toBeTruthy(),
   );
   expect(mockSave).not.toHaveBeenCalled();
+  expect(screen.getByRole("button", { name: "Zurück zu Mehr" })).toBeTruthy();
   await fireEvent.press(screen.getByText("Erneut versuchen"));
   await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
 });
@@ -174,13 +196,21 @@ it("shows a load error without writing defaults and can reload", async () => {
 it("offers just one additional switch and keeps the previous youth choice after a failed save", async () => {
   mockSaveYouth.mockRejectedValueOnce(new Error("write failed"));
   const screen = await render(<CheckSettingsScreen />);
-  await waitFor(() => expect(screen.getByLabelText("Jugendlichenprüfung").props.value).toBe(false));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+      false,
+    ),
+  );
   expect(screen.queryAllByRole("textbox")).toHaveLength(0);
   await fireEvent(screen.getByLabelText("Jugendlichenprüfung"), "valueChange", true);
   await waitFor(() => expect(screen.getByText(/Nicht gespeichert/)).toBeTruthy());
-  expect(screen.getByLabelText("Jugendlichenprüfung").props.value).toBe(false);
+  expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(false);
   await fireEvent(screen.getByLabelText("Jugendlichenprüfung"), "valueChange", true);
-  await waitFor(() => expect(screen.getByLabelText("Jugendlichenprüfung").props.value).toBe(true));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+      true,
+    ),
+  );
   expect(mockSaveYouth).toHaveBeenCalledWith(mockDb, true);
   expect(mockSave).not.toHaveBeenCalled();
 });
@@ -193,7 +223,11 @@ it("restores an enabled youth choice on opening and blocks on an unreadable pref
   );
   expect(screen.queryByLabelText("Jugendlichenprüfung")).toBeNull();
   await fireEvent.press(screen.getByText("Erneut versuchen"));
-  await waitFor(() => expect(screen.getByLabelText("Jugendlichenprüfung").props.value).toBe(true));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+      true,
+    ),
+  );
   expect(mockSaveYouth).not.toHaveBeenCalled();
 });
 
@@ -212,7 +246,7 @@ it("keeps the youth scope visible while extra explanation is optional", async ()
   expect(
     screen.getByText(/Prüft die erfassten Dienstzeiten nach dem Jugendarbeitsschutzgesetz/),
   ).toBeTruthy();
-  expect(screen.getByLabelText("Jugendlichenprüfung").props.value).toBe(false);
+  expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(false);
   expect(mockSaveYouth).not.toHaveBeenCalled();
   expect(mockSave).not.toHaveBeenCalled();
 });

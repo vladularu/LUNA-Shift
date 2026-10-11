@@ -1,26 +1,22 @@
+import { TextInput } from "@/ui/text";
 import { router, Stack, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import { Alert, TextInput } from "react-native";
-
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePreventRemove, type NavigationAction } from "expo-router/react-navigation";
+import { Alert, Keyboard } from "react-native";
 import {
   usePflegeShiftEntries,
   usePflegeShiftProfile,
   usePflegeShiftTemplates,
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import {
-  type CalendarEntry,
-  type EntryLocation,
-  type EntryNotification,
-  type RecurrenceRule,
-  type ShiftType,
-} from "@/domain/types";
+import { type CalendarEntry, type EntryLocation, type ShiftType } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import { ValidationError } from "@/domain/validation";
 import { calculateTimedShiftMinutes } from "@/engine/working-time";
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
 import { resolveShiftTypePreset } from "@/features/day-editor/shift-type-preset";
 import { ShiftEditOverlay } from "@/features/day-editor/shift-edit-overlay";
+import { useEntryEditorDraft } from "@/features/day-editor/use-entry-editor-draft";
 import { criticalIssueForSavedShift } from "@/features/day-editor/saved-shift-compliance";
 import { AlarmSheet, NotificationSheet, PauseSheet } from "@/features/day-editor/entry-options";
 import {
@@ -28,7 +24,7 @@ import {
   prepareLocationPicker,
 } from "@/features/location/location-selection";
 import { useStableEditorSession } from "@/features/editor-session";
-import { APPOINTMENT_COLOR, SHIFT_TYPE_COLORS } from "@/theme/palette";
+import { APPOINTMENT_COLOR } from "@/theme/palette";
 import { deletionFeedback, selectionFeedback, warningFeedback } from "@/ui/haptics";
 import {
   focusInvalidField,
@@ -60,49 +56,32 @@ export function DayEditorForm({
   const mode: EditorMode = existing?.kind ?? requestedMode;
   const initialShift = existing?.kind === "SHIFT" ? existing : null;
   const initialAppointment = existing?.kind === "APPOINTMENT" ? existing : null;
-  const [shiftType, setShiftType] = useState<ShiftType>(initialShift?.type ?? "CUSTOM");
-  const [shiftAllDay, setShiftAllDay] = useState(initialShift?.allDay ?? false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(initialShift?.templateId ?? null);
-  const [shiftTitle, setShiftTitle] = useState(initialShift?.title ?? "Dienst");
-  const [startTime, setStartTime] = useState(initialShift?.startTime ?? "08:00");
-  const [endTime, setEndTime] = useState(initialShift?.endTime ?? "16:00");
-  const [breakMinutes, setBreakMinutes] = useState(String(initialShift?.breakMinutes ?? 30));
-  const [shiftColor, setShiftColor] = useState(initialShift?.color ?? SHIFT_TYPE_COLORS.CUSTOM);
-  const [shiftSymbol, setShiftSymbol] = useState(initialShift?.symbol ?? "D");
-  const [shiftNote, setShiftNote] = useState(initialShift?.note ?? "");
-  const [shiftNotification, setShiftNotification] = useState<EntryNotification | null>(
-    initialShift?.notification ?? null,
-  );
-  const [shiftAlarmEnabled, setShiftAlarmEnabled] = useState(initialShift?.alarmEnabled ?? false);
-  const [shiftLocation, setShiftLocation] = useState<EntryLocation | null>(
-    initialShift?.location ?? null,
-  );
-  const [overtimeMinutes, setOvertimeMinutes] = useState(
-    String(initialShift?.overtimeMinutes ?? 0),
-  );
-  const [tariffOvertimeConfirmed, setTariffOvertimeConfirmed] = useState(
-    initialShift?.tariffOvertimeConfirmed ?? false,
-  );
+  const draftState = useEntryEditorDraft(initialShift, initialAppointment, mode);
+  const [shiftType, setShiftType] = draftState.shiftType;
+  const [shiftAllDay, setShiftAllDay] = draftState.shiftAllDay;
+  const [selectedTemplateId, setSelectedTemplateId] = draftState.selectedTemplateId;
+  const [shiftTitle, setShiftTitle] = draftState.shiftTitle;
+  const [startTime, setStartTime] = draftState.startTime;
+  const [endTime, setEndTime] = draftState.endTime;
+  const [breakMinutes, setBreakMinutes] = draftState.breakMinutes;
+  const [shiftColor, setShiftColor] = draftState.shiftColor;
+  const [shiftSymbol, setShiftSymbol] = draftState.shiftSymbol;
+  const [shiftNote, setShiftNote] = draftState.shiftNote;
+  const [shiftNotification, setShiftNotification] = draftState.shiftNotification;
+  const [shiftAlarmEnabled, setShiftAlarmEnabled] = draftState.shiftAlarmEnabled;
+  const [shiftLocation, setShiftLocation] = draftState.shiftLocation;
+  const [overtimeMinutes, setOvertimeMinutes] = draftState.overtimeMinutes;
+  const [tariffOvertimeConfirmed, setTariffOvertimeConfirmed] = draftState.tariffOvertimeConfirmed;
   const holidayPremiumMode = initialShift?.holidayPremiumMode ?? "WITH_TIME_OFF";
-  const [appointmentTitle, setAppointmentTitle] = useState(
-    initialAppointment?.title ?? "Ohne Titel",
-  );
-  const [allDay, setAllDay] = useState(initialAppointment?.allDay ?? false);
-  const [appointmentStart, setAppointmentStart] = useState(
-    initialAppointment?.startTime ?? "12:00",
-  );
-  const [appointmentEnd, setAppointmentEnd] = useState(initialAppointment?.endTime ?? "13:00");
+  const [appointmentTitle, setAppointmentTitle] = draftState.appointmentTitle;
+  const [allDay, setAllDay] = draftState.allDay;
+  const [appointmentStart, setAppointmentStart] = draftState.appointmentStart;
+  const [appointmentEnd, setAppointmentEnd] = draftState.appointmentEnd;
   const appointmentColor = initialAppointment?.color ?? APPOINTMENT_COLOR;
-  const [appointmentNote, setAppointmentNote] = useState(initialAppointment?.note ?? "");
-  const [appointmentRecurrence, setAppointmentRecurrence] = useState<RecurrenceRule | null>(
-    initialAppointment?.recurrence ?? null,
-  );
-  const [appointmentNotification, setAppointmentNotification] = useState<EntryNotification | null>(
-    initialAppointment?.notification ?? null,
-  );
-  const [appointmentLocation, setAppointmentLocation] = useState<EntryLocation | null>(
-    initialAppointment?.location ?? null,
-  );
+  const [appointmentNote, setAppointmentNote] = draftState.appointmentNote;
+  const [appointmentRecurrence, setAppointmentRecurrence] = draftState.appointmentRecurrence;
+  const [appointmentNotification, setAppointmentNotification] = draftState.appointmentNotification;
+  const [appointmentLocation, setAppointmentLocation] = draftState.appointmentLocation;
   const [optionSheet, setOptionSheet] = useState<
     "ALARM" | "PAUSE" | "RECURRENCE" | "NOTIFICATION" | null
   >(null);
@@ -110,19 +89,21 @@ export function DayEditorForm({
   const [appointmentTitleError, setAppointmentTitleError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { hasChanges } = draftState;
   const shiftTitleRef = useRef<TextInput>(null);
   const breakRef = useRef<TextInput>(null);
   const overtimeRef = useRef<TextInput>(null);
   const appointmentTitleRef = useRef<TextInput>(null);
   const savingRef = useRef(false);
-  const allowRemovalRef = useRef(false);
+  const [exit, setExit] = useState<{ action?: NavigationAction } | null>(null);
+  const exitHandled = useRef(false);
   useFocusEffect(
     useCallback(() => {
       const selected = consumeLocationSelection();
       if (selected === undefined) return;
       if (mode === "SHIFT") setShiftLocation(selected);
       else setAppointmentLocation(selected);
-    }, [mode]),
+    }, [mode, setAppointmentLocation, setShiftLocation]),
   );
   function openLocationPicker(current: EntryLocation | null) {
     prepareLocationPicker(current);
@@ -147,6 +128,10 @@ export function DayEditorForm({
 
   async function save(closeAfterSave = true): Promise<boolean> {
     if (savingRef.current) return false;
+    if (!hasChanges) {
+      if (closeAfterSave) setExit({});
+      return true;
+    }
     const nextShiftTitleError =
       mode === "SHIFT" ? requiredFieldError(shiftTitle, "Bezeichnung") : null;
     const nextBreakError =
@@ -252,8 +237,7 @@ export function DayEditorForm({
         });
       }
       if (closeAfterSave) {
-        allowRemovalRef.current = true;
-        router.back();
+        setExit({});
       }
       return true;
     } catch (saveError) {
@@ -275,8 +259,7 @@ export function DayEditorForm({
       onDeletionChange(existing);
       await removeEntry(existing);
       deletionFeedback();
-      allowRemovalRef.current = true;
-      router.back();
+      setExit({});
     } catch (deleteError) {
       onDeletionChange(null);
       warningFeedback();
@@ -293,22 +276,21 @@ export function DayEditorForm({
     ]);
   }
 
-  const saveFromDismiss = useEffectEvent(() => save(false));
-  useEffect(() => {
-    return navigation.addListener("beforeRemove", (event) => {
-      if (allowRemovalRef.current) {
-        allowRemovalRef.current = false;
-        return;
-      }
-      event.preventDefault();
-      if (savingRef.current) return;
-      void saveFromDismiss().then((saved) => {
-        if (!saved) return;
-        allowRemovalRef.current = true;
-        navigation.dispatch(event.data.action);
-      });
+  // Let iOS track the finger freely when an existing entry has no edits.
+  // Unsaved drafts and in-flight operations still require validation and persistence.
+  usePreventRemove(exit === null && (hasChanges || saving), ({ data }) => {
+    if (savingRef.current) return;
+    Keyboard.dismiss();
+    void save(false).then((saved) => {
+      if (saved) setExit({ action: data.action });
     });
-  }, [navigation]);
+  });
+  useEffect(() => {
+    if (!exit || exitHandled.current) return;
+    exitHandled.current = true;
+    if (exit.action) navigation.dispatch(exit.action);
+    else router.back();
+  }, [exit, navigation]);
 
   if (mode === "SHIFT") {
     const durationMinutes = shiftIsTimed
@@ -344,8 +326,7 @@ export function DayEditorForm({
           }}
           onBreakPress={() => setOptionSheet("PAUSE")}
           onDismiss={() => {
-            allowRemovalRef.current = true;
-            router.back();
+            setExit({});
           }}
           onDelete={
             initialShift
@@ -444,10 +425,7 @@ export function DayEditorForm({
                 )
             : undefined
         }
-        onDismiss={() => {
-          allowRemovalRef.current = true;
-          router.back();
-        }}
+        onDismiss={() => setExit({})}
         onEndTimeChange={setAppointmentEnd}
         onLocationPress={() => openLocationPicker(appointmentLocation)}
         onNoteChange={setAppointmentNote}

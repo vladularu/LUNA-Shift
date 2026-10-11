@@ -1,4 +1,4 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { Tabs } from "expo-router";
 import { useReducedMotion } from "react-native-reanimated";
 

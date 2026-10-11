@@ -50,17 +50,146 @@ const existingShift: ShiftEntry = {
   deletedAt: null,
 };
 
+async function renderCompact(
+  entries: readonly ShiftEntry[],
+  props: Partial<React.ComponentProps<typeof QuickEntryPopup>> = {},
+) {
+  jest
+    .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useWindowDimensions")
+    .mockReturnValue({ width: 400, height: 800, scale: 1, fontScale: 1 });
+  return render(
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { height: 800, width: 400, x: 0, y: 0 },
+        insets: { bottom: 0, left: 0, right: 0, top: 0 },
+      }}
+    >
+      <QuickEntryPopup
+        actions={[
+          { kind: "CUSTOM_SHIFT", key: "editor:shift", label: "Dienst" },
+          { kind: "APPOINTMENT", key: "editor:appointment", label: "Termin" },
+        ]}
+        anchor={{ height: 48, width: 48, x: 40, y: 100 }}
+        busy={false}
+        date="2026-08-04"
+        entries={entries}
+        animateEntry={false}
+        onClose={jest.fn()}
+        onOpenDetails={jest.fn()}
+        onOpenEntry={jest.fn()}
+        onOpenShiftPicker={jest.fn()}
+        onSelectAction={jest.fn()}
+        {...props}
+      />
+    </SafeAreaProvider>,
+  );
+}
+
 describe("QuickEntryPopup", () => {
+  it.each([false, true])(
+    "shows only compact content and actions (withEntry=%s)",
+    async (withEntry) => {
+      const screen = await renderCompact(withEntry ? [existingShift] : []);
+      expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: withEntry ? 118 : 58 });
+      expect(screen.queryByRole("header")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Schicht hinzufügen" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeTruthy();
+      expect(screen.getByTestId("quick-entry-popup")).toHaveProp("accessibilityActions", [
+        { name: "dismiss", label: "Schnellauswahl schließen" },
+      ]);
+      if (withEntry) expect(screen.getByText("9h 30min")).toBeTruthy();
+    },
+  );
+
+  it.each([
+    {
+      date: "2026-10-08",
+      type: "LATE" as const,
+      startTime: "13:18",
+      endTime: "21:30",
+      breakMinutes: 30,
+      label: "7h 42min",
+    },
+    {
+      date: "2026-10-24",
+      type: "NIGHT" as const,
+      startTime: "21:00",
+      endTime: "07:30",
+      breakMinutes: 60,
+      label: "10h 30min",
+    },
+  ])(
+    "shows net duration with pauses and the local clock change: $label",
+    async ({ label, ...fields }) => {
+      const screen = await renderCompact([{ ...existingShift, ...fields }]);
+      expect(screen.getByText(label)).toBeTruthy();
+    },
+  );
+
+  it("supports accessible dismissal and keeps holiday information in the compact card", async () => {
+    const onClose = jest.fn();
+    const screen = await renderCompact([], { onClose, holidayName: "Tag der Deutschen Einheit" });
+    expect(screen.getByText("Tag der Deutschen Einheit")).toBeTruthy();
+    await fireEvent(screen.getByTestId("quick-entry-popup"), "accessibilityEscape");
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
   afterEach(() => {
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
-  it.each([false, true])("inverts surface and text together for dark=%s", async (dark) => {
+  it.each([false, true])(
+    "inverts surface and text against the calendar (dark=%s)",
+    async (dark) => {
+      jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const expected = dark ? LIGHT_PALETTE : DARK_PALETTE;
+      const screen = await render(
+        <SafeAreaProvider
+          initialMetrics={{
+            frame: { height: 800, width: 400, x: 0, y: 0 },
+            insets: { bottom: 0, left: 0, right: 0, top: 0 },
+          }}
+        >
+          <QuickEntryPopup
+            actions={[]}
+            anchor={{ height: 48, width: 48, x: 40, y: 100 }}
+            busy={false}
+            date="2026-08-04"
+            entries={[existingShift]}
+            onClose={jest.fn()}
+            onOpenDetails={jest.fn()}
+            onOpenEntry={jest.fn()}
+            onOpenShiftPicker={jest.fn()}
+            onSelectAction={jest.fn()}
+          />
+        </SafeAreaProvider>,
+      );
+      expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({
+        backgroundColor: expected.surfaceRaised,
+        overflow: "visible",
+      });
+      expect(
+        screen.getByTestId("quick-entry-backdrop", { includeHiddenElements: true }),
+      ).toHaveStyle({ backgroundColor: "transparent" });
+      expect(screen.getByTestId("quick-entry-clipped-content")).toHaveStyle({ overflow: "hidden" });
+      expect(screen.getByTestId("quick-entry-pointer")).toHaveStyle({
+        backgroundColor: expected.surfaceRaised,
+        top: -8,
+      });
+      expect(screen.getByText("Nacht")).toHaveStyle({ color: expected.text });
+    },
+  );
+
+  it("keeps the lower pointer outside the clip when the popup opens above a late day", async () => {
     jest
-      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
-      .mockReturnValue(dark ? "dark" : "light");
-    const expected = dark ? LIGHT_PALETTE : DARK_PALETTE;
+      .spyOn(
+        jest.requireActual<typeof import("react-native")>("react-native"),
+        "useWindowDimensions",
+      )
+      .mockReturnValue({ width: 400, height: 800, scale: 1, fontScale: 1 });
     const screen = await render(
       <SafeAreaProvider
         initialMetrics={{
@@ -70,10 +199,11 @@ describe("QuickEntryPopup", () => {
       >
         <QuickEntryPopup
           actions={[]}
-          anchor={{ height: 48, width: 48, x: 40, y: 100 }}
+          anchor={{ height: 48, width: 48, x: 180, y: 700 }}
           busy={false}
           date="2026-08-04"
           entries={[existingShift]}
+          animateEntry={false}
           onClose={jest.fn()}
           onOpenDetails={jest.fn()}
           onOpenEntry={jest.fn()}
@@ -82,10 +212,10 @@ describe("QuickEntryPopup", () => {
         />
       </SafeAreaProvider>,
     );
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({
-      backgroundColor: expected.surfaceRaised,
-    });
-    expect(screen.getByText("Nacht")).toHaveStyle({ color: expected.text });
+    expect(screen.getByTestId("quick-entry-pointer")).toHaveStyle({ bottom: -8, left: 184 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ overflow: "visible" });
+    expect(screen.getByTestId("quick-entry-clipped-content")).toHaveStyle({ overflow: "hidden" });
+    expect(screen.getByTestId("quick-entry-pointer")).toHaveProp("pointerEvents", "none");
   });
 
   it("opens the stacked shift selection from the compact day popup", async () => {
@@ -189,7 +319,9 @@ describe("QuickEntryPopup", () => {
       </SafeAreaProvider>,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Schnellauswahl schließen" }));
+    await fireEvent.press(
+      screen.getByTestId("quick-entry-backdrop", { includeHiddenElements: true }),
+    );
 
     expect(screen.getByTestId("quick-entry-overlay", { includeHiddenElements: true })).toHaveProp(
       "pointerEvents",
@@ -230,7 +362,7 @@ describe("QuickEntryPopup", () => {
     expect(overlay).toHaveStyle({ opacity: 0 });
     expect(overlay).toHaveProp("pointerEvents", "none");
     expect(overlay).toHaveProp("accessibilityElementsHidden", true);
-    expect(screen.queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Nacht bearbeiten" })).toBeNull();
     await screen.rerender(
       <SafeAreaProvider
         initialMetrics={{
@@ -243,6 +375,6 @@ describe("QuickEntryPopup", () => {
     );
     expect(screen.getByTestId("quick-entry-overlay")).toBe(overlay);
     expect(screen.getByTestId("quick-entry-overlay")).toHaveStyle({ opacity: 1 });
-    expect(screen.getByRole("button", { name: "Schnellauswahl schließen" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeTruthy();
   });
 });

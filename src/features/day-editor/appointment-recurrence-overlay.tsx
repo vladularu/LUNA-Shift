@@ -1,10 +1,13 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SelectionRow } from "@/ui/selection-option";
+import { Text } from "@/ui/text";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import { useCallback, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -16,7 +19,7 @@ import type { RecurrenceFrequency, RecurrenceRule } from "@/domain/types";
 import { recurrenceLabel } from "@/features/day-editor/entry-options";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 
 const DEFAULT_RECURRENCE: RecurrenceRule = { frequency: "WEEK", interval: 1 };
 
@@ -58,20 +61,6 @@ function isPreset(value: RecurrenceRule | null): boolean {
   return PRESETS.some((preset) => recurrencesEqual(preset.value, value));
 }
 
-function RadioMark({ selected }: { readonly selected: boolean }) {
-  const palette = usePalette();
-  return (
-    <View
-      style={[
-        styles.radioOuter,
-        { borderColor: selected ? palette.primary : palette.textSecondary },
-      ]}
-    >
-      {selected ? <View style={[styles.radioInner, { backgroundColor: palette.primary }]} /> : null}
-    </View>
-  );
-}
-
 function PresetRow({
   label,
   onPress,
@@ -81,29 +70,7 @@ function PresetRow({
   readonly onPress: () => void;
   readonly selected: boolean;
 }) {
-  const palette = usePalette();
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.presetRow,
-        {
-          borderBottomColor: palette.separator,
-          backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-        },
-      ]}
-    >
-      <RadioMark selected={selected} />
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.presetLabel, { color: palette.text }]}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
+  return <SelectionRow label={label} onPress={onPress} selected={selected} separator />;
 }
 
 function WheelColumn<T extends string | number>({
@@ -359,7 +326,8 @@ export function AppointmentRecurrenceOverlay({
         ]}
         testID="appointment-recurrence-sheet"
       >
-        <View
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
           accessibilityRole="radiogroup"
           style={[styles.presetCard, { backgroundColor: palette.surface }]}
           testID="appointment-recurrence-preset-card"
@@ -375,25 +343,27 @@ export function AppointmentRecurrenceOverlay({
               selected={recurrencesEqual(value, preset.value)}
             />
           ))}
-        </View>
+        </ScrollView>
 
-        <Pressable
-          accessibilityRole="radio"
-          accessibilityState={{ selected: value !== null && !isPreset(value) }}
-          onPress={() => {
-            setDraft(value ?? DEFAULT_RECURRENCE);
-            setView("CUSTOM");
+        <View
+          style={{
+            borderRadius: RADII.control,
+            borderCurve: CORNER_CURVE,
+            overflow: "hidden",
+            backgroundColor: palette.surface,
           }}
-          style={({ pressed }) => [
-            styles.customRow,
-            { backgroundColor: pressed ? palette.surfaceMuted : palette.surface },
-          ]}
-          testID="appointment-recurrence-custom-row"
         >
-          <RadioMark selected={value !== null && !isPreset(value)} />
-          <Text style={[styles.presetLabel, { color: palette.text }]}>Benutzerdefiniert</Text>
-          <Ionicons color={palette.text} name="chevron-forward" size={22} />
-        </Pressable>
+          <SelectionRow
+            label="Benutzerdefiniert"
+            selected={value !== null && !isPreset(value)}
+            navigation
+            testID="appointment-recurrence-custom-row"
+            onPress={() => {
+              setDraft(value ?? DEFAULT_RECURRENCE);
+              setView("CUSTOM");
+            }}
+          />
+        </View>
       </Animated.View>
     </View>
   );
@@ -412,16 +382,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     gap: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopLeftRadius: 34,
-    borderTopRightRadius: 34,
-    borderCurve: "continuous",
+    borderTopLeftRadius: RADII.sheet,
+    borderTopRightRadius: RADII.sheet,
+    borderCurve: CORNER_CURVE,
     paddingHorizontal: 20,
     paddingTop: 22,
   },
   presetCard: {
+    flexShrink: 1,
     overflow: "hidden",
-    borderRadius: 24,
-    borderCurve: "continuous",
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
   },
   presetRow: {
     minHeight: 56,
@@ -431,7 +402,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
   },
-  presetLabel: { flex: 1, fontSize: 16, lineHeight: 21, fontWeight: "500" },
+  presetLabel: {
+    flex: 1,
+    fontFamily: INTER_FONTS.medium,
+    fontSize: TYPOGRAPHY.body.fontSize,
+    lineHeight: TYPOGRAPHY.compact.lineHeight,
+    fontWeight: "500",
+  },
   radioOuter: {
     width: 24,
     height: 24,
@@ -446,8 +423,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    borderRadius: 24,
-    borderCurve: "continuous",
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
     paddingHorizontal: 16,
   },
   customScreen: {
@@ -469,14 +446,21 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 24,
   },
-  customTitle: { flex: 1, fontSize: 22, lineHeight: 28, fontWeight: "700", textAlign: "center" },
+  customTitle: {
+    flex: 1,
+    fontFamily: INTER_FONTS.bold,
+    fontSize: TYPOGRAPHY.screenTitle.fontSize,
+    lineHeight: TYPOGRAPHY.screenTitle.lineHeight,
+    fontWeight: "700",
+    textAlign: "center",
+  },
   headerBalance: { width: 48 },
   wheelCard: {
     height: 220,
     flexDirection: "row",
     gap: 16,
-    borderRadius: 26,
-    borderCurve: "continuous",
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
     paddingHorizontal: 12,
   },
   wheelColumn: { flex: 1, overflow: "hidden" },
@@ -486,8 +470,8 @@ const styles = StyleSheet.create({
     right: 0,
     left: 0,
     height: WHEEL_ITEM_HEIGHT,
-    borderRadius: 14,
-    borderCurve: "continuous",
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
   },
   wheelContent: { paddingVertical: WHEEL_PADDING },
   wheelItem: {
@@ -497,12 +481,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   wheelItemText: {
-    fontSize: 19,
-    lineHeight: 24,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.pickerValue.fontSize,
+    lineHeight: TYPOGRAPHY.bodyLarge.lineHeight,
     fontVariant: ["tabular-nums"],
     textAlign: "center",
   },
-  summary: { fontSize: 16, lineHeight: 22, textAlign: "center" },
+  summary: {
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.body.fontSize,
+    lineHeight: TYPOGRAPHY.button.lineHeight,
+    textAlign: "center",
+  },
   customFooter: { marginTop: "auto", flexDirection: "row", gap: 18 },
   footerButton: {
     minHeight: 54,
@@ -510,8 +500,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 27,
-    borderCurve: "continuous",
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
   },
-  footerLabel: { fontSize: 17, fontWeight: "600" },
+  footerLabel: {
+    fontFamily: INTER_FONTS.semibold,
+    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+    fontWeight: "600",
+  },
 });

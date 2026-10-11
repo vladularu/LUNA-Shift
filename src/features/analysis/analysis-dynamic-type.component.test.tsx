@@ -97,7 +97,7 @@ describe("analysis Dynamic Type layout", () => {
     expect(screen.getByLabelText("Früh, Anzahl 9, Stunden 69:18 h")).toBeTruthy();
     expect(screen.getByLabelText("Fortbildung, Anzahl 3, Stunden 23:06 h")).toBeTruthy();
     expect(screen.getByLabelText("Gesamt, Anzahl 12, Stunden 92:24 h")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Schichten: Anzahl" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Schichten: Anzahl" })).toBeNull();
     expect(screen.getByTestId("shift-detail-EARLY")).toHaveStyle({
       flexDirection: fontScale >= 1.3 ? "column" : "row",
     });

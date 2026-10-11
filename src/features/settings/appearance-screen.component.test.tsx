@@ -9,6 +9,8 @@ import type { ShiftEntry } from "@/domain/types";
 import { calendarChipPalette } from "@/theme/color-contrast";
 import type { CalendarImageStrength } from "@/theme/calendar-image";
 
+const nativeModule = jest.requireActual<typeof import("react-native")>("react-native");
+
 const preferences: AppearanceValue = {
   themeId: "mint",
   mode: "system",
@@ -64,7 +66,7 @@ const mockEntries: ShiftEntry[] = [
 ];
 jest.mock("@/navigation/active-month", () => ({ useActiveMonth: () => "2026-10" }));
 jest.mock("@/features/calendar/calendar-preferences", () => ({
-  useCalendarPreferences: () => mockDisplay,
+  useCalendarPreferences: () => ({ ...mockDisplay }),
 }));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftEntries: () => ({ entries: mockEntries }),
@@ -122,7 +124,7 @@ describe("appearance controls", () => {
     mockDisplay.labelMode = "SHORT";
     mockDisplay.showShiftTimes = false;
     mockDisplay.showShiftDuration = false;
-    jest.spyOn(ReactNative, "useWindowDimensions").mockReturnValue({
+    jest.spyOn(nativeModule, "useWindowDimensions").mockReturnValue({
       width: 390,
       height: 844,
       scale: 3,
@@ -153,14 +155,14 @@ describe("appearance controls", () => {
   });
   it("stacks image strengths with usable touch targets when text is large", async () => {
     jest
-      .spyOn(ReactNative, "useWindowDimensions")
+      .spyOn(nativeModule, "useWindowDimensions")
       .mockReturnValue({ width: 320, height: 640, scale: 2, fontScale: 2 });
     const screen = await render(pictureScreen());
     expect(screen.getByLabelText("Bildsichtbarkeit")).toHaveStyle({
       flexDirection: "column",
     });
     for (const name of ["Dezent", "Mittel", "Kräftig"])
-      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 48 });
+      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
   });
   it("does not write again when the selected mode is pressed", async () => {
     const screen = await render(screenWith());
@@ -169,7 +171,7 @@ describe("appearance controls", () => {
     expect(preferences.setTheme).not.toHaveBeenCalled();
   });
   it("stacks the choices for large text and preserves usable touch targets", async () => {
-    jest.spyOn(ReactNative, "useWindowDimensions").mockReturnValue({
+    jest.spyOn(nativeModule, "useWindowDimensions").mockReturnValue({
       width: 320,
       height: 640,
       scale: 2,
@@ -180,12 +182,12 @@ describe("appearance controls", () => {
       flexDirection: "column",
     });
     for (const name of ["Hell", "Dunkel", "System"]) {
-      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 48 });
+      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
     }
   });
 
   it("keeps medium enlarged labels out of cramped horizontal segments", async () => {
-    jest.spyOn(ReactNative, "useWindowDimensions").mockReturnValue({
+    jest.spyOn(nativeModule, "useWindowDimensions").mockReturnValue({
       width: 375,
       height: 812,
       scale: 3,
@@ -195,17 +197,31 @@ describe("appearance controls", () => {
     expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({ flexDirection: "column" });
   });
 
-  it("uses a neutral track and raised selection in both modes", async () => {
-    const screen = await render(screenWith({ mode: "light" }));
+  it("uses standalone pill selections with the same contrast in both modes", async () => {
+    const screen = await render(screenWith({ mode: "light" }, { uri: "file:///photo.jpg" }));
     for (const mode of ["light", "dark"] as const) {
-      await screen.rerender(screenWith({ mode }));
+      await screen.rerender(screenWith({ mode }, { uri: "file:///photo.jpg" }));
       const palette = resolvePalette("mint", mode === "dark");
-      expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({
-        backgroundColor: palette.surfaceMuted,
-      });
-      expect(screen.getByRole("radio", { checked: true })).toHaveStyle({
-        backgroundColor: palette.surfaceRaised,
-      });
+      for (const label of [
+        "Erscheinungsbild",
+        "Kalenderhintergrund",
+        "Bildsichtbarkeit",
+        "Dienstbezeichnung",
+      ]) {
+        const group = screen.getByLabelText(label);
+        expect(group).toHaveStyle({
+          backgroundColor: palette.selectionTrack,
+          borderRadius: 999,
+        });
+        expect(within(group).getByRole("radio", { checked: true })).toBeTruthy();
+        expect(within(group).getByTestId(`${label}:active-surface`)).toHaveStyle({
+          backgroundColor: palette.selectionActiveSurface,
+          borderRadius: 999,
+        });
+        expect(ReactNative.StyleSheet.flatten(group.parent?.props.style)).not.toHaveProperty(
+          "backgroundColor",
+        );
+      }
     }
   });
 
@@ -275,7 +291,7 @@ describe("appearance controls", () => {
       const alert = jest.spyOn(ReactNative.Alert, "alert");
       const screen = await render(screenWith({}, { uri }));
       const status = uri ? "Eigenes Foto" : "LUNA Standard";
-      expect(screen.getByRole("tab", { name: status, selected: true })).toBeTruthy();
+      expect(screen.getByRole("radio", { name: status, checked: true })).toBeTruthy();
       expect(screen.getByLabelText("Kalenderhintergrund")).toBeTruthy();
       expect(screen.queryByRole("button", { name: /Hintergrund/ })).toBeNull();
       await fireEvent.press(
@@ -302,6 +318,34 @@ describe("appearance controls", () => {
       expect(screen.getByTestId("appearance-preview-month").props.style.height).toBeLessThan(300);
     },
   );
+  it("keeps preview height and date positions stable when shift details are toggled", async () => {
+    const screen = await render(pictureScreen());
+    await layoutPreview(screen);
+    const hidden = { includeHiddenElements: true };
+    const height = screen.getByTestId("appearance-preview-month").props.style.height;
+    const datePositions = () =>
+      screen
+        .getAllByTestId(/^calendar-date-marker-/, hidden)
+        .map((marker) => ReactNative.StyleSheet.flatten(marker.props.style));
+    const positions = datePositions();
+
+    for (const [times, duration] of [
+      [true, false],
+      [true, true],
+      [false, true],
+      [false, false],
+    ] as const) {
+      mockDisplay.showShiftTimes = times;
+      mockDisplay.showShiftDuration = duration;
+      await screen.rerender(pictureScreen());
+      expect(screen.getByTestId("appearance-preview-month")).toHaveStyle({ height });
+      expect(datePositions()).toEqual(positions);
+      const shift = within(screen.getByTestId("appearance-calendar-preview")).getByLabelText(
+        "2026-10-01, Früh",
+      );
+      expect(within(shift).queryByText(/06:00/) !== null).toBe(times);
+    }
+  });
   it("uses a red text row for removing only the photo and provides undo", async () => {
     const screen = await render(pictureScreen());
     expect(screen.getByText("Foto entfernen")).toHaveStyle({
@@ -313,7 +357,7 @@ describe("appearance controls", () => {
     expect(preferences.setMode).not.toHaveBeenCalled();
     expect(setStrength).not.toHaveBeenCalled();
     await screen.rerender(screenWith({}, { canUndoRemoval: true }));
-    expect(screen.getByRole("tab", { name: "LUNA Standard", selected: true })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "LUNA Standard", checked: true })).toBeTruthy();
     expect(screen.queryByLabelText("Bildsichtbarkeit")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Rückgängig" }));
     expect(background.undoRemove).toHaveBeenCalled();
@@ -336,25 +380,25 @@ describe("appearance controls", () => {
   });
   it("keeps mode and photo rows operable with large type on a small iPhone", async () => {
     jest
-      .spyOn(ReactNative, "useWindowDimensions")
+      .spyOn(nativeModule, "useWindowDimensions")
       .mockReturnValue({ width: 320, height: 568, scale: 2, fontScale: 3 });
     const screen = await render(pictureScreen());
     for (const name of ["Hell", "Dunkel", "System", "Dezent", "Mittel", "Kräftig"])
-      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 48 });
+      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
     for (const name of ["Foto ändern", "Foto entfernen"])
       expect(screen.getByRole("button", { name })).toHaveStyle({ minHeight: 56 });
     expect(screen.getByRole("button", { name: "Kalenderoptionen zurücksetzen" })).toHaveStyle({
-      minHeight: 48,
+      minHeight: 40,
     });
     expect(screen.getByText("Änderungen werden automatisch gespeichert.")).toBeTruthy();
   });
   it("keeps background selection direct and restores a removed photo without opening another picker", async () => {
     const screen = await render(pictureScreen());
-    expect(screen.getByRole("tab", { name: "Eigenes Foto", selected: true })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("tab", { name: "LUNA Standard" }));
+    expect(screen.getByRole("radio", { name: "Eigenes Foto", checked: true })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "LUNA Standard" }));
     expect(background.remove).toHaveBeenCalledTimes(1);
     await screen.rerender(screenWith({}, { canUndoRemoval: true }));
-    await fireEvent.press(screen.getByRole("tab", { name: "Eigenes Foto" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Eigenes Foto" }));
     expect(background.undoRemove).toHaveBeenCalledTimes(1);
     expect(background.choose).not.toHaveBeenCalled();
   });
@@ -369,9 +413,9 @@ describe("appearance controls", () => {
     ] as const) {
       await fireEvent.press(screen.getByRole("switch", { name }));
       expect(setter).toHaveBeenCalledWith(name === "Startzeit" || name === "Gesamtdauer");
-      expect(screen.getByRole("switch", { name })).toHaveStyle({ minHeight: 48, minWidth: 48 });
+      expect(screen.getByRole("switch", { name })).toHaveStyle({ minHeight: 40, minWidth: 40 });
     }
-    await fireEvent.press(screen.getByRole("tab", { name: "Name" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Name" }));
     expect(mockDisplay.setLabelMode).toHaveBeenCalledWith("FULL");
   });
   it("retains label and time values while hidden services disable their controls", async () => {
@@ -379,10 +423,10 @@ describe("appearance controls", () => {
     mockDisplay.showShiftTimes = true;
     mockDisplay.showShiftDuration = true;
     const screen = await render(screenWith());
-    expect(screen.getByRole("tab", { name: "Kürzel", selected: true })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Kürzel", checked: true })).toBeDisabled();
     for (const name of ["Name", "Kürzel", "Symbol"]) {
-      await fireEvent.press(screen.getByRole("tab", { name }));
-      expect(screen.getByRole("tab", { name })).toBeDisabled();
+      await fireEvent.press(screen.getByRole("radio", { name }));
+      expect(screen.getByRole("radio", { name })).toBeDisabled();
     }
     for (const name of ["Startzeit", "Gesamtdauer"])
       expect(screen.getByRole("switch", { name })).toBeDisabled();
@@ -392,7 +436,7 @@ describe("appearance controls", () => {
     expect(mockDisplay.setShowShiftDuration).not.toHaveBeenCalled();
     mockDisplay.showShifts = true;
     await screen.rerender(screenWith());
-    expect(screen.getByRole("tab", { name: "Kürzel", selected: true })).toBeEnabled();
+    expect(screen.getByRole("radio", { name: "Kürzel", checked: true })).toBeEnabled();
     expect(screen.getByRole("switch", { name: "Startzeit", checked: true })).toBeTruthy();
   });
   it("shows a calendar persistence failure and never announces a saved selection", async () => {

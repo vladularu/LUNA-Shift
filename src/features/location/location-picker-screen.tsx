@@ -1,15 +1,9 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text, TextInput } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
 
 import type { EntryLocation } from "@/domain/types";
 import {
@@ -21,8 +15,8 @@ import {
   useLocationSearch,
 } from "@/features/location/use-location-search";
 import { usePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE } from "@/theme/typography";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 type PickerRow =
   | { readonly id: "custom"; readonly kind: "CUSTOM"; readonly query: string }
@@ -162,93 +156,97 @@ export function LocationPickerScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.surface }]} testID="location-picker">
-      <View
-        style={[styles.header, { borderBottomColor: palette.separator }]}
-        testID="location-picker-header"
-      >
-        <Text
-          accessibilityRole="header"
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={[styles.title, { color: palette.text }]}
+    <BackFooterLayout disabled={resolvingId !== null} onPress={() => router.back()}>
+      {(bottomPadding) => (
+        <View
+          style={[styles.container, { backgroundColor: palette.surface }]}
+          testID="location-picker"
         >
-          Ort
-        </Text>
-      </View>
-
-      <View
-        style={[styles.inputRow, { borderBottomColor: palette.separator }]}
-        testID="location-picker-input-row"
-      >
-        <TextInput
-          accessibilityLabel="Ort oder Adresse"
-          autoCapitalize="words"
-          autoCorrect={false}
-          autoFocus
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          onChangeText={(value) => {
-            setSelectionError(null);
-            setQuery(value);
-          }}
-          onSubmitEditing={submitCustomLocation}
-          placeholder="Gib einen Ort ein"
-          placeholderTextColor={palette.textMuted}
-          returnKeyType="done"
-          selectionColor={palette.primary}
-          style={[styles.input, { color: palette.text }]}
-          value={query}
-        />
-        {loading ? (
-          <View accessibilityLabel="Adressen werden gesucht" accessibilityRole="progressbar">
-            <ActivityIndicator color={palette.primary} size="small" />
-          </View>
-        ) : null}
-        {query.length > 0 ? (
-          <Pressable
-            accessibilityLabel="Ortseingabe löschen"
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={() => {
-              setSelectionError(null);
-              setQuery("");
-            }}
-            style={({ pressed }) => [styles.clearButton, { opacity: pressed ? 0.55 : 1 }]}
+          <View
+            style={[styles.header, { borderBottomColor: palette.separator }]}
+            testID="location-picker-header"
           >
-            <Ionicons color={palette.textMuted} name="close-circle" size={22} />
-          </Pressable>
-        ) : null}
-      </View>
-
-      <FlatList
-        automaticallyAdjustKeyboardInsets
-        contentContainerStyle={styles.resultsContent}
-        data={rows}
-        initialNumToRender={6}
-        ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: palette.separator }]} />
-        )}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        keyExtractor={(item) => item.id}
-        ListFooterComponent={
-          (selectionError ?? error) ? (
             <Text
-              accessibilityLiveRegion="polite"
-              accessibilityRole="alert"
+              accessibilityRole="header"
               maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={[styles.error, { color: palette.textMuted }]}
+              style={[styles.title, { color: palette.text }]}
             >
-              {selectionError ?? error}
+              Ort
             </Text>
-          ) : null
-        }
-        renderItem={renderRow}
-        style={styles.results}
-      />
-      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20 }}>
-        <SheetBackFooter disabled={resolvingId !== null} onPress={() => router.back()} />
-      </View>
-    </View>
+          </View>
+
+          <View
+            style={[styles.inputRow, { borderBottomColor: palette.separator }]}
+            testID="location-picker-input-row"
+          >
+            <TextInput
+              accessibilityLabel="Ort oder Adresse"
+              autoCapitalize="words"
+              autoCorrect={false}
+              autoFocus
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              onChangeText={(value) => {
+                setSelectionError(null);
+                setQuery(value);
+              }}
+              onSubmitEditing={submitCustomLocation}
+              placeholder="Gib einen Ort ein"
+              placeholderTextColor={palette.textMuted}
+              returnKeyType="done"
+              selectionColor={palette.primary}
+              style={[styles.input, { color: palette.text }]}
+              value={query}
+            />
+            {loading ? (
+              <View accessibilityLabel="Adressen werden gesucht" accessibilityRole="progressbar">
+                <ActivityIndicator color={palette.primary} size="small" />
+              </View>
+            ) : null}
+            {query.length > 0 ? (
+              <Pressable
+                accessibilityLabel="Ortseingabe löschen"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => {
+                  setSelectionError(null);
+                  setQuery("");
+                }}
+                style={({ pressed }) => [styles.clearButton, { opacity: pressed ? 0.55 : 1 }]}
+              >
+                <Ionicons color={palette.textMuted} name="close-circle" size={22} />
+              </Pressable>
+            ) : null}
+          </View>
+
+          <FlatList
+            automaticallyAdjustKeyboardInsets
+            contentContainerStyle={[styles.resultsContent, { paddingBottom: bottomPadding }]}
+            data={rows}
+            initialNumToRender={6}
+            ItemSeparatorComponent={() => (
+              <View style={[styles.separator, { backgroundColor: palette.separator }]} />
+            )}
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={(item) => item.id}
+            ListFooterComponent={
+              (selectionError ?? error) ? (
+                <Text
+                  accessibilityLiveRegion="polite"
+                  accessibilityRole="alert"
+                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                  style={[styles.error, { color: palette.textMuted }]}
+                >
+                  {selectionError ?? error}
+                </Text>
+              ) : null
+            }
+            renderItem={renderRow}
+            style={styles.results}
+          />
+        </View>
+      )}
+    </BackFooterLayout>
   );
 }
 
@@ -265,8 +263,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 19,
-    lineHeight: 24,
+    fontFamily: INTER_FONTS.semibold,
+    fontSize: TYPOGRAPHY.pickerValue.fontSize,
+    lineHeight: TYPOGRAPHY.bodyLarge.lineHeight,
     fontWeight: "600",
   },
   inputRow: {
@@ -280,8 +279,9 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 58,
     flex: 1,
-    fontSize: 17,
-    lineHeight: 22,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+    lineHeight: TYPOGRAPHY.button.lineHeight,
     paddingVertical: 0,
   },
   clearButton: {
@@ -306,8 +306,9 @@ const styles = StyleSheet.create({
   },
   customResultText: {
     flex: 1,
-    fontSize: 17,
-    lineHeight: 22,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+    lineHeight: TYPOGRAPHY.button.lineHeight,
     fontWeight: "400",
   },
   resultTextColumn: {
@@ -316,13 +317,15 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   resultTitle: {
-    fontSize: 17,
-    lineHeight: 22,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+    lineHeight: TYPOGRAPHY.button.lineHeight,
     fontWeight: "400",
   },
   resultAddress: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.small.fontSize,
+    lineHeight: TYPOGRAPHY.label.lineHeight,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
@@ -331,7 +334,8 @@ const styles = StyleSheet.create({
   error: {
     paddingHorizontal: 22,
     paddingVertical: 14,
-    fontSize: 13,
-    lineHeight: 18,
+    fontFamily: INTER_FONTS.regular,
+    fontSize: TYPOGRAPHY.label.fontSize,
+    lineHeight: TYPOGRAPHY.label.lineHeight,
   },
 });

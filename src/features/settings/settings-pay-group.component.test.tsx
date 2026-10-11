@@ -131,6 +131,21 @@ describe("settings pay group selection", () => {
     await select(screen, "Entgeltgruppe", "P6");
     expect(screen.getByRole("button", { name: "Stufe: Stufe 4" })).toBeTruthy();
   });
+
+  it("places the salary mode directly below its heading and preserves the tariff when switching back", async () => {
+    const screen = await render(editor());
+    const group = screen.getByTestId("salary-basis-selection");
+    const heading = screen.getByRole("header", { name: "Gehaltsgrundlage" });
+    expect(group.parent).toBe(heading.parent);
+    expect(screen.getByRole("radio", { name: "Nach Tarif", checked: true })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "Eigenes Brutto" }));
+    expect(screen.getByRole("radio", { name: "Eigenes Brutto", checked: true })).toBeTruthy();
+    expect(screen.getByLabelText("Monatliches Brutto in Euro")).toBeTruthy();
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("radio", { name: "Nach Tarif" }));
+    expect(screen.getByRole("button", { name: "Entgeltgruppe: P5" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Stufe: Stufe 1" })).toBeTruthy();
+  });
   it("requires a choice and restores only that salary's stored group and stage", async () => {
     mockSalaryBasisConflict = {
       tariff: {

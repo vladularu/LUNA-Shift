@@ -1,11 +1,12 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
 import { useCallback } from "react";
 import {
   FlatList,
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type ListRenderItem,
@@ -16,10 +17,10 @@ import { SHIFT_COLOR_SWATCHES } from "@/theme/color-grid";
 import { chipTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { selectionFeedback } from "@/ui/haptics";
 import { ShiftSymbol } from "@/ui/shift-symbol";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 const COLUMN_COUNT = 10;
 
@@ -88,76 +89,66 @@ export function ShiftColorPickerSheet({
       presentationStyle="fullScreen"
       visible={visible}
     >
-      <View style={[styles.screen, { backgroundColor: palette.groupedBackground }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, SPACING.md) }]}>
-          <Pressable
-            accessibilityLabel="Farbauswahl schließen"
-            accessibilityRole="button"
-            onPress={onClose}
-            style={({ pressed }) => [
-              styles.closeButton,
-              {
-                backgroundColor: palette.surfaceRaised,
-                opacity: pressed ? 0.62 : 1,
-              },
-            ]}
-          >
-            <Ionicons color={palette.text} name="close" size={28} />
-          </Pressable>
-          <Text
-            accessibilityRole="header"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.title, { color: palette.text }]}
-          >
-            Farbe
-          </Text>
-          <View style={styles.headerPlaceholder} />
-        </View>
+      <BackFooterLayout onPress={onClose} style={{ backgroundColor: palette.groupedBackground }}>
+        {(bottomPadding) => (
+          <View style={[styles.screen, { backgroundColor: palette.groupedBackground }]}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, SPACING.md) }]}>
+              <Pressable
+                accessibilityLabel="Farbauswahl schließen"
+                accessibilityRole="button"
+                onPress={onClose}
+                style={({ pressed }) => [
+                  styles.closeButton,
+                  {
+                    backgroundColor: palette.surfaceRaised,
+                    opacity: pressed ? 0.62 : 1,
+                  },
+                ]}
+              >
+                <Ionicons color={palette.text} name="close" size={28} />
+              </Pressable>
+              <Text
+                accessibilityRole="header"
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={[styles.title, { color: palette.text }]}
+              >
+                Farbe
+              </Text>
+              <View style={styles.headerPlaceholder} />
+            </View>
 
-        <View
-          accessibilityLabel={`Vorschau mit Farbe ${value}`}
-          accessible
-          style={[styles.preview, { backgroundColor: value }]}
-        >
-          <ShiftSymbol color={chipTextColor} size={34} value={symbol} />
-        </View>
+            <View
+              accessibilityLabel={`Vorschau mit Farbe ${value}`}
+              accessible
+              style={[styles.preview, { backgroundColor: value }]}
+            >
+              <ShiftSymbol color={chipTextColor} size={34} value={symbol} />
+            </View>
 
-        <View
-          style={[
-            styles.gridCard,
-            {
-              width: cardWidth,
-              borderColor: palette.separator,
-              backgroundColor: palette.surface,
-            },
-          ]}
-        >
-          <FlatList
-            contentContainerStyle={styles.gridContent}
-            data={SHIFT_COLOR_SWATCHES}
-            initialNumToRender={60}
-            keyExtractor={(item) => item}
-            numColumns={COLUMN_COUNT}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            windowSize={5}
-          />
-        </View>
-
-        <View
-          style={[
-            styles.footer,
-            {
-              paddingBottom: Math.max(insets.bottom, SPACING.md),
-              backgroundColor: palette.groupedBackground,
-            },
-          ]}
-        >
-          <View style={{ width: cardWidth }}>
-            <SheetBackFooter onPress={onClose} />
+            <View
+              style={[
+                styles.gridCard,
+                {
+                  width: cardWidth,
+                  borderColor: palette.separator,
+                  backgroundColor: palette.surface,
+                },
+              ]}
+            >
+              <FlatList
+                contentContainerStyle={[styles.gridContent, { paddingBottom: bottomPadding }]}
+                data={SHIFT_COLOR_SWATCHES}
+                initialNumToRender={60}
+                keyExtractor={(item) => item}
+                numColumns={COLUMN_COUNT}
+                renderItem={renderItem}
+                showsVerticalScrollIndicator={false}
+                windowSize={5}
+              />
+            </View>
           </View>
-        </View>
-      </View>
+        )}
+      </BackFooterLayout>
     </Modal>
   );
 }
@@ -182,8 +173,9 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.screenTitle,
-    fontSize: 23,
-    lineHeight: 29,
+    fontFamily: INTER_FONTS.bold,
+    fontSize: TYPOGRAPHY.editorTitle.fontSize,
+    lineHeight: TYPOGRAPHY.highlightCount.lineHeight,
     fontWeight: "700",
   },
   headerPlaceholder: {
@@ -206,7 +198,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderRadius: RADII.large,
-    borderCurve: "continuous",
+    borderCurve: CORNER_CURVE,
   },
   gridContent: {
     paddingHorizontal: SPACING.md,
@@ -229,10 +221,5 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-  },
-  footer: {
-    alignItems: "center",
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
   },
 });

@@ -72,6 +72,9 @@ const repository: PflegeShiftRepositoryPort = {
   swapTemplateSortOrder: jest.fn(async () => {
     throw new Error("Unexpected swapTemplateSortOrder call");
   }),
+  reorderTemplates: jest.fn(async () => {
+    throw new Error("Unexpected reorderTemplates call");
+  }),
   listCalendarEntries: jest.fn(async () => []),
   saveShift: jest.fn(async () => mockSavedShift),
   saveAppointment: jest.fn(async () => {

@@ -1,8 +1,14 @@
+import { SelectionControl } from "@/ui/selection-control";
+import { SelectionRow } from "@/ui/selection-option";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { Text } from "@/ui/text";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { Temporal } from "@js-temporal/polyfill";
 import { router } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 import { PRODUCT_NAME } from "@/brand";
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
@@ -24,7 +30,7 @@ import { listDiagnosticEvents, recordDiagnostic } from "@/infrastructure/diagnos
 import { analysisRoute, calendarRoute } from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
 import { successFeedback } from "@/ui/haptics";
-import { PrimaryButton, SegmentedButton } from "@/ui/form-controls";
+import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 
 const SCENARIOS: readonly { key: TestScenario; title: string; detail: string }[] = [
@@ -141,7 +147,14 @@ function DevToolsContent() {
           padding: 28,
         }}
       >
-        <Text style={{ color: palette.text, fontSize: 22, fontWeight: "700" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.screenTitle.fontSize,
+            fontWeight: "700",
+          }}
+        >
           Testlabor gesperrt
         </Text>
         <Text style={{ color: palette.textMuted, textAlign: "center" }}>
@@ -163,7 +176,14 @@ function DevToolsContent() {
           padding: 28,
         }}
       >
-        <Text style={{ color: palette.text, fontSize: 22, fontWeight: "700" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.screenTitle.fontSize,
+            fontWeight: "700",
+          }}
+        >
           Profil erforderlich
         </Text>
         <Text style={{ color: palette.textMuted, textAlign: "center" }}>
@@ -317,7 +337,16 @@ function DevToolsContent() {
       contentContainerStyle={{ gap: 18, padding: 16, paddingBottom: 48 }}
     >
       <View style={{ gap: 5 }}>
-        <Text style={{ color: palette.text, fontSize: 28, fontWeight: "700" }}>Testlabor</Text>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.dialogTitle.fontSize,
+            fontWeight: "700",
+          }}
+        >
+          Testlabor
+        </Text>
         <Text style={{ color: palette.textMuted, lineHeight: 20 }}>
           Komplette Monate in wenigen Sekunden prüfen.
         </Text>
@@ -333,10 +362,11 @@ function DevToolsContent() {
 
       <View
         style={{
+          borderCurve: CORNER_CURVE,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          borderRadius: 18,
+          borderRadius: RADII.control,
           backgroundColor: palette.surface,
           padding: 12,
         }}
@@ -347,13 +377,35 @@ function DevToolsContent() {
           onPress={() => moveMonth(-1)}
           style={{ padding: 12 }}
         >
-          <Text style={{ color: palette.primary, fontSize: 24 }}>‹</Text>
+          <Text
+            style={{
+              color: palette.primary,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.highlightCount.fontSize,
+            }}
+          >
+            ‹
+          </Text>
         </Pressable>
         <View style={{ alignItems: "center", gap: 2 }}>
-          <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: palette.textMuted,
+              fontFamily: INTER_FONTS.bold,
+              fontSize: TYPOGRAPHY.caption.fontSize,
+              fontWeight: "700",
+            }}
+          >
             STARTMONAT
           </Text>
-          <Text style={{ color: palette.text, fontSize: 18, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: palette.text,
+              fontFamily: INTER_FONTS.bold,
+              fontSize: TYPOGRAPHY.metricValue.fontSize,
+              fontWeight: "700",
+            }}
+          >
             {formatMonthTitle(startMonth)}
           </Text>
         </View>
@@ -363,61 +415,65 @@ function DevToolsContent() {
           onPress={() => moveMonth(1)}
           style={{ padding: 12 }}
         >
-          <Text style={{ color: palette.primary, fontSize: 24 }}>›</Text>
+          <Text
+            style={{
+              color: palette.primary,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.highlightCount.fontSize,
+            }}
+          >
+            ›
+          </Text>
         </Pressable>
       </View>
 
-      <View
+      <SelectionControl
         accessibilityLabel="Testzeitraum"
-        accessibilityRole="radiogroup"
-        style={{ flexDirection: "row", gap: 8 }}
-      >
-        {([1, 3, 12] as const).map((value) => (
-          <SegmentedButton
-            key={value}
-            label={`${value} ${value === 1 ? "Monat" : "Monate"}`}
-            selected={range === value}
-            onPress={() => setRange(value)}
-          />
-        ))}
-      </View>
+        value={String(range)}
+        items={[
+          { value: "1", label: "1 Monat" },
+          { value: "3", label: "3 Monate" },
+          { value: "12", label: "12 Monate" },
+        ]}
+        onChange={(value) => setRange(Number(value) as 1 | 3 | 12)}
+      />
 
       <View accessibilityLabel="Testszenario" accessibilityRole="radiogroup" style={{ gap: 9 }}>
         {SCENARIOS.map((item) => {
           const selected = scenario === item.key;
           return (
-            <Pressable
+            <SelectionRow
               key={item.key}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
+              label={item.title}
+              caption={item.detail}
+              selected={selected}
               onPress={() => setScenario(item.key)}
-              style={{
-                gap: 4,
-                borderWidth: 1,
-                borderColor: selected ? palette.primary : palette.border,
-                borderRadius: 17,
-                backgroundColor: selected ? palette.primarySoft : palette.surface,
-                padding: 15,
-              }}
-            >
-              <Text
-                style={{
-                  color: selected ? palette.primary : palette.text,
-                  fontSize: 16,
-                  fontWeight: "700",
-                }}
-              >
-                {item.title}
-              </Text>
-              <Text style={{ color: palette.textMuted, fontSize: 13 }}>{item.detail}</Text>
-            </Pressable>
+              style={{ borderRadius: RADII.control }}
+            />
           );
         })}
       </View>
 
       {preview ? (
-        <View style={{ gap: 12, borderRadius: 20, backgroundColor: palette.surface, padding: 17 }}>
-          <Text style={{ color: palette.text, fontSize: 17, fontWeight: "700" }}>Vorschau</Text>
+        <View
+          style={{
+            borderCurve: CORNER_CURVE,
+            gap: 12,
+            borderRadius: RADII.control,
+            backgroundColor: palette.surface,
+            padding: 17,
+          }}
+        >
+          <Text
+            style={{
+              color: palette.text,
+              fontFamily: INTER_FONTS.bold,
+              fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+              fontWeight: "700",
+            }}
+          >
+            Vorschau
+          </Text>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Metric label="Monate" value={String(preview.months.length)} />
             <Metric label="Vorhanden" value={String(preview.existingEntryCount)} />
@@ -426,11 +482,24 @@ function DevToolsContent() {
               value={String(preview.plannedShiftCount + preview.plannedAppointmentCount)}
             />
           </View>
-          <Text style={{ color: palette.textMuted, fontSize: 12 }}>
+          <Text
+            style={{
+              color: palette.textMuted,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.caption.fontSize,
+            }}
+          >
             {preview.months.map(formatMonthTitle).join(" · ")}
           </Text>
           {preview.warnings.map((warning) => (
-            <Text key={warning} style={{ color: palette.warning, fontSize: 12 }}>
+            <Text
+              key={warning}
+              style={{
+                color: palette.warning,
+                fontFamily: INTER_FONTS.regular,
+                fontSize: TYPOGRAPHY.caption.fontSize,
+              }}
+            >
               ● {warning}
             </Text>
           ))}
@@ -449,19 +518,38 @@ function DevToolsContent() {
       </PrimaryButton>
 
       {backupGroups.length > 0 ? (
-        <Text style={{ color: palette.text, fontSize: 18, fontWeight: "700" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.metricValue.fontSize,
+            fontWeight: "700",
+          }}
+        >
           Aktive Testläufe
         </Text>
       ) : null}
       {backupGroups.map(([runId, items]) => (
         <View
           key={runId}
-          style={{ gap: 12, borderRadius: 18, backgroundColor: palette.surface, padding: 15 }}
+          style={{
+            borderCurve: CORNER_CURVE,
+            gap: 12,
+            borderRadius: RADII.control,
+            backgroundColor: palette.surface,
+            padding: 15,
+          }}
         >
           <Text style={{ color: palette.text, fontWeight: "700" }}>
             {items.map((item) => formatMonthTitle(item.month)).join(" · ")}
           </Text>
-          <Text style={{ color: palette.textMuted, fontSize: 12 }}>
+          <Text
+            style={{
+              color: palette.textMuted,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.caption.fontSize,
+            }}
+          >
             {items.reduce((sum, item) => sum + item.currentEntryCount, 0)} aktuelle Einträge
           </Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
@@ -487,28 +575,67 @@ function DevToolsContent() {
         </View>
       ) : null}
       <View style={{ gap: 8 }}>
-        <Text style={{ color: palette.text, fontSize: 18, fontWeight: "700" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.metricValue.fontSize,
+            fontWeight: "700",
+          }}
+        >
           Lokale Diagnose
         </Text>
-        <Text style={{ color: palette.textMuted, fontSize: 12, lineHeight: 18 }}>
+        <Text
+          style={{
+            color: palette.textMuted,
+            fontFamily: INTER_FONTS.regular,
+            fontSize: TYPOGRAPHY.caption.fontSize,
+            lineHeight: TYPOGRAPHY.label.lineHeight,
+          }}
+        >
           Zeigt nur technische Codes und Fehlerklassen dieser App-Sitzung. Dienst-, Termin- und
           Notizdaten werden nicht protokolliert.
         </Text>
         <View
           accessibilityLabel="Lokale Diagnoseereignisse"
-          style={{ gap: 8, borderRadius: 18, backgroundColor: palette.surface, padding: 15 }}
+          style={{
+            borderCurve: CORNER_CURVE,
+            gap: 8,
+            borderRadius: RADII.control,
+            backgroundColor: palette.surface,
+            padding: 15,
+          }}
         >
           {diagnosticEvents.length === 0 ? (
-            <Text style={{ color: palette.textMuted, fontSize: 13 }}>
+            <Text
+              style={{
+                color: palette.textMuted,
+                fontFamily: INTER_FONTS.regular,
+                fontSize: TYPOGRAPHY.label.fontSize,
+              }}
+            >
               Keine technischen Fehler in dieser Sitzung.
             </Text>
           ) : (
             diagnosticEvents.map((event) => (
               <View key={`${event.timestamp}-${event.code}`} style={{ gap: 2 }}>
-                <Text style={{ color: palette.text, fontSize: 13, fontWeight: "700" }}>
+                <Text
+                  style={{
+                    color: palette.text,
+                    fontFamily: INTER_FONTS.bold,
+                    fontSize: TYPOGRAPHY.label.fontSize,
+                    fontWeight: "700",
+                  }}
+                >
                   {event.code}
                 </Text>
-                <Text style={{ color: palette.textMuted, fontSize: 12 }}>
+                <Text
+                  style={{
+                    color: palette.textMuted,
+                    fontFamily: INTER_FONTS.regular,
+                    fontSize: TYPOGRAPHY.caption.fontSize,
+                  }}
+                >
                   {event.source} · {event.errorClass} ·{" "}
                   {new Date(event.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -550,20 +677,56 @@ export function RuleCatalogRefreshCard({
   return (
     <View
       accessibilityLabel="Preview-Regelkatalog"
-      style={{ gap: 12, borderRadius: 18, backgroundColor: palette.surface, padding: 16 }}
+      style={{
+        borderCurve: CORNER_CURVE,
+        gap: 12,
+        borderRadius: RADII.control,
+        backgroundColor: palette.surface,
+        padding: 16,
+      }}
     >
       <View style={{ gap: 3 }}>
-        <Text style={{ color: palette.text, fontSize: 17, fontWeight: "700" }}>Regelkatalog</Text>
-        <Text style={{ color: palette.primary, fontSize: 14, fontWeight: "700" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+            fontWeight: "700",
+          }}
+        >
+          Regelkatalog
+        </Text>
+        <Text
+          style={{
+            color: palette.primary,
+            fontFamily: INTER_FONTS.bold,
+            fontSize: TYPOGRAPHY.small.fontSize,
+            fontWeight: "700",
+          }}
+        >
           {generation === null ? "Eingebettete Regeln" : `Generation ${generation}`}
         </Text>
       </View>
-      <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
+      <Text
+        style={{
+          color: palette.textMuted,
+          fontFamily: INTER_FONTS.regular,
+          fontSize: TYPOGRAPHY.label.fontSize,
+          lineHeight: TYPOGRAPHY.compactCaption.lineHeight,
+        }}
+      >
         Prüft sofort auf neue, signierte Regeln. Bei einem Fehler bleiben die bisherigen Regeln
         aktiv.
       </Text>
       {message ? (
-        <Text accessibilityLiveRegion="polite" style={{ color: palette.primary, fontSize: 13 }}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={{
+            color: palette.primary,
+            fontFamily: INTER_FONTS.regular,
+            fontSize: TYPOGRAPHY.label.fontSize,
+          }}
+        >
           {message}
         </Text>
       ) : null}
@@ -583,8 +746,25 @@ function Metric({ label, value }: { label: string; value: string }) {
   const palette = usePalette();
   return (
     <View style={{ gap: 2 }}>
-      <Text style={{ color: palette.text, fontSize: 22, fontWeight: "700" }}>{value}</Text>
-      <Text style={{ color: palette.textMuted, fontSize: 12 }}>{label}</Text>
+      <Text
+        style={{
+          color: palette.text,
+          fontFamily: INTER_FONTS.bold,
+          fontSize: TYPOGRAPHY.screenTitle.fontSize,
+          fontWeight: "700",
+        }}
+      >
+        {value}
+      </Text>
+      <Text
+        style={{
+          color: palette.textMuted,
+          fontFamily: INTER_FONTS.regular,
+          fontSize: TYPOGRAPHY.caption.fontSize,
+        }}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -596,16 +776,26 @@ export function SmallButton({ label, onPress }: { label: string; onPress: () => 
       accessibilityRole="button"
       onPress={onPress}
       style={{
+        borderCurve: CORNER_CURVE,
         minHeight: 42,
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 1,
         borderColor: palette.border,
-        borderRadius: 12,
+        borderRadius: RADII.control,
       }}
     >
-      <Text style={{ color: palette.primary, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+      <Text
+        style={{
+          color: palette.primary,
+          fontFamily: INTER_FONTS.semibold,
+          fontSize: TYPOGRAPHY.caption.fontSize,
+          fontWeight: "600",
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

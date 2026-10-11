@@ -1,17 +1,24 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
+import { View } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
 
-export function CheckClearStatus({ title }: { readonly title: string }) {
+export function CheckClearStatus({
+  title,
+  limited = false,
+}: {
+  readonly title: string;
+  readonly limited?: boolean;
+}) {
   const palette = usePalette();
   return (
     <View style={{ flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm }}>
       <Ionicons
-        name="checkmark-circle-outline"
+        name={limited ? "information-circle-outline" : "checkmark-circle-outline"}
         size={19}
-        color={palette.success}
+        color={limited ? palette.info : palette.success}
         accessibilityElementsHidden
         importantForAccessibility="no"
       />
@@ -26,7 +33,7 @@ export function CheckClearStatus({ title }: { readonly title: string }) {
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
         >
-          Keine Auffälligkeiten
+          {limited ? "Bisher keine Auffälligkeiten · Angaben fehlen noch" : "Keine Auffälligkeiten"}
         </Text>
       </View>
     </View>

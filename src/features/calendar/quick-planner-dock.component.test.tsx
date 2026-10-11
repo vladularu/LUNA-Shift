@@ -6,27 +6,32 @@ import type { AnimationCallback, WithTimingConfig } from "react-native-reanimate
 
 import type { ShiftTemplate } from "@/domain/types";
 import { buildQuickEntryActions } from "@/features/calendar/quick-entry-actions";
-import {
-  QUICK_PLANNER_COLORS,
-  QUICK_PLANNER_METRICS,
-} from "@/features/calendar/quick-planner-appearance";
+import { QUICK_PLANNER_METRICS } from "@/features/calendar/quick-planner-appearance";
 import {
   QuickPlannerDock,
   quickPlannerTransitionDuration,
 } from "@/features/calendar/quick-planner-dock";
-import { quickPlannerControlMotion } from "@/features/calendar/quick-planner-control-motion";
+import {
+  quickPlannerControlMotion,
+  quickPlannerDockMotion,
+} from "@/features/calendar/quick-planner-control-motion";
 import { MOTION } from "@/theme/motion";
 import { CALENDAR_METRICS } from "@/theme/tokens";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import {
+  colorContrastRatio,
+  MINIMUM_TEXT_CONTRAST,
+  MINIMUM_UI_CONTRAST,
+} from "@/theme/color-contrast";
 
 let mockReducedMotion = false;
-let mockSequenceValue: number | undefined;
+let mockTimingValue: number | undefined;
 let mockCloseCompletion: AnimationCallback | undefined;
 const mockCancel = jest.fn();
 const mockTiming = jest.fn(
   (target: number, _config?: WithTimingConfig, complete?: AnimationCallback) => {
     if (complete) mockCloseCompletion = complete;
-    return target;
+    return mockTimingValue ?? target;
   },
 );
 // Controlled UI runtime: timing calls are recorded, closing completes only when the test says so.
@@ -49,13 +54,12 @@ jest.mock("react-native-reanimated", () => {
     useReducedMotion: () => mockReducedMotion,
     withTiming: (target: number, config?: WithTimingConfig, complete?: AnimationCallback) =>
       mockTiming(target, config, complete),
-    withSequence: (...animations: unknown[]) => mockSequenceValue ?? Number(animations.at(-1)),
     cancelAnimation: (value: unknown) => mockCancel(value),
     runOnJS: (callback: () => void) => callback,
   };
 });
 
-jest.mock("@expo/vector-icons/Ionicons", () => {
+jest.mock("@/ui/icon", () => {
   const { Text } = jest.requireActual<typeof import("react-native")>("react-native");
   return function Icon({ name }: { name: string }) {
     return <Text>{name}</Text>;
@@ -93,7 +97,7 @@ async function renderDock({
   activeKey?: string | null;
   bottomInset?: number;
 } = {}) {
-  const tree = (nextOpen: boolean) => (
+  const tree = (nextOpen: boolean, active = true) => (
     <SafeAreaProvider
       initialMetrics={{
         frame: { height: 932, width: 430, x: 0, y: 0 },
@@ -101,6 +105,7 @@ async function renderDock({
       }}
     >
       <QuickPlannerDock
+        active={active}
         actions={buildQuickEntryActions([TEMPLATE]).slice(0, 1)}
         activeKey={activeKey}
         busy={busy}
@@ -112,13 +117,36 @@ async function renderDock({
     </SafeAreaProvider>
   );
   const screen = await render(tree(open));
-  return { ...screen, setOpen: (nextOpen: boolean) => screen.rerender(tree(nextOpen)) };
+  return {
+    ...screen,
+    setOpen: (nextOpen: boolean) => screen.rerender(tree(nextOpen)),
+    setActive: (active: boolean) => screen.rerender(tree(open, active)),
+  };
 }
 
 describe("QuickPlannerDock", () => {
+  it("keeps Plus mounted beneath the editor and reveals it immediately without another enter animation", async () => {
+    const screen = await renderDock({ open: false });
+    const reveal = screen.getByTestId("quick-planner-mount-reveal");
+    expect(reveal.props.entering).toBeUndefined();
+    mockTiming.mockClear();
+    await screen.setActive(false);
+    expect(screen.getByTestId("quick-planner-mount-reveal", { includeHiddenElements: true })).toBe(
+      reveal,
+    );
+    expect(reveal).toHaveStyle({ opacity: 0 });
+    expect(reveal).toHaveProp("pointerEvents", "none");
+    expect(screen.queryByRole("button", { name: "Dienstplan bearbeiten" })).toBeNull();
+    await screen.setActive(true);
+    expect(screen.getByTestId("quick-planner-mount-reveal")).toBe(reveal);
+    expect(reveal).toHaveStyle({ opacity: 1 });
+    expect(screen.getByRole("button", { name: "Dienstplan bearbeiten" })).toBeTruthy();
+    expect(mockTiming).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     mockReducedMotion = false;
-    mockSequenceValue = undefined;
+    mockTimingValue = undefined;
     mockCloseCompletion = undefined;
     mockTiming.mockClear();
     mockCancel.mockClear();
@@ -130,22 +158,27 @@ describe("QuickPlannerDock", () => {
     jest.restoreAllMocks();
   });
 
-  it.each([false, true])("inverts open controls and inactive text (dark=%s)", async (dark) => {
-    jest
-      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
-      .mockReturnValue(dark ? "dark" : "light");
-    const inverse = dark ? LIGHT_PALETTE : DARK_PALETTE;
-    const screen = await renderDock({ activeKey: null });
-    expect(screen.getByTestId("quick-planner-dock", { includeHiddenElements: true })).toHaveStyle({
-      backgroundColor: inverse.surface,
-    });
-    expect(
-      screen.getByTestId("quick-planner-close-visual", { includeHiddenElements: true }),
-    ).toHaveStyle({
-      backgroundColor: inverse.surface,
-    });
-    expect(screen.getByText("Früh")).toHaveStyle({ color: inverse.text });
-  });
+  it.each([false, true])(
+    "inverts open controls and inactive text against the calendar (dark=%s)",
+    async (dark) => {
+      jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const inverse = dark ? LIGHT_PALETTE : DARK_PALETTE;
+      const screen = await renderDock({ activeKey: null });
+      expect(screen.getByTestId("quick-planner-dock", { includeHiddenElements: true })).toHaveStyle(
+        {
+          backgroundColor: inverse.surface,
+        },
+      );
+      expect(
+        screen.getByTestId("quick-planner-close-visual", { includeHiddenElements: true }),
+      ).toHaveStyle({
+        backgroundColor: inverse.surface,
+      });
+      expect(screen.getByText("Früh")).toHaveStyle({ color: inverse.text });
+    },
+  );
   it("keeps the pencil, dock and close action in one persistent synchronized control", async () => {
     const screen = await renderDock();
     const mountReveal = screen.getByTestId("quick-planner-mount-reveal", {
@@ -243,18 +276,29 @@ describe("QuickPlannerDock", () => {
     },
   );
 
-  it("shows the active template with the SuperShift-style blue selection ring", async () => {
-    const screen = await renderDock();
-    const activeBadge = screen.getByTestId("quick-planner-badge-template:early", {
-      includeHiddenElements: true,
-    });
-
-    expect(activeBadge).toHaveStyle({
-      borderWidth: 2,
-      borderColor: QUICK_PLANNER_COLORS.active,
-    });
-    expect(screen.getByText("Früh")).toHaveStyle({ color: QUICK_PLANNER_COLORS.active });
-  });
+  it.each([false, true])(
+    "keeps the active template label and ring readable on the inverse dock (dark=%s)",
+    async (dark) => {
+      jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const screen = await renderDock();
+      const surface = StyleSheet.flatten(screen.getByTestId("quick-planner-dock").props.style);
+      const badge = screen.getByTestId("quick-planner-badge-template:early");
+      const ring = StyleSheet.flatten(badge.props.style);
+      const label = screen.getByText("Früh");
+      const text = StyleSheet.flatten(label.props.style);
+      expect(colorContrastRatio(text.color, surface.backgroundColor)).toBeGreaterThanOrEqual(
+        MINIMUM_TEXT_CONTRAST,
+      );
+      expect(colorContrastRatio(ring.borderColor, surface.backgroundColor)).toBeGreaterThanOrEqual(
+        MINIMUM_UI_CONTRAST,
+      );
+      expect(ring.borderWidth).toBe(2);
+      expect(label).toHaveStyle({ fontWeight: "600" });
+      expect(screen.getByRole("button", { name: "Früh auswählen", selected: true })).toBeTruthy();
+    },
+  );
 
   it("starts the reverse morph before ending planning mode", async () => {
     const onClose = jest.fn();
@@ -278,19 +322,21 @@ describe("QuickPlannerDock", () => {
     });
   });
 
-  it("gives each control travel leg equal time and does not replay when closing finishes", async () => {
+  it("uses one complete timeline and does not replay when closing finishes", async () => {
     const timing = mockTiming;
     const onClose = jest.fn();
     const screen = await renderDock({ open: false, onClose });
     const legs = (duration: number) =>
       timing.mock.calls.filter(([, config]) => config?.duration === duration);
-    expect(legs(MOTION.duration.scene / 2)).toHaveLength(0);
+    expect(timing).not.toHaveBeenCalled();
     timing.mockClear();
     await screen.setOpen(true);
-    expect(legs(MOTION.duration.scene / 2).map(([target]) => target)).toEqual([0.5, 1]);
+    expect(legs(480).map(([target]) => target)).toEqual([1]);
+    const clockCurve = legs(480)[0][1]?.easing as (progress: number) => number;
+    expect(clockCurve(0.3)).toBeCloseTo(0.3);
     timing.mockClear();
     await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
-    expect(legs(MOTION.duration.deliberate / 2).map(([target]) => target)).toEqual([0.5, 0]);
+    expect(legs(360).map(([target]) => target)).toEqual([0]);
     expect(onClose).not.toHaveBeenCalled();
     timing.mockClear();
     await act(async () => {
@@ -298,18 +344,16 @@ describe("QuickPlannerDock", () => {
       await screen.setOpen(false);
     });
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(legs(MOTION.duration.deliberate / 2)).toHaveLength(0);
+    expect(timing).not.toHaveBeenCalled();
   });
 
   it("reverses an interrupted opening directly without first moving further down", async () => {
     const screen = await renderDock({ open: false });
-    mockSequenceValue = 0.25;
+    mockTimingValue = 0.25;
     await screen.setOpen(true);
     mockTiming.mockClear();
     await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
-    const legs = mockTiming.mock.calls.filter(
-      ([, config]) => config?.duration === MOTION.duration.deliberate / 2,
-    );
+    const legs = mockTiming.mock.calls.filter(([, config]) => config?.duration === 360);
     expect(legs.map(([target]) => target)).toEqual([0]);
     expect(mockCancel).toHaveBeenCalled();
   });
@@ -337,8 +381,8 @@ describe("QuickPlannerDock", () => {
   });
 
   it("uses responsive scene timings and an instant reduced-motion fallback", () => {
-    expect(quickPlannerTransitionDuration(true, false)).toBe(MOTION.duration.scene);
-    expect(quickPlannerTransitionDuration(false, false)).toBe(MOTION.duration.deliberate);
+    expect(quickPlannerTransitionDuration(true, false)).toBe(480);
+    expect(quickPlannerTransitionDuration(false, false)).toBe(360);
     expect(quickPlannerTransitionDuration(true, true)).toBe(MOTION.duration.instant);
   });
 
@@ -379,19 +423,25 @@ describe("quick planner control travel", () => {
   const frame = (progress: number, reduceMotion = false) => ({
     add: quickPlannerControlMotion(progress, "add", reduceMotion),
     close: quickPlannerControlMotion(progress, "close", reduceMotion),
+    dock: quickPlannerDockMotion(
+      progress,
+      reduceMotion,
+      QUICK_PLANNER_METRICS.dockHeight + MOTION.distance.scene,
+    ),
   });
 
   it("slides add down before close rises from the same lower point", () => {
     const start = frame(0);
-    const leaving = frame(0.25);
-    const changeover = frame(0.5);
-    const arriving = frame(0.75);
+    const leaving = frame(0.15);
+    const changeover = frame(0.3);
+    const arriving = frame(0.55);
     const end = frame(1);
     expect(start.add).toEqual({ opacity: 1, transform: [{ translateY: 0 }] });
     expect(leaving.add.opacity).toBeGreaterThan(0);
     expect(leaving.add.opacity).toBeLessThan(1);
     expect(leaving.add.transform[0].translateY).toBeGreaterThan(0);
     expect(leaving.close.opacity).toBe(0);
+    expect(leaving.dock.opacity).toBe(0);
     expect(changeover.add).toEqual({
       opacity: 0,
       transform: [{ translateY: MOTION.distance.scene }],
@@ -409,6 +459,8 @@ describe("quick planner control travel", () => {
     const frames = values.map((value) => frame(value));
     for (const state of frames) {
       expect(state.add.opacity * state.close.opacity).toBe(0);
+      expect(state.add.opacity * state.dock.opacity).toBe(0);
+      expect(state.close.opacity).toBe(state.dock.opacity);
       expect(state.add.transform[0].translateY).toBeGreaterThanOrEqual(0);
       expect(state.close.transform[0].translateY).toBeGreaterThanOrEqual(0);
     }
@@ -423,12 +475,44 @@ describe("quick planner control travel", () => {
     expect(frames.at(-1)?.add.opacity).toBe(1);
   });
 
+  it("settles the drawer and close together without overshoot or a reversal on arrival", () => {
+    const landed = frame(5 / 6);
+    expect(landed.dock.transform).toEqual([{ translateY: 0 }]);
+    expect(landed.close.transform).toEqual([{ translateY: 0 }]);
+    const values = Array.from({ length: 101 }, (_, index) => index / 100);
+    const frames = values.map((value) => frame(value));
+    for (const [index, state] of frames.entries()) {
+      const dockY = state.dock.transform[0].translateY;
+      const closeY = state.close.transform[0].translateY;
+      expect(dockY).toBeGreaterThanOrEqual(0);
+      expect(closeY).toBeGreaterThanOrEqual(0);
+      if (index > 0) {
+        expect(dockY).toBeLessThanOrEqual(frames[index - 1].dock.transform[0].translateY);
+        expect(closeY).toBeLessThanOrEqual(frames[index - 1].close.transform[0].translateY);
+      }
+      if (values[index] >= 5 / 6) {
+        expect(state.close.transform).toEqual([{ translateY: 0 }]);
+        expect(state.dock.transform).toEqual([{ translateY: 0 }]);
+        expect(state.close.opacity).toBe(1);
+        expect(state.add.opacity).toBe(0);
+      }
+    }
+    expect(frames.at(-1)?.dock.transform).toEqual([{ translateY: 0 }]);
+    expect(
+      values
+        .slice()
+        .reverse()
+        .map((value) => frame(value)),
+    ).toEqual(frames.slice().reverse());
+  });
+
   it("uses opacity only with reduced motion and preserves both settled states", () => {
     for (const value of [0, 0.25, 0.5, 0.75, 1]) {
       const reduced = frame(value, true);
       const normal = frame(value);
       expect(reduced.add.transform).toEqual([]);
       expect(reduced.close.transform).toEqual([]);
+      expect(reduced.dock.transform).toEqual([]);
       expect(reduced.add.opacity).toBe(normal.add.opacity);
       expect(reduced.close.opacity).toBe(normal.close.opacity);
     }

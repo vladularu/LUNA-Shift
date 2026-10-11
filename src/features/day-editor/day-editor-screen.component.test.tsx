@@ -42,6 +42,20 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockRouteParams,
 }));
 
+jest.mock("expo-router/react-navigation", () => ({
+  usePreventRemove: (
+    enabled: boolean,
+    callback: (event: { data: { action: { type: string } } }) => void,
+  ) => {
+    mockBeforeRemoveListener = enabled
+      ? (event) => {
+          event.preventDefault();
+          callback({ data: event.data });
+        }
+      : null;
+  },
+}));
+
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftEntries: () => ({
     entries: mockEntries,
@@ -82,6 +96,93 @@ describe("DayEditorScreen", () => {
     mockNavigationDispatch.mockClear();
     mockEntries = [];
     mockRouteParams = { date: "2026-08-04", mode: "SHIFT" };
+  });
+
+  it.each(["SHIFT", "APPOINTMENT"] as const)(
+    "protects %s native dismissal until one pending save succeeds",
+    async (mode) => {
+      mockRouteParams = { date: "2026-08-20", mode };
+      let finish!: () => void;
+      if (mode === "SHIFT")
+        mockUpsertShift.mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              finish = () => resolve({ id: "saved" } as ShiftEntry);
+            }),
+        );
+      else
+        mockUpsertAppointment.mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              finish = () => resolve({ id: "saved" } as Appointment);
+            }),
+        );
+      const screen = await render(deletionScreen());
+      const action = { type: "GO_BACK" };
+      const preventDefault = jest.fn();
+      await act(() => {
+        mockBeforeRemoveListener?.({ preventDefault, data: { action } });
+        mockBeforeRemoveListener?.({ preventDefault, data: { action } });
+      });
+      expect(preventDefault).toHaveBeenCalledTimes(2);
+      expect(mode === "SHIFT" ? mockUpsertShift : mockUpsertAppointment).toHaveBeenCalledTimes(1);
+      expect(mockNavigationDispatch).not.toHaveBeenCalled();
+      expect(router.back).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeDisabled();
+      expect(
+        screen.getByTestId(mode === "SHIFT" ? "shift-edit-sheet" : "appointment-edit-sheet"),
+      ).toHaveProp("pointerEvents", "none");
+      await act(() => finish());
+      expect(mockNavigationDispatch).toHaveBeenCalledTimes(1);
+      expect(mockNavigationDispatch).toHaveBeenCalledWith(action);
+      expect(mockBeforeRemoveListener).toBeNull();
+      expect(router.back).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["SHIFT", "APPOINTMENT"] as const)(
+    "keeps the %s draft after a native-dismiss save failure and retries only deliberately",
+    async (mode) => {
+      mockRouteParams = { date: "2026-08-20", mode };
+      if (mode === "SHIFT") mockUpsertShift.mockRejectedValueOnce(new Error("offline database"));
+      else mockUpsertAppointment.mockRejectedValueOnce(new Error("offline database"));
+      const screen = await render(deletionScreen());
+      await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
+      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Entwurf behalten");
+      const event = { preventDefault: jest.fn(), data: { action: { type: "GO_BACK" } } };
+      await act(async () => {
+        mockBeforeRemoveListener?.(event);
+      });
+      expect(screen.getByDisplayValue("Entwurf behalten")).toBeTruthy();
+      expect(screen.getByText("Eintrag konnte nicht gespeichert werden.")).toBeTruthy();
+      expect(mockNavigationDispatch).not.toHaveBeenCalled();
+      expect(router.back).not.toHaveBeenCalled();
+      expect(mockBeforeRemoveListener).not.toBeNull();
+      expect(
+        screen.getByTestId(mode === "SHIFT" ? "shift-edit-sheet" : "appointment-edit-sheet"),
+      ).toHaveProp("pointerEvents", "auto");
+      expect(mode === "SHIFT" ? mockUpsertShift : mockUpsertAppointment).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        mockBeforeRemoveListener?.(event);
+      });
+      expect(mode === "SHIFT" ? mockUpsertShift : mockUpsertAppointment).toHaveBeenCalledTimes(2);
+      expect(mockNavigationDispatch).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("blocks native dismissal of an invalid appointment before persistence", async () => {
+    mockRouteParams = { date: "2026-08-20", mode: "APPOINTMENT" };
+    const screen = await render(deletionScreen());
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "");
+    const preventDefault = jest.fn();
+    await act(async () => {
+      mockBeforeRemoveListener?.({ preventDefault, data: { action: { type: "GO_BACK" } } });
+    });
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(mockUpsertAppointment).not.toHaveBeenCalled();
+    expect(mockNavigationDispatch).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Titel")).toHaveProp("value", "");
   });
 
   function deletionEntry(kind: "SHIFT" | "APPOINTMENT"): CalendarEntry {
@@ -131,12 +232,37 @@ describe("DayEditorScreen", () => {
     );
   }
 
+  it.each(["SHIFT", "APPOINTMENT"] as const)(
+    "lets unchanged saved %s entries dismiss natively and protects edits until saved",
+    async (kind) => {
+      const entry = deletionEntry(kind);
+      mockEntries = [entry];
+      mockRouteParams = { date: entry.date, mode: kind, entryId: entry.id };
+      const screen = await render(deletionScreen());
+      expect(screen.getByText("Notiz behalten")).toBeTruthy();
+      expect(mockBeforeRemoveListener).toBeNull();
+      await fireEvent.press(
+        screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }),
+      );
+      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Neue Übergabe");
+      expect(mockBeforeRemoveListener).not.toBeNull();
+      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Notiz behalten");
+      expect(mockBeforeRemoveListener).toBeNull();
+      await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+      expect(mockUpsertShift).not.toHaveBeenCalled();
+      expect(mockUpsertAppointment).not.toHaveBeenCalled();
+    },
+  );
+
   async function openDeleteDialog(kind: "SHIFT" | "APPOINTMENT") {
     const entry = deletionEntry(kind);
     mockEntries = [entry];
     mockRouteParams = { date: entry.date, mode: kind, entryId: entry.id };
     const alert = jest.spyOn(Alert, "alert");
     const screen = await render(deletionScreen());
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     await fireEvent.press(
       screen.getByRole("button", {
         name: kind === "SHIFT" ? "Dienst löschen" : "Termin löschen",
@@ -226,6 +352,7 @@ describe("DayEditorScreen", () => {
     expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
     expect(router.back).not.toHaveBeenCalled();
     expect(deletionFeedback).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     await fireEvent.press(screen.getByRole("button", { name: "Dienst löschen" }));
     const retry = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2]?.[1];
     await act(async () => {

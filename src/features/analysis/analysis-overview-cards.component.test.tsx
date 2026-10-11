@@ -154,7 +154,7 @@ describe("analysis overview cards", () => {
     expect(salaryButton).toHaveStyle({
       minHeight: 100,
       gap: 8,
-      paddingHorizontal: 20,
+      paddingHorizontal: 24,
       paddingVertical: 12,
     });
     expect(screen.getByText("Gehalt")).toHaveStyle({

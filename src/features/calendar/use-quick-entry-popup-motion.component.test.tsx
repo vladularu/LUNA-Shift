@@ -50,11 +50,11 @@ jest.mock("react-native-reanimated", () => {
 function motionFrame(handle: unknown) {
   return handle as {
     opacity: number;
-    transform: { translateX?: number; translateY?: number; scale?: number }[];
+    transform: { translateY?: number; scaleY?: number }[];
   };
 }
 
-const origin = { translateX: -150, translateY: 200, scale: 0.14 };
+const origin = { translateY: -8, pivotY: -80 };
 
 describe("day popup motion lifecycle", () => {
   beforeEach(() => {
@@ -65,37 +65,40 @@ describe("day popup motion lifecycle", () => {
     mockCancel.mockClear();
   });
 
-  it("opens with the same calm curve and returns to its day before closing", async () => {
+  it("keeps its prompt opening and fades while returning to its day before closing", async () => {
     const onClose = jest.fn();
     const screen = await renderHook(() =>
       useQuickEntryPopupMotion({ animateEntry: true, origin, onClose }),
     );
     expect(mockTiming).toHaveBeenLastCalledWith(
       1,
-      { duration: MOTION.duration.scene, easing: MOTION.easing.calm },
+      { duration: 320, easing: expect.any(Function) },
       undefined,
     );
     await screen.rerender(undefined);
     expect(motionFrame(screen.result.current.popupMotionStyle).opacity).toBe(1);
     expect(
-      motionFrame(screen.result.current.popupMotionStyle).transform[0]?.translateX,
+      motionFrame(screen.result.current.popupMotionStyle).transform[0]?.translateY,
     ).toBeCloseTo(0);
-    expect(
-      motionFrame(screen.result.current.popupMotionStyle).transform[1]?.translateY,
-    ).toBeCloseTo(0);
-    expect(motionFrame(screen.result.current.popupMotionStyle).transform[2]?.scale).toBe(1);
+    expect(motionFrame(screen.result.current.popupMotionStyle).transform[1]?.translateY).toBe(-80);
+    expect(motionFrame(screen.result.current.popupMotionStyle).transform[2]?.scaleY).toBe(1);
+    expect(motionFrame(screen.result.current.popupMotionStyle).transform[3]?.translateY).toBe(80);
     await act(() => {
       screen.result.current.closePopup();
     });
     expect(mockTiming).toHaveBeenLastCalledWith(
       0,
-      { duration: MOTION.duration.deliberate, easing: MOTION.easing.calm },
+      { duration: 240, easing: expect.any(Function) },
       expect.any(Function),
     );
     expect(screen.result.current.closing).toBe(true);
+    const openCurve = mockTiming.mock.calls[0][1].easing as (progress: number) => number;
+    expect(mockTiming.mock.calls.at(-1)?.[1].easing).toBe(openCurve);
+    expect(openCurve(0.1)).toBeGreaterThan(0.2);
+    expect(openCurve(0.9)).toBeGreaterThan(0.99);
     expect(motionFrame(screen.result.current.popupMotionStyle)).toMatchObject({
       opacity: 0,
-      transform: [{ translateX: -150 }, { translateY: 200 }, { scale: 0.14 }],
+      transform: [{ translateY: -8 }, { translateY: -80 }, { scaleY: 0 }, { translateY: 80 }],
     });
     expect(onClose).not.toHaveBeenCalled();
     await act(() => {
@@ -111,10 +114,28 @@ describe("day popup motion lifecycle", () => {
     );
     await screen.rerender(undefined);
     const style = motionFrame(screen.result.current.popupMotionStyle);
-    expect(style.transform[0]?.translateX).toBe(-75);
-    expect(style.transform[1]?.translateY).toBe(100);
-    expect(style.transform[2]?.scale).toBeCloseTo(0.57);
+    expect(style.transform[0]?.translateY).toBe(-4);
+    expect(style.transform[1]?.translateY).toBe(-80);
+    expect(style.transform[2]?.scaleY).toBe(0.5);
+    expect(style.transform[3]?.translateY).toBe(80);
     expect(style.opacity).toBe(1);
+  });
+
+  it("fades from full opacity even when closing an unfinished opening", async () => {
+    mockTimingValue = 0.5;
+    const onClose = jest.fn();
+    const screen = await renderHook(() =>
+      useQuickEntryPopupMotion({ animateEntry: true, origin, onClose }),
+    );
+    await screen.rerender(undefined);
+    expect(motionFrame(screen.result.current.popupMotionStyle).opacity).toBe(1);
+    mockTimingValue = 0.25;
+    await act(() => screen.result.current.closePopup());
+    expect(motionFrame(screen.result.current.popupMotionStyle)).toMatchObject({
+      opacity: 0.5,
+      transform: [{ translateY: -6 }, { translateY: -80 }, { scaleY: 0.25 }, { translateY: 80 }],
+    });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("ignores repeated closes and duplicate completion signals", async () => {
@@ -173,11 +194,9 @@ describe("day popup motion lifecycle", () => {
     expect(mockTiming).not.toHaveBeenCalled();
     expect(motionFrame(screen.result.current.popupMotionStyle).opacity).toBe(1);
     expect(
-      motionFrame(screen.result.current.popupMotionStyle).transform[0]?.translateX,
+      motionFrame(screen.result.current.popupMotionStyle).transform[0]?.translateY,
     ).toBeCloseTo(0);
-    expect(
-      motionFrame(screen.result.current.popupMotionStyle).transform[1]?.translateY,
-    ).toBeCloseTo(0);
-    expect(motionFrame(screen.result.current.popupMotionStyle).transform[2]?.scale).toBe(1);
+    expect(motionFrame(screen.result.current.popupMotionStyle).transform[1]?.translateY).toBe(-80);
+    expect(motionFrame(screen.result.current.popupMotionStyle).transform[2]?.scaleY).toBe(1);
   });
 });

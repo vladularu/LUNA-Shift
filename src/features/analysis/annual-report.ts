@@ -28,6 +28,7 @@ import { classifyChecks, type ClassifiedCheckCounts } from "./check-visibility";
 import type { AnnualRemuneration } from "./annual-remuneration";
 
 export interface AnnualMonthReport {
+  readonly prerequisiteCount?: number;
   /** Missing on legacy reports; use the year coverage as the conservative fallback. */
   readonly complianceComplete?: boolean;
   /** Day-level legal training values; never included in actualMinutes or pay. */
@@ -47,6 +48,7 @@ export interface AnnualMonthReport {
 }
 
 export interface AnnualReport {
+  readonly prerequisiteCount?: number;
   /** Present only when the caller supplies a dated snapshot; legacy numbers are not a fallback. */
   readonly remuneration?: AnnualRemuneration;
   readonly shiftTypeAnalysis?: MonthlyShiftTypeAnalysis;

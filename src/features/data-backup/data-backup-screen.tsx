@@ -1,5 +1,6 @@
-import { Stack } from "expo-router";
-import { Alert, Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import { Stack, router } from "expo-router";
+import { Alert, View } from "react-native";
 import { BackupTempCleanupError } from "@/features/data-backup/backup-temp-file";
 
 import {
@@ -17,6 +18,7 @@ import { InlineNotice, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { useFeedback } from "@/ui/feedback";
 import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 const BACKUP_DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", {
   day: "2-digit",
@@ -129,170 +131,179 @@ export function DataBackupScreen() {
   }
 
   return (
-    <ScreenScrollView surface="groupedBackground">
-      <Stack.Screen
-        options={{
-          title: "Datensicherung",
-          headerStyle: { backgroundColor: palette.background },
-          headerTintColor: palette.text,
-          headerTitleStyle: { color: palette.text },
-          statusBarStyle: palette.dark ? "light" : "dark",
-        }}
-      />
+    <BackFooterLayout
+      disabled={busy}
+      label="Zurück zu Mehr"
+      onPress={() => router.back()}
+      style={{ backgroundColor: palette.groupedBackground }}
+    >
+      {(bottomPadding) => (
+        <ScreenScrollView bottomPadding={bottomPadding} surface="groupedBackground">
+          <Stack.Screen
+            options={{
+              title: "Datensicherung",
+              headerStyle: { backgroundColor: palette.background },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              statusBarStyle: palette.dark ? "light" : "dark",
+            }}
+          />
 
-      <View style={{ gap: SPACING.sm }}>
-        <SectionHeader
-          caption="Eine vollständige Kopie deiner aktuellen LUNA-Shift-Daten."
-          title="Lokales Backup"
-        />
-        <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-          >
-            Enthalten
-          </Text>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-          >
-            Profil, Dienstvorlagen, Dienste, Termine, Tarifentscheidungen und sichtbare
-            Einstellungen.
-          </Text>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-          >
-            Nicht enthalten
-          </Text>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-          >
-            Testlabor-Zustand, geplante Systemmitteilungen und der lokale Regelwerkscache.
-          </Text>
-        </SurfaceCard>
-      </View>
-
-      <InlineNotice
-        message="Die JSON-Datei enthält persönliche Daten und ist außerhalb der App nicht verschlüsselt. Lege sie nur an einem geschützten Ort ab."
-        tone="warning"
-      />
-
-      <PrimaryButton
-        busy={exportBusy}
-        busyLabel="Backup wird erstellt"
-        disabled={restoreBusy}
-        onPress={() => void createBackup()}
-      >
-        Backup erstellen und teilen
-      </PrimaryButton>
-
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        selectable
-        style={{ color: palette.textMuted, textAlign: "center", ...TYPOGRAPHY.caption }}
-      >
-        Beim Erstellen wird die lokale Datenbank nicht verändert.
-      </Text>
-
-      <View style={{ gap: SPACING.sm }}>
-        <SectionHeader
-          caption="Eine lokale JSON-Sicherung auswählen und vor dem Ersetzen prüfen."
-          title="Backup wiederherstellen"
-        />
-
-        <InlineNotice
-          message="Beim Wiederherstellen werden deine aktuellen Daten ersetzt. Lege vorher ein aktuelles Backup an einem geschützten Ort ab."
-          tone="warning"
-        />
-
-        {candidate === null ? (
-          <SecondaryButton disabled={busy} onPress={() => void chooseBackup()}>
-            Backup-Datei auswählen
-          </SecondaryButton>
-        ) : (
-          <>
+          <View style={{ gap: SPACING.sm }}>
+            <SectionHeader
+              caption="Eine vollständige Kopie deiner aktuellen LUNA-Shift-Daten."
+              title="Lokales Backup"
+            />
             <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                numberOfLines={2}
                 selectable
                 style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
               >
-                {candidate.fileName}
+                Enthalten
               </Text>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
                 selectable
                 style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
               >
-                Erstellt am {backupDate(candidate.preview.createdAt)}
+                Profil, Dienstvorlagen, Dienste, Termine, Tarifentscheidungen und sichtbare
+                Einstellungen.
               </Text>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
                 selectable
-                style={{ color: palette.text, ...TYPOGRAPHY.body }}
+                style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
               >
-                {countLabel(candidate.preview.shiftCount, "Dienst", "Dienste")} ·{" "}
-                {countLabel(candidate.preview.appointmentCount, "Termin", "Termine")}
-              </Text>
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                selectable
-                style={{ color: palette.text, ...TYPOGRAPHY.body }}
-              >
-                {countLabel(candidate.preview.templateCount, "Vorlage", "Vorlagen")} ·{" "}
-                {countLabel(
-                  candidate.preview.monthlyTariffDecisionCount,
-                  "Tarifmonat",
-                  "Tarifmonate",
-                )}
+                Nicht enthalten
               </Text>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
                 selectable
                 style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
               >
-                Zeitraum:{" "}
-                {dateRange(candidate.preview.firstEntryDate, candidate.preview.lastEntryDate)}
-              </Text>
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                selectable
-                style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-              >
-                Profil {candidate.preview.profileIncluded ? "enthalten" : "nicht enthalten"} ·{" "}
-                {countLabel(
-                  candidate.preview.preferenceCount,
-                  "sichtbare Einstellung",
-                  "sichtbare Einstellungen",
-                )}
-                {candidate.preview.deletedRecordCount > 0
-                  ? ` · ${countLabel(candidate.preview.deletedRecordCount, "gelöschter Datensatz", "gelöschte Datensätze")}`
-                  : ""}
+                Testlabor-Zustand, geplante Systemmitteilungen und der lokale Regelwerkscache.
               </Text>
             </SurfaceCard>
+          </View>
 
-            <SecondaryButton disabled={busy} onPress={() => void chooseBackup()}>
-              Andere Datei wählen
-            </SecondaryButton>
-            <PrimaryButton
-              busy={restoreBusy}
-              busyLabel="Daten werden wiederhergestellt"
-              danger
-              disabled={exportBusy}
-              onPress={confirmRestore}
-            >
-              Aktuelle Daten ersetzen
-            </PrimaryButton>
-          </>
-        )}
-      </View>
-    </ScreenScrollView>
+          <InlineNotice
+            message="Die JSON-Datei enthält persönliche Daten und ist außerhalb der App nicht verschlüsselt. Lege sie nur an einem geschützten Ort ab."
+            tone="warning"
+          />
+
+          <PrimaryButton
+            busy={exportBusy}
+            busyLabel="Backup wird erstellt"
+            disabled={restoreBusy}
+            onPress={() => void createBackup()}
+          >
+            Backup erstellen und teilen
+          </PrimaryButton>
+
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            selectable
+            style={{ color: palette.textMuted, textAlign: "center", ...TYPOGRAPHY.caption }}
+          >
+            Beim Erstellen wird die lokale Datenbank nicht verändert.
+          </Text>
+
+          <View style={{ gap: SPACING.sm }}>
+            <SectionHeader
+              caption="Eine lokale JSON-Sicherung auswählen und vor dem Ersetzen prüfen."
+              title="Backup wiederherstellen"
+            />
+
+            <InlineNotice
+              message="Beim Wiederherstellen werden deine aktuellen Daten ersetzt. Lege vorher ein aktuelles Backup an einem geschützten Ort ab."
+              tone="warning"
+            />
+
+            {candidate === null ? (
+              <SecondaryButton disabled={busy} onPress={() => void chooseBackup()}>
+                Backup-Datei auswählen
+              </SecondaryButton>
+            ) : (
+              <>
+                <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    numberOfLines={2}
+                    selectable
+                    style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+                  >
+                    {candidate.fileName}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    selectable
+                    style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
+                  >
+                    Erstellt am {backupDate(candidate.preview.createdAt)}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    selectable
+                    style={{ color: palette.text, ...TYPOGRAPHY.body }}
+                  >
+                    {countLabel(candidate.preview.shiftCount, "Dienst", "Dienste")} ·{" "}
+                    {countLabel(candidate.preview.appointmentCount, "Termin", "Termine")}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    selectable
+                    style={{ color: palette.text, ...TYPOGRAPHY.body }}
+                  >
+                    {countLabel(candidate.preview.templateCount, "Vorlage", "Vorlagen")} ·{" "}
+                    {countLabel(
+                      candidate.preview.monthlyTariffDecisionCount,
+                      "Tarifmonat",
+                      "Tarifmonate",
+                    )}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    selectable
+                    style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
+                  >
+                    Zeitraum:{" "}
+                    {dateRange(candidate.preview.firstEntryDate, candidate.preview.lastEntryDate)}
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    selectable
+                    style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+                  >
+                    Profil {candidate.preview.profileIncluded ? "enthalten" : "nicht enthalten"} ·{" "}
+                    {countLabel(
+                      candidate.preview.preferenceCount,
+                      "sichtbare Einstellung",
+                      "sichtbare Einstellungen",
+                    )}
+                    {candidate.preview.deletedRecordCount > 0
+                      ? ` · ${countLabel(candidate.preview.deletedRecordCount, "gelöschter Datensatz", "gelöschte Datensätze")}`
+                      : ""}
+                  </Text>
+                </SurfaceCard>
+
+                <SecondaryButton disabled={busy} onPress={() => void chooseBackup()}>
+                  Andere Datei wählen
+                </SecondaryButton>
+                <PrimaryButton
+                  busy={restoreBusy}
+                  busyLabel="Daten werden wiederhergestellt"
+                  danger
+                  disabled={exportBusy}
+                  onPress={confirmRestore}
+                >
+                  Aktuelle Daten ersetzen
+                </PrimaryButton>
+              </>
+            )}
+          </View>
+        </ScreenScrollView>
+      )}
+    </BackFooterLayout>
   );
 }

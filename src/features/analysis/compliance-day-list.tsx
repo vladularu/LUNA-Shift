@@ -1,6 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { useMemo } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -14,6 +15,7 @@ import {
   checkDate,
 } from "./compliance-issue-content";
 import { complianceTimeline } from "./compliance-timeline";
+import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 const PRIORITY = { critical: 0, warning: 1, info: 2 };
 
 export function ComplianceDayList({
@@ -28,6 +30,8 @@ export function ComplianceDayList({
   readonly timeZone: string;
 }) {
   const palette = usePalette();
+  const visible = selectVisibleCompliance(compliance, showPlanning);
+  const limited = (visible.prerequisiteCount ?? 0) > 0;
   const issues = useMemo(
     () =>
       [...selectVisibleCompliance(compliance, showPlanning).issues].sort(
@@ -42,9 +46,10 @@ export function ComplianceDayList({
   return (
     <View style={{ gap: SPACING.xxl, flexGrow: issues.length ? undefined : 1 }}>
       {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
+      {limited ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
       {!issues.length ? (
         <View
-          testID="check-complete"
+          testID={limited ? "check-limited" : "check-complete"}
           style={{
             flexGrow: 1,
             minHeight: 280,
@@ -54,8 +59,8 @@ export function ComplianceDayList({
           }}
         >
           <Ionicons
-            name="checkmark-circle-outline"
-            color={palette.success}
+            name={limited ? "information-circle-outline" : "checkmark-circle-outline"}
+            color={limited ? palette.info : palette.success}
             size={104}
             accessibilityElementsHidden
             importantForAccessibility="no"
@@ -64,10 +69,14 @@ export function ComplianceDayList({
             accessibilityRole="header"
             style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
           >
-            {showPlanning ? "Prüfung abgeschlossen" : "Gesetzliche Prüfung"}
+            {limited
+              ? "Bisher keine Auffälligkeiten"
+              : showPlanning
+                ? "Prüfung abgeschlossen"
+                : "Gesetzliche Prüfung"}
           </Text>
           <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
-            Keine Auffälligkeiten
+            {limited ? "Angaben fehlen noch." : "Keine Auffälligkeiten"}
           </Text>
         </View>
       ) : null}

@@ -26,6 +26,9 @@ import type {
 } from "@/rules/contracts.generated";
 import { createRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
+jest.mock("@/features/report-export/report-export-button", () => ({
+  ReportExportButton: () => null,
+}));
 
 // Native modal inset measurements are outside the JS renderer's layout coverage.
 jest.mock("react-native-safe-area-context", () => ({
@@ -891,7 +894,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(overview.getByLabelText("Gesamt: 7:30 h")).toBeTruthy();
     expect(overview.getByText("D")).toBeTruthy();
     expect(overview.getByLabelText("Sonntagsdienst: 7:30 h")).toBeTruthy();
-    await fireEvent.press(overview.getByRole("button", { name: "Schichten: Anzahl" }));
+    await fireEvent.press(overview.getByRole("tab", { name: "Schichten: Anzahl" }));
     expect(overview.getByLabelText("Gesamt: 1")).toBeTruthy();
     await overview.unmount();
     mockActiveMonthCoordinator.setMonth.mockClear();
@@ -900,7 +903,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(details.getByText("Deine Schichten")).toBeTruthy();
     expect(details.getByLabelText("Tag, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
     expect(details.queryByText("Arbeitszeit")).toBeNull();
-    expect(details.queryByRole("button", { name: "Schichten: Anzahl" })).toBeNull();
+    expect(details.queryByRole("tab", { name: "Schichten: Anzahl" })).toBeNull();
     expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
   });
 

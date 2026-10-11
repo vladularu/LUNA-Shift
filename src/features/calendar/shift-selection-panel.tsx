@@ -1,6 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { memo, useEffect, useRef } from "react";
-import { findNodeHandle, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { findNodeHandle, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -21,7 +22,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { InlineNotice } from "@/ui/design-system";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 function longDate(date: string): string {
   return new Intl.DateTimeFormat("de-DE", {
@@ -88,107 +89,107 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
       ]}
       testID="shift-selection-panel"
     >
-      <View style={[styles.navigationBar, { backgroundColor: palette.background }]}>
-        <Pressable
-          accessibilityLabel="Schichtauswahl schließen"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: busy }}
-          disabled={busy}
-          onPress={onClose}
-          style={({ pressed }) => [
-            styles.closeButton,
-            { backgroundColor: palette.surface, opacity: pressed ? 0.58 : 1 },
-          ]}
-        >
-          <Ionicons accessibilityElementsHidden color={palette.text} name="close" size={22} />
-        </Pressable>
-        <View
-          ref={headingRef}
-          accessible
-          accessibilityLabel={`Schicht auswählen für ${longDate(date)}, Überschrift`}
-          accessibilityRole="header"
-          style={styles.navigationTitleWrap}
-        >
-          <Text
-            dynamicTypeRamp="headline"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.navigationTitle, { color: palette.text }]}
-          >
-            Schicht auswählen
-          </Text>
-          <Text
-            dynamicTypeRamp="caption1"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.navigationDate, { color: palette.textMuted }]}
-          >
-            {longDate(date)}
-          </Text>
-        </View>
-        <View accessibilityElementsHidden style={styles.navigationPlaceholder} />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: Math.max(insets.bottom, SPACING.xxl) + SPACING.xl },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.section}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.sectionHeading, { color: palette.text }]}
-          >
-            Meine Dienste
-          </Text>
-          <ShiftTemplateListCard>
-            {templateActions.length > 0 ? (
-              templateActions.map((action, index) => (
-                <View key={action.key}>
-                  {index > 0 ? <ShiftTemplateListSeparator /> : null}
-                  <ShiftTemplateListRow
-                    accessibilityLabel={`${action.label} direkt eintragen`}
-                    color={action.color}
-                    disabled={busy}
-                    moreAccessibilityLabel={`${action.label} Dienstvorlage bearbeiten`}
-                    onMorePress={() => onEditTemplate(action.template.id)}
-                    onPress={() => onSelectAction(action, date)}
-                    subtitle={shiftTemplateSubtitle(action.template)}
-                    symbol={action.symbol}
-                    title={action.label}
-                  />
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyTemplates}>
+      <BackFooterLayout disabled={busy} onPress={onClose} showFooter={inNativeSheet}>
+        {(bottomPadding) => (
+          <>
+            <View style={[styles.navigationBar, { backgroundColor: palette.background }]}>
+              <Pressable
+                accessibilityLabel="Schichtauswahl schließen"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: busy }}
+                disabled={busy}
+                onPress={onClose}
+                style={({ pressed }) => [
+                  styles.closeButton,
+                  { backgroundColor: palette.surface, opacity: pressed ? 0.58 : 1 },
+                ]}
+              >
+                <Ionicons accessibilityElementsHidden color={palette.text} name="close" size={22} />
+              </Pressable>
+              <View
+                ref={headingRef}
+                accessible
+                accessibilityLabel={`Schicht auswählen für ${longDate(date)}, Überschrift`}
+                accessibilityRole="header"
+                style={styles.navigationTitleWrap}
+              >
                 <Text
+                  dynamicTypeRamp="headline"
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.emptyTemplatesText, { color: palette.textMuted }]}
+                  style={[styles.navigationTitle, { color: palette.text }]}
                 >
-                  Noch keine Dienstvorlagen vorhanden.
+                  Schicht auswählen
+                </Text>
+                <Text
+                  dynamicTypeRamp="caption1"
+                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                  style={[styles.navigationDate, { color: palette.textMuted }]}
+                >
+                  {longDate(date)}
                 </Text>
               </View>
-            )}
-            {templateActions.length > 0 ? <ShiftTemplateListSeparator /> : null}
-            <ShiftTemplateAddRow
-              accessibilityLabel="Neue Schichtvorlage hinzufügen"
-              disabled={busy}
-              onPress={onAddTemplate}
-            />
-          </ShiftTemplateListCard>
-        </View>
-      </ScrollView>
-      {inNativeSheet ? (
-        <View
-          style={{
-            paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-            paddingTop: SPACING.sm,
-            paddingBottom: Math.max(insets.bottom, SPACING.md),
-          }}
-        >
-          <SheetBackFooter disabled={busy} onPress={onClose} />
-        </View>
-      ) : null}
+              <View accessibilityElementsHidden style={styles.navigationPlaceholder} />
+            </View>
+
+            <ScrollView
+              contentContainerStyle={[
+                styles.content,
+                {
+                  paddingBottom: Math.max(
+                    bottomPadding,
+                    Math.max(insets.bottom, SPACING.xxl) + SPACING.xl,
+                  ),
+                },
+              ]}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.section}>
+                <Text
+                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                  style={[styles.sectionHeading, { color: palette.text }]}
+                >
+                  Meine Dienste
+                </Text>
+                <ShiftTemplateListCard>
+                  {templateActions.length > 0 ? (
+                    templateActions.map((action, index) => (
+                      <View key={action.key}>
+                        {index > 0 ? <ShiftTemplateListSeparator /> : null}
+                        <ShiftTemplateListRow
+                          accessibilityLabel={`${action.label} direkt eintragen`}
+                          color={action.color}
+                          disabled={busy}
+                          moreAccessibilityLabel={`${action.label} Dienstvorlage bearbeiten`}
+                          onMorePress={() => onEditTemplate(action.template.id)}
+                          onPress={() => onSelectAction(action, date)}
+                          subtitle={shiftTemplateSubtitle(action.template)}
+                          symbol={action.symbol}
+                          title={action.label}
+                        />
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.emptyTemplates}>
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={[styles.emptyTemplatesText, { color: palette.textMuted }]}
+                      >
+                        Noch keine Dienstvorlagen vorhanden.
+                      </Text>
+                    </View>
+                  )}
+                  {templateActions.length > 0 ? <ShiftTemplateListSeparator /> : null}
+                  <ShiftTemplateAddRow
+                    accessibilityLabel="Neue Schichtvorlage hinzufügen"
+                    disabled={busy}
+                    onPress={onAddTemplate}
+                  />
+                </ShiftTemplateListCard>
+              </View>
+            </ScrollView>
+          </>
+        )}
+      </BackFooterLayout>
     </Animated.View>
   );
 });

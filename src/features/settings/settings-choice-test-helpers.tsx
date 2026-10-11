@@ -21,7 +21,7 @@ export function SettingsEditorTestFlow() {
 }
 export async function selectSettingsChoice(screen: Screen, field: string, option: string) {
   if (field === "Berechnung" && option === "Monatsbrutto selbst eintragen") {
-    await fireEvent.press(screen.getByRole("tab", { name: "Eigenes Brutto" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Eigenes Brutto" }));
     return [];
   }
   const mapped =

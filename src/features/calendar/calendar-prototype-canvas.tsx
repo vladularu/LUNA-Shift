@@ -1,6 +1,8 @@
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
 import { today } from "@/engine/calendar";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import { usePalette } from "@/theme/palette";
 import { calendarImageLabelColor } from "@/theme/calendar-image";
@@ -56,6 +58,7 @@ const MovingDay = memo(function MovingDay({
       <Text
         allowFontScaling={false}
         style={{
+          fontFamily: INTER_FONTS.regular,
           fontSize: CALENDAR_METRICS.dayNumberFontSize,
           fontWeight: isToday ? "700" : "500",
           color: isToday
@@ -251,6 +254,7 @@ export function PrototypeMonthContent({
                 height: CALENDAR_METRICS.dayNumberHeight,
                 paddingLeft: 5,
                 paddingTop: 5,
+                fontFamily: INTER_FONTS.regular,
                 fontSize: CALENDAR_METRICS.dayNumberFontSize,
                 color: labelColor,
                 opacity: 0.5,
@@ -335,6 +339,7 @@ export function PrototypeMonthContent({
                     style={{
                       height: CALENDAR_METRICS.entryRowHeight,
                       color: labelColor,
+                      fontFamily: INTER_FONTS.regular,
                       fontSize: CALENDAR_METRICS.entryFontSize,
                     }}
                   >{`+${preview.overflowCount}`}</Text>
@@ -347,6 +352,7 @@ export function PrototypeMonthContent({
                     style={{
                       height: CALENDAR_METRICS.entryRowHeight,
                       color: labelColor,
+                      fontFamily: INTER_FONTS.regular,
                       fontSize: CALENDAR_METRICS.entryFontSize,
                     }}
                   >
@@ -406,6 +412,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     minHeight: 44,
     minWidth: 44,
+    fontFamily: INTER_FONTS.bold,
     fontSize: TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700",
   },
@@ -413,6 +420,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 18,
     height: 18,
+    fontFamily: INTER_FONTS.regular,
     fontSize: CALENDAR_METRICS.dayNumberFontSize * 0.6,
     textAlign: "center",
     lineHeight: TYPOGRAPHY.label.lineHeight,

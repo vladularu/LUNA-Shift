@@ -43,7 +43,7 @@ describe("tariff assessment questions", () => {
       screen.getByRole("radio", { name: "Erste Frage?: Unsicher", checked: true }),
     ).toHaveStyle({
       minHeight: CONTROL_HEIGHT.compact,
-      borderRadius: RADII.control,
+      borderRadius: RADII.pill,
     });
   });
 });

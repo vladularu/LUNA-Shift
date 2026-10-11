@@ -1,5 +1,8 @@
+import { TYPOGRAPHY } from "@/theme/typography";
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { PRODUCT_NAME } from "@/brand";
 import type { SettingsInfoSection } from "@/navigation/routes";
@@ -8,7 +11,7 @@ import { parseEnumRouteParam, type RouteParam } from "@/navigation/route-params"
 import { usePalette } from "@/theme/palette";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView } from "@/ui/loading-view";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 interface InfoContent {
   readonly title: string;
@@ -230,46 +233,81 @@ export function SettingsInfoDetailsScreen() {
       : INFO_CONTENT[section];
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
+    <BackFooterLayout
+      onPress={() => router.back()}
       style={{ backgroundColor: palette.groupedBackground }}
-      contentContainerStyle={{ flexGrow: 1, gap: 14, padding: 16, paddingBottom: 32 }}
     >
-      <Stack.Screen
-        options={{
-          title: content.title,
-          headerStyle: { backgroundColor: palette.background },
-          headerTintColor: palette.text,
-          headerTitleStyle: { color: palette.text },
-          statusBarStyle: palette.dark ? "light" : "dark",
-        }}
-      />
-      <Text selectable style={{ color: palette.textSecondary, fontSize: 14, lineHeight: 21 }}>
-        {content.intro}
-      </Text>
-      <SurfaceCard>
-        {content.items.map((item, index) => (
-          <View
-            key={item.title}
+      {(bottomPadding) => (
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          style={{ backgroundColor: palette.groupedBackground }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            gap: 14,
+            padding: 16,
+            paddingBottom: bottomPadding,
+          }}
+        >
+          <Stack.Screen
+            options={{
+              title: content.title,
+              headerStyle: { backgroundColor: palette.background },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              statusBarStyle: palette.dark ? "light" : "dark",
+            }}
+          />
+          <Text
+            selectable
             style={{
-              gap: 4,
-              borderTopWidth: index === 0 ? 0 : 1,
-              borderTopColor: palette.separator,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
+              color: palette.textSecondary,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.small.fontSize,
+              lineHeight: TYPOGRAPHY.compact.lineHeight,
             }}
           >
-            <Text selectable style={{ color: palette.text, fontSize: 15, fontWeight: "600" }}>
-              {item.title}
-            </Text>
-            <Text selectable style={{ color: palette.textMuted, fontSize: 12, lineHeight: 18 }}>
-              {item.text}
-            </Text>
-          </View>
-        ))}
-      </SurfaceCard>
-      <View style={{ flex: 1 }} />
-      <SheetBackFooter onPress={() => router.back()} />
-    </ScrollView>
+            {content.intro}
+          </Text>
+          <SurfaceCard>
+            {content.items.map((item, index) => (
+              <View
+                key={item.title}
+                style={{
+                  gap: 4,
+                  borderTopWidth: index === 0 ? 0 : 1,
+                  borderTopColor: palette.separator,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                }}
+              >
+                <Text
+                  selectable
+                  style={{
+                    color: palette.text,
+                    fontFamily: INTER_FONTS.semibold,
+                    fontSize: TYPOGRAPHY.compact.fontSize,
+                    fontWeight: "600",
+                  }}
+                >
+                  {item.title}
+                </Text>
+                <Text
+                  selectable
+                  style={{
+                    color: palette.textMuted,
+                    fontFamily: INTER_FONTS.regular,
+                    fontSize: TYPOGRAPHY.caption.fontSize,
+                    lineHeight: TYPOGRAPHY.label.lineHeight,
+                  }}
+                >
+                  {item.text}
+                </Text>
+              </View>
+            ))}
+          </SurfaceCard>
+          <View style={{ flex: 1 }} />
+        </ScrollView>
+      )}
+    </BackFooterLayout>
   );
 }

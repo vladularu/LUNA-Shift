@@ -2,7 +2,8 @@ import { ProfileSelectionProvider } from "@/features/settings/profile-selection"
 import { AnalysisViewProvider } from "@/features/analysis/analysis-view-preferences";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar, StyleSheet } from "react-native";
+import { useFonts } from "expo-font";
+import { Platform, StatusBar, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PflegeShiftRuntimeProvider } from "@/composition/pflegeshift-runtime-provider";
@@ -22,18 +23,23 @@ import {
 } from "@/features/settings/appearance-preferences";
 import { LoadingView } from "@/ui/loading-view";
 import { CalendarBackgroundProvider } from "@/features/settings/calendar-background-preferences";
+import { INTER_FONTS } from "@/theme/shadcn";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
 
 SplashScreen.setOptions({ duration: 300, fade: true });
 
-const ENTRY_EDITOR_SCREEN_OPTIONS = {
-  headerShown: false,
-  presentation: "transparentModal" as const,
-  animation: "none" as const,
-  gestureEnabled: false,
-  contentStyle: { backgroundColor: "transparent" },
-};
-
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    [INTER_FONTS.regular]: require("../assets/fonts/inter/Inter-Regular.ttf"),
+    [INTER_FONTS.medium]: require("../assets/fonts/inter/Inter-Medium.ttf"),
+    [INTER_FONTS.semibold]: require("../assets/fonts/inter/Inter-SemiBold.ttf"),
+    [INTER_FONTS.bold]: require("../assets/fonts/inter/Inter-Bold.ttf"),
+    [INTER_FONTS.extraBold]: require("../assets/fonts/inter/Inter-ExtraBold.ttf"),
+    [INTER_FONTS.italic]: require("../assets/fonts/inter/Inter-Italic.ttf"),
+  });
+  if (fontError) throw fontError;
+  if (!fontsLoaded) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
       <SecureDatabaseProvider>
@@ -65,6 +71,12 @@ function ThemedApp() {
                   <ThemeProvider
                     value={{
                       ...navigationTheme,
+                      fonts: {
+                        regular: { fontFamily: INTER_FONTS.regular, fontWeight: "400" },
+                        medium: { fontFamily: INTER_FONTS.medium, fontWeight: "500" },
+                        bold: { fontFamily: INTER_FONTS.bold, fontWeight: "700" },
+                        heavy: { fontFamily: INTER_FONTS.extraBold, fontWeight: "800" },
+                      },
                       colors: {
                         ...navigationTheme.colors,
                         primary: palette.accent,
@@ -85,7 +97,11 @@ function ThemedApp() {
                             headerShadowVisible: false,
                             headerStyle: { backgroundColor: palette.background },
                             headerTintColor: palette.text,
-                            headerTitleStyle: { color: palette.text },
+                            headerTitleStyle: {
+                              ...TYPOGRAPHY.sectionTitle,
+                              fontFamily: INTER_FONTS.semibold,
+                              color: palette.text,
+                            },
                             statusBarStyle: dark ? "light" : "dark",
                             headerTransparent: false,
                           }}
@@ -110,11 +126,26 @@ function ThemedApp() {
                           />
                           <Stack.Screen name="appearance" options={{ presentation: "card" }} />
                           <Stack.Screen name="work-profile" options={{ presentation: "card" }} />
-                          <Stack.Screen name="day-editor" options={ENTRY_EDITOR_SCREEN_OPTIONS} />
-                          <Stack.Screen name="shift-editor" options={ENTRY_EDITOR_SCREEN_OPTIONS} />
+                          <Stack.Screen
+                            name="day-editor"
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
+                          />
+                          <Stack.Screen
+                            name="shift-editor"
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
+                          />
                           <Stack.Screen
                             name="appointment-editor"
-                            options={ENTRY_EDITOR_SCREEN_OPTIONS}
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
                           />
                           <Stack.Screen
                             name="day-details"

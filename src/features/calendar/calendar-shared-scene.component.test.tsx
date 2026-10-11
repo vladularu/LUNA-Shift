@@ -1,7 +1,7 @@
-import { act, fireEvent, render, within } from "@testing-library/react-native";
+import { act, fireEvent, render, renderHook, within } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { AppState } from "react-native";
-import { getAnimatedStyle } from "react-native-reanimated";
+import { getAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
@@ -43,10 +43,14 @@ function Tree({
   mode = "MONTH",
   entries = [],
   active = true,
+  stampMode = false,
+  stampTransitionProgress,
 }: {
   mode?: CalendarViewMode;
   entries?: CalendarEntry[];
   active?: boolean;
+  stampMode?: boolean;
+  stampTransitionProgress?: SharedValue<number>;
 }) {
   return (
     <SharedCalendarScene
@@ -68,8 +72,10 @@ function Tree({
         showHolidays
         selectedDate="2026-01-08"
         onSelectDate={onSelectDate}
-        accessibilityVisible
+        accessibilityVisible={active}
         testData={false}
+        stampMode={stampMode}
+        stampTransitionProgress={stampTransitionProgress}
       />
     </SharedCalendarScene>
   );
@@ -107,6 +113,36 @@ function BackgroundTree({
 }
 
 describe("shared live calendar scene", () => {
+  it("retains the selected-date glyph while hidden beneath an editor without a focus handoff", async () => {
+    const hidden = { includeHiddenElements: true };
+    const screen = await render(<Tree />);
+    const marker = screen.getByTestId("calendar-date-marker-2026-01-08", hidden);
+    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+    await screen.rerender(<Tree active={false} />);
+    expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);
+    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+    await screen.rerender(<Tree />);
+    expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);
+    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+  });
+
+  it("tracks the planner clock through opening, reversal and closing without remounting outlines", async () => {
+    const clock = await renderHook(() => useSharedValue(0));
+    const progress = clock.result.current;
+    const screen = await render(
+      <Tree entries={[appointment]} stampMode stampTransitionProgress={progress} />,
+    );
+    const outline = screen.getByTestId("quick-stamp-outline-2026-01-09");
+    expect(screen.queryByTestId("quick-stamp-outline-2026-01-08")).toBeNull();
+    for (const value of [0.25, 0.75, 0.5, 1, 0.5, 0]) {
+      await act(() => {
+        progress.value = value;
+      });
+      expect(getAnimatedStyle(outline)).toMatchObject({ opacity: value });
+      expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toBe(outline);
+    }
+  });
+
   it("keeps selected day accessible but removes its full-cell outline", async () => {
     const screen = await render(<Tree />);
     expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({ borderWidth: 0 });
@@ -131,6 +167,11 @@ describe("shared live calendar scene", () => {
     await screen.rerender(<Tree mode="YEAR" />);
     await act(async () => jest.advanceTimersByTime(500));
     expect(screen.getByTestId("shared-month-2026-01", { includeHiddenElements: true })).toBe(month);
+    expect(screen.getByTestId("calendar-year-overview-shell").props.pointerEvents).toBe("none");
+    await fireEvent.press(screen.getByRole("button", { name: "September 2026 öffnen" }));
+    expect(onSelectMonth).not.toHaveBeenCalled();
+    await act(async () => jest.advanceTimersByTime(100));
+    expect(screen.getByTestId("calendar-year-overview-shell").props.pointerEvents).toBe("auto");
     await fireEvent.press(screen.getByRole("button", { name: "September 2026 öffnen" }));
     expect(onSelectMonth).toHaveBeenCalledWith("2026-09");
     await screen.rerender(<Tree />);
@@ -226,7 +267,7 @@ describe("shared live calendar scene", () => {
         hidden,
       )[0];
       expect(weekday).toHaveStyle({
-        color: option.value === "subtle" ? LIGHT_PALETTE.textMuted : LIGHT_PALETTE.text,
+        color: option.value === "subtle" ? LIGHT_PALETTE.textSecondary : LIGHT_PALETTE.text,
       });
       expect(screen.getByTestId("calendar-custom-background-image", hidden)).toBe(photo);
       expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);

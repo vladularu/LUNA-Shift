@@ -1,5 +1,6 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View } from "react-native";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
+import { Pressable, View } from "react-native";
 
 import type { MonthlyPayEstimate } from "@/domain/types";
 import { ExpandableHighlightCard } from "@/features/analysis/expandable-highlight-card";

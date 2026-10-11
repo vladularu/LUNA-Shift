@@ -1,7 +1,10 @@
+import { Text } from "@/ui/text";
+import { INTER_FONTS } from "@/theme/shadcn";
+import type { ReactNode } from "react";
 import { router } from "expo-router";
 import { annualDetailsRoute } from "@/navigation/routes";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View } from "react-native";
+import Ionicons from "@/ui/icon";
+import { Pressable, View } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
@@ -25,23 +28,26 @@ import { AnnualPremiumReport } from "./annual-premium-report";
 import { AnnualOverview } from "./annual-overview";
 import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
 import { CheckPeriod } from "./check-summary-card";
+import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import type { AnnualDetailSection } from "@/navigation/routes";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
 import { MOTION } from "@/theme/motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardFooterLine, CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { ReportPeriodContent, ReportScrollView } from "@/ui/report-layout";
 
 export type AnalysisPeriod = "MONTH" | "YEAR";
 
 export function AnnualReportScreen({
+  exportControl,
   report: sourceReport,
   pending = false,
   testMonths,
   onBackToMonth,
   onMoveYear,
 }: {
+  readonly exportControl?: ReactNode;
   readonly report: AnnualReport;
   readonly pending?: boolean;
   readonly testMonths: readonly string[];
@@ -74,6 +80,7 @@ export function AnnualReportScreen({
 
           <AnnualOverview report={report} pending={pending} />
           <AnalysisViewControls />
+          {exportControl}
         </ReportPeriodContent>
       </ReportScrollView>
     </View>
@@ -268,7 +275,12 @@ function AnnualCheckDetails({
 }) {
   const palette = usePalette();
   const issueMonths = report.months.filter(
-    (item) => item.criticalCount + item.warningCount + (item.infoCount ?? 0) > 0,
+    (item) =>
+      item.criticalCount +
+        item.warningCount +
+        (item.infoCount ?? 0) +
+        (item.prerequisiteCount ?? 0) >
+      0,
   );
   if (issueMonths.length === 0)
     return (
@@ -276,24 +288,29 @@ function AnnualCheckDetails({
     );
   return (
     <View style={{ gap: SPACING.md }}>
+      {report.prerequisiteCount ? <CheckPrerequisitesCard /> : null}
       <Text
         accessibilityRole="header"
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
       >
-        Monate mit Meldungen
+        {report.prerequisiteCount ? "Monate mit Hinweisen" : "Monate mit Meldungen"}
       </Text>
       <SurfaceCard style={{ paddingHorizontal: SPACING.lg }}>
         {issueMonths.map((item, index) => {
           const count = item.criticalCount + item.warningCount + (item.infoCount ?? 0);
-          const countLabel = `${count} ${count === 1 ? "Meldung" : "Meldungen"}`;
+          const countLabel = count
+            ? `${count} ${count === 1 ? "Meldung" : "Meldungen"}`
+            : "Prüfung eingeschränkt";
           const monthLabel = formatMonthTitle(item.month);
           const severity =
             item.criticalCount > 0
               ? "Kritische Meldung enthalten"
               : item.warningCount > 0
                 ? "Warnung enthalten"
-                : "Hinweis enthalten";
+                : item.prerequisiteCount
+                  ? "Prüfgrundlage unvollständig"
+                  : "Hinweis enthalten";
           return (
             <View key={item.month}>
               {index > 0 ? <CardSeparator inset={0} /> : null}
@@ -586,7 +603,14 @@ function DistributionList({
       <ReportCardTitle title="Dienstverteilung" />
       <View style={{ gap: 14, padding: SPACING.lg }}>
         {!hasEntries ? (
-          <Text selectable style={{ color: palette.textMuted, fontSize: 13 }}>
+          <Text
+            selectable
+            style={{
+              color: palette.textMuted,
+              fontFamily: INTER_FONTS.regular,
+              fontSize: TYPOGRAPHY.label.fontSize,
+            }}
+          >
             Keine Einträge in diesem Jahr.
           </Text>
         ) : null}
@@ -616,7 +640,15 @@ function DistributionList({
                     backgroundColor: SHIFT_TYPE_COLORS[type],
                   }}
                 />
-                <Text selectable style={{ flex: 1, color: palette.textSecondary, fontSize: 13 }}>
+                <Text
+                  selectable
+                  style={{
+                    flex: 1,
+                    color: palette.textSecondary,
+                    fontFamily: INTER_FONTS.regular,
+                    fontSize: TYPOGRAPHY.label.fontSize,
+                  }}
+                >
                   {SHIFT_TYPE_LABELS[type]}
                 </Text>
                 <Text
@@ -636,7 +668,8 @@ function DistributionList({
                   style={{
                     width: 38,
                     color: palette.textMuted,
-                    fontSize: 12,
+                    fontFamily: INTER_FONTS.regular,
+                    fontSize: TYPOGRAPHY.caption.fontSize,
                     textAlign: "right",
                     fontVariant: ["tabular-nums"],
                   }}
@@ -674,7 +707,7 @@ function DistributionList({
                     alignItems: "center",
                     gap: 8,
                     borderRadius: RADII.control,
-                    borderCurve: "continuous",
+                    borderCurve: CORNER_CURVE,
                     backgroundColor: palette.surfaceRaised,
                     paddingHorizontal: 12,
                     paddingVertical: 10,
@@ -692,7 +725,11 @@ function DistributionList({
                     <Text
                       maxFontSizeMultiplier={TEXT_MAX_SCALE}
                       selectable
-                      style={{ color: palette.textSecondary, fontSize: 12 }}
+                      style={{
+                        color: palette.textSecondary,
+                        fontFamily: INTER_FONTS.regular,
+                        fontSize: TYPOGRAPHY.caption.fontSize,
+                      }}
                     >
                       {SHIFT_TYPE_LABELS[type]}
                     </Text>

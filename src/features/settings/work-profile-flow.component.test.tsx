@@ -16,9 +16,12 @@ const mockUpdate = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockDispatch = jest.fn();
 const mockNavigation = { dispatch: mockDispatch };
 type MockHeaderOptions = {
+  headerBackVisible?: boolean;
+  presentation?: string;
   headerLeft?: () => React.ReactNode;
   headerRight?: () => React.ReactNode;
 };
+let mockHeaderOptions: MockHeaderOptions;
 let mockGuard: {
   active: boolean;
   callback: (event: { data: { action: NavigationAction } }) => void;
@@ -34,6 +37,7 @@ jest.mock("expo-router", () => ({
   useNavigation: () => mockNavigation,
   Stack: {
     Screen: ({ options }: { options: MockHeaderOptions }) => {
+      mockHeaderOptions = { ...mockHeaderOptions, ...options };
       return (
         <>
           {options.headerLeft?.()}
@@ -54,6 +58,7 @@ function saveButton(screen: Awaited<ReturnType<typeof render>>) {
 describe("work profile draft flow", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockHeaderOptions = {};
     mockSection = "WORK";
     mockPalette = LIGHT_PALETTE;
     mockProfile = {
@@ -83,7 +88,12 @@ describe("work profile draft flow", () => {
     });
   });
   it("loads all saved work evidence, saves the whole draft once and reloads saved values", async () => {
+    mockHeaderOptions = { headerLeft: jest.fn(() => null) };
     let screen = await render(<SettingsEditorTestFlow />);
+    expect(mockHeaderOptions.headerBackVisible).toBe(true);
+    expect(mockHeaderOptions.presentation).toBe("card");
+    expect(mockHeaderOptions.headerLeft).toBeUndefined();
+    expect(screen.queryByRole("button", { name: "Abbrechen" })).toBeNull();
     expect(
       screen.getByRole("button", { name: /Regelmäßige Nacht.*Noch nicht bestätigt/ }),
     ).toBeTruthy();
@@ -114,7 +124,7 @@ describe("work profile draft flow", () => {
     expect(screen.getByRole("button", { name: "Bundesland: Bayern" })).toBeTruthy();
     expect(mockGuard.active).toBe(false);
   });
-  it("cancels without saving, and preserves a failed save through a theme change", async () => {
+  it("preserves a failed save through a theme change and confirms discarding before going back", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "28");
     mockUpdate.mockRejectedValueOnce(new Error("storage"));
@@ -125,9 +135,16 @@ describe("work profile draft flow", () => {
     mockPalette = DARK_PALETTE;
     await screen.rerender(<SettingsEditorTestFlow />);
     expect(screen.getByDisplayValue("28")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
+    const alert = jest.spyOn(Alert, "alert");
+    const action: NavigationAction = { type: "GO_BACK" };
+    await act(() => mockGuard.callback({ data: { action } }));
+    expect(mockDispatch).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("28")).toBeTruthy();
+    await act(() => alert.mock.calls.at(-1)![2]![1].onPress?.());
     expect(mockUpdate).toHaveBeenCalledTimes(1);
-    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockDispatch).toHaveBeenCalledWith(action);
+    expect(mockProfile.weeklyMinutes).toBe(2310);
   });
   it("guards back and swipe, keeps the draft or dispatches the original removal after discarding", async () => {
     const screen = await render(<SettingsEditorTestFlow />);

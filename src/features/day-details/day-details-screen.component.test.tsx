@@ -1,6 +1,7 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
+import { StyleSheet } from "react-native";
 
 import { DayDetailsScreen } from "@/features/day-details/day-details-screen";
 import { SCREEN_LAYOUT } from "@/theme/tokens";
@@ -46,10 +47,14 @@ describe("DayDetailsScreen", () => {
           gap: SCREEN_LAYOUT.contentGap,
           paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
           paddingTop: SCREEN_LAYOUT.contentTopPadding,
-          paddingBottom: SCREEN_LAYOUT.contentBottomPadding,
         }),
       ]),
     );
+    const scroll = screen.getByTestId("day-details-screen");
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingBottom).toBeGreaterThan(
+      SCREEN_LAYOUT.contentBottomPadding,
+    );
+    expect(within(scroll).queryByRole("button", { name: "Zurück" })).toBeNull();
 
     await fireEvent.press(screen.getByRole("button", { name: "Schicht hinzufügen" }));
     expect(router.push).toHaveBeenLastCalledWith({

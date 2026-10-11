@@ -31,23 +31,8 @@ function filesMatching(pattern: RegExp) {
 const LEGACY_COLOR_LITERAL_FILES = ["src/features/calendar/quick-planner-appearance.ts"];
 
 const LEGACY_TYPOGRAPHY_LITERAL_FILES = [
-  "src/features/analysis/annual-report-view.tsx",
   "src/features/calendar/month-card.tsx",
-  "src/features/calendar/quick-entry-action-tile.tsx",
-  "src/features/calendar/quick-entry-popup.tsx",
-  "src/features/calendar/year-overview.tsx",
-  "src/features/day-editor/appointment-edit-overlay.tsx",
-  "src/features/day-editor/appointment-recurrence-overlay.tsx",
-  "src/features/day-editor/day-editor-components.tsx",
-  "src/features/day-editor/entry-edit-overlay-frame.tsx",
-  "src/features/day-editor/entry-options.tsx",
-  "src/features/day-editor/shift-edit-overlay.tsx",
-  "src/features/day-editor/shift-notification-overlay.tsx",
   "src/features/dev-tools/dev-tools-screen.tsx",
-  "src/features/location/location-picker-screen.tsx",
-  "src/features/settings/settings-info-details-screen.tsx",
-  "src/ui/shift-color-picker-sheet.tsx",
-  "src/ui/shift-symbol-picker.tsx",
 ].sort();
 
 const LEGACY_RADIUS_LITERAL_FILES = [
@@ -59,13 +44,8 @@ const LEGACY_RADIUS_LITERAL_FILES = [
   "src/features/day-editor/appointment-recurrence-overlay.tsx",
   "src/features/day-editor/day-editor-components.tsx",
   "src/features/day-editor/entry-edit-overlay-frame.tsx",
-  "src/features/day-editor/entry-options.tsx",
-  "src/features/day-editor/shift-edit-overlay.tsx",
   "src/features/day-editor/shift-notification-overlay.tsx",
-  "src/features/dev-tools/dev-tools-screen.tsx",
-  "src/features/location/location-preview.tsx",
   "src/ui/color-picker.tsx",
-  "src/ui/loading-view.tsx",
   "src/ui/shift-color-picker-sheet.tsx",
   "src/ui/shift-symbol-picker.tsx",
 ].sort();
@@ -77,7 +57,6 @@ const LEGACY_HORIZONTAL_PADDING_LITERAL_FILES = [
   "src/features/calendar/quick-entry-popup.tsx",
   "src/features/calendar/quick-planner-dock.tsx",
   "src/features/calendar/year-overview.tsx",
-  "src/features/day-editor/appointment-edit-overlay.tsx",
   "src/features/day-editor/appointment-recurrence-overlay.tsx",
   "src/features/day-editor/day-editor-components.tsx",
   "src/features/day-editor/entry-edit-overlay-frame.tsx",

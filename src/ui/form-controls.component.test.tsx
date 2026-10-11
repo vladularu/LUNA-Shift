@@ -4,11 +4,46 @@ import { AccessibilityInfo, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TEXT_MAX_SCALE } from "@/theme/typography";
-import { LIGHT_PALETTE } from "@/theme/palette-values";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { DropdownField, Field, PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 
 describe("form controls", () => {
+  it.each([false, true])("keeps fields and both action tones readable in dark=%s", async (dark) => {
+    const scheme = jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue(dark ? "dark" : "light");
+    try {
+      const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
+      const onPress = jest.fn();
+      const screen = await render(
+        <>
+          <Field label="Notiz" placeholder="Text eingeben" />
+          <PrimaryButton onPress={onPress}>Speichern</PrimaryButton>
+          <PrimaryButton danger onPress={onPress}>
+            Löschen
+          </PrimaryButton>
+        </>,
+      );
+      expect(screen.getByLabelText("Notiz")).toHaveStyle({
+        color: palette.text,
+        backgroundColor: palette.surfaceRaised,
+      });
+      expect(screen.getByLabelText("Notiz")).toHaveProp("placeholderTextColor", palette.textMuted);
+      expect(screen.getByRole("button", { name: "Speichern" })).toHaveStyle({
+        backgroundColor: palette.accent,
+      });
+      expect(screen.getByText("Speichern")).toHaveStyle({ color: palette.onAccent });
+      expect(screen.getByRole("button", { name: "Löschen" })).toHaveStyle({
+        backgroundColor: palette.danger,
+      });
+      expect(screen.getByText("Löschen")).toHaveStyle({ color: palette.onDanger });
+      await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+      expect(onPress).toHaveBeenCalledTimes(1);
+    } finally {
+      scheme.mockRestore();
+    }
+  });
   it("exposes a labeled field and forwards changes", async () => {
     const onChangeText = jest.fn();
     const screen = await render(
@@ -64,14 +99,14 @@ describe("form controls", () => {
 
     expect(screen.getByRole("button", { name: "Speichern" })).toHaveStyle({
       width: "100%",
-      minHeight: 52,
+      minHeight: 40,
       borderWidth: 0,
       backgroundColor: LIGHT_PALETTE.accent,
       opacity: 1,
     });
     expect(screen.getByRole("button", { name: "Abbrechen" })).toHaveStyle({
       width: "100%",
-      minHeight: 48,
+      minHeight: 40,
       borderWidth: 1,
     });
     expect(screen.getByText("Abbrechen")).toHaveProp("dynamicTypeRamp", "headline");

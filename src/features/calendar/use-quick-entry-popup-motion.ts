@@ -8,8 +8,8 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-import { quickEntryTransitionDuration, type QuickEntryAnchorMotion } from "./quick-entry-motion";
-import { MOTION } from "@/theme/motion";
+import type { QuickEntryAnchorMotion } from "./quick-entry-motion";
+import { QUICK_ENTRY_EASING, quickEntryTransitionDuration } from "./quick-entry-motion";
 
 export function useQuickEntryPopupMotion({
   animateEntry,
@@ -22,6 +22,7 @@ export function useQuickEntryPopupMotion({
 }) {
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(animateEntry ? 0 : 1);
+  const closeStart = useSharedValue(1);
   const [closing, setClosing] = useState(false);
   const closeRequested = useRef(false);
   const completed = useRef(false);
@@ -42,7 +43,7 @@ export function useQuickEntryPopupMotion({
       animateEntry
         ? withTiming(1, {
             duration: quickEntryTransitionDuration(true, reduceMotion),
-            easing: MOTION.easing.calm,
+            easing: QUICK_ENTRY_EASING,
           })
         : 1,
     );
@@ -57,6 +58,7 @@ export function useQuickEntryPopupMotion({
   const closePopup = useCallback(() => {
     if (closeRequested.current) return;
     closeRequested.current = true;
+    closeStart.set(progress.get());
     setClosing(true);
     cancelAnimation(progress);
     progress.set(
@@ -64,29 +66,33 @@ export function useQuickEntryPopupMotion({
         0,
         {
           duration: quickEntryTransitionDuration(false, reduceMotion),
-          easing: MOTION.easing.calm,
+          easing: QUICK_ENTRY_EASING,
         },
         (finished) => {
           if (finished) runOnJS(finishClose)();
         },
       ),
     );
-  }, [finishClose, progress, reduceMotion]);
+  }, [closeStart, finishClose, progress, reduceMotion]);
 
   const popupMotionStyle = useAnimatedStyle(() => {
     const value = progress.get();
     return {
-      opacity: Math.min(1, value * 4),
+      opacity: reduceMotion
+        ? value
+        : closing
+          ? Math.min(1, Math.max(0, value / Math.max(0.001, closeStart.get())))
+          : 1,
       transform: reduceMotion
         ? []
         : [
-            { translateX: origin.translateX * (1 - value) },
             { translateY: origin.translateY * (1 - value) },
-            { scale: origin.scale + (1 - origin.scale) * value },
+            { translateY: origin.pivotY },
+            { scaleY: value },
+            { translateY: -origin.pivotY },
           ],
     };
-  }, [origin, reduceMotion]);
-  const backdropMotionStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
+  }, [closeStart, closing, origin, reduceMotion]);
 
-  return { closing, closePopup, popupMotionStyle, backdropMotionStyle };
+  return { closing, closePopup, popupMotionStyle };
 }

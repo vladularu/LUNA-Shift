@@ -1,5 +1,6 @@
+import { Text, TextInput } from "@/ui/text";
 import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding";
-import { RADII, SPACING, SCREEN_LAYOUT, CONTROL_HEIGHT } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING, SCREEN_LAYOUT, CONTROL_HEIGHT } from "@/theme/tokens";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -11,18 +12,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
-import {
-  defaultHolidayRegion,
-  defaultTariffRegion,
-  holidayRegionsForState,
-  tariffFullTimeWeeklyMinutes,
-} from "@/domain/employment-profile";
+import { defaultHolidayRegion, holidayRegionsForState } from "@/domain/employment-profile";
 import { userFacingErrorMessage } from "@/domain/errors";
 import {
   FEDERAL_STATES,
@@ -30,14 +24,9 @@ import {
   HOLIDAY_REGION_LABELS,
   INDUSTRIES,
   INDUSTRY_LABELS,
-  PAY_GROUPS,
-  payLevelsForGroup,
   type FederalState,
   type HolidayRegion,
   type Industry,
-  type PayGroup,
-  type PayLevel,
-  type TariffSector,
 } from "@/domain/types";
 import {
   manualMonthlyGrossFieldError,
@@ -53,12 +42,34 @@ import {
   SelectField,
 } from "./onboarding-controls";
 import { PercentageSlider } from "./percentage-slider";
+import { SALARY_BASIS_OPTIONS } from "@/features/settings/salary-basis-options";
+import { OnboardingTariffFields } from "./onboarding-tariff-fields";
+import {
+  EMPTY_TARIFF_SELECTION,
+  onboardingTariffErrors,
+  onboardingTariffProfile,
+  isTrainingTariff,
+  type OnboardingTariffSelection,
+} from "./onboarding-tariff-values";
 
 type Step = 1 | 2 | 3 | 4 | 5;
-type SalaryMode = "MANUAL" | "TVOED_P" | "LATER";
+type SalaryMode = "MANUAL" | "TARIFF" | "LATER";
+const STEP_ORDER = [1, 2, 4, 3, 5] as const;
 type Errors = Partial<
   Record<
-    "industry" | "salary" | "gross" | "group" | "level" | "sector" | "hours" | "state" | "region",
+    | "industry"
+    | "salary"
+    | "gross"
+    | "group"
+    | "level"
+    | "sector"
+    | "hours"
+    | "state"
+    | "region"
+    | "tariff"
+    | "tariffRegion"
+    | "year"
+    | "fulltime",
     string
   >
 >;
@@ -83,9 +94,8 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   const [industry, setIndustry] = useState<Industry | null>(null);
   const [salaryMode, setSalaryMode] = useState<SalaryMode | null>(null);
   const [gross, setGross] = useState("");
-  const [payGroup, setPayGroup] = useState<PayGroup | null>(null);
-  const [payLevel, setPayLevel] = useState<PayLevel | null>(null);
-  const [sector, setSector] = useState<TariffSector | null>(null);
+  const [tariffSelection, setTariffSelection] =
+    useState<OnboardingTariffSelection>(EMPTY_TARIFF_SELECTION);
   const [weeklyHours, setWeeklyHours] = useState("38,5");
   const [percentageBasis, setPercentageBasis] = useState(38.5);
   const [adjustingPercentage, setAdjustingPercentage] = useState(false);
@@ -99,6 +109,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   const grossRef = useRef<TextInput>(null);
   const hoursRef = useRef<TextInput>(null);
   const [editingSummary, setEditingSummary] = useState(false);
+  const displayStep = STEP_ORDER.indexOf(step) + 1;
   function moveTo(next: Step) {
     if (savingRef.current) return;
     setErrors({});
@@ -117,11 +128,11 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       if (salaryMode === "MANUAL")
         nextErrors.gross =
           manualMonthlyGrossFieldError(normalizeOnboardingGross(gross)) ?? undefined;
-      if (salaryMode === "TVOED_P") {
-        if (!payGroup) nextErrors.group = "Bitte wähle deine Entgeltgruppe.";
-        if (!payLevel) nextErrors.level = "Bitte wähle deine Stufe.";
-        if (!sector) nextErrors.sector = "Bitte wähle deinen Tarifbereich.";
-      }
+      if (salaryMode === "TARIFF")
+        Object.assign(
+          nextErrors,
+          onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours)),
+        );
     }
     if (step === 4) {
       nextErrors.hours = /^\d+(?:[,.]\d{1,2})?$/.test(weeklyHours.trim())
@@ -145,7 +156,10 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     if (editingSummary) {
       setEditingSummary(false);
       moveTo(5);
-    } else moveTo((step + 1) as Step);
+    } else {
+      const next = STEP_ORDER[displayStep];
+      if (next) moveTo(next);
+    }
   }
   async function finish() {
     if (savingRef.current) return;
@@ -154,11 +168,18 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       return;
     }
     if (!industry || !salaryMode || !federalState || holidayRegion === "UNKNOWN") return;
-    if (salaryMode === "TVOED_P" && (!payGroup || !payLevel || !sector)) return;
+    if (salaryMode === "TARIFF") {
+      const tariffErrors = onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours));
+      if (Object.values(tariffErrors).some(Boolean)) {
+        setErrors(tariffErrors);
+        setEditingSummary(true);
+        setStep(3);
+        return;
+      }
+    }
     savingRef.current = true;
     setSaving(true);
     setSaveError(undefined);
-    const tariffRegion = defaultTariffRegion(federalState);
     try {
       await updateProfile({
         industry,
@@ -166,20 +187,15 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
         holidayRegion,
         weeklyMinutes: parseWeeklyHours(weeklyHours),
         timeZone: "Europe/Berlin",
-        manualMonthlyGrossCents:
-          salaryMode === "MANUAL"
-            ? parseManualMonthlyGrossCents(normalizeOnboardingGross(gross))
-            : null,
-        tariff:
-          salaryMode === "TVOED_P" && payGroup && payLevel && sector
-            ? {
-                payGroup,
-                payLevel,
-                sector,
-                tariffRegion,
-                fullTimeWeeklyMinutes: tariffFullTimeWeeklyMinutes(sector, tariffRegion),
-              }
-            : null,
+        ...(salaryMode === "TARIFF"
+          ? onboardingTariffProfile(tariffSelection, parseWeeklyHours(weeklyHours))
+          : {
+              tariff: null,
+              manualMonthlyGrossCents:
+                salaryMode === "MANUAL"
+                  ? parseManualMonthlyGrossCents(normalizeOnboardingGross(gross))
+                  : null,
+            }),
       });
       router.replace("/");
     } catch (error) {
@@ -192,18 +208,18 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     }
   }
   const titles = [
-    "Dein Dienstplan.\nDein Rhythmus.",
+    "Dein Dienstplan.\nEinfach im Blick.",
     "Wo arbeitest du?",
-    "Dein Gehalt im Blick.",
+    "Wie möchtest du dein Gehalt einrichten?",
     "Wie viel arbeitest du?",
-    "Dein Überblick ist bereit.",
+    "Bereit für deinen Dienstplan.",
   ];
   const copies = [
     "Schichten planen. Zeit verstehen.",
-    "Wähle den Bereich, der zu deinem Arbeitsalltag passt.",
-    "Wähle deine Gehaltsgrundlage oder richte sie später ein.",
-    "Deine vertragliche Arbeitszeit pro Woche.",
-    "Das sind deine Angaben. Du kannst sie später jederzeit in den Einstellungen anpassen.",
+    "Wähle deinen Berufsbereich.",
+    "Jetzt oder später – du entscheidest.",
+    "Deine Wochenstunden und dein Arbeitsort.",
+    "Du kannst deine Angaben jederzeit ändern.",
   ];
   const grossCents = parseManualMonthlyGrossCents(normalizeOnboardingGross(gross));
   const salaryLabel =
@@ -211,7 +227,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       ? "Gehalt später einrichten"
       : salaryMode === "MANUAL"
         ? `${((grossCents ?? 0) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € brutto / Monat`
-        : `TVöD-P · ${payGroup} · Stufe ${payLevel} · ${sector === "BT_K" ? "BT-K" : "BT-B"}`;
+        : `${SALARY_BASIS_OPTIONS.find((option) => option.value === tariffSelection.mode)?.label ?? "Tarif"} · ${isTrainingTariff(tariffSelection.mode) ? `${tariffSelection.trainingYear}. Ausbildungsjahr` : `${tariffSelection.group} · Stufe ${tariffSelection.level}`}`;
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: p.canvas }]}>
       <KeyboardAvoidingView style={s.safe} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -222,7 +238,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
             disabled={saving || step === 1}
             onPress={() => {
               setEditingSummary(false);
-              moveTo((step - 1) as Step);
+              moveTo(STEP_ORDER[Math.max(0, displayStep - 2)]);
             }}
             style={[s.back, { opacity: step === 1 ? 0 : saving ? 0.5 : 1 }]}
           >
@@ -244,17 +260,17 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
             ) : null}
             <View
               accessible
-              accessibilityLabel={`Schritt ${step} von 5`}
+              accessibilityLabel={`Schritt ${displayStep} von 5`}
               accessibilityRole="progressbar"
-              accessibilityValue={{ min: 1, max: 5, now: step }}
+              accessibilityValue={{ min: 1, max: 5, now: displayStep }}
               style={s.progressDots}
             >
-              <Text style={[s.caption, { color: p.text }]}>{step} / 5</Text>
+              <Text style={[s.caption, { color: p.text }]}>{displayStep} / 5</Text>
               <View accessibilityElementsHidden style={s.track}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <View
                     key={n}
-                    style={[s.segment, { backgroundColor: n <= step ? p.accent : p.border }]}
+                    style={[s.segment, { backgroundColor: n <= displayStep ? p.accent : p.border }]}
                   />
                 ))}
               </View>
@@ -340,9 +356,9 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                 <View style={s.list}>
                   {(
                     [
-                      { value: "MANUAL", label: "Monatsbrutto eintragen", icon: "cash-multiple" },
-                      { value: "TVOED_P", label: "TVöD-P", icon: "file-document-outline" },
-                      { value: "LATER", label: "Später einrichten", icon: "clock-outline" },
+                      { value: "TARIFF", label: "Nach Tarif", icon: "file-document-outline" },
+                      { value: "MANUAL", label: "Eigenes Brutto", icon: "cash-multiple" },
+                      { value: "LATER", label: "Später", icon: "clock-outline" },
                     ] as const
                   ).map((option) => (
                     <Choice
@@ -373,52 +389,20 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                       testID="onboarding-manual-gross"
                     />
                     <Text style={[s.caption, { color: p.muted }]}>
-                      Dein persönliches Monatsbrutto. Zuschläge werden hier nicht berechnet.
+                      Dein Monatsbrutto ohne zusätzliche Zuschläge.
                     </Text>
                   </View>
                 ) : null}
-                {salaryMode === "TVOED_P" ? (
-                  <View style={s.fields}>
-                    <SelectField
-                      label="Entgeltgruppe"
-                      value={payGroup}
-                      options={PAY_GROUPS.map((value) => ({ value, label: value }))}
-                      error={errors.group}
-                      onChange={(value) => {
-                        setPayGroup(value);
-                        if (payLevel !== null && !payLevelsForGroup(value).includes(payLevel)) {
-                          setPayLevel(null);
-                        }
-                        clearError("group");
-                      }}
-                    />
-                    <SelectField
-                      label="Stufe"
-                      value={payLevel}
-                      options={(payGroup ? payLevelsForGroup(payGroup) : []).map((value) => ({
-                        value,
-                        label: `Stufe ${value}`,
-                      }))}
-                      error={errors.level}
-                      onChange={(value) => {
-                        setPayLevel(value);
-                        clearError("level");
-                      }}
-                    />
-                    <SelectField
-                      label="Tarifbereich"
-                      value={sector}
-                      options={[
-                        { value: "BT_K" as const, label: "Krankenhäuser · BT-K" },
-                        { value: "BT_B" as const, label: "Pflege und Betreuung · BT-B" },
-                      ]}
-                      error={errors.sector}
-                      onChange={(value) => {
-                        setSector(value);
-                        clearError("sector");
-                      }}
-                    />
-                  </View>
+                {salaryMode === "TARIFF" ? (
+                  <OnboardingTariffFields
+                    selection={tariffSelection}
+                    errors={errors}
+                    federalState={federalState}
+                    onChange={(value) => {
+                      setTariffSelection(value);
+                      setErrors({});
+                    }}
+                  />
                 ) : null}
               </View>
             ) : null}
@@ -547,6 +531,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
         <View style={[s.footer, { backgroundColor: p.canvas }]} testID="onboarding-fixed-footer">
           <FieldError message={saveError} />
           <Pressable
+            hitSlop={2}
             accessibilityRole="button"
             accessibilityLabel={saving ? "LUNA Shift wird eingerichtet" : undefined}
             accessibilityState={{ busy: saving, disabled: saving }}
@@ -565,7 +550,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                 {step === 1
                   ? "Los geht’s"
                   : step === 5
-                    ? "Ohne Konto starten"
+                    ? "Zum Kalender"
                     : editingSummary
                       ? "Übernehmen"
                       : "Weiter"}
@@ -584,7 +569,12 @@ const s = StyleSheet.create({
   scrollViewport: { flex: 1, minHeight: 0 },
   progressRight: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
   progressDots: { alignItems: "flex-end", gap: SPACING.xxs },
-  summaryCard: { borderWidth: 1, borderRadius: RADII.control, paddingHorizontal: SPACING.md },
+  summaryCard: {
+    borderCurve: CORNER_CURVE,
+    borderWidth: 1,
+    borderRadius: RADII.control,
+    paddingHorizontal: SPACING.md,
+  },
   chipColumn: { alignItems: "center", gap: SPACING.sm },
   caption: ONBOARDING_TYPOGRAPHY.caption,
   label: ONBOARDING_TYPOGRAPHY.label,
@@ -607,7 +597,13 @@ const s = StyleSheet.create({
   content: { gap: SPACING.xl },
   welcome: { flexGrow: 1, justifyContent: "center", paddingVertical: SPACING.md },
   brand: { gap: SPACING.xl, alignItems: "center" },
-  logo: { width: 260, maxWidth: "100%", height: 260, borderRadius: RADII.card },
+  logo: {
+    borderCurve: CORNER_CURVE,
+    width: 260,
+    maxWidth: "100%",
+    height: 260,
+    borderRadius: RADII.card,
+  },
   titleGroup: { gap: SPACING.sm },
   title: { ...ONBOARDING_TYPOGRAPHY.title, textAlign: "center" },
   display: { ...ONBOARDING_TYPOGRAPHY.display, textAlign: "center" },
@@ -615,6 +611,7 @@ const s = StyleSheet.create({
   fields: { gap: SPACING.lg },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xl, justifyContent: "center" },
   chip: {
+    borderCurve: CORNER_CURVE,
     minWidth: 64,
     minHeight: 64,
     alignItems: "center",
@@ -641,6 +638,7 @@ const s = StyleSheet.create({
     paddingBottom: SPACING.md,
   },
   primary: {
+    borderCurve: CORNER_CURVE,
     minHeight: CONTROL_HEIGHT.large,
     width: "100%",
     borderRadius: RADII.control,

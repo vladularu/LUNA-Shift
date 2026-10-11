@@ -4,6 +4,19 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "design": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "environment": "preview",
+      "env": {
+        "APP_VARIANT": "design",
+        "LUNA_DESIGN_SANDBOX": "1"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "channel": "design-shadcn"
+    },
     "e2e-test": {
       "distribution": "internal",
       "withoutCredentials": true,

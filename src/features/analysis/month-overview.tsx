@@ -77,7 +77,7 @@ export function MonthOverview({
         CHECK: (
           <CheckListCard
             counts={visible ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
-            categories={visible ? classifyChecks(visible.issues) : undefined}
+            categories={visible && compliance ? classifyChecks(compliance.issues) : undefined}
             status={status}
             showPlanning={showPlanning}
             onPress={() => router.push(complianceDetailsRoute(month))}

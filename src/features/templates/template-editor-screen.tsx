@@ -1,12 +1,12 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SelectionChip } from "@/ui/selection-option";
+import { Text, TextInput } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import {
   ActionSheetIOS,
   Platform,
   Pressable,
-  Text,
-  TextInput,
   View,
   useWindowDimensions,
   type TextInputProps,
@@ -44,7 +44,7 @@ import { MOTION } from "@/theme/motion";
 import { DEFAULT_TEMPLATE_COLOR, SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { CardSeparator, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { ColorPicker, SecondaryButton, TimePickerField } from "@/ui/form-controls";
@@ -361,6 +361,7 @@ function CompactPausePicker({
         </Text>
         <View
           style={{
+            borderCurve: CORNER_CURVE,
             minHeight: 36,
             minWidth: 92,
             alignItems: "center",
@@ -701,32 +702,12 @@ function TemplateEditorForm({
                   {TEMPLATE_TYPES.map((candidate) => {
                     const selected = candidate === type;
                     return (
-                      <Pressable
+                      <SelectionChip
                         key={candidate}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected }}
+                        label={SHIFT_TYPE_LABELS[candidate]}
+                        selected={selected}
                         onPress={() => changeType(candidate)}
-                        style={({ pressed }) => ({
-                          minHeight: CONTROL_HEIGHT.compact,
-                          justifyContent: "center",
-                          borderWidth: 1,
-                          borderColor: selected ? palette.primary : palette.border,
-                          borderRadius: RADII.pill,
-                          backgroundColor: selected ? palette.primarySoft : palette.surface,
-                          opacity: pressed ? 0.68 : 1,
-                          paddingHorizontal: SPACING.md,
-                        })}
-                      >
-                        <Text
-                          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                          style={{
-                            color: selected ? palette.primary : palette.text,
-                            ...TYPOGRAPHY.label,
-                          }}
-                        >
-                          {SHIFT_TYPE_LABELS[candidate]}
-                        </Text>
-                      </Pressable>
+                      />
                     );
                   })}
                 </View>

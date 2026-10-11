@@ -1,55 +1,121 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text } from "react-native";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
+import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from "expo-glass-effect";
+import { useEffect, useState } from "react";
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type ViewProps,
+} from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 
 export function SheetBackFooter({
+  accessibilityLabel,
+  busy = false,
   disabled = false,
+  icon = "chevron-back",
   label = "Zurück",
+  onLayout,
   onPress,
 }: {
+  readonly accessibilityLabel?: string;
+  readonly busy?: boolean;
   readonly disabled?: boolean;
+  readonly icon?: "chevron-back" | "close";
   readonly label?: string;
+  readonly onLayout?: ViewProps["onLayout"];
   readonly onPress: () => void;
 }) {
   const palette = usePalette();
+  const blocked = disabled || busy;
+  const [reduceTransparency, setReduceTransparency] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const update = (enabled: boolean) => {
+      if (active) setReduceTransparency(enabled);
+    };
+    const subscription = AccessibilityInfo.addEventListener("reduceTransparencyChanged", update);
+    void AccessibilityInfo.isReduceTransparencyEnabled()
+      .then(update)
+      .catch(() => update(true));
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+  const nativeGlass =
+    Platform.OS === "ios" &&
+    isGlassEffectAPIAvailable() &&
+    isLiquidGlassAvailable() &&
+    !reduceTransparency;
+  const Surface = nativeGlass ? GlassView : View;
   return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 48,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: SPACING.sm,
-        ...(label !== "Zurück"
-          ? { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm }
-          : {}),
-        borderRadius: RADII.control,
-        borderWidth: 1,
+    <Surface
+      onLayout={onLayout}
+      testID="back-footer-surface"
+      {...(nativeGlass
+        ? {
+            colorScheme: palette.dark ? ("dark" as const) : ("light" as const),
+            isInteractive: !blocked,
+          }
+        : {})}
+      style={{
+        borderCurve: CORNER_CURVE,
+        borderRadius: RADII.pill,
+        borderWidth: nativeGlass ? 0 : StyleSheet.hairlineWidth,
         borderColor: palette.separator,
-        backgroundColor: palette.surface,
-        opacity: disabled ? 0.45 : pressed ? 0.68 : 1,
-      })}
+        backgroundColor: nativeGlass
+          ? "transparent"
+          : reduceTransparency
+            ? palette.surface
+            : `${palette.surface}ed`,
+      }}
     >
-      <Ionicons accessibilityElementsHidden name="arrow-back" size={18} color={palette.text} />
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{
-          color: palette.text,
-          ...TYPOGRAPHY.bodyStrong,
-          flexShrink: 1,
-          textAlign: "center",
-        }}
+      <Pressable
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: blocked, busy }}
+        disabled={blocked}
+        onPress={onPress}
+        style={({ pressed }) => ({
+          minHeight: 48,
+          justifyContent: "center",
+          paddingHorizontal: SPACING.xl * 2,
+          paddingVertical: SPACING.sm,
+          borderCurve: CORNER_CURVE,
+          borderRadius: RADII.pill,
+          backgroundColor: pressed ? `${palette.text}0a` : "transparent",
+        })}
       >
-        {label}
-      </Text>
-    </Pressable>
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", left: SPACING.lg, opacity: blocked ? 0.45 : 1 }}
+        >
+          {busy ? (
+            <ActivityIndicator color={palette.text} size="small" />
+          ) : (
+            <Ionicons accessibilityElementsHidden name={icon} size={20} color={palette.text} />
+          )}
+        </View>
+        <Text
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          style={{
+            color: palette.text,
+            ...TYPOGRAPHY.body,
+            textAlign: "center",
+            opacity: blocked ? 0.45 : 1,
+          }}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Surface>
   );
 }

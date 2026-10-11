@@ -8,6 +8,7 @@ describe("design system accessibility", () => {
     const onChange = jest.fn();
     const screen = await render(
       <SegmentedControl
+        kind="view"
         items={[
           { value: "MONTH", label: "Monat" },
           { value: "YEAR", label: "Jahr" },

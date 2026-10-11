@@ -1,12 +1,14 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import type { ComponentProps } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import type { CalendarLabelMode } from "@/domain/types";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, SPACING } from "@/theme/tokens";
+import { CONTROL_HEIGHT } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, RowButton, SegmentedControl, SurfaceCard } from "@/ui/design-system";
+import { SelectionGroup } from "@/ui/selection-group";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 
 function DisplaySwitch({
@@ -36,6 +38,7 @@ function DisplaySwitch({
       }
       trailing={
         <Pressable
+          hitSlop={2}
           accessibilityRole="switch"
           accessibilityLabel={label}
           accessibilityState={{ checked: value, disabled }}
@@ -91,29 +94,22 @@ export function CalendarDisplayControls() {
           onChange={preferences.setShowHolidays}
           disabled={!preferences.ready}
         />
-        <CardSeparator inset={0} />
-        <View style={{ padding: SPACING.md, gap: SPACING.sm }}>
-          <Text
-            accessibilityRole="header"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}
-          >
-            Dienstanzeige
-          </Text>
-          <SegmentedControl
-            accessibilityLabel="Dienstbezeichnung"
-            items={[
-              { value: "FULL", label: "Name" },
-              { value: "SHORT", label: "Kürzel" },
-              { value: "SYMBOL", label: "Symbol" },
-            ]}
-            value={preferences.labelMode}
-            disabled={displayDisabled}
-            stacked={width < 360 || fontScale > 1.2}
-            onChange={(value) => preferences.setLabelMode(value as CalendarLabelMode)}
-          />
-        </View>
-        <CardSeparator />
+      </SurfaceCard>
+      <SelectionGroup title="Dienstanzeige" testID="calendar-label-settings">
+        <SegmentedControl
+          accessibilityLabel="Dienstbezeichnung"
+          items={[
+            { value: "FULL", label: "Name" },
+            { value: "SHORT", label: "Kürzel" },
+            { value: "SYMBOL", label: "Symbol" },
+          ]}
+          value={preferences.labelMode}
+          disabled={displayDisabled}
+          stacked={width < 360 || fontScale > 1.2}
+          onChange={(value) => preferences.setLabelMode(value as CalendarLabelMode)}
+        />
+      </SelectionGroup>
+      <SurfaceCard>
         <DisplaySwitch
           label="Startzeit"
           icon="time-outline"

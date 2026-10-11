@@ -1,6 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import type { RemunerationPosition, RemunerationStatus } from "@/domain/remuneration-result";
 import { usePalette } from "@/theme/palette";
 import { SPACING, CONTROL_HEIGHT } from "@/theme/tokens";

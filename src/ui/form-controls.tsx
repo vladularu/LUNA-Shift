@@ -1,10 +1,9 @@
+import { Text, TextInput } from "@/ui/text";
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { Children, useId, type PropsWithChildren, type Ref } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  Text,
-  TextInput,
   View,
   useWindowDimensions,
   type StyleProp,
@@ -16,7 +15,7 @@ import Animated from "react-native-reanimated";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { usePressMotion } from "@/ui/press-motion";
 
 export { SegmentedButton } from "@/ui/segmented-button";
@@ -52,12 +51,15 @@ export function TimePickerField({
   label,
   value,
   onChange,
+  layout = "inline",
 }: {
   readonly label: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
+  readonly layout?: "inline" | "stacked";
 }) {
   const palette = usePalette();
+  const stacked = layout === "stacked";
   if (process.env.EXPO_OS === "web") {
     return (
       <Field
@@ -84,9 +86,10 @@ export function TimePickerField({
           });
         }}
         style={({ pressed }) => ({
+          borderCurve: CORNER_CURVE,
           minHeight: CONTROL_HEIGHT.large,
-          flexDirection: "row",
-          alignItems: "center",
+          flexDirection: stacked ? "column" : "row",
+          alignItems: stacked ? "flex-start" : "center",
           justifyContent: "space-between",
           gap: SPACING.sm,
           borderRadius: RADII.control,
@@ -96,7 +99,10 @@ export function TimePickerField({
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.textSecondary, ...TYPOGRAPHY.bodyStrong }}
+          style={{
+            color: palette.textSecondary,
+            ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.bodyStrong),
+          }}
         >
           {label}
         </Text>
@@ -117,20 +123,24 @@ export function TimePickerField({
     <View
       style={{
         minHeight: CONTROL_HEIGHT.large,
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: stacked ? "column" : "row",
+        alignItems: stacked ? "flex-start" : "center",
         justifyContent: "space-between",
         gap: SPACING.sm,
       }}
     >
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ color: palette.textSecondary, ...TYPOGRAPHY.bodyStrong }}
+        style={{
+          color: palette.textSecondary,
+          ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.bodyStrong),
+        }}
       >
         {label}
       </Text>
       <DateTimePicker
         accessibilityLabel={`${label} wählen`}
+        style={stacked ? { minHeight: 44, alignSelf: "flex-start" } : undefined}
         display="compact"
         mode="time"
         onValueChange={(_, date) => onChange(asTimeString(date))}
@@ -159,12 +169,13 @@ export function Field({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
+        style={{ color: palette.text, ...TYPOGRAPHY.label }}
       >
         {label}
       </Text>
       <TextInput
         ref={inputRef}
+        hitSlop={2}
         accessibilityHint={error ? `Fehler: ${error}` : accessibilityHint}
         accessibilityLabel={accessibilityLabel ?? `${label}${error ? ", ungültig" : ""}`}
         accessibilityLiveRegion={error ? "polite" : accessibilityLiveRegion}
@@ -178,12 +189,12 @@ export function Field({
             borderWidth: 1,
             borderColor: error ? palette.danger : palette.border,
             borderRadius: RADII.control,
-            borderCurve: "continuous",
+            borderCurve: CORNER_CURVE,
             backgroundColor: palette.surfaceRaised,
             color: palette.text,
             paddingHorizontal: SPACING.md,
-            paddingVertical: 10,
-            ...TYPOGRAPHY.body,
+            paddingVertical: (CONTROL_HEIGHT.regular - TYPOGRAPHY.input.lineHeight - 2) / 2,
+            ...TYPOGRAPHY.input,
           },
           style,
         ]}
@@ -235,6 +246,7 @@ function FormActionButton({
         onPressIn={pressMotion.onPressIn}
         onPressOut={pressMotion.onPressOut}
         onPress={onPress}
+        hitSlop={2}
         style={({ pressed }: PressableStateCallbackType) => ({
           width: "100%",
           minHeight: secondary ? CONTROL_HEIGHT.regular : CONTROL_HEIGHT.large,
@@ -243,14 +255,15 @@ function FormActionButton({
           borderWidth: secondary ? 1 : 0,
           borderColor: secondary ? palette.border : "transparent",
           borderRadius: RADII.control,
-          borderCurve: "continuous",
+          borderCurve: CORNER_CURVE,
           backgroundColor: secondary
             ? pressed
               ? palette.surfaceMuted
               : palette.surfaceRaised
             : backgroundColor,
-          opacity: blocked ? 0.45 : pressed && !secondary ? 0.82 : 1,
+          opacity: blocked ? 0.5 : pressed ? 0.86 : 1,
           paddingHorizontal: SPACING.lg,
+          paddingVertical: SPACING.sm,
         })}
       >
         {busy ? (

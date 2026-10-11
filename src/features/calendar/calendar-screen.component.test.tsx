@@ -183,14 +183,16 @@ jest.mock("@/features/calendar/calendar-shared-scene", () => ({
     month,
     onSelectDate,
     selectedDate,
+    stampTransitionProgress,
   }: {
     month: string;
     onSelectDate: (date: string, anchor: object) => void;
     selectedDate: string | null;
+    stampTransitionProgress: object;
   }) => {
     return MockReact.createElement(
       MockView,
-      { testID: `month-card-${month}` },
+      { testID: `month-card-${month}`, ...{ stampTransitionProgress } },
       MockReact.createElement(
         MockText,
         { testID: `month-card-selection-${month}` },
@@ -210,17 +212,28 @@ jest.mock("@/features/calendar/calendar-shared-scene", () => ({
 
 jest.mock("@/features/calendar/quick-planner-dock", () => ({
   QuickPlannerDock: ({
+    active,
     open,
     onOpen,
     onSelectAction,
+    transitionProgress,
   }: {
+    active: boolean;
     open: boolean;
     onOpen: () => void;
     onSelectAction: (action: QuickEntryAction) => void;
+    transitionProgress: object;
   }) =>
     MockReact.createElement(
       MockView,
-      { testID: "quick-planner-dock" },
+      {
+        testID: "quick-planner-dock",
+        ...{ transitionProgress },
+        accessibilityElementsHidden: !active,
+        importantForAccessibility: active ? "auto" : "no-hide-descendants",
+        style: { opacity: active ? 1 : 0 },
+        pointerEvents: active ? "box-none" : "none",
+      },
       MockReact.createElement(MockPressable, {
         accessibilityRole: "button",
         accessibilityLabel: "Dienstplan bearbeiten",
@@ -291,15 +304,24 @@ describe("CalendarScreen quick-entry navigation", () => {
     });
   });
 
-  it("opens the day popup without haptics", async () => {
+  it("keeps Plus mounted and usable above the popup with the same day-marker clock", async () => {
     const screen = await render(<CalendarScreen />);
     await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
       nativeEvent: { layout: { height: 700 } },
     });
+    const dock = screen.getByTestId("quick-planner-dock");
+    expect(screen.getByTestId("month-card-2026-08").props.stampTransitionProgress).toBe(
+      dock.props.transitionProgress,
+    );
     await fireEvent.press(screen.getByTestId("calendar-day"));
     expect(screen.getByTestId("mounted-quick-entry-popup")).toBeTruthy();
+    expect(screen.getByTestId("quick-planner-dock")).toBe(dock);
     expect(mockSelectionFeedback).not.toHaveBeenCalled();
     expect(mockPlanningModeFeedback).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+    expect(screen.queryByTestId("mounted-quick-entry-popup")).toBeNull();
+    expect(screen.getByRole("button", { name: "Früh auswählen" })).toBeTruthy();
+    expect(screen.getByTestId("quick-planner-dock")).toBe(dock);
   });
 
   it("starts a fresh popup instance when the same date is pressed again", async () => {
@@ -387,6 +409,26 @@ describe("CalendarScreen quick-entry navigation", () => {
     await screen.rerender(<CalendarScreen />);
     expect(screen.getByTestId("header-state").props.children).toBe("MONTH:2026-12");
     expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+  });
+
+  it("keeps the same Plus host across editor focus changes and restores the selected date immediately", async () => {
+    const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    await fireEvent.press(screen.getByTestId("calendar-day"));
+    const dock = screen.getByTestId("quick-planner-dock");
+    mockFocused = false;
+    await screen.rerender(<CalendarScreen />);
+    expect(screen.getByTestId("quick-planner-dock", { includeHiddenElements: true })).toBe(dock);
+    expect(dock).toHaveStyle({ opacity: 0 });
+    expect(screen.queryByRole("button", { name: "Dienstplan bearbeiten" })).toBeNull();
+    mockFocused = true;
+    await screen.rerender(<CalendarScreen />);
+    expect(screen.getByTestId("quick-planner-dock")).toBe(dock);
+    expect(dock).toHaveStyle({ opacity: 1 });
+    expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("2026-08-14");
+    expect(screen.getByRole("button", { name: "Dienstplan bearbeiten" })).toBeTruthy();
   });
 
   it("ignores hidden pager scroll events while a year is displayed", async () => {
@@ -714,7 +756,7 @@ describe("CalendarScreen quick-entry navigation", () => {
     expect(screen.getByTestId("quick-planner-dock")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("calendar-day"));
     expect(screen.getByTestId("mounted-quick-entry-popup")).toBeTruthy();
-    expect(screen.queryByTestId("quick-planner-dock")).toBeNull();
+    expect(screen.getByTestId("quick-planner-dock")).toBeTruthy();
 
     await fireEvent.press(screen.getByRole("button", { name: "Schicht öffnen" }));
     expect(router.push).toHaveBeenCalledWith({

@@ -1,5 +1,6 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";

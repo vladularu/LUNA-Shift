@@ -31,9 +31,7 @@ describe("NotificationSheet", () => {
   it("keeps the reference choices local until the user confirms them", async () => {
     const { props, screen } = await renderNotificationSheet();
 
-    expect(screen.getByRole("radio", { name: "Keine" }).props.accessibilityState).toEqual({
-      selected: true,
-    });
+    expect(screen.getByRole("radio", { name: "Keine", checked: true })).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Benachrichtigungsabstand"), "2");
     await fireEvent.press(screen.getByRole("radio", { name: "Stunden" }));
     await fireEvent.press(screen.getByRole("radio", { name: "nach" }));

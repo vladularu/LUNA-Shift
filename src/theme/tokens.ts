@@ -4,25 +4,56 @@ export const SPACING = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
-  xxl: 24,
+  xl: 24,
+  xxl: 32,
 } as const;
 
 export const RADII = {
-  small: 10,
+  small: 3,
   control: 12,
-  card: 28,
+  card: 16,
   sheet: 24,
   large: 24,
   pill: 999,
 } as const;
 
+export const CORNER_CURVE = "continuous" as const;
+
+export const CONTROL_CORNERS = {
+  borderRadius: RADII.control,
+  borderCurve: CORNER_CURVE,
+} as const;
+
 export const MINIMUM_TOUCH_TARGET = 44;
+
+export const SELECTION_METRICS = {
+  trackRadius: RADII.pill,
+  stackedTrackRadius: RADII.sheet,
+  optionRadius: RADII.pill,
+  trackInset: SPACING.xxs,
+  optionHeight: MINIMUM_TOUCH_TARGET,
+  iconSize: 18,
+  stackFontScale: 1.2,
+  narrowWidth: 360,
+  maxInlineOptions: 3,
+  inlineLabelLimit: 24,
+  pressedOpacity: 0.72,
+  disabledOpacity: 0.5,
+} as const;
+
+export const SHADCN_METRICS = {
+  tabItemHeight: 32,
+  tabPadding: 5,
+  switchWidth: 44,
+  switchHeight: 24,
+  switchThumbSize: 20,
+  switchInset: 2,
+} as const;
 
 export const CONTROL_HEIGHT = {
   compact: MINIMUM_TOUCH_TARGET,
-  regular: 48,
-  large: 52,
+  regular: 40,
+  large: 40,
 } as const;
 
 export const SCREEN_LAYOUT = {
@@ -37,14 +68,14 @@ export const SCREEN_LAYOUT = {
   headerAccessoryStackFontScale: 1.6,
 } as const;
 
-export const REPORT_CARD_GAP = 32;
+export const REPORT_CARD_GAP = 24;
 
-export const CARD_HEADER_INSET = SPACING.xs;
+export const CARD_HEADER_INSET = 0;
 
 export const SHADOWS = {
-  card: "0 8px 24px rgba(22, 34, 30, 0.08)",
-  raised: "0 8px 24px rgba(22, 34, 30, 0.08)",
-  overlay: "0 18px 42px rgba(12, 20, 17, 0.16)",
+  card: "0 0 0 rgba(0, 0, 0, 0)",
+  raised: "0 4px 6px rgba(0, 0, 0, 0.09)",
+  overlay: "0 4px 6px rgba(0, 0, 0, 0.09)",
 } as const;
 
 export const CALENDAR_METRICS = {
@@ -63,7 +94,7 @@ export const CALENDAR_METRICS = {
   entryRowHeight: 17,
   entryFontSize: 12,
   entryLineHeight: 15,
-  cardRadius: 22,
+  cardRadius: RADII.card,
   floatingActionSize: 40,
 } as const;
 

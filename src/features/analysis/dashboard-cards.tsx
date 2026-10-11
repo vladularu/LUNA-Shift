@@ -1,6 +1,7 @@
+import { Text } from "@/ui/text";
 import { WorktimeCard } from "./analysis-report-cards";
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import type { AnalysisCardId } from "@/domain/analysis-view";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
@@ -71,7 +72,7 @@ export function checkCountLabel(counts: CheckCounts) {
         : "",
     ]
       .filter(Boolean)
-      .join(" · ") || "Keine Auffälligkeiten"
+      .join(" · ") || (counts.prerequisiteCount ? "Prüfung eingeschränkt" : "Keine Auffälligkeiten")
   );
 }
 function CheckRow({
@@ -93,7 +94,7 @@ function CheckRow({
       icon={
         counts.criticalCount || counts.warningCount
           ? "warning-outline"
-          : total
+          : total || counts.prerequisiteCount
             ? "information-circle-outline"
             : "checkmark-circle-outline"
       }
@@ -102,7 +103,7 @@ function CheckRow({
           ? p.danger
           : counts.warningCount
             ? p.warning
-            : total
+            : total || counts.prerequisiteCount
               ? p.info
               : p.success
       }
@@ -129,7 +130,9 @@ export function CheckListCard({
     status ??
     (total
       ? total + (total === 1 ? " Meldung" : " Meldungen")
-      : "Keine sichtbaren Auffälligkeiten");
+      : counts.prerequisiteCount
+        ? "Prüfung eingeschränkt"
+        : "Keine sichtbaren Auffälligkeiten");
   return (
     <AnalysisListCard
       title="Prüfung"
@@ -142,6 +145,13 @@ export function CheckListCard({
       ) : categories ? (
         <>
           <CheckRow first label="Gesetzliche Prüfung" counts={categories.legal} />
+          {categories.legal.prerequisiteCount ? (
+            <AnalysisValueRow
+              label="Prüfgrundlage"
+              value="Angaben ergänzen"
+              icon="information-circle-outline"
+            />
+          ) : null}
           {showPlanning ? (
             <CheckRow label="Freiwillige Planung" counts={categories.planning} />
           ) : null}

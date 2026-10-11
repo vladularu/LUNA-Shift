@@ -1,8 +1,9 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
-import { CARD_HEADER_INSET, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CARD_HEADER_INSET, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CardFooterLine, SurfaceCard } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
@@ -40,6 +41,7 @@ export function AnalysisListCard({
     </>
   );
   const headerStyle = {
+    borderCurve: CORNER_CURVE,
     minHeight: p.dark ? 56 : 50,
     paddingHorizontal: p.dark ? SPACING.lg : SPACING.lg - CARD_HEADER_INSET,
     paddingVertical: p.dark ? SPACING.sm : SPACING.xs,

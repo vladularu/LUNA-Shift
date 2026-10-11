@@ -75,6 +75,24 @@ const list = (
 );
 
 describe("visible check timelines", () => {
+  it("shows limited coverage separately, offers setup and never claims completion", async () => {
+    const open = issue({
+      id: "open",
+      rule: "ARBZG_DATA_ALL_EMPLOYMENT",
+      severity: "warning",
+      title: "Gesamtarbeitszeit noch nicht bestätigt",
+    });
+    const screen = await render(list([open]));
+    expect(screen.getByText("Prüfung eingeschränkt")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Angaben ergänzen" })).toBeTruthy();
+    expect(screen.getByTestId("check-limited")).toBeTruthy();
+    expect(screen.queryByTestId("check-complete")).toBeNull();
+    expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
+    expect(screen.queryByTestId("check-details-open")).toBeNull();
+    await screen.rerender(list([open, issue()]));
+    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
+    expect(screen.getByText("Prüfung eingeschränkt")).toBeTruthy();
+  });
   it.each([1, 3.1])(
     "shows both endpoints and the gap without opening an explanation at text scale %s",
     async (scale) => {

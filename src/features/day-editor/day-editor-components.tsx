@@ -1,5 +1,9 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, Text, View } from "react-native";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { Text } from "@/ui/text";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { INTER_FONTS } from "@/theme/shadcn";
+import Ionicons from "@/ui/icon";
+import { Pressable, View } from "react-native";
 
 import { formatDateTitle } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
@@ -57,15 +61,16 @@ export function EditorDateHeader({
           height: 34,
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 10,
-          borderCurve: "continuous",
+          borderRadius: RADII.control,
+          borderCurve: CORNER_CURVE,
           backgroundColor: palette.primarySoft,
         }}
       >
         <Text
           style={{
             color: palette.primary,
-            fontSize: 13,
+            fontFamily: INTER_FONTS.semibold,
+            fontSize: TYPOGRAPHY.label.fontSize,
             fontWeight: "600",
             fontVariant: ["tabular-nums"],
           }}
@@ -74,10 +79,27 @@ export function EditorDateHeader({
         </Text>
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text selectable style={{ color: palette.text, fontSize: 15, fontWeight: "600" }}>
+        <Text
+          selectable
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.semibold,
+            fontSize: TYPOGRAPHY.compact.fontSize,
+            fontWeight: "600",
+          }}
+        >
           {formatDateTitle(date)}
         </Text>
-        <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+        <Text
+          style={{
+            color: palette.textMuted,
+            fontFamily: INTER_FONTS.semibold,
+            fontSize: TYPOGRAPHY.caption.fontSize,
+            fontWeight: "600",
+          }}
+        >
+          {label}
+        </Text>
       </View>
     </View>
   );
@@ -95,10 +117,24 @@ export function InlineDeleteConfirmation({
   const palette = usePalette();
   return (
     <SurfaceCard style={{ gap: 12, borderColor: palette.danger, padding: 16 }}>
-      <Text style={{ color: palette.text, fontSize: 16, fontWeight: "700" }}>
+      <Text
+        style={{
+          color: palette.text,
+          fontFamily: INTER_FONTS.bold,
+          fontSize: TYPOGRAPHY.body.fontSize,
+          fontWeight: "700",
+        }}
+      >
         {series ? "Gesamte Serie löschen?" : "Eintrag löschen?"}
       </Text>
-      <Text style={{ color: palette.textMuted, fontSize: 14, lineHeight: 20 }}>
+      <Text
+        style={{
+          color: palette.textMuted,
+          fontFamily: INTER_FONTS.regular,
+          fontSize: TYPOGRAPHY.small.fontSize,
+          lineHeight: TYPOGRAPHY.small.lineHeight,
+        }}
+      >
         {series
           ? "Alle Termine dieser Serie werden gelöscht."
           : "Dieser Eintrag wird aus dem Kalender entfernt."}
@@ -107,11 +143,12 @@ export function InlineDeleteConfirmation({
         <Pressable
           onPress={onCancel}
           style={{
+            borderCurve: CORNER_CURVE,
             flex: 1,
             minHeight: 46,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 23,
+            borderRadius: RADII.control,
             backgroundColor: palette.surfaceMuted,
           }}
         >
@@ -120,11 +157,12 @@ export function InlineDeleteConfirmation({
         <Pressable
           onPress={onDelete}
           style={{
+            borderCurve: CORNER_CURVE,
             flex: 1,
             minHeight: 46,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 23,
+            borderRadius: RADII.control,
             backgroundColor: palette.danger,
           }}
         >
@@ -166,10 +204,26 @@ export function AdvancedDisclosure({
     >
       <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ color: palette.text, fontSize: 14, fontWeight: "600" }}>
+        <Text
+          style={{
+            color: palette.text,
+            fontFamily: INTER_FONTS.semibold,
+            fontSize: TYPOGRAPHY.small.fontSize,
+            fontWeight: "600",
+          }}
+        >
           Weitere Angaben
         </Text>
-        <Text style={{ color: palette.textMuted, fontSize: 12, fontWeight: "600" }}>{summary}</Text>
+        <Text
+          style={{
+            color: palette.textMuted,
+            fontFamily: INTER_FONTS.semibold,
+            fontSize: TYPOGRAPHY.caption.fontSize,
+            fontWeight: "600",
+          }}
+        >
+          {summary}
+        </Text>
       </View>
       <Ionicons color={palette.primary} name={expanded ? "remove" : "add"} size={19} />
     </Pressable>

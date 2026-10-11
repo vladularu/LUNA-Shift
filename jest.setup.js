@@ -19,3 +19,9 @@ jest.mock("expo-notifications", () => ({
 }));
 
 require("react-native-reanimated").setUpTests();
+
+jest.mock("expo-glass-effect", () => ({
+  GlassView: require("react-native").View,
+  isGlassEffectAPIAvailable: jest.fn(() => false),
+  isLiquidGlassAvailable: jest.fn(() => false),
+}));

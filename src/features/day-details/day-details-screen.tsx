@@ -1,6 +1,7 @@
+import { Text } from "@/ui/text";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
-import { Text, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 
 import {
   usePflegeShiftEntries,
@@ -32,7 +33,7 @@ import {
 import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
-import { SheetBackFooter } from "@/ui/sheet-back-footer";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 function timeLabel(entry: CalendarEntry): string {
   if (entry.kind === "APPOINTMENT") {
@@ -89,74 +90,81 @@ export function DayDetailsScreen() {
   if (!ready || profile === null) return <LoadingView />;
 
   return (
-    <ScreenScrollView contentContainerStyle={{ flexGrow: 1 }} testID="day-details-screen">
-      <Stack.Screen options={{ title: formatDateTitle(date) }} />
-      {holiday ? (
-        <SurfaceCard style={{ padding: SPACING.lg, backgroundColor: palette.primarySoft }}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.primary, ...TYPOGRAPHY.label }}
-          >
-            {holiday.name}
-          </Text>
-        </SurfaceCard>
-      ) : null}
-      {summary ? (
-        <View
-          style={{
-            flexDirection:
-              fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale ? "column" : "row",
-            gap: SPACING.sm,
-          }}
+    <BackFooterLayout onPress={() => router.back()}>
+      {(bottomPadding) => (
+        <ScreenScrollView
+          bottomPadding={bottomPadding}
+          contentContainerStyle={{ flexGrow: 1 }}
+          testID="day-details-screen"
         >
-          <MetricCard compact label="Soll" value={formatMinutes(summary.targetMinutes)} />
-          <MetricCard compact label="Ist" value={formatMinutes(summary.actualMinutes)} />
-          <MetricCard
-            compact
-            label="Saldo"
-            value={formatSignedMinutes(summary.balanceMinutes)}
-            accent={summary.balanceMinutes < 0 ? palette.danger : palette.success}
-          />
-        </View>
-      ) : null}
-      <View style={{ gap: SPACING.md }}>
-        <SectionHeader title="Einträge" caption={`${dayEntries.length} an diesem Tag`} />
-        <SurfaceCard>
-          {dayEntries.length === 0 ? (
-            <EmptyState
-              title="Noch nichts geplant"
-              message="Füge einen Dienst, Termin oder eine Abwesenheit hinzu."
-            />
-          ) : (
-            dayEntries.map((entry, index) => (
-              <View key={`${entry.kind}-${entry.id}`}>
-                {index > 0 ? <CardSeparator inset={70} /> : null}
-                <RowButton
-                  leading={
-                    <ColorBadge
-                      color={entry.color}
-                      label={entry.kind === "SHIFT" ? entry.symbol : "T"}
-                    />
-                  }
-                  onPress={() => router.push(dayEditorRoute(date, entry.kind, entry.id))}
-                  subtitle={timeLabel(entry)}
-                  title={entry.title}
+          <Stack.Screen options={{ title: formatDateTitle(date) }} />
+          {holiday ? (
+            <SurfaceCard style={{ padding: SPACING.lg, backgroundColor: palette.primarySoft }}>
+              <Text
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{ color: palette.primary, ...TYPOGRAPHY.label }}
+              >
+                {holiday.name}
+              </Text>
+            </SurfaceCard>
+          ) : null}
+          {summary ? (
+            <View
+              style={{
+                flexDirection:
+                  fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale ? "column" : "row",
+                gap: SPACING.sm,
+              }}
+            >
+              <MetricCard compact label="Soll" value={formatMinutes(summary.targetMinutes)} />
+              <MetricCard compact label="Ist" value={formatMinutes(summary.actualMinutes)} />
+              <MetricCard
+                compact
+                label="Saldo"
+                value={formatSignedMinutes(summary.balanceMinutes)}
+                accent={summary.balanceMinutes < 0 ? palette.danger : palette.success}
+              />
+            </View>
+          ) : null}
+          <View style={{ gap: SPACING.md }}>
+            <SectionHeader title="Einträge" caption={`${dayEntries.length} an diesem Tag`} />
+            <SurfaceCard>
+              {dayEntries.length === 0 ? (
+                <EmptyState
+                  title="Noch nichts geplant"
+                  message="Füge einen Dienst, Termin oder eine Abwesenheit hinzu."
                 />
-              </View>
-            ))
-          )}
-        </SurfaceCard>
-      </View>
-      <View style={{ gap: SPACING.md }}>
-        <PrimaryButton onPress={() => router.push(quickAddRoute(date))}>
-          Schicht hinzufügen
-        </PrimaryButton>
-        <SecondaryButton onPress={() => router.push(dayEditorRoute(date, "APPOINTMENT"))}>
-          Termin hinzufügen
-        </SecondaryButton>
-      </View>
-      <View style={{ flex: 1 }} />
-      <SheetBackFooter onPress={() => router.back()} />
-    </ScreenScrollView>
+              ) : (
+                dayEntries.map((entry, index) => (
+                  <View key={`${entry.kind}-${entry.id}`}>
+                    {index > 0 ? <CardSeparator inset={70} /> : null}
+                    <RowButton
+                      leading={
+                        <ColorBadge
+                          color={entry.color}
+                          label={entry.kind === "SHIFT" ? entry.symbol : "T"}
+                        />
+                      }
+                      onPress={() => router.push(dayEditorRoute(date, entry.kind, entry.id))}
+                      subtitle={timeLabel(entry)}
+                      title={entry.title}
+                    />
+                  </View>
+                ))
+              )}
+            </SurfaceCard>
+          </View>
+          <View style={{ gap: SPACING.md }}>
+            <PrimaryButton onPress={() => router.push(quickAddRoute(date))}>
+              Schicht hinzufügen
+            </PrimaryButton>
+            <SecondaryButton onPress={() => router.push(dayEditorRoute(date, "APPOINTMENT"))}>
+              Termin hinzufügen
+            </SecondaryButton>
+          </View>
+          <View style={{ flex: 1 }} />
+        </ScreenScrollView>
+      )}
+    </BackFooterLayout>
   );
 }

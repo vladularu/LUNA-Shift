@@ -1,7 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 import { Pressable } from "react-native";
 import { usePalette } from "@/theme/palette";
-import { MINIMUM_TOUCH_TARGET, RADII } from "@/theme/tokens";
+import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII } from "@/theme/tokens";
 
 export function PeriodArrow({
   accessibilityLabel,
@@ -21,6 +21,7 @@ export function PeriodArrow({
       hitSlop={8}
       onPress={onPress}
       style={({ pressed }) => ({
+        borderCurve: CORNER_CURVE,
         width: MINIMUM_TOUCH_TARGET,
         height: MINIMUM_TOUCH_TARGET,
         alignItems: "center",

@@ -1,3 +1,4 @@
+import { Text } from "@/ui/text";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import {
   findNodeHandle,
@@ -6,7 +7,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Text,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -22,11 +22,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Ionicons from "@/ui/icon";
 
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 
@@ -247,9 +247,9 @@ export function SelectionSheet({
                 flexShrink: 1,
                 borderTopLeftRadius: RADII.sheet,
                 borderTopRightRadius: RADII.sheet,
-                borderCurve: "continuous",
+                borderCurve: CORNER_CURVE,
                 backgroundColor: palette.surfaceRaised,
-                boxShadow: `0 -12px 32px ${palette.shadow}`,
+                boxShadow: SHADOWS.overlay,
                 paddingBottom: Math.max(insets.bottom, SPACING.md),
               },
               sheetStyle,

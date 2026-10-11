@@ -1,7 +1,8 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 
 import { usePflegeShiftStatus, usePflegeShiftTemplates } from "@/application/pflegeshift-provider";
 import type { ShiftTemplate } from "@/domain/types";
@@ -16,8 +17,10 @@ import {
 import { usePalette } from "@/theme/palette";
 import { templateEditorRoute } from "@/navigation/routes";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
-import { EmptyState } from "@/ui/design-system";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { ReorderableList } from "@/ui/reorderable-list";
+import { useReorderScroll } from "@/ui/use-reorder-scroll";
+import { ColorBadge, EmptyState } from "@/ui/design-system";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { FormStatus } from "@/ui/form-layout";
 import { selectionFeedback } from "@/ui/haptics";
@@ -31,8 +34,9 @@ export function TemplatesManagerScreen() {
   useThemeStatusBar();
   const { fontScale } = useWindowDimensions();
   const stackActions = fontScale >= 1.6;
+  const reorderScroll = useReorderScroll();
   const { error: loadError, ready, reload } = usePflegeShiftStatus();
-  const { templates, removeTemplate, moveTemplate } = usePflegeShiftTemplates();
+  const { templates, removeTemplate, moveTemplateToIndex } = usePflegeShiftTemplates();
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [sorting, setSorting] = useState(false);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
@@ -110,117 +114,120 @@ export function TemplatesManagerScreen() {
         title="Schichten"
       />
       <ScreenScrollView
+        scrollRef={reorderScroll.scrollRef}
+        {...reorderScroll.scrollProps}
         contentContainerStyle={{ width: "100%", maxWidth: 560, alignSelf: "center" }}
         surface="groupedBackground"
         testID="templates-manager-scroll"
       >
         <FormStatus error={operationError} />
         <View style={{ gap: SPACING.md }}>
-          <ShiftTemplateListCard testID="template-manager-list">
-            {templates.length === 0 ? (
-              <EmptyState
-                title="Keine Vorlagen"
-                message="Lege häufige Dienste einmal an und stemple sie danach direkt in den Kalender."
-              />
-            ) : (
-              templates.map((template, index) => {
-                const subtitle = shiftTemplateSubtitle(template);
-                return (
-                  <View key={template.id}>
-                    {index > 0 ? <ShiftTemplateListSeparator /> : null}
-                    <ShiftTemplateListRow
-                      accessibilityLabel={
-                        sorting
-                          ? `${template.name}, Sortieroptionen öffnen`
-                          : `${template.name}, ${subtitle}, Vorlage bearbeiten`
-                      }
-                      color={template.color}
-                      disabled={busyTemplateId !== null}
-                      moreAccessibilityLabel={
-                        sorting ? `${template.name} sortieren` : `${template.name} verwalten`
-                      }
-                      onMorePress={() =>
-                        setActiveTemplateId((current) =>
-                          current === template.id ? null : template.id,
-                        )
-                      }
-                      onPress={() =>
-                        sorting
-                          ? setActiveTemplateId((current) =>
-                              current === template.id ? null : template.id,
-                            )
-                          : router.push(templateEditorRoute(template.id))
-                      }
-                      sorting={sorting}
-                      subtitle={subtitle}
-                      symbol={template.symbol}
-                      testID={`template-manager-row-${template.id}`}
-                      title={template.name}
-                    />
-                    {activeTemplateId === template.id ? (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          flexWrap: stackActions ? "wrap" : "nowrap",
-                          gap: SPACING.xs,
-                          borderTopWidth: 1,
-                          borderTopColor: palette.separator,
-                          backgroundColor: palette.surfaceMuted,
-                          padding: SPACING.sm,
-                        }}
-                      >
-                        {sorting ? (
-                          <>
-                            <ManagerButton
-                              disabled={busyTemplateId !== null || index === 0}
-                              icon="arrow-up"
-                              label="Nach oben"
-                              onPress={() =>
-                                void runTemplateAction(
-                                  template,
-                                  "Vorlage konnte nicht verschoben werden.",
-                                  () => moveTemplate(template, -1),
-                                )
-                              }
-                            />
-                            <ManagerButton
-                              disabled={busyTemplateId !== null || index === templates.length - 1}
-                              icon="arrow-down"
-                              label="Nach unten"
-                              onPress={() =>
-                                void runTemplateAction(
-                                  template,
-                                  "Vorlage konnte nicht verschoben werden.",
-                                  () => moveTemplate(template, 1),
-                                )
-                              }
-                            />
-                          </>
-                        ) : (
+          {sorting ? (
+            <ReorderableList
+              testID="template-manager-sort"
+              scroll={reorderScroll.controller}
+              disabled={busyTemplateId !== null}
+              items={templates.map((template) => ({
+                id: template.id,
+                title: template.name,
+                subtitle: shiftTemplateSubtitle(template),
+                leading: <ColorBadge color={template.color} label={template.symbol} size={38} />,
+              }))}
+              onMove={async (id, index) => {
+                const template = templates.find((item) => item.id === id);
+                if (!template) return;
+                setBusyTemplateId(id);
+                setOperationError(null);
+                try {
+                  await moveTemplateToIndex(template, index);
+                } catch (error) {
+                  setOperationError(
+                    userFacingErrorMessage(error, "Vorlage konnte nicht verschoben werden."),
+                  );
+                  throw error;
+                } finally {
+                  setBusyTemplateId(null);
+                }
+              }}
+            />
+          ) : (
+            <ShiftTemplateListCard testID="template-manager-list">
+              {templates.length === 0 ? (
+                <EmptyState
+                  title="Keine Vorlagen"
+                  message="Lege häufige Dienste einmal an und stemple sie danach direkt in den Kalender."
+                />
+              ) : (
+                templates.map((template, index) => {
+                  const subtitle = shiftTemplateSubtitle(template);
+                  return (
+                    <View key={template.id}>
+                      {index > 0 ? <ShiftTemplateListSeparator /> : null}
+                      <ShiftTemplateListRow
+                        accessibilityLabel={
+                          sorting
+                            ? `${template.name}, Sortieroptionen öffnen`
+                            : `${template.name}, ${subtitle}, Vorlage bearbeiten`
+                        }
+                        color={template.color}
+                        disabled={busyTemplateId !== null}
+                        moreAccessibilityLabel={
+                          sorting ? `${template.name} sortieren` : `${template.name} verwalten`
+                        }
+                        onMorePress={() =>
+                          setActiveTemplateId((current) =>
+                            current === template.id ? null : template.id,
+                          )
+                        }
+                        onPress={() =>
+                          sorting
+                            ? setActiveTemplateId((current) =>
+                                current === template.id ? null : template.id,
+                              )
+                            : router.push(templateEditorRoute(template.id))
+                        }
+                        sorting={sorting}
+                        subtitle={subtitle}
+                        symbol={template.symbol}
+                        testID={`template-manager-row-${template.id}`}
+                        title={template.name}
+                      />
+                      {activeTemplateId === template.id ? (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            flexWrap: stackActions ? "wrap" : "nowrap",
+                            gap: SPACING.xs,
+                            borderTopWidth: 1,
+                            borderTopColor: palette.separator,
+                            backgroundColor: palette.surfaceMuted,
+                            padding: SPACING.sm,
+                          }}
+                        >
                           <ManagerButton
                             danger
                             disabled={busyTemplateId !== null}
                             label="Löschen"
                             onPress={() => confirmDelete(template)}
                           />
-                        )}
-                      </View>
-                    ) : null}
-                  </View>
-                );
-              })
-            )}
-            {!sorting ? (
-              <>
-                {templates.length > 0 ? <ShiftTemplateListSeparator /> : null}
-                <ShiftTemplateAddRow
-                  accessibilityLabel="Neue Dienstvorlage erstellen"
-                  onPress={() => router.push("/template-editor")}
-                  testID="template-manager-add-row"
-                />
-              </>
-            ) : null}
-          </ShiftTemplateListCard>
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                })
+              )}
+              {!sorting ? (
+                <>
+                  {templates.length > 0 ? <ShiftTemplateListSeparator /> : null}
+                  <ShiftTemplateAddRow
+                    accessibilityLabel="Neue Dienstvorlage erstellen"
+                    onPress={() => router.push("/template-editor")}
+                    testID="template-manager-add-row"
+                  />
+                </>
+              ) : null}
+            </ShiftTemplateListCard>
+          )}
         </View>
       </ScreenScrollView>
     </View>
@@ -250,6 +257,7 @@ function ManagerButton({
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
+        borderCurve: CORNER_CURVE,
         minHeight: 44,
         flex: wrapped ? undefined : 1,
         flexBasis: wrapped ? "47%" : undefined,
