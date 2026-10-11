@@ -1,0 +1,263 @@
+import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import { validateMonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import { netPayPensionMaxOwnRate } from "@/domain/net-pay-pension-schemes";
+import type { SfnNetPayResult, SfnShift } from "@/domain/net-pay-sfn";
+import type { MonthlyPayEstimate, ShiftEntry, UserProfile } from "@/domain/types";
+import type { RuleResolver } from "@/rules/rule-resolver";
+import { calculateMonthlyNetPay } from "./net-pay";
+import { classifySfnPayroll2026 } from "./net-pay-sfn";
+import { premiumCategory, premiumKind } from "./net-pay-premium-trace";
+import { calculateTvoedShiftPremiumTrace } from "./simple-pay";
+import { calculateVkaEShift } from "./simple-vka-e-pay";
+import { calculateNursingTrainingShift } from "./simple-nursing-training-pay";
+import { calculateTvlKrShift } from "./simple-tvl-kr-pay";
+import { calculateTvhKrShift } from "./simple-tvh-kr-pay";
+import { calculateTvUkNursingShift } from "./simple-tvuk-nursing-pay";
+import { calculateTvalPflegeShift } from "./simple-tval-pflege-pay";
+import { isPayWorkShift } from "./tvoed-pattern";
+import { calculateTimedShiftBounds } from "./working-time";
+
+export interface AutomaticNetPayForecast {
+  readonly result: SfnNetPayResult;
+  readonly basicHourlyPayCents?: number;
+  readonly regularGrossCents?: number;
+  readonly sourceMonth: string;
+  /** Includes no pension contributions or pension-related tax/SV adjustments. */
+  readonly pensionOmitted?: boolean;
+}
+const unavailable = (reason: string): SfnNetPayResult => ({
+  status: "unavailable",
+  stage: "sfn",
+  reason,
+});
+function cents(euros: number): number {
+  const value = Math.round(euros * 100);
+  if (!Number.isSafeInteger(value) || value < 0 || Math.abs(value - euros * 100) > 0.000001)
+    throw new Error("Ungültiger Geldbetrag in der Gehaltsprognose.");
+  return value;
+}
+
+/** Uses the same dated cash calculation as the salary screen; does not duplicate tariff tables. */
+export function calculateAutomaticNetPayForecast(
+  input: {
+    readonly month: string;
+    readonly profile: UserProfile;
+    readonly settings: MonthlyNetPaySettings;
+    readonly shifts: readonly ShiftEntry[];
+    readonly pay: MonthlyPayEstimate;
+  },
+  resolver: RuleResolver,
+): AutomaticNetPayForecast {
+  const { month, profile, settings, pay } = input;
+  const sourceMonth = settings.month;
+  const stop = (reason: string): AutomaticNetPayForecast => ({
+    sourceMonth,
+    result: unavailable(reason),
+  });
+  try {
+    validateMonthlyNetPaySettings(settings);
+    if (settings.version !== 2 || !settings.automation)
+      return stop("Richte die fortlaufenden Netto-Angaben einmal ein.");
+    if (settings.month > month || pay.month !== month)
+      return stop("Die Berechnungsgrundlagen gehören zu unterschiedlichen Monaten.");
+    if (profile.salaryBasisConflict || profile.timeZone !== "Europe/Berlin")
+      return stop("Gehaltsbasis oder Zeitzone im Arbeitsprofil prüfen.");
+    if (!pay.available || pay.personalBaseAmount === null || pay.estimatedGrossAmount === null)
+      return stop("Die vollständige Brutto-Gehaltsprognose fehlt.");
+    if (!Number.isSafeInteger(profile.weeklyMinutes) || profile.weeklyMinutes <= 0)
+      return stop("Die vertragliche Wochenarbeitszeit fehlt.");
+    const components = [
+      pay.personalBaseAmount,
+      pay.timePremiumAmount,
+      pay.overtimeAmount,
+      pay.allowanceAmount,
+      pay.tvoedAllowanceAmount,
+      pay.careAllowanceAmount,
+    ];
+    if (components.reduce((sum, part) => sum + cents(part), 0) !== cents(pay.estimatedGrossAmount))
+      return stop("Die Bestandteile passen nicht zum Gesamtbrutto.");
+    const automation = settings.automation;
+    const allowanceStatus = pay.confirmedAllowance ?? pay.assessment.suggestedAllowance;
+    const saturdayShiftWork =
+      pay.assessment.shiftWork === "DETECTED" ||
+      pay.assessment.alternatingShiftWork === "DETECTED" ||
+      allowanceStatus !== "NONE";
+    // Fixed monthly recurring components. Variable actual premiums cannot determine regular income.
+    const regularGrossCents =
+      cents(pay.personalBaseAmount) +
+      cents(pay.careAllowanceAmount) +
+      cents(pay.tvoedAllowanceAmount) +
+      (allowanceStatus.endsWith("_MONTHLY") ? cents(pay.allowanceAmount) : 0) +
+      automation.additionalRecurringGrossCents;
+    const basicHourlyPayCents = Math.round(
+      (regularGrossCents * 6000) / (435 * profile.weeklyMinutes),
+    );
+    const shifts = input.shifts.filter(
+      (s) => s.deletedAt === null && s.date.startsWith(`${month}-`),
+    );
+    if (
+      shifts.some(
+        (s) => ["EARLY", "LATE", "NIGHT", "DAY", "CUSTOM"].includes(s.type) && !isPayWorkShift(s),
+      )
+    )
+      return stop("Eine Schicht hat keine vollständigen Arbeitszeiten.");
+    const workShifts = shifts.filter(isPayWorkShift);
+    const manual =
+      profile.manualMonthlyGrossCents != null &&
+      !profile.tariff &&
+      !profile.nursingTrainingTariff &&
+      !profile.vkaETariff &&
+      !profile.tvlKrTariff &&
+      !profile.tvhKrTariff &&
+      !profile.tvUkNursingTariff &&
+      !profile.tvalPflegeTariff;
+    if (!manual && workShifts.length !== pay.shiftBreakdowns.length)
+      return stop("Die Dienstzeiten passen nicht zur Gehaltsprognose.");
+    const traces: SfnShift[] = [];
+    for (const shift of manual ? [] : workShifts) {
+      const bounds = calculateTimedShiftBounds(shift, profile.timeZone);
+      if (
+        !bounds ||
+        !Number.isSafeInteger(shift.breakMinutes) ||
+        shift.breakMinutes < 0 ||
+        shift.breakMinutes >= bounds.grossMinutes
+      )
+        return stop("Arbeits- und Pausenzeiten sind unvollständig.");
+      let breakdown;
+      let trace: SfnShift;
+      if (profile.tvalPflegeTariff)
+        breakdown = calculateTvalPflegeShift(
+          shift,
+          profile,
+          profile.tvalPflegeTariff,
+          saturdayShiftWork,
+          resolver,
+          true,
+        );
+      else if (profile.tvhKrTariff)
+        breakdown = calculateTvhKrShift(
+          shift,
+          profile,
+          profile.tvhKrTariff,
+          { allowanceStatus, saturdayShiftWork },
+          resolver,
+          true,
+        );
+      else if (profile.tvUkNursingTariff)
+        breakdown = calculateTvUkNursingShift(
+          shift,
+          profile,
+          profile.tvUkNursingTariff,
+          { regularShiftWork: pay.assessment.shiftWork === "DETECTED" },
+          resolver,
+          true,
+        );
+      else if (profile.tvlKrTariff)
+        breakdown = calculateTvlKrShift(
+          shift,
+          profile,
+          { payGroup: profile.tvlKrTariff.payGroup, payLevel: profile.tvlKrTariff.payLevel },
+          profile.tvlKrTariff.universityRegion,
+          saturdayShiftWork,
+          resolver,
+          true,
+        );
+      else if (profile.vkaETariff) breakdown = calculateVkaEShift(shift, profile, resolver, true);
+      else if (profile.nursingTrainingTariff)
+        breakdown = calculateNursingTrainingShift(shift, profile, resolver, true);
+      else if (profile.tariff) {
+        const dated = calculateTvoedShiftPremiumTrace(shift, profile, resolver);
+        breakdown = dated.breakdown;
+        trace = {
+          id: shift.id,
+          start: dated.start,
+          end: dated.end,
+          unpaidBreaks: dated.unpaidBreaks,
+          payments: dated.premiums.map((p) => ({
+            id: `${shift.id}:${p.ruleId}`,
+            kind: premiumKind(p.premiumType),
+            category: premiumCategory(p.premiumType),
+            amountCents: cents(p.line.amount),
+            additionalToBasicPay: true,
+            periods: p.periods,
+          })),
+        };
+      } else return stop("Für diese Gehaltsbasis fehlt eine vollständige Tarifberechnung.");
+      const { payrollTrace, ...cashBreakdown } = breakdown;
+      const recorded = pay.shiftBreakdowns.find((b) => b.shiftId === shift.id);
+      if (!recorded || JSON.stringify(recorded) !== JSON.stringify(cashBreakdown))
+        return stop("Die Zuschlagszeitspur stimmt nicht mit dem Brutto überein.");
+      trace = payrollTrace ?? trace!;
+      if (!trace) return stop("Die Zuschlagszeitspur fehlt.");
+      traces.push(trace);
+    }
+    if (
+      traces.reduce(
+        (sum, t) => sum + t.payments.reduce((total, p) => total + p.amountCents, 0),
+        0,
+      ) !== cents(pay.timePremiumAmount)
+    )
+      return stop("Die Zuschlagssummen passen nicht zum Brutto.");
+    const classification = classifySfnPayroll2026(
+      {
+        month,
+        completeGross: true,
+        grossCents: cents(pay.estimatedGrossAmount) + automation.additionalRecurringGrossCents,
+        regularMonthlySocialInsuranceGrossCents: regularGrossCents,
+        basicHourlyPayCents,
+        workplace: { federalState: profile.federalState, holidayRegion: profile.holidayRegion },
+        workEvidence: "PLANNED",
+        monthAttribution: "SHIFT_START",
+        shifts: traces,
+      },
+      resolver,
+      "FORECAST",
+    );
+    if (classification.status !== "available") return stop(classification.reason);
+    const pensionOmitted =
+      ["UNKNOWN", "OTHER"].includes(automation.pensionScheme) ||
+      (netPayPensionMaxOwnRate(automation.pensionScheme) !== null &&
+        automation.pensionEmployeeRateBps == null);
+    let pensionContributionBasisCents = classification.amounts.taxableGrossCents;
+    // Darmstadt's Satzung §62(2)(s) excludes all SFN premiums, including taxable portions.
+    if (["ZVK_DARMSTADT_I", "ZVK_DARMSTADT_II"].includes(automation.pensionScheme))
+      for (const shift of classification.shifts)
+        for (const premium of shift.premiumBreakdown)
+          if (["NIGHT", "SUNDAY", "HOLIDAY"].includes(premium.category))
+            pensionContributionBasisCents -= premium.taxablePremiumCents;
+    const result = calculateMonthlyNetPay(
+      {
+        month,
+        profile: { ...settings.profile, worksInSaxony: profile.federalState === "SN" },
+        amounts: classification.amounts,
+        specialCases: settings.specialCases,
+        employmentKind:
+          profile.nursingTrainingTariff || profile.tvalPflegeTariff ? "APPRENTICE" : "EMPLOYEE",
+        pension: {
+          scheme: pensionOmitted ? "NONE" : automation.pensionScheme,
+          contributionBasisCents: pensionContributionBasisCents,
+          regularContributionBasisCents: regularGrossCents,
+          employeeRateBps: pensionOmitted
+            ? undefined
+            : (automation.pensionEmployeeRateBps ?? undefined),
+        },
+        additionalNetDeductionCents: automation.additionalNetDeductionCents,
+      },
+      "FORECAST",
+    );
+    return {
+      sourceMonth,
+      basicHourlyPayCents,
+      regularGrossCents,
+      pensionOmitted,
+      result:
+        result.status === "available"
+          ? { status: "available", classification, pay: result }
+          : { status: "unavailable", stage: "net-pay", reason: result.reason },
+    };
+  } catch {
+    return stop(
+      "Tarif-, Arbeitszeit- oder Feiertagsdaten konnten nicht vollständig zugeordnet werden.",
+    );
+  }
+}

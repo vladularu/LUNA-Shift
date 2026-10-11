@@ -1,5 +1,6 @@
 import { TVAL_PFLEGE_PREFERENCE_KEY, requireTvalPflegeTariff } from "@/domain/tval-pflege-tariff";
 import { TVH_KR_PREFERENCE_KEY, requireTvhKrTariff } from "@/domain/tvh-kr-tariff";
+import { mapNetPayProfileRow } from "./net-pay-profile-repository";
 import {
   TVUK_NURSING_PREFERENCE_KEY,
   requireTvUkNursingTariff,
@@ -890,6 +891,7 @@ export async function validateLocalBackup(
       root.version !== 16 &&
       root.version !== 17 &&
       root.version !== 18 &&
+      root.version !== 19 &&
       root.version !== LOCAL_BACKUP_VERSION
     ) {
       return invalid("Diese Backup-Version wird von LUNA Shift nicht unterstützt.");
@@ -925,9 +927,24 @@ export async function validateLocalBackup(
       ...(root.version >= 17 ? ["tvoedAnnexAPremiumFacts"] : []),
       ...(root.version >= 18 ? ["drkEmployeeMonthConfirmations"] : []),
       ...(root.version >= 19 ? ["drkTrainingMonthConfirmations"] : []),
+      ...(root.version >= 20 ? ["netPayProfiles"] : []),
     ]);
     const rawProfile = data.profile;
     const profile = rawProfile === null ? null : validateProfileRow(rawProfile);
+    const netPayProfiles =
+      root.version >= 20
+        ? Object.freeze(
+            asArray(data.netPayProfiles).map((value) => {
+              mapNetPayProfileRow(value);
+              return frozenBackupRow(asRecord(value));
+            }),
+          )
+        : Object.freeze([]);
+    if (root.version >= 20) {
+      if ((databaseSchemaVersion as number) < 32 || (profile === null && netPayProfiles.length > 0))
+        return invalid();
+      uniqueValues(netPayProfiles, "month");
+    }
     const remunerationProfiles =
       root.version === 1
         ? Object.freeze([])
@@ -1450,6 +1467,7 @@ export async function validateLocalBackup(
       appVersion: appVersion as string | null,
       databaseSchemaVersion: databaseSchemaVersion as number,
       data: Object.freeze({
+        netPayProfiles,
         profile,
         remunerationProfiles,
         allowanceDecisions,
@@ -1510,7 +1528,8 @@ export async function validateLocalBackup(
             !(document.version < 16 && key === "tvoedSueAllowanceConfirmations") &&
             !(document.version < 17 && key === "tvoedAnnexAPremiumFacts") &&
             !(document.version < 18 && key === "drkEmployeeMonthConfirmations") &&
-            !(document.version < 19 && key === "drkTrainingMonthConfirmations"),
+            !(document.version < 19 && key === "drkTrainingMonthConfirmations") &&
+            !(document.version < 20 && key === "netPayProfiles"),
         ),
       ),
     });

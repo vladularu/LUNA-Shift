@@ -143,8 +143,10 @@ export function calculateTvlKrShift(
   region: TvlKrUniversityRegion,
   saturdayShiftWork: boolean,
   resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
 ): ShiftPremiumBreakdown {
   return calculateTvlFamilyShift(shift, work, saturdayShiftWork, resolver, {
+    capturePayrollTrace,
     packageId: "tvl-kr-tdl",
     rulePrefix: "tvl",
     roundHourlyPremium: false,

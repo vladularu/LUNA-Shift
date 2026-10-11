@@ -88,6 +88,7 @@ async function resign(serialized: string, edit: (root: MutableBackup) => void) {
   const root = JSON.parse(serialized) as MutableBackup;
   delete root.integrity;
   edit(root);
+  if (root.version < 20) delete (root.data as Record<string, unknown>).netPayProfiles;
   if (root.version < 17) delete (root.data as Record<string, unknown>).tvoedAnnexAPremiumFacts;
   if (root.version < 18)
     delete (root.data as Record<string, unknown>).drkEmployeeMonthConfirmations;

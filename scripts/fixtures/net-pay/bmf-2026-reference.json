@@ -1,0 +1,1907 @@
+{
+  "source": "https://www.bmf-steuerrechner.de/interface/2026Version1.xhtml",
+  "usage": "Synthetic program verification only; never used for app calculations.",
+  "capturedAt": "2026-10-09T19:21:25.447Z",
+  "cases": [
+    {
+      "name": "class-1",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78241
+      }
+    },
+    {
+      "name": "class-2",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 2,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "2",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 67425,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 67425
+      }
+    },
+    {
+      "name": "class-3",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 3,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "3",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 40183,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 40183
+      }
+    },
+    {
+      "name": "class-4",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 4,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "4",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78241
+      }
+    },
+    {
+      "name": "class-5",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 5,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "5",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 128033,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 128033
+      }
+    },
+    {
+      "name": "class-6",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 6,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "6",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 132458,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 132458
+      }
+    },
+    {
+      "name": "gross-200001",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 200001,
+          "taxableGrossCents": 200001,
+          "socialInsuranceGrossCents": 200001,
+          "regularMonthlySocialInsuranceGrossCents": 200001
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "200001",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 8816,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 8816
+      }
+    },
+    {
+      "name": "gross-300000",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 300000,
+          "taxableGrossCents": 300000,
+          "socialInsuranceGrossCents": 300000,
+          "regularMonthlySocialInsuranceGrossCents": 300000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "300000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 29308,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 29308
+      }
+    },
+    {
+      "name": "gross-400000",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 400000,
+          "taxableGrossCents": 400000,
+          "socialInsuranceGrossCents": 400000,
+          "regularMonthlySocialInsuranceGrossCents": 400000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "400000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 52450,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 52450
+      }
+    },
+    {
+      "name": "gross-581249",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 581249,
+          "taxableGrossCents": 581249,
+          "socialInsuranceGrossCents": 581249,
+          "regularMonthlySocialInsuranceGrossCents": 581249
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "581249",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 101141,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 101141
+      }
+    },
+    {
+      "name": "gross-581250",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 581250,
+          "taxableGrossCents": 581250,
+          "socialInsuranceGrossCents": 581250,
+          "regularMonthlySocialInsuranceGrossCents": 581250
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "581250",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 101141,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 101141
+      }
+    },
+    {
+      "name": "gross-581251",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 581251,
+          "taxableGrossCents": 581251,
+          "socialInsuranceGrossCents": 581251,
+          "regularMonthlySocialInsuranceGrossCents": 581251
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "581251",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 101141,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 101141
+      }
+    },
+    {
+      "name": "gross-845000",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 845000,
+          "taxableGrossCents": 845000,
+          "socialInsuranceGrossCents": 845000,
+          "regularMonthlySocialInsuranceGrossCents": 845000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "845000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 198175,
+        "solidarityCents": 3402,
+        "churchTaxBasisCents": 198175
+      }
+    },
+    {
+      "name": "gross-845001",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 845001,
+          "taxableGrossCents": 845001,
+          "socialInsuranceGrossCents": 845001,
+          "regularMonthlySocialInsuranceGrossCents": 845001
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "845001",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 198175,
+        "solidarityCents": 3402,
+        "churchTaxBasisCents": 198175
+      }
+    },
+    {
+      "name": "gross-1000000",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 1000000,
+          "taxableGrossCents": 1000000,
+          "socialInsuranceGrossCents": 1000000,
+          "regularMonthlySocialInsuranceGrossCents": 1000000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "1000000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 263275,
+        "solidarityCents": 11149,
+        "churchTaxBasisCents": 263275
+      }
+    },
+    {
+      "name": "no-church",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 0,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "0",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 0
+      }
+    },
+    {
+      "name": "church-eight",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 8,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78241
+      }
+    },
+    {
+      "name": "factor-800",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 4,
+          "factorPermille": 800,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "4",
+        "af": "1",
+        "f": "0.800",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 62591,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 62591
+      }
+    },
+    {
+      "name": "factor-001",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 4,
+          "factorPermille": 1,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "4",
+        "af": "1",
+        "f": "0.001",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 75,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 75
+      }
+    },
+    {
+      "name": "factor-999",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 4,
+          "factorPermille": 999,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "4",
+        "af": "1",
+        "f": "0.999",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78158,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78158
+      }
+    },
+    {
+      "name": "half-child-allowance",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 1,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.5",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 64783
+      }
+    },
+    {
+      "name": "full-child-allowance",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 2,
+          "isParent": true,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 1000000,
+          "taxableGrossCents": 1000000,
+          "socialInsuranceGrossCents": 1000000,
+          "regularMonthlySocialInsuranceGrossCents": 1000000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "1000000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "1.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 264741,
+        "solidarityCents": 7259,
+        "churchTaxBasisCents": 230591
+      }
+    },
+    {
+      "name": "parent-0",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79258,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79258
+      }
+    },
+    {
+      "name": "parent-1",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 1,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79258,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79258
+      }
+    },
+    {
+      "name": "parent-2",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 2,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "1",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79683,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79683
+      }
+    },
+    {
+      "name": "parent-3",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 3,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "2",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 80116,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 80116
+      }
+    },
+    {
+      "name": "parent-4",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 4,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "3",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 80541,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 80541
+      }
+    },
+    {
+      "name": "parent-5",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 5,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "4",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 80966,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 80966
+      }
+    },
+    {
+      "name": "parent-6",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 6,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "4",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 80966,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 80966
+      }
+    },
+    {
+      "name": "saxony-childless",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": true,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "1",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 77391,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 77391
+      }
+    },
+    {
+      "name": "saxony-two-children",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": true,
+          "childrenUnder25": 2,
+          "worksInSaxony": true,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "1",
+        "PVZ": "0",
+        "PVA": "1",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78833,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78833
+      }
+    },
+    {
+      "name": "tk-additional-rate",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 269,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.69",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78416,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78416
+      }
+    },
+    {
+      "name": "zero-additional-rate",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 0,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "0.00",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 80708,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 80708
+      }
+    },
+    {
+      "name": "monthly-tax-allowance",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 10000
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "10000",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 74866,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 74866
+      }
+    },
+    {
+      "name": "before-23",
+      "input": {
+        "month": "2026-06",
+        "profile": {
+          "birthDate": "2003-07-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79258,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79258
+      }
+    },
+    {
+      "name": "birthday-month-23",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "2003-07-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79258,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79258
+      }
+    },
+    {
+      "name": "after-23",
+      "input": {
+        "month": "2026-08",
+        "profile": {
+          "birthDate": "2003-07-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "1",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 78241,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 78241
+      }
+    },
+    {
+      "name": "birthday-first-day",
+      "input": {
+        "month": "2026-07",
+        "profile": {
+          "birthDate": "2003-07-01",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 9,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "amounts": {
+          "grossCents": 500000,
+          "taxableGrossCents": 500000,
+          "socialInsuranceGrossCents": 500000,
+          "regularMonthlySocialInsuranceGrossCents": 500000
+        },
+        "specialCases": []
+      },
+      "parameters": {
+        "LZZ": "2",
+        "RE4": "500000",
+        "STKL": "1",
+        "af": "0",
+        "f": "1",
+        "R": "1",
+        "ZKF": "0.0",
+        "KVZ": "2.90",
+        "PVS": "0",
+        "PVZ": "0",
+        "PVA": "0",
+        "PKV": "0",
+        "KRV": "0",
+        "ALV": "0",
+        "ALTER1": "0",
+        "LZZFREIB": "0",
+        "LZZHINZU": "0",
+        "SONSTB": "0"
+      },
+      "expected": {
+        "wageTaxCents": 79258,
+        "solidarityCents": 0,
+        "churchTaxBasisCents": 79258
+      }
+    }
+  ]
+}

@@ -3,11 +3,10 @@ import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
 import { selectVkaEAssessmentShifts } from "@/engine/simple-vka-e-pay";
 import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-training-pay";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Temporal } from "@js-temporal/polyfill";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, Text } from "react-native";
 
 import {
   usePflegeShiftEntries,
@@ -38,11 +37,12 @@ import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
-import { CardFooterLine, CardHeader, CardSeparator, SurfaceCard } from "@/ui/design-system";
+import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { MonthNavigator } from "@/ui/month-navigator";
 import { selectionFeedback } from "@/ui/haptics";
 import { ReportPeriodContent, ReportScrollView, ReportTestBadge } from "@/ui/report-layout";
+import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
 
 function euro(value: number | null): string {
   if (value === null) return "–";
@@ -188,10 +188,9 @@ export function SalaryScreen() {
                   ? `TVöD-P ${profile.tariff.payGroup} · Stufe ${profile.tariff.payLevel}`
                   : null;
   const compositionRows = manualSalary
-    ? [{ key: "base", label: "Monatsbrutto", value: euro(pay.personalBaseAmount) }]
+    ? [{ label: "Monatsbrutto", value: euro(pay.personalBaseAmount) }]
     : [
         {
-          key: "base",
           label:
             profile.nursingTrainingTariff || profile.tvalPflegeTariff
               ? "Ausbildungsentgelt"
@@ -199,18 +198,16 @@ export function SalaryScreen() {
           value: euro(pay.personalBaseAmount),
         },
         {
-          key: "premium",
           label: "Zeitzuschläge",
           value: euro(pay.timePremiumAmount),
-          onPress: () => router.push(premiumDetailsRoute(pay.month)),
+          onPress: () => router.push(premiumDetailsRoute(month)),
         },
         ...(pay.overtimeAmount > 0
-          ? [{ key: "overtime", label: "Überstunden", value: euro(pay.overtimeAmount) }]
+          ? [{ label: "Überstunden", value: euro(pay.overtimeAmount) }]
           : []),
         ...(pay.allowanceAmount > 0
           ? [
               {
-                key: "shift-allowance",
                 label: pay.confirmedAllowance
                   ? "Schichtzulage"
                   : "Schichtzulage · Muster & Angaben",
@@ -222,7 +219,6 @@ export function SalaryScreen() {
         ...(pay.tvoedAllowanceAmount > 0
           ? [
               {
-                key: "tvoed",
                 label: "TVöD-Zulage",
                 value: euro(pay.tvoedAllowanceAmount),
                 onPress: () => router.push(settingsInfoRoute("TVOED_ALLOWANCE")),
@@ -232,7 +228,6 @@ export function SalaryScreen() {
         ...(pay.careAllowanceAmount > 0
           ? [
               {
-                key: "care",
                 label: profile.tvhKrTariff
                   ? "Pflegezulage TV-H"
                   : profile.tvUkNursingTariff
@@ -258,7 +253,6 @@ export function SalaryScreen() {
             ]
           : []),
       ];
-
   return (
     <ReportScrollView>
       <MonthNavigator
@@ -309,68 +303,22 @@ export function SalaryScreen() {
                 </Text>
               </SurfaceCard>
             ) : null}
-            <SurfaceCard
-              style={{
-                gap: SPACING.md,
-                padding: SPACING.xl,
-              }}
-            >
-              <View style={{ gap: SPACING.sm }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.sm }}>
-                  <Ionicons
-                    accessibilityElementsHidden
-                    color={palette.textMuted}
-                    name="wallet-outline"
-                    size={18}
-                  />
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    selectable
-                    style={{ color: palette.textMuted, ...TYPOGRAPHY.overline }}
-                  >
-                    {manualSalary ? "MONATSBRUTTO" : "BRUTTO-SCHÄTZUNG"}
-                  </Text>
-                </View>
-                <Text
-                  selectable
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={{
-                    color: palette.text,
-                    ...TYPOGRAPHY.hero,
-                    fontVariant: ["tabular-nums"],
-                  }}
-                >
-                  {euro(pay.estimatedGrossAmount)}
-                </Text>
-                {(pay.nightCompensatoryMinutes ?? 0) > 0 ? (
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                  >
-                    Zusätzlich{" "}
-                    {new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(
-                      pay.nightCompensatoryMinutes!,
-                    )}{" "}
-                    Min. Freizeitausgleich für Nachtarbeit.
-                  </Text>
-                ) : null}
-              </View>
-            </SurfaceCard>
-
-            <SurfaceCard>
-              <CardHeader title="Zusammensetzung" caption={salaryProfileLabel ?? undefined} />
-              <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm }}>
-                {compositionRows.map((row, index) => (
-                  <View key={row.key}>
-                    {index > 0 ? <CardSeparator inset={0} /> : null}
-                    <ValueRow label={row.label} onPress={row.onPress} value={row.value} />
-                  </View>
-                ))}
-              </View>
-              <CardFooterLine />
-            </SurfaceCard>
           </>
         )}
+        <NetPayAutomaticEntryCard
+          key={month}
+          month={month}
+          caption={salaryProfileLabel ?? undefined}
+          nightCompensatoryMinutes={pay.nightCompensatoryMinutes ?? 0}
+          grossItems={compositionRows}
+          showPremiumDetails={salaryReady && pay.available && !manualSalary}
+          blocked={testMonths.includes(month)}
+          proposedGrossCents={
+            pay.available && pay.estimatedGrossAmount !== null
+              ? Math.round(pay.estimatedGrossAmount * 100)
+              : null
+          }
+        />
       </ReportPeriodContent>
     </ReportScrollView>
   );
@@ -415,85 +363,5 @@ function SetupCard() {
         </Text>
       </Pressable>
     </SurfaceCard>
-  );
-}
-
-function ValueRow({
-  label,
-  value,
-  onPress,
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly onPress?: () => void;
-}) {
-  const palette = usePalette();
-  const { fontScale } = useWindowDimensions();
-  const stacked = fontScale >= 1.6;
-  const content = (
-    <>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        selectable
-        style={{ color: palette.dark ? palette.text : palette.textMuted, ...TYPOGRAPHY.label }}
-      >
-        {label}
-      </Text>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.sm }}>
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          selectable
-          style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong, fontVariant: ["tabular-nums"] }}
-        >
-          {value}
-        </Text>
-        {onPress ? (
-          <Ionicons
-            accessibilityElementsHidden
-            color={palette.textMuted}
-            name="ellipsis-horizontal-circle"
-            size={17}
-          />
-        ) : null}
-      </View>
-    </>
-  );
-
-  if (!onPress) {
-    return (
-      <View
-        style={{
-          minHeight: CONTROL_HEIGHT.regular,
-          flexDirection: stacked ? "column" : "row",
-          alignItems: stacked ? "flex-start" : "center",
-          justifyContent: "space-between",
-          gap: SPACING.md,
-          paddingVertical: stacked ? SPACING.sm : 0,
-        }}
-      >
-        {content}
-      </View>
-    );
-  }
-
-  return (
-    <Pressable
-      accessibilityLabel={`${label} ${value}, Erklärung öffnen`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: CONTROL_HEIGHT.regular,
-        flexDirection: stacked ? "column" : "row",
-        alignItems: stacked ? "flex-start" : "center",
-        justifyContent: "space-between",
-        gap: SPACING.md,
-        borderRadius: RADII.control,
-        backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-        opacity: pressed ? 0.72 : 1,
-        paddingVertical: stacked ? SPACING.sm : 0,
-      })}
-    >
-      {content}
-    </Pressable>
   );
 }

@@ -1,0 +1,40 @@
+# SFN-Klassifikation – Arbeitspaket 2
+
+## Task-Vertrag
+
+- Ziel: ausdrücklich zugeordnete Zuschlagszahlungen anhand minutengenauer Arbeitszeiten in steuer- und beitragsfreie Anteile teilen und an den geprüften Netto-Kern übergeben.
+- Nicht-Ziele: UI, Steuerprofil-Speicherung, automatische Übernahme aggregierter Tarifzeilen, Nachzahlungen aus anderen Arbeitsmonaten, Bereitschaft, sonstige Steuerbefreiungen, Zusatzversorgung, Veröffentlichung.
+- Plattform: reine TypeScript-Fachlogik für Expo SDK 57; iPhone/Hermes-Abnahme folgt mit dem Nutzerfluss.
+- Dateiscope: `src/domain/net-pay-sfn.ts`, zwei neue Engine-Dateien, zwei zugehörige Testdateien und diese Dokumentation. Bestehende Tarifberechnungen bleiben außerhalb dieses Pakets.
+- Abnahme: gesetzliche Zeitgrenzen, getrennte 50-/25-Euro-Grenzen, gemeinsame Sonntags-/Feiertagsgrenze, additive Nachtgrenze, tatsächliche Zeit bei Sommer-/Winterzeit, Pausen, vollständige Brutto-Abstimmung, fehlende Daten/Regeln und Übergabe an den BMF-Kern prüfen; `verify:fast` besteht.
+- Gerätescreenshots: erst bei UI-Integration erforderlich.
+- Commit, Push, Build, OTA und Merge: keine Freigabe.
+
+## Eingabevertrag und Grenzen
+
+Die bisherigen `PremiumLine`-Werte enthalten Minuten und Gesamtbeträge, aber keine exakte Zuordnung der bezahlten Minuten. Die Tarif-Engine positioniert Pausen derzeit in der Schichtmitte (`src/engine/pay.ts:129`). Ihr individueller oder tariflicher Referenz-Stundenlohn ist außerdem nicht automatisch der steuerliche Grundlohn. Ein automatischer Adapter wäre deshalb ohne zusätzliche Angaben unvollständig.
+
+Der neue Kern verlangt ein vollständiges Gesamtbrutto, einen ausdrücklich bestimmten SFN-Grundlohn je Stunde, den Arbeitsort (Bundesland und lokale Feiertagsregion), den aktiven `RuleResolver`, Schichtgrenzen, unbezahlte Pausen und bezahlte Zuschlagsintervalle. Alle Zeitangaben haben einen expliziten UTC-Offset und werden für `Europe/Berlin` geprüft. Bezahlte Pausen werden nicht als unbezahlte Pausen abgezogen. Fehlende Pausenlagen werden nicht stillschweigend in die Schichtmitte gesetzt.
+
+Jeder Zuschlagsbetrag gilt gleichmäßig für die bezahlten Minuten seiner Intervalle, nach Abzug der unbezahlten Pausen. Bei wechselnden Vergütungssätzen muss der Aufrufer getrennte Zahlungen liefern. Zahlungs-IDs sind eindeutig; doppelte Intervallabdeckung innerhalb einer Zahlung und überschneidende Schichten werden abgewiesen. Verschiedene Zuschlagszahlungen dürfen zusammentreffen; ihre Grenzen werden gemeinsam je Minute geprüft. `NIGHT` bezeichnet einen Nachtzuschlag, `DAY` einen Sonntags-/Feiertags-/besonderen Tageszuschlag und `OTHER` einen in diesem Modell steuer- und beitragspflichtigen Betrag, beispielsweise Samstag oder Überstunden. Die tatsächliche Zuordnung ist Aufgabe des späteren Tarifadapters; Textlabels werden nicht interpretiert.
+
+Geplante Zeiten erhalten zwingend die Kennzeichnung `PLANNED`; auch `RECORDED` ist eine Modellberechnung, keine bestätigte Arbeitgeberabrechnung. Steuer-/SV-Freiheit setzt die gesonderte Zahlung neben dem Grundlohn und die entsprechende Behandlung in der Entgeltabrechnung voraus. Der Grundlohn muss einschließlich seiner rechtlich relevanten laufenden Bestandteile bestimmt werden; der Kern leitet ihn nicht aus einer beliebigen Tariftabelle ab. Er erwartet Centgenauigkeit und unterstützt hier keine wechselnden Grundlöhne innerhalb eines Monats. Die Sachsen-Angabe im Netto-Profil muss zum angegebenen Arbeitsort passen, damit der Pflegebeitrag dieselbe Beschäftigung beschreibt.
+
+Bezahlte Zuschlagsminuten müssen im Abrechnungsmonat liegen. Eine Schicht darf am Vortag beginnen, damit die Mitternachtsregel geprüft werden kann. Abrechnungsverschiebungen und Nachzahlungen brauchen ein weiteres Paket. Unvollständiges Brutto (`completeGross: false`), unbekannter Grundlohn oder Arbeitsort, unbekannte Pausen und fehlende Feiertagskatalog-Abdeckung ergeben keine Nettozahl.
+
+## Regeln und Quellen
+
+- Nacht 20–06 Uhr: bis 25 Prozent; 00–04 Uhr bis 40 Prozent, wenn in derselben Schicht bereits am Vortag ab 20 Uhr gearbeitet wurde. Bei entsprechend begonnener Nachtarbeit reicht die Sonntags-/Feiertagsbegünstigung bis 04 Uhr des Folgetages. Sonntag 50 Prozent, gesetzlicher Feiertag und Silvester ab 14 Uhr 125 Prozent; Heiligabend ab 14 Uhr, Weihnachten und 1. Mai 150 Prozent. Nacht und Tageszuschlag haben getrennte Grenzen; Sonntag und Feiertag nutzen die jeweils höchste gemeinsame Tagesgrenze. [§ 3b EStG](https://www.gesetze-im-internet.de/estg/__3b.html)
+- Steuerliche Grundlohngrenze 50 Euro je Stunde, SV-Grenze 25 Euro. SV-Freiheit ist zusätzlich durch den steuerfreien Betrag begrenzt und betrifft hier die vier Arbeitnehmerzweige. [§ 1 SvEV](https://www.gesetze-im-internet.de/svev/__1.html), [DRV: Steuerfreie SFN-Zuschläge](https://www.deutsche-rentenversicherung.de/DRV/DE/Experten/Arbeitgeber-und-Steuerberater/summa-summarum/Lexikon/S/steuerfreie_sfn_zuschlaege.html)
+- Die geltende Richtlinie erläutert regelmäßigen Grundlohn, getrennte Zuschläge und Arbeitszeitnachweise einschließlich vereinbarter bezahlter Pausen. Auf Zuschläge für eine benachbarte Nacht bezogene Sonderzuordnungen werden in diesem Paket nicht automatisch aus Tageslabels abgeleitet. [BMF: R 3b, Handbuch 2025](https://lsth.bundesfinanzministerium.de/lsth/2025/A-Einkommensteuergesetz/II-Einkommen-2-24b/2-Steuerfreie-Einnahmen-3-3c/Paragraf-3b/inhalt.html)
+
+Die Berechnung hält Bruchteile mit exakten rationalen Zahlen aus `bigint` fest. Erst die steuer-/beitragsfreien Gesamtsummen je Schicht werden auf volle Cent abgerundet. Diese konservative Prognosekonvention verhindert zusätzliche steuerfreie Cent durch Aufteilen von Zahlungen; bei centabweichender Arbeitgeber-Rundung kann die spätere Abrechnung abweichen. Steuerpflichtige und beitragspflichtige Restbeträge ergeben sich immer durch Subtraktion vom unveränderten Zahlungsbetrag.
+
+## Entwicklungsnachweise
+
+- 76 neue SFN-Tests und sechs Übergabetests bestehen zusammen mit den bisherigen 105 Netto-Tests: insgesamt 187. Die SFN-Erwartungswerte sind unabhängig von der Implementierung aus den dokumentierten Zeit- und Betragsgrenzen berechnet; sie wurden nicht mit einer realen Arbeitgeberabrechnung verglichen.
+- Geprüft sind unter anderem Grenzminuten um 20/06/04/14 Uhr, vorherige tatsächliche Nachtarbeit, Sonntag und Feiertag gleichzeitig, lokale Feiertage, vollständige/teilweise Freiheit, Grundlohn über 25 und 50 Euro, gleichzeitige Zahlungen, Pausen, Monatsgrenzen, aktive Feiertagskataloge, Zeitumstellungen, fehlende Angaben und Brutto-Abstimmung.
+- Die Übergabe verwendet den vorhandenen, mit amtlichen BMF-Fällen geprüften Steuerkern. Beispiel: 5.000 Euro steuer- und beitragspflichtiges Brutto plus fünf Euro vollständig freier Nachtzuschlag ergeben bei den Angaben aus [Arbeitspaket 1](brutto-netto-prototype.md) 3.135,09 Euro geschätztes Netto. Bei 40 Euro Grundlohn und zehn Euro Nachtzuschlag für eine normale Nachtstunde sind alle zehn Euro steuerfrei, aber nur 6,25 Euro beitragsfrei; das verbleibende SV-Brutto beträgt 5.003,75 Euro.
+- `npm.cmd run verify:fast` besteht vollständig: Regelverträge, Typprüfung, Lint ohne Warnungen, Formatierung, 7.858 Unit-Tests in 404 Dateien, 808 Komponententests in 108 Suiten und sämtliche Publisher-, Delivery-, Produktions-, Operator-, Inventar-, Sicherheits-, Runtime- und Build-Dependency-Prüfungen. Protokoll: `artifacts/verify-fast-sfn.log`.
+- Browser-Bündelprüfung mit esbuild für ES2022: 44 gebündelte Quelldateien einschließlich des bestehenden Regelkatalogs, keine externen Imports. Ausführung unter Node liefert 313.509 Cent Netto und prüft zusätzlich den 150-Prozent-Feiertagsübertrag vom 1. auf den 2. Mai bis 04 Uhr. Das ist keine Browser- oder iPhone-Abnahme.
+- Noch keine automatische Anbindung der Tarifprognose, keine Profil-/Backupänderungen und keine iPhone-/Hermes-Abnahme. Der spätere Adapter muss exakte bezahlte Tarifintervalle, die Pausenannahme und einen vollständigen steuerlichen Grundlohn bereitstellen. Bei nicht verfügbarer Grundlage bleibt die Netto-Prognose nicht verfügbar.

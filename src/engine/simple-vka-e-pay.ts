@@ -23,6 +23,7 @@ import { roundRemunerationCents } from "./remuneration-money";
 import { assessTvoedKCalendarMonth } from "./tvoed-k-calendar-assessment";
 import { assessTvoedPattern, isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds, calculateTimedShiftMinutes } from "./working-time";
+import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
 
 // Explicit local E-table adapter. Raw Annex-A source packages remain DRAFT.
 // Shared nursing shift rules use the same VKA AT/BT-K/BT-B source provisions;
@@ -197,6 +198,7 @@ export function calculateVkaEShift(
   shift: ShiftEntry,
   profile: UserProfile,
   source: RuleResolver,
+  capturePayrollTrace = false,
 ): ShiftPremiumBreakdown {
   const empty: ShiftPremiumBreakdown = {
     shiftId: shift.id,
@@ -212,6 +214,9 @@ export function calculateVkaEShift(
   if (!bounds) return empty;
   const pause = Math.min(shift.breakMinutes, bounds.grossMinutes);
   const breakStart = Math.floor((bounds.grossMinutes - pause) / 2);
+  const trace = capturePayrollTrace
+    ? new NetPayPremiumTrace(shift.id, bounds.startEpochMinutes, bounds.grossMinutes, pause)
+    : null;
   const lines = new Map<string, PremiumLine>();
   const overtimeMinutes = shift.tariffOvertimeConfirmed
     ? Math.min(shift.overtimeMinutes, bounds.netMinutes)
@@ -255,7 +260,13 @@ export function calculateVkaEShift(
       breakStart + pause,
       context.rulePackage,
       source,
-      { from, until },
+      {
+        from,
+        until,
+        ...(trace
+          ? { onCount: (id: string, epoch: number) => trace.add(`${from}:${id}`, epoch) }
+          : {}),
+      },
     );
     for (const [id, minutes] of buckets.byRuleId) {
       const rule = context.rulePackage.rules.premiumRules.find((r) => r.id === id)!;
@@ -268,6 +279,12 @@ export function calculateVkaEShift(
           ? "preholiday"
           : rule.premiumType.toLowerCase();
       const amount = roundRemunerationCents(rate * minutes * percentage, 600000) / 100;
+      trace?.pay(
+        `${from}:${id}`,
+        premiumKind(rule.premiumType),
+        Math.round(amount * 100),
+        premiumCategory(rule.premiumType),
+      );
       const previous = lines.get(key);
       const combinedMinutes = (previous?.minutes ?? 0) + minutes;
       lines.set(key, {
@@ -313,6 +330,7 @@ export function calculateVkaEShift(
   return {
     ...empty,
     netMinutes: calculateTimedShiftMinutes(shift, profile.timeZone),
+    ...(trace ? { payrollTrace: trace.finish() } : {}),
     premiumLines,
     overtimeBaseAmount: overtimeBaseCents / 100,
     overtimePremiumAmount: overtimePremiumCents / 100,

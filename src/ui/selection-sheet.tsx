@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import {
   findNodeHandle,
+  KeyboardAvoidingView,
   type LayoutChangeEvent,
   Modal,
   Pressable,
@@ -21,6 +22,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
@@ -36,11 +38,27 @@ export function SelectionSheet({
   onClose,
   title,
   visible,
+  disabled = false,
+  cancelLabel = "Abbrechen",
+  keyboardAware = false,
+  closeInHeader = false,
+  onBack,
+  backLabel = "Zurück zur Angaben-Übersicht",
+  footer,
+  contentKey,
 }: {
   readonly children: (dismiss: () => void) => ReactNode;
   readonly onClose: () => void;
   readonly title: string;
   readonly visible: boolean;
+  readonly disabled?: boolean;
+  readonly cancelLabel?: string;
+  readonly keyboardAware?: boolean;
+  readonly closeInHeader?: boolean;
+  readonly onBack?: () => void;
+  readonly backLabel?: string;
+  readonly footer?: ReactNode;
+  readonly contentKey?: string;
 }) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
@@ -58,7 +76,7 @@ export function SelectionSheet({
   const dragOrigin = useSharedValue(0);
 
   const requestClose = useCallback(() => {
-    if (closeStarted.get()) return;
+    if (disabled || closeStarted.get()) return;
     closeStarted.set(true);
     setClosing(true);
     cancelAnimation(translateY);
@@ -83,7 +101,16 @@ export function SelectionSheet({
         },
       ),
     );
-  }, [backdropProgress, closeStarted, maxHeight, onClose, reduceMotion, sheetHeight, translateY]);
+  }, [
+    backdropProgress,
+    closeStarted,
+    disabled,
+    maxHeight,
+    onClose,
+    reduceMotion,
+    sheetHeight,
+    translateY,
+  ]);
 
   function showSheet() {
     closeStarted.set(false);
@@ -120,7 +147,7 @@ export function SelectionSheet({
   function dismissGesture(fromHeader: boolean) {
     return Gesture.Pan()
       .withTestId(fromHeader ? "selection-sheet-header-drag" : "selection-sheet-list-drag")
-      .enabled(!closing)
+      .enabled(!closing && !disabled)
       .activeOffsetY([-6, 6])
       .failOffsetX([-28, 28])
       .onStart((event) => {
@@ -189,119 +216,212 @@ export function SelectionSheet({
       visible={visible}
     >
       <GestureHandlerRootView style={{ flex: 1, justifyContent: "flex-end" }}>
-        <Animated.View
-          style={[{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }, backdropStyle]}
+        <KeyboardAvoidingView
+          testID="selection-sheet-keyboard-layer"
+          behavior="padding"
+          enabled={keyboardAware}
+          style={{ flex: 1, justifyContent: "flex-end" }}
         >
-          <Pressable
-            testID="selection-sheet-backdrop"
-            accessible={false}
-            accessibilityElementsHidden
-            aria-hidden
-            importantForAccessibility="no-hide-descendants"
-            onPress={requestClose}
-            style={{ flex: 1, backgroundColor: palette.overlay }}
-          />
-        </Animated.View>
-        <Animated.View
-          accessibilityViewIsModal
-          onAccessibilityEscape={requestClose}
-          onLayout={measureSheet}
-          testID="dropdown-modal-content"
-          style={[
-            {
-              maxHeight,
-              borderTopLeftRadius: RADII.sheet,
-              borderTopRightRadius: RADII.sheet,
-              borderCurve: "continuous",
-              backgroundColor: palette.surfaceRaised,
-              boxShadow: `0 -12px 32px ${palette.shadow}`,
-              paddingBottom: Math.max(insets.bottom, SPACING.md),
-            },
-            sheetStyle,
-          ]}
-        >
-          <GestureDetector gesture={headerDrag}>
-            <View
-              collapsable={false}
-              style={{ borderBottomWidth: 1, borderBottomColor: palette.separator }}
-            >
+          <Animated.View
+            style={[{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }, backdropStyle]}
+          >
+            <Pressable
+              testID="selection-sheet-backdrop"
+              accessible={false}
+              accessibilityElementsHidden
+              aria-hidden
+              importantForAccessibility="no-hide-descendants"
+              onPress={requestClose}
+              disabled={disabled}
+              style={{ flex: 1, backgroundColor: palette.overlay }}
+            />
+          </Animated.View>
+          <Animated.View
+            accessibilityViewIsModal
+            onAccessibilityEscape={requestClose}
+            onLayout={measureSheet}
+            testID="dropdown-modal-content"
+            style={[
+              {
+                maxHeight,
+                flexShrink: 1,
+                borderTopLeftRadius: RADII.sheet,
+                borderTopRightRadius: RADII.sheet,
+                borderCurve: "continuous",
+                backgroundColor: palette.surfaceRaised,
+                boxShadow: `0 -12px 32px ${palette.shadow}`,
+                paddingBottom: Math.max(insets.bottom, SPACING.md),
+              },
+              sheetStyle,
+            ]}
+          >
+            <GestureDetector gesture={headerDrag}>
               <View
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                style={{ alignItems: "center", paddingTop: SPACING.sm, paddingBottom: SPACING.sm }}
+                collapsable={false}
+                style={{ borderBottomWidth: 1, borderBottomColor: palette.separator }}
               >
                 <View
-                  testID="selection-sheet-grabber"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
                   style={{
-                    width: 36,
-                    height: 5,
-                    borderRadius: RADII.pill,
-                    backgroundColor: palette.textMuted,
+                    alignItems: "center",
+                    paddingTop: SPACING.sm,
+                    paddingBottom: SPACING.sm,
                   }}
-                />
+                >
+                  <View
+                    testID="selection-sheet-grabber"
+                    style={{
+                      width: 36,
+                      height: 5,
+                      borderRadius: RADII.pill,
+                      backgroundColor: palette.textMuted,
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: closeInHeader ? SPACING.lg : 0,
+                    paddingBottom: closeInHeader ? SPACING.sm : 0,
+                    gap: SPACING.sm,
+                  }}
+                >
+                  {onBack ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={backLabel}
+                      disabled={closing || disabled}
+                      onPress={onBack}
+                      style={{
+                        minWidth: CONTROL_HEIGHT.regular,
+                        minHeight: CONTROL_HEIGHT.regular,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Ionicons
+                        accessibilityElementsHidden
+                        name="chevron-back"
+                        size={TYPOGRAPHY.screenTitle.lineHeight}
+                        color={palette.primary}
+                      />
+                    </Pressable>
+                  ) : null}
+                  <View
+                    ref={headingRef}
+                    accessible
+                    accessibilityLabel={`${title}, Auswahldialog`}
+                    accessibilityHint="Zum Schließen nach unten ziehen"
+                    accessibilityRole="header"
+                    style={{
+                      flex: 1,
+                      minHeight: CONTROL_HEIGHT.regular,
+                      justifyContent: "center",
+                      paddingHorizontal: closeInHeader ? undefined : SPACING.lg,
+                      paddingBottom: closeInHeader ? 0 : SPACING.sm,
+                    }}
+                  >
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+                    >
+                      {title}
+                    </Text>
+                  </View>
+                  {closeInHeader ? (
+                    <Pressable
+                      testID="selection-sheet-header-close"
+                      accessibilityLabel={cancelLabel}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: closing || disabled }}
+                      onPress={requestClose}
+                      disabled={closing || disabled}
+                      style={({ pressed }) => ({
+                        width: CONTROL_HEIGHT.regular,
+                        height: CONTROL_HEIGHT.regular,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: RADII.pill,
+                        borderWidth: 1,
+                        borderColor: palette.primary,
+                        opacity: pressed || disabled ? 0.65 : 1,
+                      })}
+                    >
+                      <Ionicons
+                        accessibilityElementsHidden
+                        name="close"
+                        size={TYPOGRAPHY.value.fontSize}
+                        color={palette.text}
+                      />
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
+            </GestureDetector>
+            <GestureDetector gesture={listDrag}>
+              <GestureDetector gesture={nativeScroll}>
+                <ScrollView
+                  key={contentKey}
+                  testID="selection-sheet-list"
+                  nestedScrollEnabled
+                  keyboardShouldPersistTaps={keyboardAware ? "handled" : "never"}
+                  keyboardDismissMode={keyboardAware ? "interactive" : "none"}
+                  bounces={false}
+                  showsVerticalScrollIndicator
+                  scrollEventThrottle={16}
+                  onScroll={(event) => {
+                    scrollOffset.set(Math.max(0, event.nativeEvent.contentOffset.y));
+                  }}
+                  style={{ flexShrink: 1 }}
+                  pointerEvents={closing ? "none" : "auto"}
+                >
+                  {children(requestClose)}
+                </ScrollView>
+              </GestureDetector>
+            </GestureDetector>
+            {footer ? (
               <View
-                ref={headingRef}
-                accessible
-                accessibilityLabel={`${title}, Auswahldialog`}
-                accessibilityHint="Zum Schließen nach unten ziehen"
-                accessibilityRole="header"
+                testID="selection-sheet-footer"
+                pointerEvents={closing ? "none" : "auto"}
                 style={{
-                  minHeight: CONTROL_HEIGHT.regular,
-                  justifyContent: "center",
+                  borderTopWidth: 1,
+                  borderTopColor: palette.separator,
                   paddingHorizontal: SPACING.lg,
-                  paddingBottom: SPACING.sm,
+                  paddingTop: SPACING.md,
+                  flexShrink: 0,
                 }}
+              >
+                {footer}
+              </View>
+            ) : null}
+            {!closeInHeader ? (
+              <Pressable
+                accessibilityLabel={cancelLabel === "Abbrechen" ? "Auswahl abbrechen" : cancelLabel}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: closing || disabled }}
+                onPress={requestClose}
+                disabled={closing || disabled}
+                style={({ pressed }) => ({
+                  minHeight: CONTROL_HEIGHT.large,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderTopWidth: 1,
+                  borderTopColor: palette.separator,
+                  opacity: pressed ? 0.65 : 1,
+                })}
               >
                 <Text
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+                  style={{ color: palette.primary, ...TYPOGRAPHY.button }}
                 >
-                  {title}
+                  {cancelLabel}
                 </Text>
-              </View>
-            </View>
-          </GestureDetector>
-          <GestureDetector gesture={listDrag}>
-            <GestureDetector gesture={nativeScroll}>
-              <ScrollView
-                testID="selection-sheet-list"
-                nestedScrollEnabled
-                bounces={false}
-                showsVerticalScrollIndicator
-                scrollEventThrottle={16}
-                onScroll={(event) => {
-                  scrollOffset.set(Math.max(0, event.nativeEvent.contentOffset.y));
-                }}
-                style={{ flexShrink: 1 }}
-                pointerEvents={closing ? "none" : "auto"}
-              >
-                {children(requestClose)}
-              </ScrollView>
-            </GestureDetector>
-          </GestureDetector>
-          <Pressable
-            accessibilityLabel="Auswahl abbrechen"
-            accessibilityRole="button"
-            onPress={requestClose}
-            disabled={closing}
-            style={({ pressed }) => ({
-              minHeight: CONTROL_HEIGHT.large,
-              alignItems: "center",
-              justifyContent: "center",
-              borderTopWidth: 1,
-              borderTopColor: palette.separator,
-              opacity: pressed ? 0.65 : 1,
-            })}
-          >
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{ color: palette.primary, ...TYPOGRAPHY.button }}
-            >
-              Abbrechen
-            </Text>
-          </Pressable>
-        </Animated.View>
+              </Pressable>
+            ) : null}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </GestureHandlerRootView>
     </Modal>
   );

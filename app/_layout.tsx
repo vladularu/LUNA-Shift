@@ -235,6 +235,10 @@ function ThemedApp() {
                             options={{ title: "Gehalt", presentation: "card" }}
                           />
                           <Stack.Screen
+                            name="net-pay"
+                            options={{ title: "Brutto-Netto", presentation: "card" }}
+                          />
+                          <Stack.Screen
                             name="worktime-details"
                             options={{ title: "Stunden", presentation: "card" }}
                           />

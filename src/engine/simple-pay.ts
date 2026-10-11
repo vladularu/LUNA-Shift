@@ -31,6 +31,7 @@ import {
 } from "./simple-nursing-training-pay";
 // Restored Build-31 calculator. Dated tariff engines remain separate.
 import { Temporal } from "@js-temporal/polyfill";
+import type { SfnTimeRange } from "@/domain/net-pay-sfn";
 
 import type {
   MonthlyPayEstimate,
@@ -84,6 +85,22 @@ export interface MonthlyTvoedAssessmentResult {
 
 interface PremiumMinuteBuckets {
   readonly byRuleId: Map<string, number>;
+  readonly periodsByRuleId?: Map<string, [number, number][]>;
+}
+
+export interface TvoedShiftPremiumTrace extends SfnTimeRange {
+  readonly breakdown: ShiftPremiumBreakdown;
+  readonly unpaidBreaks: readonly SfnTimeRange[];
+  readonly premiums: readonly {
+    readonly ruleId: string;
+    readonly premiumType: RulePremiumRule["premiumType"];
+    readonly line: PremiumLine;
+    readonly periods: readonly SfnTimeRange[];
+  }[];
+}
+
+function premiumTimestamp(time: Temporal.ZonedDateTime): string {
+  return time.toString({ smallestUnit: "minute", timeZoneName: "never" });
 }
 
 interface PremiumDayContext {
@@ -214,6 +231,7 @@ function countPremiumMinute(
   shift: ShiftEntry,
   profile: UserProfile,
   rulePackage: RuleTariffPackage,
+  cursor?: number,
 ): void {
   const candidates = rulePackage.rules.premiumRules.filter(
     (rule) =>
@@ -223,6 +241,13 @@ function countPremiumMinute(
   );
   for (const rule of applyCombinationRules(candidates, rulePackage)) {
     buckets.byRuleId.set(rule.id, (buckets.byRuleId.get(rule.id) ?? 0) + 1);
+    if (buckets.periodsByRuleId && cursor !== undefined) {
+      const periods = buckets.periodsByRuleId.get(rule.id) ?? [];
+      const previous = periods.at(-1);
+      if (previous?.[1] === cursor) previous[1] = cursor + 1;
+      else periods.push([cursor, cursor + 1]);
+      buckets.periodsByRuleId.set(rule.id, periods);
+    }
   }
 }
 
@@ -234,11 +259,29 @@ function countPremiumMinutes(
   breakEnd: number,
   rulePackage: RuleTariffPackage,
   ruleResolver: RuleResolver,
+  periodsByRuleId?: Map<string, SfnTimeRange[]>,
 ): PremiumMinuteBuckets {
   const buckets: PremiumMinuteBuckets = {
     byRuleId: new Map(),
+    periodsByRuleId: periodsByRuleId ? new Map() : undefined,
   };
   if (gross <= 0) return buckets;
+
+  // Collect minute intervals numerically; format only their boundaries, not every minute.
+  const finish = () => {
+    const timestamp = (minute: number) =>
+      premiumTimestamp(
+        Temporal.Instant.fromEpochMilliseconds(minute * 60_000).toZonedDateTimeISO(
+          profile.timeZone,
+        ),
+      );
+    for (const [id, periods] of buckets.periodsByRuleId ?? [])
+      periodsByRuleId!.set(
+        id,
+        periods.map(([from, until]) => ({ start: timestamp(from), end: timestamp(until) })),
+      );
+    return buckets;
+  };
 
   const start = zonedStart(shift, profile.timeZone);
   const lastMinute = start.add({ minutes: gross - 1 });
@@ -264,13 +307,15 @@ function countPremiumMinutes(
         shift,
         profile,
         rulePackage,
+        periodsByRuleId ? cursor.epochMilliseconds / 60_000 : undefined,
       );
     }
-    return buckets;
+    return finish();
   }
 
   const startDate = start.toPlainDate();
   const startMinuteOfDay = start.hour * 60 + start.minute;
+  const startEpochMinute = start.epochMilliseconds / 60_000;
   let cachedDayOffset = 0;
   let cachedDate = startDate;
   let cachedDay = premiumDayContext(
@@ -302,9 +347,10 @@ function countPremiumMinutes(
       shift,
       profile,
       rulePackage,
+      periodsByRuleId ? startEpochMinute + index : undefined,
     );
   }
-  return buckets;
+  return finish();
 }
 
 function premiumLine(
@@ -360,6 +406,7 @@ function calculateShiftPremiumBreakdownUncached(
   shift: ShiftEntry,
   profile: UserProfile,
   ruleResolver: RuleResolver,
+  periodsByRuleId?: Map<string, SfnTimeRange[]>,
 ): ShiftPremiumBreakdown {
   const tariff = profile.tariff;
   const rulePackage = getTariffRulePackage(shift.date, ruleResolver);
@@ -387,6 +434,7 @@ function calculateShiftPremiumBreakdownUncached(
     breakEnd,
     rulePackage,
     ruleResolver,
+    periodsByRuleId,
   );
   const premiumKey = (rule: RulePremiumRule): string => {
     switch (rule.premiumType) {
@@ -450,6 +498,44 @@ function calculateShiftPremiumBreakdownUncached(
     overtimeBaseAmount,
     overtimePremiumAmount,
     totalAmount,
+  };
+}
+
+/** Exact rule-selected intervals using the same midpoint-pause forecast as the salary card. */
+export function calculateTvoedShiftPremiumTrace(
+  shift: ShiftEntry,
+  profile: UserProfile,
+  ruleResolver: RuleResolver = bundledRuleResolver,
+): TvoedShiftPremiumTrace {
+  const periods = new Map<string, SfnTimeRange[]>();
+  const breakdown = calculateShiftPremiumBreakdownUncached(shift, profile, ruleResolver, periods);
+  const start = zonedStart(shift, profile.timeZone);
+  const gross = grossMinutes(shift, profile.timeZone);
+  const pauseMinutes = Math.min(gross, shift.breakMinutes);
+  const pauseStart = start.add({ minutes: Math.floor((gross - pauseMinutes) / 2) });
+  const rules = getTariffRulePackage(shift.date, ruleResolver)?.rules.premiumRules ?? [];
+  let lineIndex = 0;
+  const premiums = rules
+    .filter((rule) => rule.premiumType !== "OVERTIME" && periods.has(rule.id))
+    .map((rule) => ({
+      ruleId: rule.id,
+      premiumType: rule.premiumType,
+      line: breakdown.premiumLines[lineIndex++],
+      periods: periods.get(rule.id)!,
+    }));
+  return {
+    start: premiumTimestamp(start),
+    end: premiumTimestamp(start.add({ minutes: gross })),
+    unpaidBreaks: pauseMinutes
+      ? [
+          {
+            start: premiumTimestamp(pauseStart),
+            end: premiumTimestamp(pauseStart.add({ minutes: pauseMinutes })),
+          },
+        ]
+      : [],
+    breakdown,
+    premiums,
   };
 }
 

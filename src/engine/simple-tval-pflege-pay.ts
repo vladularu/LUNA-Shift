@@ -117,8 +117,10 @@ export function calculateTvalPflegeShift(
   selection: TvalPflegeTariff,
   saturdayShiftWork: boolean,
   resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
 ) {
   return calculateTvlFamilyShift(shift, work, saturdayShiftWork, resolver, {
+    capturePayrollTrace,
     packageId: "tval-pflege-tdl",
     rulePrefix: "tval",
     roundHourlyPremium: true,
