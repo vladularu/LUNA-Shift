@@ -14,6 +14,7 @@ const HOLIDAY_DATE_CACHE = new WeakMap<RuleResolver, Map<string, ReadonlySet<str
 export interface PremiumMinuteInterval {
   readonly from: number;
   readonly until: number;
+  readonly onCount?: (ruleId: string, epochMinute: number) => void;
 }
 interface PremiumMinuteBuckets {
   readonly byRuleId: Map<string, number>;
@@ -139,6 +140,8 @@ function countPremiumMinute(
   shift: ShiftEntry,
   profile: UserProfile,
   rulePackage: RuleTariffPackage,
+  epochMinute: number,
+  onCount: PremiumMinuteInterval["onCount"],
 ): void {
   const candidates = rulePackage.rules.premiumRules.filter(
     (rule) =>
@@ -148,6 +151,7 @@ function countPremiumMinute(
   );
   for (const rule of applyCombinationRules(candidates, rulePackage)) {
     buckets.byRuleId.set(rule.id, (buckets.byRuleId.get(rule.id) ?? 0) + 1);
+    onCount?.(rule.id, epochMinute);
   }
 }
 
@@ -198,6 +202,8 @@ export function countPremiumMinutes(
         shift,
         profile,
         rulePackage,
+        Number(start.epochMilliseconds) / 60000 + index,
+        interval.onCount,
       );
     }
     return buckets;
@@ -236,6 +242,8 @@ export function countPremiumMinutes(
       shift,
       profile,
       rulePackage,
+      Number(start.epochMilliseconds) / 60000 + index,
+      interval.onCount,
     );
   }
   return buckets;

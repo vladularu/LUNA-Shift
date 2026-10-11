@@ -133,6 +133,7 @@ describe("local backup", () => {
 
   it("creates deterministic versioned JSON with a checksum over the unsigned document", async () => {
     const snapshot: LocalBackupSnapshot = {
+      netPayProfiles: [],
       databaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       profile: null,
       remunerationProfiles: [],
@@ -213,6 +214,7 @@ describe("local backup", () => {
 
   it("rejects a malformed checksum", async () => {
     const emptySnapshot: LocalBackupSnapshot = {
+      netPayProfiles: [],
       databaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       profile: null,
       remunerationProfiles: [],

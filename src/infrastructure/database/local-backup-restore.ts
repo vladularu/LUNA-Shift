@@ -1,3 +1,4 @@
+import { NET_PAY_PROFILE_COLUMNS } from "./net-pay-profile-repository";
 import { DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS } from "./drk-training-month-confirmation-repository";
 import { DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS } from "./drk-employee-month-confirmation-repository";
 import { TVOED_ANNEX_A_PREMIUM_FACTS_COLUMNS } from "./tvoed-annex-a-premium-facts-repository";
@@ -74,6 +75,7 @@ export async function restoreLocalBackup(
     }
 
     await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
+    await transaction.runAsync("DELETE FROM net_pay_profiles");
     await transaction.runAsync("DELETE FROM tvl_shift_work");
     await transaction.runAsync("DELETE FROM caritas_work_days");
     await transaction.runAsync("DELETE FROM caritas_month_facts");
@@ -106,6 +108,12 @@ export async function restoreLocalBackup(
     if (document.data.profile !== null) {
       await insertRows(transaction, "user_profile", PROFILE_COLUMNS, [document.data.profile]);
     }
+    await insertRows(
+      transaction,
+      "net_pay_profiles",
+      NET_PAY_PROFILE_COLUMNS,
+      document.data.netPayProfiles,
+    );
     if (document.version === 1) await initializeLegacyRemunerationProfile(transaction);
     else
       await insertRows(

@@ -1,3 +1,4 @@
+import { NET_PAY_PROFILE_COLUMNS, mapNetPayProfileRow } from "./net-pay-profile-repository";
 import {
   DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS,
   mapDrkTrainingMonthConfirmationRow,
@@ -33,13 +34,14 @@ import { withImmediateTransaction } from "@/infrastructure/database/transaction"
 import { REMUNERATION_PROFILE_COLUMNS } from "./remuneration-profile-repository";
 
 export const LOCAL_BACKUP_FORMAT = "lunashift-local-backup";
-export const LOCAL_BACKUP_VERSION = 19;
+export const LOCAL_BACKUP_VERSION = 20;
 
 type BackupScalar = string | number | null;
 type BackupRow = Readonly<Record<string, BackupScalar>>;
 
 export interface LocalBackupSnapshot {
   readonly databaseSchemaVersion: number;
+  readonly netPayProfiles: readonly BackupRow[];
   readonly profile: BackupRow | null;
   readonly remunerationProfiles: readonly BackupRow[];
   readonly allowanceDecisions: readonly BackupRow[];
@@ -87,11 +89,13 @@ interface UnsignedLocalBackupDocument {
     | 16
     | 17
     | 18
+    | 19
     | typeof LOCAL_BACKUP_VERSION;
   readonly createdAt: string;
   readonly appVersion: string | null;
   readonly databaseSchemaVersion: number;
   readonly data: {
+    readonly netPayProfiles: readonly BackupRow[];
     readonly profile: BackupRow | null;
     readonly remunerationProfiles: readonly BackupRow[];
     readonly allowanceDecisions: readonly BackupRow[];
@@ -167,6 +171,12 @@ export async function loadLocalBackupSnapshot(db: SQLiteDatabase): Promise<Local
          FROM user_profile
         WHERE id='singleton'`,
     );
+    const netPayProfiles = await transaction.getAllAsync<BackupRow>(
+      `SELECT ${NET_PAY_PROFILE_COLUMNS.join(",")} FROM net_pay_profiles ORDER BY month`,
+    );
+    netPayProfiles.forEach(mapNetPayProfileRow);
+    if (profile === null && netPayProfiles.length > 0)
+      throw new Error("Das Arbeitsprofil für gespeicherte Netto-Angaben fehlt.");
     const remunerationProfiles = await transaction.getAllAsync<BackupRow>(
       "SELECT " +
         REMUNERATION_PROFILE_COLUMNS.join(",") +
@@ -276,6 +286,7 @@ export async function loadLocalBackupSnapshot(db: SQLiteDatabase): Promise<Local
 
     return Object.freeze({
       databaseSchemaVersion: schema.version,
+      netPayProfiles: Object.freeze(netPayProfiles.map(Object.freeze)),
       profile: profile === null ? null : Object.freeze(profile),
       remunerationProfiles: Object.freeze(remunerationProfiles.map(Object.freeze)),
       allowanceDecisions: Object.freeze(allowanceDecisions.map(Object.freeze)),
@@ -320,6 +331,7 @@ export async function createLocalBackupDocument(
     readonly sha256: (value: string) => Promise<string>;
   },
 ): Promise<CreatedLocalBackup> {
+  snapshot.netPayProfiles.forEach(mapNetPayProfileRow);
   const createdAt = input.createdAt.toISOString();
   const unsigned: UnsignedLocalBackupDocument = Object.freeze({
     format: LOCAL_BACKUP_FORMAT,
@@ -328,6 +340,7 @@ export async function createLocalBackupDocument(
     appVersion: input.appVersion,
     databaseSchemaVersion: snapshot.databaseSchemaVersion,
     data: Object.freeze({
+      netPayProfiles: snapshot.netPayProfiles,
       profile: snapshot.profile,
       remunerationProfiles: snapshot.remunerationProfiles,
       allowanceDecisions: snapshot.allowanceDecisions,

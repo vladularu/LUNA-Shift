@@ -3,9 +3,10 @@ export function rewindRemunerationMigrations(
   database: { exec(sql: string): unknown },
   firstVersion: number,
 ): void {
-  if (!Number.isInteger(firstVersion) || firstVersion < 14 || firstVersion > 31)
+  if (!Number.isInteger(firstVersion) || firstVersion < 14 || firstVersion > 32)
     throw new Error("Unsupported remuneration fixture migration.");
   const tables = [
+    [32, "net_pay_profiles"],
     [31, "drk_training_month_confirmations"],
     [30, "drk_employee_month_confirmations"],
     [29, "tvoed_annex_a_premium_facts"],

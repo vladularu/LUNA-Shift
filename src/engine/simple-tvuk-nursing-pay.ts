@@ -15,6 +15,7 @@ import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
+import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
 import sourceTables from "./simple-tvuk-nursing-tables.json";
 
 export const TVUK_FULL_TIME_MINUTES = 2310;
@@ -97,6 +98,7 @@ export function calculateTvUkNursingShift(
   selection: TvUkNursingTariff,
   options: TvUkCalculationOptions,
   resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
 ): TvUkShiftBreakdown {
   requireOptions(options);
   const empty: TvUkShiftBreakdown = {
@@ -114,6 +116,9 @@ export function calculateTvUkNursingShift(
   if (!bounds) return empty;
   const pause = Math.min(shift.breakMinutes, bounds.grossMinutes);
   const pauseFrom = Math.floor((bounds.grossMinutes - pause) / 2);
+  const trace = capturePayrollTrace
+    ? new NetPayPremiumTrace(shift.id, bounds.startEpochMinutes, bounds.grossMinutes, pause)
+    : null;
   const start = Temporal.Instant.fromEpochMilliseconds(
     bounds.startEpochMinutes * 60000,
   ).toZonedDateTimeISO(work.timeZone);
@@ -168,11 +173,12 @@ export function calculateTvUkNursingShift(
     if (holidays.status !== "AVAILABLE") throw new RuleResolutionError(holidays.failure);
     const transition =
       sectionStart.offsetNanoseconds !== start.add({ minutes: until - 1 }).offsetNanoseconds;
-    const count = (key: string, label: string, percentage: number) => {
+    const count = (key: string, label: string, percentage: number, offset: number) => {
       const id = JSON.stringify([key, percentage, ctx.hourlyCents]);
       const previous = buckets.get(id);
       if (previous) previous.minutes++;
       else buckets.set(id, { key, label, percentage, hourly: ctx.hourlyCents, minutes: 1 });
+      trace?.add(id, bounds.startEpochMinutes + offset);
     };
     for (let offset = from; offset < until; offset++) {
       const cursor = transition ? start.add({ minutes: offset }) : null;
@@ -188,28 +194,32 @@ export function calculateTvUkNursingShift(
       if (isNight(minute)) {
         nightMinutes++;
         // Basic 25% minus compulsory 5% time credit; extra 10/15% is cash.
-        count("night", "Nacht", minute < 240 ? coreNightCashRate : 2000);
-      } else if (options.regularShiftWork) count("shift", "Schichtdienst (6–20 Uhr)", 280);
+        count("night", "Nacht", minute < 240 ? coreNightCashRate : 2000, offset);
+      } else if (options.regularShiftWork) count("shift", "Schichtdienst (6–20 Uhr)", 280, offset);
       // §11(1)c/d/e: one calendar premium, choosing the greatest applicable rate.
-      if (sectionStart.dayOfWeek === 7) count("sunday", "Sonntag", sundayRate);
-      else if (holidays.holidays.has(date)) count("holiday", "Feiertag", 2500);
+      if (sectionStart.dayOfWeek === 7) count("sunday", "Sonntag", sundayRate, offset);
+      else if (holidays.holidays.has(date)) count("holiday", "Feiertag", 2500, offset);
       else if (date.slice(5) === "12-24" || date.slice(5) === "12-31")
-        count("preholiday", "24./31. Dezember", 2500);
+        count("preholiday", "24./31. Dezember", 2500, offset);
       if (remaining <= confirmedMinutes)
         overtime.set(ctx.hourlyCents, (overtime.get(ctx.hourlyCents) ?? 0) + 1);
       remaining--;
     }
     from = until;
   }
-  const premiumLines: PremiumLine[] = [...buckets.values()].map((b) => ({
-    key: b.key,
-    label: b.label,
-    ruleId: "tvuk-" + b.key + "-" + b.percentage,
-    minutes: b.minutes,
-    percentage: b.percentage / 100,
-    hourlyRate: b.hourly / 100,
-    amount: roundRemunerationCents(b.hourly * b.percentage * b.minutes, 600000) / 100,
-  }));
+  const premiumLines: PremiumLine[] = [...buckets].map(([id, b]) => {
+    const amount = roundRemunerationCents(b.hourly * b.percentage * b.minutes, 600000);
+    trace?.pay(id, premiumKind(b.key), amount, premiumCategory(b.key));
+    return {
+      key: b.key,
+      label: b.label,
+      ruleId: "tvuk-" + b.key + "-" + b.percentage,
+      minutes: b.minutes,
+      percentage: b.percentage / 100,
+      hourlyRate: b.hourly / 100,
+      amount: amount / 100,
+    };
+  });
   const overtimeBaseAmount =
     [...overtime].reduce(
       (sum, [rate, minutes]) => sum + roundRemunerationCents(rate * minutes, 60),
@@ -232,6 +242,7 @@ export function calculateTvUkNursingShift(
         overtimePremiumAmount,
     ),
     nightCompensatoryMinutes: nightMinutes / 20,
+    ...(trace ? { payrollTrace: trace.finish() } : {}),
   };
 }
 

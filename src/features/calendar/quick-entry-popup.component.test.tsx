@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -195,13 +195,13 @@ describe("QuickEntryPopup", () => {
       "pointerEvents",
       "none",
     );
-    // Expo's default Reanimated test runtime completes immediately; deferred completion is tested in the hook.
-    expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("quick-entry-popup", { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByTestId("quick-entry-overlay", { includeHiddenElements: true })).toHaveProp(
       "accessibilityElementsHidden",
       true,
     );
+    // The overlay releases touches immediately; runOnJS completes the animation callback separately.
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
   it("hides a retained iOS popup while another editing screen is focused", async () => {
     const props = {

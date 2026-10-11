@@ -77,6 +77,7 @@ interface MutableBackup {
 async function resign(serialized: string, edit: (root: MutableBackup) => void) {
   const root = JSON.parse(serialized) as MutableBackup;
   edit(root);
+  if (root.version < 20) delete root.data.netPayProfiles;
   if (root.version < 17) delete root.data.tvoedAnnexAPremiumFacts;
   if (root.version < 18) delete root.data.drkEmployeeMonthConfirmations;
   if (root.version < 19) delete root.data.drkTrainingMonthConfirmations;

@@ -1,12 +1,13 @@
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Platform } from "react-native";
+import { Platform, Text } from "react-native";
 import { State } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { getAnimatedStyle } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { DropdownField } from "@/ui/form-controls";
+import { SelectionSheet } from "@/ui/selection-sheet";
 
 const originalOS = Platform.OS;
 const metrics = {
@@ -76,6 +77,40 @@ describe("shared dismissible selection sheet", () => {
       "accessibilityState",
       { expanded: false },
     );
+  });
+
+  it("blocks every dismissal path while a form is saving and unlocks afterwards", async () => {
+    const onClose = jest.fn<() => void>();
+    const formSheet = (disabled: boolean) => (
+      <SafeAreaProvider initialMetrics={metrics}>
+        <SelectionSheet
+          title="Meine Netto-Angaben"
+          visible
+          disabled={disabled}
+          cancelLabel="Schließen"
+          keyboardAware
+          closeInHeader
+          onClose={onClose}
+        >
+          {() => <Text>Persönliche Angaben</Text>}
+        </SelectionSheet>
+      </SafeAreaProvider>
+    );
+    const screen = await render(formSheet(true));
+    expect(screen.getAllByRole("button", { name: "Schließen" })).toHaveLength(1);
+    expect(screen.getByTestId("selection-sheet-header-close")).toBeTruthy();
+    await fireEvent(screen.getByTestId("dropdown-modal-content"), "show");
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await fireEvent.press(
+      screen.getByTestId("selection-sheet-backdrop", { includeHiddenElements: true }),
+    );
+    await fireEvent(screen.getByTestId("dropdown-modal-content"), "requestClose");
+    await fireEvent(screen.getByTestId("dropdown-modal-content"), "accessibilityEscape");
+    await drag("header", 120);
+    expect(onClose).not.toHaveBeenCalled();
+    await screen.rerender(formSheet(false));
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it.each([

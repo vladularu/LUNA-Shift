@@ -461,6 +461,7 @@ export interface PremiumLine {
 }
 
 export interface ShiftPremiumBreakdown {
+  readonly payrollTrace?: import("./net-pay-sfn").SfnShift;
   readonly shiftId: string;
   readonly date: string;
   readonly netMinutes: number;

@@ -6,6 +6,7 @@ import { resolveHolidayMapForMonth } from "./holidays";
 import { roundRemunerationCents } from "./remuneration-money";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
+import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
 
 export interface TvlFamilyPremiumPolicy {
   readonly nightWindow: RuleTimeWindow;
@@ -27,6 +28,7 @@ export interface TvlFamilyShiftContext {
   readonly policy: TvlFamilyPremiumPolicy;
 }
 interface TvlFamilyShiftConfig {
+  readonly capturePayrollTrace?: boolean;
   readonly packageId: string;
   readonly rulePrefix: string;
   readonly failureMessage: string;
@@ -73,6 +75,9 @@ export function calculateTvlFamilyShift(
   if (!bounds) return empty;
   const pause = Math.min(shift.breakMinutes, bounds.grossMinutes);
   const pauseFrom = Math.floor((bounds.grossMinutes - pause) / 2);
+  const trace = config.capturePayrollTrace
+    ? new NetPayPremiumTrace(shift.id, bounds.startEpochMinutes, bounds.grossMinutes, pause)
+    : null;
   const start = Temporal.Instant.fromEpochMilliseconds(
     bounds.startEpochMinutes * 60000,
   ).toZonedDateTimeISO(work.timeZone);
@@ -122,7 +127,7 @@ export function calculateTvlFamilyShift(
       hourlyCents: ctx.premiumHourlyCents,
       percentageBasisPoints: basisPoints,
     });
-    const count = (candidate: PremiumCandidate) => {
+    const count = (candidate: PremiumCandidate, offset: number) => {
       const key = JSON.stringify([
         candidate.key,
         candidate.hourlyCents,
@@ -131,6 +136,7 @@ export function calculateTvlFamilyShift(
       const previous = buckets.get(key);
       if (previous) previous.minutes++;
       else buckets.set(key, { candidate, minutes: 1 });
+      trace?.add(key, bounds.startEpochMinutes + offset);
     };
     for (let offset = from; offset < until; offset++) {
       if (offset >= pauseFrom && offset < pauseFrom + pause) continue;
@@ -139,7 +145,7 @@ export function calculateTvlFamilyShift(
         ? cursor.hour * 60 + cursor.minute
         : sectionStart.hour * 60 + sectionStart.minute + offset - from;
       if (inWindow(minute, ctx.policy.nightWindow))
-        count(percentage("night", "Nacht", ctx.policy.nightBasisPoints));
+        count(percentage("night", "Nacht", ctx.policy.nightBasisPoints), offset);
       const competing: PremiumCandidate[] = [];
       if (sectionStart.dayOfWeek === 7)
         competing.push(percentage("sunday", "Sonntag", ctx.policy.sundayBasisPoints));
@@ -183,7 +189,7 @@ export function calculateTvlFamilyShift(
             : best,
         null,
       );
-      if (winner) count(winner);
+      if (winner) count(winner, offset);
       if (remainingWork <= confirmedMinutes) {
         const key = JSON.stringify([
           ctx.overtimeHourlyCents,
@@ -205,7 +211,7 @@ export function calculateTvlFamilyShift(
     from = until;
   }
   const lines = new Map<string, PremiumLine>();
-  for (const { candidate, minutes } of buckets.values()) {
+  for (const [bucketKey, { candidate, minutes }] of buckets) {
     const amount =
       roundRemunerationCents(
         config.roundHourlyPremium
@@ -214,6 +220,12 @@ export function calculateTvlFamilyShift(
           : candidate.hourlyCents * candidate.percentageBasisPoints * minutes,
         config.roundHourlyPremium ? 60 : 600000,
       ) / 100;
+    trace?.pay(
+      bucketKey,
+      premiumKind(candidate.key),
+      Math.round(amount * 100),
+      premiumCategory(candidate.key),
+    );
     const previous = lines.get(candidate.key);
     const totalMinutes = (previous?.minutes ?? 0) + minutes;
     lines.set(candidate.key, {
@@ -251,6 +263,7 @@ export function calculateTvlFamilyShift(
   const premiumLines = [...lines.values()];
   return {
     ...empty,
+    ...(trace ? { payrollTrace: trace.finish() } : {}),
     netMinutes: bounds.netMinutes,
     premiumLines,
     overtimeBaseAmount,
