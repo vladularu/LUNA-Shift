@@ -51,6 +51,22 @@ const report: ReportDocument = {
       unit: "",
     },
   ],
+  entries: [
+    {
+      date: "2026-08-03",
+      title: "Früh",
+      kind: "SHIFT",
+      typeLabel: "Früh",
+      color: "#338544",
+      allDay: false,
+      startTime: "06:00",
+      endTime: "14:00",
+      nextDay: false,
+      breakMinutes: 30,
+      durationMinutes: 450,
+      creditMinutes: 0,
+    },
+  ],
 };
 describe("lokaler Berichtsexport", () => {
   beforeEach(() => {
@@ -73,9 +89,7 @@ describe("lokaler Berichtsexport", () => {
       return { action: Share.sharedAction };
     });
     const exportPromise = shareReport(report, "CSV");
-    expect(mockFiles.get("file:///cache/LUNA-Shift-Bericht-2026-08-uuid.csv")).toContain(
-      "Übergabe",
-    );
+    expect(mockFiles.get("file:///cache/LUNA-Shift-Bericht-2026-08-uuid.csv")).toContain("Früh");
     expect(Share.share).toHaveBeenCalledWith(
       { url: "file:///cache/LUNA-Shift-Bericht-2026-08-uuid.csv" },
       { subject: "LUNA Shift Bericht 2026-08" },
@@ -113,6 +127,15 @@ describe("lokaler Berichtsexport", () => {
   it("entfernt das PDF, wenn Teilen fehlschlägt", async () => {
     jest.spyOn(Share, "share").mockRejectedValue(new Error("share"));
     await expect(shareReport(report, "PDF")).rejects.toThrow("share");
+    expect(mockFiles.size).toBe(0);
+  });
+  it("teilt kein PDF außerhalb des bestätigten Seitenlimits und räumt es auf", async () => {
+    mockPrint.mockImplementation(async () => {
+      mockFiles.set("file:///cache/printed.pdf", "PDF");
+      return { uri: "file:///cache/printed.pdf", numberOfPages: 4 };
+    });
+    await expect(shareReport(report, "PDF")).rejects.toThrow("Seitenumfang");
+    expect(Share.share).not.toHaveBeenCalled();
     expect(mockFiles.size).toBe(0);
   });
   it("beendet Fehler des PDF-Moduls ohne leere Dateien zu teilen", async () => {

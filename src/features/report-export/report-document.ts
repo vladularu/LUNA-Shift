@@ -13,7 +13,33 @@ export interface ReportDocument {
   readonly period: string;
   readonly createdAt: string;
   readonly rows: readonly ReportRow[];
+  readonly entries?: readonly ReportEntry[];
 }
+
+export interface ReportEntry {
+  readonly date: string;
+  readonly title: string;
+  readonly kind: "SHIFT" | "APPOINTMENT";
+  readonly typeLabel: string;
+  readonly color: string;
+  readonly allDay: boolean;
+  readonly startTime: string | null;
+  readonly endTime: string | null;
+  readonly nextDay: boolean;
+  readonly breakMinutes: number | null;
+  readonly durationMinutes: number | null;
+  readonly creditMinutes: number | null;
+}
+
+export interface ReportOptions {
+  readonly layout: "standard" | "compact";
+  readonly includeSalary: boolean;
+}
+
+export const DEFAULT_REPORT_OPTIONS: ReportOptions = {
+  layout: "standard",
+  includeSalary: true,
+};
 
 const LABELS: Readonly<Record<string, string>> = {
   netCents: "Netto-Prognose",
