@@ -1,7 +1,7 @@
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Notifications from "expo-notifications";
-import { Linking } from "react-native";
+import { Linking, Platform } from "react-native";
 import { State } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -234,6 +234,39 @@ describe("ShiftEditOverlay", () => {
     await waitFor(() => expect(props.onDismiss).toHaveBeenCalledTimes(1));
   });
 
+  it("closes the pause selector on a second tap without closing or saving the editor", async () => {
+    const { screen, props } = await renderOverlay({ note: "Noch nicht gespeichert" });
+    const pause = screen.getByRole("button", { name: "Pause: 0 Minuten" });
+
+    await fireEvent.press(pause);
+    expect(screen.getByTestId("shift-edit-pause-popover")).toBeTruthy();
+    await fireEvent.press(pause);
+
+    expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
+    expect(screen.getByText("Noch nicht gespeichert")).toBeTruthy();
+    expect(props.onBreakMinutesChange).not.toHaveBeenCalled();
+    expect(props.onRequestClose).not.toHaveBeenCalled();
+    expect(props.onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("uses the parent pause and notification pickers on Android instead of opening iOS selectors", async () => {
+    const platformDescriptor = Object.getOwnPropertyDescriptor(Platform, "OS")!;
+    Object.defineProperty(Platform, "OS", { configurable: true, value: "android" });
+    try {
+      const { screen, props } = await renderOverlay();
+      await fireEvent.press(screen.getByRole("button", { name: "Pause: 0 Minuten" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+
+      expect(props.onBreakPress).toHaveBeenCalledTimes(1);
+      expect(props.onNotificationPress).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
+      expect(screen.queryByTestId("shift-notification-presets")).toBeNull();
+      expect(props.onRequestClose).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, "OS", platformDescriptor);
+    }
+  });
+
   it("hides deletion while entering a new shift", async () => {
     const { screen } = await renderOverlay({ onDelete: undefined });
 
@@ -297,6 +330,29 @@ describe("ShiftEditOverlay", () => {
 
     await fireEvent.press(settingsButton);
     expect(openSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the reminder editable and closes normally when native permission lookups fail", async () => {
+    jest
+      .mocked(Notifications.getPermissionsAsync)
+      .mockRejectedValue(new Error("Native bridge unavailable"));
+    const { screen, props } = await renderOverlay();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await waitFor(() => expect(Notifications.getPermissionsAsync).toHaveBeenCalledTimes(1));
+    await fireEvent.press(screen.getByRole("radio", { name: "5 Minuten vor Beginn" }));
+
+    expect(props.onNotificationChange).toHaveBeenCalledWith({
+      amount: 5,
+      unit: "MINUTE",
+      direction: "BEFORE",
+      reference: "START",
+    });
+    await waitFor(() => expect(screen.queryByTestId("shift-notification-presets")).toBeNull());
+    expect(Notifications.getPermissionsAsync).toHaveBeenCalledTimes(2);
+    expect(Notifications.requestPermissionsAsync).not.toHaveBeenCalled();
+    expect(props.onRequestClose).not.toHaveBeenCalled();
+    expect(props.onDismiss).not.toHaveBeenCalled();
   });
 
   it("requests an undecided iOS permission after choosing a reminder", async () => {

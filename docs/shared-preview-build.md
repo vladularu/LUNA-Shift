@@ -54,10 +54,16 @@ Expo-Referenzen:
 
 ## Abnahmestand
 
-Integration abgeschlossen. Das schnelle Gate besteht: 8.413 Unit-Tests,
+Integration abgeschlossen. Das erste schnelle Gate bestand: 8.413 Unit-Tests,
 977 Komponententests in 123 Suites sowie die zusätzlichen Regel-, Runtime- und
 Worklet-Prüfungen. Die fokussierten integrierten Ansichten bestehen mit 95 Tests.
-Der vollständige Release-Check läuft; die gemeinsame iPhone-Abnahme steht aus.
+Nachweise zur vollständigen Release-Prüfung und zur gemeinsamen iPhone-Abnahme
+werden im Pull Request protokolliert.
+
+Drei ergänzende Editor-Regressionstests prüfen das erneute Antippen der
+Pausenauswahl, die Picker außerhalb von iOS und fehlgeschlagene native
+Berechtigungsabfragen. Die fokussierte Coverage-Prüfung der zwei betroffenen
+Komponenten besteht mit den unveränderten Grenzwerten.
 
 Die ursprünglichen Arbeitsstände wurden anhand ihrer HEADs und SHA-256-Prüfsummen
 verglichen und blieben unverändert. Der bestehende Netto-Rechenkern und die
