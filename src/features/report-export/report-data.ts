@@ -12,6 +12,7 @@ import { buildAnnualAvailableReportSteps } from "@/features/analysis/annual-core
 import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
 import { RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { appendReportData, type ReportDocument, type ReportRow } from "./report-document";
+import { reportEntries } from "./report-entry-data";
 
 export interface ReportInput {
   readonly period: string;
@@ -44,6 +45,7 @@ function reportMonths(period: string): readonly string[] {
 export function* buildReportSteps(input: ReportInput): Generator<void, ReportDocument, void> {
   const months = reportMonths(input.period);
   const rows: ReportRow[] = [];
+  const readableEntries: NonNullable<ReportDocument["entries"]>[number][] = [];
   let availableNetMonthCount = 0;
   let annualNetCents = 0;
   const add = (section: string, period: string, record: string, data: unknown) =>
@@ -214,6 +216,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       );
     if (entries.length === 0)
       add("Kalendereinträge", month, "Tagesliste", { status: "Keine Einträge" });
+    readableEntries.push(...reportEntries(entries, input.profile, input.ruleResolver));
     for (const entry of entries) {
       add(
         entry.kind === "SHIFT" ? "Dienste und Abwesenheiten" : "Termine",
@@ -230,5 +233,5 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       availableNetMonthCount,
       reason: `Netto-Prognose für ${availableNetMonthCount} von 12 Monaten verfügbar; die Summe umfasst ausschließlich diese Monate.`,
     });
-  return { period: input.period, createdAt: input.createdAt, rows };
+  return { period: input.period, createdAt: input.createdAt, rows, entries: readableEntries };
 }

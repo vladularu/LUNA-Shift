@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, ShiftEntry, UserProfile } from "@/domain/types";
 import { bundledRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { buildReportSteps, type ReportInput } from "./report-data";
-import { appendReportData, type ReportDocument, type ReportRow } from "./report-document";
+import {
+  appendReportData,
+  type ReportDocument,
+  type ReportEntry,
+  type ReportRow,
+} from "./report-document";
+import { reportEntries } from "./report-entry-data";
 import { reportToCsv, reportToHtml } from "./report-formats";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -136,9 +142,9 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
       String(expected.result.pay.tax.wageTaxCents / 100).replace(".", ","),
     );
     expect(value(report, "Netto-Grundlagen", "settings.profile.taxClass", period)).toBe("1");
-    expect(reportToCsv(report)).toContain('"Netto-Prognose"');
-    expect(reportToHtml(report)).toContain("Netto-Prognose");
-    expect(reportToHtml(report)).toContain("Lohnsteuer");
+    expect(reportToCsv(report)).not.toContain('"Netto-Prognose"');
+    expect(reportToHtml(report)).toContain("Netto geschätzt");
+    expect(reportToHtml(report)).toContain("Steuern");
   });
   it("verwendet eine neue datierte Netto-Konfiguration erst ab ihrem Gültigkeitsmonat", () => {
     const first = automatedSettings("2026-01");
@@ -342,32 +348,56 @@ describe("PDF und CSV aus demselben Datenbestand", () => {
     special: "=HYPERLINK(1)",
     blank: null,
   });
-  const report: ReportDocument = { period: "2026-08", createdAt: "2026-08-15", rows };
+  const entry: ReportEntry = {
+    date: "2026-08-03",
+    title: 'Übung; "Team"\nZeile 2',
+    kind: "APPOINTMENT",
+    typeLabel: "Termin",
+    color: "#123456",
+    allDay: false,
+    startTime: "08:00",
+    endTime: "16:00",
+    nextDay: false,
+    breakMinutes: null,
+    durationMinutes: 480,
+    creditMinutes: null,
+  };
+  const report: ReportDocument = {
+    period: "2026-08",
+    createdAt: "2026-08-15",
+    rows,
+    entries: [entry],
+  };
   it("nutzt BOM, Semikolon, CRLF, deutsche Zahlen und korrektes Quoting", () => {
     const csv = reportToCsv(report);
     expect(csv.startsWith("\uFEFF")).toBe(true);
     expect(csv).toContain('"Übung; ""Team""\nZeile 2"');
-    expect(csv).toContain('"12,5";"EUR"');
-    expect(csv).toContain('"-30";"Minuten"');
+    expect(csv).toContain('"8,00"');
     expect(csv).toContain("\r\n");
-    expect(csv).toContain("Nicht hinterlegt");
+    expect(csv).not.toContain("Nicht hinterlegt");
+    expect(csv).not.toContain("Schlüssel");
   });
   it.each(["=1+1", "+SUM(1)", "@SUM(1)", "-cmd", "\t=1", "\r@SUM(1)"])(
     "neutralisiert Excel-Formeln %s",
     (text) => {
       const dangerous: ReportRow[] = [];
       appendReportData(dangerous, text, "2026-08", text, { note: text });
-      expect(reportToCsv({ ...report, rows: dangerous })).toContain(`"'${text}"`);
+      expect(
+        reportToCsv({ ...report, rows: dangerous, entries: [{ ...entry, title: text }] }),
+      ).toContain(`"'${text}"`);
     },
   );
   it("escaped sämtliche Nutzereingaben im offlinefähigen PDF-HTML", () => {
-    const output = reportToHtml(report);
+    const output = reportToHtml({
+      ...report,
+      entries: [{ ...entry, title: '<script>alert("x")</script>' }, entry],
+    });
     expect(output).toContain("&lt;script&gt;");
     expect(output).not.toContain("<script>");
     expect(output).toContain("Übung; &quot;Team&quot;");
-    expect(output).toContain("12,5");
-    expect(output).toContain("Nicht hinterlegt");
-    expect(output).toContain("keine Lohnabrechnung");
+    expect(output).not.toContain("Schlüssel");
+    expect(output).toContain("Nicht verfügbar");
+    expect(output).toContain("Keine Lohnabrechnung");
     expect(output).toContain("table-header-group");
     expect(output).not.toContain("https://");
   });
@@ -388,6 +418,85 @@ describe("PDF und CSV aus demselben Datenbestand", () => {
   });
 });
 describe("Grenzen und Vollständigkeit", () => {
+  it("grenzt Standard, Kompakt und Gehalt ab, ohne technische oder abgeschaltete Daten auszugeben", () => {
+    const report = build();
+    const standard = reportToHtml(report);
+    const compact = reportToHtml(report, { layout: "compact", includeSalary: true });
+    const privateReport = reportToHtml(report, { layout: "standard", includeSalary: false });
+    expect(standard.match(/<article /g)).toHaveLength(2);
+    expect(compact.match(/<article /g)).toHaveLength(1);
+    expect(compact).toContain("Dein Monatsplan");
+    expect(privateReport).not.toContain("Gehaltsprognose");
+    expect(privateReport).not.toContain("5.000,00");
+    expect(privateReport).not.toContain("Grundgehalt");
+    expect(standard).not.toContain("createdAt");
+    expect(standard).not.toContain("shiftBreakdowns");
+    expect(standard).not.toContain("Übergabe; Zimmer 2");
+  });
+  it("exportiert eine CSV-Zeile pro Eintrag und trennt Urlaubsgutschriften von Dienstzeiten", () => {
+    const report = build({
+      entries: [
+        shift("work", "2026-08-03"),
+        shift("vacation", "2026-08-05", {
+          type: "VACATION",
+          startTime: null,
+          endTime: null,
+          breakMinutes: 0,
+        }),
+      ],
+    });
+    const csv = reportToCsv(report);
+    expect(csv.trim().split("\r\n")).toHaveLength(3);
+    expect(report.entries?.find((entry) => entry.date === "2026-08-05")?.creditMinutes).toBe(462);
+    expect(csv).toContain('"7,50";""');
+    expect(csv).toContain('"";"7,70"');
+    expect(csv).not.toContain("Netto");
+    expect(csv).not.toContain('"revision"');
+  });
+  it("verwendet die echte Zeitumstellung und kennzeichnet das Ende am Folgetag", () => {
+    const entries = reportEntries(
+      [shift("night", "2026-10-24", { type: "NIGHT", startTime: "22:00", endTime: "06:00" })],
+      profile,
+      bundledRuleResolver,
+    );
+    expect(entries[0].durationMinutes).toBe(510);
+    expect(entries[0].nextDay).toBe(true);
+    expect(
+      reportToCsv({ period: "2026-10", createdAt: "2026-10-12", rows: [], entries }),
+    ).toContain('"Ja";"30";"8,50"');
+  });
+  it("vergibt die Tagesgutschrift bei mehrfachen Abwesenheiten nur einmal", () => {
+    const entries = reportEntries(
+      [
+        shift("vacation", "2026-08-05", { type: "VACATION", startTime: null, endTime: null }),
+        shift("sick", "2026-08-05", { type: "SICK", startTime: null, endTime: null }),
+        shift("sick2", "2026-08-05", { type: "SICK", startTime: null, endTime: null }),
+      ],
+      profile,
+      bundledRuleResolver,
+    );
+    expect(entries.map((entry) => entry.creditMinutes)).toEqual([0, 462, 0]);
+  });
+  it("begrenzt volle Monate auf drei PDF-Seiten und erhält alle CSV-Einträge", () => {
+    const report = build();
+    const first = report.entries![0];
+    const sixty = { ...report, entries: Array.from({ length: 60 }, () => first) };
+    expect(reportToHtml(sixty).match(/<article /g)).toHaveLength(3);
+    const crowded = { ...report, entries: [...sixty.entries, first] };
+    expect(reportToHtml(crowded).match(/<article /g)).toHaveLength(2);
+    expect(reportToHtml(crowded)).toContain("PDF tagesweise verdichtet");
+    expect(reportToCsv(crowded).trim().split("\r\n")).toHaveLength(62);
+  });
+  it("zeigt zwölf Monatszeilen und kennzeichnet nur teilweise verfügbare Jahresprognosen", () => {
+    const report = build({ period: "2026" });
+    const output = reportToHtml(report, { layout: "compact", includeSalary: true });
+    expect(output.match(/<article /g)).toHaveLength(1);
+    expect(output).toContain("Zwölf Monate im Überblick");
+    expect(output).toContain("Brutto: 12/12 Monate verfügbar");
+    expect(output).toContain("Netto: 0/12 Monate verfügbar");
+    expect(output).toContain("Nicht verfügbar");
+    expect(output).not.toContain("Netto-Grundlagen");
+  });
   it("kennzeichnet fehlendes Jahresgehalt und Zulagen statt unbekannte Werte auf null Euro zu setzen", () => {
     const report = build({
       period: "2026",
@@ -416,9 +525,9 @@ describe("Grenzen und Vollständigkeit", () => {
   });
   it("stellt Arbeitszeiten in der PDF-Zusammenfassung als Stunden und Minuten dar", () => {
     const output = reportToHtml(build());
-    expect(output).toContain("<h2>Zusammenfassung</h2>");
+    expect(output).toContain("Erfasste Kontozeit");
     expect(output).toContain("7:30 h");
-    expect(output.indexOf("<h2>Zusammenfassung</h2>")).toBeLessThan(output.indexOf("<h2>Profil"));
+    expect(output).not.toContain("<h2>Profil");
   });
   it("exportiert Zulagenbestätigungen und leere Monate ohne Einträge zu erfinden", () => {
     const report = build({
