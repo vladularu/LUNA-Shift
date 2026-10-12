@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ReportExportButton } from "./report-export-button";
 import type { ReportInput } from "./report-data";
 import type { ReportDocument, ReportOptions } from "./report-document";
+import { ReportExportError } from "./report-export-error";
 
 const mockShare =
   jest.fn<(report: ReportDocument, format: string, options: ReportOptions) => Promise<void>>();
@@ -154,6 +155,19 @@ describe("Exportbedienung", () => {
     );
     expect(screen.getByRole("button")).toBeEnabled();
     expect(JSON.stringify(jest.mocked(Alert.alert).mock.calls)).not.toContain("private path");
+  });
+  it("zeigt die sichere PDF-Fehlerphase statt ausschließlich der allgemeinen Meldung", async () => {
+    mockShare.mockRejectedValue(new ReportExportError("iOS hat keine gültige PDF-Datei erstellt."));
+    const screen = await render(<ReportExportButton period="2026-08" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+    await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
+    await act(async () => {
+      mockSchedule?.();
+    });
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      "Export nicht möglich",
+      "iOS hat keine gültige PDF-Datei erstellt.",
+    );
   });
   it("verhindert ein PDF mit Gehalt wenn die gespeicherten Netto-Angaben nicht lesbar sind", async () => {
     mockLoadNetTimeline.mockRejectedValue(new Error("private database path"));

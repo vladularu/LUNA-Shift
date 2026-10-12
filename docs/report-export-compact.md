@@ -26,3 +26,13 @@ Abnahme:
 - Tests und `verify:fast` müssen bestehen. Zielgerät muss die Auswahl und neu exportierte PDF/CSV bestätigen.
 
 Freigaben: Umsetzung und OTA ausdrücklich erteilt; vorhandene unabhängige Änderungen bleiben unberührt. Geräteabnahme des neuen OTA steht bis zur Nutzerrückmeldung aus.
+
+## Korrektur der iOS-PDF-Ausgabe
+
+Gerätenachweis: Build 34 mit OTA `60e22222-d2b0-4643-a0da-cbdd7eb3f4bd`, Screenshot vom 12.10.2026. Alle PDF-Varianten brechen ab, CSV funktioniert. Die bisherige Geräteabnahme ist damit nicht bestanden.
+
+Scope der Korrektur: ausschließlich iOS-Druckgeometrie, begrenzter erneuter Anpassungsversuch, sichere Fehlermeldungen und Exporttests. Bestehende Berichtsdaten, CSV, Netto-Berechnung und native Abhängigkeiten bleiben erhalten.
+
+Der iOS-WebView-Druckformatter benötigt Pixelmaße innerhalb des nativen Druckrechtecks. Die Browser-Vorschau behält ihre A4-Druckpunkte. Maximal ein erneuter Anpassungsversuch wird erlaubt; auch danach gilt die Seitenbegrenzung. Die tatsächliche iPhone-PDF-Ausgabe muss nach dem Korrektur-OTA erneut bestätigt werden.
+
+Technische Prüfung der Korrektur: `verify:fast` bestanden (8.423 Unit-Tests, 985 Komponententests); danach finaler Exportstand mit 41 Unit- und 19 Komponententests sowie TypeScript, Lint und Formatprüfung geprüft. Zwölf HTML-Szenarien passen im Modell des nativen Druckrechtecks ohne Fußzeilenüberlauf. iOS-Hermes-Export erfolgreich; Fingerprint stimmt mit Build 34 überein. Diese Nachweise ersetzen keinen PDF-Export auf dem Zielgerät.

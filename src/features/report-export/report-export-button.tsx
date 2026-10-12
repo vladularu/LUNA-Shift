@@ -21,6 +21,7 @@ import { buildReportSteps } from "./report-data";
 import { shareReport, type ReportFormat } from "./share-report";
 import { ReportExportOptions } from "./report-export-options";
 import { SelectionSheet } from "@/ui/selection-sheet";
+import { ReportExportError } from "./report-export-error";
 
 export function ReportExportButton({ period }: { readonly period: string }) {
   const palette = usePalette();
@@ -111,11 +112,13 @@ export function ReportExportButton({ period }: { readonly period: string }) {
         };
       });
       if (mounted.current && report) await shareReport(report, format, selectedOptions);
-    } catch {
+    } catch (failure) {
       if (mounted.current)
         Alert.alert(
           "Export nicht möglich",
-          "Der Bericht konnte nicht erstellt oder geteilt werden. Bitte versuche es erneut.",
+          failure instanceof ReportExportError
+            ? failure.userMessage
+            : "Der Bericht konnte nicht erstellt oder geteilt werden. Bitte versuche es erneut.",
         );
     } finally {
       locked.current = false;
