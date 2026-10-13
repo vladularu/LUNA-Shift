@@ -70,6 +70,18 @@ export function calendarChipPalette(backgroundColor: string, dark: boolean) {
   });
 }
 
+/** Muted service-colored text, with small-text contrast against its tinted background. */
+export function sharedCalendarChipPalette(backgroundColor: string, dark: boolean) {
+  const colors = calendarChipPalette(backgroundColor, dark);
+  let weight = 0.7;
+  let text = mixHexColors(backgroundColor, colors.onDetail, weight);
+  while ((colorContrastRatio(text, colors.detail) ?? 0) < 4.5 && weight < 1) {
+    weight = Math.min(1, weight + 0.05);
+    text = mixHexColors(backgroundColor, colors.onDetail, weight);
+  }
+  return { ...colors, onDetail: text };
+}
+
 function formatHex(red: number, green: number, blue: number): string {
   return `#${[red, green, blue]
     .map((channel) => Math.round(channel).toString(16).padStart(2, "0"))

@@ -6,7 +6,7 @@ import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import { CALENDAR_METRICS, CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { calendarChipPalette } from "@/theme/color-contrast";
+import { sharedCalendarChipPalette } from "@/theme/color-contrast";
 import { formatDateTitle } from "@/engine/calendar";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
@@ -26,7 +26,7 @@ export function SharedCalendarDayMark({
   const palette = usePalette();
   const first = entries[0];
   if (!first) return null;
-  const color = calendarChipPalette(first.entry.color, palette.dark);
+  const color = sharedCalendarChipPalette(first.entry.color, palette.dark);
   return (
     <Pressable
       accessibilityRole="button"
@@ -47,7 +47,7 @@ export function SharedCalendarDayMark({
         paddingHorizontal: CALENDAR_METRICS.chipHorizontalInset,
         borderRadius: RADII.small,
         borderCurve: CORNER_CURVE,
-        borderLeftWidth: 3,
+        borderLeftWidth: CALENDAR_METRICS.sharedCalendarStripeWidth,
         borderLeftColor: first.calendarColor,
         backgroundColor: color.detail,
         opacity: pressed ? 0.65 : 1,

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   accessibleChipBackgroundColor,
   calendarChipPalette,
+  sharedCalendarChipPalette,
   chipTextColor,
   colorContrastRatio,
   MINIMUM_TEXT_CONTRAST,
@@ -163,5 +164,28 @@ describe.each([
       expect(contrast).toBeGreaterThan(1);
       expect(contrast).toBeLessThan(1.5);
     }
+  });
+});
+
+describe.each([false, true])("shared service text in dark mode %s", (dark) => {
+  it("tints every preset without reducing small-text contrast", () => {
+    for (const color of [
+      "#FF526D",
+      "#43D86E",
+      "#FFBC41",
+      "#6B67BE",
+      "#00A0C0",
+      "#888888",
+      "#FFFFFF",
+      "#000000",
+    ]) {
+      const chip = sharedCalendarChipPalette(color, dark);
+      expect(chip.main).toBe(color);
+      expect(chip.detail).toBe(calendarChipPalette(color, dark).detail);
+      expect(colorContrastRatio(chip.onDetail, chip.detail)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(sharedCalendarChipPalette("#FF526D", dark).onDetail).not.toBe(
+      sharedCalendarChipPalette("#43D86E", dark).onDetail,
+    );
   });
 });

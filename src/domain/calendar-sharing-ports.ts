@@ -141,6 +141,7 @@ export interface SharingLocalPort {
   cacheSnapshot(accountId: string, snapshot: SharedCalendarSnapshot): Promise<void>;
   removeCalendar(accountId: string, calendarId: string): Promise<void>;
   setVisible(accountId: string, calendarId: string, visible: boolean): Promise<void>;
+  setColor(accountId: string, calendarId: string, color: string): Promise<void>;
   forgetAccount(accountId: string): Promise<void>;
   readEntries(): Promise<readonly CalendarEntry[]>;
   bindCalendar(

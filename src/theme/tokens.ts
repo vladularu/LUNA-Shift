@@ -81,6 +81,7 @@ export const SHADOWS = {
 export const CALENDAR_METRICS = {
   chipRadius: 2,
   chipGap: 1,
+  sharedCalendarStripeWidth: 6,
   chipHorizontalInset: 1,
   chipTextColor: "#FFFFFF",
   horizontalInset: 0,

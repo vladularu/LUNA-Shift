@@ -38,6 +38,7 @@ export function calendarPrototypeLayout(month: string, width: number, height: nu
             {
               date: cell.date,
               day: cell.day,
+              weekend: cell.weekend,
               toX: (((index % 7) + 0.5) * width) / 7,
               toY: 32 + Math.floor(index / 7) * weekHeight + 20,
             },

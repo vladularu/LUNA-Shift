@@ -9,6 +9,7 @@ import {
   updateLabel,
   useSharingAction,
 } from "./sharing-ui-elements";
+import { SharingCalendarColorPicker } from "./sharing-calendar-color-picker";
 import type {
   SharingCalendarView,
   SharingController,
@@ -225,33 +226,49 @@ export function SharingCalendarManagement({
               ))}
           </>
         ) : (
-          <LabeledSwitch
-            label="Im Kalender und Widget anzeigen"
-            value={selected.visible}
-            disabled={action.busy}
-            onValueChange={(value) =>
-              void action.run(() => controller.setVisible(selected.id, value))
-            }
-          />
+          <>
+            <SurfaceCard>
+              <RowButton
+                title="Farbe"
+                trailing={
+                  <SharingCalendarColorPicker
+                    name={selected.name}
+                    value={selected.color}
+                    disabled={action.busy}
+                    onChange={(color) =>
+                      void action.run(() => controller.setColor(selected.id, color))
+                    }
+                  />
+                }
+              />
+            </SurfaceCard>
+            <LabeledSwitch
+              label="Im Kalender und Widget anzeigen"
+              value={selected.visible}
+              disabled={action.busy}
+              onValueChange={(value) =>
+                void action.run(() => controller.setVisible(selected.id, value))
+              }
+            />
+          </>
         )}
-        <SurfaceCard>
-          <RowButton
-            title={selected.isOwner ? "Freigabe beenden" : "Kalender verlassen"}
-            destructive
-            disabled={action.busy}
-            onPress={() =>
-              confirm(
-                selected.isOwner ? "Freigabe für alle beenden?" : "Kalender verlassen?",
-                () =>
-                  void action.run(async () => {
-                    if (selected.isOwner) await controller.deleteCalendar(selected.id);
-                    else await controller.leaveCalendar(selected.id);
-                    setMode("overview");
-                  }),
-              )
-            }
-          />
-        </SurfaceCard>
+        <PrimaryButton
+          danger
+          disabled={action.busy}
+          onPress={() =>
+            confirm(
+              selected.isOwner ? "Freigabe für alle beenden?" : "Kalender verlassen?",
+              () =>
+                void action.run(async () => {
+                  if (selected.isOwner) await controller.deleteCalendar(selected.id);
+                  else await controller.leaveCalendar(selected.id);
+                  setMode("overview");
+                }),
+            )
+          }
+        >
+          {selected.isOwner ? "Freigabe beenden" : "Kalender verlassen"}
+        </PrimaryButton>
         {back}
       </>
     );

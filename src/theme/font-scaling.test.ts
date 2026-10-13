@@ -19,6 +19,8 @@ const TEXT_SHRINK_ALLOWLIST = new Set([
 ]);
 
 const SINGLE_LINE_ALLOWLIST = new Set([
+  // Compact invitation URL only: full link is the accessibility hint; all other card text scales and wraps.
+  "features/sharing/sharing-active-invitation-card.tsx",
   // Foreign month-cell marker only; its complete read-only sheet stays scalable.
   "features/calendar/shared-calendar-day.tsx",
   // Foreign service glyphs share the bounded day cell; full names stay in the day label and scalable editor.

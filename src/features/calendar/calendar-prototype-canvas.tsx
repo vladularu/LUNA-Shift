@@ -76,7 +76,7 @@ const MovingDay = memo(function MovingDay({
             : isSelected
               ? palette.onCalendarSelection
               : day.weekend
-                ? palette.textMuted
+                ? palette.danger
                 : palette.text,
         }}
       >
@@ -129,7 +129,7 @@ function YearMonthDates({
               {
                 left: day.fromX - 9,
                 top: day.fromY - 9,
-                color: day.weekend ? palette.textMuted : palette.text,
+                color: day.weekend ? palette.danger : palette.text,
               },
             ]}
           >
@@ -271,7 +271,14 @@ export function PrototypeMonthContent({
     >
       <View testID="calendar-month-weekdays" style={styles.weekdays}>
         {["M", "D", "M", "D", "F", "S", "S"].map((label, i) => (
-          <Text key={i} style={{ width: layout.cellWidth, textAlign: "center", color: labelColor }}>
+          <Text
+            key={i}
+            style={{
+              width: layout.cellWidth,
+              textAlign: "center",
+              color: i >= 5 ? palette.danger : labelColor,
+            }}
+          >
             {label}
           </Text>
         ))}
@@ -312,6 +319,7 @@ function CombinedDayContent({
     readonly day: number;
     readonly toX: number;
     readonly toY: number;
+    readonly weekend: boolean;
   };
   readonly layout: PrototypeMonth;
   readonly entries: readonly CalendarEntry[];
@@ -374,7 +382,7 @@ function CombinedDayContent({
                 fontFamily: INTER_FONTS.regular,
                 fontWeight: "500",
                 fontSize: CALENDAR_METRICS.dayNumberFontSize,
-                color: labelColor,
+                color: day.weekend ? palette.danger : labelColor,
               }}
             >
               {day.day}

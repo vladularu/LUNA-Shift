@@ -52,7 +52,7 @@ export function sharedCalendarDays(
         const row = {
           calendarId: cached.calendar.id,
           calendarName: cached.calendar.name,
-          calendarColor: cached.calendar.color,
+          calendarColor: cached.localColor ?? cached.calendar.color,
           entry,
           when,
           fetchedAt: cached.fetchedAt,

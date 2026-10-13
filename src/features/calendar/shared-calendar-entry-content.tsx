@@ -2,7 +2,7 @@ import { View } from "react-native";
 import { Text } from "@/ui/text";
 import { usePalette } from "@/theme/palette";
 import { CALENDAR_METRICS } from "@/theme/tokens";
-import { calendarChipPalette } from "@/theme/color-contrast";
+import { sharedCalendarChipPalette } from "@/theme/color-contrast";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { PrototypeDisplay } from "./prototype-entry-content";
@@ -17,7 +17,7 @@ export function SharedCalendarEntryContent({
   readonly lineHeight: number;
 }) {
   const palette = usePalette();
-  const colors = calendarChipPalette(row.entry.color, palette.dark);
+  const colors = sharedCalendarChipPalette(row.entry.color, palette.dark);
   const textStyle = {
     height: lineHeight,
     lineHeight,
@@ -31,7 +31,7 @@ export function SharedCalendarEntryContent({
       style={{
         borderRadius: CALENDAR_METRICS.chipRadius,
         overflow: "hidden",
-        borderLeftWidth: 3,
+        borderLeftWidth: CALENDAR_METRICS.sharedCalendarStripeWidth,
         borderLeftColor: row.calendarColor,
         backgroundColor: colors.detail,
       }}

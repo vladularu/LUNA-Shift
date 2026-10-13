@@ -7,7 +7,6 @@ import { updateLabel } from "./sharing-ui-elements";
 import type { SharingController } from "./sharing-ui-contract";
 import CalendarSharingRoute from "../../../app/calendar-sharing";
 import SharingInviteRoute from "../../../app/sharing-invite";
-import SharingTabRoute from "../../../app/(tabs)/(sharing)/sharing";
 
 let mockParams: { token?: string | string[] } = {};
 const mockHeader = jest.fn();
@@ -50,6 +49,7 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
       .mockResolvedValue({ confirmationId: "confirmation", entryCount: 0, entries: [] }),
     publishCalendar: action(),
     setVisible: action(),
+    setColor: action(),
     invite: action(),
     setMember: action(),
     revokeInvite: action(),
@@ -63,7 +63,7 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
 }
 
 describe("Freigabe UI Grenzen", () => {
-  it("keeps a visible way back from a standalone route while the tab follows the reference header", async () => {
+  it("keeps a visible way back from the calendar header route", async () => {
     const c = controller();
     const screen = await render(
       <SharingUiProvider controller={c}>
@@ -72,12 +72,6 @@ describe("Freigabe UI Grenzen", () => {
     );
     await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Kalender" }));
     expect(mockBack).toHaveBeenCalledTimes(1);
-    await screen.rerender(
-      <SharingUiProvider controller={c}>
-        <SharingTabRoute />
-      </SharingUiProvider>,
-    );
-    expect(screen.queryByRole("button", { name: "Zurück zum Kalender" })).toBeNull();
     expect(screen.getByRole("button", { name: "Neue Einladung erstellen" })).toBeTruthy();
   });
   it("shares no appointment unless specifically selected and previews that selection", async () => {

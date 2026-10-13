@@ -76,6 +76,7 @@ function localPort(): SharingLocalPort {
     cacheSnapshot: (id, snapshot) => sharing.cacheSharingSnapshot(db, id, snapshot),
     removeCalendar: (id, target) => sharing.removeSharingCalendar(db, id, target),
     setVisible: (id, target, visible) => sharing.setSharingCalendarVisible(db, id, target, visible),
+    setColor: (id, target, color) => sharing.setSharingCalendarColor(db, id, target, color),
     forgetAccount: (id) => sharing.forgetSharingAccount(db, id),
     readEntries: () => listCalendarEntries(db),
     bindCalendar: (id, metadata, deviceSecret, selected) =>

@@ -60,6 +60,11 @@ export async function migrateCalendarSharing(
    CREATE TABLE IF NOT EXISTS sharing_publication_outbox(calendar_id TEXT PRIMARY KEY REFERENCES sharing_local_bindings(calendar_id) ON DELETE CASCADE,account_id TEXT NOT NULL,mutation_id TEXT NOT NULL,generation INTEGER NOT NULL,expected_revision INTEGER NOT NULL,snapshot_json TEXT NOT NULL CHECK(json_valid(snapshot_json)));
    CREATE TABLE IF NOT EXISTS sharing_entry_ids(calendar_id TEXT NOT NULL REFERENCES sharing_local_bindings(calendar_id) ON DELETE CASCADE,local_key TEXT NOT NULL,public_id TEXT NOT NULL UNIQUE,PRIMARY KEY(calendar_id,local_key));
    CREATE TABLE IF NOT EXISTS sharing_calendar_cache(account_id TEXT NOT NULL,calendar_id TEXT NOT NULL,metadata_json TEXT NOT NULL CHECK(json_valid(metadata_json)),entries_json TEXT NOT NULL CHECK(json_valid(entries_json)),fetched_at TEXT NOT NULL,visible INTEGER NOT NULL DEFAULT 1 CHECK(visible IN(0,1)),PRIMARY KEY(account_id,calendar_id));`);
+    const cacheColumns = await tx.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(sharing_calendar_cache)",
+    );
+    if (!cacheColumns.some((column) => column.name === "local_color"))
+      await tx.execAsync("ALTER TABLE sharing_calendar_cache ADD COLUMN local_color TEXT");
     const columns = await tx.getAllAsync<{ name: string }>(
       "PRAGMA table_info(sharing_local_bindings)",
     );
@@ -441,6 +446,7 @@ export async function listCachedSharingCalendars(
       entries_json: string;
       fetched_at: string;
       visible: number;
+      local_color: string | null;
     }>("SELECT * FROM sharing_calendar_cache WHERE account_id=?", accountId)
   ).map((r) => ({
     accountId,
@@ -448,7 +454,22 @@ export async function listCachedSharingCalendars(
     entries: JSON.parse(r.entries_json) as SharedCalendarEntry[],
     fetchedAt: r.fetched_at,
     visible: r.visible === 1,
+    ...(r.local_color ? { localColor: r.local_color } : {}),
   }));
+}
+export async function setSharingCalendarColor(
+  db: SQLiteDatabase,
+  accountId: string,
+  calendarId: string,
+  color: string,
+): Promise<void> {
+  if (!/^#[0-9a-f]{6}$/i.test(color)) throw new Error("SHARE_INVALID_ARGUMENT");
+  await db.runAsync(
+    "UPDATE sharing_calendar_cache SET local_color=? WHERE account_id=? AND calendar_id=? AND json_extract(metadata_json,'$.isOwner')=0",
+    color,
+    accountId,
+    calendarId,
+  );
 }
 export async function setSharingCalendarVisible(
   db: SQLiteDatabase,

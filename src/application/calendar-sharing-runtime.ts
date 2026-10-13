@@ -645,6 +645,14 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         await localState(ticket, accountId);
       });
     },
+    async setColor(calendarId: string, color: string) {
+      await run(async (ticket, accountId) => {
+        if (requireCalendar(calendarId).isOwner) throw new Error("SHARE_INVALID_ARGUMENT");
+        if (!/^#[0-9a-f]{6}$/i.test(color)) throw new Error("SHARE_INVALID_ARGUMENT");
+        await options.local.setColor(accountId, calendarId, color);
+        await localState(ticket, accountId);
+      });
+    },
     async setVisible(calendarId: string, visible: boolean) {
       await run(async (ticket, accountId) => {
         requireCalendar(calendarId);
@@ -871,7 +879,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       return {
         id: item.calendar.id,
         name: item.calendar.name,
-        color: item.calendar.color,
+        color: item.localColor ?? item.calendar.color,
         visibility: item.calendar.visibility,
         isOwner: item.calendar.isOwner,
         visible: item.visible,
