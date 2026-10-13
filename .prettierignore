@@ -6,3 +6,4 @@ android/
 ios/
 assets/
 package-lock.json
+/supabase/.temp/

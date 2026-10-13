@@ -123,7 +123,7 @@ describe("SettingsScreen production gates", () => {
     for (const fontScale of [3.1, 1]) {
       mockFontScale = fontScale;
       await screen.rerender(<SettingsScreen />);
-      const subtitle = screen.getByText("SQLite · ausschließlich auf diesem Gerät");
+      const subtitle = screen.getByText("Deine Daten auf diesem Gerät");
       expect(subtitle.parent).toHaveStyle({ gap: fontScale >= 1.3 ? SPACING.sm : SPACING.xxs });
     }
     await fireEvent.press(screen.getByText("Lokale Datenspeicherung"));

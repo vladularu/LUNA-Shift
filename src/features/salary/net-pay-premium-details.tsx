@@ -1,34 +1,61 @@
-import { useState } from "react";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
 import type { SfnClassificationResult, SfnPremiumCategory } from "@/domain/net-pay-sfn";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
-import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RowButton } from "@/ui/design-system";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { CardSeparator } from "@/ui/design-system";
 import { netPayEuro } from "./net-pay-format";
-import { NetPayWorkflowAmount, NetPayWorkflowLink } from "./net-pay-workflow-controls";
+import {
+  SalaryAmountRow,
+  SalaryPremiumCard,
+  SalarySectionCard,
+  SalaryNavigationRow,
+} from "./salary-ui";
 
-const CATEGORIES: readonly { category: SfnPremiumCategory; label: string }[] = [
-  { category: "NIGHT", label: "Nacht" },
-  { category: "SUNDAY", label: "Sonntag" },
-  { category: "HOLIDAY", label: "Feiertag" },
-  { category: "SATURDAY", label: "Samstag" },
-  { category: "OTHER", label: "Weitere" },
-];
+export const SALARY_PREMIUM_CATEGORIES: readonly { category: SfnPremiumCategory; label: string }[] =
+  [
+    { category: "NIGHT", label: "Nacht" },
+    { category: "SUNDAY", label: "Sonntag" },
+    { category: "HOLIDAY", label: "Feiertag" },
+    { category: "SATURDAY", label: "Samstag" },
+    { category: "OTHER", label: "Weitere" },
+  ];
+
+export function NetPayPremiumExplanation({
+  classification,
+}: {
+  readonly classification: Extract<SfnClassificationResult, { status: "available" }>;
+}) {
+  const palette = usePalette();
+  return (
+    <View style={{ gap: SPACING.sm }}>
+      <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+        Die Aufteilung folgt den geplanten Arbeitszeiten und den SFN-Grenzen. Nacht-, Sonn- und
+        Feiertagszuschläge können steuerfrei sein. Samstagszuschläge, bezahlte Pausen und Beträge
+        oberhalb der Grenzen bleiben steuerpflichtig.
+      </Text>
+      <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+        Sozialversicherungsfrei: {netPayEuro(classification.socialInsuranceFreeCents)}. Dafür gelten
+        eigene Höchstgrenzen.
+      </Text>
+    </View>
+  );
+}
 
 export function NetPayPremiumDetails({
   classification,
   onServices,
+  onBasis,
   compact = false,
 }: {
   readonly classification: Extract<SfnClassificationResult, { status: "available" }>;
   readonly onServices?: () => void;
+  readonly onBasis?: () => void;
   readonly compact?: boolean;
 }) {
   const palette = usePalette();
-  const [help, setHelp] = useState(false);
-  const rows = CATEGORIES.map(({ category, label }) => {
+  const rows = SALARY_PREMIUM_CATEGORIES.map(({ category, label }) => {
     const items = classification.shifts
       .flatMap((shift) => shift.premiumBreakdown)
       .filter((row) => row.category === category);
@@ -38,120 +65,77 @@ export function NetPayPremiumDetails({
       paid: items.reduce((sum, row) => sum + row.paidPremiumCents, 0),
       free: items.reduce((sum, row) => sum + row.taxFreeCents, 0),
     };
-  }).filter((row) => row.category !== "OTHER" || row.paid > 0);
+  });
+  const relevant = rows.filter((row) => row.paid > 0);
   return (
-    <View style={{ gap: SPACING.md }}>
+    <View style={{ gap: SPACING.lg }}>
       {!compact ? (
-        <NetPayWorkflowAmount
-          title="Zeitzuschläge insgesamt"
-          value={netPayEuro(classification.paidPremiumCents)}
-          caption="Aus geplanten Diensten"
+        <SalaryPremiumCard
+          totalCents={classification.paidPremiumCents}
+          taxFreeCents={classification.taxFreeCents}
         />
       ) : null}
-      {onServices ? (
-        <View style={{ marginHorizontal: -SPACING.lg }}>
-          <RowButton
-            title="Einzelne Dienste"
-            subtitle="Zuschläge je Schicht ansehen"
-            accessibilityLabel="Einzelne Dienste"
-            onPress={onServices}
-          />
-        </View>
-      ) : null}
-      <View testID="net-pay-premium-table">
-        <View
-          accessible
-          accessibilityRole="header"
-          accessibilityLabel="Zuschlag, steuerfrei, steuerpflichtig"
-          style={{ flexDirection: "row", gap: SPACING.sm, paddingBottom: SPACING.sm }}
-        >
-          {["Zuschlag", "Steuerfrei", "Steuerpflichtig"].map((title, index) => (
-            <Text
-              key={title}
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{
-                flex: 1,
-                textAlign: index ? "right" : "left",
-                color: palette.textMuted,
-                ...TYPOGRAPHY.footnote,
-              }}
-            >
-              {title}
-            </Text>
-          ))}
-        </View>
-        {rows.map((row) => (
-          <View
-            key={row.category}
-            accessible
-            accessibilityLabel={`${row.label}: steuerfrei ${netPayEuro(row.free)}, steuerpflichtig ${netPayEuro(row.paid - row.free)}`}
-            style={{
-              flexDirection: "row",
-              gap: SPACING.sm,
-              alignItems: "center",
-              minHeight: 44,
-              paddingVertical: SPACING.sm,
-              borderBottomWidth: 1,
-              borderBottomColor: palette.separator,
-            }}
-          >
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.caption }}
-            >
-              {row.label}
-            </Text>
-            <Text
-              selectable
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{
-                flex: 1,
-                textAlign: "right",
-                color: row.free ? palette.success : palette.text,
-                ...TYPOGRAPHY.caption,
-                fontVariant: ["tabular-nums"],
-              }}
-            >
-              {netPayEuro(row.free)}
-            </Text>
-            <Text
-              selectable
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{
-                flex: 1,
-                textAlign: "right",
-                color: palette.text,
-                ...TYPOGRAPHY.caption,
-                fontVariant: ["tabular-nums"],
-              }}
-            >
-              {netPayEuro(row.paid - row.free)}
-            </Text>
-          </View>
-        ))}
-      </View>
-      <NetPayWorkflowLink onPress={() => setHelp(!help)} expanded={help}>
-        {help ? "Aufteilung schließen" : "Wie werden sie aufgeteilt?"}
-      </NetPayWorkflowLink>
-      {help ? (
-        <View style={{ gap: SPACING.sm }}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.footnote }}
-          >
-            Die Aufteilung folgt den geplanten Arbeitszeiten und den SFN-Grenzen. Nacht-, Sonn- und
-            Feiertagszuschläge können steuerfrei sein. Samstagszuschläge, bezahlte Pausen und
-            Beträge oberhalb der Grenzen bleiben steuerpflichtig.
+      <SalarySectionCard title="Aufteilung">
+        {relevant.length === 0 ? (
+          <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted, padding: SPACING.lg }}>
+            Keine Zeitzuschläge in diesem Monat.
           </Text>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.footnote }}
-          >
-            Sozialversicherungsfrei: {netPayEuro(classification.socialInsuranceFreeCents)}. Dafür
-            gelten eigene Höchstgrenzen.
-          </Text>
-        </View>
+        ) : (
+          relevant.map((row, index) => (
+            <View key={row.category}>
+              {index ? <CardSeparator /> : null}
+              <SalaryAmountRow
+                quiet
+                label={row.label}
+                value={netPayEuro(row.paid)}
+                subtitle={[
+                  row.free > 0 ? `Steuerfrei ${netPayEuro(row.free)}` : null,
+                  row.paid - row.free > 0
+                    ? `Steuerpflichtig ${netPayEuro(row.paid - row.free)}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              />
+            </View>
+          ))
+        )}
+      </SalarySectionCard>
+      <SalarySectionCard title="Sozialversicherung">
+        <SalaryAmountRow
+          quiet
+          label="Sozialversicherungsfrei"
+          value={netPayEuro(classification.socialInsuranceFreeCents)}
+        />
+        <CardSeparator />
+        <SalaryAmountRow
+          quiet
+          label="SV-pflichtige Zuschläge"
+          value={netPayEuro(
+            classification.paidPremiumCents - classification.socialInsuranceFreeCents,
+          )}
+        />
+      </SalarySectionCard>
+      {onServices || onBasis ? (
+        <SalarySectionCard title="Details">
+          {onServices ? (
+            <SalaryNavigationRow title="Zuschläge je Dienst" onPress={onServices} />
+          ) : null}
+          {onServices && onBasis ? <CardSeparator /> : null}
+          {onBasis ? (
+            <SalaryNavigationRow title="Berechnung der Zuschläge" onPress={onBasis} />
+          ) : null}
+        </SalarySectionCard>
       ) : null}
+      {!onBasis ? <NetPayPremiumExplanation classification={classification} /> : null}
+      <Text style={{ ...TYPOGRAPHY.footnote, color: palette.textMuted }}>
+        Ohne Zuschläge:{" "}
+        {rows
+          .filter((row) => row.paid === 0)
+          .map((row) => row.label)
+          .join(", ") || "keine weiteren Arten"}
+        .
+      </Text>
     </View>
   );
 }

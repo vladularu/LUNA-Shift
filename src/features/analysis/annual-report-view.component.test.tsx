@@ -195,7 +195,7 @@ describe("annual report view", () => {
       />,
     );
     expect(screen.queryByRole("header", { name: "1 Meldung" })).toBeNull();
-    expect(screen.queryByText("Freiwillige Planung: 2")).toBeNull();
+    expect(screen.queryByText("Planungshinweise: 2")).toBeNull();
     expect(screen.queryByText("2 Warnungen")).toBeNull();
     expect(screen.getByRole("button", { name: /^August 2026, 1 Meldung/ })).toBeVisible();
   });

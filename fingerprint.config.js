@@ -12,6 +12,21 @@ module.exports = {
   // The transform itself must participate in compatibility decisions too.
   extraSources: [
     { type: "file", filePath: "fingerprint.config.js", reasons: ["fingerprintConfig"] },
+    {
+      type: "file",
+      filePath: "plugins/with-native-calendar-widget.js",
+      reasons: ["nativeWidgetRenderer"],
+    },
+    {
+      type: "file",
+      filePath: "plugins/luna-calendar-widget/LUNAShiftMonth.swift",
+      reasons: ["nativeWidgetRenderer"],
+    },
+    {
+      type: "file",
+      filePath: "plugins/luna-calendar-widget/LUNAShiftCalendar.swift",
+      reasons: ["nativeWidgetRenderer"],
+    },
   ],
   fileHookTransform(source, chunk, isEndOfFile, encoding) {
     if (source.type !== "file" || source.filePath.replaceAll("\\", "/") !== tabControllerPath) {

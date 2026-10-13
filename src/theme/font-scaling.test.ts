@@ -19,6 +19,8 @@ const TEXT_SHRINK_ALLOWLIST = new Set([
 ]);
 
 const SINGLE_LINE_ALLOWLIST = new Set([
+  // Foreign month-cell marker only; its complete read-only sheet stays scalable.
+  "features/calendar/shared-calendar-day.tsx",
   // Bounded prototype day cells; complete titles remain in each day's accessible label.
   "features/calendar/calendar-prototype-canvas.tsx",
   "features/calendar/prototype-entry-content.tsx",

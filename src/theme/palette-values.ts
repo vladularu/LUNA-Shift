@@ -26,12 +26,15 @@ export interface Palette {
   readonly primarySoft: string;
   readonly secondarySoft: string;
   readonly tertiarySoft: string;
+  readonly salaryAccent: string;
+  readonly salaryAccentSoft: string;
   readonly onPrimary: string;
   readonly sortAction: string;
   readonly onSortAction: string;
   readonly onDanger: string;
   readonly info: string;
   readonly success: string;
+  readonly positiveBalance: string;
   readonly warning: string;
   readonly danger: string;
   readonly weekend: string;
@@ -77,19 +80,22 @@ export const LIGHT_PALETTE: Palette = {
   primarySoft: "#EDEDEF",
   secondarySoft: "#F4F4F5",
   tertiarySoft: "#F8F8FA",
+  salaryAccent: "#C48A00",
+  salaryAccentSoft: "#FFF8E8",
   onPrimary: "#FAFAFA",
   sortAction: "#18181B",
   onSortAction: "#FAFAFA",
   onDanger: SHADCN_COLORS.white,
   info: "#3F3F46",
   success: "#3F3F46",
+  positiveBalance: "#15803D",
   warning: "#B91C1C",
   danger: "#B91C1C",
   weekend: "#EDEDEF",
   outsideMonth: "#F4F4F5",
   tabBar: SHADCN_COLORS.white,
   calendarToday: "#18181B",
-  calendarYearAccent: "#18181B",
+  calendarYearAccent: "#B91C1C",
   onCalendarToday: "#FAFAFA",
   calendarSelection: "#EDEDEF",
   onCalendarSelection: "#18181B",
@@ -126,19 +132,22 @@ export const DARK_PALETTE: Palette = {
   primarySoft: "#27272A",
   secondarySoft: "#202023",
   tertiarySoft: "#19191C",
+  salaryAccent: "#F1C767",
+  salaryAccentSoft: "#292419",
   onPrimary: "#18181B",
   sortAction: "#FAFAFA",
   onSortAction: "#18181B",
   onDanger: "#18181B",
   info: "#D4D4D8",
   success: "#D4D4D8",
+  positiveBalance: "#4ADE80",
   warning: "#FCA5A5",
   danger: "#FCA5A5",
   weekend: "#202023",
   outsideMonth: "#111113",
   tabBar: "#141416",
   calendarToday: "#FAFAFA",
-  calendarYearAccent: "#FAFAFA",
+  calendarYearAccent: "#EF4444",
   onCalendarToday: "#18181B",
   calendarSelection: "#303035",
   onCalendarSelection: "#FAFAFA",

@@ -52,7 +52,13 @@ export function WorkListCard({
       target={withoutUnit(target)}
       balance={withoutUnit(balance)}
       balanceAccent={
-        /[0-9]/u.test(balance) ? (/^[−-]/u.test(balance) ? p.danger : p.success) : p.textMuted
+        /[0-9]/u.test(balance)
+          ? /^[−-]/u.test(balance)
+            ? p.danger
+            : /^\+/u.test(balance)
+              ? p.positiveBalance
+              : p.success
+          : p.textMuted
       }
       onPress={onPress}
       caption={caption}
@@ -152,9 +158,7 @@ export function CheckListCard({
               icon="information-circle-outline"
             />
           ) : null}
-          {showPlanning ? (
-            <CheckRow label="Freiwillige Planung" counts={categories.planning} />
-          ) : null}
+          {showPlanning ? <CheckRow label="Planungshinweise" counts={categories.planning} /> : null}
         </>
       ) : (
         <CheckRow first label="Meldungen" counts={counts} />
@@ -172,6 +176,7 @@ export function PayListCard({
   manual = false,
   status,
   caption,
+  netRow,
 }: {
   readonly onPress: () => void;
   readonly base?: number | null;
@@ -182,6 +187,7 @@ export function PayListCard({
   readonly manual?: boolean;
   readonly status?: string;
   readonly caption: string;
+  readonly netRow?: ReactNode;
 }) {
   return (
     <AnalysisListCard
@@ -189,6 +195,7 @@ export function PayListCard({
       label={"Gehalt, " + (status ?? formatEuro(gross ?? null))}
       onPress={onPress}
       caption={caption}
+      captionBelowFooter
     >
       {status ? (
         <AnalysisValueRow reserveDisclosure first label="Status" value={status} />
@@ -241,6 +248,7 @@ export function PayListCard({
           />
         </>
       )}
+      {netRow}
     </AnalysisListCard>
   );
 }

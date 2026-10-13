@@ -1,8 +1,10 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { AssessmentSummaryCard, ComplianceDetails } from "@/features/analysis/analysis-screen";
+// These cases exercise compliance components; the salary row has dedicated integration coverage.
+jest.mock("@/features/analysis/analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
 
 function shift(
   id: string,

@@ -85,6 +85,15 @@ export function salaryRoute(month: string) {
   });
 }
 
+export type SalaryDetailSection = "components" | "deductions" | "premiums" | "services" | "basis";
+
+export function salaryDetailsRoute(month: string, section: SalaryDetailSection) {
+  return {
+    pathname: "/salary-details" as const,
+    params: { month: requireMonth(month), section },
+  };
+}
+
 export function premiumDetailsRoute(month: string) {
   const normalizedMonth = requireMonth(month);
   return Object.freeze({

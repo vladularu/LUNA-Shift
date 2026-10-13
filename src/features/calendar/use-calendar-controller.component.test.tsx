@@ -5,10 +5,16 @@ import type { CalendarViewMode } from "@/domain/types";
 import { useCalendarController } from "./use-calendar-controller";
 
 const mockCompletions: ((finished: boolean) => void)[] = [];
+const mockDurations: (number | undefined)[] = [];
 jest.mock("react-native-reanimated", () => ({
   ...jest.requireActual<object>("react-native-reanimated"),
   useReducedMotion: () => false,
-  withTiming: (end: number, _config: unknown, complete: (finished: boolean) => void) => {
+  withTiming: (
+    end: number,
+    config: { duration?: number },
+    complete: (finished: boolean) => void,
+  ) => {
+    mockDurations.push(config.duration);
     mockCompletions.push(complete);
     return end;
   },
@@ -25,6 +31,7 @@ describe("one calendar presentation controller", () => {
   afterEach(() => {
     jest.restoreAllMocks();
     mockCompletions.length = 0;
+    mockDurations.length = 0;
   });
 
   it("previews a swipe without changing the data month and clears preview on Today", async () => {
@@ -48,6 +55,7 @@ describe("one calendar presentation controller", () => {
     await act(async () => listener.mock.calls[0][1]("active"));
     await hook.rerender({ ...initialProps, mode: "YEAR" });
     const oldCompletion = mockCompletions.at(-1)!;
+    expect(mockDurations.at(-1)).toBe(480);
     expect(hook.result.current.busy).toBe(true);
     await hook.rerender({ ...initialProps, month: "2026-01" });
     const latestCompletion = mockCompletions.at(-1)!;

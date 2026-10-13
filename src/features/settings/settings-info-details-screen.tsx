@@ -32,16 +32,20 @@ const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
         text: "Dienste, Termine, Tarifprofil und Einstellungen liegen in einer lokalen SQLite-Datenbank.",
       },
       {
+        title: "Kalender teilen ist optional",
+        text: "Ein Konto wird erst zum Teilen oder Annehmen einer Einladung benötigt. Empfänger können bestätigte Freigaben nur ansehen. Du kannst Personen entfernen oder die Freigabe löschen. Fremde Kalender sind höchstens 24 Stunden offline sichtbar und werden bei bekanntem Widerruf sofort entfernt.",
+      },
+      {
         title: "Backup bewusst selbst ablegen",
-        text: "Aktuell gibt es weder Cloud-Sync noch ein automatisches Backup. Unter Mehr → Datensicherung kannst du eine lokale Backup-Datei erstellen, vor dem Wiederherstellen prüfen und außerhalb der App sicher ablegen. Eine Deinstallation kann sonst lokale Daten entfernen.",
+        text: "Die optionale Kalenderfreigabe ist kein vollständiges Cloud-Backup. Unter Mehr → Datensicherung kannst du eine lokale Backup-Datei erstellen, vor dem Wiederherstellen prüfen und außerhalb der App sicher ablegen. Eine Deinstallation kann sonst lokale Daten entfernen.",
       },
       {
         title: "Löschen",
-        text: "Gelöschte Dienste und Termine verschwinden sofort aus der App. Der verschlüsselte Datensatz bleibt 90 Tage lokal gespeichert und wird beim nächsten App-Start danach entfernt. Gelöschte Vorlagen bleiben länger erhalten, solange vorhandene Dienste oder ein offenes Testlabor-Backup darauf verweisen.",
+        text: "Gelöschte Dienste und Termine verschwinden sofort aus der App. Der verschlüsselte Datensatz bleibt mindestens 90 Tage lokal gespeichert. Bei einer offenen Kalenderveröffentlichung wartet die Bereinigung zusätzlich auf die Serverbestätigung. Gelöschte Vorlagen bleiben länger erhalten, solange vorhandene Dienste oder ein offenes Testlabor-Backup darauf verweisen.",
       },
       {
         title: "Ortssuche",
-        text: `Ab drei Zeichen wird deine Suche online über den Kartendienst des Betriebssystems aufgelöst: auf iOS über Apple, auf Android über den systemseitigen Geocoder. ${PRODUCT_NAME} fragt dabei nicht deine aktuelle GPS-Position ab. Android kann für das Geocoding trotzdem eine Standortberechtigung verlangen.`,
+        text: `Ab drei Zeichen wird deine Suche online über den Kartendienst des Betriebssystems aufgelöst: auf iOS über Apple, auf Android über den systemseitigen Geocoder. ${PRODUCT_NAME} fragt dabei nicht deine aktuelle GPS-Position ab. Android kann für das Geocoding trotzdem eine Standortberechtigung verlangen. Der Suchtext geht an den Kartendienst und nicht an einen ${PRODUCT_NAME}-Server.`,
       },
       {
         title: "Karten",
@@ -49,7 +53,7 @@ const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
       },
       {
         title: "Datenschutz",
-        text: `${PRODUCT_NAME} überträgt diese Daten nicht an einen ${PRODUCT_NAME}-Server. Für die Online-Suche und Kartendarstellung gelten zusätzlich die Datenschutzbedingungen von Apple beziehungsweise Google.`,
+        text: `${PRODUCT_NAME} überträgt Notizen, Orte, Gehalts- und Steuerdaten nicht in die Kalenderfreigabe. Erst nach Anmeldung und bestätigter Vorschau werden ausgewählte Kalenderangaben an die separate LUNA-Cloud übertragen. Ohne Freigabe bleibt der Dienstplan lokal. Für die Online-Suche und Kartendarstellung gelten zusätzlich die Datenschutzbedingungen von Apple beziehungsweise Google.`,
       },
     ],
   },

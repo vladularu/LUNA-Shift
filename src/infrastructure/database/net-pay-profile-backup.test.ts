@@ -1,3 +1,4 @@
+import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import canonicalize from "canonicalize";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -60,7 +61,7 @@ describe("monthly net-pay profile backup compatibility", () => {
   it("exports v20 and restores all profile fields, revisions and timestamps", async () => {
     const exported = await exportTvlBackup(source);
     expect(LOCAL_BACKUP_VERSION).toBe(20);
-    expect(exported.document.databaseSchemaVersion).toBe(32);
+    expect(exported.document.databaseSchemaVersion).toBe(LATEST_DATABASE_SCHEMA_VERSION);
     expect(exported.document.data.netPayProfiles).toHaveLength(2);
     const original = await loadMonthlyNetPaySettings(source.db, "2026-09");
     await saveMonthlyNetPaySettings(target.db, { settings: settings("2026-08"), expected: null });

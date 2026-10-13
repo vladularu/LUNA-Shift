@@ -1,0 +1,105 @@
+-- Run against the isolated Supabase Preview database after applying migrations.
+-- Everything rolls back; fixture emails use reserved .invalid domains.
+begin;
+create extension if not exists pgtap with schema extensions;
+set search_path = public, extensions;
+select no_plan();
+select is((select count(*)::int from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='luna_sharing' and c.relkind='r' and c.relrowsecurity),6,'all sharing tables enable RLS');
+select ok(not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='luna_sharing' and c.relkind='r' and has_table_privilege('authenticated',c.oid,'SELECT,INSERT,UPDATE,DELETE')),'no direct authenticated table privileges');
+select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'sharing_%' and has_function_privilege('anon',p.oid,'EXECUTE')),'anon cannot invoke sharing RPCs');
+select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','luna_sharing') and p.prosecdef and p.proname like '%sharing%' and not ('search_path=""'=any(p.proconfig))),'security definer search paths are fixed');
+insert into auth.users(id,email) values
+ ('11111111-1111-4111-8111-111111111111','sharing-owner@example.invalid'),
+ ('22222222-2222-4222-8222-222222222222','sharing-viewer@example.invalid'),
+ ('33333333-3333-4333-8333-333333333333','sharing-other@example.invalid');
+insert into auth.sessions(id,user_id,created_at,updated_at) values
+ ('00000000-0000-4000-8000-000000000001','11111111-1111-4111-8111-111111111111',now(),now()),
+ ('00000000-0000-4000-8000-000000000002','22222222-2222-4222-8222-222222222222',now(),now()),
+ ('00000000-0000-4000-8000-000000000003','33333333-3333-4333-8333-333333333333',now(),now());
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+select throws_ok($q$select public.sharing_save_profile('33333333-3333-4333-8333-333333333333','Alex')$q$,'42501','SHARE_ACCOUNT_MISMATCH','profile cannot change another confirmed account');
+select throws_ok($q$select public.sharing_create_calendar('33333333-3333-4333-8333-333333333333','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'Plan','#D19A22','DETAILS')$q$,'42501','SHARE_ACCOUNT_MISMATCH','creation rejects switched account assertion');
+select is(public.sharing_create_calendar('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'Dienstplan','#D19A22','DETAILS')->>'revision','0','owner creates revision zero');
+select throws_ok($q$select public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'44444444-4444-4444-8444-444444444444',0,'[{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","startsAt":"2026-10-02T00:00:00Z","endsAt":"2026-10-04T00:00:01Z","timeZone":"Europe/Berlin","allDay":false,"title":"Nacht","color":"#D19A22","symbol":"moon"}]')$q$,'22023','SHARE_INVALID_ARGUMENT','oversized timed interval rejected');
+select throws_ok($q$select public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'44444444-4444-4444-8444-444444444444',0,'[{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","startsAt":"2026-10-02T00:00:00Z","endsAt":"2026-10-04T00:00:01Z","timeZone":"Europe/Berlin","allDay":true,"title":"Nacht","color":"#D19A22","symbol":"moon"}]')$q$,'22023','SHARE_INVALID_ARGUMENT','oversized all-day interval rejected');
+select throws_ok($q$select public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('b',64),'44444444-4444-4444-8444-444444444444',0,'[]')$q$,'42501','SHARE_DEVICE_MISMATCH','copied device UUID without secret cannot publish');
+select ok(not (public.sharing_list_calendars()->0 ? 'deviceSecretHash') and not (public.sharing_list_calendars()->0 ? 'deviceSecret'),'summaries never return device secret or hash');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000002"}',true);
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','foreign session cannot use owner JWT');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}',true);
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','missing signed session claim fails closed');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"malformed"}',true);
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','malformed signed session claim fails closed');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+select is(public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'ffffffff-ffff-4fff-8fff-ffffffffffff',0,
+ '[{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","startsAt":"2026-10-02T21:00:00+02:00","endsAt":"2026-10-03T07:30:00+02:00","timeZone":"Europe/Berlin","allDay":false,"title":"Nacht","color":"#D19A22","symbol":"moon"}]')->>'revision','1','server revision increments on publish');
+select throws_ok($q$select public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'33333333-3333-4333-8333-333333333333',0,'[]')$q$,'22023','SHARE_REVISION_CONFLICT','stale owner upload rejected');
+reset role;
+create temp table sharing_test_invite as select public.sharing_create_invite('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','ffffffff-ffff-4fff-8fff-ffffffffffff') as data;
+grant select on sharing_test_invite to authenticated;
+select ok((select length(token_hash)=64 and token_hash<>(select data->>'token' from sharing_test_invite) from luna_sharing.invites),'only token hash stored');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+select set_config('request.jwt.claims','{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000002"}',true);
+select throws_ok($q$select public.sharing_claim_invite('33333333-3333-4333-8333-333333333333',(select data->>'token' from sharing_test_invite),'Sam')$q$,'42501','SHARE_ACCOUNT_MISMATCH','switched account cannot consume invitation');
+select is(public.sharing_claim_invite('22222222-2222-4222-8222-222222222222',(select data->>'token' from sharing_test_invite),'Leser')->>'status','PENDING','claim is pending');
+select is(public.sharing_list_calendars(),'[]'::jsonb,'pending member sees no calendar');
+select throws_ok($q$select public.sharing_fetch_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',null)$q$,'42501','SHARE_NOT_FOUND','pending member cannot fetch');
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select set_config('request.jwt.claims','{"sub":"33333333-3333-4333-8333-333333333333","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000003"}',true);
+select throws_ok($q$select public.sharing_claim_invite('33333333-3333-4333-8333-333333333333',(select data->>'token' from sharing_test_invite),'Andere')$q$,'22023','SHARE_INVITE_INVALID','invite cannot be reused by another person');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+select is(public.sharing_set_member('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','22222222-2222-4222-8222-222222222222','APPROVE')->>'status','ACTIVE','owner approves');
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+select set_config('request.jwt.claims','{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000002"}',true);
+select throws_ok($q$select public.sharing_leave_calendar('33333333-3333-4333-8333-333333333333','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')$q$,'42501','SHARE_ACCOUNT_MISMATCH','another confirmed reader cannot be removed');
+select is(jsonb_array_length(public.sharing_fetch_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',null)->'entries'),1,'approved viewer reads complete snapshot');
+select throws_ok($q$select public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'33333333-3333-4333-8333-333333333333',1,'[]')$q$,'42501','SHARE_NOT_FOUND','approved viewer cannot write');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+select is(public.sharing_publish_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd',repeat('a',64),'33333333-3333-4333-8333-333333333333',1,'[]')->>'revision','2','complete empty snapshot increments revision');
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+select set_config('request.jwt.claims','{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000002"}',true);
+select is(jsonb_array_length(public.sharing_fetch_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',1)->'entries'),0,'removed entries absent in recovery snapshot');
+select is(public.sharing_fetch_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',99)->>'reset','true','future cursor forces complete reset');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+select lives_ok($q$select public.sharing_set_member('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','22222222-2222-4222-8222-222222222222','REVOKE')$q$,'owner revokes');
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+select set_config('request.jwt.claims','{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000002"}',true);
+select throws_ok($q$select public.sharing_fetch_calendar('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',2)$q$,'42501','SHARE_NOT_FOUND','revoked viewer loses future read access');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","session_id":"00000000-0000-4000-8000-000000000001"}',true);
+reset role;
+delete from auth.sessions where id='00000000-0000-4000-8000-000000000001';
+set local role authenticated;
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','revoked session rejects still-unexpired JWT');
+reset role;
+insert into auth.sessions(id,user_id,created_at,updated_at) values('00000000-0000-4000-8000-000000000001','11111111-1111-4111-8111-111111111111',now(),now());
+update auth.users set banned_until=now()+interval '1 hour' where id='11111111-1111-4111-8111-111111111111';
+set local role authenticated;
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','banned user cannot use existing JWT');
+reset role;
+update auth.users set banned_until=null,deleted_at=now() where id='11111111-1111-4111-8111-111111111111';
+set local role authenticated;
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','soft-deleted user cannot use existing JWT');
+reset role;
+update auth.users set deleted_at=null where id='11111111-1111-4111-8111-111111111111';
+insert into auth.identities(id,user_id,provider,provider_id,identity_data) values('44444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111','apple','sharing-apple-fixture','{"sub":"sharing-apple-fixture"}'::jsonb);
+set local role authenticated;
+select throws_ok($q$select public.sharing_delete_account('11111111-1111-4111-8111-111111111111')$q$,'42501','SHARE_PROVIDER_REVOKE_REQUIRED','linked Apple identity cannot bypass server provider revocation');
+select is(jsonb_array_length(public.sharing_list_calendars()),1,'Apple denial leaves cloud data intact');
+reset role;
+delete from auth.identities where id='44444444-4444-4444-8444-444444444444';
+set local role authenticated;
+select throws_ok($q$select public.sharing_delete_account('33333333-3333-4333-8333-333333333333')$q$,'42501','SHARE_ACCOUNT_MISMATCH','deletion rejects switched account assertion');
+select is(public.sharing_delete_account('11111111-1111-4111-8111-111111111111'),' {"deleted":true}'::jsonb,'account deletes caller only');
+select throws_ok($q$select public.sharing_list_calendars()$q$,'42501','SHARE_UNAUTHENTICATED','deleted user JWT has no sharing access');
+reset role;
+select is((select count(*)::int from auth.users where id in ('22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333')),2,'other accounts remain');
+select is((select count(*)::int from luna_sharing.calendars),0,'owned cloud calendars cascade away');
+select * from finish();
+rollback;

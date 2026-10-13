@@ -7,7 +7,15 @@ export default function configureApp({ config }: ConfigContext): ExpoConfig {
     ...config,
     name: design ? "LUNA Design" : internal ? "LUNA Shift Internal" : "LUNA Shift",
     slug: config.slug ?? "pflegeshift",
-    scheme: design ? "lunashift-design" : internal ? "pflegeshift-internal" : "pflegeshift",
+    scheme: design
+      ? "lunashift-design"
+      : internal
+        ? ["pflegeshift-internal", "lunashift-internal"]
+        : ["pflegeshift", "lunashift"],
+    extra: {
+      ...config.extra,
+      appVariant: design ? "design" : internal ? "internal" : "production",
+    },
     userInterfaceStyle: "automatic",
     updates: design
       ? {
@@ -21,24 +29,30 @@ export default function configureApp({ config }: ConfigContext): ExpoConfig {
         }
       : config.updates,
     plugins: (config.plugins ?? []).map((plugin) =>
-      plugin === "expo-font"
+      Array.isArray(plugin) && plugin[0] === "expo-widgets" && !design && !internal
         ? [
-            "expo-font",
-            {
-              fonts: [
-                "./assets/fonts/inter/Inter-Regular.ttf",
-                "./assets/fonts/inter/Inter-Medium.ttf",
-                "./assets/fonts/inter/Inter-SemiBold.ttf",
-                "./assets/fonts/inter/Inter-Bold.ttf",
-                "./assets/fonts/inter/Inter-ExtraBold.ttf",
-                "./assets/fonts/inter/Inter-Italic.ttf",
-              ],
-            },
+            plugin[0],
+            { ...plugin[1], groupIdentifier: "group.com.lunashift.app.widgets.72c9t74sn2" },
           ]
-        : plugin,
+        : plugin === "expo-font"
+          ? [
+              "expo-font",
+              {
+                fonts: [
+                  "./assets/fonts/inter/Inter-Regular.ttf",
+                  "./assets/fonts/inter/Inter-Medium.ttf",
+                  "./assets/fonts/inter/Inter-SemiBold.ttf",
+                  "./assets/fonts/inter/Inter-Bold.ttf",
+                  "./assets/fonts/inter/Inter-ExtraBold.ttf",
+                  "./assets/fonts/inter/Inter-Italic.ttf",
+                ],
+              },
+            ]
+          : plugin,
     ),
     ios: {
       ...config.ios,
+      usesAppleSignIn: true,
       bundleIdentifier: design
         ? "com.lunashift.app.design"
         : internal

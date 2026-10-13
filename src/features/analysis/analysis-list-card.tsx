@@ -14,11 +14,13 @@ export function AnalysisListCard({
   onPress,
   children,
   caption,
+  captionBelowFooter = false,
 }: PropsWithChildren<{
   readonly title: string;
   readonly label?: string;
   readonly onPress?: () => void;
   readonly caption?: string;
+  readonly captionBelowFooter?: boolean;
 }>) {
   const p = usePalette();
   const secondaryText = p.dark ? p.text : p.textMuted;
@@ -56,6 +58,19 @@ export function AnalysisListCard({
     borderBottomColor: p.cardSeparator,
     backgroundColor: p.cardHeader,
   };
+  const captionContent = caption ? (
+    <Text
+      testID="analysis-card-caption"
+      style={{
+        paddingHorizontal: SPACING.lg,
+        paddingBottom: SPACING.md,
+        color: captionBelowFooter ? p.textMuted : secondaryText,
+        ...(captionBelowFooter ? TYPOGRAPHY.footnote : TYPOGRAPHY.caption),
+      }}
+    >
+      {caption}
+    </Text>
+  ) : null;
   return (
     <SurfaceCard>
       {onPress ? (
@@ -74,19 +89,9 @@ export function AnalysisListCard({
         <View style={headerStyle}>{heading}</View>
       )}
       <View style={{ paddingHorizontal: SPACING.lg }}>{children}</View>
-      {caption ? (
-        <Text
-          style={{
-            paddingHorizontal: SPACING.lg,
-            paddingBottom: SPACING.md,
-            color: secondaryText,
-            ...TYPOGRAPHY.caption,
-          }}
-        >
-          {caption}
-        </Text>
-      ) : null}
+      {captionBelowFooter ? null : captionContent}
       <CardFooterLine />
+      {captionBelowFooter ? captionContent : null}
     </SurfaceCard>
   );
 }

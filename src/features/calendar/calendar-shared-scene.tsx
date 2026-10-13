@@ -1,3 +1,5 @@
+import { SharedCalendarDayMark } from "./shared-calendar-day";
+import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
 import { createContext, use, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -141,6 +143,8 @@ export function SharedCalendarMonth({
   month,
   pageHeight,
   entriesByDate,
+  sharedEntriesByDate,
+  onSelectSharedDate,
   display,
   profile,
   ruleResolver,
@@ -156,6 +160,8 @@ export function SharedCalendarMonth({
   month: string;
   pageHeight: number;
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
+  sharedEntriesByDate?: ReadonlyMap<string, readonly SharedCalendarDayEntry[]>;
+  onSelectSharedDate?: (date: string) => void;
   display: PrototypeDisplay;
   profile: UserProfile;
   ruleResolver: RuleResolver;
@@ -187,6 +193,8 @@ export function SharedCalendarMonth({
       month={month}
       pageHeight={pageHeight}
       entriesByDate={entriesByDate}
+      sharedEntriesByDate={sharedEntriesByDate}
+      onSelectSharedDate={onSelectSharedDate}
       display={display}
       profile={profile}
       onSelectDate={onSelectDate}
@@ -208,6 +216,8 @@ function SharedMonthBody({
   month,
   pageHeight,
   entriesByDate,
+  sharedEntriesByDate,
+  onSelectSharedDate,
   display,
   profile,
   onSelectDate,
@@ -245,6 +255,7 @@ function SharedMonthBody({
         layout={layout}
         progress={progress}
         entriesByDate={entriesByDate}
+        sharedEntriesByDate={sharedEntriesByDate}
         holidays={holidays}
         display={display}
         timeZone={profile.timeZone}
@@ -305,6 +316,29 @@ function SharedMonthBody({
             ) : null}
           </Pressable>
         ))}
+        {onSelectSharedDate
+          ? layout.days.map((day) => {
+              const shared = sharedEntriesByDate?.get(day.date);
+              return shared?.length ? (
+                <View
+                  key={`shared:${day.date}`}
+                  pointerEvents="box-none"
+                  style={{
+                    position: "absolute",
+                    left: day.toX - layout.cellWidth / 2,
+                    top: day.toY - 20 + Math.max(30, layout.weekHeight - 46),
+                    width: layout.cellWidth,
+                  }}
+                >
+                  <SharedCalendarDayMark
+                    date={day.date}
+                    entries={shared}
+                    onPress={onSelectSharedDate}
+                  />
+                </View>
+              ) : null;
+            })
+          : null}
       </View>
       {testData ? <Text style={{ position: "absolute", bottom: 0 }}>Testdaten</Text> : null}
     </Animated.View>

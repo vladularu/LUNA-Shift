@@ -70,15 +70,37 @@ describe("isolated iPhone design build", () => {
     ]) {
       const config = configFor(variant);
       expect(config.name).toBe(name);
-      expect(config.scheme).toBe(scheme);
+      expect(config.scheme).toEqual([
+        scheme,
+        variant === "internal" ? "lunashift-internal" : "lunashift",
+      ]);
       expect(config.ios?.bundleIdentifier).toBe(id);
       expect(config.updates).toEqual(original.updates);
-      expect(config.plugins).toEqual(configFor("design").plugins);
+      const otherPlugins = (value: typeof config) =>
+        value.plugins?.filter((plugin) => !(Array.isArray(plugin) && plugin[0] === "expo-widgets"));
+      expect(otherPlugins(config)).toEqual(otherPlugins(configFor("design")));
       expect(config.userInterfaceStyle).toBe("automatic");
     }
     expect(profiles.build.preview.channel).toBe("preview");
     expect(profiles.build.production.channel).toBe("production");
     expect(profiles.build.preview.env).not.toHaveProperty("LUNA_DESIGN_SANDBOX");
+  });
+
+  it("isolates the registered TestFlight widget App Group from the internal and design apps", () => {
+    for (const variant of ["internal", "design", "production", ""]) {
+      const options = configFor(variant).plugins?.find(
+        (plugin) => Array.isArray(plugin) && plugin[0] === "expo-widgets",
+      ) as [string, Record<string, unknown>];
+      const originalOptions = original.plugins.find(
+        (plugin: string | [string, unknown]) =>
+          Array.isArray(plugin) && plugin[0] === "expo-widgets",
+      )[1];
+      expect(options[1]).toEqual(
+        variant === "production" || variant === ""
+          ? { ...originalOptions, groupIdentifier: "group.com.lunashift.app.widgets.72c9t74sn2" }
+          : originalOptions,
+      );
+    }
   });
 
   it("embeds every required Inter face as a non-empty local font asset", () => {

@@ -58,6 +58,7 @@ describe("TemplatesManagerScreen", () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockMoveTemplate.mockClear();
+    mockRemoveTemplate.mockClear();
   });
 
   it("opens a template directly when its row is pressed", async () => {
@@ -88,7 +89,7 @@ describe("TemplatesManagerScreen", () => {
       height: 38,
       borderRadius: RADII.pill,
     });
-    expect(screen.getByRole("button", { name: "Früh verwalten" })).toHaveStyle({
+    expect(screen.getByRole("button", { name: "Früh bearbeiten" })).toHaveStyle({
       width: 44,
       height: 44,
     });
@@ -119,16 +120,21 @@ describe("TemplatesManagerScreen", () => {
     expect(screen.getByTestId("template-manager-add-row")).toBeVisible();
   });
 
-  it("opens management actions without also opening the editor", async () => {
+  it("opens the editor from the more action without exposing inline deletion", async () => {
     const screen = await render(
       <FeedbackProvider>
         <TemplatesManagerScreen />
       </FeedbackProvider>,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Früh verwalten" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Früh bearbeiten" }));
 
-    expect(mockPush).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Löschen" })).toBeTruthy();
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/template-editor",
+      params: { id: "early" },
+    });
+    expect(screen.queryByRole("button", { name: "Löschen" })).toBeNull();
+    expect(mockRemoveTemplate).not.toHaveBeenCalled();
   });
 });

@@ -76,7 +76,12 @@ lesbar und erhält für später ergänzte Felder sichere Standardwerte. Alte und
 neue Payloads werden vor jedem Ersetzen vollständig auf Monat, IDs,
 Zeilenanzahl und Feldtypen geprüft.
 
-Vor Einführung einer Cloud-Synchronisation muss der automatische Purge um ein
-Server-Acknowledgement und eine leere lokale Outbox als zusätzliche Bedingungen
-erweitert werden. Bis dahin darf kein Sync-Feature auf der aktuellen
-zeitbasierten Bedingung allein aufbauen.
+Die optionale Kalenderfreigabe ergänzt den automatischen Purge um eine
+Serverbestätigung und eine leere lokale Veröffentlichungs-Outbox. Solange eine
+Freigabe Änderungen noch nicht bestätigt hat, werden Tombstones auch nach
+90 Tagen nicht physisch entfernt. Abmeldung löscht fremde Kalender-Caches,
+erhält aber eigene Dienste und offene Veröffentlichungen. Kontowechsel
+pausiert Bindings des vorherigen Kontos; sie werden nicht still übernommen.
+Der verschlüsselte Freigabe-Cache ist höchstens 24 Stunden offline sichtbar.
+Ein bekanntes Rechte- oder Sitzungswiderruf entfernt ihn sofort. Freigabe- und
+Auth-Geheimnisse gehören nicht in die exportierte lokale Backup-Datei.

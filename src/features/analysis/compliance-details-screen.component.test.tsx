@@ -70,7 +70,7 @@ describe("ComplianceDetailsScreen", () => {
     mockPlanning = false;
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByRole("header", { name: /Meldungen/ })).toBeNull();
-    expect(screen.queryByText("Freiwillige Planung")).toBeNull();
+    expect(screen.queryByText("Planungshinweise")).toBeNull();
     expect(screen.getByText(/Planungshinweise ausgeblendet/)).toBeVisible();
   });
   it("shows one neutral total and reserves color for its severity", async () => {
