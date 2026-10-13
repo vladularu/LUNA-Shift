@@ -1,17 +1,16 @@
-import { useState, type ReactNode } from "react";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import type { NetPayResult } from "@/domain/net-pay";
 import { formatMonthTitle } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
-import { RADII, SPACING } from "@/theme/tokens";
+import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RowButton, SurfaceCard } from "@/ui/design-system";
 import { NetPayText } from "./net-pay-controls";
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
-import { NetPayWorkflowAmount, NetPayWorkflowLink } from "./net-pay-workflow-controls";
 import { NetPayAmountRow } from "./net-pay-amount-row";
+import { CardSeparator } from "@/ui/design-system";
+import { SalaryAmountRow, SalaryPremiumCard, SalarySectionCard } from "./salary-ui";
 
 type AvailablePay = Extract<NetPayResult, { status: "available" }>;
 type Premiums = { readonly paidPremiumCents: number; readonly taxFreeCents: number };
@@ -24,15 +23,6 @@ export function NetPaySalarySummary({
   onGross,
   onDeductions,
   onPremiums,
-  onServices,
-  grossExpanded = false,
-  grossDetails,
-  deductionsExpanded = false,
-  deductionDetails,
-  premiumsExpanded = false,
-  premiumDetails,
-  servicesExpanded = false,
-  serviceDetails,
 }: {
   readonly pay: AvailablePay;
   readonly pensionOmitted: boolean;
@@ -41,162 +31,106 @@ export function NetPaySalarySummary({
   readonly onGross: () => void;
   readonly onDeductions: () => void;
   readonly onPremiums: () => void;
-  readonly onServices: () => void;
-  readonly grossExpanded?: boolean;
-  readonly grossDetails?: ReactNode;
-  readonly deductionsExpanded?: boolean;
-  readonly deductionDetails?: ReactNode;
-  readonly premiumsExpanded?: boolean;
-  readonly premiumDetails?: ReactNode;
-  readonly servicesExpanded?: boolean;
-  readonly serviceDetails?: ReactNode;
 }) {
   const palette = usePalette();
-  const title = pensionOmitted ? "Netto vor Zusatzversorgung" : "Netto-Prognose";
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = width < 360 || fontScale >= 1.4;
+  const netLabel = netPayForecastEuro(pay);
+  const heroType = width < 360 ? TYPOGRAPHY.hero : TYPOGRAPHY.salaryHero;
   const notice = netPayForecastLabel(pay);
+  const title = pensionOmitted ? "Netto vor Zusatzversorgung" : "Voraussichtliches Netto";
   return (
     <>
-      <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.md }}>
-        <NetPayWorkflowAmount
-          title={title}
-          value={netPayForecastEuro(pay)}
-          prefix="ca."
-          caption={caption}
-          large
-        />
-        {notice ? (
+      <SalarySectionCard title="Netto-Prognose">
+        <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
           <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            accessible
+            accessibilityLabel={`${title}: ${netLabel}`}
+            selectable
             style={{
-              alignSelf: "flex-start",
-              paddingHorizontal: SPACING.sm,
-              paddingVertical: 5,
-              borderRadius: RADII.small,
-              backgroundColor: palette.tertiarySoft,
-              color: palette.warning,
-              ...TYPOGRAPHY.caption,
+              ...heroType,
+              fontVariant: ["tabular-nums"],
+              color: palette.text,
             }}
           >
-            {notice}
+            {netLabel.replaceAll("\u00a0", " ")}
           </Text>
-        ) : null}
-        {pensionOmitted ? (
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          {caption ? (
+            <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>{caption}</Text>
+          ) : null}
+          {notice ? <NetPayText>{notice}</NetPayText> : null}
+          {pensionOmitted ? <NetPayText>Zusatzversorgung offen</NetPayText> : null}
+          <View
             style={{
-              alignSelf: "flex-start",
-              paddingHorizontal: SPACING.sm,
-              paddingVertical: 5,
-              borderRadius: RADII.small,
-              backgroundColor: palette.tertiarySoft,
-              color: palette.warning,
-              ...TYPOGRAPHY.caption,
+              flexDirection: "row",
+              flexWrap: stacked ? "wrap" : "nowrap",
+              gap: SPACING.lg,
+              borderTopWidth: 1,
+              borderTopColor: palette.separator,
+              paddingTop: SPACING.sm,
             }}
           >
-            Zusatzversorgung offen
-          </Text>
-        ) : null}
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 16,
-            borderTopWidth: 1,
-            borderTopColor: palette.separator,
-            paddingTop: 12,
-          }}
-        >
-          <NetPaySummaryMetric
-            label="Gesamtbrutto"
-            cents={pay.amounts.grossCents}
-            onPress={onGross}
-            expanded={grossExpanded}
-          />
-          <NetPaySummaryMetric
-            label="Abzüge"
-            cents={pay.amounts.grossCents - pay.netCents}
-            onPress={onDeductions}
-            expanded={deductionsExpanded}
-            negative
-          />
+            <NetPaySummaryMetric
+              label="Gesamtbrutto"
+              displayLabel="Brutto"
+              cents={pay.amounts.grossCents}
+              onPress={onGross}
+              overview
+            />
+            {!stacked ? <View style={{ width: 1, backgroundColor: palette.separator }} /> : null}
+            <NetPaySummaryMetric
+              label="Abzüge"
+              cents={pay.amounts.grossCents - pay.netCents}
+              onPress={onDeductions}
+              negative
+              overview
+            />
+          </View>
         </View>
-        {grossDetails}
-        {deductionDetails}
-      </SurfaceCard>
-      <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
-        <NetPayAmountRow label="Zeitzuschläge" value={netPayEuro(premiums.paidPremiumCents)} />
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
-          <NetPaySummaryMetric
-            label="Steuerfrei"
-            cents={premiums.taxFreeCents}
-            color={palette.success}
-          />
-          <NetPaySummaryMetric
-            label="Steuerpflichtig"
-            cents={premiums.paidPremiumCents - premiums.taxFreeCents}
-          />
-        </View>
-        <NetPayWorkflowLink onPress={onPremiums} expanded={premiumsExpanded}>
-          Aufschlüsseln
-        </NetPayWorkflowLink>
-        {premiumDetails}
-        <View
-          style={{
-            marginHorizontal: -SPACING.lg,
-            borderTopWidth: 1,
-            borderTopColor: palette.separator,
-          }}
-        >
-          <RowButton
-            title="Einzelne Dienste"
-            subtitle="Zuschläge je Schicht ansehen"
-            accessibilityLabel="Einzelne Dienste"
-            onPress={onServices}
-            accessibilityState={{ expanded: servicesExpanded }}
-            trailing={
-              <Ionicons
-                accessibilityElementsHidden
-                name={servicesExpanded ? "chevron-up" : "chevron-down"}
-                color={palette.textMuted}
-                size={18}
-              />
-            }
-          />
-        </View>
-        {serviceDetails}
-      </SurfaceCard>
+      </SalarySectionCard>
+      <SalaryPremiumCard
+        totalCents={premiums.paidPremiumCents}
+        taxFreeCents={premiums.taxFreeCents}
+        onPress={onPremiums}
+        grouped
+      />
     </>
   );
 }
-
 export function NetPaySummaryMetric({
   label,
+  displayLabel,
   cents,
   onPress,
   negative = false,
   color,
   large = false,
   expanded,
+  overview = false,
 }: {
   readonly label: string;
+  readonly displayLabel?: string;
   readonly cents: number;
   readonly onPress?: () => void;
   readonly negative?: boolean;
   readonly color?: string;
   readonly large?: boolean;
   readonly expanded?: boolean;
+  readonly overview?: boolean;
 }) {
   const palette = usePalette();
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = width < 360 || fontScale >= 1.4;
   return (
     <Pressable
       accessibilityRole={onPress ? "button" : undefined}
-      accessibilityLabel={`${label}: ${netPayEuro(cents)}`}
+      accessibilityLabel={`${label}: ${netPayEuro(negative ? -cents : cents)}`}
       accessibilityHint={onPress ? "Details anzeigen" : undefined}
       accessibilityState={expanded === undefined ? undefined : { expanded }}
       onPress={onPress}
       style={({ pressed }) => ({
         flexGrow: 1,
-        flexBasis: "45%",
+        flexBasis: stacked ? "100%" : overview ? 0 : "45%",
         minHeight: 48,
         gap: SPACING.xxs,
         paddingVertical: 4,
@@ -206,11 +140,15 @@ export function NetPaySummaryMetric({
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.xxs }}>
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+          style={{
+            color: palette.textMuted,
+            ...(overview ? TYPOGRAPHY.small : TYPOGRAPHY.caption),
+            flexShrink: 1,
+          }}
         >
-          {label}
+          {displayLabel ?? label}
         </Text>
-        {onPress ? (
+        {onPress && !overview ? (
           <Ionicons
             accessibilityElementsHidden
             name={
@@ -225,7 +163,7 @@ export function NetPaySummaryMetric({
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{
           color: color ?? palette.text,
-          ...(large ? TYPOGRAPHY.hero : TYPOGRAPHY.bodyStrong),
+          ...(large ? TYPOGRAPHY.hero : overview ? TYPOGRAPHY.value : TYPOGRAPHY.bodyStrong),
           fontVariant: ["tabular-nums"],
         }}
       >
@@ -257,7 +195,9 @@ export function NetPayDeductionDetails({
   readonly compact?: boolean;
 }) {
   const palette = usePalette();
-  const [more, setMore] = useState(false);
+  const { width, fontScale } = useWindowDimensions();
+  const compactAmount = width < 360 || fontScale >= 1.4;
+
   const notice = netPayForecastLabel(pay);
   const mainRows = [
     ["Lohnsteuer", pay.tax.wageTaxCents],
@@ -277,7 +217,7 @@ export function NetPayDeductionDetails({
       : []),
   ] as const;
   return (
-    <View style={{ gap: SPACING.md }}>
+    <View style={{ gap: SPACING.lg }}>
       {compact ? (
         <Text
           accessibilityRole="header"
@@ -287,45 +227,63 @@ export function NetPayDeductionDetails({
           Deine Abzüge
         </Text>
       ) : (
-        <NetPayWorkflowAmount
-          title="Abzüge insgesamt"
-          value={netPayEuro(pay.amounts.grossCents - pay.netCents)}
-          caption={formatMonthTitle(month)}
-        />
-      )}
-      {notice ? <NetPayText>{notice}</NetPayText> : null}
-      <View>
-        {[...mainRows, ...extraRows.filter(([, cents]) => cents !== 0)].map(([label, cents]) => (
-          <View
-            key={label}
+        <SalarySectionCard title="Abzüge insgesamt">
+          <Text
+            accessible
+            accessibilityLabel={`Abzüge insgesamt: ${netPayEuro(pay.amounts.grossCents - pay.netCents)}, ${formatMonthTitle(month)}`}
+            selectable
             style={{
-              borderBottomWidth: 1,
-              borderBottomColor: palette.separator,
+              ...(compactAmount ? TYPOGRAPHY.highlightCount : TYPOGRAPHY.highlightValue),
+              color: palette.text,
+              padding: SPACING.lg,
+              fontVariant: ["tabular-nums"],
             }}
           >
-            <NetPayDetailAmount label={label} cents={cents} />
+            {netPayEuro(pay.amounts.grossCents - pay.netCents).replaceAll("\u00a0", " ")}
+          </Text>
+        </SalarySectionCard>
+      )}
+      {notice ? <NetPayText>{notice}</NetPayText> : null}
+      <SalarySectionCard title="Steuern und Sozialversicherung">
+        {[...mainRows, ...extraRows].map(([label, cents], index) => (
+          <View key={label}>
+            {index ? <CardSeparator /> : null}
+            <SalaryAmountRow label={label} value={netPayEuro(cents)} quiet />
           </View>
         ))}
-      </View>
-      <NetPayWorkflowLink onPress={() => setMore(!more)} expanded={more}>
-        Berechnungsgrundlagen
-      </NetPayWorkflowLink>
-      {more ? (
-        <View style={{ gap: SPACING.xs }}>
-          {extraRows
-            .filter(([, cents]) => cents === 0)
-            .map(([label, cents]) => (
-              <NetPayDetailAmount key={label} label={label} cents={cents} />
-            ))}
-          <NetPayDetailAmount label="Steuerbrutto" cents={pay.amounts.taxableGrossCents} />
-          <NetPayDetailAmount label="SV-Brutto" cents={pay.amounts.socialInsuranceGrossCents} />
-          <NetPayText>Krankenversicherung einschließlich Zusatzbeitrag.</NetPayText>
-          {notice ? (
-            <NetPayDetailAmount label="Netto rechnerisch (vorläufig)" cents={pay.netCents} />
-          ) : null}
-          <NetPayText>Geschätzte Abzüge · Die tatsächliche Auszahlung kann abweichen.</NetPayText>
+      </SalarySectionCard>
+      <SalarySectionCard title="Berechnungsgrundlagen">
+        <SalaryAmountRow
+          label="Steuerbrutto"
+          value={netPayEuro(pay.amounts.taxableGrossCents)}
+          quiet
+        />
+        <CardSeparator />
+        <SalaryAmountRow
+          label="SV-Brutto"
+          value={netPayEuro(pay.amounts.socialInsuranceGrossCents)}
+          quiet
+        />
+        {notice ? (
+          <>
+            <CardSeparator />
+            <SalaryAmountRow
+              label="Netto rechnerisch (vorläufig)"
+              value={netPayEuro(pay.netCents)}
+              quiet
+            />
+          </>
+        ) : null}
+        <CardSeparator />
+        <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+          <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+            Krankenversicherung einschließlich Zusatzbeitrag.
+          </Text>
+          <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+            Geschätzte Abzüge · Die tatsächliche Auszahlung kann abweichen.
+          </Text>
         </View>
-      ) : null}
+      </SalarySectionCard>
       {pensionOmitted ? (
         <NetPayText>
           Beiträge zur Zusatzversorgung und ihre Auswirkungen auf Steuern und Sozialversicherung

@@ -63,8 +63,8 @@ function ThemedApp() {
   return (
     <AppErrorBoundary>
       <ActiveMonthProvider>
-        <PflegeShiftRuntimeProvider>
-          <CalendarPreferencesProvider>
+        <CalendarPreferencesProvider>
+          <PflegeShiftRuntimeProvider>
             <CheckPreferencesProvider>
               <AnalysisViewProvider>
                 <AppErrorBoundary title="Ansicht konnte nicht angezeigt werden">
@@ -119,6 +119,18 @@ function ThemedApp() {
                               headerShown: false,
                               presentation: "fullScreenModal",
                             }}
+                          />
+                          <Stack.Screen
+                            name="calendar-sharing"
+                            options={{ headerShown: false, presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="sharing-invite"
+                            options={{ headerShown: false, presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="auth/callback"
+                            options={{ headerShown: false, presentation: "card" }}
                           />
                           <Stack.Screen
                             name="calendar-design"
@@ -263,7 +275,11 @@ function ThemedApp() {
                           />
                           <Stack.Screen
                             name="salary"
-                            options={{ title: "Gehalt", presentation: "card" }}
+                            options={{ title: "Gehalt", presentation: "card", headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="salary-details"
+                            options={{ presentation: "card", headerShown: false }}
                           />
                           <Stack.Screen
                             name="net-pay"
@@ -295,8 +311,8 @@ function ThemedApp() {
                 </AppErrorBoundary>
               </AnalysisViewProvider>
             </CheckPreferencesProvider>
-          </CalendarPreferencesProvider>
-        </PflegeShiftRuntimeProvider>
+          </PflegeShiftRuntimeProvider>
+        </CalendarPreferencesProvider>
       </ActiveMonthProvider>
     </AppErrorBoundary>
   );

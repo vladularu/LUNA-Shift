@@ -9,6 +9,8 @@ import { AnnualReportScreen } from "@/features/analysis/annual-report-view";
 import { buildAnnualCoreReport } from "@/features/analysis/annual-core-report";
 import { classifyChecks } from "@/features/analysis/check-visibility";
 import type { MonthlyComplianceResult } from "@/domain/types";
+// These cases exercise check preferences; salary data is covered by the net-pay workflow suite.
+jest.mock("@/features/analysis/analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));

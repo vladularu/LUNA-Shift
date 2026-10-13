@@ -65,7 +65,7 @@ export function CheckSettingsScreen() {
                 />
               </View>
             </SurfaceCard>
-            <SectionHeader title="Freiwillige Planung" />
+            <SectionHeader title="Planungshinweise" />
             <SurfaceCard>
               <View
                 style={{

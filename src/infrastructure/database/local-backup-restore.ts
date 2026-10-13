@@ -33,6 +33,7 @@ import {
 import { LocalBackupBlockedError } from "@/infrastructure/database/local-backup";
 import { USER_DATA_PREFERENCE_KEYS } from "@/infrastructure/database/preferences-repository";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
+import { isolateSharingForBackupRestore } from "./calendar-sharing-repository";
 import {
   REMUNERATION_PROFILE_COLUMNS,
   initializeLegacyRemunerationProfile,
@@ -73,6 +74,8 @@ export async function restoreLocalBackup(
         "Das Backup stammt aus einer neueren LUNA-Shift-Version.",
       );
     }
+
+    await isolateSharingForBackupRestore(transaction);
 
     await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
     await transaction.runAsync("DELETE FROM net_pay_profiles");

@@ -25,6 +25,7 @@ import {
   restoreTestBackup,
   setDeveloperMode,
 } from "@/infrastructure/database/dev-tools-repository";
+import { CalendarWidgetDiagnosticsCard } from "@/features/widgets/calendar-widget-diagnostics-card";
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { listDiagnosticEvents, recordDiagnostic } from "@/infrastructure/diagnostics";
 import { analysisRoute, calendarRoute } from "@/navigation/routes";
@@ -647,6 +648,7 @@ function DevToolsContent() {
           )}
         </View>
       </View>
+      <CalendarWidgetDiagnosticsCard />
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: busy || catalogBusy }}

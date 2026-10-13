@@ -1,3 +1,4 @@
+import { useSharedCalendarDays } from "./use-shared-calendar-days";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -60,7 +61,6 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
 
 const [MONTHS_BEFORE, MONTHS_AFTER] = [24, 36] as const;
-
 interface QuickPopupState {
   readonly revision: number;
   readonly date: string;
@@ -127,6 +127,13 @@ export function CalendarScreen() {
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [stampTool, setStampTool] = useState<QuickEntryStampAction | null>(null);
   const [quickPopup, setQuickPopup] = useState<QuickPopupState | null>(null);
+  const closeQuickPopup = useCallback(() => setQuickPopup(null), []);
+  const { sharedEntriesByDate, openSharedDate, sharedDaySheet } = useSharedCalendarDays(
+    timeZone,
+    isFocused,
+    closeQuickPopup,
+    visibleMonth,
+  );
   const popupRevision = useRef(0);
   const pendingSelectedDate = useRef<string | null>(null);
   const settledMonth = useRef(targetMonth);
@@ -427,7 +434,6 @@ export function CalendarScreen() {
     [openQuickEditor, selectedDate],
   );
 
-  const closeQuickPopup = useCallback(() => setQuickPopup(null), []);
   const openShiftPicker = useOpenShiftSelection({ setPlannerMode, setStampTool });
   const openEntry = useCallback((entry: CalendarEntry) => {
     pendingSelectedDate.current = entry.date;
@@ -475,6 +481,8 @@ export function CalendarScreen() {
         <SharedCalendarMonth
           accessibilityVisible={isFocused && item === visibleMonth}
           entriesByDate={entriesByDate}
+          sharedEntriesByDate={sharedEntriesByDate}
+          onSelectSharedDate={openSharedDate}
           display={preferences}
           month={item}
           onSelectDate={selectDate}
@@ -491,6 +499,8 @@ export function CalendarScreen() {
       ) : null,
     [
       entriesByDate,
+      sharedEntriesByDate,
+      openSharedDate,
       isFocused,
       pageHeight,
       preferences,
@@ -525,6 +535,7 @@ export function CalendarScreen() {
         direction={headerDirection}
         month={controller.displayMonth}
         onMoveYear={moveYear}
+        onOpenSharing={() => router.push("/calendar-sharing")}
         onOpenDisplay={openCalendarDisplay}
         onOpenYear={openYear}
         plannerActive={plannerMode}
@@ -593,6 +604,7 @@ export function CalendarScreen() {
           </Animated.View>
         </View>
       </SharedCalendarScene>
+      {sharedDaySheet}
       <CalendarQuickOverlay modal={quickPopup !== null && isFocused}>
         {quickPopup ? (
           <QuickEntryPopup

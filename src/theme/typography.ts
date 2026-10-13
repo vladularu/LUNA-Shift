@@ -8,6 +8,7 @@ export const COMPACT_TEXT_MAX_SCALE = 2;
 export const TYPOGRAPHY = {
   // Keep LUNA's original iPhone metrics; the text adapter supplies Inter.
   hero: { fontSize: 34, lineHeight: 41, fontWeight: "700", letterSpacing: -0.8 },
+  salaryHero: { fontSize: 40, lineHeight: 48, fontWeight: "700", letterSpacing: -0.8 },
   screenTitle: { fontSize: 22, lineHeight: 28, fontWeight: "600", letterSpacing: -0.2 },
   sectionTitle: { fontSize: 17, lineHeight: 23, fontWeight: "600" },
   value: { fontSize: 20, lineHeight: 26, fontWeight: "700", letterSpacing: -0.2 },

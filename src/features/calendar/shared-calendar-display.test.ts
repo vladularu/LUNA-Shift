@@ -1,0 +1,100 @@
+import { describe, it, expect } from "vitest";
+import { sharedCalendarDays } from "./shared-calendar-display";
+import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
+const now = Date.parse("2026-10-25T12:00:00Z");
+const item: CachedSharedCalendar = {
+  accountId: "viewer",
+  calendar: {
+    id: "cal",
+    ownerId: "owner",
+    name: "Alex",
+    color: "#123456",
+    visibility: "DETAILS",
+    revision: 1,
+    isOwner: false,
+    publishedAt: "2026-10-25T10:00:00Z",
+  },
+  visible: true,
+  fetchedAt: "2026-10-25T11:00:00Z",
+  entries: [
+    {
+      id: "entry",
+      title: "Nacht",
+      color: "#FF0000",
+      symbol: "moon",
+      startsAt: "2026-10-24T19:00:00Z",
+      endsAt: "2026-10-25T06:30:00Z",
+      timeZone: "Europe/Berlin",
+      allDay: false,
+    },
+  ],
+};
+describe("separate read-only shared calendar display", () => {
+  it("shows a DST night with correct local start and next-day end", () => {
+    const result = sharedCalendarDays([item], "Europe/Berlin", now);
+    const row = result.get("2026-10-24")![0];
+    expect(row.when).toBe("21:00–07:30 · endet am 25.10.");
+    expect(row.calendarName).toBe("Alex");
+    expect(row.calendarColor).toBe("#123456");
+    expect(row.entry).toBe(item.entries[0]);
+  });
+  it("hides owner copies, hidden calendars and expired cache without touching local data", () => {
+    expect(
+      sharedCalendarDays(
+        [
+          { ...item, visible: false },
+          { ...item, calendar: { ...item.calendar, isOwner: true } },
+          { ...item, fetchedAt: "2026-10-24T10:00:00Z" },
+        ],
+        "Europe/Berlin",
+        now,
+      ).size,
+    ).toBe(0);
+    expect(item.entries).toHaveLength(1);
+  });
+  it("uses source dates for all-day entries across viewer time zones", () => {
+    const allDay = {
+      ...item,
+      entries: [
+        {
+          ...item.entries[0],
+          startsAt: "2026-10-24T22:00:00Z",
+          endsAt: "2026-10-25T23:00:00Z",
+          allDay: true,
+        },
+      ],
+    };
+    const map = sharedCalendarDays([allDay], "America/New_York", now);
+    expect([...map.keys()]).toEqual(["2026-10-25"]);
+    expect(map.get("2026-10-25")![0].when).toBe("Ganztägig");
+  });
+  it("bounds aggregation to visible months and rejects hostile long intervals", () => {
+    expect(
+      sharedCalendarDays([item], "Europe/Berlin", now, {
+        startDate: "2026-11-01",
+        endDate: "2026-12-01",
+      }).size,
+    ).toBe(0);
+    expect(
+      sharedCalendarDays(
+        [
+          {
+            ...item,
+            entries: [{ ...item.entries[0], allDay: true, endsAt: "2099-10-01T00:00:00Z" }],
+          },
+        ],
+        "Europe/Berlin",
+        now,
+      ).size,
+    ).toBe(0);
+  });
+  it("fails closed on damaged cached intervals", () => {
+    expect(
+      sharedCalendarDays(
+        [{ ...item, entries: [{ ...item.entries[0], startsAt: "invalid" }] }],
+        "Europe/Berlin",
+        now,
+      ).size,
+    ).toBe(0);
+  });
+});

@@ -103,3 +103,11 @@ export const CALENDAR_MINI_METRICS = {
   daySize: 18,
   fontSize: 10,
 } as const;
+
+// Muted colors for names of separate, read-only calendar layers.
+export const SHARED_CALENDAR_COLORS = [
+  { color: "#527D92", name: "Blau" },
+  { color: "#4D8C64", name: "Grün" },
+  { color: "#A27447", name: "Braun" },
+  { color: "#7666A4", name: "Violett" },
+] as const;

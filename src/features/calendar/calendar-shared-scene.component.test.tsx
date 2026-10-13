@@ -165,12 +165,12 @@ describe("shared live calendar scene", () => {
     });
     const month = screen.getByTestId("shared-month-2026-01");
     await screen.rerender(<Tree mode="YEAR" />);
-    await act(async () => jest.advanceTimersByTime(500));
+    await act(async () => jest.advanceTimersByTime(479));
     expect(screen.getByTestId("shared-month-2026-01", { includeHiddenElements: true })).toBe(month);
     expect(screen.getByTestId("calendar-year-overview-shell").props.pointerEvents).toBe("none");
     await fireEvent.press(screen.getByRole("button", { name: "September 2026 öffnen" }));
     expect(onSelectMonth).not.toHaveBeenCalled();
-    await act(async () => jest.advanceTimersByTime(100));
+    await act(async () => jest.advanceTimersByTime(1));
     expect(screen.getByTestId("calendar-year-overview-shell").props.pointerEvents).toBe("auto");
     await fireEvent.press(screen.getByRole("button", { name: "September 2026 öffnen" }));
     expect(onSelectMonth).toHaveBeenCalledWith("2026-09");

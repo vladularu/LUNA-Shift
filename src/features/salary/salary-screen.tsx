@@ -1,39 +1,12 @@
 import { Text } from "@/ui/text";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
-import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
-import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
-import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
-import { selectVkaEAssessmentShifts } from "@/engine/simple-vka-e-pay";
-import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-training-pay";
 import { Temporal } from "@js-temporal/polyfill";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable } from "react-native";
-
-import {
-  usePflegeShiftEntries,
-  usePflegeShiftProfile,
-  usePflegeShiftStatus,
-  usePflegeShiftTariff,
-  usePflegeShiftTestData,
-} from "@/application/pflegeshift-provider";
-import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { formatMonthTitle } from "@/engine/calendar";
-import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
-import {
-  selectAllowanceShifts,
-  selectMonthlyAnalysisEntries,
-} from "@/features/analysis/analysis-data";
-import {
-  captureRuleComputation,
-  RuleComputationNotice,
-} from "@/features/analysis/rule-computation";
-import {
-  premiumDetailsRoute,
-  settingsEditorRoute,
-  settingsInfoRoute,
-  tariffAssessmentRoute,
-} from "@/navigation/routes";
+import { RuleComputationNotice } from "@/features/analysis/rule-computation";
+import { settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
@@ -41,282 +14,120 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
-import { MonthNavigator } from "@/ui/month-navigator";
 import { selectionFeedback } from "@/ui/haptics";
-import { ReportPeriodContent, ReportScrollView, ReportTestBadge } from "@/ui/report-layout";
+import { ReportPeriodContent, ReportTestBadge } from "@/ui/report-layout";
 import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
-
-function euro(value: number | null): string {
-  if (value === null) return "–";
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value);
-}
+import { useSalaryReport } from "./use-salary-report";
+import { salaryProfileCaption } from "./salary-composition";
+import { SalaryMonthNavigator, SalaryPage } from "./salary-ui";
 
 export function SalaryScreen() {
   const palette = usePalette();
-  const activeMonthCoordinator = useActiveMonthCoordinator();
+  const coordinator = useActiveMonthCoordinator();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
-  const { error, ready, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
-  const { entries } = usePflegeShiftEntries();
-  const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
-  const { testMonths } = usePflegeShiftTestData();
-  const { resolver: ruleResolver } = useRuleCatalogRuntime();
-  const [month, setMonth] = useState(() => activeMonthCoordinator.getMonth());
-  const [ruleRetryRevision, setRuleRetryRevision] = useState(0);
-  const parsedMonth = parseMonthRouteParam(params.month);
-  const routeMonth = parsedMonth.status === "valid" ? parsedMonth.value : null;
-
+  const parsed = parseMonthRouteParam(params.month);
+  const routeMonth = parsed.status === "valid" ? parsed.value : null;
+  const [month, setMonth] = useState(() => routeMonth ?? coordinator.getMonth());
   useEffect(() => {
     if (routeMonth !== null) {
-      activeMonthCoordinator.setMonth(routeMonth);
+      coordinator.setMonth(routeMonth);
       setMonth(routeMonth);
     }
-  }, [activeMonthCoordinator, routeMonth]);
-
+  }, [coordinator, routeMonth]);
   useFocusEffect(
     useCallback(() => {
-      const activeMonth = activeMonthCoordinator.getMonth();
-      setMonth((current) => (current === activeMonth ? current : activeMonth));
-    }, [activeMonthCoordinator]),
+      const active = coordinator.getMonth();
+      setMonth((current) => (current === active ? current : active));
+    }, [coordinator]),
   );
-
-  const calculation = useMemo(() => {
-    void ruleRetryRevision;
-    if (!ready || error !== null || profile === null) return null;
-    return captureRuleComputation(() => {
-      const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
-      const allowanceShifts = profile.tvhKrTariff
-        ? selectTvhKrAssessmentShifts(entries, month)
-        : profile.tvUkNursingTariff
-          ? selectTvUkAssessmentShifts(entries, month)
-          : profile.tvlKrTariff || profile.tvalPflegeTariff
-            ? selectTvlKrAssessmentShifts(entries, month)
-            : profile.vkaETariff
-              ? selectVkaEAssessmentShifts(entries, month)
-              : profile.nursingTrainingTariff
-                ? selectNursingTrainingAssessmentShifts(entries, month)
-                : profile.tariff === null
-                  ? monthlyEntries.monthShifts
-                  : selectAllowanceShifts(entries, month, ruleResolver);
-      const decision = tariffDecisions.find((item) => item.month === month) ?? null;
-      return {
-        monthShifts: monthlyEntries.monthShifts,
-        pay: calculateMonthlyPayEstimate(
-          month,
-          monthlyEntries.monthShifts,
-          profile,
-          decision,
-          allowanceShifts,
-          workPatternSettings,
-          ruleResolver,
-        ),
-      };
-    });
-  }, [
-    entries,
-    error,
+  const { ready, error, reload, profile, calculation, retryRules, testMonths } = useSalaryReport(
     month,
-    profile,
-    ready,
-    ruleResolver,
-    ruleRetryRevision,
-    tariffDecisions,
-    workPatternSettings,
-  ]);
-
-  if (ready && error) return <LoadFailureView message={error} onRetry={() => void reload()} />;
-  if (calculation !== null && !calculation.ok) {
-    return (
-      <ReportScrollView>
-        <MonthNavigator
-          label={formatMonthTitle(month)}
-          onNext={() => moveMonth(1)}
-          onPrevious={() => moveMonth(-1)}
-        />
-        <ReportPeriodContent>
-          <ReportExportButton period={month} />
-          <RuleComputationNotice
-            failure={calculation}
-            onRetry={() => setRuleRetryRevision((value) => value + 1)}
-            title="Gehalt nicht verfügbar"
-          />
-        </ReportPeriodContent>
-      </ReportScrollView>
-    );
-  }
-  if (!ready || profile === null || calculation === null) return <LoadingView />;
-  const { monthShifts, pay } = calculation.value;
-  const manualSalary = profile.tariff === null && profile.manualMonthlyGrossCents != null;
-  const salaryReady =
-    profile.tariff !== null ||
-    profile.nursingTrainingTariff != null ||
-    profile.vkaETariff != null ||
-    profile.tvlKrTariff != null ||
-    profile.tvUkNursingTariff != null ||
-    profile.tvhKrTariff != null ||
-    profile.tvalPflegeTariff != null ||
-    manualSalary;
-
+    parsed.status !== "invalid",
+  );
   function moveMonth(delta: number) {
-    const nextMonth = Temporal.PlainDate.from(`${month}-01`)
+    const next = Temporal.PlainDate.from(`${month}-01`)
       .add({ months: delta })
       .toString()
       .slice(0, 7);
-    activeMonthCoordinator.setMonth(nextMonth);
-    setMonth(nextMonth);
+    coordinator.setMonth(next);
+    setMonth(next);
     selectionFeedback();
   }
-
-  const salaryProfileLabel = manualSalary
-    ? "Manuell hinterlegt"
-    : profile.tvalPflegeTariff
-      ? `TVA-L Pflege · ${profile.tvalPflegeTariff.trainingYear}. Ausbildungsjahr`
-      : profile.tvhKrTariff
-        ? `TV-H ${profile.tvhKrTariff.payGroup} · Stufe ${profile.tvhKrTariff.payLevel}`
-        : profile.tvUkNursingTariff
-          ? "TV-UK " +
-            profile.tvUkNursingTariff.payGroup.replace("PUK", "P-UK") +
-            " · Stufe " +
-            profile.tvUkNursingTariff.payLevel
-          : profile.tvlKrTariff
-            ? `TV-L ${profile.tvlKrTariff.payGroup} · Stufe ${profile.tvlKrTariff.payLevel}`
-            : profile.vkaETariff
-              ? `TVöD ${profile.vkaETariff.payGroup} · Stufe ${profile.vkaETariff.payLevel}`
-              : profile.nursingTrainingTariff
-                ? `TVAöD Pflege · ${profile.nursingTrainingTariff.trainingYear}. Ausbildungsjahr`
-                : profile.tariff
-                  ? `TVöD-P ${profile.tariff.payGroup} · Stufe ${profile.tariff.payLevel}`
-                  : null;
-  const compositionRows = manualSalary
-    ? [{ label: "Monatsbrutto", value: euro(pay.personalBaseAmount) }]
-    : [
-        {
-          label:
-            profile.nursingTrainingTariff || profile.tvalPflegeTariff
-              ? "Ausbildungsentgelt"
-              : "Grundentgelt",
-          value: euro(pay.personalBaseAmount),
-        },
-        {
-          label: "Zeitzuschläge",
-          value: euro(pay.timePremiumAmount),
-          onPress: () => router.push(premiumDetailsRoute(month)),
-        },
-        ...(pay.overtimeAmount > 0
-          ? [{ label: "Überstunden", value: euro(pay.overtimeAmount) }]
-          : []),
-        ...(pay.allowanceAmount > 0
-          ? [
-              {
-                label: pay.confirmedAllowance
-                  ? "Schichtzulage"
-                  : "Schichtzulage · Muster & Angaben",
-                value: euro(pay.allowanceAmount),
-                onPress: () => router.push(tariffAssessmentRoute(month)),
-              },
-            ]
-          : []),
-        ...(pay.tvoedAllowanceAmount > 0
-          ? [
-              {
-                label: "TVöD-Zulage",
-                value: euro(pay.tvoedAllowanceAmount),
-                onPress: () => router.push(settingsInfoRoute("TVOED_ALLOWANCE")),
-              },
-            ]
-          : []),
-        ...(pay.careAllowanceAmount > 0
-          ? [
-              {
-                label: profile.tvhKrTariff
-                  ? "Pflegezulage TV-H"
-                  : profile.tvUkNursingTariff
-                    ? "Pflegezulage TV-UK"
-                    : profile.tvlKrTariff
-                      ? "Pflegezulage TV-L"
-                      : "Pflegezulage TVöD-P",
-                value: euro(pay.careAllowanceAmount),
-                onPress: () =>
-                  router.push(
-                    settingsInfoRoute(
-                      "CARE_ALLOWANCE",
-                      profile.tvhKrTariff
-                        ? "TVH"
-                        : profile.tvUkNursingTariff
-                          ? "TVUK"
-                          : profile.tvlKrTariff
-                            ? "TVL"
-                            : undefined,
-                    ),
-                  ),
-              },
-            ]
-          : []),
-      ];
-  return (
-    <ReportScrollView>
-      <MonthNavigator
-        label={formatMonthTitle(month)}
-        onNext={() => moveMonth(1)}
-        onPrevious={() => moveMonth(-1)}
+  if (parsed.status === "invalid")
+    return (
+      <SalaryPage title="Gehalt">
+        <LoadFailureView
+          title="Gehalt kann nicht geöffnet werden"
+          message="Der Link enthält keinen gültigen Monat."
+          actionLabel="Schließen"
+          onRetry={() => router.back()}
+        />
+      </SalaryPage>
+    );
+  const navigation = (
+    <SalaryMonthNavigator
+      label={formatMonthTitle(month)}
+      onNext={() => moveMonth(1)}
+      onPrevious={() => moveMonth(-1)}
+    />
+  );
+  let content;
+  if (ready && error) content = <LoadFailureView message={error} onRetry={() => void reload()} />;
+  else if (calculation !== null && !calculation.ok)
+    content = (
+      <RuleComputationNotice
+        failure={calculation}
+        onRetry={retryRules}
+        title="Gehalt nicht verfügbar"
       />
+    );
+  else if (!ready || !profile || !calculation) content = <LoadingView />;
+  else {
+    const { pay, monthShifts } = calculation.value;
+    const manual = profile.tariff === null && profile.manualMonthlyGrossCents != null;
+    const salaryReady = !!(
+      profile.tariff ||
+      profile.nursingTrainingTariff ||
+      profile.vkaETariff ||
+      profile.tvlKrTariff ||
+      profile.tvUkNursingTariff ||
+      profile.tvhKrTariff ||
+      profile.tvalPflegeTariff ||
+      manual
+    );
+    const caption = salaryProfileCaption(profile);
+    content = (
       <ReportPeriodContent>
-        <ReportExportButton period={month} />
         {testMonths.includes(month) ? <ReportTestBadge /> : null}
-
         {!salaryReady ? (
           <SetupCard />
         ) : !pay.available ? (
-          <SurfaceCard style={{ gap: SPACING.xs, padding: SPACING.lg }}>
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              selectable
-              style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
-            >
+          <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.xs }}>
+            <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>
               Für diesen Monat nicht verfügbar
             </Text>
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              selectable
-              style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-            >
+            <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
               Für den gewählten Zeitraum liegt kein unterstützter Tarifstand vor.
             </Text>
           </SurfaceCard>
-        ) : (
-          <>
-            {!manualSalary && monthShifts.length === 0 ? (
-              <SurfaceCard style={{ gap: SPACING.xxs, padding: SPACING.md }}>
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  selectable
-                  style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-                >
-                  Noch keine Dienste in diesem Monat
-                </Text>
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  selectable
-                  style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                >
-                  Grundentgelt und feste Zulagen sind bereits enthalten. Variable Zeitzuschläge
-                  erscheinen nach dem ersten Dienst.
-                </Text>
-              </SurfaceCard>
-            ) : null}
-          </>
-        )}
+        ) : !manual && !monthShifts.length ? (
+          <SurfaceCard style={{ padding: SPACING.md, gap: SPACING.xs }}>
+            <Text style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}>
+              Noch keine Dienste in diesem Monat
+            </Text>
+            <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+              Grundentgelt und feste Zulagen sind bereits enthalten. Variable Zeitzuschläge
+              erscheinen nach dem ersten Dienst.
+            </Text>
+          </SurfaceCard>
+        ) : null}
         <NetPayAutomaticEntryCard
           key={month}
           month={month}
-          caption={salaryProfileLabel ?? undefined}
-          nightCompensatoryMinutes={pay.nightCompensatoryMinutes ?? 0}
-          grossItems={compositionRows}
-          showPremiumDetails={salaryReady && pay.available && !manualSalary}
+          caption={caption ?? undefined}
+          showPremiumDetails={salaryReady && pay.available && !manual}
           blocked={testMonths.includes(month)}
+          premiumCents={pay.available ? Math.round(pay.timePremiumAmount * 100) : undefined}
           proposedGrossCents={
             pay.available && pay.estimatedGrossAmount !== null
               ? Math.round(pay.estimatedGrossAmount * 100)
@@ -324,10 +135,18 @@ export function SalaryScreen() {
           }
         />
       </ReportPeriodContent>
-    </ReportScrollView>
+    );
+  }
+  return (
+    <SalaryPage
+      title="Gehalt"
+      action={<ReportExportButton key={month} period={month} variant="icon" />}
+    >
+      {navigation}
+      {content}
+    </SalaryPage>
   );
 }
-
 function SetupCard() {
   const palette = usePalette();
   return (

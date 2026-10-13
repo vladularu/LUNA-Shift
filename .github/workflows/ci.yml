@@ -25,6 +25,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify:fast
+        env:
+          # SDK widget and cloud types exceed Node 22's default CI heap.
+          NODE_OPTIONS: --max-old-space-size=4096
 
   coverage:
     name: coverage

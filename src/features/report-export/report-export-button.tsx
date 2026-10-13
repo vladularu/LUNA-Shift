@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform, Pressable, View } from "react-native";
+import { Alert, Platform, View } from "react-native";
 import { Text } from "@/ui/text";
 import { useSQLiteContext } from "expo-sqlite";
 import { Temporal } from "@js-temporal/polyfill";
@@ -13,7 +13,7 @@ import {
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { usePalette } from "@/theme/palette";
-import { SPACING, RADII, CONTROL_HEIGHT, CORNER_CURVE } from "@/theme/tokens";
+import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleIdleWork } from "@/ui/schedule-idle-work";
 import { DEFAULT_REPORT_OPTIONS, type ReportDocument, type ReportOptions } from "./report-document";
@@ -22,8 +22,15 @@ import { shareReport, type ReportFormat } from "./share-report";
 import { ReportExportOptions } from "./report-export-options";
 import { SelectionSheet } from "@/ui/selection-sheet";
 import { ReportExportError } from "./report-export-error";
+import { ReportExportAction } from "./report-export-action";
 
-export function ReportExportButton({ period }: { readonly period: string }) {
+export function ReportExportButton({
+  period,
+  variant = "button",
+}: {
+  readonly period: string;
+  readonly variant?: "button" | "icon";
+}) {
   const palette = usePalette();
   const db = useSQLiteContext();
   const { ready, error } = usePflegeShiftStatus();
@@ -128,35 +135,20 @@ export function ReportExportButton({ period }: { readonly period: string }) {
   if (Platform.OS !== "ios") return null;
   return (
     <View style={{ gap: SPACING.xs }}>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-      >
-        {period.length === 4 ? "Jahresbericht" : "Monatsbericht"} als PDF oder CSV
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled, busy }}
-        disabled={disabled}
-        onPress={() => setOptionsOpen(true)}
-        style={({ pressed }) => ({
-          minHeight: CONTROL_HEIGHT.regular,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: SPACING.sm,
-          borderRadius: RADII.control,
-          borderCurve: CORNER_CURVE,
-          backgroundColor: palette.surfaceMuted,
-          opacity: disabled || pressed ? 0.5 : 1,
-        })}
-      >
+      {variant === "button" ? (
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.primary, ...TYPOGRAPHY.button }}
+          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
         >
-          {busy ? "Bericht wird erstellt …" : "Bericht exportieren"}
+          {period.length === 4 ? "Jahresbericht" : "Monatsbericht"} als PDF oder CSV
         </Text>
-      </Pressable>
+      ) : null}
+      <ReportExportAction
+        variant={variant}
+        busy={busy}
+        disabled={disabled}
+        onPress={() => setOptionsOpen(true)}
+      />
       <SelectionSheet
         title="Bericht exportieren"
         visible={optionsOpen}

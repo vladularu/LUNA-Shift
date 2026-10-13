@@ -35,7 +35,7 @@ describe("SettingsInfoDetailsScreen storage disclosure", () => {
 
     expect(screen.getByText("Löschen")).toBeTruthy();
     expect(
-      screen.getByText(/Der verschlüsselte Datensatz bleibt 90 Tage lokal gespeichert/),
+      screen.getByText(/Der verschlüsselte Datensatz bleibt mindestens 90 Tage lokal gespeichert/),
     ).toBeTruthy();
     expect(screen.getByText(/Gelöschte Vorlagen bleiben länger erhalten/)).toBeTruthy();
     expect(screen.getByText(/vor dem Wiederherstellen prüfen/)).toBeTruthy();

@@ -72,11 +72,13 @@ import {
   Database,
   FileText,
   Shield,
+  Share,
 } from "lucide-react-native";
 
 // Keep existing control props and stored identifiers; draw the kit's Lucide
 // outlines instead of introducing a second icon language in the design build.
 export const DESIGN_ICON_MAP = {
+  "share-outline": Share,
   coffee: Coffee,
   "weather-sunset-up": Sunrise,
   "white-balance-sunny": Sun,

@@ -17,7 +17,8 @@ describe("native iOS PDF geometry", () => {
       const html = reportToIosHtml(report, { layout, includeSalary: true });
       const style = html.match(/<style>([\s\S]*?)<\/style>/)![1];
       expect(style).toContain("height:768px");
-      expect(style).toContain("width:523px");
+      expect(style).toContain("html,body{width:auto}.page{width:100%}");
+      expect(style).not.toMatch(/(?:html,body|\.page)\{[^}]*\bwidth:\d+(?:\.\d+)?px/);
       expect(style).toContain("@page{size:A4;margin:0}");
       expect(style).not.toMatch(/\dpt\b/);
       expect(html).toContain("Team 768pt");
@@ -31,7 +32,7 @@ describe("native iOS PDF geometry", () => {
   it("bounds the adjustment without modifying user data", () => {
     const html = reportToIosHtml(report, { layout: "standard", includeSalary: false }, 0.94);
     expect(html).toContain("height:721.92px");
-    expect(html).toContain("width:523px");
+    expect(html).toContain("html,body{width:auto}.page{width:100%}");
     expect(html).toContain("Team 768pt");
     expect(html).not.toContain("Gehaltsprognose");
   });

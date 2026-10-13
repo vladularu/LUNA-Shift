@@ -6,6 +6,7 @@ import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
+import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 
 export function MonthOverview({
   month,
@@ -104,12 +105,13 @@ export function MonthOverview({
             }
             gross={estimate?.estimatedGrossAmount}
             manual={manualSalary}
+            netRow={<AnalysisNetPayRow month={month} />}
             caption={
               !salaryReady
                 ? "Tarif oder Monatsbrutto hinterlegen"
                 : manualSalary
                   ? "Manuell hinterlegtes Monatsbrutto"
-                  : "Unverbindliche Brutto-Schätzung"
+                  : "Unverbindliche Schätzung"
             }
           />
         ),

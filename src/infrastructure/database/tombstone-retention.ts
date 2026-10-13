@@ -31,6 +31,14 @@ export async function purgeExpiredTombstones(
   };
 
   await withImmediateTransaction(db, async (transaction) => {
+    // A durable sharing snapshot must reach its server revision before deleting
+    // the local evidence. This also protects a signed-out pending publication.
+    const sharingPending = await transaction.getFirstAsync<{ pending: number }>(
+      `SELECT EXISTS(SELECT 1 FROM sharing_local_bindings
+                      WHERE generation > acknowledged_generation)
+           OR EXISTS(SELECT 1 FROM sharing_publication_outbox) AS pending`,
+    );
+    if (sharingPending?.pending) return;
     // Dependent entries are removed before templates so foreign keys remain valid.
     const shifts = await transaction.runAsync(
       `DELETE FROM shift_entries

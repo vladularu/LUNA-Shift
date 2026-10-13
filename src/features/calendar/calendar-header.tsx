@@ -31,6 +31,7 @@ function HeaderIconButton({
 }: {
   readonly label: string;
   readonly name:
+    | "account-multiple"
     | "calendar-number-outline"
     | "options-outline"
     | "chevron-back"
@@ -58,6 +59,7 @@ export const CalendarHeader = memo(function CalendarHeader({
   viewMode,
   onOpenYear,
   onOpenDisplay,
+  onOpenSharing,
   onMoveYear,
   plannerActive,
   plannerTransition,
@@ -70,6 +72,7 @@ export const CalendarHeader = memo(function CalendarHeader({
   readonly referenceMonth: string;
   readonly viewMode: CalendarViewMode;
   readonly onOpenYear: () => void;
+  readonly onOpenSharing?: () => void;
   readonly onOpenDisplay: () => void;
   readonly onMoveYear: (amount: number) => void;
   readonly plannerActive: boolean;
@@ -144,6 +147,16 @@ export const CalendarHeader = memo(function CalendarHeader({
           >
             {viewMode === "MONTH" ? (
               <>
+                {onOpenSharing ? (
+                  <>
+                    <HeaderIconButton
+                      label="Kalender teilen"
+                      name="account-multiple"
+                      onPress={onOpenSharing}
+                    />
+                    <View style={[styles.separator, { backgroundColor: palette.separator }]} />
+                  </>
+                ) : null}
                 <HeaderIconButton
                   label={`${year}, Jahresansicht öffnen`}
                   name="calendar-number-outline"

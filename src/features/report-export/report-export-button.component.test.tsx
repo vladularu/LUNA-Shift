@@ -89,6 +89,23 @@ describe("Exportbedienung", () => {
       includeSalary: false,
     });
   });
+  it("öffnet den bestehenden Exportablauf über die Kopfleistenaktion", async () => {
+    const screen = await render(<ReportExportButton period="2026-08" variant="icon" />);
+    expect(screen.queryByText(/Monatsbericht als PDF/)).toBeNull();
+    const action = screen.getByRole("button", { name: "Bericht exportieren" });
+    expect(action.props.accessibilityState.disabled).toBe(false);
+    await fireEvent.press(action);
+    await fireEvent.press(screen.getByRole("radio", { name: "CSV" }));
+    await fireEvent.press(screen.getByRole("button", { name: "CSV erstellen und teilen" }));
+    await act(async () => {
+      mockSchedule?.();
+    });
+    expect(mockShare).toHaveBeenCalledWith(
+      expect.objectContaining({ period: "2026-08" }),
+      "CSV",
+      expect.any(Object),
+    );
+  });
   it("exportiert CSV ohne Gehaltsangaben und blockiert doppelte Exporte", async () => {
     const screen = await render(<ReportExportButton period="2026-08" />);
     await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));

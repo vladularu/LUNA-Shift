@@ -1,11 +1,9 @@
-import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { usePflegeShiftStatus, usePflegeShiftTemplates } from "@/application/pflegeshift-provider";
-import type { ShiftTemplate } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import {
   ShiftTemplateAddRow,
@@ -16,12 +14,10 @@ import {
 } from "@/features/templates/shift-template-list";
 import { usePalette } from "@/theme/palette";
 import { templateEditorRoute } from "@/navigation/routes";
-import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { RADII, SPACING } from "@/theme/tokens";
 import { ReorderableList } from "@/ui/reorderable-list";
 import { useReorderScroll } from "@/ui/use-reorder-scroll";
 import { ColorBadge, EmptyState } from "@/ui/design-system";
-import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { FormStatus } from "@/ui/form-layout";
 import { selectionFeedback } from "@/ui/haptics";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -32,12 +28,9 @@ import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
 export function TemplatesManagerScreen() {
   const palette = usePalette();
   useThemeStatusBar();
-  const { fontScale } = useWindowDimensions();
-  const stackActions = fontScale >= 1.6;
   const reorderScroll = useReorderScroll();
   const { error: loadError, ready, reload } = usePflegeShiftStatus();
-  const { templates, removeTemplate, moveTemplateToIndex } = usePflegeShiftTemplates();
-  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const { templates, moveTemplateToIndex } = usePflegeShiftTemplates();
   const [sorting, setSorting] = useState(false);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
@@ -46,35 +39,6 @@ export function TemplatesManagerScreen() {
     return <LoadFailureView message={loadError} onRetry={() => void reload()} />;
   }
   if (!ready) return <LoadingView />;
-
-  async function runTemplateAction(
-    template: ShiftTemplate,
-    fallback: string,
-    action: () => Promise<void>,
-  ) {
-    try {
-      setBusyTemplateId(template.id);
-      setOperationError(null);
-      await action();
-      setActiveTemplateId(null);
-    } catch (error) {
-      setOperationError(userFacingErrorMessage(error, fallback));
-    } finally {
-      setBusyTemplateId(null);
-    }
-  }
-
-  function confirmDelete(template: ShiftTemplate) {
-    confirmDestructiveAction({
-      title: "Vorlage löschen?",
-      message: `„${template.name}“ wird aus der Schnellauswahl entfernt. Bestehende Einträge behalten die zuletzt verknüpfte Darstellung.`,
-      onConfirm: () =>
-        void runTemplateAction(template, "Vorlage konnte nicht gelöscht werden.", async () => {
-          await removeTemplate(template);
-          selectionFeedback();
-        }),
-    });
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
@@ -87,7 +51,6 @@ export function TemplatesManagerScreen() {
             onPress={() => {
               selectionFeedback();
               setSorting((current) => !current);
-              setActiveTemplateId(null);
             }}
             testID="template-manager-sort-button"
             style={({ pressed }) => ({
@@ -164,54 +127,18 @@ export function TemplatesManagerScreen() {
                     <View key={template.id}>
                       {index > 0 ? <ShiftTemplateListSeparator /> : null}
                       <ShiftTemplateListRow
-                        accessibilityLabel={
-                          sorting
-                            ? `${template.name}, Sortieroptionen öffnen`
-                            : `${template.name}, ${subtitle}, Vorlage bearbeiten`
-                        }
+                        accessibilityLabel={`${template.name}, ${subtitle}, Vorlage bearbeiten`}
                         color={template.color}
                         disabled={busyTemplateId !== null}
-                        moreAccessibilityLabel={
-                          sorting ? `${template.name} sortieren` : `${template.name} verwalten`
-                        }
-                        onMorePress={() =>
-                          setActiveTemplateId((current) =>
-                            current === template.id ? null : template.id,
-                          )
-                        }
-                        onPress={() =>
-                          sorting
-                            ? setActiveTemplateId((current) =>
-                                current === template.id ? null : template.id,
-                              )
-                            : router.push(templateEditorRoute(template.id))
-                        }
+                        moreAccessibilityLabel={`${template.name} bearbeiten`}
+                        onMorePress={() => router.push(templateEditorRoute(template.id))}
+                        onPress={() => router.push(templateEditorRoute(template.id))}
                         sorting={sorting}
                         subtitle={subtitle}
                         symbol={template.symbol}
                         testID={`template-manager-row-${template.id}`}
                         title={template.name}
                       />
-                      {activeTemplateId === template.id ? (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            flexWrap: stackActions ? "wrap" : "nowrap",
-                            gap: SPACING.xs,
-                            borderTopWidth: 1,
-                            borderTopColor: palette.separator,
-                            backgroundColor: palette.surfaceMuted,
-                            padding: SPACING.sm,
-                          }}
-                        >
-                          <ManagerButton
-                            danger
-                            disabled={busyTemplateId !== null}
-                            label="Löschen"
-                            onPress={() => confirmDelete(template)}
-                          />
-                        </View>
-                      ) : null}
                     </View>
                   );
                 })
@@ -231,60 +158,5 @@ export function TemplatesManagerScreen() {
         </View>
       </ScreenScrollView>
     </View>
-  );
-}
-
-function ManagerButton({
-  label,
-  icon,
-  disabled = false,
-  danger = false,
-  onPress,
-}: {
-  readonly label: string;
-  readonly icon?: "arrow-up" | "arrow-down";
-  readonly disabled?: boolean;
-  readonly danger?: boolean;
-  readonly onPress: () => void;
-}) {
-  const palette = usePalette();
-  const { fontScale } = useWindowDimensions();
-  const wrapped = fontScale >= 1.6;
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        borderCurve: CORNER_CURVE,
-        minHeight: 44,
-        flex: wrapped ? undefined : 1,
-        flexBasis: wrapped ? "47%" : undefined,
-        flexGrow: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: RADII.control,
-        backgroundColor: palette.surfaceRaised,
-        opacity: disabled ? 0.3 : pressed ? 0.6 : 1,
-        paddingHorizontal: 8,
-      })}
-    >
-      {icon ? (
-        <Ionicons accessibilityElementsHidden color={palette.primary} name={icon} size={17} />
-      ) : (
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{
-            color: danger ? palette.danger : palette.primary,
-            ...TYPOGRAPHY.caption,
-            fontWeight: "600",
-            textAlign: "center",
-          }}
-        >
-          {label}
-        </Text>
-      )}
-    </Pressable>
   );
 }

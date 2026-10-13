@@ -19,6 +19,7 @@ import type { AnnualReport } from "@/features/analysis/annual-report";
 import { PremiumDetailsScreen } from "@/features/analysis/premium-details-screen";
 import { TariffAssessmentScreen } from "@/features/analysis/tariff-assessment-screen";
 import { SalaryScreen } from "@/features/salary/salary-screen";
+import { SalaryDetailsScreen } from "@/features/salary/salary-details-screen";
 import type {
   RuleHolidayPackage,
   RuleLegalPackage,
@@ -332,10 +333,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   it("opens time premiums for a tariff month without shifts", async () => {
     mockRouteMonth = "2026-09";
     const screen = await render(<SalaryScreen />);
-    await fireEvent.press(screen.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-09" },
+      pathname: "/salary-details",
+      params: { month: "2026-09", section: "services" },
     });
   });
 
@@ -358,7 +359,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.getByLabelText(/^Grundgehalt: 1\.490,69/)).toBeTruthy();
     expect(screen.getByText("Zeitzuschläge")).toBeTruthy();
     expect(screen.getByText("Brutto gesamt")).toBeTruthy();
-    expect(screen.getByText("Unverbindliche Brutto-Schätzung")).toBeTruthy();
+    expect(screen.getByText("Unverbindliche Schätzung")).toBeTruthy();
     expect(screen.queryByText("Monatsbrutto")).toBeNull();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
@@ -383,12 +384,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText(/14,26/)).toBeTruthy();
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
@@ -444,15 +447,17 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText("TVA-L Pflege · 1. Ausbildungsjahr")).toBeTruthy();
     expect(salary.getByText("Ausbildungsentgelt")).toBeTruthy();
     expect(salary.getByText(/13,76/)).toBeTruthy();
     expect(salary.queryByText(/Pflegezulage TVöD-P|TVöD-Zulage/)).toBeNull();
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
@@ -503,7 +508,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText("TV-H KR8 · Stufe 4")).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-H")).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
@@ -512,10 +518,11 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       pathname: "/info-details",
       params: { section: "CARE_ALLOWANCE", tariff: "TVH" },
     });
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
@@ -542,7 +549,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText("TV-UK P-UK8 · Stufe 4")).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-UK")).toBeTruthy();
     expect(salary.getByText(/Zusätzlich 30 Min. Freizeitausgleich/)).toBeTruthy();
@@ -552,10 +560,11 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       pathname: "/info-details",
       params: { section: "CARE_ALLOWANCE", tariff: "TVUK" },
     });
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
@@ -594,7 +603,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText("TV-L KR8 · Stufe 4")).toBeTruthy();
     expect(salary.getByText(/36,67/)).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-L")).toBeTruthy();
@@ -604,10 +614,11 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       pathname: "/info-details",
       params: { section: "CARE_ALLOWANCE", tariff: "TVL" },
     });
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
@@ -646,14 +657,16 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       },
     ];
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.getByText("TVöD E9b · Stufe 4")).toBeTruthy();
     expect(salary.getByText(/40,18/)).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
-    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+    await salary.rerender(<SalaryScreen />);
+    await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/premium-details",
-      params: { month: "2026-10" },
+      pathname: "/salary-details",
+      params: { month: "2026-10", section: "services" },
     });
     const premiums = await render(<PremiumDetailsScreen />);
     expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
@@ -722,7 +735,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(analysis.getByRole("button", { name: /^Gehalt, 3\.450,50/ })).toBeTruthy();
 
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.queryByText("Diagnosecode: RULE_PACKAGE_NOT_FOUND")).toBeNull();
     expect(salary.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
     expect(salary.getByText("Monatsbrutto")).toBeTruthy();
@@ -834,7 +848,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(analysis.getByText(/Arbeitszeitprüfung benötigt/)).toBeTruthy();
 
     const salary = await render(<SalaryScreen />);
-    await fireEvent.press(salary.getByRole("button", { name: /^Gesamtbrutto:/ }));
+    mockAnnualSection = "components";
+    await salary.rerender(<SalaryDetailsScreen />);
     expect(salary.queryByText("Diagnosecode: RULE_PACKAGE_NOT_FOUND")).toBeNull();
     expect(salary.getByText("Grundentgelt")).toBeTruthy();
   });
@@ -1037,10 +1052,10 @@ it("opens premiums only inside salary with the exact month", async () => {
   });
   await screen.unmount();
   const salary = await render(<SalaryScreen />);
-  await fireEvent.press(salary.getByRole("button", { name: "Zuschläge nach Diensten" }));
+  await fireEvent.press(salary.getByRole("button", { name: "Zuschläge je Dienst" }));
   expect(router.push).toHaveBeenLastCalledWith({
-    pathname: "/premium-details",
-    params: { month: "2026-09" },
+    pathname: "/salary-details",
+    params: { month: "2026-09", section: "services" },
   });
 });
 

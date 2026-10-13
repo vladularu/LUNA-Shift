@@ -101,7 +101,12 @@ describe.each([
   });
   it("uses readable mode-specific accents and calendar controls", () => {
     expect(palette.accent).toBe(palette.primary);
-    expect(palette.calendarYearAccent).toBe(palette.dark ? palette.primary : palette.accent);
+    expect(colorContrastRatio(palette.positiveBalance, palette.surface)).toBeGreaterThanOrEqual(
+      MINIMUM_TEXT_CONTRAST,
+    );
+    expect(
+      colorContrastRatio(palette.calendarYearAccent, palette.calendarBackground),
+    ).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
     expect(palette.onAccent).toBe(palette.onPrimary);
     expect(colorContrastRatio(palette.onAccent, palette.accent)).toBeGreaterThanOrEqual(
       MINIMUM_TEXT_CONTRAST,

@@ -9,6 +9,7 @@ import { calendarImageLabelColor } from "@/theme/calendar-image";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
 import { CALENDAR_METRICS, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
+import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
 import { prototypeEntryPreview } from "./prototype-entry-preview";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
@@ -185,6 +186,7 @@ export function PrototypeMonthContent({
   layout,
   progress,
   entriesByDate,
+  sharedEntriesByDate,
   holidays,
   display,
   timeZone,
@@ -193,6 +195,7 @@ export function PrototypeMonthContent({
   layout: PrototypeMonth;
   progress: SharedValue<number>;
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
+  sharedEntriesByDate?: ReadonlyMap<string, readonly SharedCalendarDayEntry[]>;
   holidays: ReadonlyMap<string, { readonly name: string }>;
   display: PrototypeDisplay;
   timeZone: string;
@@ -223,7 +226,10 @@ export function PrototypeMonthContent({
         const rows = Math.max(
           0,
           Math.floor(
-            (layout.weekHeight - CALENDAR_METRICS.dayNumberHeight - 2) /
+            (layout.weekHeight -
+              CALENDAR_METRICS.dayNumberHeight -
+              2 -
+              (sharedEntriesByDate?.get(day.date)?.length ? 46 : 0)) /
               (CALENDAR_METRICS.entryRowHeight + CALENDAR_METRICS.chipGap),
           ),
         );
@@ -291,7 +297,10 @@ export function PrototypeMonthContent({
         const rows = Math.max(
           0,
           Math.floor(
-            (layout.weekHeight - CALENDAR_METRICS.dayNumberHeight - 2) /
+            (layout.weekHeight -
+              CALENDAR_METRICS.dayNumberHeight -
+              2 -
+              (sharedEntriesByDate?.get(day.date)?.length ? 46 : 0)) /
               (CALENDAR_METRICS.entryRowHeight + CALENDAR_METRICS.chipGap),
           ),
         );

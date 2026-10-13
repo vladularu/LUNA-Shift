@@ -134,7 +134,7 @@ export function ComplianceDetails({
       {showPlanning && planning.issues.length > 0 ? (
         <ComplianceIssueList
           compliance={planning}
-          heading="Freiwillige Planung"
+          heading="Planungshinweise"
           shifts={shifts}
           embedded={embedded}
         />

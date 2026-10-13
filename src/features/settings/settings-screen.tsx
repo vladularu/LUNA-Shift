@@ -99,9 +99,17 @@ export function SettingsScreen() {
             <CardSeparator />
             <RowButton
               subtitleBelow={subtitleBelow}
+              leading={<SettingsIcon name="account-multiple" />}
+              title="Kalender teilen"
+              subtitle="Dienstpläne gemeinsam ansehen"
+              onPress={() => router.push("/calendar-sharing")}
+            />
+            <CardSeparator />
+            <RowButton
+              subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="shield-checkmark-outline" />}
               title="Prüfung"
-              subtitle="Freiwillige Planungshinweise anzeigen"
+              subtitle="Planungshinweise anzeigen"
               onPress={() => router.push("/check-settings")}
             />
           </SurfaceCard>
@@ -154,7 +162,7 @@ export function SettingsScreen() {
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="phone-portrait-outline" />}
               onPress={() => router.push(settingsInfoRoute("STORAGE"))}
-              subtitle="SQLite · ausschließlich auf diesem Gerät"
+              subtitle="Deine Daten auf diesem Gerät"
               title="Lokale Datenspeicherung"
             />
             <CardSeparator />
