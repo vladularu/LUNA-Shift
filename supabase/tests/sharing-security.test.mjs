@@ -28,6 +28,12 @@ const entry = (id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee") => ({
 });
 let db;
 const rpcNames = new Set([
+  "sharing_capabilities",
+  "sharing_publish_calendar_v2",
+  "sharing_fetch_calendar_v2",
+  "sharing_create_invite_v2",
+  "sharing_list_members_v2",
+  "sharing_set_member_rights",
   "sharing_save_profile",
   "sharing_create_calendar",
   "sharing_publish_calendar",
@@ -129,8 +135,24 @@ before(async () => {
   `);
   const sql = await readFile("supabase/migrations/202610120001_calendar_sharing.sql", "utf8");
   await db.exec(sql);
+  await db.exec(`
+    create schema realtime;
+    create table realtime.messages(topic text not null, extension text not null, payload jsonb not null, private boolean not null);
+    alter table realtime.messages enable row level security;
+    grant usage on schema realtime to authenticated;
+    grant select on realtime.messages to authenticated;
+    create function realtime.topic() returns text language sql stable as
+      $$ select current_setting('realtime.topic', true) $$;
+    create function realtime.send(p_payload jsonb,p_event text,p_topic text,p_private boolean) returns void
+      language sql as $$ insert into realtime.messages values(p_topic,'broadcast',p_payload,p_private) $$;
+  `);
+  await db.exec(await readFile("supabase/migrations/202610130001_sharing_realtime.sql", "utf8"));
+  await db.exec(
+    await readFile("supabase/migrations/202610130002_sharing_content_rights.sql", "utf8"),
+  );
 });
 beforeEach(async () => {
+  await db.exec("reset role; truncate realtime.messages");
   await db.exec("reset role; truncate auth.users cascade");
   await db.query("insert into auth.users(id) values ($1),($2),($3)", [OWNER, VIEWER, OTHER]);
   for (const user of [OWNER, VIEWER, OTHER])
@@ -138,6 +160,244 @@ beforeEach(async () => {
 });
 after(async () => {
   if (db) await db.close();
+});
+
+const rights = (shifts = true, appointments = false, notes = false) => ({
+  shifts,
+  appointments,
+  notes,
+});
+async function publishV2(
+  entries,
+  revision = 0,
+  mutation = MUTATION,
+  user = OWNER,
+  secret = DEVICE_SECRET,
+) {
+  return rpc(user, "sharing_publish_calendar_v2", [
+    CALENDAR,
+    DEVICE,
+    secret,
+    mutation,
+    revision,
+    JSON.stringify(entries),
+  ]);
+}
+async function joinV2(user = VIEWER, contents = rights()) {
+  const invitation = await rpc(OWNER, "sharing_create_invite_v2", [
+    CALENDAR,
+    crypto.randomUUID(),
+    JSON.stringify(contents),
+  ]);
+  const joined = await rpc(user, "sharing_claim_invite", [invitation.token, "Leserin"]);
+  assert.equal(joined.status, "ACTIVE");
+  return invitation;
+}
+const typedEntries = () => [
+  { ...entry(), kind: "SHIFT", note: "Dienstnotiz\nZweite Zeile" },
+  {
+    ...entry("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeef"),
+    kind: "APPOINTMENT",
+    title: "Arzttermin",
+    symbol: "calendar",
+    note: "Terminnotiz",
+  },
+];
+test("v2 invitation remains active for 48 hours with multiple joins, and stop blocks further claims", async () => {
+  await create();
+  await publishV2(typedEntries());
+  const invitation = await joinV2();
+  const hours = (Date.parse(invitation.expiresAt) - Date.now()) / 3600000;
+  assert.ok(hours > 47.9 && hours <= 48);
+  await rpc(OTHER, "sharing_claim_invite", [invitation.token, "Andere Leserin"]);
+  await rpc(VIEWER, "sharing_claim_invite", [invitation.token, "Leserin"]);
+  const link = (await rpc(OWNER, "sharing_list_members_v2", [CALENDAR])).invites[0];
+  assert.equal(link.joinedCount, 2);
+  assert.equal(link.consumedAt, null);
+  await rpc(OWNER, "sharing_revoke_invite", [CALENDAR, invitation.inviteId]);
+  await assert.rejects(
+    rpc(OTHER, "sharing_claim_invite", [invitation.token, "Andere Leserin"]),
+    failure("SHARE_INVITE_INVALID"),
+  );
+  assert.equal(
+    (await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null])).entries.length,
+    1,
+  );
+});
+test("v2 selected contents become active directly, and both fetch versions enforce them", async () => {
+  await create();
+  await publishV2(typedEntries());
+  await joinV2();
+  const v2 = await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null]);
+  assert.equal(v2.entries.length, 1);
+  assert.equal(v2.entries[0].kind, "SHIFT");
+  assert.equal(v2.entries[0].note, null);
+  const v1 = await rpc(VIEWER, "sharing_fetch_calendar", [CALENDAR, null]);
+  assert.equal(v1.entries.length, 1);
+  assert.equal(Object.keys(v1.entries[0]).length, 8);
+  assert.equal(
+    (await rpc(OWNER, "sharing_list_members_v2", [CALENDAR])).members[0].rights.notes,
+    false,
+  );
+});
+test("appointments-only access and future snapshots retain the exact scope", async () => {
+  await create();
+  await publishV2(typedEntries());
+  await joinV2(VIEWER, rights(false, true, true));
+  const first = await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null]);
+  assert.equal(first.entries.length, 1);
+  assert.equal(first.entries[0].title, "Arzttermin");
+  assert.equal(first.entries[0].note, "Terminnotiz");
+  await publishV2(
+    [
+      ...typedEntries(),
+      { ...entry("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeea"), kind: "APPOINTMENT", note: null },
+    ],
+    1,
+    crypto.randomUUID(),
+  );
+  const next = await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, first.revision]);
+  assert.equal(next.reset, true);
+  assert.equal(next.entries.length, 2);
+});
+test("reducing one person's notes forces cache reset without changing owner or other person's cursor", async () => {
+  await create();
+  await publishV2(typedEntries());
+  await joinV2(VIEWER, rights(true, true, true));
+  await joinV2(OTHER, rights(true, true, true));
+  const before = await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null]);
+  const other = await rpc(OTHER, "sharing_fetch_calendar_v2", [CALENDAR, null]);
+  const owner = await rpc(OWNER, "sharing_fetch_calendar", [CALENDAR, null]);
+  await rpc(OWNER, "sharing_set_member_rights", [CALENDAR, VIEWER, JSON.stringify(rights())]);
+  const next = await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, before.revision]);
+  assert.equal(next.reset, true);
+  assert.equal(next.entries.length, 1);
+  assert.equal(next.entries[0].note, null);
+  assert.equal(
+    (await rpc(OTHER, "sharing_fetch_calendar_v2", [CALENDAR, other.revision])).unchanged,
+    true,
+  );
+  assert.equal(
+    (await rpc(OWNER, "sharing_fetch_calendar", [CALENDAR, owner.revision])).unchanged,
+    true,
+  );
+  await publishV2(typedEntries(), owner.revision, crypto.randomUUID());
+});
+test("v2 rights are owner-only, strictly typed and cannot revive revoked access", async () => {
+  await create();
+  await publishV2(typedEntries());
+  const invitation = await joinV2();
+  await assert.rejects(
+    rpc(VIEWER, "sharing_set_member_rights", [
+      CALENDAR,
+      VIEWER,
+      JSON.stringify(rights(true, true, true)),
+    ]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+  for (const bad of [
+    null,
+    [],
+    {},
+    { shifts: true, appointments: false, notes: "true" },
+    { ...rights(), location: true },
+  ])
+    await assert.rejects(
+      rpc(OWNER, "sharing_set_member_rights", [CALENDAR, VIEWER, JSON.stringify(bad)]),
+      failure("SHARE_INVALID_ARGUMENT"),
+    );
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "REVOKE"]);
+  await assert.rejects(
+    rpc(OWNER, "sharing_set_member_rights", [CALENDAR, VIEWER, JSON.stringify(rights())]),
+    failure("SHARE_MEMBER_INVALID"),
+  );
+  await assert.rejects(
+    rpc(VIEWER, "sharing_claim_invite", [invitation.token, "Leserin"]),
+    failure("SHARE_INVITE_INVALID"),
+  );
+  await assert.rejects(
+    rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+});
+test("legacy untyped entries remain visible only with unrestricted contents; upgrading makes them filterable", async () => {
+  await create();
+  await publish();
+  const invite = await invitedAfterCreate();
+  assert.ok(invite);
+  await rpc(OWNER, "sharing_set_member_rights", [CALENDAR, VIEWER, JSON.stringify(rights())]);
+  assert.equal(
+    (await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null])).entries.length,
+    0,
+  );
+  await publishV2(typedEntries(), 1, crypto.randomUUID());
+  assert.equal(
+    (await rpc(VIEWER, "sharing_fetch_calendar_v2", [CALENDAR, null])).entries.length,
+    1,
+  );
+});
+async function invitedAfterCreate() {
+  const invite = await rpc(OWNER, "sharing_create_invite", [CALENDAR, crypto.randomUUID()]);
+  assert.equal(
+    (await rpc(VIEWER, "sharing_claim_invite", [invite.token, "Leserin"])).status,
+    "PENDING",
+  );
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "APPROVE"]);
+  return invite;
+}
+test("v2 receipts bind notes, kind and invitation rights, with safe retries and device validation", async () => {
+  await create();
+  const entries = typedEntries();
+  const first = await publishV2(entries);
+  assert.deepEqual(await publishV2(entries), first);
+  await assert.rejects(
+    publishV2([{ ...entries[0], note: "Andere Notiz" }, entries[1]]),
+    failure("SHARE_MUTATION_REUSED"),
+  );
+  await assert.rejects(
+    publishV2(entries, 0, MUTATION, OWNER, "b".repeat(64)),
+    failure("SHARE_DEVICE_MISMATCH", "42501"),
+  );
+  const mutation = crypto.randomUUID();
+  const invite = await rpc(OWNER, "sharing_create_invite_v2", [
+    CALENDAR,
+    mutation,
+    JSON.stringify(rights()),
+  ]);
+  const retry = await rpc(OWNER, "sharing_create_invite_v2", [
+    CALENDAR,
+    mutation,
+    JSON.stringify(rights()),
+  ]);
+  assert.equal(retry.inviteId, invite.inviteId);
+  assert.equal(retry.token, null);
+  await assert.rejects(
+    rpc(OWNER, "sharing_create_invite_v2", [
+      CALENDAR,
+      mutation,
+      JSON.stringify(rights(true, true, true)),
+    ]),
+    failure("SHARE_MUTATION_REUSED"),
+  );
+});
+test("v2 publication rejects oversized notes, unknown content and revealing availability notes atomically", async () => {
+  await create();
+  for (const bad of [
+    { ...typedEntries()[0], note: "x".repeat(4097) },
+    { ...typedEntries()[0], note: "bad\u0001" },
+    { ...typedEntries()[0], kind: "SALARY" },
+    { ...typedEntries()[0], location: "private" },
+  ])
+    await assert.rejects(publishV2([bad]), failure("SHARE_INVALID_ARGUMENT"));
+  assert.equal((await rpc(OWNER, "sharing_fetch_calendar_v2", [CALENDAR, null])).entries.length, 0);
+});
+test("legacy receivers never get notes even when their v2 invitation allows them", async () => {
+  await create();
+  await publishV2(typedEntries());
+  await joinV2(VIEWER, rights(true, true, true));
+  const data = await rpc(VIEWER, "sharing_fetch_calendar", [CALENDAR, null]);
+  assert.equal(data.entries.length, 2);
+  assert.ok(data.entries.every((e) => !("note" in e) && !("kind" in e)));
 });
 
 test("RPC entry points are unavailable to anon and PUBLIC; auth without a real user fails", async () => {
@@ -833,5 +1093,46 @@ test("snapshot accepts the exact forty-eight-hour interval boundary", async () =
       ])
     ).revision,
     1,
+  );
+});
+
+test("realtime invalidates only owners and active readers without calendar payloads", async () => {
+  await invited();
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "APPROVE"]);
+  await db.exec("reset role; truncate realtime.messages");
+  await publish([], 1, "88888888-8888-4888-8888-888888888888");
+  await db.exec("reset role");
+  const messages = (await db.query("select * from realtime.messages")).rows;
+  assert.deepEqual(
+    new Set(messages.map((m) => m.topic)),
+    new Set(["sharing:" + OWNER, "sharing:" + VIEWER]),
+  );
+  assert.ok(messages.every((m) => m.private && JSON.stringify(m.payload) === "{}"));
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "REVOKE"]);
+  await db.exec("reset role; truncate realtime.messages");
+  await publish([], 2, "99999999-9999-4999-8999-999999999999");
+  await db.exec("reset role");
+  assert.deepEqual(
+    (await db.query("select topic from realtime.messages")).rows.map((m) => m.topic),
+    ["sharing:" + OWNER],
+  );
+});
+
+test("realtime receive policy rejects another user's topic and offers no client send grant", async () => {
+  await invited();
+  await db.exec("reset role");
+  await db.query(
+    "select set_config('request.jwt.claim.sub', $1, false), set_config('realtime.topic', $2, false)",
+    [VIEWER, "sharing:" + OWNER],
+  );
+  await db.exec("set role authenticated");
+  assert.equal((await db.query("select * from realtime.messages")).rows.length, 0);
+  await db.query("select set_config('realtime.topic', $1, false)", ["sharing:" + VIEWER]);
+  const ownMessages = (await db.query("select * from realtime.messages")).rows;
+  assert.ok(ownMessages.length > 0);
+  assert.ok(ownMessages.every((m) => m.topic === "sharing:" + VIEWER));
+  await assert.rejects(
+    db.query("insert into realtime.messages values ('fake','broadcast','{}',true)"),
+    (e) => e.code === "42501",
   );
 });

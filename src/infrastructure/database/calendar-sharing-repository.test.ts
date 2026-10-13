@@ -13,6 +13,10 @@ import {
   acknowledgeSharingPublication,
   listCachedSharingCalendars,
   cacheSharingSnapshot,
+  configureSharingContent,
+  isolateSharingForBackupRestore,
+  rememberSharingInvitation,
+  listSharingInvitations,
 } from "@/infrastructure/database/calendar-sharing-repository";
 import type { CloudSharedCalendar } from "@/domain/calendar-sharing";
 const account = "10000000-0000-4000-8000-000000000001";
@@ -40,6 +44,7 @@ const shiftInput = {
   symbol: "moon",
 };
 let test: TariffAnnualTestDatabase;
+const sourceContent = { version: 2 as const, shifts: true, allAppointments: false, notes: true };
 beforeEach(async () => {
   test = new TariffAnnualTestDatabase();
   await test.setup();
@@ -48,6 +53,88 @@ beforeEach(async () => {
   await bindSharingCalendar(test.db, account, calendar, "a".repeat(64), []);
 });
 afterEach(() => test.database.close());
+it("retains an issued QR link across reload and clears it on account switch and restore", async () => {
+  const invitation = {
+    calendarId,
+    id: "invite",
+    url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
+    expiresAt: "2099-10-14T00:00:00Z",
+  };
+  await rememberSharingInvitation(test.db, account, invitation);
+  await migrateCalendarSharing(test.db);
+  expect(await listSharingInvitations(test.db, account)).toEqual([invitation]);
+  await isolateSharingForBackupRestore(test.db);
+  expect(await listSharingInvitations(test.db, account)).toEqual([]);
+  await rememberSharingInvitation(test.db, account, invitation);
+  await setSharingActiveAccount(test.db, "another-account");
+  expect(await listSharingInvitations(test.db, account)).toEqual([]);
+});
+it("publishes notes only after source consent and discards an older queued snapshot when consent is reduced", async () => {
+  await saveShift(test.db, { ...shiftInput, note: "Notiz\nZweite Zeile" });
+  const [legacy] = await listSharingBindings(test.db, account);
+  expect(
+    (await stageSharingPublication(test.db, legacy, "Europe/Berlin", () => crypto.randomUUID()))!
+      .entries[0],
+  ).not.toHaveProperty("note");
+  await configureSharingContent(test.db, account, calendarId, sourceContent);
+  const [allowed] = await listSharingBindings(test.db, account);
+  const first = (await stageSharingPublication(test.db, allowed, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(first.entries[0]).toMatchObject({ kind: "SHIFT", note: "Notiz\nZweite Zeile" });
+  await configureSharingContent(test.db, account, calendarId, { ...sourceContent, notes: false });
+  const [reduced] = await listSharingBindings(test.db, account);
+  const next = (await stageSharingPublication(test.db, reduced, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(next.mutationId).not.toBe(first.mutationId);
+  expect(next.entries[0].note).toBeNull();
+});
+it("restore clears note consent and leaves publication paused", async () => {
+  await configureSharingContent(test.db, account, calendarId, sourceContent);
+  await isolateSharingForBackupRestore(test.db);
+  const [restored] = await listSharingBindings(test.db, account);
+  expect(restored.enabled).toBe(false);
+  expect(restored.content).toBeUndefined();
+  expect(restored.requiresContentConsent).toBe(true);
+});
+it("source consent cannot be changed under another active account", async () => {
+  await setSharingActiveAccount(test.db, "another-account");
+  await expect(
+    configureSharingContent(test.db, account, calendarId, sourceContent),
+  ).rejects.toThrow("SHARE_ACCOUNT_CHANGED");
+  expect((await listSharingBindings(test.db, account))[0].content).toBeUndefined();
+});
+it("a newer rights revision replaces cached entries and removes formerly authorized notes", async () => {
+  const entry = {
+    id: crypto.randomUUID(),
+    kind: "SHIFT" as const,
+    note: "Vorher sichtbar",
+    startsAt: "2026-10-01T20:00:00Z",
+    endsAt: "2026-10-02T05:30:00Z",
+    timeZone: "Europe/Berlin",
+    allDay: false,
+    title: "Nacht",
+    color: "#123456",
+    symbol: "moon",
+  };
+  const snapshot = {
+    calendar: { ...calendar, isOwner: false, revision: 1 },
+    revision: 1,
+    unchanged: false,
+    reset: true,
+    entries: [entry],
+    fetchedAt: "2026-10-13T20:00:00Z",
+  };
+  await cacheSharingSnapshot(test.db, account, snapshot);
+  await cacheSharingSnapshot(test.db, account, {
+    ...snapshot,
+    calendar: { ...snapshot.calendar, revision: 2 },
+    revision: 2,
+    entries: [{ ...entry, note: null }],
+  });
+  expect((await listCachedSharingCalendars(test.db, account))[0].entries[0].note).toBeNull();
+});
 describe("sharing SQLite atomic outbox and isolation", () => {
   it("marks shift changes atomically and stages a persistent safe snapshot", async () => {
     await saveShift(test.db, shiftInput);
@@ -56,8 +143,8 @@ describe("sharing SQLite atomic outbox and isolation", () => {
     const mutation = await stageSharingPublication(test.db, binding, "Europe/Berlin", () =>
       crypto.randomUUID(),
     );
-    expect(mutation!.entries[0].title).toBe("Nacht");
-    expect(JSON.stringify(mutation)).not.toContain("Privat");
+    expect(mutation!.entries[0].title).toBe(shiftInput.title);
+    expect(mutation!.entries[0].id).not.toBe((await listCalendarEntries(test.db))[0].id);
     const retry = await stageSharingPublication(test.db, binding, "Europe/Berlin", () =>
       crypto.randomUUID(),
     );
@@ -187,4 +274,34 @@ describe("sharing SQLite atomic outbox and isolation", () => {
     await acknowledgeSharingPublication(test.db, deletion, 1);
     expect((await purgeExpiredTombstones(test.db, new Date("2026-10-12"))).shifts).toBe(1);
   });
+});
+
+it("republishes existing detailed shares once after the service-name upgrade without resuming paused shares", async () => {
+  await test.db.runAsync(
+    "UPDATE sharing_local_bindings SET acknowledged_generation=generation WHERE calendar_id=?",
+    calendarId,
+  );
+  await test.db.runAsync(
+    "INSERT INTO sharing_local_bindings SELECT 'paused',account_id,device_id,device_secret,name,color,visibility,appointment_ids_json,generation,acknowledged_generation,server_revision,0,NULL FROM sharing_local_bindings WHERE calendar_id=?",
+    calendarId,
+  );
+  await test.db.runAsync(
+    "INSERT INTO sharing_local_bindings SELECT 'availability',account_id,device_id,device_secret,name,color,'AVAILABILITY',appointment_ids_json,generation,acknowledged_generation,server_revision,1,NULL FROM sharing_local_bindings WHERE calendar_id=?",
+    calendarId,
+  );
+  const before = await listSharingBindings(test.db, account);
+  await test.db.runAsync("DELETE FROM sharing_projection_version");
+  await migrateCalendarSharing(test.db);
+  const upgraded = await listSharingBindings(test.db, account);
+  for (const previous of before) {
+    const current = upgraded.find((item) => item.calendarId === previous.calendarId)!;
+    expect(current.enabled).toBe(previous.enabled);
+    expect(current.visibility).toBe(previous.visibility);
+    expect(current.generation).toBe(
+      previous.generation + (previous.enabled && previous.visibility === "DETAILS" ? 1 : 0),
+    );
+    expect(current.acknowledgedGeneration).toBe(previous.acknowledgedGeneration);
+  }
+  await migrateCalendarSharing(test.db);
+  expect(await listSharingBindings(test.db, account)).toEqual(upgraded);
 });

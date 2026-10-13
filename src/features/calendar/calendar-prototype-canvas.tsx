@@ -3,7 +3,11 @@ import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
 import { today } from "@/engine/calendar";
 import { Pressable, StyleSheet, View } from "react-native";
-import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  type SharedValue,
+} from "react-native-reanimated";
 import { usePalette } from "@/theme/palette";
 import { calendarImageLabelColor } from "@/theme/calendar-image";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
@@ -11,7 +15,8 @@ import { CALENDAR_METRICS, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
-import { prototypeEntryPreview } from "./prototype-entry-preview";
+import { combinedCalendarPreview } from "./combined-calendar-preview";
+import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
 import {
   PROTOTYPE_MONTH_NAMES,
@@ -24,11 +29,13 @@ const MovingDay = memo(function MovingDay({
   progress,
   currentDate,
   selectedDate,
+  testIDPrefix = "calendar-date-marker",
 }: {
   day: PrototypeDay;
   progress: SharedValue<number>;
   currentDate: string;
   selectedDate?: string | null;
+  testIDPrefix?: string;
 }) {
   const palette = usePalette();
   const isToday = currentDate === day.date;
@@ -36,14 +43,16 @@ const MovingDay = memo(function MovingDay({
   const motion = useAnimatedStyle(() => ({
     transform: [
       { translateX: day.fromX + (day.toX - day.fromX) * progress.value - 15 },
-      { translateY: day.fromY + (day.toY - day.fromY) * progress.value - 15 },
+      {
+        translateY: day.fromY + (day.toY - day.fromY) * progress.value - 15 - 5 * progress.value,
+      },
       { scale: 0.6 + 0.4 * progress.value },
     ],
   }));
-  // This very same glyph survives both endpoints: there is no overlay handoff.
+  // Movement uses the same fixed month geometry; the idle year grid owns its static dates.
   return (
     <Animated.View
-      testID={`calendar-date-marker-${day.date}`}
+      testID={`${testIDPrefix}-${day.date}`}
       style={[
         styles.day,
         {
@@ -77,6 +86,61 @@ const MovingDay = memo(function MovingDay({
   );
 });
 
+function YearMonthDates({
+  layout,
+  progress,
+  selected,
+}: {
+  readonly layout: PrototypeMonth;
+  readonly progress: SharedValue<number>;
+  readonly selected: boolean;
+}) {
+  const palette = usePalette();
+  const still = useSharedValue(0);
+  const currentDate = today("Europe/Berlin");
+  // Fully shown years are independent of any native pager repositioning.
+  const motion = useAnimatedStyle(() => ({ opacity: selected && progress.value > 0 ? 0 : 1 }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      testID={"calendar-year-dates-" + layout.month}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[StyleSheet.absoluteFill, motion]}
+    >
+      {layout.days.map((day) =>
+        selected ? (
+          <MovingDay
+            key={day.day}
+            day={day}
+            progress={still}
+            currentDate={currentDate}
+            testIDPrefix="calendar-year-date"
+          />
+        ) : (
+          <Text
+            key={day.day}
+            testID={"calendar-year-date-" + day.date}
+            pointerEvents="none"
+            accessible={false}
+            allowFontScaling={false}
+            style={[
+              styles.miniDay,
+              {
+                left: day.fromX - 9,
+                top: day.fromY - 9,
+                color: day.weekend ? palette.textMuted : palette.text,
+              },
+            ]}
+          >
+            {day.day}
+          </Text>
+        ),
+      )}
+    </Animated.View>
+  );
+}
+
 export const PrototypeYear = memo(function PrototypeYear({
   layouts,
   selectedMonth,
@@ -97,9 +161,15 @@ export const PrototypeYear = memo(function PrototypeYear({
   return (
     <Animated.View style={[StyleSheet.absoluteFill, motion]}>
       {layouts.map((layout, index) => (
-        <View key={layout.month} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <View
+          key={index}
+          testID={`calendar-year-month-${index + 1}`}
+          pointerEvents="box-none"
+          style={StyleSheet.absoluteFill}
+        >
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ selected: layout.month === selectedMonth }}
             accessibilityLabel={`${PROTOTYPE_MONTH_NAMES[index]} ${layout.month.slice(0, 4)} öffnen`}
             onPress={() => onSelect(layout.month)}
             style={{
@@ -130,7 +200,7 @@ export const PrototypeYear = memo(function PrototypeYear({
               .slice(0, 2);
             return shifts.length ? (
               <View
-                key={`marks-${day.date}`}
+                key={`marks-${day.day}`}
                 pointerEvents="none"
                 accessible={false}
                 testID={`calendar-mini-shifts-${day.date}`}
@@ -156,26 +226,11 @@ export const PrototypeYear = memo(function PrototypeYear({
               </View>
             ) : null;
           })}
-          {layout.month !== selectedMonth
-            ? layout.days.map((day) => (
-                <Text
-                  key={day.date}
-                  pointerEvents="none"
-                  accessible={false}
-                  allowFontScaling={false}
-                  style={[
-                    styles.miniDay,
-                    {
-                      left: day.fromX - 9,
-                      top: day.fromY - 9,
-                      color: day.weekend ? palette.textMuted : palette.text,
-                    },
-                  ]}
-                >
-                  {day.day}
-                </Text>
-              ))
-            : null}
+          <YearMonthDates
+            layout={layout}
+            progress={progress}
+            selected={layout.month === selectedMonth}
+          />
         </View>
       ))}
     </Animated.View>
@@ -221,159 +276,183 @@ export function PrototypeMonthContent({
           </Text>
         ))}
       </View>
-      {layout.adjacentDays.map((day) => {
-        const entries = entriesByDate.get(day.date) ?? [];
-        const rows = Math.max(
-          0,
-          Math.floor(
-            (layout.weekHeight -
-              CALENDAR_METRICS.dayNumberHeight -
-              2 -
-              (sharedEntriesByDate?.get(day.date)?.length ? 46 : 0)) /
-              (CALENDAR_METRICS.entryRowHeight + CALENDAR_METRICS.chipGap),
-          ),
-        );
-        const preview = prototypeEntryPreview(
-          entries,
-          rows,
-          display.showShiftTimes || display.showShiftDuration,
-        );
-        return (
+      {[...layout.adjacentDays, ...layout.days].map((day) => (
+        <CombinedDayContent
+          key={day.date}
+          day={day}
+          layout={layout}
+          entries={entriesByDate.get(day.date) ?? []}
+          shared={sharedEntriesByDate?.get(day.date) ?? []}
+          display={display}
+          timeZone={timeZone}
+          labelColor={labelColor}
+          visible={visible}
+          adjacent={day.date.slice(0, 7) !== layout.month}
+          holiday={holidays.get(day.date)?.name}
+        />
+      ))}
+    </Animated.View>
+  );
+}
+
+function CombinedDayContent({
+  day,
+  layout,
+  entries,
+  shared,
+  display,
+  timeZone,
+  labelColor,
+  visible,
+  adjacent = false,
+  holiday,
+}: {
+  readonly day: {
+    readonly date: string;
+    readonly day: number;
+    readonly toX: number;
+    readonly toY: number;
+  };
+  readonly layout: PrototypeMonth;
+  readonly entries: readonly CalendarEntry[];
+  readonly shared: readonly SharedCalendarDayEntry[];
+  readonly display: PrototypeDisplay;
+  readonly timeZone: string;
+  readonly labelColor: string;
+  readonly visible: boolean;
+  readonly adjacent?: boolean;
+  readonly holiday?: string;
+}) {
+  const palette = usePalette();
+  const preview = combinedCalendarPreview(
+    entries,
+    shared,
+    layout.weekHeight,
+    display.showShiftTimes || display.showShiftDuration,
+  );
+  const usedHeight =
+    preview.rows.length *
+      preview.lineHeight *
+      (display.showShiftTimes || display.showShiftDuration ? 2 : 1) +
+    Math.max(0, preview.rows.length - 1);
+  return (
+    <View
+      accessible={visible}
+      accessibilityLabel={
+        day.date +
+        ", " +
+        ([
+          ...entries.map((e) => e.title),
+          ...shared.map((r) => r.calendarName + ": " + r.entry.title),
+        ].join(", ") || "Keine Einträge") +
+        (holiday ? ", " + holiday : "")
+      }
+      testID={"calendar-combined-day-" + day.date}
+      style={{
+        position: "absolute",
+        left: day.toX - layout.cellWidth / 2,
+        top: day.toY - 20,
+        width: layout.cellWidth,
+        height: layout.weekHeight,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderColor: palette.separator,
+        overflow: "hidden",
+        opacity: 1,
+      }}
+    >
+      {adjacent ? (
+        <View style={{ height: preview.headerHeight, alignItems: "center" }}>
           <View
-            key={day.date}
-            style={{
-              position: "absolute",
-              left: day.toX - layout.cellWidth / 2,
-              top: day.toY - 20,
-              width: layout.cellWidth,
-              height: layout.weekHeight,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderColor: palette.separator,
-            }}
+            testID={"calendar-adjacent-date-box-" + day.date}
+            style={[styles.day, { position: "relative" }]}
           >
             <Text
-              testID={`calendar-adjacent-${day.date}`}
-              accessible={visible}
-              accessibilityLabel={`${day.date}, Nachbarmonat`}
+              testID={"calendar-adjacent-" + day.date}
               allowFontScaling={false}
               style={{
-                height: CALENDAR_METRICS.dayNumberHeight,
-                paddingLeft: 5,
-                paddingTop: 5,
+                opacity: 0.5,
                 fontFamily: INTER_FONTS.regular,
+                fontWeight: "500",
                 fontSize: CALENDAR_METRICS.dayNumberFontSize,
                 color: labelColor,
-                opacity: 0.5,
               }}
             >
               {day.day}
             </Text>
-            <View
-              testID={`calendar-adjacent-entry-layer-${day.date}`}
-              style={{
-                marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
-                gap: CALENDAR_METRICS.chipGap,
-                opacity: 0.3,
-                overflow: "hidden",
-              }}
-            >
-              {preview.entries.map((entry) => (
-                <PrototypeEntryContent
-                  key={`${entry.kind}:${entry.id}:${entry.date}`}
-                  entry={entry}
-                  display={display}
-                  timeZone={timeZone}
-                />
-              ))}
-            </View>
           </View>
-        );
-      })}
-      {layout.days.map((day) => {
-        const entries = entriesByDate.get(day.date) ?? [];
-        const holiday = holidays.get(day.date)?.name;
-        // Reserve overflow space before choosing entries so dense days never
-        // overlap the next week (including very short six-week viewports).
-        const rows = Math.max(
-          0,
-          Math.floor(
-            (layout.weekHeight -
-              CALENDAR_METRICS.dayNumberHeight -
-              2 -
-              (sharedEntriesByDate?.get(day.date)?.length ? 46 : 0)) /
-              (CALENDAR_METRICS.entryRowHeight + CALENDAR_METRICS.chipGap),
-          ),
-        );
-        const preview = prototypeEntryPreview(
-          entries,
-          rows - (holiday && rows > 1 ? 1 : 0),
-          display.showShiftTimes || display.showShiftDuration,
-        );
-        return (
+        </View>
+      ) : null}
+      {preview.overflowCount > 0 ? (
+        <Text
+          testID={"calendar-overflow-" + day.date}
+          allowFontScaling={false}
+          style={{
+            position: "absolute",
+            right: 2,
+            top: 3,
+            fontSize: CALENDAR_METRICS.weekNumberFontSize,
+            color: labelColor,
+          }}
+        >
+          {"+" + preview.overflowCount}
+        </Text>
+      ) : null}
+      <View
+        testID={
+          (adjacent ? "calendar-adjacent-entry-layer-" : "calendar-combined-entries-") + day.date
+        }
+        style={{
+          marginTop: adjacent ? 0 : preview.headerHeight,
+          marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
+          gap: CALENDAR_METRICS.chipGap,
+          opacity: adjacent ? 0.3 : 1,
+        }}
+      >
+        {preview.rows.map((item, index) => (
           <View
-            key={day.date}
-            accessible={visible}
-            accessibilityLabel={`${day.date}${holiday ? `, ${holiday}` : ""}, ${entries.length ? entries.map((entry) => entry.title).join(", ") : "Keine Einträge"}`}
+            key={
+              item.kind === "own"
+                ? "own:" + item.entry.id
+                : item.row.calendarId + ":" + item.row.entry.id
+            }
+            testID={"calendar-entry-slot-" + day.date + "-" + index}
             style={{
-              position: "absolute",
-              left: day.toX - layout.cellWidth / 2,
-              top: day.toY - 20,
-              width: layout.cellWidth,
-              height: layout.weekHeight,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderColor: palette.separator,
+              height:
+                preview.lineHeight * (display.showShiftTimes || display.showShiftDuration ? 2 : 1),
             }}
           >
-            {rows > 0 ? (
-              <View
-                style={{
-                  marginTop: CALENDAR_METRICS.dayNumberHeight,
-                  marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
-                  gap: CALENDAR_METRICS.chipGap,
-                  overflow: "hidden",
-                }}
-              >
-                {preview.entries.map((entry) => (
-                  <PrototypeEntryContent
-                    key={`${entry.kind}:${entry.id}:${entry.date}`}
-                    entry={entry}
-                    display={display}
-                    timeZone={timeZone}
-                  />
-                ))}
-                {preview.overflowCount > 0 ? (
-                  <Text
-                    numberOfLines={1}
-                    allowFontScaling={false}
-                    style={{
-                      height: CALENDAR_METRICS.entryRowHeight,
-                      color: labelColor,
-                      fontFamily: INTER_FONTS.regular,
-                      fontSize: CALENDAR_METRICS.entryFontSize,
-                    }}
-                  >{`+${preview.overflowCount}`}</Text>
-                ) : null}
-                {/* Keep the first entry aligned with neighboring days. */}
-                {holiday && rows > 1 ? (
-                  <Text
-                    numberOfLines={1}
-                    allowFontScaling={false}
-                    style={{
-                      height: CALENDAR_METRICS.entryRowHeight,
-                      color: labelColor,
-                      fontFamily: INTER_FONTS.regular,
-                      fontSize: CALENDAR_METRICS.entryFontSize,
-                    }}
-                  >
-                    {holiday}
-                  </Text>
-                ) : null}
-              </View>
-            ) : null}
+            {item.kind === "own" ? (
+              <PrototypeEntryContent
+                entry={item.entry}
+                display={display}
+                timeZone={timeZone}
+                lineHeight={preview.lineHeight}
+              />
+            ) : (
+              <SharedCalendarEntryContent
+                row={item.row}
+                display={display}
+                lineHeight={preview.lineHeight}
+              />
+            )}
           </View>
-        );
-      })}
-    </Animated.View>
+        ))}
+
+        {holiday && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            style={{
+              height: CALENDAR_METRICS.entryRowHeight,
+              color: labelColor,
+              fontSize: CALENDAR_METRICS.entryFontSize,
+            }}
+          >
+            {holiday}
+          </Text>
+        ) : null}
+      </View>
+    </View>
   );
 }
 
@@ -388,12 +467,13 @@ export function PrototypeDates({
   currentDate: string;
   selectedDate?: string | null;
 }) {
+  const motion = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
   return (
-    <View
+    <Animated.View
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={StyleSheet.absoluteFill}
+      style={[StyleSheet.absoluteFill, motion]}
     >
       {layout.days.map((day) => (
         <MovingDay
@@ -404,7 +484,7 @@ export function PrototypeDates({
           selectedDate={selectedDate}
         />
       ))}
-    </View>
+    </Animated.View>
   );
 }
 

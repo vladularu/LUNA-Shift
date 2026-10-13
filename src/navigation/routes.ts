@@ -192,6 +192,18 @@ export function dayEditorRoute(date: string, mode: "SHIFT" | "APPOINTMENT", entr
   });
 }
 
+export function sharedDayEditorRoute(date: string, calendarId: string, entryId: string) {
+  return Object.freeze({
+    pathname: "/shift-editor" as const,
+    params: Object.freeze({
+      date: requireDate(date),
+      mode: "SHIFT",
+      entryId: requireIdentifier(entryId),
+      sharedCalendarId: requireIdentifier(calendarId),
+    }),
+  });
+}
+
 export function calendarRoute(month: string) {
   return Object.freeze({
     pathname: "/" as const,

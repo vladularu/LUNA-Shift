@@ -23,7 +23,14 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
     })),
     signIn: action(),
     refresh: action(),
-    createCalendar: action(),
+    createCalendar: jest.fn<SharingController["createCalendar"]>().mockResolvedValue("own"),
+    createInvitation: jest.fn<SharingController["createInvitation"]>().mockResolvedValue({
+      calendarId: "own",
+      id: "invite",
+      url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
+      expiresAt: "2099-10-19T12:30:00Z",
+    }),
+    shareInvitation: action(),
     preparePublicationPreview: jest
       .fn<SharingController["preparePublicationPreview"]>()
       .mockResolvedValue({
@@ -57,7 +64,7 @@ const own: SharingCalendarView = {
     { userId: "pending", displayName: "Sam", status: "PENDING" },
     { userId: "active", displayName: "Kim", status: "ACTIVE" },
   ],
-  invites: [{ id: "invite", expiresAt: "2026-10-19T12:30:00Z", consumedAt: null, revokedAt: null }],
+  invites: [{ id: "invite", expiresAt: "2099-10-19T12:30:00Z", consumedAt: null, revokedAt: null }],
 };
 const foreign: SharingCalendarView = {
   ...own,
@@ -77,10 +84,175 @@ async function confirmLastAlert() {
 }
 
 describe("Kalenderfreigabe", () => {
+  it("reopens a persisted multi-use invitation and displays its actual join count", async () => {
+    const invitation = {
+      calendarId: "own",
+      id: "invite",
+      url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
+      expiresAt: "2099-10-19T12:30:00Z",
+    };
+    const c = controller({
+      contentRightsAvailable: true,
+      issuedInvitations: [invitation],
+      calendars: [
+        {
+          ...own,
+          invites: own.invites.map((invite) => ({
+            ...invite,
+            joinedCount: 2,
+            rights: { shifts: true, appointments: false, notes: false },
+          })),
+        },
+      ],
+    });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    expect(screen.getByText("2 beigetreten")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung öffnen" }));
+    expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+    expect(c.createInvitation).not.toHaveBeenCalled();
+  });
+  it("creates an appointments-only invitation even before the first appointment is entered", async () => {
+    const c = controller({ contentRightsAvailable: true });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Schichten teilen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Termine teilen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    expect(c.createCalendar).toHaveBeenCalledWith(
+      expect.objectContaining({ rights: { shifts: false, appointments: true, notes: false } }),
+    );
+    expect(c.createInvitation).toHaveBeenCalledWith("own", {
+      shifts: false,
+      appointments: true,
+      notes: false,
+    });
+    await screen.rerender(<CalendarSharingScreen controller={{ ...c, calendars: [own] }} />);
+    expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+  });
+  it("keeps notes off initially and passes the explicit switch selection to the invitation", async () => {
+    const c = controller({ calendars: [own], contentRightsAvailable: true });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(
+      screen.getByRole("switch", { name: "Notizen teilen" }).props.accessibilityState.checked,
+    ).toBe(false);
+    await fireEvent(screen.getByRole("switch", { name: "Notizen teilen" }), "valueChange", true);
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    expect(c.createCalendar).not.toHaveBeenCalled();
+    expect(c.createInvitation).toHaveBeenCalledWith("own", {
+      shifts: true,
+      appointments: false,
+      notes: true,
+    });
+  });
+  it("changes only the selected person's content rights", async () => {
+    const setMemberRights = jest
+      .fn<NonNullable<SharingController["setMemberRights"]>>()
+      .mockResolvedValue();
+    const c = controller({
+      contentRightsAvailable: true,
+      setMemberRights,
+      calendars: [
+        {
+          ...own,
+          members: own.members.map((member) => ({
+            ...member,
+            rights: { shifts: true, appointments: false, notes: false },
+          })),
+        },
+      ],
+    });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+    await fireEvent(screen.getByRole("switch", { name: "Notizen freigeben" }), "valueChange", true);
+    expect(setMemberRights).toHaveBeenCalledWith("own", "active", {
+      shifts: true,
+      appointments: false,
+      notes: true,
+    });
+    expect(c.createCalendar).not.toHaveBeenCalled();
+    expect(c.setMember).not.toHaveBeenCalled();
+  });
+  it("opens the selected person directly and revokes only that person's access", async () => {
+    const c = controller({ calendars: [own] });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+    expect(screen.getByText("Kalenderzugriff")).toBeTruthy();
+    expect(screen.getByText("Kim")).toBeTruthy();
+    expect(screen.queryByText("Sam")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Freigabe beenden" }));
+    expect(c.setMember).not.toHaveBeenCalled();
+    await confirmLastAlert();
+    expect(c.setMember).toHaveBeenCalledWith("own", "active", "REVOKE");
+    expect(c.deleteCalendar).not.toHaveBeenCalled();
+  });
+  it("closes the selection without creating a calendar or an invitation", async () => {
+    const c = controller();
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung erstellen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung schließen" }));
+    expect(c.createCalendar).not.toHaveBeenCalled();
+    expect(c.createInvitation).not.toHaveBeenCalled();
+    expect(c.shareInvitation).not.toHaveBeenCalled();
+  });
+  it("retains the issued link on the overview and can reopen the same QR without another invitation", async () => {
+    const c = controller({ calendars: [own] });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung schließen" }));
+    expect(screen.getByText("Aktive Einladungslinks")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung öffnen" }));
+    expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+    expect(c.createInvitation).toHaveBeenCalledTimes(1);
+  });
+  it("does not require manual publication for ordinary pending changes", async () => {
+    const c = controller({ calendars: [{ ...own, syncState: "pending" }] });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
+    expect(screen.queryByText("Freigabe prüfen")).toBeNull();
+    expect(c.preparePublicationPreview).not.toHaveBeenCalled();
+  });
+  it("hides an open QR when the invitation is consumed", async () => {
+    const c = controller({ calendars: [own] });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    await fireEvent.press(screen.getByText("Weiter"));
+    expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+    await screen.rerender(
+      <CalendarSharingScreen
+        controller={{
+          ...c,
+          calendars: [
+            { ...own, invites: [{ ...own.invites[0], consumedAt: "2026-10-13T12:00:00Z" }] },
+          ],
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("sharing-qr")).toBeNull();
+    expect(screen.queryByText("Sonstige (AirDrop)")).toBeNull();
+    expect(screen.getByText("Neue Einladung")).toBeTruthy();
+  });
+  it("retries a failed invitation without creating another calendar", async () => {
+    const c = controller({
+      createInvitation: jest
+        .fn<SharingController["createInvitation"]>()
+        .mockRejectedValue(new Error("offline")),
+    });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    await fireEvent.press(screen.getByText("Weiter"));
+    await screen.rerender(<CalendarSharingScreen controller={{ ...c, calendars: [own] }} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    expect(c.createCalendar).toHaveBeenCalledTimes(1);
+    expect(c.createInvitation).toHaveBeenCalledTimes(2);
+    expect(c.createInvitation).toHaveBeenLastCalledWith("own");
+  });
+
   it("keeps login optional and only starts a provider after pressing its action", async () => {
     const c = controller({ status: "signedOut", account: null });
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    expect(screen.getByText("Dein Kalender bleibt ohne Konto nutzbar.")).toBeTruthy();
+    expect(screen.getByText("Dein eigener Kalender bleibt ohne Konto nutzbar.")).toBeTruthy();
     expect(c.signIn).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Mit Apple fortfahren" }));
     expect(c.signIn).toHaveBeenCalledWith("apple");
@@ -94,42 +266,58 @@ describe("Kalenderfreigabe", () => {
     expect(screen.queryByRole("button", { name: "Mit Google fortfahren" })).toBeNull();
     expect(c.createCalendar).not.toHaveBeenCalled();
   });
-  it("requires a privacy preview and confirmation before connecting the local plan", async () => {
+  it("requires selecting contents before creating a full-details invitation", async () => {
     const c = controller();
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Eigenen Kalender teilen" }));
-    expect(screen.getByText("Termine bleiben privat.")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Nur Verfügbarkeit" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Vorschau ansehen" }));
-    expect(c.preview).toHaveBeenCalledWith("AVAILABILITY", []);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(screen.getByText("Was möchtest du teilen?")).toBeTruthy();
+    expect(screen.queryByText("Nur Verfügbarkeit")).toBeNull();
+    expect(screen.queryByLabelText("Name im geteilten Kalender")).toBeNull();
+    expect(screen.getByLabelText("Notizen teilen")).toBeDisabled();
     expect(c.createCalendar).not.toHaveBeenCalled();
-    expect(screen.getByText("Notizen, Orte und Gehalt bleiben privat.")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Diesen Dienstplan freigeben" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Schichten teilen" }));
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeDisabled();
+    await fireEvent.press(screen.getByRole("button", { name: "Schichten teilen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
     expect(c.createCalendar).toHaveBeenCalledWith({
-      name: "Mein Dienstplan",
+      name: "Alex",
       color: "#527D92",
-      visibility: "AVAILABILITY",
+      visibility: "DETAILS",
       confirmed: true,
+      selectedAppointmentIds: [],
     });
   });
-  it("blocks a blank calendar name and resets preview after changing the privacy mode", async () => {
-    const c = controller();
+  it("keeps an existing invitation behind the same two-step flow and puts QR next to delivery options", async () => {
+    const c = controller({ calendars: [own] });
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByText("Eigenen Kalender teilen"));
-    await fireEvent.changeText(screen.getByLabelText("Kalendername"), "   ");
-    expect(screen.getByRole("button", { name: "Vorschau ansehen" })).toBeDisabled();
-    await fireEvent.changeText(screen.getByLabelText("Kalendername"), "Mein Plan");
-    await fireEvent.press(screen.getByText("Vorschau ansehen"));
-    await fireEvent.press(screen.getByText("Nur Verfügbarkeit"));
-    expect(screen.queryByRole("button", { name: "Diesen Dienstplan freigeben" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(c.createInvitation).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    expect(c.createCalendar).not.toHaveBeenCalled();
+    expect(c.createInvitation).toHaveBeenCalledWith("own");
+    expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+    for (const name of [
+      "Mit Nachrichten einladen",
+      "Mit WhatsApp einladen",
+      "Mit Telegram einladen",
+      "Mit E-Mail einladen",
+      "Sonstige (AirDrop)",
+    ])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
+    expect(c.shareInvitation).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Mit WhatsApp einladen" }));
+    expect(c.shareInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "invite" }),
+      "whatsapp",
+    );
   });
   it("lets readers hide a calendar without exposing owner actions", async () => {
     const c = controller({ calendars: [foreign] });
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent(screen.getByLabelText("Sams Plan im Kalender anzeigen"), "valueChange", false);
+    await fireEvent(screen.getByLabelText("Sams Plan anzeigen"), "valueChange", false);
     expect(c.setVisible).toHaveBeenCalledWith("foreign", false);
-    await fireEvent.press(screen.getByRole("button", { name: "Sams Plan verwalten" }));
-    expect(screen.queryByText("Person einladen")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Sams Plan ansehen" }));
+    expect(screen.queryByText("Neue Einladung")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Kalender verlassen" }));
     expect(c.leaveCalendar).not.toHaveBeenCalled();
     await confirmLastAlert();
@@ -137,7 +325,14 @@ describe("Kalenderfreigabe", () => {
   });
   it("requires a fresh safe preview before any manual update and cancellation publishes nothing", async () => {
     const c = controller({
-      calendars: [{ ...own, selectedAppointmentIds: ["consented-appointment"] }],
+      calendars: [
+        {
+          ...own,
+          syncState: "pending",
+          publicationPaused: true,
+          selectedAppointmentIds: ["consented-appointment"],
+        },
+      ],
       preparePublicationPreview: jest
         .fn<SharingController["preparePublicationPreview"]>()
         .mockResolvedValue({
@@ -151,49 +346,52 @@ describe("Kalenderfreigabe", () => {
     });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
-    await fireEvent.press(screen.getByText("Dienstplan aktualisieren"));
+    await fireEvent.press(screen.getByText("Freigabe prüfen"));
     expect(c.publishCalendar).not.toHaveBeenCalled();
     expect(c.preparePublicationPreview).toHaveBeenCalledWith("own");
-    expect(screen.getByText("2 Einträge")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Freigabe fortsetzen" })).toBeTruthy();
     expect(screen.getByText("24.10. · 21:00–07:30 · Folgetag")).toBeTruthy();
     expect(screen.getByText("Termin")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
     expect(c.publishCalendar).not.toHaveBeenCalled();
-    expect(screen.getByText("Dienstplan aktualisieren")).toBeTruthy();
+    expect(screen.getByText("Freigabe prüfen")).toBeTruthy();
   });
   it("previews a restore-cleared appointment selection and only publishes the selected calendar on confirmation", async () => {
     const c = controller({
-      calendars: [{ ...own, syncState: "pending", selectedAppointmentIds: [] }],
+      calendars: [
+        { ...own, syncState: "pending", publicationPaused: true, selectedAppointmentIds: [] },
+      ],
       availableAppointments: [
         { id: "restored", title: "Private restored appointment", date: "25.10." },
       ],
     });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
-    await fireEvent.press(screen.getByText("Dienstplan aktualisieren"));
+    await fireEvent.press(screen.getByText("Freigabe prüfen"));
     expect(c.preparePublicationPreview).toHaveBeenCalledWith("own");
     expect(screen.queryByText("Private restored appointment")).toBeNull();
     expect(c.publishCalendar).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Aktualisierung freigeben" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Freigabe fortsetzen" }));
     expect(c.publishCalendar).toHaveBeenCalledTimes(1);
     expect(c.publishCalendar).toHaveBeenCalledWith("own", "confirmation");
-    expect(screen.getByText("Dienstplan aktualisieren")).toBeTruthy();
+    expect(screen.getByText("Freigabe prüfen")).toBeTruthy();
   });
   it("requires a new local preparation after a confirmed preview becomes stale", async () => {
     const c = controller({
-      calendars: [own],
+      calendars: [{ ...own, syncState: "pending", publicationPaused: true }],
       publishCalendar: jest
         .fn<SharingController["publishCalendar"]>()
         .mockRejectedValue(new Error("SHARE_PREVIEW_STALE")),
     });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
-    await fireEvent.press(screen.getByText("Dienstplan aktualisieren"));
-    await fireEvent.press(screen.getByRole("button", { name: "Aktualisierung freigeben" }));
-    expect(screen.queryByText("Aktualisierung freigeben")).toBeNull();
-    expect(screen.getByText("Dienstplan aktualisieren")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Freigabe prüfen"));
+    await fireEvent.press(screen.getByRole("button", { name: "Freigabe fortsetzen" }));
+    expect(screen.queryByText("Freigabe fortsetzen")).toBeNull();
+    expect(screen.getByText("Freigabe prüfen")).toBeTruthy();
     expect(screen.queryByText("SHARE_PREVIEW_STALE")).toBeNull();
-    await fireEvent.press(screen.getByText("Dienstplan aktualisieren"));
+    await fireEvent.press(screen.getByText("Freigabe prüfen"));
     expect(c.preparePublicationPreview).toHaveBeenCalledTimes(2);
     expect(c.publishCalendar).toHaveBeenCalledTimes(1);
   });
@@ -202,15 +400,19 @@ describe("Kalenderfreigabe", () => {
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
     expect(c.invite).not.toHaveBeenCalled();
-    expect(screen.getByText("Einmal verwendbar · 7 Tage gültig")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Person einladen" }));
-    expect(c.invite).toHaveBeenCalledWith("own");
+
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(c.createInvitation).not.toHaveBeenCalled();
+    expect(c.shareInvitation).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Weiter"));
+    await fireEvent.press(screen.getByText("Sonstige (AirDrop)"));
+    expect(c.shareInvitation).toHaveBeenCalledTimes(1);
   });
   it("distinguishes requesting members and active readers with explicit control", async () => {
     const c = controller({ calendars: [own] });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Sam bestätigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Sam erlauben" }));
     expect(c.setMember).toHaveBeenCalledWith("own", "pending", "APPROVE");
     await fireEvent.press(screen.getByRole("button", { name: "Sam ablehnen" }));
     expect(c.setMember).toHaveBeenCalledWith("own", "pending", "REJECT");
@@ -222,12 +424,12 @@ describe("Kalenderfreigabe", () => {
     const c = controller({ calendars: [own] });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Mein Dienstplan verwalten" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Einladung widerrufen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung stoppen" }));
     expect(c.revokeInvite).toHaveBeenCalledWith("own", "invite");
-    await fireEvent.press(screen.getByText("Freigabe löschen"));
+    await fireEvent.press(screen.getByText("Freigabe beenden"));
     expect(c.deleteCalendar).not.toHaveBeenCalled();
     expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[1]).toContain(
-      "Deine lokalen Dienste bleiben erhalten.",
+      "Deine eigenen Dienste bleiben erhalten.",
     );
     await confirmLastAlert();
     expect(c.deleteCalendar).toHaveBeenCalledWith("own");
@@ -236,19 +438,20 @@ describe("Kalenderfreigabe", () => {
     const c = controller({ error: true, busy: true, calendars: [own] });
     const screen = await render(<CalendarSharingScreen controller={c} />);
     expect(screen.getByText("Das hat nicht geklappt. Bitte versuche es erneut.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Aktualisieren" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Neue Einladung" })).toBeDisabled();
     expect(screen.queryByText(/SHARE_|token|apikey/)).toBeNull();
   });
   it("confirms account deletion and offers signout with local data retained", async () => {
     const c = controller();
     const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Konto" }));
     await fireEvent.press(screen.getByRole("button", { name: "Abmelden" }));
     await confirmLastAlert();
     expect(c.signOut).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByRole("button", { name: "Konto löschen" }));
     expect(c.deleteAccount).not.toHaveBeenCalled();
     expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[1]).toContain(
-      "Deine lokalen Dienste und Einstellungen bleiben erhalten.",
+      "Deine eigenen Dienste bleiben erhalten.",
     );
     await confirmLastAlert();
     expect(c.deleteAccount).toHaveBeenCalledTimes(1);

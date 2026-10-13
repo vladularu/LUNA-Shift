@@ -1,8 +1,9 @@
+import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
 import { CORNER_CURVE, SHADOWS, RADII } from "@/theme/tokens";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   findNodeHandle,
   Platform,
@@ -82,6 +83,8 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   date,
   timeZone = "Europe/Berlin",
   entries,
+  sharedEntries = [],
+  onOpenSharedEntry,
   holidayName,
   onClose,
   onOpenEntry,
@@ -98,6 +101,8 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   readonly date: string;
   readonly timeZone?: string;
   readonly entries: readonly CalendarEntry[];
+  readonly sharedEntries?: readonly SharedCalendarDayEntry[];
+  readonly onOpenSharedEntry?: (row: SharedCalendarDayEntry, date: string) => void;
   readonly holidayName?: string;
   readonly onClose: () => void;
   readonly onOpenEntry: (entry: CalendarEntry) => void;
@@ -114,8 +119,31 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   const overflowRowHeight = Math.ceil(OVERFLOW_ROW_HEIGHT * layoutScale);
   const actionRowHeight = Math.ceil(ACTION_ROW_HEIGHT * layoutScale);
   const popupWidth = Math.min(420, width - 24);
-  const visibleEntries = entries.slice(0, 2);
-  const overflowCount = Math.max(0, entries.length - visibleEntries.length);
+  const [entryLimit, setEntryLimit] = useState(25);
+  const popupRows = [
+    ...entries.map((entry) => ({
+      key: entry.kind + ":" + entry.id,
+      title: entry.title,
+      color: entry.color,
+      symbol: entry.kind === "SHIFT" ? entry.symbol : null,
+      subtitle: entrySubtitle(entry),
+      duration: entryDuration(entry, timeZone),
+      readOnly: false,
+      onPress: () => onOpenEntry(entry),
+    })),
+    ...sharedEntries.map((row) => ({
+      key: row.calendarId + ":" + row.entry.id,
+      title: row.entry.title,
+      color: row.entry.color,
+      symbol: row.entry.symbol,
+      subtitle: row.when + " · " + row.calendarName,
+      duration: null,
+      readOnly: true,
+      onPress: () => onOpenSharedEntry?.(row, date),
+    })),
+  ];
+  const visibleEntries = popupRows.slice(0, sharedEntries.length ? entryLimit : 2);
+  const overflowCount = Math.max(0, popupRows.length - visibleEntries.length);
   const headerHeight = Math.ceil((holidayName ? HOLIDAY_HEADER_HEIGHT : 0) * layoutScale);
   const desiredPopupHeight =
     headerHeight +
@@ -279,15 +307,15 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
 
           <ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={{ flexShrink: 1 }}>
             {visibleEntries.map((entry, index) => {
-              const duration = entryDuration(entry, timeZone);
+              const duration = entry.duration;
               return (
                 <Pressable
-                  key={`${entry.kind}-${entry.id}`}
+                  key={entry.key}
                   ref={index === 0 ? dialogHeadingRef : undefined}
-                  accessibilityLabel={`${entry.title} bearbeiten`}
+                  accessibilityLabel={`${entry.title} ${entry.readOnly ? "ansehen" : "bearbeiten"}`}
                   accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
                   accessibilityRole="button"
-                  onPress={() => onOpenEntry(entry)}
+                  onPress={entry.onPress}
                   style={({ pressed }) => ({
                     minHeight: entryRowHeight,
                     flexDirection: "row",
@@ -307,7 +335,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                       backgroundColor: accessibleChipBackgroundColor(entry.color),
                     }}
                   >
-                    {entry.kind === "SHIFT" ? (
+                    {entry.symbol ? (
                       <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
                     ) : (
                       <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
@@ -333,7 +361,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                         fontSize: TYPOGRAPHY.caption.fontSize,
                       }}
                     >
-                      {entrySubtitle(entry)}
+                      {entry.subtitle}
                     </Text>
                   </View>
                   {duration ? (
@@ -367,9 +395,15 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
 
             {overflowCount > 0 ? (
               <Pressable
-                accessibilityLabel={`${overflowCount} weitere Einträge in den Tagesdetails anzeigen`}
+                accessibilityLabel={
+                  sharedEntries.length
+                    ? `${overflowCount} weitere Einträge anzeigen`
+                    : `${overflowCount} weitere Einträge in den Tagesdetails anzeigen`
+                }
                 accessibilityRole="button"
-                onPress={() => onOpenDetails(date)}
+                onPress={() =>
+                  sharedEntries.length ? setEntryLimit((limit) => limit + 25) : onOpenDetails(date)
+                }
                 style={({ pressed }) => ({
                   minHeight: overflowRowHeight,
                   alignItems: "center",

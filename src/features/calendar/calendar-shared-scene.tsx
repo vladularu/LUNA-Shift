@@ -1,4 +1,3 @@
-import { SharedCalendarDayMark } from "./shared-calendar-day";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
 import { createContext, use, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -144,7 +143,6 @@ export function SharedCalendarMonth({
   pageHeight,
   entriesByDate,
   sharedEntriesByDate,
-  onSelectSharedDate,
   display,
   profile,
   ruleResolver,
@@ -161,7 +159,6 @@ export function SharedCalendarMonth({
   pageHeight: number;
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
   sharedEntriesByDate?: ReadonlyMap<string, readonly SharedCalendarDayEntry[]>;
-  onSelectSharedDate?: (date: string) => void;
   display: PrototypeDisplay;
   profile: UserProfile;
   ruleResolver: RuleResolver;
@@ -194,7 +191,6 @@ export function SharedCalendarMonth({
       pageHeight={pageHeight}
       entriesByDate={entriesByDate}
       sharedEntriesByDate={sharedEntriesByDate}
-      onSelectSharedDate={onSelectSharedDate}
       display={display}
       profile={profile}
       onSelectDate={onSelectDate}
@@ -217,7 +213,6 @@ function SharedMonthBody({
   pageHeight,
   entriesByDate,
   sharedEntriesByDate,
-  onSelectSharedDate,
   display,
   profile,
   onSelectDate,
@@ -281,7 +276,7 @@ function SharedMonthBody({
             accessibilityHint={
               stampMode ? stampDayAccessibilityHint(stampToolLabel ?? null) : "Tagesfenster öffnen"
             }
-            accessibilityLabel={`${day.date}, ${holidays.get(day.date)?.name ?? ""} ${(entriesByDate.get(day.date) ?? []).map((entry) => entry.title).join(", ")}`}
+            accessibilityLabel={`${day.date}, ${holidays.get(day.date)?.name ?? ""} ${[...(entriesByDate.get(day.date) ?? []).map((entry) => entry.title), ...(sharedEntriesByDate?.get(day.date) ?? []).map((row) => `${row.calendarName}: ${row.entry.title}`)].join(", ")}`}
             accessibilityState={{ selected: selectedDate === day.date }}
             onPress={(event) => {
               const { pageX, pageY, locationX, locationY } = event.nativeEvent;
@@ -316,29 +311,6 @@ function SharedMonthBody({
             ) : null}
           </Pressable>
         ))}
-        {onSelectSharedDate
-          ? layout.days.map((day) => {
-              const shared = sharedEntriesByDate?.get(day.date);
-              return shared?.length ? (
-                <View
-                  key={`shared:${day.date}`}
-                  pointerEvents="box-none"
-                  style={{
-                    position: "absolute",
-                    left: day.toX - layout.cellWidth / 2,
-                    top: day.toY - 20 + Math.max(30, layout.weekHeight - 46),
-                    width: layout.cellWidth,
-                  }}
-                >
-                  <SharedCalendarDayMark
-                    date={day.date}
-                    entries={shared}
-                    onPress={onSelectSharedDate}
-                  />
-                </View>
-              ) : null;
-            })
-          : null}
       </View>
       {testData ? <Text style={{ position: "absolute", bottom: 0 }}>Testdaten</Text> : null}
     </Animated.View>

@@ -18,18 +18,21 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   entry,
   display,
   timeZone,
+  lineHeight = CALENDAR_METRICS.entryRowHeight,
 }: {
   entry: CalendarEntry;
   display: PrototypeDisplay;
   timeZone: string;
+  lineHeight?: number;
 }) {
   const palette = usePalette();
+  const rowStyle = { height: lineHeight, lineHeight, fontSize: Math.min(12, lineHeight - 1) };
   if (entry.kind === "APPOINTMENT")
     return (
       <Text
         numberOfLines={1}
         allowFontScaling={false}
-        style={[styles.row, { color: palette.text }]}
+        style={[styles.row, rowStyle, { color: palette.text }]}
       >
         {`• ${entry.title}`}
       </Text>
@@ -38,14 +41,14 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   const detail = calendarShiftDetail(entry, { ...display, timeZone });
   return (
     <View style={styles.chip}>
-      <View style={[styles.main, { backgroundColor: colors.main }]}>
+      <View style={[styles.main, { height: lineHeight, backgroundColor: colors.main }]}>
         {display.labelMode === "SYMBOL" ? (
           <ShiftSymbol value={entry.symbol} color={CALENDAR_METRICS.chipTextColor} size={12} />
         ) : (
           <Text
             numberOfLines={1}
             allowFontScaling={false}
-            style={[styles.row, styles.center, { color: CALENDAR_METRICS.chipTextColor }]}
+            style={[styles.row, rowStyle, styles.center, { color: CALENDAR_METRICS.chipTextColor }]}
           >
             {display.labelMode === "SHORT" ? entry.title.slice(0, 1) : entry.title}
           </Text>
@@ -57,6 +60,7 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
           allowFontScaling={false}
           style={[
             styles.row,
+            rowStyle,
             styles.center,
             { backgroundColor: colors.detail, color: colors.onDetail },
           ]}

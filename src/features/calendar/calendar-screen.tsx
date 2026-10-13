@@ -1,3 +1,4 @@
+import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { useSharedCalendarDays } from "./use-shared-calendar-days";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
@@ -42,6 +43,7 @@ import {
 } from "@/features/calendar/quick-entry-actions";
 import { consumeShiftSelectionPopupRestore } from "@/features/calendar/quick-entry-navigation";
 import { QuickEntryPopup } from "@/features/calendar/quick-entry-popup";
+import { SharedCalendarFilters } from "./shared-calendar-filters";
 import { QuickPlannerDock } from "@/features/calendar/quick-planner-dock";
 import { CalendarQuickOverlay } from "./calendar-quick-overlay";
 import { stampToolSelectedAnnouncement } from "@/features/calendar/stamp-accessibility";
@@ -49,7 +51,12 @@ import { useCalendarTodayScroll } from "@/features/calendar/use-calendar-today-s
 import { useCalendarPaging } from "@/features/calendar/use-calendar-paging";
 import { useOpenShiftSelection } from "@/features/calendar/use-open-shift-selection";
 import { useQuickStampAction } from "@/features/calendar/use-quick-stamp-action";
-import { dayDetailsRoute, dayEditorRoute, quickAddRoute } from "@/navigation/routes";
+import {
+  dayDetailsRoute,
+  dayEditorRoute,
+  sharedDayEditorRoute,
+  quickAddRoute,
+} from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
@@ -128,12 +135,7 @@ export function CalendarScreen() {
   const [stampTool, setStampTool] = useState<QuickEntryStampAction | null>(null);
   const [quickPopup, setQuickPopup] = useState<QuickPopupState | null>(null);
   const closeQuickPopup = useCallback(() => setQuickPopup(null), []);
-  const { sharedEntriesByDate, openSharedDate, sharedDaySheet } = useSharedCalendarDays(
-    timeZone,
-    isFocused,
-    closeQuickPopup,
-    visibleMonth,
-  );
+  const { sharedEntriesByDate } = useSharedCalendarDays(timeZone, visibleMonth);
   const popupRevision = useRef(0);
   const pendingSelectedDate = useRef<string | null>(null);
   const settledMonth = useRef(targetMonth);
@@ -440,6 +442,11 @@ export function CalendarScreen() {
     setQuickPopup(null);
     router.push(dayEditorRoute(entry.date, entry.kind, entry.id));
   }, []);
+  const openSharedEntry = useCallback((row: SharedCalendarDayEntry, date: string) => {
+    pendingSelectedDate.current = date;
+    setQuickPopup(null);
+    router.push(sharedDayEditorRoute(date, row.calendarId, row.entry.id));
+  }, []);
   const openDayDetails = useCallback((date: string) => {
     pendingSelectedDate.current = date;
     setQuickPopup(null);
@@ -482,7 +489,6 @@ export function CalendarScreen() {
           accessibilityVisible={isFocused && item === visibleMonth}
           entriesByDate={entriesByDate}
           sharedEntriesByDate={sharedEntriesByDate}
-          onSelectSharedDate={openSharedDate}
           display={preferences}
           month={item}
           onSelectDate={selectDate}
@@ -500,7 +506,6 @@ export function CalendarScreen() {
     [
       entriesByDate,
       sharedEntriesByDate,
-      openSharedDate,
       isFocused,
       pageHeight,
       preferences,
@@ -543,6 +548,10 @@ export function CalendarScreen() {
         referenceMonth={currentMonth(timeZone)}
         transition={headerTransition}
         viewMode={controller.mode}
+      />
+      <SharedCalendarFilters
+        ownVisible={preferences.showShifts}
+        onOwnVisible={preferences.setShowShifts}
       />
       {plannerError ? (
         <View
@@ -604,7 +613,6 @@ export function CalendarScreen() {
           </Animated.View>
         </View>
       </SharedCalendarScene>
-      {sharedDaySheet}
       <CalendarQuickOverlay modal={quickPopup !== null && isFocused}>
         {quickPopup ? (
           <QuickEntryPopup
@@ -617,6 +625,8 @@ export function CalendarScreen() {
             date={quickPopup.date}
             timeZone={timeZone}
             entries={entriesByDate.get(quickPopup.date) ?? []}
+            sharedEntries={sharedEntriesByDate.get(quickPopup.date) ?? []}
+            onOpenSharedEntry={openSharedEntry}
             holidayName={quickPopupHolidayName}
             onClose={closeQuickPopup}
             onOpenDetails={openDayDetails}

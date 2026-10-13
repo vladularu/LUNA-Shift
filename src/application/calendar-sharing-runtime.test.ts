@@ -68,6 +68,14 @@ function fixture({
   let localBindings = [...bindings];
   let staged: SharingPublication | null = null;
   const local: SharingLocalPort = {
+    configureContent: vi.fn(async (id, target, content) => {
+      localBindings = localBindings.map((item) =>
+        item.accountId === id && item.calendarId === target
+          ? { ...item, content, generation: item.generation + 1 }
+          : item,
+      );
+      staged = null;
+    }),
     initialize: vi.fn(async () => {}),
     setActiveAccount: vi.fn(async (id) => {
       if (!id) caches = [];
@@ -158,6 +166,8 @@ function fixture({
     }),
   };
   const cloud: CloudSharingClient = {
+    supportsContentRights: vi.fn(async () => false),
+    setMemberRights: vi.fn(),
     saveProfile: vi.fn(async (_expectedAccountId, displayName) => ({
       userId: account.id,
       displayName,
@@ -202,7 +212,12 @@ function fixture({
       calendarName: calendar.name,
       status: "PENDING" as const,
     })),
-    listMembers: vi.fn(async () => ({ members: [], invites: [] })),
+    listMembers: vi.fn(async () => ({
+      members: [],
+      invites: [
+        { id: "invite", expiresAt: "2026-10-19T12:00:00Z", consumedAt: null, revokedAt: null },
+      ],
+    })),
     setMember: vi.fn(async () => ({
       userId: "member",
       displayName: "Sam",
@@ -262,6 +277,117 @@ function fixture({
 }
 
 describe("sharing runtime", () => {
+  it("does not inherit former note or appointment consent after manually resuming a restored source", async () => {
+    const f = fixture({
+      remote: [owner],
+      bindings: [{ ...binding, requiresContentConsent: true }],
+    });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    f.cloud.listMembers = vi.fn(async () => ({
+      members: [
+        {
+          userId: "member",
+          displayName: "Sam",
+          status: "ACTIVE" as const,
+          requestedAt: "2026-10-12T12:00:00Z",
+          updatedAt: "2026-10-12T12:00:00Z",
+          rights: { shifts: true, appointments: true, notes: true },
+        },
+      ],
+      invites: [],
+    }));
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(f.local.configureContent).toHaveBeenCalledWith(account.id, calendar.id, {
+      version: 2,
+      consentReset: true,
+      shifts: true,
+      allAppointments: false,
+      notes: false,
+    });
+  });
+  it("immediately removes persisted invitation secrets from the controller on account switch", async () => {
+    const f = fixture();
+    const invitation = {
+      id: "invite",
+      calendarId: calendar.id,
+      url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
+      expiresAt: "2099-10-14T00:00:00Z",
+    };
+    f.local.listInvitations = vi.fn(async (id) => (id === account.id ? [invitation] : []));
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(runtime.getController().issuedInvitations).toEqual([invitation]);
+    f.changeAccount({ id: "second-account", displayName: "Sam" });
+    expect(runtime.getController().issuedInvitations).toEqual([]);
+    await runtime.backgroundRefresh();
+    expect(runtime.getController().issuedInvitations).toEqual([]);
+  });
+  it("allows reducing a person's rights from another owner device without publishing local data", async () => {
+    const f = fixture({ remote: [owner] });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const rights = { shifts: true, appointments: false, notes: false };
+    await runtime.getController().setMemberRights!(calendar.id, "member", rights);
+    expect(f.cloud.setMemberRights).toHaveBeenCalledWith(calendar.id, "member", rights);
+    expect(f.cloud.publish).not.toHaveBeenCalled();
+    expect(f.local.configureContent).not.toHaveBeenCalled();
+  });
+  it("upgrades an enabled source to typed content without opting into notes or all appointments", async () => {
+    const f = fixture({ remote: [owner], bindings: [binding] });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(runtime.getController().contentRightsAvailable).toBe(true);
+    expect(f.local.configureContent).toHaveBeenCalledWith(account.id, calendar.id, {
+      version: 2,
+      shifts: true,
+      allAppointments: false,
+      notes: false,
+    });
+    expect(f.cloud.publish).toHaveBeenCalled();
+  });
+  it("passes explicit invitation rights to the server and enables only selected source contents", async () => {
+    const f = fixture({ remote: [owner], bindings: [binding] });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const rights = { shifts: false, appointments: true, notes: true };
+    await runtime.getController().createInvitation(calendar.id, rights);
+    expect(f.cloud.createInvite).toHaveBeenCalledWith(calendar.id, expect.any(String), rights);
+    expect(f.local.configureContent).toHaveBeenCalledWith(account.id, calendar.id, {
+      version: 2,
+      shifts: true,
+      allAppointments: true,
+      notes: true,
+    });
+  });
+  it("requests a complete v2 snapshot when upgrading an existing v1 reader cache", async () => {
+    const f = fixture({
+      initialCaches: [
+        {
+          accountId: account.id,
+          calendar,
+          entries: [],
+          fetchedAt: "2026-10-12T12:00:00Z",
+          visible: true,
+        },
+      ],
+    });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(f.cloud.fetch).toHaveBeenCalledWith(calendar.id, null);
+  });
+  it("does not resume a restored source just because the server supports content rights", async () => {
+    const f = fixture({ remote: [owner], bindings: [{ ...binding, enabled: false }] });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(f.local.configureContent).not.toHaveBeenCalled();
+    expect(f.cloud.publish).not.toHaveBeenCalled();
+  });
   it("stays unavailable without cloud setup and never reads or uploads local data", async () => {
     const f = fixture();
     f.auth.isConfigured = false;
@@ -399,8 +525,10 @@ describe("sharing runtime", () => {
     ]);
     const preview = await runtime.getController().preparePublicationPreview(owner.id);
     expect(preview.entryCount).toBe(1);
-    expect(preview.entries).toEqual([{ title: "Nacht", when: "24.10. · 21:00–07:30 · Folgetag" }]);
-    expect(JSON.stringify(preview)).not.toMatch(/Private|private-shift/);
+    expect(preview.entries).toEqual([
+      { title: "Private title", when: "24.10. · 21:00–07:30 · Folgetag" },
+    ]);
+    expect(JSON.stringify(preview)).not.toMatch(/Private note|private-shift/);
     expect(f.local.readEntries).toHaveBeenCalledTimes(reads + 1);
     expect(f.cloud.publish).not.toHaveBeenCalled();
     expect(f.local.resumePublication).not.toHaveBeenCalled();
@@ -413,7 +541,7 @@ describe("sharing runtime", () => {
         generation: 2,
         visibility: "DETAILS",
         selectedAppointmentIds: ["appointment"],
-        projection: expect.stringContaining("Nacht"),
+        projection: expect.stringContaining("Private title"),
       }),
     );
     expect(f.cloud.publish).toHaveBeenCalledTimes(1);
@@ -897,7 +1025,7 @@ describe("sharing runtime", () => {
     expect(preview.entries[0].when).toContain("Folgetag");
     expect(preview.entries[1].when).toContain("Ganztägig");
     expect(preview.entries[2].title).toBe("Termin");
-    expect(JSON.stringify(preview)).not.toMatch(/Private|local-template|note/);
+    expect(JSON.stringify(preview)).not.toMatch(/Private appointment|local-template|note/);
     expect(
       runtime
         .getController()
@@ -955,4 +1083,76 @@ describe("sharing runtime", () => {
     await runtime.backgroundRefresh();
     expect(f.cloud.listCalendars).toHaveBeenCalledTimes(calls);
   });
+});
+
+it("reconciles another change arriving while a refresh is in flight", async () => {
+  const f = fixture();
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  let release!: () => void;
+  vi.mocked(f.cloud.listCalendars).mockImplementationOnce(async () => {
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    return [calendar];
+  });
+  const before = vi.mocked(f.cloud.listCalendars).mock.calls.length;
+  const first = runtime.backgroundRefresh();
+  await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+  const followup = runtime.backgroundRefresh();
+  release();
+  await Promise.all([first, followup]);
+  expect(f.cloud.listCalendars).toHaveBeenCalledTimes(before + 2);
+  runtime.stop();
+});
+it("prepares one invitation without OS sharing and refuses a revoked invitation for every delivery channel", async () => {
+  const f = fixture({ remote: [owner] });
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  const invite = await runtime.getController().createInvitation(owner.id);
+  expect(f.options.shareUrl).not.toHaveBeenCalled();
+  expect(invite.url).toContain("b".repeat(64));
+  vi.mocked(f.cloud.listMembers).mockResolvedValue({
+    members: [],
+    invites: [
+      {
+        id: invite.id,
+        expiresAt: invite.expiresAt,
+        consumedAt: null,
+        revokedAt: "2026-10-12T12:00:00Z",
+      },
+    ],
+  });
+  await expect(runtime.getController().shareInvitation(invite)).rejects.toThrow(
+    "SHARE_INVITE_INVALID",
+  );
+  for (const channel of ["messages", "whatsapp", "telegram", "email", "system", "copy"] as const) {
+    await expect(runtime.getController().shareInvitation(invite, channel)).rejects.toThrow(
+      "SHARE_INVITE_INVALID",
+    );
+  }
+  expect(f.options.shareUrl).not.toHaveBeenCalled();
+  runtime.stop();
+});
+it("forwards the chosen delivery channel only after validating the current invitation", async () => {
+  const f = fixture({ remote: [owner] });
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  const invite = await runtime.getController().createInvitation(owner.id);
+  expect(f.options.shareUrl).not.toHaveBeenCalled();
+  await runtime.getController().shareInvitation(invite, "telegram");
+  expect(f.options.shareUrl).toHaveBeenCalledWith(invite.url, "telegram");
+  runtime.stop();
+});
+it("copies a valid invitation directly only when the native copy port exists", async () => {
+  const f = fixture({ remote: [owner] });
+  const copyUrl = vi.fn().mockResolvedValue(undefined);
+  const runtime = createCalendarSharingRuntime({ ...f.options, copyUrl });
+  await runtime.start();
+  const invite = await runtime.getController().createInvitation(owner.id);
+  expect(runtime.getController().directCopyAvailable).toBe(true);
+  await runtime.getController().shareInvitation(invite, "copy");
+  expect(copyUrl).toHaveBeenCalledWith(invite.url);
+  expect(f.options.shareUrl).not.toHaveBeenCalled();
+  runtime.stop();
 });

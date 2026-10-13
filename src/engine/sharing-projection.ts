@@ -1,6 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { CalendarEntry, ShiftType } from "@/domain/types";
 import type { CalendarSharingVisibility, SharedCalendarEntry } from "@/domain/calendar-sharing";
+import type { SharingSourceContent } from "@/domain/sharing-content";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const APPEARANCE: Readonly<Record<ShiftType, readonly [string, string]>> = {
   EARLY: ["Früh", "sunrise"],
@@ -8,12 +9,13 @@ const APPEARANCE: Readonly<Record<ShiftType, readonly [string, string]>> = {
   NIGHT: ["Nacht", "moon"],
   DAY: ["Tag", "home"],
   TRAINING: ["Schule", "book"],
-  VACATION: ["Nicht verfügbar", "unavailable"],
-  SICK: ["Nicht verfügbar", "unavailable"],
+  VACATION: ["Urlaub", "star"],
+  SICK: ["Krank", "unavailable"],
   FREE: ["Frei", "star"],
   CUSTOM: ["Dienst", "clock"],
 };
 export interface SharingProjectionOptions {
+  readonly content?: SharingSourceContent;
   readonly timeZone: string;
   readonly visibility: CalendarSharingVisibility;
   readonly selectedAppointmentIds?: readonly string[];
@@ -26,8 +28,18 @@ export function projectSharingEntries(
   const selected = new Set(options.selectedAppointmentIds ?? []);
   const result: SharedCalendarEntry[] = [];
   for (const entry of entries) {
-    if (entry.deletedAt !== null || (entry.kind === "SHIFT" && entry.type === "FREE")) continue;
-    if (entry.kind === "APPOINTMENT" && !selected.has(entry.id)) continue;
+    if (
+      entry.deletedAt !== null ||
+      (options.visibility === "AVAILABILITY" && entry.kind === "SHIFT" && entry.type === "FREE")
+    )
+      continue;
+    if (entry.kind === "SHIFT" && options.content?.shifts === false) continue;
+    if (
+      entry.kind === "APPOINTMENT" &&
+      !options.content?.allAppointments &&
+      !selected.has(entry.id)
+    )
+      continue;
     const id = options.publicId(entry);
     if (!UUID.test(id)) throw new Error("SHARE_INVALID_PUBLIC_ID");
     const allDay = entry.allDay === true || (entry.startTime === null && entry.endTime === null);
@@ -36,16 +48,51 @@ export function projectSharingEntries(
     const end = Temporal.PlainTime.from(allDay ? "00:00" : (entry.endTime ?? "00:00"));
     const endDay =
       allDay || Temporal.PlainTime.compare(end, start) <= 0 ? day.add({ days: 1 }) : day;
-    const neutral =
-      options.visibility === "AVAILABILITY" ||
-      (entry.kind === "SHIFT" && ["SICK", "VACATION"].includes(entry.type));
-    const [title, symbol] = neutral
-      ? ["Nicht verfügbar", "unavailable"]
+    const neutral = options.visibility === "AVAILABILITY";
+    const appearance =
+      entry.kind === "APPOINTMENT" ? ["Termin", "calendar"] : APPEARANCE[entry.type];
+    const title = neutral
+      ? "Nicht verfügbar"
       : entry.kind === "APPOINTMENT"
-        ? ["Termin", "calendar"]
-        : APPEARANCE[entry.type];
+        ? options.content
+          ? entry.title
+              .replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
+              .trim()
+              .slice(0, 128) || "Termin"
+          : "Termin"
+        : entry.title
+            .replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
+            .trim()
+            .slice(0, 128) || appearance[0];
+    const symbols = [
+      "calendar",
+      "sunrise",
+      "sun",
+      "moon",
+      "home",
+      "book",
+      "clock",
+      "star",
+      "unavailable",
+    ];
+    const symbol = neutral
+      ? "unavailable"
+      : entry.kind === "SHIFT" && symbols.includes(entry.symbol)
+        ? entry.symbol
+        : appearance[1];
     result.push(
       Object.freeze({
+        ...(options.content
+          ? {
+              kind: entry.kind,
+              note:
+                !neutral && options.content.notes
+                  ? entry.note
+                      ?.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/g, "")
+                      .slice(0, 4096) || null
+                  : null,
+            }
+          : {}),
         id,
         startsAt: day
           .toZonedDateTime({ timeZone: options.timeZone, plainTime: start })

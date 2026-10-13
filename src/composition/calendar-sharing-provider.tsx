@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useSyncExternalStore, type PropsWithChildren } from "react";
-import { Alert, AppState, Share } from "react-native";
+import { useEffect, useMemo, useState, useSyncExternalStore, type PropsWithChildren } from "react";
+import { Alert, AppState } from "react-native";
 import * as Crypto from "expo-crypto";
 import Constants from "expo-constants";
 import { useSQLiteContext } from "expo-sqlite";
@@ -27,6 +27,8 @@ import { createCloudSharingClient } from "@/infrastructure/sharing/cloud-sharing
 import * as local from "@/infrastructure/database/calendar-sharing-repository";
 import { listCalendarEntries } from "@/infrastructure/database/calendar-entry-repository";
 import type { SharingRevocationStatus } from "@/domain/calendar-sharing-ports";
+import { watchSharingChanges } from "@/infrastructure/sharing/sharing-realtime";
+import { deliverSharingInvitation } from "@/infrastructure/sharing/invitation-delivery";
 
 export { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 function confirmManualAppleDeletion(): Promise<boolean> {
@@ -60,7 +62,14 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
   const { profile } = usePflegeShiftProfile();
   const { entries } = usePflegeShiftEntries();
   const { testMonths } = usePflegeShiftTestData();
-  const active = ready && profile !== null;
+  const hasProfile = profile !== null;
+  const [initializedDatabase, setInitializedDatabase] = useState<typeof db | null>(null);
+  useEffect(() => {
+    if (ready && hasProfile) setInitializedDatabase(db);
+    else if (!hasProfile) setInitializedDatabase(null);
+  }, [db, hasProfile, ready]);
+  // ready describes the requested calendar range, not the lifetime of this database.
+  const active = hasProfile && (ready || initializedDatabase === db);
   const runtime = useMemo(() => {
     const auth = createSharingAuthPort();
     const client = getSharingSupabaseClient();
@@ -73,6 +82,11 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
         listBindings: (accountId) => local.listSharingBindings(db, accountId),
         stagePublication: (binding, timeZone, makeId) =>
           local.stageSharingPublication(db, binding, timeZone, makeId),
+        configureContent: (accountId, calendarId, content) =>
+          local.configureSharingContent(db, accountId, calendarId, content),
+        rememberInvitation: (accountId, invitation) =>
+          local.rememberSharingInvitation(db, accountId, invitation),
+        listInvitations: (accountId) => local.listSharingInvitations(db, accountId),
         stageConfirmedPublication: (binding, timeZone, makeId, confirmation) =>
           local.stageConfirmedSharingPublication(db, binding, timeZone, makeId, confirmation),
         acknowledgePublication: (publication, revision) =>
@@ -100,12 +114,7 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
           byte.toString(16).padStart(2, "0"),
         ).join(""),
       appleAvailable: false,
-      async shareUrl(url) {
-        await Share.share({
-          message: `Ich möchte meinen LUNA-Kalender mit dir teilen. ${url}`,
-          url,
-        });
-      },
+      shareUrl: deliverSharingInvitation,
       inviteUrl: (token) =>
         createSharingInviteUrl(
           token,
@@ -134,7 +143,7 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
       forgetAuthProfile: forgetSharingAuthProfile,
     };
     return createCalendarSharingRuntime(options);
-    // ready resets a stopped runtime when the main database becomes ready again.
+    // Calendar range loading must not recreate an initialized sharing session.
   }, [db, active]);
   const snapshot = useSyncExternalStore(
     runtime.subscribe,
@@ -154,6 +163,12 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
       () => {},
     );
     let appState = AppState.currentState;
+    const client = getSharingSupabaseClient();
+    const stopRealtime = client
+      ? watchSharingChanges(client, () => {
+          if (appState === "active") void runtime.backgroundRefresh().catch(() => {});
+        })
+      : () => {};
     const subscription = AppState.addEventListener("change", (state) => {
       appState = state;
       if (state === "active") void runtime.backgroundRefresh().catch(() => {});
@@ -163,6 +178,7 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
     }, 15000);
     return () => {
       disposed = true;
+      stopRealtime();
       clearInterval(timer);
       subscription.remove();
       runtime.stop();

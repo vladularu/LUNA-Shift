@@ -16,7 +16,7 @@ import { expandCalendarEntries } from "@/engine/recurrence";
 import { getPublicHolidays } from "@/engine/holidays";
 import { formatMinutes, formatSignedMinutes } from "@/engine/working-time";
 import { calculateDailySummary } from "@/features/calendar/calendar-metrics";
-import { dayEditorRoute, quickAddRoute } from "@/navigation/routes";
+import { dayEditorRoute, sharedDayEditorRoute, quickAddRoute } from "@/navigation/routes";
 import { parseLocalDateRouteParam, type RouteParam } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -34,6 +34,8 @@ import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
+import { sharedCalendarDays } from "@/features/calendar/shared-calendar-display";
 
 function timeLabel(entry: CalendarEntry): string {
   if (entry.kind === "APPOINTMENT") {
@@ -53,6 +55,13 @@ export function DayDetailsScreen() {
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const parsedDate = parseLocalDateRouteParam(params.date);
   const date = parsedDate.status === "valid" ? parsedDate.value : today();
+  const sharedCalendars = useVisibleSharedCalendars();
+  const shared = useMemo(
+    () =>
+      sharedCalendarDays(sharedCalendars, profile?.timeZone ?? "Europe/Berlin", null).get(date) ??
+      [],
+    [sharedCalendars, profile?.timeZone, date],
+  );
   const dayEntries = useMemo(
     () => [...expandCalendarEntries(entries, date, date)].sort(compareCalendarEntries),
     [date, entries],
@@ -155,6 +164,26 @@ export function DayDetailsScreen() {
             </SurfaceCard>
           </View>
           <View style={{ gap: SPACING.md }}>
+            {shared.length ? (
+              <>
+                <SectionHeader title="Geteilte Dienste" caption="Nur ansehen" />
+                <SurfaceCard>
+                  {shared.map((row) => (
+                    <RowButton
+                      key={`${row.calendarId}:${row.entry.id}`}
+                      title={row.entry.title}
+                      subtitle={`${row.calendarName} · ${row.when}`}
+                      onPress={() =>
+                        router.push(sharedDayEditorRoute(date, row.calendarId, row.entry.id))
+                      }
+                      leading={
+                        <ColorBadge color={row.entry.color} label={row.entry.title.slice(0, 1)} />
+                      }
+                    />
+                  ))}
+                </SurfaceCard>
+              </>
+            ) : null}
             <PrimaryButton onPress={() => router.push(quickAddRoute(date))}>
               Schicht hinzufügen
             </PrimaryButton>

@@ -1,3 +1,4 @@
+import { sharingContentSignature, type SharingSourceContent } from "@/domain/sharing-content";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type {
   CachedSharedCalendar,
@@ -8,11 +9,13 @@ import type {
   SharingPublication,
 } from "@/domain/calendar-sharing";
 import type { SharingPublicationConfirmation } from "@/domain/calendar-sharing-ports";
+import type { SharingInvitation } from "@/domain/sharing-ui-contract";
 import { sharingProjectionSignature } from "@/engine/sharing-publication-confirmation";
 import { listCalendarEntries } from "@/infrastructure/database/calendar-entry-repository";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
 import { projectSharingEntries } from "@/engine/sharing-projection";
 interface BindingRow {
+  content_json: string | null;
   account_id: string;
   calendar_id: string;
   device_id: string;
@@ -27,6 +30,12 @@ interface BindingRow {
   enabled: number;
 }
 const bindingFrom = (r: BindingRow): LocalSharingBinding => ({
+  ...(r.content_json && JSON.parse(r.content_json).version === 2
+    ? { content: JSON.parse(r.content_json) as SharingSourceContent }
+    : {}),
+  ...(r.content_json && JSON.parse(r.content_json).consentReset
+    ? { requiresContentConsent: true as const }
+    : {}),
   accountId: r.account_id,
   calendarId: r.calendar_id,
   deviceId: r.device_id,
@@ -51,6 +60,32 @@ export async function migrateCalendarSharing(
    CREATE TABLE IF NOT EXISTS sharing_publication_outbox(calendar_id TEXT PRIMARY KEY REFERENCES sharing_local_bindings(calendar_id) ON DELETE CASCADE,account_id TEXT NOT NULL,mutation_id TEXT NOT NULL,generation INTEGER NOT NULL,expected_revision INTEGER NOT NULL,snapshot_json TEXT NOT NULL CHECK(json_valid(snapshot_json)));
    CREATE TABLE IF NOT EXISTS sharing_entry_ids(calendar_id TEXT NOT NULL REFERENCES sharing_local_bindings(calendar_id) ON DELETE CASCADE,local_key TEXT NOT NULL,public_id TEXT NOT NULL UNIQUE,PRIMARY KEY(calendar_id,local_key));
    CREATE TABLE IF NOT EXISTS sharing_calendar_cache(account_id TEXT NOT NULL,calendar_id TEXT NOT NULL,metadata_json TEXT NOT NULL CHECK(json_valid(metadata_json)),entries_json TEXT NOT NULL CHECK(json_valid(entries_json)),fetched_at TEXT NOT NULL,visible INTEGER NOT NULL DEFAULT 1 CHECK(visible IN(0,1)),PRIMARY KEY(account_id,calendar_id));`);
+    const columns = await tx.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(sharing_local_bindings)",
+    );
+    await tx.execAsync(
+      "CREATE TABLE IF NOT EXISTS sharing_issued_invitations(account_id TEXT NOT NULL,invite_id TEXT NOT NULL,calendar_id TEXT NOT NULL,url TEXT NOT NULL,expires_at TEXT NOT NULL,PRIMARY KEY(account_id,invite_id))",
+    );
+    if (!columns.some((column) => column.name === "content_json"))
+      await tx.execAsync(
+        "ALTER TABLE sharing_local_bindings ADD COLUMN content_json TEXT CHECK(content_json IS NULL OR json_valid(content_json))",
+      );
+    await tx.execAsync(
+      `CREATE TABLE IF NOT EXISTS sharing_projection_version(id INTEGER PRIMARY KEY CHECK(id=1),version INTEGER NOT NULL);`,
+    );
+    const projection = await tx.getFirstAsync<{ version: number }>(
+      "SELECT version FROM sharing_projection_version WHERE id=1",
+    );
+    if (!projection || projection.version < 2) {
+      // Existing full shares must send the real service names once after upgrade.
+      // Paused and availability-only shares retain their explicit owner settings.
+      await tx.runAsync(
+        "UPDATE sharing_local_bindings SET generation=generation+1 WHERE enabled=1 AND visibility='DETAILS'",
+      );
+      await tx.runAsync(
+        "INSERT OR REPLACE INTO sharing_projection_version(id,version) VALUES(1,2)",
+      );
+    }
     await tx.runAsync(
       "INSERT OR IGNORE INTO schema_migrations(version,applied_at) VALUES(33,?)",
       now,
@@ -91,6 +126,8 @@ export async function setSharingActiveAccount(
       accountId,
     );
     if (accountId === null) await tx.runAsync("DELETE FROM sharing_calendar_cache");
+    if (accountId === null) await tx.runAsync("DELETE FROM sharing_issued_invitations");
+    else await tx.runAsync("DELETE FROM sharing_issued_invitations WHERE account_id<>?", accountId);
   });
 }
 export async function bindSharingCalendar(
@@ -219,6 +256,8 @@ export async function stageConfirmedSharingPublication(
       row.generation >= Number.MAX_SAFE_INTEGER ||
       row.generation !== confirmation.generation ||
       row.visibility !== confirmation.visibility ||
+      sharingContentSignature(bindingFrom(row).content) !==
+        sharingContentSignature(confirmation.content) ||
       JSON.stringify(selected) !== JSON.stringify(confirmation.selectedAppointmentIds) ||
       !Number.isSafeInteger(confirmation.serverRevision) ||
       confirmation.serverRevision < 0
@@ -228,6 +267,7 @@ export async function stageConfirmedSharingPublication(
     const checkedProjection = projectSharingEntries(source, {
       timeZone,
       visibility: row.visibility,
+      content: bindingFrom(row).content,
       selectedAppointmentIds: selected,
       publicId: () => "11111111-1111-4111-8111-111111111111",
     });
@@ -292,6 +332,7 @@ async function persistSharingPublication(
   const entries = projectSharingEntries(source, {
     timeZone,
     visibility: row.visibility,
+    content: bindingFrom(row).content,
     selectedAppointmentIds: JSON.parse(row.appointment_ids_json) as string[],
     publicId: (entry) => ids.get(entry.kind + ":" + entry.id)!,
   });
@@ -457,10 +498,109 @@ export async function isolateSharingForBackupRestore(db: SQLiteDatabase): Promis
   );
   // Older offline-only databases have no sharing state to detach.
   if (bindingTable === null) return;
+  const issuedTable = await db.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='sharing_issued_invitations'",
+  );
+  if (issuedTable) await db.runAsync("DELETE FROM sharing_issued_invitations");
   await db.runAsync("DELETE FROM sharing_publication_outbox");
   await db.runAsync("DELETE FROM sharing_entry_ids");
   await db.runAsync("DELETE FROM sharing_calendar_cache");
-  await db.runAsync(
-    "UPDATE sharing_local_bindings SET enabled=0,appointment_ids_json='[]',generation=generation+1",
+  const columns = await db.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(sharing_local_bindings)",
   );
+  await db.runAsync(
+    columns.some((column) => column.name === "content_json")
+      ? "UPDATE sharing_local_bindings SET enabled=0,content_json='{\"consentReset\":true}',appointment_ids_json='[]',generation=generation+1"
+      : "UPDATE sharing_local_bindings SET enabled=0,appointment_ids_json='[]',generation=generation+1",
+  );
+}
+
+/** Changes source consent atomically, invalidating every older queued snapshot. */
+export async function configureSharingContent(
+  db: SQLiteDatabase,
+  accountId: string,
+  calendarId: string,
+  content: SharingSourceContent,
+): Promise<void> {
+  if (
+    content.version !== 2 ||
+    [content.shifts, content.allAppointments, content.notes].some(
+      (value) => typeof value !== "boolean",
+    )
+  )
+    throw new Error("SHARE_INVALID_ARGUMENT");
+  await withImmediateTransaction(db, async (tx) => {
+    const active = await tx.getFirstAsync<{ account_id: string }>(
+      "SELECT account_id FROM sharing_active_account WHERE id=1",
+    );
+    const row = await tx.getFirstAsync<BindingRow>(
+      "SELECT * FROM sharing_local_bindings WHERE account_id=? AND calendar_id=?",
+      accountId,
+      calendarId,
+    );
+    if (active?.account_id !== accountId || !row) throw new Error("SHARE_ACCOUNT_CHANGED");
+    const testLab = await tx.getFirstAsync<{ count: number }>(
+      "SELECT count(*) AS count FROM dev_test_backups",
+    );
+    if (testLab?.count) throw new Error("SHARE_TEST_LAB_ACTIVE");
+    if (sharingContentSignature(bindingFrom(row).content) === sharingContentSignature(content))
+      return;
+    await tx.runAsync(
+      "UPDATE sharing_local_bindings SET content_json=?,generation=generation+1 WHERE account_id=? AND calendar_id=?",
+      JSON.stringify(content),
+      accountId,
+      calendarId,
+    );
+    await tx.runAsync(
+      "DELETE FROM sharing_publication_outbox WHERE account_id=? AND calendar_id=?",
+      accountId,
+      calendarId,
+    );
+  });
+}
+
+/** Account-scoped invitation secrets are cleared on signout and restore. */
+export async function rememberSharingInvitation(
+  db: SQLiteDatabase,
+  accountId: string,
+  invitation: SharingInvitation,
+): Promise<void> {
+  await withImmediateTransaction(db, async (tx) => {
+    const active = await tx.getFirstAsync<{ account_id: string }>(
+      "SELECT account_id FROM sharing_active_account WHERE id=1",
+    );
+    if (active?.account_id !== accountId) throw new Error("SHARE_ACCOUNT_CHANGED");
+    await tx.runAsync(
+      "INSERT OR REPLACE INTO sharing_issued_invitations(account_id,invite_id,calendar_id,url,expires_at) VALUES(?,?,?,?,?)",
+      accountId,
+      invitation.id,
+      invitation.calendarId,
+      invitation.url,
+      invitation.expiresAt,
+    );
+  });
+}
+export async function listSharingInvitations(
+  db: SQLiteDatabase,
+  accountId: string,
+): Promise<readonly SharingInvitation[]> {
+  await db.runAsync(
+    "DELETE FROM sharing_issued_invitations WHERE expires_at<=?",
+    new Date().toISOString(),
+  );
+  const rows = await db.getAllAsync<{
+    invite_id: string;
+    calendar_id: string;
+    url: string;
+    expires_at: string;
+  }>(
+    "SELECT * FROM sharing_issued_invitations WHERE account_id=? AND account_id=(SELECT account_id FROM sharing_active_account WHERE id=1)",
+    accountId,
+  );
+  return rows.map((row) => ({
+    id: row.invite_id,
+    calendarId: row.calendar_id,
+    url: row.url,
+    expiresAt: row.expires_at,
+  }));
 }

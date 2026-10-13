@@ -7,10 +7,13 @@ import { updateLabel } from "./sharing-ui-elements";
 import type { SharingController } from "./sharing-ui-contract";
 import CalendarSharingRoute from "../../../app/calendar-sharing";
 import SharingInviteRoute from "../../../app/sharing-invite";
+import SharingTabRoute from "../../../app/(tabs)/(sharing)/sharing";
 
 let mockParams: { token?: string | string[] } = {};
 const mockHeader = jest.fn();
+const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
+  router: { canGoBack: () => true, back: () => mockBack(), replace: jest.fn() },
   Stack: {
     Screen: (props: unknown) => {
       mockHeader(props);
@@ -34,7 +37,14 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
     preview: jest.fn(() => ({ entryCount: 0, entries: [] })),
     signIn: action(),
     refresh: action(),
-    createCalendar: action(),
+    createCalendar: jest.fn<SharingController["createCalendar"]>().mockResolvedValue("own"),
+    createInvitation: jest.fn<SharingController["createInvitation"]>().mockResolvedValue({
+      calendarId: "own",
+      id: "invite",
+      url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
+      expiresAt: "2099-10-19T12:30:00Z",
+    }),
+    shareInvitation: action(),
     preparePublicationPreview: jest
       .fn<SharingController["preparePublicationPreview"]>()
       .mockResolvedValue({ confirmationId: "confirmation", entryCount: 0, entries: [] }),
@@ -53,18 +63,33 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
 }
 
 describe("Freigabe UI Grenzen", () => {
+  it("keeps a visible way back from a standalone route while the tab follows the reference header", async () => {
+    const c = controller();
+    const screen = await render(
+      <SharingUiProvider controller={c}>
+        <CalendarSharingRoute />
+      </SharingUiProvider>,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Kalender" }));
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    await screen.rerender(
+      <SharingUiProvider controller={c}>
+        <SharingTabRoute />
+      </SharingUiProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Zurück zum Kalender" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Neue Einladung erstellen" })).toBeTruthy();
+  });
   it("shares no appointment unless specifically selected and previews that selection", async () => {
     const c = controller({
       availableAppointments: [{ id: "appointment", title: "Privater Titel", date: "15.10." }],
     });
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByText("Eigenen Kalender teilen"));
-    const toggle = screen.getByLabelText("Privater Titel am 15.10. freigeben");
+    await fireEvent.press(screen.getByText("Neue Einladung"));
+    const toggle = screen.getByRole("button", { name: "Termine teilen" });
     expect(toggle.props.accessibilityState.checked).toBe(false);
-    await fireEvent(toggle, "valueChange", true);
-    await fireEvent.press(screen.getByText("Vorschau ansehen"));
-    expect(c.preview).toHaveBeenCalledWith("DETAILS", ["appointment"]);
-    await fireEvent.press(screen.getByText("Diesen Dienstplan freigeben"));
+    await fireEvent.press(toggle);
+    await fireEvent.press(screen.getByText("Weiter"));
     expect(c.createCalendar).toHaveBeenCalledWith(
       expect.objectContaining({ selectedAppointmentIds: ["appointment"], confirmed: true }),
     );
@@ -74,17 +99,17 @@ describe("Freigabe UI Grenzen", () => {
       createCalendar: jest
         .fn<SharingController["createCalendar"]>()
         .mockRejectedValueOnce(new Error("raw secret token must not appear"))
-        .mockResolvedValue(),
+        .mockResolvedValue("own"),
     });
     const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByText("Eigenen Kalender teilen"));
-    await fireEvent.press(screen.getByText("Vorschau ansehen"));
-    await fireEvent.press(screen.getByText("Diesen Dienstplan freigeben"));
+    await fireEvent.press(screen.getByText("Neue Einladung"));
+
+    await fireEvent.press(screen.getByText("Weiter"));
     expect(screen.getByText("Das hat nicht geklappt. Bitte versuche es erneut.")).toBeTruthy();
     expect(screen.queryByText(/raw secret/)).toBeNull();
-    await fireEvent.press(screen.getByText("Diesen Dienstplan freigeben"));
+    await fireEvent.press(screen.getByText("Weiter"));
     expect(c.createCalendar).toHaveBeenCalledTimes(2);
-    expect(screen.getByText("Eigenen Kalender teilen")).toBeTruthy();
+    expect(screen.getByText("Sende deine Einladung")).toBeTruthy();
   });
   it("blocks overlapping provider requests while an authentication request is running", async () => {
     let done!: () => void;
@@ -108,10 +133,11 @@ describe("Freigabe UI Grenzen", () => {
     const screen = await render(
       <CalendarSharingScreen controller={controller({ status: "loading" })} />,
     );
-    expect(screen.getByText("Kalenderfreigaben werden geladen …")).toBeTruthy();
+    expect(screen.getByText("Freigaben werden geladen …")).toBeTruthy();
     await screen.rerender(
       <CalendarSharingScreen controller={controller({ accountDeletionAvailable: false })} />,
     );
+    await fireEvent.press(screen.getByRole("button", { name: "Konto" }));
     expect(screen.getByRole("button", { name: /Konto löschen/ })).toBeDisabled();
   });
   it("handles missing, overlong, malformed and duplicate invitation tokens safely", () => {
@@ -144,7 +170,7 @@ describe("Freigabe UI Grenzen", () => {
     expect(c.signIn).toHaveBeenCalledWith("google");
     expect(mockHeader).toHaveBeenCalledWith(
       expect.objectContaining({
-        options: expect.objectContaining({ title: "Kalender teilen", headerShown: true }),
+        options: expect.objectContaining({ title: "Kalender teilen", headerShown: false }),
       }),
     );
   });

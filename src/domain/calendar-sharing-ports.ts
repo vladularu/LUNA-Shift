@@ -1,4 +1,6 @@
 import type { CalendarEntry } from "./types";
+import type { SharingInvitation } from "./sharing-ui-contract";
+import type { SharingContentRights, SharingSourceContent } from "./sharing-content";
 import type {
   CachedSharedCalendar,
   CalendarSharingVisibility,
@@ -17,6 +19,7 @@ export interface SharingAuthPort {
   signOut(): Promise<void>;
 }
 export interface SharingCloudMember {
+  readonly rights?: SharingContentRights;
   readonly userId: string;
   readonly displayName: string;
   readonly status: "PENDING" | "ACTIVE" | "REJECTED" | "REVOKED" | "LEFT";
@@ -36,11 +39,19 @@ export interface SharingCloudMembers {
     readonly expiresAt: string;
     readonly consumedAt: string | null;
     readonly revokedAt: string | null;
+    readonly rights?: SharingContentRights;
+    readonly joinedCount?: number;
   }[];
 }
 export type SharingRevocationStatus =
   "not_applicable" | "revoked" | "manual_required" | "unconfirmed";
 export interface SharingCloudPort {
+  supportsContentRights?(): Promise<boolean>;
+  setMemberRights?(
+    calendarId: string,
+    userId: string,
+    rights: SharingContentRights,
+  ): Promise<SharingCloudMember>;
   saveProfile(
     expectedAccountId: string,
     displayName: string,
@@ -64,7 +75,11 @@ export interface SharingCloudPort {
   }>;
   listCalendars(): Promise<readonly CloudSharedCalendar[]>;
   fetch(calendarId: string, afterRevision: number | null): Promise<SharedCalendarSnapshot>;
-  createInvite(calendarId: string, mutationId: string): Promise<SharingCloudInvite>;
+  createInvite(
+    calendarId: string,
+    mutationId: string,
+    rights?: SharingContentRights,
+  ): Promise<SharingCloudInvite>;
   claimInvite(
     expectedAccountId: string,
     token: string,
@@ -88,8 +103,9 @@ export interface SharingCloudPort {
     appleAuthorizationCode?: string | null,
   ): Promise<{ readonly deleted: true; readonly revocationStatus: SharingRevocationStatus }>;
 }
-/** Bound to a fresh local safe projection; never contains private notes or places. */
+/** Bound to the exact consent and projection; places are never published. */
 export interface SharingPublicationConfirmation {
+  readonly content?: SharingSourceContent;
   readonly generation: number;
   readonly visibility: CalendarSharingVisibility;
   readonly selectedAppointmentIds: readonly string[];
@@ -97,6 +113,13 @@ export interface SharingPublicationConfirmation {
   readonly serverRevision: number;
 }
 export interface SharingLocalPort {
+  rememberInvitation?(accountId: string, invitation: SharingInvitation): Promise<void>;
+  listInvitations?(accountId: string): Promise<readonly SharingInvitation[]>;
+  configureContent?(
+    accountId: string,
+    calendarId: string,
+    content: SharingSourceContent,
+  ): Promise<void>;
   initialize(): Promise<void>;
   setActiveAccount(accountId: string | null): Promise<void>;
   listBindings(accountId: string): Promise<readonly LocalSharingBinding[]>;

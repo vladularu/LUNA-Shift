@@ -6,10 +6,19 @@ import { SharingRuntimeProvider } from "@/composition/calendar-sharing-provider"
 import { useVisibleSharedCalendars } from "./shared-calendars-context";
 import { useSharingUiController } from "@/features/sharing/sharing-ui-provider";
 
-const mockDb = {};
+let mockInvalidate: () => void;
+const mockStopRealtime = jest.fn();
+jest.mock("@/infrastructure/sharing/sharing-realtime", () => ({
+  watchSharingChanges: (_client: unknown, invalidate: () => void) => {
+    mockInvalidate = invalidate;
+    return mockStopRealtime;
+  },
+}));
+let mockDb = {};
 const mockEntries: readonly never[] = [];
 const mockMonths: readonly string[] = [];
 let mockReady = true;
+let mockProfile: { timeZone: string } | null = { timeZone: "Europe/Berlin" };
 let mockConfigured = false;
 const mockList = jest.fn<() => Promise<readonly unknown[]>>().mockResolvedValue([]);
 const mockGetSession = jest.fn<() => Promise<{ id: string; displayName: string } | null>>();
@@ -17,7 +26,7 @@ const mockInitialize = jest.fn<() => Promise<void>>().mockResolvedValue();
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftStatus: () => ({ ready: mockReady }),
-  usePflegeShiftProfile: () => ({ profile: { timeZone: "Europe/Berlin" } }),
+  usePflegeShiftProfile: () => ({ profile: mockProfile }),
   usePflegeShiftTestData: () => ({ testMonths: mockMonths }),
   usePflegeShiftEntries: () => ({ entries: mockEntries }),
 }));
@@ -48,6 +57,9 @@ jest.mock("@/infrastructure/database/calendar-sharing-repository", () => ({
   setSharingActiveAccount: async () => {},
   listSharingBindings: async () => [],
   listCachedSharingCalendars: async () => [],
+  listSharingInvitations: async () => [],
+  rememberSharingInvitation: async () => {},
+  configureSharingContent: async () => {},
 }));
 function Harness() {
   const controller = useSharingUiController();
@@ -55,11 +67,14 @@ function Harness() {
   return <Text>{`${controller?.status ?? "missing"} · ${calendars.length}`}</Text>;
 }
 beforeEach(() => {
+  mockDb = {};
   mockReady = true;
+  mockProfile = { timeZone: "Europe/Berlin" };
   mockConfigured = false;
   mockGetSession.mockReset().mockResolvedValue(null);
   mockInitialize.mockClear();
   mockList.mockClear();
+  mockStopRealtime.mockClear();
 });
 it("keeps the local app mounted while missing cloud setup remains explicitly unavailable", async () => {
   const screen = await render(
@@ -89,6 +104,90 @@ it("waits for the main database/profile before initializing optional sharing", a
   await waitFor(() => expect(screen.getByText("signedOut · 0")).toBeTruthy());
   expect(mockInitialize).toHaveBeenCalledTimes(1);
 });
+it("keeps the initialized sharing session while another calendar year loads and when returning", async () => {
+  mockConfigured = true;
+  mockGetSession.mockResolvedValue({ id: "account", displayName: "Alex" });
+  const tree = (
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>
+  );
+  const screen = await render(tree);
+  await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
+  for (const ready of [false, true, false, true]) {
+    mockReady = ready;
+    await screen.rerender(
+      <SharingRuntimeProvider>
+        <Harness />
+      </SharingRuntimeProvider>,
+    );
+    expect(screen.getByText("signedIn · 0")).toBeTruthy();
+    expect(mockInitialize).toHaveBeenCalledTimes(1);
+    expect(mockStopRealtime).not.toHaveBeenCalled();
+  }
+});
+it("waits for the replacement database instead of retaining the previous initialized session", async () => {
+  mockConfigured = true;
+  mockGetSession.mockResolvedValue({ id: "account", displayName: "Alex" });
+  const screen = await render(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
+  mockDb = {};
+  mockReady = false;
+  await screen.rerender(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  expect(screen.queryByText("signedIn · 0")).toBeNull();
+  expect(mockInitialize).toHaveBeenCalledTimes(1);
+  expect(mockStopRealtime).toHaveBeenCalledTimes(1);
+  mockReady = true;
+  await screen.rerender(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
+  expect(mockInitialize).toHaveBeenCalledTimes(2);
+});
+it("stops sharing when the profile is removed and waits for initialization on return", async () => {
+  mockConfigured = true;
+  mockGetSession.mockResolvedValue({ id: "account", displayName: "Alex" });
+  const screen = await render(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
+  mockProfile = null;
+  mockReady = false;
+  await screen.rerender(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  expect(screen.queryByText("signedIn · 0")).toBeNull();
+  expect(mockStopRealtime).toHaveBeenCalledTimes(1);
+  mockProfile = { timeZone: "Europe/Berlin" };
+  await screen.rerender(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  expect(mockInitialize).toHaveBeenCalledTimes(1);
+  mockReady = true;
+  await screen.rerender(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
+  expect(mockInitialize).toHaveBeenCalledTimes(2);
+});
 it("refreshes on foreground and every fifteen active seconds, and removes listeners on unmount", async () => {
   jest.useFakeTimers();
   mockConfigured = true;
@@ -110,6 +209,9 @@ it("refreshes on foreground and every fifteen active seconds, and removes listen
     listener("active");
   });
   expect(mockList.mock.calls.length).toBeGreaterThan(before);
+  const realtimeBefore = mockList.mock.calls.length;
+  await act(async () => mockInvalidate());
+  expect(mockList.mock.calls.length).toBeGreaterThan(realtimeBefore);
   const foreground = mockList.mock.calls.length;
   await act(async () => {
     jest.advanceTimersByTime(15000);
@@ -121,9 +223,11 @@ it("refreshes on foreground and every fifteen active seconds, and removes listen
   const paused = mockList.mock.calls.length;
   await act(async () => {
     jest.advanceTimersByTime(30000);
+    mockInvalidate();
   });
   expect(mockList.mock.calls.length).toBe(paused);
   await screen.unmount();
   expect(remove).toHaveBeenCalledTimes(1);
+  expect(mockStopRealtime).toHaveBeenCalledTimes(1);
   jest.useRealTimers();
 });
