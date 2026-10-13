@@ -99,6 +99,8 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
         cacheSnapshot: (accountId, snapshot) => local.cacheSharingSnapshot(db, accountId, snapshot),
         removeCalendar: (accountId, calendarId) =>
           local.removeSharingCalendar(db, accountId, calendarId),
+        setColor: (accountId, calendarId, color) =>
+          local.setSharingCalendarColor(db, accountId, calendarId, color),
         setVisible: (accountId, calendarId, visible) =>
           local.setSharingCalendarVisible(db, accountId, calendarId, visible),
         forgetAccount: (accountId) => local.forgetSharingAccount(db, accountId),

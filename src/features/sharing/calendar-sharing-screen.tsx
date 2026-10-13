@@ -3,13 +3,11 @@ import { Modal, View } from "react-native";
 import { DEFAULT_SHARING_RIGHTS, type SharingContentRights } from "@/domain/sharing-content";
 import { usePalette } from "@/theme/palette";
 import { SHARED_CALENDAR_COLORS, SPACING } from "@/theme/tokens";
-import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 import { LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView, TabScreenHeader } from "@/ui/screen-layout";
-import { Text } from "@/ui/text";
 import { SharingCalendarManagement, confirmSharingAction } from "./sharing-calendar-management";
 import {
   SharingFlowLayout,
@@ -17,6 +15,8 @@ import {
   SharingPerson,
   SharingSelection,
 } from "./sharing-flow-layout";
+import { SharingActiveInvitationCard } from "./sharing-active-invitation-card";
+import { SharingCalendarColorPicker } from "./sharing-calendar-color-picker";
 import { SharingInvitationSend } from "./sharing-invitation-send";
 import {
   SharingParagraph,
@@ -405,65 +405,45 @@ export function CalendarSharingScreen({
                   (value) => value.id === item.id && value.calendarId === calendar.id,
                 );
                 return (
-                  <SurfaceCard key={item.id}>
-                    <RowButton
-                      title={link?.url ?? "Einladung"}
-                      subtitle={
-                        !link
-                          ? item.rights
-                            ? "Link auf dem ursprünglichen Gerät"
-                            : "Einmal verwendbar · Link auf dem ursprünglichen Gerät"
-                          : undefined
-                      }
-                      onPress={
-                        link
-                          ? () => {
-                              setCalendarId(calendar.id);
-                              setInvitation(link);
-                              setMode("ready");
-                            }
-                          : undefined
-                      }
-                      accessibilityLabel="Einladung öffnen"
-                    />
-                    <CardSeparator />
-                    {link ? (
-                      <RowButton
-                        title={
-                          controller.directCopyAvailable
-                            ? "Link kopieren"
-                            : "Link teilen oder kopieren"
-                        }
-                        disabled={action.busy}
-                        onPress={() =>
-                          void action.run(() => controller.shareInvitation(link, "copy"))
-                        }
-                      />
-                    ) : null}
-                    <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
-                      <Text
-                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                        style={{ ...TYPOGRAPHY.bodyStrong, color: palette.primary }}
-                      >{`Läuft ab in: ${invitationTimeRemaining(item.expiresAt, now)}`}</Text>
-                      <Text style={{ ...TYPOGRAPHY.body, color: palette.text }}>
-                        {calendar.name}
-                      </Text>
-                      <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
-                        {item.rights
-                          ? `${item.joinedCount ?? 0} beigetreten`
-                          : "0 beigetreten · einmal verwendbar"}
-                      </Text>
-                    </View>
-                    <RowButton
-                      title="Stop"
-                      accessibilityLabel="Einladung stoppen"
-                      destructive
-                      disabled={action.busy}
-                      onPress={() =>
-                        void action.run(() => controller.revokeInvite(calendar.id, item.id))
-                      }
-                    />
-                  </SurfaceCard>
+                  <SharingActiveInvitationCard
+                    key={item.id}
+                    title={link?.url ?? "Einladung"}
+                    caption={
+                      !link
+                        ? item.rights
+                          ? "Link auf dem ursprünglichen Gerät"
+                          : "Einmal verwendbar · Link auf dem ursprünglichen Gerät"
+                        : undefined
+                    }
+                    name={calendar.name}
+                    remaining={invitationTimeRemaining(item.expiresAt, now)}
+                    joined={
+                      item.rights
+                        ? `${item.joinedCount ?? 0} beigetreten`
+                        : "0 beigetreten · einmal verwendbar"
+                    }
+                    busy={action.busy}
+                    copyLabel={
+                      controller.directCopyAvailable ? "Link kopieren" : "Link teilen oder kopieren"
+                    }
+                    onOpen={
+                      link
+                        ? () => {
+                            setCalendarId(calendar.id);
+                            setInvitation(link);
+                            setMode("ready");
+                          }
+                        : undefined
+                    }
+                    onCopy={
+                      link
+                        ? () => void action.run(() => controller.shareInvitation(link, "copy"))
+                        : undefined
+                    }
+                    onStop={() =>
+                      void action.run(() => controller.revokeInvite(calendar.id, item.id))
+                    }
+                  />
                 );
               })}
             </View>
@@ -480,6 +460,16 @@ export function CalendarSharingScreen({
                     {index ? <CardSeparator /> : null}
                     <RowButton
                       title={calendar.name}
+                      leading={
+                        <SharingCalendarColorPicker
+                          name={calendar.name}
+                          value={calendar.color}
+                          disabled={action.busy}
+                          onChange={(color) =>
+                            void action.run(() => controller.setColor(calendar.id, color))
+                          }
+                        />
+                      }
                       accessibilityLabel={`${calendar.name} ansehen`}
                       onPress={() => manage(calendar.id)}
                       trailing={

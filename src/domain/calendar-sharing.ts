@@ -62,4 +62,6 @@ export interface CachedSharedCalendar {
   readonly entries: readonly SharedCalendarEntry[];
   readonly fetchedAt: string;
   readonly visible: boolean;
+  /** Device-local marker override; never changes the owner's service colors. */
+  readonly localColor?: string;
 }

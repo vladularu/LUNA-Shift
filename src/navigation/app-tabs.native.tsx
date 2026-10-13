@@ -56,13 +56,6 @@ export function AppTabs() {
           src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="stats-chart-outline" />}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="(sharing)">
-        <NativeTabs.Trigger.Label>Teilen</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf="person.2"
-          src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="people-outline" />}
-        />
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(templates)">
         <NativeTabs.Trigger.Label>Schichten</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

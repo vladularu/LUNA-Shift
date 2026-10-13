@@ -98,3 +98,11 @@ describe("separate read-only shared calendar display", () => {
     ).toBe(0);
   });
 });
+
+it("uses the local calendar marker while retaining the owner's original service", () => {
+  const rows = sharedCalendarDays([{ ...item, localColor: "#AA4455" }], "Europe/Berlin", now);
+  const row = [...rows.values()][0][0];
+  expect(row.calendarColor).toBe("#AA4455");
+  expect(row.entry).toBe(item.entries[0]);
+  expect(item.calendar.color).toBe("#123456");
+});

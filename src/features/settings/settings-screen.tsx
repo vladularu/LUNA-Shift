@@ -99,14 +99,6 @@ export function SettingsScreen() {
             <CardSeparator />
             <RowButton
               subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="account-multiple" />}
-              title="Kalender teilen"
-              subtitle="Dienstpläne gemeinsam ansehen"
-              onPress={() => router.push("/calendar-sharing")}
-            />
-            <CardSeparator />
-            <RowButton
-              subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="shield-checkmark-outline" />}
               title="Prüfung"
               subtitle="Planungshinweise anzeigen"

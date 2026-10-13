@@ -87,6 +87,8 @@ export interface SharingController {
   preparePublicationPreview(calendarId: string): Promise<SharingPublicationPreview>;
   publishCalendar(calendarId: string, confirmationId: string): Promise<void>;
   setVisible(calendarId: string, visible: boolean): Promise<void>;
+  /** Changes only this device's marker for a received calendar. */
+  setColor(calendarId: string, color: string): Promise<void>;
   /** Creates one-use seven-day invitation then opens OS Share, only on explicit press. */
   invite(calendarId: string): Promise<void>;
   createInvitation(calendarId: string, rights?: SharingContentRights): Promise<SharingInvitation>;

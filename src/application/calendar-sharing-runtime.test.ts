@@ -137,12 +137,20 @@ function fixture({
         calendar: snapshot.calendar,
         fetchedAt: snapshot.fetchedAt,
         visible: previous?.visible ?? true,
+        localColor: previous?.localColor,
         entries: snapshot.unchanged ? (previous?.entries ?? []) : snapshot.entries,
       });
     }),
     removeCalendar: vi.fn(async (_id, target) => {
       caches = caches.filter((item) => item.calendar.id !== target);
       localBindings = localBindings.filter((item) => item.calendarId !== target);
+    }),
+    setColor: vi.fn(async (id, target, value) => {
+      caches = caches.map((item) =>
+        item.accountId === id && item.calendar.id === target
+          ? { ...item, localColor: value }
+          : item,
+      );
     }),
     setVisible: vi.fn(async (_id, target, value) => {
       caches = caches.map((item) =>
@@ -882,6 +890,24 @@ describe("sharing runtime", () => {
     done(null);
     await signing;
     expect(f.auth.signInApple).not.toHaveBeenCalled();
+  });
+  it("updates a received calendar marker locally, immediately and without a cloud write", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    await runtime.getController().setColor(calendar.id, "#AA4455");
+    expect(runtime.getController().calendars.find((c) => c.id === calendar.id)?.color).toBe(
+      "#AA4455",
+    );
+    expect(runtime.visibleCalendars()[0].localColor).toBe("#AA4455");
+    expect(runtime.visibleCalendars()[0].calendar.color).toBe(calendar.color);
+    expect(f.local.setColor).toHaveBeenCalledWith(account.id, calendar.id, "#AA4455");
+    await expect(runtime.getController().setColor(calendar.id, "invalid")).rejects.toThrow(
+      "SHARE_INVALID_ARGUMENT",
+    );
+    await expect(runtime.getController().setColor("missing", "#AA4455")).rejects.toThrow(
+      "SHARE_NOT_FOUND",
+    );
   });
   it("hides and restores only the selected foreign calendar", async () => {
     const f = fixture();

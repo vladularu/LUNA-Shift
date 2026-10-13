@@ -17,6 +17,7 @@ import {
   isolateSharingForBackupRestore,
   rememberSharingInvitation,
   listSharingInvitations,
+  setSharingCalendarColor,
 } from "@/infrastructure/database/calendar-sharing-repository";
 import type { CloudSharedCalendar } from "@/domain/calendar-sharing";
 const account = "10000000-0000-4000-8000-000000000001";
@@ -304,4 +305,64 @@ it("republishes existing detailed shares once after the service-name upgrade wit
   }
   await migrateCalendarSharing(test.db);
   expect(await listSharingBindings(test.db, account)).toEqual(upgraded);
+});
+
+it("retains independent reader colors on upgrade and snapshot replacement without changing owner metadata", async () => {
+  const foreign = { ...calendar, isOwner: false };
+  const other = { ...foreign, id: "20000000-0000-4000-8000-000000000002" };
+  const snapshot = (value: CloudSharedCalendar) => ({
+    calendar: value,
+    entries: [],
+    revision: value.revision,
+    reset: true,
+    unchanged: false,
+    fetchedAt: "2026-10-14T10:00:00Z",
+  });
+  await cacheSharingSnapshot(test.db, account, snapshot(foreign));
+  await cacheSharingSnapshot(test.db, account, snapshot(other));
+  await setSharingCalendarColor(test.db, "wrong-account", calendarId, "#AA4455");
+  expect(
+    (await listCachedSharingCalendars(test.db, account)).find((c) => c.calendar.id === calendarId)
+      ?.localColor,
+  ).toBeUndefined();
+  await setSharingCalendarColor(test.db, account, calendarId, "#AA4455");
+  await setSharingCalendarColor(test.db, account, other.id, "#4466AA");
+  await migrateCalendarSharing(test.db);
+  await cacheSharingSnapshot(
+    test.db,
+    account,
+    snapshot({ ...foreign, color: "#112233", revision: 2 }),
+  );
+  const caches = await listCachedSharingCalendars(test.db, account);
+  expect(caches.find((c) => c.calendar.id === calendarId)).toMatchObject({
+    localColor: "#AA4455",
+    calendar: { color: "#112233", revision: 2 },
+  });
+  expect(caches.find((c) => c.calendar.id === other.id)?.localColor).toBe("#4466AA");
+  await cacheSharingSnapshot(test.db, "other-account", snapshot(foreign));
+  expect(
+    (await listCachedSharingCalendars(test.db, "other-account"))[0].localColor,
+  ).toBeUndefined();
+  await expect(setSharingCalendarColor(test.db, account, calendarId, "invalid")).rejects.toThrow(
+    "SHARE_INVALID_ARGUMENT",
+  );
+});
+it("adds reader colors to a legacy cache without replacing the cached calendar", async () => {
+  const snapshot = {
+    calendar: { ...calendar, isOwner: false },
+    entries: [],
+    revision: calendar.revision,
+    reset: true,
+    unchanged: false,
+    fetchedAt: "2026-10-14T10:00:00Z",
+  };
+  await cacheSharingSnapshot(test.db, account, snapshot);
+  test.database.exec("ALTER TABLE sharing_calendar_cache DROP COLUMN local_color");
+  await migrateCalendarSharing(test.db);
+  await migrateCalendarSharing(test.db);
+  expect((await listCachedSharingCalendars(test.db, account))[0].calendar).toEqual(
+    snapshot.calendar,
+  );
+  await setSharingCalendarColor(test.db, account, calendarId, "#AA4455");
+  expect((await listCachedSharingCalendars(test.db, account))[0].localColor).toBe("#AA4455");
 });

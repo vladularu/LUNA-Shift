@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { CalendarSharingScreen } from "./calendar-sharing-screen";
 import { SharingInviteScreen } from "./sharing-invite-screen";
 import type { SharingCalendarView, SharingController } from "./sharing-ui-contract";
@@ -40,6 +41,7 @@ function controller(overrides: Partial<SharingController> = {}): SharingControll
       }),
     publishCalendar: action(),
     setVisible: action(),
+    setColor: action(),
     invite: action(),
     setMember: action(),
     revokeInvite: action(),
@@ -230,7 +232,7 @@ describe("Kalenderfreigabe", () => {
       />,
     );
     expect(screen.queryByTestId("sharing-qr")).toBeNull();
-    expect(screen.queryByText("Sonstige (AirDrop)")).toBeNull();
+    expect(screen.queryByText("Sonstige")).toBeNull();
     expect(screen.getByText("Neue Einladung")).toBeTruthy();
   });
   it("retries a failed invitation without creating another calendar", async () => {
@@ -296,19 +298,21 @@ describe("Kalenderfreigabe", () => {
     expect(c.createCalendar).not.toHaveBeenCalled();
     expect(c.createInvitation).toHaveBeenCalledWith("own");
     expect(screen.getByTestId("sharing-qr")).toBeTruthy();
+    expect(screen.getByText("QR")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sonstige" })).toBeTruthy();
     for (const name of [
       "Mit Nachrichten einladen",
       "Mit WhatsApp einladen",
       "Mit Telegram einladen",
       "Mit E-Mail einladen",
-      "Sonstige (AirDrop)",
     ])
-      expect(screen.getByRole("button", { name })).toBeTruthy();
+      expect(screen.queryByRole("button", { name })).toBeNull();
+    expect(screen.queryByText("Oder per QR-Code teilen")).toBeNull();
     expect(c.shareInvitation).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Mit WhatsApp einladen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Sonstige" }));
     expect(c.shareInvitation).toHaveBeenCalledWith(
       expect.objectContaining({ id: "invite" }),
-      "whatsapp",
+      "system",
     );
   });
   it("lets readers hide a calendar without exposing owner actions", async () => {
@@ -405,7 +409,7 @@ describe("Kalenderfreigabe", () => {
     expect(c.createInvitation).not.toHaveBeenCalled();
     expect(c.shareInvitation).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByText("Weiter"));
-    await fireEvent.press(screen.getByText("Sonstige (AirDrop)"));
+    await fireEvent.press(screen.getByText("Sonstige"));
     expect(c.shareInvitation).toHaveBeenCalledTimes(1);
   });
   it("distinguishes requesting members and active readers with explicit control", async () => {
@@ -493,4 +497,27 @@ describe("Einladung", () => {
     await screen.rerender(<SharingInviteScreen controller={c} token={token} />);
     expect(c.claimInvite).toHaveBeenCalledTimes(1);
   });
+});
+
+it("changes only the selected received calendar color directly from the overview", async () => {
+  const c = controller({ calendars: [foreign, { ...foreign, id: "second", name: "Alexs Plan" }] });
+  const screen = await render(
+    <SafeAreaInsetsContext.Provider value={{ top: 0, bottom: 0, left: 0, right: 0 }}>
+      <CalendarSharingScreen controller={c} />
+    </SafeAreaInsetsContext.Provider>,
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Farbe für Sams Plan" }), {
+    stopPropagation: jest.fn(),
+  });
+  const swatch = screen.getAllByRole("button", { name: /^Farbe #/ })[0];
+  const color = swatch.props.accessibilityLabel.slice("Farbe ".length);
+  await fireEvent.press(swatch);
+  expect(c.setColor).toHaveBeenCalledWith("foreign", color);
+  expect(screen.getByText("Mit dir geteilt")).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Farbe für Alexs Plan" }), {
+    stopPropagation: jest.fn(),
+  });
+  await fireEvent.press(screen.getAllByRole("button", { name: /^Farbe #/ })[0]);
+  expect(c.setColor).toHaveBeenLastCalledWith("second", color);
+  expect(c.deleteCalendar).not.toHaveBeenCalled();
 });

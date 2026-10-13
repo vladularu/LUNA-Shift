@@ -1,6 +1,9 @@
 import { render, renderHook, within } from "@testing-library/react-native";
 import { expect, it } from "@jest/globals";
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { usePalette } from "@/theme/palette";
+import { sharedCalendarChipPalette } from "@/theme/color-contrast";
+import { CALENDAR_METRICS } from "@/theme/tokens";
 import { getAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import type { ShiftEntry } from "@/domain/types";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
@@ -70,6 +73,15 @@ it("renders both actual services in the same short six-week day cell", async () 
   expect(cell.getByText("Nacht")).toBeTruthy();
   expect(cell.getByText("21:00")).toBeTruthy();
   expect(screen.queryByTestId("shared-calendar-day-2026-03-13")).toBeNull();
+  const { result: palette } = await renderHook(() => usePalette());
+  const sharedStyle = StyleSheet.flatten(
+    screen.getByTestId("shared-calendar-entry-selena-foreign").props.style,
+  );
+  expect(sharedStyle.borderLeftWidth).toBe(CALENDAR_METRICS.sharedCalendarStripeWidth);
+  expect(sharedStyle.borderLeftColor).toBe(shared.calendarColor);
+  expect(screen.getByText("21:00")).toHaveStyle({
+    color: sharedCalendarChipPalette(shared.entry.color, palette.current.dark).onDetail,
+  });
   const day = screen.getByTestId("calendar-combined-day-2026-03-13"),
     slot = screen.getByTestId("calendar-entry-slot-2026-03-13-0");
   const slotHeight = slot.props.style.height,
@@ -90,4 +102,43 @@ it("renders both actual services in the same short six-week day cell", async () 
       ),
     ).toEqual(pose);
   }
+});
+
+it("keeps weekend numbers red including adjacent months and preserves selection colors", async () => {
+  const { result } = await renderHook(() => ({
+    progress: useSharedValue(1),
+    palette: usePalette(),
+  }));
+  const layout = calendarPrototypeLayout("2026-10", 390, 500);
+  const screen = await render(
+    <View>
+      <PrototypeMonthContent
+        layout={layout}
+        progress={result.current.progress}
+        entriesByDate={new Map()}
+        holidays={new Map()}
+        display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+        timeZone="Europe/Berlin"
+        visible
+      />
+      <PrototypeDates
+        layout={layout}
+        progress={result.current.progress}
+        currentDate="2026-10-13"
+        selectedDate="2026-10-04"
+      />
+    </View>,
+  );
+  const p = result.current.palette;
+  const number = (date: string) =>
+    within(
+      screen.getByTestId("calendar-date-marker-" + date, { includeHiddenElements: true }),
+    ).getByText(String(Number(date.slice(8))), { includeHiddenElements: true });
+  expect(number("2026-10-03")).toHaveStyle({ color: p.danger });
+  expect(number("2026-10-04")).toHaveStyle({ color: p.onCalendarSelection });
+  expect(number("2026-10-13")).toHaveStyle({ color: p.onCalendarToday });
+  expect(number("2026-10-05")).toHaveStyle({ color: p.text });
+  expect(screen.getByTestId("calendar-adjacent-2026-11-07")).toHaveStyle({ color: p.danger });
+  for (const label of within(screen.getByTestId("calendar-month-weekdays")).getAllByText("S"))
+    expect(label).toHaveStyle({ color: p.danger });
 });
