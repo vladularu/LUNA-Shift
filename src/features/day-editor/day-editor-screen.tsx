@@ -1,3 +1,4 @@
+import { SharedEntryEditorView } from "./shared-entry-editor-view";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 
@@ -19,16 +20,20 @@ export function DayEditorScreen() {
     date?: RouteParam;
     mode?: RouteParam;
     entryId?: RouteParam;
+    sharedCalendarId?: RouteParam;
   }>();
   const { error, ready, reload } = usePflegeShiftStatus();
   const { entries } = usePflegeShiftEntries();
   const parsedDate = parseLocalDateRouteParam(params.date);
   const parsedMode = parseEnumRouteParam(params.mode, ["SHIFT", "APPOINTMENT"] as const);
+  const parsedSharedCalendarId = parseIdentifierRouteParam(params.sharedCalendarId);
   const parsedEntryId = parseIdentifierRouteParam(params.entryId);
   const routeInvalid =
     parsedDate.status !== "valid" ||
     parsedMode.status !== "valid" ||
-    parsedEntryId.status === "invalid";
+    parsedEntryId.status === "invalid" ||
+    parsedSharedCalendarId.status === "invalid" ||
+    (parsedSharedCalendarId.status === "valid" && parsedEntryId.status !== "valid");
   const date = parsedDate.status === "valid" ? parsedDate.value : today();
   const entryId = parsedEntryId.status === "valid" ? parsedEntryId.value : undefined;
   const existing = useMemo(
@@ -52,6 +57,15 @@ export function DayEditorScreen() {
     );
   }
   if (ready && error) return <LoadFailureView message={error} onRetry={() => void reload()} />;
+
+  if (parsedSharedCalendarId.status === "valid" && entryId)
+    return (
+      <SharedEntryEditorView
+        date={date}
+        calendarId={parsedSharedCalendarId.value}
+        entryId={entryId}
+      />
+    );
 
   const target = resolveEditorTarget(entryId, existing ?? deletingEntry);
   if (ready && target.kind === "MISSING") {

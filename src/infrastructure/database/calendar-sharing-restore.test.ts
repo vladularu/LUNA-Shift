@@ -264,7 +264,7 @@ describe("backup restore sharing isolation", () => {
       expect(cloud.publish).toHaveBeenCalledWith(
         expect.objectContaining({ selectedAppointmentIds: [] }),
         expect.objectContaining({
-          entries: [expect.objectContaining({ title: "Nacht" })],
+          entries: [expect.objectContaining({ title: "Backup Privatdienst" })],
         }),
       );
     } finally {
@@ -294,7 +294,7 @@ describe("backup restore sharing isolation", () => {
       },
     );
     expect(fresh.entries).toHaveLength(1);
-    expect(fresh.entries[0].title).toBe("Nacht");
+    expect(fresh.entries[0].title).toBe("Backup Privatdienst");
     expect(fresh.entries.every((entry) => !originalPublicIds.includes(entry.id))).toBe(true);
     expect(JSON.stringify(fresh)).not.toContain("Termin");
     expect(fresh.expectedRevision).toBe(before.serverRevision);

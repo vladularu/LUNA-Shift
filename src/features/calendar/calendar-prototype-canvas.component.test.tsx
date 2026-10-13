@@ -1,4 +1,4 @@
-import { render, within } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { useSharedValue } from "react-native-reanimated";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
@@ -7,7 +7,15 @@ import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { CALENDAR_METRICS } from "@/theme/tokens";
 
-function Year({ year = "2026", entries = [] }: { year?: string; entries?: CalendarEntry[] }) {
+function Year({
+  year = "2026",
+  entries = [],
+  onSelect = () => {},
+}: {
+  year?: string;
+  entries?: CalendarEntry[];
+  onSelect?: (month: string) => void;
+}) {
   const progress = useSharedValue(0);
   return (
     <PrototypeYear
@@ -17,7 +25,7 @@ function Year({ year = "2026", entries = [] }: { year?: string; entries?: Calend
       selectedMonth={`${year}-01`}
       referenceMonth="2026-09"
       progress={progress}
-      onSelect={() => {}}
+      onSelect={onSelect}
       entriesByDate={new Map([["2026-01-08", entries]])}
     />
   );
@@ -102,6 +110,22 @@ describe("calendar orientation", () => {
     expect(screen.getByTestId("calendar-adjacent-2026-02-01")).toHaveTextContent("1");
     expect(screen.queryByRole("button")).toBeNull();
   });
+  it("centers previous and next month numbers in the same 30 pixel date box as current dates", async () => {
+    const screen = await render(<Month />);
+    for (const date of ["2025-12-31", "2026-02-01"]) {
+      expect(screen.getByTestId("calendar-adjacent-date-box-" + date)).toHaveStyle({
+        width: 30,
+        height: 30,
+        alignItems: "center",
+        justifyContent: "center",
+      });
+      expect(screen.getByTestId("calendar-adjacent-" + date)).toHaveStyle({
+        fontSize: CALENDAR_METRICS.dayNumberFontSize,
+        fontWeight: "500",
+        opacity: 0.5,
+      });
+    }
+  });
 });
 
 const holidayName = "Tag der Deutschen Einheit";
@@ -176,9 +200,9 @@ describe("holiday entry alignment", () => {
           .getAllByText(/^(Spät|13:18|Tag der Deutschen Einheit)$/)
           .map((node) => node.props.children),
       ).toEqual(["Spät", "13:18", holidayName]);
-      expect(content).toHaveStyle({ marginTop: CALENDAR_METRICS.dayNumberHeight });
-      expect(screen.getByText("Nachbar").parent?.parent?.parent).toHaveStyle({
-        marginTop: CALENDAR_METRICS.dayNumberHeight,
+      expect(content).toHaveStyle({ marginTop: 30 });
+      expect(screen.getByTestId("calendar-combined-entries-2026-10-02")).toHaveStyle({
+        marginTop: 30,
       });
       expect(screen.getByText("Spät")).toHaveStyle({ height: CALENDAR_METRICS.entryRowHeight });
       expect(screen.getByText(holidayName)).toHaveStyle({
@@ -200,18 +224,11 @@ describe("holiday entry alignment", () => {
     expect(screen.queryByText(holidayName)).toBeNull();
   });
 
-  it.each([
-    { height: 540, expected: ["+20", "Testfeiertag"], rows: 2, gaps: 1 },
-    { height: 760, expected: ["Spät", "13:18", "+19", "Testfeiertag"], rows: 4, gaps: 2 },
-  ])(
-    "reserves holiday and overflow rows in a six-week month at height=$height",
-    async ({ height, expected, rows, gaps }) => {
-      const date = "2026-08-08";
-      const entries = Array.from({ length: 20 }, (_, i) => ({
-        ...holidayShift,
-        date,
-        id: String(i),
-      }));
+  it.each([540, 760])(
+    "keeps two own services visible and bounds holiday overflow at height=%s",
+    async (height) => {
+      const date = "2026-08-08",
+        entries = Array.from({ length: 20 }, (_, i) => ({ ...holidayShift, date, id: String(i) }));
       const screen = await render(
         <Month
           month="2026-08"
@@ -220,18 +237,51 @@ describe("holiday entry alignment", () => {
           holidays={new Map([[date, { name: "Testfeiertag" }]])}
         />,
       );
-      const content = screen.getByText("Testfeiertag").parent!;
-      expect(
-        within(content)
-          .getAllByText(/^(Spät|13:18|\+\d+|Testfeiertag)$/)
-          .map((node) => node.props.children),
-      ).toEqual(expected);
-      const layout = calendarPrototypeLayout("2026-08", 430, height);
-      const occupiedHeight =
-        CALENDAR_METRICS.dayNumberHeight +
-        rows * CALENDAR_METRICS.entryRowHeight +
-        gaps * CALENDAR_METRICS.chipGap;
-      expect(occupiedHeight).toBeLessThan(layout.weekHeight);
+      const day = screen.getByTestId("calendar-combined-day-" + date),
+        content = within(day);
+      expect(content.getAllByText("Spät")).toHaveLength(2);
+      expect(content.getAllByText("13:18")).toHaveLength(2);
+      expect(content.getByText("+18")).toBeTruthy();
+      expect(day.props.accessibilityLabel).toContain("Testfeiertag");
+      const slots = content.getAllByTestId(/calendar-entry-slot-/);
+      const heightUsed = 30 + slots.reduce((sum, slot) => sum + slot.props.style.height, 0) + 1;
+      expect(heightUsed).toBeLessThanOrEqual(
+        calendarPrototypeLayout("2026-08", 430, height).weekHeight,
+      );
+      if (height === 760) expect(content.getByText("Testfeiertag")).toBeTruthy();
     },
   );
+});
+
+it("keeps the twelve month areas and selected date nodes when moving years forward and back", async () => {
+  const onSelect = jest.fn();
+  const screen = await render(<Year onSelect={onSelect} />);
+  const months = Array.from({ length: 12 }, (_, i) =>
+    screen.getByTestId("calendar-year-month-" + (i + 1), { includeHiddenElements: true }),
+  );
+  const january = screen.getByTestId("calendar-year-date-2026-01-01", {
+    includeHiddenElements: true,
+  });
+  const february = screen.getByTestId("calendar-year-date-2026-02-28", {
+    includeHiddenElements: true,
+  });
+  for (const year of ["2027", "2028", "2026"]) {
+    await screen.rerender(<Year year={year} onSelect={onSelect} />);
+    months.forEach((node, i) =>
+      expect(
+        screen.getByTestId("calendar-year-month-" + (i + 1), { includeHiddenElements: true }),
+      ).toBe(node),
+    );
+    expect(
+      screen.getByTestId("calendar-year-date-" + year + "-01-01", { includeHiddenElements: true }),
+    ).toBe(january);
+    expect(
+      screen.getByTestId("calendar-year-date-" + year + "-02-28", { includeHiddenElements: true }),
+    ).toBe(february);
+    expect(
+      screen.getByTestId("calendar-year-dates-" + year + "-01", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Januar " + year + " öffnen" }));
+    expect(onSelect).toHaveBeenLastCalledWith(year + "-01");
+  }
 });

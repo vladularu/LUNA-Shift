@@ -1,5 +1,8 @@
+import type { SharingSourceContent } from "./sharing-content";
 export type CalendarSharingVisibility = "DETAILS" | "AVAILABILITY";
 export interface SharedCalendarEntry {
+  readonly kind?: "SHIFT" | "APPOINTMENT" | null;
+  readonly note?: string | null;
   readonly id: string;
   readonly startsAt: string;
   readonly endsAt: string;
@@ -10,6 +13,7 @@ export interface SharedCalendarEntry {
   readonly symbol: string;
 }
 export interface CloudSharedCalendar {
+  readonly contentVersion?: 2;
   readonly id: string;
   readonly ownerId: string;
   readonly name: string;
@@ -29,6 +33,8 @@ export interface SharedCalendarSnapshot {
   readonly fetchedAt: string;
 }
 export interface LocalSharingBinding {
+  readonly requiresContentConsent?: true;
+  readonly content?: SharingSourceContent;
   readonly accountId: string;
   readonly calendarId: string;
   readonly deviceId: string;

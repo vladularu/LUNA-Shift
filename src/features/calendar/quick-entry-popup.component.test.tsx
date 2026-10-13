@@ -378,3 +378,38 @@ describe("QuickEntryPopup", () => {
     expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeTruthy();
   });
 });
+
+it("opens own and foreign services from the same normal day tile", async () => {
+  const ownOpen = jest.fn();
+  const sharedOpen = jest.fn();
+  const shared = {
+    calendarId: "calendar-shared",
+    calendarName: "Selena",
+    calendarColor: "#527D92",
+    fetchedAt: "2026-08-04T12:00:00Z",
+    when: "07:00–15:00",
+    entry: {
+      id: "shared-early",
+      startsAt: "2026-08-04T05:00:00Z",
+      endsAt: "2026-08-04T13:00:00Z",
+      timeZone: "Europe/Berlin",
+      allDay: false,
+      title: "Früh",
+      color: "#00AA55",
+      symbol: "sunrise",
+    },
+  };
+  const screen = await renderCompact([existingShift], {
+    sharedEntries: [shared],
+    onOpenEntry: ownOpen,
+    onOpenSharedEntry: sharedOpen,
+  });
+  expect(screen.getByText("07:00–15:00 · Selena")).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText("Nacht bearbeiten"));
+  expect(ownOpen).toHaveBeenCalledWith(existingShift);
+  expect(sharedOpen).not.toHaveBeenCalled();
+  await fireEvent.press(screen.getByLabelText("Früh ansehen"));
+  expect(sharedOpen).toHaveBeenCalledWith(shared, "2026-08-04");
+  expect(ownOpen).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText("Dein Tag · geteilte Dienste nur ansehen")).toBeNull();
+});

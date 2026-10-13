@@ -1,3 +1,4 @@
+import { sharingContentSignature, type SharingContentRights } from "@/domain/sharing-content";
 import type {
   SharingAuthPort,
   SharingAuthUser,
@@ -23,6 +24,8 @@ import type {
   SharingController,
   SharingCalendarView,
   SharingPreview,
+  SharingDeliveryChannel,
+  SharingInvitation,
 } from "@/domain/sharing-ui-contract";
 import { projectSharingEntries } from "@/engine/sharing-projection";
 import { sharingProjectionSignature } from "@/engine/sharing-publication-confirmation";
@@ -37,7 +40,8 @@ export interface CalendarSharingRuntimeOptions {
   makeId(): string;
   makeSecret(): string;
   appleAvailable: boolean;
-  shareUrl(url: string): Promise<void>;
+  shareUrl(url: string, channel?: SharingDeliveryChannel): Promise<void>;
+  copyUrl?(url: string): Promise<void>;
   inviteUrl(token: string): string;
   isAppleUser(): Promise<boolean>;
   prepareAppleDeletion(): Promise<AppleDeletionPreparation>;
@@ -95,6 +99,7 @@ function samePublicationConsent(a: LocalSharingBinding, b: LocalSharingBinding):
   return (
     a.generation === b.generation &&
     a.visibility === b.visibility &&
+    sharingContentSignature(a.content) === sharingContentSignature(b.content) &&
     JSON.stringify([...a.selectedAppointmentIds].sort()) ===
       JSON.stringify([...b.selectedAppointmentIds].sort())
   );
@@ -114,6 +119,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
   let busyTicket: number | null = null;
   let failed = false;
   let offline = false;
+  let contentRightsAvailable = false;
+  let issuedInvitations: readonly SharingInvitation[] = [];
   let caches: readonly CachedSharedCalendar[] = [];
   let bindings: readonly LocalSharingBinding[] = [];
   let source: readonly CalendarEntry[] = [];
@@ -133,6 +140,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
   let tail: Promise<unknown> = Promise.resolve();
   let activation: Promise<void> = Promise.resolve();
   let refreshing: Promise<void> | null = null;
+  let refreshAgain = false;
   let unsubscribe = () => {};
   const listeners = new Set<() => void>();
   const emit = () => {
@@ -165,6 +173,9 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     check(ticket, accountId);
     const nextSource = await options.local.readEntries();
     check(ticket, accountId);
+    const nextInvitations = (await options.local.listInvitations?.(accountId)) ?? [];
+    check(ticket, accountId);
+    issuedInvitations = nextInvitations;
     caches = nextCaches;
     bindings = nextBindings;
     source = nextSource;
@@ -238,9 +249,63 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       throw error;
     }
   }
+  async function ensureSourceContent(
+    ticket: number,
+    accountId: string,
+    calendarId: string,
+    rights?: SharingContentRights,
+  ) {
+    if (!contentRightsAvailable || !options.local.configureContent || readInput().testLabActive)
+      return;
+    const binding = (await options.local.listBindings(accountId)).find(
+      (item) => item.calendarId === calendarId,
+    );
+    check(ticket, accountId);
+    const calendar = caches.find((item) => item.calendar.id === calendarId)?.calendar;
+    if (!binding || !binding.enabled || (calendar && calendar.deviceId !== binding.deviceId)) {
+      // Rights remain owner-manageable on another device. The publishing device
+      // adopts explicit grants on its next sync; restored bindings stay paused.
+      return;
+    }
+    const list = members.get(calendarId);
+    const grants = [
+      ...(list?.members
+        .filter((item) => ["PENDING", "ACTIVE"].includes(item.status))
+        .map((item) => item.rights) ?? []),
+      ...(list?.invites
+        .filter(
+          (item) =>
+            !item.consumedAt && !item.revokedAt && Date.parse(item.expiresAt) > options.now(),
+        )
+        .map((item) => item.rights) ?? []),
+      rights,
+    ].filter((item): item is SharingContentRights => !!item);
+    const content = {
+      ...(binding.requiresContentConsent ? { consentReset: true as const } : {}),
+      version: 2 as const,
+      shifts: binding.content?.shifts ?? true,
+      allAppointments: binding.content?.allAppointments ?? false,
+      notes: binding.requiresContentConsent
+        ? (!!binding.content?.notes && grants.some((item) => item.notes)) || !!rights?.notes
+        : grants.some((item) => item.notes),
+    };
+    content.shifts ||= binding.requiresContentConsent
+      ? !!rights?.shifts
+      : grants.some((item) => item.shifts);
+    content.allAppointments ||= binding.requiresContentConsent
+      ? !!rights?.appointments
+      : grants.some((item) => item.appointments);
+    if (sharingContentSignature(binding.content) === sharingContentSignature(content)) return;
+    await options.local.configureContent(accountId, calendarId, content);
+    check(ticket, accountId);
+    prepared.clear();
+  }
   async function refreshNow(ticket: number, accountId: string): Promise<void> {
     check(ticket, accountId);
     await localState(ticket, accountId);
+    const supported = (await cloud().supportsContentRights?.()) ?? false;
+    check(ticket, accountId);
+    contentRightsAvailable = supported && !!options.local.configureContent;
     const previous = caches;
     const remote = await cloud().listCalendars();
     check(ticket, accountId);
@@ -254,7 +319,12 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       check(ticket, accountId);
       const cached = caches.find((item) => item.calendar.id === calendar.id);
       try {
-        const snapshot = await cloud().fetch(calendar.id, cached?.calendar.revision ?? null);
+        const snapshot = await cloud().fetch(
+          calendar.id,
+          contentRightsAvailable && cached?.calendar.contentVersion !== 2
+            ? null
+            : (cached?.calendar.revision ?? null),
+        );
         check(ticket, accountId);
         await options.local.cacheSnapshot(accountId, snapshot);
         check(ticket, accountId);
@@ -269,6 +339,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         else networkFailure = true;
       }
     }
+    for (const calendar of remote)
+      if (calendar.isOwner) await ensureSourceContent(ticket, accountId, calendar.id);
     await localState(ticket, accountId);
     for (const binding of bindings) {
       const remoteCalendar = remote.find((item) => item.id === binding.calendarId);
@@ -298,6 +370,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     user = null;
     status = "signedOut";
     caches = [];
+    issuedInvitations = [];
     bindings = [];
     source = [];
     members = new Map();
@@ -345,6 +418,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     user = next;
     status = next ? "signedIn" : "signedOut";
     caches = [];
+    issuedInvitations = [];
     bindings = [];
     source = [];
     members = new Map();
@@ -421,9 +495,10 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       });
     },
     async createCalendar(draft: Parameters<SharingController["createCalendar"]>[0]) {
-      await run(async (ticket, accountId) => {
+      return run(async (ticket, accountId) => {
         if (draft.confirmed !== true || readInput().testLabActive)
           throw new Error("SHARE_NOT_CONFIRMED");
+        if (draft.rights && !contentRightsAvailable) throw new Error("SHARE_INVALID_ARGUMENT");
         const entries = await options.local.readEntries();
         check(ticket, accountId);
         const selected = draft.selectedAppointmentIds ?? [];
@@ -455,6 +530,17 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         check(ticket, accountId);
         await options.local.bindCalendar(accountId, calendar, deviceSecret, selected);
         check(ticket, accountId);
+        if (draft.rights) {
+          if (!contentRightsAvailable || !options.local.configureContent)
+            throw new Error("SHARE_INVALID_ARGUMENT");
+          await options.local.configureContent(accountId, calendar.id, {
+            version: 2,
+            shifts: draft.rights.shifts,
+            allAppointments: draft.rights.appointments,
+            notes: draft.rights.notes,
+          });
+          check(ticket, accountId);
+        }
         const binding = (await options.local.listBindings(accountId)).find(
           (item) => item.calendarId === calendar.id,
         );
@@ -462,6 +548,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         if (!binding) throw new Error("SHARE_INVALID_BINDING");
         await publishBinding(ticket, accountId, binding);
         await localState(ticket, accountId);
+        return calendar.id;
       });
     },
     async preparePublicationPreview(calendarId: string) {
@@ -486,6 +573,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         const projection = projectSharingEntries(entries, {
           timeZone,
           visibility: binding.visibility,
+          content: binding.content,
           selectedAppointmentIds: binding.selectedAppointmentIds,
           publicId: () => "11111111-1111-4111-8111-111111111111",
         });
@@ -498,6 +586,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
           binding,
           timeZone,
           confirmation: {
+            content: binding.content,
             generation: binding.generation,
             visibility: binding.visibility,
             selectedAppointmentIds: [...binding.selectedAppointmentIds],
@@ -564,18 +653,69 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       });
     },
     async invite(calendarId: string) {
-      await run(async (ticket, accountId) => {
+      const invitation = await actions.createInvitation(calendarId);
+      await actions.shareInvitation(invitation);
+    },
+    async createInvitation(calendarId: string, rights?: SharingContentRights) {
+      return run(async (ticket, accountId) => {
         requireCalendar(calendarId, true);
-        let invite = await cloud().createInvite(calendarId, options.makeId());
+        if (rights && !contentRightsAvailable) throw new Error("SHARE_INVALID_ARGUMENT");
+        await ensureSourceContent(ticket, accountId, calendarId, rights);
+        const binding = (await options.local.listBindings(accountId)).find(
+          (item) => item.calendarId === calendarId,
+        );
+        check(ticket, accountId);
+        if (rights && binding) await publishBinding(ticket, accountId, binding);
+        let invite = await cloud().createInvite(calendarId, options.makeId(), rights);
         check(ticket, accountId);
         if (!invite.token) {
           await cloud().revokeInvite(calendarId, invite.inviteId);
           check(ticket, accountId);
-          invite = await cloud().createInvite(calendarId, options.makeId());
+          invite = await cloud().createInvite(calendarId, options.makeId(), rights);
           check(ticket, accountId);
         }
         if (!invite.token) throw new Error("SHARE_INVITE_INVALID");
-        await options.shareUrl(options.inviteUrl(invite.token));
+        const result = {
+          calendarId,
+          id: invite.inviteId,
+          url: options.inviteUrl(invite.token),
+          expiresAt: invite.expiresAt,
+        };
+        await options.local.rememberInvitation?.(accountId, result);
+        check(ticket, accountId);
+        await refreshNow(ticket, accountId);
+        return result;
+      });
+    },
+    async shareInvitation(
+      invitation: Parameters<SharingController["shareInvitation"]>[0],
+      channel?: SharingDeliveryChannel,
+    ) {
+      await run(async (ticket, accountId) => {
+        requireCalendar(invitation.calendarId, true);
+        const current = await cloud().listMembers(invitation.calendarId);
+        check(ticket, accountId);
+        const invite = current.invites.find((item) => item.id === invitation.id);
+        if (
+          !invite ||
+          invite.consumedAt ||
+          invite.revokedAt ||
+          Date.parse(invite.expiresAt) <= options.now()
+        )
+          throw new Error("SHARE_INVITE_INVALID");
+        if (channel === "copy" && options.copyUrl) await options.copyUrl(invitation.url);
+        else if (channel) await options.shareUrl(invitation.url, channel);
+        else await options.shareUrl(invitation.url);
+        check(ticket, accountId);
+      });
+    },
+    async setMemberRights(calendarId: string, userId: string, rights: SharingContentRights) {
+      await run(async (ticket, accountId) => {
+        requireCalendar(calendarId, true);
+        if (!contentRightsAvailable || !cloud().setMemberRights)
+          throw new Error("SHARE_INVALID_ARGUMENT");
+        await ensureSourceContent(ticket, accountId, calendarId, rights);
+        await cloud().setMemberRights!(calendarId, userId, rights);
         check(ticket, accountId);
         await refreshNow(ticket, accountId);
       });
@@ -638,6 +778,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       user = null;
       status = "signedOut";
       caches = [];
+      issuedInvitations = [];
       bindings = [];
       members = new Map();
       source = [];
@@ -685,6 +826,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         user = null;
         status = "signedOut";
         caches = [];
+        issuedInvitations = [];
         bindings = [];
         source = [];
         members = new Map();
@@ -736,6 +878,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         selectedAppointmentIds: item.calendar.isOwner
           ? (binding?.selectedAppointmentIds ?? [])
           : undefined,
+        publicationPaused: !!binding && !binding.enabled && !otherDevice,
         publishedAt: item.calendar.publishedAt,
         syncState,
         members: members.get(item.calendar.id)?.members ?? [],
@@ -751,6 +894,9 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       claimResult,
       appleAvailable,
       accountDeletionAvailable: !!options.cloud,
+      directCopyAvailable: !!options.copyUrl,
+      contentRightsAvailable: status === "signedIn" && contentRightsAvailable,
+      issuedInvitations: status === "signedIn" ? issuedInvitations : [],
       availableAppointments: source
         .filter((entry) => entry.kind === "APPOINTMENT" && entry.deletedAt === null)
         .map((entry) => ({ id: entry.id, title: entry.title, date: entry.date })),
@@ -824,9 +970,17 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         emit();
       await activation;
       if (!user || stopped || !options.cloud) return;
-      if (refreshing) return refreshing;
+      if (refreshing) {
+        refreshAgain = true;
+        return refreshing;
+      }
       const { ticket, accountId } = actor();
-      refreshing = queue(() => refreshSafely(ticket, accountId)).finally(() => {
+      refreshing = queue(async () => {
+        do {
+          refreshAgain = false;
+          await refreshSafely(ticket, accountId);
+        } while (refreshAgain && valid(ticket, accountId));
+      }).finally(() => {
         refreshing = null;
       });
       return refreshing;

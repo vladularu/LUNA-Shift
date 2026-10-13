@@ -111,3 +111,6 @@ export const SHARED_CALENDAR_COLORS = [
   { color: "#A27447", name: "Braun" },
   { color: "#7666A4", name: "Violett" },
 ] as const;
+
+/** QR contrast must remain black on white in every appearance mode. */
+export const QR_COLORS = { ink: "#000000", paper: "#FFFFFF" } as const;

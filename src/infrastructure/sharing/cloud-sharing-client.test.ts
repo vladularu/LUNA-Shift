@@ -61,6 +61,62 @@ function fixture(data: unknown = calendar, error: unknown = null) {
   const transport = { rpc, functions: { invoke } } as SharingCloudTransport;
   return { rpc, invoke, api: createCloudSharingClient(transport) };
 }
+it("detects the additive server contract and uses v2 fetch without widening a legacy response parser", async () => {
+  const f = fixture({ contentVersion: 2 });
+  expect(await f.api.supportsContentRights()).toBe(true);
+  f.rpc.mockResolvedValue({
+    data: {
+      calendar,
+      revision: 1,
+      unchanged: false,
+      reset: true,
+      entries: [{ ...entry, kind: "SHIFT", note: "Zeile 1\nZeile 2" }],
+      fetchedAt: NOW,
+    },
+    error: null,
+  });
+  const data = await f.api.fetch(ID, null);
+  expect(data.entries[0].note).toBe("Zeile 1\nZeile 2");
+  expect(data.calendar.contentVersion).toBe(2);
+  expect(f.rpc).toHaveBeenLastCalledWith("sharing_fetch_calendar_v2", {
+    p_calendar_id: ID,
+    p_after_revision: null,
+  });
+});
+it("falls back only when the v2 capability RPC is absent, preserving old strict formats", async () => {
+  const f = fixture(null, { code: "PGRST202" });
+  expect(await f.api.supportsContentRights()).toBe(false);
+  f.rpc.mockResolvedValue({
+    data: {
+      calendar,
+      revision: 1,
+      unchanged: false,
+      reset: true,
+      entries: [{ ...entry, note: "Unexpected" }],
+      fetchedAt: NOW,
+    },
+    error: null,
+  });
+  await expect(f.api.fetch(ID, null)).rejects.toMatchObject({ code: "SHARE_INVALID_RESPONSE" });
+});
+it("rejects unsafe note fields in the versioned response", async () => {
+  const f = fixture({ contentVersion: 2 });
+  await f.api.supportsContentRights();
+  for (const note of ["x".repeat(4097), "bad\u0001", 12]) {
+    f.rpc.mockResolvedValue({
+      data: {
+        calendar,
+        revision: 1,
+        unchanged: false,
+        reset: true,
+        entries: [{ ...entry, kind: "SHIFT", note }],
+        fetchedAt: NOW,
+      },
+      error: null,
+    });
+    await expect(f.api.fetch(ID, null)).rejects.toMatchObject({ code: "SHARE_INVALID_RESPONSE" });
+  }
+});
 const invalid = async (promise: Promise<unknown>) => {
   await expect(promise).rejects.toMatchObject({ code: "SHARE_INVALID_RESPONSE" });
 };

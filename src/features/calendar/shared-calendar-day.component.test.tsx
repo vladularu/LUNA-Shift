@@ -1,36 +1,11 @@
-import { render, fireEvent } from "@testing-library/react-native";
-import { beforeEach, afterEach, it, expect, jest } from "@jest/globals";
-import * as MockReact from "react";
-import { View as MockView, Pressable as MockPressable, Text as MockText } from "react-native";
+import { render } from "@testing-library/react-native";
+import { it, expect } from "@jest/globals";
+import { Text, View } from "react-native";
 import { SharedCalendarsContext } from "@/application/shared-calendars-context";
 import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import { useSharedCalendarDays } from "./use-shared-calendar-days";
-import { SharedCalendarDayMark, SharedCalendarDaySheet } from "./shared-calendar-day";
+import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { sharedCalendarDays } from "./shared-calendar-display";
-
-jest.mock("@/ui/selection-sheet", () => ({
-  SelectionSheet: ({
-    children,
-    onClose,
-    visible,
-  }: {
-    children: () => MockReact.ReactNode;
-    onClose: () => void;
-    visible: boolean;
-  }) =>
-    visible
-      ? MockReact.createElement(
-          MockView,
-          { testID: "shared-sheet" },
-          children(),
-          MockReact.createElement(
-            MockPressable,
-            { accessibilityRole: "button", accessibilityLabel: "Schließen", onPress: onClose },
-            MockReact.createElement(MockText, null, "Schließen"),
-          ),
-        )
-      : null,
-}));
 const cache: CachedSharedCalendar = {
   accountId: "accountA",
   visible: true,
@@ -58,15 +33,16 @@ const cache: CachedSharedCalendar = {
     },
   ],
 };
-const closePopup = jest.fn();
+
 function Screen() {
-  const view = useSharedCalendarDays("Europe/Berlin", true, closePopup, "2026-10");
+  const { sharedEntriesByDate } = useSharedCalendarDays("Europe/Berlin", "2026-10");
   return (
-    <MockView>
-      <MockText>Oktober 2026</MockText>
-      <MockPressable testID="open-shared" onPress={() => view.openSharedDate("2026-10-11")} />
-      {view.sharedDaySheet}
-    </MockView>
+    <View>
+      <Text>Oktober 2026</Text>
+      {(sharedEntriesByDate.get("2026-10-11") ?? []).map((row) => (
+        <Text key={row.entry.id}>{row.entry.title + " · " + row.calendarName}</Text>
+      ))}
+    </View>
   );
 }
 function Wrapper({ items }: { items: readonly CachedSharedCalendar[] }) {
@@ -76,60 +52,23 @@ function Wrapper({ items }: { items: readonly CachedSharedCalendar[] }) {
     </SharedCalendarsContext>
   );
 }
-beforeEach(() => {
-  closePopup.mockClear();
-  jest.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-12T12:00:00Z"));
-});
-afterEach(() => {
-  jest.restoreAllMocks();
-});
-it("opens read-only details and closes while keeping the calendar month", async () => {
+it("adds foreign data to the current calendar and removes it after revocation", async () => {
   const screen = await render(<Wrapper items={[cache]} />);
-  await fireEvent.press(screen.getByTestId("open-shared"));
-  expect(closePopup).toHaveBeenCalledTimes(1);
-  expect(screen.getByText("Alex")).toBeTruthy();
-  expect(screen.getByText("21:00–07:30 · endet am 12.10.")).toBeTruthy();
-  expect(screen.queryByText("Bearbeiten")).toBeNull();
-  await fireEvent.press(screen.getByLabelText("Schließen"));
-  expect(screen.queryByTestId("shared-sheet")).toBeNull();
+  expect(screen.getByText("Nacht · Alex")).toBeTruthy();
+  await screen.rerender(<Wrapper items={[]} />);
+  expect(screen.queryByText("Nacht · Alex")).toBeNull();
   expect(screen.getByText("Oktober 2026")).toBeTruthy();
 });
-it("removes already-open details after known revocation", async () => {
-  const screen = await render(<Wrapper items={[cache]} />);
-  await fireEvent.press(screen.getByTestId("open-shared"));
-  await screen.rerender(<Wrapper items={[]} />);
-  expect(screen.queryByTestId("shared-sheet")).toBeNull();
-  expect(screen.queryByText("Nacht")).toBeNull();
-});
-it("closes the selection when accounts change even with the same authorized calendar", async () => {
-  const screen = await render(<Wrapper items={[cache]} />);
-  await fireEvent.press(screen.getByTestId("open-shared"));
-  await screen.rerender(<Wrapper items={[{ ...cache, accountId: "accountB" }]} />);
-  expect(screen.queryByTestId("shared-sheet")).toBeNull();
-});
-it("does not propagate a foreign touch into local editing or stamping", async () => {
-  const pressed = jest.fn();
-  const stopPropagation = jest.fn();
-  const rows = sharedCalendarDays([cache], "Europe/Berlin").get("2026-10-11")!;
+it("does not render a separate shared day sheet or editor touch target", async () => {
+  const row = sharedCalendarDays([cache], "Europe/Berlin", null).get("2026-10-11")![0];
   const screen = await render(
-    <SharedCalendarDayMark date="2026-10-11" entries={rows} onPress={pressed} />,
+    <SharedCalendarEntryContent
+      row={row}
+      display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+      lineHeight={15}
+    />,
   );
-  await fireEvent.press(screen.getByTestId("shared-calendar-day-2026-10-11"), { stopPropagation });
-  expect(stopPropagation).toHaveBeenCalledTimes(1);
-  expect(pressed).toHaveBeenCalledWith("2026-10-11");
-});
-it("pages dense foreign details instead of mounting every entry", async () => {
-  const row = sharedCalendarDays([cache], "Europe/Berlin").get("2026-10-11")![0];
-  const rows = Array.from({ length: 60 }, (_, i) => ({
-    ...row,
-    entry: { ...row.entry, id: `id${i}`, title: `Dienst ${i}` },
-  }));
-  const screen = await render(
-    <SharedCalendarDaySheet date="2026-10-11" entries={rows} onClose={() => {}} />,
-  );
-  expect(screen.getByText("Dienst 24")).toBeTruthy();
-  expect(screen.queryByText("Dienst 25")).toBeNull();
-  await fireEvent.press(screen.getByText("Weitere Einträge"));
-  expect(screen.getByText("Dienst 25")).toBeTruthy();
-  expect(screen.queryByText("Dienst 0")).toBeNull();
+  expect(screen.getByText("Nacht")).toBeTruthy();
+  expect(screen.getByText("21:00")).toBeTruthy();
+  expect(screen.queryAllByRole("button")).toHaveLength(0);
 });

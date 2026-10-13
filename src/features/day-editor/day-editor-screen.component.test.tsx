@@ -1,3 +1,5 @@
+import { SharedCalendarsContext } from "@/application/shared-calendars-context";
+import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
@@ -17,7 +19,12 @@ let mockBeforeRemoveListener:
   ((event: { preventDefault: () => void; data: { action: { type: string } } }) => void) | null =
   null;
 const mockNavigationDispatch = jest.fn();
-let mockRouteParams: { date: string; mode: "SHIFT" | "APPOINTMENT"; entryId?: string } = {
+let mockRouteParams: {
+  date: string;
+  mode: "SHIFT" | "APPOINTMENT";
+  entryId?: string;
+  sharedCalendarId?: string;
+} = {
   date: "2026-08-04",
   mode: "SHIFT",
 };
@@ -599,4 +606,71 @@ describe("DayEditorScreen", () => {
     expect(mockUpsertAppointment.mock.calls[0]?.[0]).not.toHaveProperty("id");
     expect(successFeedback).not.toHaveBeenCalled();
   });
+});
+
+it("uses the normal editor frame without local mutations for a foreign shift and removes revoked data", async () => {
+  mockUpsertShift.mockClear();
+  mockRemoveEntry.mockClear();
+  const calendarId = "20000000-0000-4000-8000-000000000001",
+    entryId = "20000000-0000-4000-8000-000000000002";
+  const cache: CachedSharedCalendar = {
+    accountId: "accountA",
+    visible: true,
+    fetchedAt: new Date().toISOString(),
+    calendar: {
+      id: calendarId,
+      ownerId: "owner",
+      name: "Selena",
+      color: "#527D92",
+      visibility: "DETAILS",
+      revision: 1,
+      isOwner: false,
+      publishedAt: new Date().toISOString(),
+    },
+    entries: [
+      {
+        id: entryId,
+        title: "Urlaub",
+        kind: "SHIFT",
+        note: "Freigegebene Notiz\nZweite Zeile",
+        symbol: "star",
+        color: "#8899AA",
+        startsAt: "2026-08-03T22:00:00Z",
+        endsAt: "2026-08-04T22:00:00Z",
+        timeZone: "Europe/Berlin",
+        allDay: true,
+      },
+    ],
+  };
+  mockRouteParams = { date: "2026-08-04", mode: "SHIFT", entryId, sharedCalendarId: calendarId };
+  const content = (items: readonly CachedSharedCalendar[]) => (
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { height: 844, width: 390, x: 0, y: 0 },
+        insets: { top: 47, bottom: 34, left: 0, right: 0 },
+      }}
+    >
+      <SharedCalendarsContext value={items}>
+        <DayEditorScreen />
+      </SharedCalendarsContext>
+    </SafeAreaProvider>
+  );
+  const screen = await render(content([cache]));
+  expect(screen.getByTestId("shift-edit-time-group")).toBeTruthy();
+  expect(screen.getByText("Selena")).toBeTruthy();
+  expect(screen.getAllByText("Urlaub").length).toBeGreaterThan(0);
+  expect(screen.getByText("Freigegebene Notiz\nZweite Zeile")).toBeTruthy();
+  expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+  expect(screen.queryByLabelText("Dienst löschen")).toBeNull();
+  expect(screen.queryByLabelText("Dienst: Urlaub")).toBeNull();
+  expect(mockUpsertShift).not.toHaveBeenCalled();
+  expect(mockRemoveEntry).not.toHaveBeenCalled();
+  await screen.rerender(
+    content([{ ...cache, entries: cache.entries.map((entry) => ({ ...entry, note: null })) }]),
+  );
+  expect(screen.queryByText("Freigegebene Notiz\nZweite Zeile")).toBeNull();
+  expect(screen.getByText("Selena")).toBeTruthy();
+  await screen.rerender(content([]));
+  expect(screen.queryByText("Urlaub")).toBeNull();
+  expect(screen.getByText("Dienst nicht mehr verfügbar")).toBeTruthy();
 });

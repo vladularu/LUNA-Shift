@@ -65,6 +65,15 @@ export function AppTabs() {
         }}
       />
       <Tabs.Screen
+        name="(sharing)"
+        options={{
+          title: "Teilen",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons accessible={false} color={color} name="account-group-outline" size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="(templates)"
         options={{
           title: "Schichten",

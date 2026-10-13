@@ -7,7 +7,7 @@ const shift: ShiftEntry = {
   id: "private-local-id",
   date: "2026-10-24",
   templateId: "private-template",
-  title: "Patient Müller",
+  title: "ND Station 3",
   type: "NIGHT",
   allDay: false,
   startTime: "21:00",
@@ -35,8 +35,38 @@ const make = (
     selectedAppointmentIds: selected,
     publicId: () => uuid,
   });
-describe("sharing projection privacy and calendar times", () => {
-  it("publishes a strict DTO without private titles, IDs, notes, places or salary fields", () => {
+describe("explicit shift sharing and calendar times", () => {
+  it("supports appointments-only consent including later appointments and their actual title", () => {
+    const appointment = {
+      ...shift,
+      kind: "APPOINTMENT",
+      id: "future",
+      title: "Besprechung",
+    } as unknown as CalendarEntry;
+    const entries = projectSharingEntries([shift, appointment], {
+      timeZone: "Europe/Berlin",
+      visibility: "DETAILS",
+      content: { version: 2, shifts: false, allAppointments: true, notes: false },
+      publicId: () => uuid,
+    });
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ kind: "APPOINTMENT", title: "Besprechung", note: null });
+    expect(JSON.stringify(entries)).not.toContain("Private Klinik");
+  });
+  it("keeps note line breaks but strips control characters and still excludes places", () => {
+    const entries = projectSharingEntries(
+      [{ ...shift, note: "Erste Zeile\nZweite\tZeile\u0001" }],
+      {
+        timeZone: "Europe/Berlin",
+        visibility: "DETAILS",
+        content: { version: 2, shifts: true, allAppointments: false, notes: true },
+        publicId: () => uuid,
+      },
+    );
+    expect(entries[0].note).toBe("Erste Zeile\nZweite\tZeile");
+    expect(JSON.stringify(entries)).not.toContain("Private Klinik");
+  });
+  it("publishes entered shift titles in a strict DTO without local IDs, notes, places or salary fields", () => {
     const [entry] = make([shift]);
     expect(Object.keys(entry).sort()).toEqual([
       "allDay",
@@ -48,10 +78,9 @@ describe("sharing projection privacy and calendar times", () => {
       "timeZone",
       "title",
     ]);
-    expect(entry.title).toBe("Nacht");
+    expect(entry.title).toBe(shift.title);
     const wire = JSON.stringify(entry);
     for (const secret of [
-      "Patient",
       "private-local",
       "private-template",
       "Private Notiz",
@@ -66,24 +95,25 @@ describe("sharing projection privacy and calendar times", () => {
     expect(entry.startsAt).toBe("2026-10-24T19:00:00Z");
     expect(entry.endsAt).toBe("2026-10-25T06:30:00Z");
   });
-  it("neutralizes sensitive absences including symbols and colors", () => {
+  it("shares explicitly entered absences with their own title and color", () => {
     const [entry] = make([
-      { ...shift, type: "SICK", allDay: true, startTime: null, endTime: null },
+      { ...shift, title: "Krank", type: "SICK", allDay: true, startTime: null, endTime: null },
     ]);
     expect(entry).toMatchObject({
-      title: "Nicht verfügbar",
-      color: "#737373",
-      symbol: "unavailable",
+      title: "Krank",
+      color: shift.color,
+      symbol: shift.symbol,
       allDay: true,
     });
   });
-  it("does not share free days or deleted records", () =>
-    expect(
-      make([
-        { ...shift, type: "FREE" },
-        { ...shift, deletedAt: "2026-10-22" },
-      ]),
-    ).toEqual([]));
+  it("shares vacation and free days but excludes deleted records", () => {
+    const rows = make([
+      { ...shift, type: "VACATION", title: "Urlaub" },
+      { ...shift, type: "FREE", title: "Frei" },
+      { ...shift, deletedAt: "2026-10-22" },
+    ]);
+    expect(rows.map((row) => row.title)).toEqual(["Urlaub", "Frei"]);
+  });
   it("only shares explicitly selected appointments, always with a neutral public title", () => {
     const appointment = {
       ...shift,

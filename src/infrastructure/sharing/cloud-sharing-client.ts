@@ -1,3 +1,4 @@
+import type { SharingContentRights } from "../../domain/sharing-content";
 import { Temporal } from "@js-temporal/polyfill";
 import type {
   CalendarSharingVisibility,
@@ -18,6 +19,7 @@ export interface SharingCloudTransport {
   };
 }
 export interface SharingCloudMember {
+  readonly rights?: SharingContentRights;
   readonly userId: string;
   readonly displayName: string;
   readonly status: "PENDING" | "ACTIVE" | "REJECTED" | "REVOKED" | "LEFT";
@@ -37,6 +39,8 @@ export interface SharingCloudMembers {
     readonly expiresAt: string;
     readonly consumedAt: string | null;
     readonly revokedAt: string | null;
+    readonly rights?: SharingContentRights;
+    readonly joinedCount?: number;
   }[];
 }
 export type SharingRevocationStatus =
@@ -253,7 +257,59 @@ function transportError(error: unknown): SharingCloudError {
     return new SharingCloudError(error.message);
   return new SharingCloudError("SHARE_NETWORK_FAILED");
 }
+function parseRights(value: unknown): SharingContentRights {
+  const r = object(value, ["shifts", "appointments", "notes"]);
+  return Object.freeze({
+    shifts: boolean(r.shifts),
+    appointments: boolean(r.appointments),
+    notes: boolean(r.notes),
+  });
+}
+function parseEntryV2(value: unknown): SharedCalendarEntry {
+  const r = object(value, [
+    "id",
+    "startsAt",
+    "endsAt",
+    "timeZone",
+    "allDay",
+    "title",
+    "color",
+    "symbol",
+    "kind",
+    "note",
+  ]);
+  if (r.kind !== null && r.kind !== "SHIFT" && r.kind !== "APPOINTMENT") return fail();
+  if (
+    r.note !== null &&
+    (typeof r.note !== "string" ||
+      r.note.length > 4096 ||
+      /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(r.note))
+  )
+    return fail();
+  const { kind, note, ...base } = r;
+  return Object.freeze({
+    ...parseEntry(base),
+    kind: kind as SharedCalendarEntry["kind"],
+    note: note as string | null,
+  });
+}
+function parseMemberV2(value: unknown): SharingCloudMember {
+  const r = object(value, [
+    "userId",
+    "displayName",
+    "status",
+    "requestedAt",
+    "updatedAt",
+    "rights",
+  ]);
+  const { rights, ...base } = r;
+  return Object.freeze({
+    ...parseMember(base),
+    ...(rights === null ? {} : { rights: parseRights(rights) }),
+  });
+}
 export function createCloudSharingClient(client: SharingCloudTransport) {
+  let contentRights = false;
   async function rpc<T>(
     name: string,
     args: Record<string, unknown>,
@@ -272,6 +328,40 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
     return input(() => id(value));
   }
   return {
+    async supportsContentRights() {
+      const result = await client.rpc("sharing_capabilities", {});
+      if (
+        result.error &&
+        typeof result.error === "object" &&
+        "code" in result.error &&
+        ["PGRST202", "42883"].includes(String(result.error.code))
+      ) {
+        contentRights = false;
+        return false;
+      }
+      if (result.error) throw transportError(result.error);
+      const r = object(result.data, ["contentVersion"]);
+      if (r.contentVersion !== 2) return fail();
+      contentRights = true;
+      return true;
+    },
+    async setMemberRights(value: string, userId: string, rights: SharingContentRights) {
+      if (!contentRights) throw new SharingCloudError("SHARE_INVALID_ARGUMENT");
+      const requested = input(() => id(userId));
+      return rpc(
+        "sharing_set_member_rights",
+        {
+          p_calendar_id: calendarId(value),
+          p_user_id: requested,
+          p_rights: input(() => parseRights(rights)),
+        },
+        (result) => {
+          const member = parseMemberV2(result);
+          if (member.userId !== requested) return fail();
+          return member;
+        },
+      );
+    },
     async saveProfile(expectedAccountId: string, displayName: string) {
       const actor = input(() => id(expectedAccountId));
       const name = input(() => text(displayName, 80));
@@ -334,7 +424,10 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
           !binding.enabled
         )
           return fail();
-        const entries = unique(list(publication.entries, 10000, parseEntry), (e) => e.id);
+        const entries = unique(
+          list(publication.entries, 10000, binding.content ? parseEntryV2 : parseEntry),
+          (e) => e.id,
+        );
         if (
           binding.visibility === "AVAILABILITY" &&
           entries.some(
@@ -352,20 +445,24 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
           p_entries: entries,
         };
       });
-      return rpc("sharing_publish_calendar", args, (value) => {
-        const r = object(value, ["calendarId", "revision", "publishedAt"]);
-        const result = Object.freeze({
-          calendarId: id(r.calendarId),
-          revision: revision(r.revision),
-          publishedAt: instant(r.publishedAt),
-        });
-        if (
-          result.calendarId !== args.p_calendar_id ||
-          result.revision !== args.p_expected_revision + 1
-        )
-          return fail();
-        return result;
-      });
+      return rpc(
+        binding.content ? "sharing_publish_calendar_v2" : "sharing_publish_calendar",
+        args,
+        (value) => {
+          const r = object(value, ["calendarId", "revision", "publishedAt"]);
+          const result = Object.freeze({
+            calendarId: id(r.calendarId),
+            revision: revision(r.revision),
+            publishedAt: instant(r.publishedAt),
+          });
+          if (
+            result.calendarId !== args.p_calendar_id ||
+            result.revision !== args.p_expected_revision + 1
+          )
+            return fail();
+          return result;
+        },
+      );
     },
     async listCalendars() {
       return rpc("sharing_list_calendars", {}, (value) =>
@@ -376,7 +473,7 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
       const requested = calendarId(value),
         cursor = input(() => (afterRevision === null ? null : revision(afterRevision)));
       return rpc(
-        "sharing_fetch_calendar",
+        contentRights ? "sharing_fetch_calendar_v2" : "sharing_fetch_calendar",
         { p_calendar_id: requested, p_after_revision: cursor },
         (value) => {
           const r = object(value, [
@@ -391,7 +488,10 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
             current = revision(r.revision),
             unchanged = boolean(r.unchanged),
             reset = boolean(r.reset),
-            entries = unique(list(r.entries, 10000, parseEntry), (e) => e.id);
+            entries = unique(
+              list(r.entries, 10000, contentRights ? parseEntryV2 : parseEntry),
+              (e) => e.id,
+            );
           if (
             calendar.id !== requested ||
             calendar.revision !== current ||
@@ -411,7 +511,7 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
           )
             return fail();
           return Object.freeze({
-            calendar,
+            calendar: contentRights ? { ...calendar, contentVersion: 2 as const } : calendar,
             revision: current,
             unchanged,
             reset,
@@ -421,12 +521,20 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
         },
       );
     },
-    async createInvite(value: string, mutationId: string): Promise<SharingCloudInvite> {
+    async createInvite(
+      value: string,
+      mutationId: string,
+      rights?: SharingContentRights,
+    ): Promise<SharingCloudInvite> {
       const requested = calendarId(value),
         mutation = input(() => id(mutationId));
       return rpc(
-        "sharing_create_invite",
-        { p_calendar_id: requested, p_mutation_id: mutation },
+        rights ? "sharing_create_invite_v2" : "sharing_create_invite",
+        {
+          p_calendar_id: requested,
+          p_mutation_id: mutation,
+          ...(rights ? { p_rights: input(() => parseRights(rights)) } : {}),
+        },
         (value) => {
           const r = object(value, ["inviteId", "calendarId", "token", "expiresAt"]);
           if (r.token !== null && (typeof r.token !== "string" || !HEX.test(r.token)))
@@ -463,24 +571,39 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
       );
     },
     async listMembers(value: string): Promise<SharingCloudMembers> {
-      return rpc("sharing_list_members", { p_calendar_id: calendarId(value) }, (value) => {
-        const r = object(value, ["members", "invites"]);
-        return Object.freeze({
-          members: unique(list(r.members, 1000, parseMember), (m) => m.userId),
-          invites: unique(
-            list(r.invites, 10000, (value) => {
-              const i = object(value, ["id", "expiresAt", "consumedAt", "revokedAt"]);
-              return Object.freeze({
-                id: id(i.id),
-                expiresAt: instant(i.expiresAt),
-                consumedAt: nullableInstant(i.consumedAt),
-                revokedAt: nullableInstant(i.revokedAt),
-              });
-            }),
-            (i) => i.id,
-          ),
-        });
-      });
+      return rpc(
+        contentRights ? "sharing_list_members_v2" : "sharing_list_members",
+        { p_calendar_id: calendarId(value) },
+        (value) => {
+          const r = object(value, ["members", "invites"]);
+          return Object.freeze({
+            members: unique(
+              list(r.members, 1000, contentRights ? parseMemberV2 : parseMember),
+              (m) => m.userId,
+            ),
+            invites: unique(
+              list(r.invites, 10000, (value) => {
+                const i = object(value, [
+                  "id",
+                  "expiresAt",
+                  "consumedAt",
+                  "revokedAt",
+                  ...(contentRights ? ["rights", "joinedCount"] : []),
+                ]);
+                return Object.freeze({
+                  id: id(i.id),
+                  expiresAt: instant(i.expiresAt),
+                  consumedAt: nullableInstant(i.consumedAt),
+                  revokedAt: nullableInstant(i.revokedAt),
+                  ...(contentRights ? { joinedCount: revision(i.joinedCount) } : {}),
+                  ...(contentRights && i.rights !== null ? { rights: parseRights(i.rights) } : {}),
+                });
+              }),
+              (i) => i.id,
+            ),
+          });
+        },
+      );
     },
     async setMember(value: string, userId: string, action: "APPROVE" | "REJECT" | "REVOKE") {
       const requested = input(() => id(userId));
