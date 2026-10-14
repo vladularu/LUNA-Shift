@@ -4,7 +4,6 @@ import { memo } from "react";
 import { today } from "@/engine/calendar";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
-  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   type SharedValue,
@@ -24,8 +23,6 @@ import {
   type PrototypeDay,
   type PrototypeMonth,
 } from "./calendar-prototype-layout";
-
-const AnimatedText = Animated.createAnimatedComponent(Text);
 
 const MovingDay = memo(function MovingDay({
   day,
@@ -54,42 +51,34 @@ const MovingDay = memo(function MovingDay({
       { scale: 0.6 + 0.4 * progress.value },
     ],
   }));
-  // Movement uses the same fixed month geometry; the idle year grid owns its static dates.
+  // The normal glyph stays mounted; the bold selection fades as a separate layer.
   return (
     <Animated.View testID={`${testIDPrefix}-${day.date}`} style={[styles.day, motion]}>
-      {isSelected && !isToday && selectedDayOpacity ? (
+      <View
+        pointerEvents="none"
+        testID={
+          isSelected && !isToday ? undefined : `calendar-highlight-${testIDPrefix}-${day.date}`
+        }
+        style={[
+          styles.dayHighlight,
+          { backgroundColor: isToday ? palette.calendarToday : "transparent", opacity: 1 },
+        ]}
+      />
+      <Text
+        testID={`calendar-base-label-${testIDPrefix}-${day.date}`}
+        allowFontScaling={false}
+        style={{
+          fontFamily: INTER_FONTS.regular,
+          fontSize: CALENDAR_METRICS.dayNumberFontSize,
+          fontWeight: isToday ? "700" : "500",
+          color: isToday ? palette.onCalendarToday : day.weekend ? palette.danger : palette.text,
+        }}
+      >
+        {day.day}
+      </Text>
+      {isSelected && !isToday ? (
         <SelectedDayGlyph day={day} opacity={selectedDayOpacity} testIDPrefix={testIDPrefix} />
-      ) : (
-        <>
-          <View
-            pointerEvents="none"
-            testID={`calendar-highlight-${testIDPrefix}-${day.date}`}
-            style={[
-              styles.dayHighlight,
-              {
-                backgroundColor: isToday || isSelected ? palette.calendarToday : "transparent",
-                opacity: 1,
-              },
-            ]}
-          />
-          <Text
-            allowFontScaling={false}
-            style={{
-              fontFamily: INTER_FONTS.regular,
-              fontSize: CALENDAR_METRICS.dayNumberFontSize,
-              fontWeight: isToday || isSelected ? "700" : "500",
-              color:
-                isToday || isSelected
-                  ? palette.onCalendarToday
-                  : day.weekend
-                    ? palette.danger
-                    : palette.text,
-            }}
-          >
-            {day.day}
-          </Text>
-        </>
-      )}
+      ) : null}
     </Animated.View>
   );
 });
@@ -100,44 +89,36 @@ const SelectedDayGlyph = memo(function SelectedDayGlyph({
   testIDPrefix,
 }: {
   readonly day: PrototypeDay;
-  readonly opacity: SharedValue<number>;
+  readonly opacity?: SharedValue<number>;
   readonly testIDPrefix: string;
 }) {
   const palette = usePalette();
-  const normalColor = day.weekend ? palette.danger : palette.text;
-  const highlightMotion = useAnimatedStyle(() => ({ opacity: opacity.get() }));
-  const foreground = useAnimatedStyle(() => {
-    const value = opacity.get();
-    return {
-      color:
-        value >= 1
-          ? palette.onCalendarToday
-          : value <= 0
-            ? normalColor
-            : interpolateColor(value, [0, 1], [normalColor, palette.onCalendarToday]),
-    };
-  });
+  const fade = useAnimatedStyle(() => ({ opacity: opacity?.get() ?? 1 }));
   return (
-    <>
-      <Animated.View
-        pointerEvents="none"
+    <Animated.View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID={`calendar-selection-${testIDPrefix}-${day.date}`}
+      style={[StyleSheet.absoluteFill, styles.daySelection, fade]}
+    >
+      <View
         testID={`calendar-highlight-${testIDPrefix}-${day.date}`}
-        style={[styles.dayHighlight, { backgroundColor: palette.calendarToday }, highlightMotion]}
+        style={[styles.dayHighlight, { backgroundColor: palette.calendarToday }]}
       />
-      <AnimatedText
+      <Text
+        testID={`calendar-active-label-${testIDPrefix}-${day.date}`}
         allowFontScaling={false}
-        style={[
-          {
-            fontFamily: INTER_FONTS.regular,
-            fontSize: CALENDAR_METRICS.dayNumberFontSize,
-            fontWeight: "700",
-          },
-          foreground,
-        ]}
+        style={{
+          fontFamily: INTER_FONTS.regular,
+          fontSize: CALENDAR_METRICS.dayNumberFontSize,
+          fontWeight: "700",
+          color: palette.onCalendarToday,
+        }}
       >
         {day.day}
-      </AnimatedText>
-    </>
+      </Text>
+    </Animated.View>
   );
 });
 
@@ -555,6 +536,10 @@ export function PrototypeDates({
 }
 
 const styles = StyleSheet.create({
+  daySelection: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   dayHighlight: {
     position: "absolute",
     width: CALENDAR_METRICS.dayMarkerSize,
