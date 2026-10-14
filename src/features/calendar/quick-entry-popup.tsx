@@ -12,7 +12,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { type SharedValue } from "react-native-reanimated";
 import { FullWindowOverlay } from "react-native-screens";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -88,6 +88,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   onOpenSharedEntry,
   holidayName,
   onClose,
+  highlightOpacity,
   onOpenEntry,
   onOpenDetails,
   onOpenShiftPicker,
@@ -106,6 +107,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   readonly onOpenSharedEntry?: (row: SharedCalendarDayEntry, date: string) => void;
   readonly holidayName?: string;
   readonly onClose: () => void;
+  readonly highlightOpacity?: SharedValue<number>;
   readonly onOpenEntry: (entry: CalendarEntry) => void;
   readonly onOpenDetails: (date: string) => void;
   readonly onOpenShiftPicker: (date: string) => void;
@@ -181,6 +183,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
     animateEntry,
     origin,
     onClose,
+    highlightOpacity,
   });
 
   useEffect(() => {

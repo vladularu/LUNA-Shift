@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   cancelAnimation,
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withTiming,
+  type SharedValue,
 } from "react-native-reanimated";
 
 import type { QuickEntryAnchorMotion } from "./quick-entry-motion";
@@ -15,10 +18,12 @@ export function useQuickEntryPopupMotion({
   animateEntry,
   origin,
   onClose,
+  highlightOpacity,
 }: {
   readonly animateEntry: boolean;
   readonly origin: QuickEntryAnchorMotion;
   readonly onClose: () => void;
+  readonly highlightOpacity?: SharedValue<number>;
 }) {
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(animateEntry ? 0 : 1);
@@ -75,14 +80,25 @@ export function useQuickEntryPopupMotion({
     );
   }, [closeStart, finishClose, progress, reduceMotion]);
 
+  const opacity = useDerivedValue(() => {
+    const value = progress.get();
+    return reduceMotion
+      ? value
+      : closing
+        ? Math.min(1, Math.max(0, value / Math.max(0.001, closeStart.get())))
+        : 1;
+  }, [closeStart, closing, progress, reduceMotion]);
+
+  useAnimatedReaction(
+    () => opacity.get(),
+    (value) => highlightOpacity?.set(value),
+    [highlightOpacity],
+  );
+
   const popupMotionStyle = useAnimatedStyle(() => {
     const value = progress.get();
     return {
-      opacity: reduceMotion
-        ? value
-        : closing
-          ? Math.min(1, Math.max(0, value / Math.max(0.001, closeStart.get())))
-          : 1,
+      opacity: opacity.get(),
       transform: reduceMotion
         ? []
         : [
@@ -92,7 +108,7 @@ export function useQuickEntryPopupMotion({
             { translateY: -origin.pivotY },
           ],
     };
-  }, [closeStart, closing, origin, reduceMotion]);
+  }, [opacity, origin, reduceMotion]);
 
   return { closing, closePopup, popupMotionStyle };
 }

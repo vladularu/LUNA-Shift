@@ -143,6 +143,42 @@ it("keeps weekend numbers red including adjacent months and preserves selection 
     expect(label).toHaveStyle({ color: p.danger });
 });
 
+it.each([1, 0.5, 0])(
+  "fades the selected circle with the popup opacity %s while keeping today marked",
+  async (opacity) => {
+    const { result } = await renderHook(() => ({
+      progress: useSharedValue(1),
+      selectedDayOpacity: useSharedValue(opacity),
+      palette: usePalette(),
+    }));
+    const screen = await render(
+      <PrototypeDates
+        layout={calendarPrototypeLayout("2026-10", 390, 500)}
+        progress={result.current.progress}
+        currentDate="2026-10-13"
+        selectedDate="2026-10-04"
+        selectedDayOpacity={result.current.selectedDayOpacity}
+      />,
+    );
+    const hidden = { includeHiddenElements: true };
+    expect(
+      getAnimatedStyle(
+        screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-04", hidden),
+      ).opacity,
+    ).toBe(opacity);
+    expect(
+      screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-13", hidden),
+    ).toHaveStyle({ opacity: 1 });
+    if (opacity === 0)
+      expect(
+        within(screen.getByTestId("calendar-date-marker-2026-10-04", hidden)).getByText(
+          "4",
+          hidden,
+        ),
+      ).toHaveStyle({ color: result.current.palette.danger });
+  },
+);
+
 it("uses the same smaller marker for today and the open day without moving either date", async () => {
   const { result } = await renderHook(() => ({
     progress: useSharedValue(1),
