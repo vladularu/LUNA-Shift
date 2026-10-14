@@ -52,21 +52,21 @@ export function AppTabs() {
       <NativeTabs.Trigger name="(analysis)">
         <NativeTabs.Trigger.Label>Auswertung</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf="chart.bar.xaxis"
-          src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="stats-chart-outline" />}
+          renderingMode="template"
+          src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="bar-chart-outline" />}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(templates)">
         <NativeTabs.Trigger.Label>Schichten</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf="rectangle.stack"
+          renderingMode="template"
           src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="documents-outline" />}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(more)">
         <NativeTabs.Trigger.Label>Mehr</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf="ellipsis.circle"
+          renderingMode="template"
           src={
             <NativeTabs.Trigger.VectorIcon
               family={Ionicons}

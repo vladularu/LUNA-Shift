@@ -23,7 +23,14 @@ def calendar_icon(day, font_path):
         draw.ellipse(((x - 0.8) * factor, 1.7 * factor, (x + 0.8) * factor, 3.3 * factor), fill=white)
     draw.line((4.2 * factor, 10 * factor, 23.8 * factor, 10 * factor), fill=white, width=stroke)
     font = ImageFont.truetype(str(font_path), round(13.5 * factor))
-    draw.text((14 * factor, 17.9 * factor), str(day), font=font, fill=white, anchor="mm")
+    # Center visible ink, not the font's advance width or baseline metrics.
+    glyph = Image.new("RGBA", image.size)
+    ImageDraw.Draw(glyph).text((0, 0), str(day), font=font, fill=white)
+    glyph = glyph.crop(glyph.getbbox())
+    image.alpha_composite(glyph, (
+        round(14 * factor - glyph.width / 2),
+        round(17.35 * factor - glyph.height / 2),
+    ))
     return image.resize((84, 84), Image.Resampling.LANCZOS)
 
 
