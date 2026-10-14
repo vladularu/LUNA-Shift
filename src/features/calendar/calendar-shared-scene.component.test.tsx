@@ -117,13 +117,19 @@ describe("shared live calendar scene", () => {
     const hidden = { includeHiddenElements: true };
     const screen = await render(<Tree />);
     const marker = screen.getByTestId("calendar-date-marker-2026-01-08", hidden);
-    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+    expect(
+      screen.getByTestId("calendar-highlight-calendar-date-marker-2026-01-08", hidden),
+    ).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
     await screen.rerender(<Tree active={false} />);
     expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);
-    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+    expect(
+      screen.getByTestId("calendar-highlight-calendar-date-marker-2026-01-08", hidden),
+    ).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
     await screen.rerender(<Tree />);
     expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);
-    expect(marker).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarSelection });
+    expect(
+      screen.getByTestId("calendar-highlight-calendar-date-marker-2026-01-08", hidden),
+    ).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
   });
 
   it("tracks the planner clock through opening, reversal and closing without remounting outlines", async () => {

@@ -91,6 +91,7 @@ export const CALENDAR_METRICS = {
   weekNumberInset: 1,
   dayNumberHeight: 38,
   dayNumberFontSize: 17,
+  dayMarkerSize: 24,
   weekRowHeight: 118,
   entryRowHeight: 17,
   entryFontSize: 12,

@@ -8,7 +8,7 @@ import { sharedCalendarDays } from "@/features/calendar/shared-calendar-display"
 import { EntryEditOverlayFrame } from "./entry-edit-overlay-frame";
 import { EntryEditGroup, EntryEditValueRow } from "./entry-edit-fields";
 import { LoadFailureView } from "@/ui/loading-view";
-import { ShiftSymbol } from "@/ui/shift-symbol";
+import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
 import { Text } from "@/ui/text";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -66,7 +66,7 @@ export function SharedEntryEditorView({
         error={null}
         headerColor={headerColor}
         headerSubtitle={row.entry.title}
-        headerLeading={<ShiftSymbol value={row.entry.symbol} color={headerColor} size={22} />}
+        headerLeading={<SharedShiftSymbol value={row.entry.symbol} color={headerColor} size={22} />}
         onDismiss={() => router.back()}
         onRequestClose={async () => true}
         testIDPrefix="shift-edit"

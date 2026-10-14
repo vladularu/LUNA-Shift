@@ -3,7 +3,7 @@ import { Text } from "@/ui/text";
 import { usePalette } from "@/theme/palette";
 import { CALENDAR_METRICS } from "@/theme/tokens";
 import { sharedCalendarChipPalette } from "@/theme/color-contrast";
-import { ShiftSymbol } from "@/ui/shift-symbol";
+import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { PrototypeDisplay } from "./prototype-entry-content";
 
@@ -38,7 +38,7 @@ export function SharedCalendarEntryContent({
     >
       {display.labelMode === "SYMBOL" ? (
         <View style={{ height: lineHeight, alignItems: "center", justifyContent: "center" }}>
-          <ShiftSymbol color={colors.onDetail} size={12} value={row.entry.symbol} />
+          <SharedShiftSymbol color={colors.onDetail} size={12} value={row.entry.symbol} />
         </View>
       ) : (
         <Text numberOfLines={1} allowFontScaling={false} style={textStyle}>
