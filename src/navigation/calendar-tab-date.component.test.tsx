@@ -22,7 +22,10 @@ jest.mock("expo-router/unstable-native-tabs", () => {
   const Icon = (props: Record<string, unknown>) =>
     React.createElement(View, {
       ...props,
-      testID: props.sf ? `icon-${props.sf}` : "calendar-icon",
+      testID:
+        props.src && typeof props.src === "object" && "props" in props.src
+          ? "icon-" + (props.src as { props: { name: string } }).props.name
+          : "calendar-icon",
     });
   const Label = ({ children }: { children?: import("react").ReactNode }) =>
     React.createElement(Text, null, children);
@@ -61,6 +64,20 @@ afterEach(() => {
 });
 
 describe("current calendar day in the tab bar", () => {
+  it("keeps every native footer icon as an outline without an iOS SF override", async () => {
+    const screen = await render(<NativeAppTabs />);
+    for (const name of [
+      "bar-chart-outline",
+      "documents-outline",
+      "ellipsis-horizontal-circle-outline",
+    ]) {
+      const icon = screen.getByTestId("icon-" + name);
+      expect(icon.props.sf).toBeUndefined();
+      expect(icon.props.renderingMode).toBe("template");
+      expect(icon.props.src.props.name).toBe(name);
+    }
+  });
+
   it("uses today's local day in the tinted native icon and VoiceOver label", async () => {
     const screen = await render(<NativeAppTabs />);
     expect(screen.getByTestId("calendar-icon").props.src).toEqual(calendarTabIconSource(8));

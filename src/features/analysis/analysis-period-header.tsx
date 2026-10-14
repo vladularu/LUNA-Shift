@@ -163,7 +163,12 @@ function AnalysisPeriodHeader({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Ionicons accessible={false} color={palette.text} name="calendar-outline" size={21} />
+            <Ionicons
+              accessible={false}
+              color={palette.text}
+              name="calendar-number-outline"
+              size={22}
+            />
           </Pressable>
         </View>
       }
