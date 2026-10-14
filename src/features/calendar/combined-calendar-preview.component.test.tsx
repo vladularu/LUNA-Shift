@@ -133,9 +133,15 @@ it("keeps weekend numbers red including adjacent months and preserves selection 
   const number = (date: string) =>
     within(
       screen.getByTestId("calendar-date-marker-" + date, { includeHiddenElements: true }),
-    ).getByText(String(Number(date.slice(8))), { includeHiddenElements: true });
+    ).getByTestId("calendar-base-label-calendar-date-marker-" + date, {
+      includeHiddenElements: true,
+    });
   expect(number("2026-10-03")).toHaveStyle({ color: p.danger });
-  expect(number("2026-10-04")).toHaveStyle({ color: p.onCalendarToday });
+  expect(
+    screen.getByTestId("calendar-active-label-calendar-date-marker-2026-10-04", {
+      includeHiddenElements: true,
+    }),
+  ).toHaveStyle({ color: p.onCalendarToday });
   expect(number("2026-10-13")).toHaveStyle({ color: p.onCalendarToday });
   expect(number("2026-10-05")).toHaveStyle({ color: p.text });
   expect(screen.getByTestId("calendar-adjacent-2026-11-07")).toHaveStyle({ color: p.danger });
@@ -163,19 +169,18 @@ it.each([1, 0.5, 0])(
     const hidden = { includeHiddenElements: true };
     expect(
       getAnimatedStyle(
-        screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-04", hidden),
+        screen.getByTestId("calendar-selection-calendar-date-marker-2026-10-04", hidden),
       ).opacity,
     ).toBe(opacity);
     expect(
       screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-13", hidden),
     ).toHaveStyle({ opacity: 1 });
-    if (opacity === 0)
-      expect(
-        within(screen.getByTestId("calendar-date-marker-2026-10-04", hidden)).getByText(
-          "4",
-          hidden,
-        ),
-      ).toHaveStyle({ color: result.current.palette.danger });
+    expect(
+      screen.getByTestId("calendar-base-label-calendar-date-marker-2026-10-04", hidden),
+    ).toHaveStyle({ color: result.current.palette.danger, fontWeight: "500" });
+    expect(
+      screen.getByTestId("calendar-active-label-calendar-date-marker-2026-10-04", hidden),
+    ).toHaveStyle({ color: result.current.palette.onCalendarToday, fontWeight: "700" });
   },
 );
 
@@ -215,6 +220,83 @@ it("uses the same smaller marker for today and the open day without moving eithe
   await screen.rerender(content(null));
   expect(screen.getByTestId("calendar-date-marker-2026-10-08", hidden)).toBe(marker);
   expect(getAnimatedStyle(marker)).toEqual(pose);
-  expect(openFill).toHaveStyle({ backgroundColor: "transparent" });
+  expect(
+    screen.queryByTestId("calendar-selection-calendar-date-marker-2026-10-08", hidden),
+  ).toBeNull();
+  expect(
+    screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-08", hidden),
+  ).toHaveStyle({ backgroundColor: "transparent" });
   expect(todayFill).toHaveStyle({ backgroundColor: result.current.palette.calendarToday });
+});
+
+it.each([1, 0])(
+  "keeps the normal glyph mounted and unchanged at popup opacity %s",
+  async (opacity) => {
+    const { result } = await renderHook(() => ({
+      progress: useSharedValue(1),
+      opacity: useSharedValue(opacity),
+      palette: usePalette(),
+    }));
+    const layout = calendarPrototypeLayout("2026-10", 390, 500);
+    const content = (selectedDate: string | null) => (
+      <PrototypeDates
+        layout={layout}
+        progress={result.current.progress}
+        currentDate="2026-10-13"
+        selectedDate={selectedDate}
+        selectedDayOpacity={result.current.opacity}
+      />
+    );
+    const screen = await render(content(null));
+    const hidden = { includeHiddenElements: true };
+    const id = "calendar-base-label-calendar-date-marker-2026-10-04";
+    const number = screen.getByTestId(id, hidden);
+    const normalStyle = number.props.style;
+    const marker = screen.getByTestId("calendar-date-marker-2026-10-04", hidden);
+    const pose = getAnimatedStyle(marker);
+    await screen.rerender(content("2026-10-04"));
+    expect(screen.getByTestId(id, hidden)).toBe(number);
+    expect(number.props.style).toEqual(normalStyle);
+    expect(
+      getAnimatedStyle(
+        screen.getByTestId("calendar-selection-calendar-date-marker-2026-10-04", hidden),
+      ).opacity,
+    ).toBe(opacity);
+    expect(number).toHaveStyle({ fontWeight: "500", color: result.current.palette.danger });
+    await screen.rerender(content(null));
+    expect(screen.getByTestId(id, hidden)).toBe(number);
+    expect(number.props.style).toEqual(normalStyle);
+    expect(
+      screen.queryByTestId("calendar-selection-calendar-date-marker-2026-10-04", hidden),
+    ).toBeNull();
+    expect(screen.getByTestId("calendar-date-marker-2026-10-04", hidden)).toBe(marker);
+    expect(getAnimatedStyle(marker)).toEqual(pose);
+  },
+);
+
+it("keeps today bold and marked when its day tile closes", async () => {
+  const { result } = await renderHook(() => ({
+    progress: useSharedValue(1),
+    opacity: useSharedValue(0),
+    palette: usePalette(),
+  }));
+  const screen = await render(
+    <PrototypeDates
+      layout={calendarPrototypeLayout("2026-10", 390, 500)}
+      progress={result.current.progress}
+      currentDate="2026-10-13"
+      selectedDate="2026-10-13"
+      selectedDayOpacity={result.current.opacity}
+    />,
+  );
+  const hidden = { includeHiddenElements: true };
+  expect(
+    screen.getByTestId("calendar-base-label-calendar-date-marker-2026-10-13", hidden),
+  ).toHaveStyle({ fontWeight: "700", color: result.current.palette.onCalendarToday });
+  expect(
+    screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-13", hidden),
+  ).toHaveStyle({ opacity: 1, backgroundColor: result.current.palette.calendarToday });
+  expect(
+    screen.queryByTestId("calendar-selection-calendar-date-marker-2026-10-13", hidden),
+  ).toBeNull();
 });
