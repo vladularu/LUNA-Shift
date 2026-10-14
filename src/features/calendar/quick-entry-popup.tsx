@@ -31,6 +31,7 @@ import { useQuickEntryPopupMotion } from "./use-quick-entry-popup-motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { ShiftSymbol } from "@/ui/shift-symbol";
+import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
 
 const HOLIDAY_HEADER_HEIGHT = 28;
 const ENTRY_ROW_HEIGHT = 60;
@@ -336,7 +337,11 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                     }}
                   >
                     {entry.symbol ? (
-                      <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                      entry.readOnly ? (
+                        <SharedShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                      ) : (
+                        <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                      )
                     ) : (
                       <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
                     )}

@@ -135,10 +135,50 @@ it("keeps weekend numbers red including adjacent months and preserves selection 
       screen.getByTestId("calendar-date-marker-" + date, { includeHiddenElements: true }),
     ).getByText(String(Number(date.slice(8))), { includeHiddenElements: true });
   expect(number("2026-10-03")).toHaveStyle({ color: p.danger });
-  expect(number("2026-10-04")).toHaveStyle({ color: p.onCalendarSelection });
+  expect(number("2026-10-04")).toHaveStyle({ color: p.onCalendarToday });
   expect(number("2026-10-13")).toHaveStyle({ color: p.onCalendarToday });
   expect(number("2026-10-05")).toHaveStyle({ color: p.text });
   expect(screen.getByTestId("calendar-adjacent-2026-11-07")).toHaveStyle({ color: p.danger });
   for (const label of within(screen.getByTestId("calendar-month-weekdays")).getAllByText("S"))
     expect(label).toHaveStyle({ color: p.danger });
+});
+
+it("uses the same smaller marker for today and the open day without moving either date", async () => {
+  const { result } = await renderHook(() => ({
+    progress: useSharedValue(1),
+    palette: usePalette(),
+  }));
+  const layout = calendarPrototypeLayout("2026-10", 390, 500);
+  const content = (selectedDate: string | null) => (
+    <PrototypeDates
+      layout={layout}
+      progress={result.current.progress}
+      currentDate="2026-10-13"
+      selectedDate={selectedDate}
+    />
+  );
+  const screen = await render(content("2026-10-08"));
+  const hidden = { includeHiddenElements: true };
+  const todayFill = screen.getByTestId(
+    "calendar-highlight-calendar-date-marker-2026-10-13",
+    hidden,
+  );
+  const openFill = screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-08", hidden);
+  const marker = screen.getByTestId("calendar-date-marker-2026-10-08", hidden);
+  const pose = getAnimatedStyle(marker);
+  expect(todayFill).toHaveStyle({
+    width: 24,
+    height: 24,
+    backgroundColor: result.current.palette.calendarToday,
+  });
+  expect(openFill).toHaveStyle({
+    width: 24,
+    height: 24,
+    backgroundColor: result.current.palette.calendarToday,
+  });
+  await screen.rerender(content(null));
+  expect(screen.getByTestId("calendar-date-marker-2026-10-08", hidden)).toBe(marker);
+  expect(getAnimatedStyle(marker)).toEqual(pose);
+  expect(openFill).toHaveStyle({ backgroundColor: "transparent" });
+  expect(todayFill).toHaveStyle({ backgroundColor: result.current.palette.calendarToday });
 });

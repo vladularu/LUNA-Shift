@@ -405,6 +405,7 @@ it("opens own and foreign services from the same normal day tile", async () => {
     onOpenSharedEntry: sharedOpen,
   });
   expect(screen.getByText("07:00–15:00 · Selena")).toBeTruthy();
+  expect(screen.queryByText("sunrise")).toBeNull();
   await fireEvent.press(screen.getByLabelText("Nacht bearbeiten"));
   expect(ownOpen).toHaveBeenCalledWith(existingShift);
   expect(sharedOpen).not.toHaveBeenCalled();

@@ -101,7 +101,7 @@ export function CalendarScreen() {
   const initialDate =
     targetMonth === currentMonth(timeZone) ? today(timeZone) : `${targetMonth}-01`;
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [selectionVisible, setSelectionVisible] = useState(false);
+  const [, setSelectionVisible] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(targetMonth);
   const visibleYear = visibleMonth.slice(0, 4);
   const dataMonths = useMemo(() => {
@@ -495,7 +495,7 @@ export function CalendarScreen() {
           pageHeight={pageHeight}
           profile={profile}
           ruleResolver={ruleResolver}
-          selectedDate={selectionVisible ? selectedDate : null}
+          selectedDate={isFocused ? (quickPopup?.date ?? null) : null}
           showHolidays={preferences.showHolidays}
           testData={testMonths.includes(item)}
           stampMode={plannerMode}
@@ -515,8 +515,7 @@ export function CalendarScreen() {
       profile,
       ruleResolver,
       selectDate,
-      selectedDate,
-      selectionVisible,
+      quickPopup,
       testMonths,
       visibleMonth,
     ],

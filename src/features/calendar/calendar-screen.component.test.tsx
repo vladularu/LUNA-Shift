@@ -252,13 +252,20 @@ jest.mock("@/features/calendar/quick-entry-popup", () => ({
   QuickEntryPopup: ({
     date,
     onOpenShiftPicker,
+    onClose,
   }: {
     date: string;
     onOpenShiftPicker: (date: string) => void;
+    onClose: () => void;
   }) =>
     MockReact.createElement(
       MockView,
       { testID: "mounted-quick-entry-popup" },
+      MockReact.createElement(MockPressable, {
+        accessibilityLabel: "Tageskachel schließen",
+        accessibilityRole: "button",
+        onPress: onClose,
+      }),
       MockReact.createElement(
         MockPressable,
         {
@@ -411,7 +418,7 @@ describe("CalendarScreen quick-entry navigation", () => {
     expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
   });
 
-  it("keeps the same Plus host across editor focus changes and restores the selected date immediately", async () => {
+  it("keeps the same Plus host and restores the highlight when the day tile is visible again", async () => {
     const screen = await render(<CalendarScreen />);
     await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
       nativeEvent: { layout: { height: 700 } },
@@ -427,6 +434,7 @@ describe("CalendarScreen quick-entry navigation", () => {
     await screen.rerender(<CalendarScreen />);
     expect(screen.getByTestId("quick-planner-dock")).toBe(dock);
     expect(dock).toHaveStyle({ opacity: 1 });
+    expect(screen.getByTestId("mounted-quick-entry-popup")).toBeTruthy();
     expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("2026-08-14");
     expect(screen.getByRole("button", { name: "Dienstplan bearbeiten" })).toBeTruthy();
   });
@@ -803,9 +811,7 @@ describe("CalendarScreen quick-entry navigation", () => {
 
     expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(currentMonth);
     expect(mockActiveMonthCoordinator.completeTodayRequest).toHaveBeenCalledWith(1);
-    expect(screen.getByTestId(`month-card-selection-${currentMonth}`).props.children).toBe(
-      currentDate,
-    );
+    expect(screen.getByTestId(`month-card-selection-${currentMonth}`).props.children).toBe("none");
 
     await act(async () => {
       fireEvent(screen.getByTestId("calendar-month-pager"), "momentumScrollEnd", {
@@ -813,9 +819,7 @@ describe("CalendarScreen quick-entry navigation", () => {
       });
     });
 
-    expect(screen.getByTestId(`month-card-selection-${currentMonth}`).props.children).toBe(
-      currentDate,
-    );
+    expect(screen.getByTestId(`month-card-selection-${currentMonth}`).props.children).toBe("none");
   });
   it("opens the shared design route from the calendar menu with its entry context", async () => {
     const screen = await render(<CalendarScreen />);
@@ -849,5 +853,20 @@ describe("CalendarScreen quick-entry navigation", () => {
       params: { origin: "calendar", notice: "holidays" },
     });
     expect(mockPreferences.setViewMode).not.toHaveBeenCalled();
+  });
+
+  it("highlights only the open day tile and clears it on dismiss without replacing the pager", async () => {
+    const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    const pager = screen.getByTestId("calendar-month-pager");
+    expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("none");
+    await fireEvent.press(screen.getByTestId("calendar-day"));
+    expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("2026-08-14");
+    await fireEvent.press(screen.getByRole("button", { name: "Tageskachel schließen" }));
+    expect(screen.queryByTestId("mounted-quick-entry-popup")).toBeNull();
+    expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("none");
+    expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
   });
 });

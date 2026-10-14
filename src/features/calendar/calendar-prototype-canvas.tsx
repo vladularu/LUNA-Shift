@@ -51,30 +51,24 @@ const MovingDay = memo(function MovingDay({
   }));
   // Movement uses the same fixed month geometry; the idle year grid owns its static dates.
   return (
-    <Animated.View
-      testID={`${testIDPrefix}-${day.date}`}
-      style={[
-        styles.day,
-        {
-          backgroundColor: isToday
-            ? palette.calendarToday
-            : isSelected
-              ? palette.calendarSelection
-              : "transparent",
-        },
-        motion,
-      ]}
-    >
+    <Animated.View testID={`${testIDPrefix}-${day.date}`} style={[styles.day, motion]}>
+      <View
+        pointerEvents="none"
+        testID={`calendar-highlight-${testIDPrefix}-${day.date}`}
+        style={[
+          styles.dayHighlight,
+          { backgroundColor: isToday || isSelected ? palette.calendarToday : "transparent" },
+        ]}
+      />
       <Text
         allowFontScaling={false}
         style={{
           fontFamily: INTER_FONTS.regular,
           fontSize: CALENDAR_METRICS.dayNumberFontSize,
-          fontWeight: isToday ? "700" : "500",
-          color: isToday
-            ? palette.onCalendarToday
-            : isSelected
-              ? palette.onCalendarSelection
+          fontWeight: isToday || isSelected ? "700" : "500",
+          color:
+            isToday || isSelected
+              ? palette.onCalendarToday
               : day.weekend
                 ? palette.danger
                 : palette.text,
@@ -497,6 +491,14 @@ export function PrototypeDates({
 }
 
 const styles = StyleSheet.create({
+  dayHighlight: {
+    position: "absolute",
+    width: CALENDAR_METRICS.dayMarkerSize,
+    height: CALENDAR_METRICS.dayMarkerSize,
+    left: (30 - CALENDAR_METRICS.dayMarkerSize) / 2,
+    top: (30 - CALENDAR_METRICS.dayMarkerSize) / 2,
+    borderRadius: RADII.pill,
+  },
   day: {
     position: "absolute",
     width: 30,
