@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import { useQuickEntryPopupMotion } from "./use-quick-entry-popup-motion";
 import { MOTION } from "@/theme/motion";
+import { useSharedValue } from "react-native-reanimated";
 
 let mockReducedMotion = false;
 let mockCompletion: ((finished: boolean) => void) | undefined;
@@ -36,6 +37,9 @@ jest.mock("react-native-reanimated", () => {
       }).current,
     useReducedMotion: () => mockReducedMotion,
     useAnimatedStyle: (compute: () => object) => compute(),
+    useDerivedValue: (compute: () => number) => ({ get: compute }),
+    useAnimatedReaction: (prepare: () => number, react: (value: number) => void) =>
+      react(prepare()),
     withTiming: (
       value: number,
       config: { duration: number; easing: unknown },
@@ -124,17 +128,28 @@ describe("day popup motion lifecycle", () => {
   it("fades from full opacity even when closing an unfinished opening", async () => {
     mockTimingValue = 0.5;
     const onClose = jest.fn();
+    const { result: highlight } = await renderHook(() => useSharedValue(1));
     const screen = await renderHook(() =>
-      useQuickEntryPopupMotion({ animateEntry: true, origin, onClose }),
+      useQuickEntryPopupMotion({
+        animateEntry: true,
+        origin,
+        onClose,
+        highlightOpacity: highlight.current,
+      }),
     );
     await screen.rerender(undefined);
     expect(motionFrame(screen.result.current.popupMotionStyle).opacity).toBe(1);
+    expect(highlight.current.get()).toBe(1);
     mockTimingValue = 0.25;
     await act(() => screen.result.current.closePopup());
     expect(motionFrame(screen.result.current.popupMotionStyle)).toMatchObject({
       opacity: 0.5,
       transform: [{ translateY: -6 }, { translateY: -80 }, { scaleY: 0.25 }, { translateY: 80 }],
     });
+    expect(highlight.current.get()).toBe(0.5);
+    expect(highlight.current.get()).toBe(
+      motionFrame(screen.result.current.popupMotionStyle).opacity,
+    );
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -185,6 +200,35 @@ describe("day popup motion lifecycle", () => {
     });
     expect(motionFrame(screen.result.current.popupMotionStyle).transform).toEqual([]);
     expect(mockTiming.mock.calls.at(-1)?.[1].duration).toBe(MOTION.duration.instant);
+  });
+
+  it("finishes the shared highlight fade before dismiss and resets it for the next popup", async () => {
+    const onClose = jest.fn();
+    const { result: highlight } = await renderHook(() => useSharedValue(1));
+    const screen = await renderHook(() =>
+      useQuickEntryPopupMotion({
+        animateEntry: false,
+        origin,
+        onClose,
+        highlightOpacity: highlight.current,
+      }),
+    );
+    expect(highlight.current.get()).toBe(1);
+    await act(() => screen.result.current.closePopup());
+    expect(highlight.current.get()).toBe(0);
+    expect(onClose).not.toHaveBeenCalled();
+    await act(() => mockCompletion?.(true));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    await screen.unmount();
+    await renderHook(() =>
+      useQuickEntryPopupMotion({
+        animateEntry: false,
+        origin,
+        onClose,
+        highlightOpacity: highlight.current,
+      }),
+    );
+    expect(highlight.current.get()).toBe(1);
   });
 
   it("restores an existing popup without a new entering animation", async () => {

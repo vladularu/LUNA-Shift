@@ -134,6 +134,7 @@ export function CalendarScreen() {
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [stampTool, setStampTool] = useState<QuickEntryStampAction | null>(null);
   const [quickPopup, setQuickPopup] = useState<QuickPopupState | null>(null);
+  const dayHighlightOpacity = useSharedValue(1);
   const closeQuickPopup = useCallback(() => setQuickPopup(null), []);
   const { sharedEntriesByDate } = useSharedCalendarDays(timeZone, visibleMonth);
   const popupRevision = useRef(0);
@@ -496,6 +497,7 @@ export function CalendarScreen() {
           profile={profile}
           ruleResolver={ruleResolver}
           selectedDate={isFocused ? (quickPopup?.date ?? null) : null}
+          selectedDayOpacity={dayHighlightOpacity}
           showHolidays={preferences.showHolidays}
           testData={testMonths.includes(item)}
           stampMode={plannerMode}
@@ -506,6 +508,7 @@ export function CalendarScreen() {
     [
       entriesByDate,
       sharedEntriesByDate,
+      dayHighlightOpacity,
       isFocused,
       pageHeight,
       preferences,
@@ -628,6 +631,7 @@ export function CalendarScreen() {
             onOpenSharedEntry={openSharedEntry}
             holidayName={quickPopupHolidayName}
             onClose={closeQuickPopup}
+            highlightOpacity={dayHighlightOpacity}
             onOpenDetails={openDayDetails}
             onOpenEntry={openEntry}
             onOpenShiftPicker={openShiftPicker}

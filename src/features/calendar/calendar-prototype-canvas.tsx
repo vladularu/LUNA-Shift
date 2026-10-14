@@ -4,6 +4,7 @@ import { memo } from "react";
 import { today } from "@/engine/calendar";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   type SharedValue,
@@ -24,17 +25,21 @@ import {
   type PrototypeMonth,
 } from "./calendar-prototype-layout";
 
+const AnimatedText = Animated.createAnimatedComponent(Text);
+
 const MovingDay = memo(function MovingDay({
   day,
   progress,
   currentDate,
   selectedDate,
+  selectedDayOpacity,
   testIDPrefix = "calendar-date-marker",
 }: {
   day: PrototypeDay;
   progress: SharedValue<number>;
   currentDate: string;
   selectedDate?: string | null;
+  selectedDayOpacity?: SharedValue<number>;
   testIDPrefix?: string;
 }) {
   const palette = usePalette();
@@ -52,31 +57,87 @@ const MovingDay = memo(function MovingDay({
   // Movement uses the same fixed month geometry; the idle year grid owns its static dates.
   return (
     <Animated.View testID={`${testIDPrefix}-${day.date}`} style={[styles.day, motion]}>
-      <View
+      {isSelected && !isToday && selectedDayOpacity ? (
+        <SelectedDayGlyph day={day} opacity={selectedDayOpacity} testIDPrefix={testIDPrefix} />
+      ) : (
+        <>
+          <View
+            pointerEvents="none"
+            testID={`calendar-highlight-${testIDPrefix}-${day.date}`}
+            style={[
+              styles.dayHighlight,
+              {
+                backgroundColor: isToday || isSelected ? palette.calendarToday : "transparent",
+                opacity: 1,
+              },
+            ]}
+          />
+          <Text
+            allowFontScaling={false}
+            style={{
+              fontFamily: INTER_FONTS.regular,
+              fontSize: CALENDAR_METRICS.dayNumberFontSize,
+              fontWeight: isToday || isSelected ? "700" : "500",
+              color:
+                isToday || isSelected
+                  ? palette.onCalendarToday
+                  : day.weekend
+                    ? palette.danger
+                    : palette.text,
+            }}
+          >
+            {day.day}
+          </Text>
+        </>
+      )}
+    </Animated.View>
+  );
+});
+
+const SelectedDayGlyph = memo(function SelectedDayGlyph({
+  day,
+  opacity,
+  testIDPrefix,
+}: {
+  readonly day: PrototypeDay;
+  readonly opacity: SharedValue<number>;
+  readonly testIDPrefix: string;
+}) {
+  const palette = usePalette();
+  const normalColor = day.weekend ? palette.danger : palette.text;
+  const highlightMotion = useAnimatedStyle(() => ({ opacity: opacity.get() }));
+  const foreground = useAnimatedStyle(() => {
+    const value = opacity.get();
+    return {
+      color:
+        value >= 1
+          ? palette.onCalendarToday
+          : value <= 0
+            ? normalColor
+            : interpolateColor(value, [0, 1], [normalColor, palette.onCalendarToday]),
+    };
+  });
+  return (
+    <>
+      <Animated.View
         pointerEvents="none"
         testID={`calendar-highlight-${testIDPrefix}-${day.date}`}
-        style={[
-          styles.dayHighlight,
-          { backgroundColor: isToday || isSelected ? palette.calendarToday : "transparent" },
-        ]}
+        style={[styles.dayHighlight, { backgroundColor: palette.calendarToday }, highlightMotion]}
       />
-      <Text
+      <AnimatedText
         allowFontScaling={false}
-        style={{
-          fontFamily: INTER_FONTS.regular,
-          fontSize: CALENDAR_METRICS.dayNumberFontSize,
-          fontWeight: isToday || isSelected ? "700" : "500",
-          color:
-            isToday || isSelected
-              ? palette.onCalendarToday
-              : day.weekend
-                ? palette.danger
-                : palette.text,
-        }}
+        style={[
+          {
+            fontFamily: INTER_FONTS.regular,
+            fontSize: CALENDAR_METRICS.dayNumberFontSize,
+            fontWeight: "700",
+          },
+          foreground,
+        ]}
       >
         {day.day}
-      </Text>
-    </Animated.View>
+      </AnimatedText>
+    </>
   );
 });
 
@@ -463,11 +524,13 @@ export function PrototypeDates({
   progress,
   currentDate,
   selectedDate,
+  selectedDayOpacity,
 }: {
   layout: PrototypeMonth;
   progress: SharedValue<number>;
   currentDate: string;
   selectedDate?: string | null;
+  selectedDayOpacity?: SharedValue<number>;
 }) {
   const motion = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
   return (
@@ -484,6 +547,7 @@ export function PrototypeDates({
           progress={progress}
           currentDate={currentDate}
           selectedDate={selectedDate}
+          selectedDayOpacity={selectedDayOpacity}
         />
       ))}
     </Animated.View>

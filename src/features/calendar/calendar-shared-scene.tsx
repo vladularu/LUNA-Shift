@@ -149,6 +149,7 @@ export function SharedCalendarMonth({
   showHolidays,
   onSelectDate,
   selectedDate,
+  selectedDayOpacity,
   accessibilityVisible,
   testData,
   stampMode = false,
@@ -165,6 +166,7 @@ export function SharedCalendarMonth({
   showHolidays: boolean;
   onSelectDate: (date: string, anchor: CalendarAnchorRect) => void;
   selectedDate: string | null;
+  selectedDayOpacity?: SharedValue<number>;
   accessibilityVisible: boolean;
   testData: boolean;
   stampMode?: boolean;
@@ -195,6 +197,7 @@ export function SharedCalendarMonth({
       profile={profile}
       onSelectDate={onSelectDate}
       selectedDate={selectedDate}
+      selectedDayOpacity={selectedDayOpacity}
       accessibilityVisible={accessibilityVisible}
       testData={testData}
       stampMode={stampMode}
@@ -217,6 +220,7 @@ function SharedMonthBody({
   profile,
   onSelectDate,
   selectedDate,
+  selectedDayOpacity,
   accessibilityVisible,
   testData,
   scene,
@@ -261,6 +265,7 @@ function SharedMonthBody({
         progress={progress}
         currentDate={currentDate}
         selectedDate={scene.mode === "MONTH" ? selectedDate : null}
+        selectedDayOpacity={selectedDayOpacity}
       />
       <View
         pointerEvents={visible ? "box-none" : "none"}

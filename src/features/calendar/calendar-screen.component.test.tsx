@@ -183,16 +183,18 @@ jest.mock("@/features/calendar/calendar-shared-scene", () => ({
     month,
     onSelectDate,
     selectedDate,
+    selectedDayOpacity,
     stampTransitionProgress,
   }: {
     month: string;
     onSelectDate: (date: string, anchor: object) => void;
     selectedDate: string | null;
+    selectedDayOpacity: object;
     stampTransitionProgress: object;
   }) => {
     return MockReact.createElement(
       MockView,
-      { testID: `month-card-${month}`, ...{ stampTransitionProgress } },
+      { testID: `month-card-${month}`, ...{ stampTransitionProgress, selectedDayOpacity } },
       MockReact.createElement(
         MockText,
         { testID: `month-card-selection-${month}` },
@@ -253,14 +255,16 @@ jest.mock("@/features/calendar/quick-entry-popup", () => ({
     date,
     onOpenShiftPicker,
     onClose,
+    highlightOpacity,
   }: {
     date: string;
     onOpenShiftPicker: (date: string) => void;
     onClose: () => void;
+    highlightOpacity: object;
   }) =>
     MockReact.createElement(
       MockView,
-      { testID: "mounted-quick-entry-popup" },
+      { testID: "mounted-quick-entry-popup", ...{ highlightOpacity } },
       MockReact.createElement(MockPressable, {
         accessibilityLabel: "Tageskachel schließen",
         accessibilityRole: "button",
@@ -864,6 +868,9 @@ describe("CalendarScreen quick-entry navigation", () => {
     expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("none");
     await fireEvent.press(screen.getByTestId("calendar-day"));
     expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("2026-08-14");
+    expect(screen.getByTestId("month-card-2026-08").props.selectedDayOpacity).toBe(
+      screen.getByTestId("mounted-quick-entry-popup").props.highlightOpacity,
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Tageskachel schließen" }));
     expect(screen.queryByTestId("mounted-quick-entry-popup")).toBeNull();
     expect(screen.getByTestId("month-card-selection-2026-08").props.children).toBe("none");
