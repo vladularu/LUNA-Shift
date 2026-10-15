@@ -87,6 +87,7 @@ describe("visible check timelines", () => {
     expect(screen.getByRole("button", { name: "Angaben ergänzen" })).toBeTruthy();
     expect(screen.getByTestId("check-limited")).toBeTruthy();
     expect(screen.queryByTestId("check-complete")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
     expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
     expect(screen.queryByTestId("check-details-open")).toBeNull();
     await screen.rerender(list([open, issue()]));
@@ -210,6 +211,7 @@ describe("visible check timelines", () => {
       alignItems: "center",
     });
     expect(screen.getByRole("header", { name: "Prüfung abgeschlossen" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeTruthy();
   });
 });
 it("formats dates even when localization is unavailable", () => {
