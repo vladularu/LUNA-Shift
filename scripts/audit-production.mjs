@@ -5,6 +5,7 @@ import {
 } from "./braces-hardening.mjs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import decoderHardening from "./decode-uri-component-hardening.cjs";
 import {
   NODE_FORGE_ADVISORY_URL,
   isVerifiedNodeForgeHardening,
@@ -164,6 +165,12 @@ function printFinding(prefix, finding) {
 }
 
 export function runProductionAudit() {
+  try {
+    decoderHardening.verifyDecodeUriComponentHardening();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
   const npmCliPath = process.env.npm_execpath;
   const npmCommand = npmCliPath ? process.execPath : "npm";
   const npmArguments = npmCliPath
