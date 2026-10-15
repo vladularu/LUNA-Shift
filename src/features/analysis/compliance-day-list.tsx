@@ -16,6 +16,7 @@ import {
 } from "./compliance-issue-content";
 import { complianceTimeline } from "./compliance-timeline";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
+import { CheckRunnerEgg } from "./check-runner-egg";
 const PRIORITY = { critical: 0, warning: 1, info: 2 };
 
 export function ComplianceDayList({
@@ -58,26 +59,30 @@ export function ComplianceDayList({
             gap: SPACING.md,
           }}
         >
-          <Ionicons
-            name={limited ? "information-circle-outline" : "checkmark-circle-outline"}
-            color={limited ? palette.info : palette.success}
-            size={104}
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-          />
-          <Text
-            accessibilityRole="header"
-            style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
-          >
-            {limited
-              ? "Bisher keine Auffälligkeiten"
-              : showPlanning
-                ? "Prüfung abgeschlossen"
-                : "Gesetzliche Prüfung"}
-          </Text>
-          <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
-            {limited ? "Angaben fehlen noch." : "Keine Auffälligkeiten"}
-          </Text>
+          {limited ? (
+            <>
+              <Ionicons
+                name="information-circle-outline"
+                color={palette.info}
+                size={104}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              />
+              <Text
+                accessibilityRole="header"
+                style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+              >
+                Bisher keine Auffälligkeiten
+              </Text>
+              <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
+                Angaben fehlen noch.
+              </Text>
+            </>
+          ) : (
+            <CheckRunnerEgg
+              title={showPlanning ? "Prüfung abgeschlossen" : "Gesetzliche Prüfung"}
+            />
+          )}
         </View>
       ) : null}
       {days.map((date) => {
