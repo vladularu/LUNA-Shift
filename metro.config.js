@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
+require("./scripts/decode-uri-component-hardening.cjs").verifyDecodeUriComponentHardening();
 
 /** @type {import("expo/metro-config").MetroConfig} */
 const config = getDefaultConfig(__dirname);

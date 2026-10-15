@@ -473,6 +473,41 @@ describe("local backup restore", () => {
     ).toEqual({ count: LATEST_DATABASE_SCHEMA_VERSION });
   });
 
+  it("restores SQL control characters as data without executing imported statements", async () => {
+    const payload = "x'); DROP TABLE user_profile; --";
+    const serialized = await signedSerialized(document, (unsigned) => {
+      const data = unsigned.data as {
+        shifts: Record<string, unknown>[];
+        appointments: Record<string, unknown>[];
+      };
+      for (const shift of data.shifts) {
+        shift.title = payload;
+        shift.note = payload;
+      }
+      for (const appointment of data.appointments) appointment.title = payload;
+    });
+    const backup = await validateLocalBackup(serialized, {
+      maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
+      sha256,
+    });
+    await restoreLocalBackup(destinationDb, backup);
+    expect(
+      destination.database
+        .prepare("SELECT title,note FROM shift_entries WHERE id=?")
+        .get("shift-source"),
+    ).toEqual({ title: payload, note: payload });
+    expect(
+      destination.database
+        .prepare("SELECT title FROM appointments WHERE id=?")
+        .get("appointment-source"),
+    ).toEqual({ title: payload });
+    expect(
+      destination.database.prepare("SELECT count(*) AS count FROM user_profile").get(),
+    ).toEqual({
+      count: 1,
+    });
+  });
+
   it("rolls the complete replacement back when an insert fails", async () => {
     const backup = await validateLocalBackup(JSON.stringify(document), {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
