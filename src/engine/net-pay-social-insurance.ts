@@ -32,10 +32,17 @@ export function calculateNetPaySocialInsurance2026(
   socialInsuranceGrossCents: number,
   profile: NetPayProfile,
   childlessSurcharge: boolean,
+  limits?: { readonly healthCents: number; readonly pensionCents: number },
 ): NetPaySocialInsurance {
   const rules = NET_PAY_RULES_2026;
-  const healthBasisCents = Math.min(socialInsuranceGrossCents, rules.healthMonthlyLimitCents);
-  const pensionBasisCents = Math.min(socialInsuranceGrossCents, rules.pensionMonthlyLimitCents);
+  const healthBasisCents = Math.min(
+    socialInsuranceGrossCents,
+    limits?.healthCents ?? rules.healthMonthlyLimitCents,
+  );
+  const pensionBasisCents = Math.min(
+    socialInsuranceGrossCents,
+    limits?.pensionCents ?? rules.pensionMonthlyLimitCents,
+  );
   // The GKV standard and additional contributions are rounded separately (§ 2 BVV).
   const healthStandardCents = contribution(healthBasisCents, rules.healthRateBps, true);
   const healthAdditionalCents = contribution(

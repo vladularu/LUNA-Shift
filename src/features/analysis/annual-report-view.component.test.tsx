@@ -10,6 +10,9 @@ import { AnnualReportScreen, AnnualReportDetails } from "@/features/analysis/ann
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
+jest.mock("./use-annual-salary-payments", () => ({
+  useAnnualSalaryPayments: (report: AnnualReport) => ({ report, loading: false, error: null }),
+}));
 
 const report: AnnualReport = {
   year: 2026,

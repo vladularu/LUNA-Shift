@@ -4,6 +4,9 @@ import { Text } from "@/ui/text";
 import type { MonthlyPayEstimate, UserProfile } from "@/domain/types";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { NetPayResult } from "@/domain/net-pay";
+import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
+import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
+import type { AnnualPaymentForecast } from "@/engine/net-pay-annual-payment";
 import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -24,6 +27,8 @@ export function SalaryComponentsView({
   net,
   settings,
   pensionOmitted,
+  annualPayment,
+  annualPayments,
 }: {
   readonly month: string;
   readonly profile: UserProfile;
@@ -31,14 +36,21 @@ export function SalaryComponentsView({
   readonly net: AvailablePay | null;
   readonly settings: MonthlyNetPaySettings | null;
   readonly pensionOmitted: boolean;
+  readonly annualPayment?: AnnualPaymentForecast;
+  readonly annualPayments?: readonly AnnualSalaryPayment[];
 }) {
   const palette = usePalette();
   const { width } = useWindowDimensions();
   const { caption, compositionRows } = salaryComposition(profile, pay, month);
-  const gross =
-    net?.amounts.grossCents ??
-    (pay.estimatedGrossAmount === null ? null : Math.round(pay.estimatedGrossAmount * 100));
   const extra = settings?.automation?.additionalRecurringGrossCents ?? 0;
+  const annualGross = annualSalaryGrossCents(
+    month,
+    annualPayments ?? settings?.automation?.annualPayments,
+  );
+  const gross =
+    pay.estimatedGrossAmount === null
+      ? null
+      : Math.round(pay.estimatedGrossAmount * 100) + extra + annualGross;
   return (
     <>
       <SalarySectionCard title="Gesamtbrutto">
@@ -83,6 +95,16 @@ export function SalaryComponentsView({
             />
           </>
         ) : null}
+        {annualGross > 0 ? (
+          <>
+            <CardSeparator />
+            <SalaryAmountRow
+              label="Jahressonderzahlung / Einmalzahlung"
+              value={netPayEuro(annualGross)}
+              quiet
+            />
+          </>
+        ) : null}
       </SalarySectionCard>
       {(pay.nightCompensatoryMinutes ?? 0) > 0 ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
@@ -104,11 +126,26 @@ export function SalaryComponentsView({
           <>
             <CardSeparator />
             <SalaryAmountRow
-              label={pensionOmitted ? "Netto vor Zusatzversorgung" : "Voraussichtliches Netto"}
+              label={
+                annualPayment && !annualPayment.netIncluded
+                  ? "Netto ohne Sonderzahlung"
+                  : annualPayment?.pensionOmitted
+                    ? "Netto vor Zusatzversorgung"
+                    : pensionOmitted
+                      ? "Netto vor Zusatzversorgung"
+                      : "Voraussichtliches Netto"
+              }
               value={netPayForecastEuro(net)}
               quiet
               emphasizeValue
             />
+            {annualPayment ? (
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, padding: SPACING.lg }}>
+                {annualPayment.netIncluded
+                  ? "Weihnachtsgeld enthalten"
+                  : "Sonderzahlung nur im Brutto"}
+              </Text>
+            ) : null}
             {netPayForecastLabel(net) ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, padding: SPACING.lg }}>
                 {netPayForecastLabel(net)}
@@ -136,15 +173,36 @@ export function SalaryBasisView({
   classification,
   pensionOmitted,
   nightMinutes,
+  annualPayment,
+  annualProposal,
 }: {
   readonly net: AvailablePay | null;
   readonly classification: SalaryClassification | null;
   readonly pensionOmitted: boolean;
   readonly nightMinutes: number;
+  readonly annualPayment?: AnnualPaymentForecast;
+  readonly annualProposal?: import("./annual-salary-proposal").AnnualSalaryProposal | null;
 }) {
   const palette = usePalette();
   return (
     <>
+      {annualProposal || annualPayment ? (
+        <SalarySectionCard title="Weihnachtsgeld-Prognose">
+          <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+            {annualProposal ? (
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+                {annualProposal.rateBasisPoints / 100} % aus{" "}
+                {annualProposal.referenceMonths.join(", ")}. {annualProposal.note}
+              </Text>
+            ) : null}
+            {annualPayment ? (
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+                {annualPayment.note}
+              </Text>
+            ) : null}
+          </View>
+        </SalarySectionCard>
+      ) : null}
       {net ? (
         <SurfaceCard>
           <SalaryAmountRow label="Steuerbrutto" value={netPayEuro(net.amounts.taxableGrossCents)} />

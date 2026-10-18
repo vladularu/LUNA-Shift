@@ -11,9 +11,13 @@ import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 export function AnnualOverview({
   report,
   pending,
+  salaryPending = false,
+  salaryError,
 }: {
   readonly report: AnnualReport;
   readonly pending: boolean;
+  readonly salaryPending?: boolean;
+  readonly salaryError?: string | null;
 }) {
   const checkPreferences = useCheckPreferences();
   const empty: CheckCounts = { criticalCount: 0, warningCount: 0, infoCount: 0 };
@@ -32,14 +36,15 @@ export function AnnualOverview({
     : !report.complianceCoverageComplete
       ? "Nicht verfügbar"
       : undefined;
-  const payReady = !pending && report.availablePayMonthCount > 0;
+  const payReady = !pending && !salaryPending && !salaryError && report.availablePayMonthCount > 0;
   const tariff = report.salarySource === "TARIFF";
   const base = tariff
     ? Math.round(
         (report.estimatedGrossAmount -
           report.premiumAmount -
           report.overtimeAmount -
-          report.allowanceAmount) *
+          report.allowanceAmount -
+          (report.annualPaymentAmount ?? 0)) *
           100,
       ) / 100
     : undefined;
@@ -94,21 +99,30 @@ export function AnnualOverview({
         PAY: (
           <PayListCard
             onPress={() => router.push(annualDetailsRoute(report.year, "PAY"))}
-            status={pending ? "Wird berechnet …" : !payReady ? "Nicht verfügbar" : undefined}
+            status={
+              pending || salaryPending
+                ? "Wird berechnet …"
+                : !payReady
+                  ? "Nicht verfügbar"
+                  : undefined
+            }
             base={base}
             premiums={tariff ? report.premiumAmount : undefined}
             overtime={tariff ? report.overtimeAmount : undefined}
             allowances={tariff ? report.allowanceAmount : undefined}
             gross={report.estimatedGrossAmount}
+            annualPayments={report.annualPaymentAmount}
             manual={report.salarySource === "MANUAL"}
             caption={
-              payReady
-                ? (report.availablePayMonthCount < 12
-                    ? "Brutto-Teilsumme · "
-                    : "Brutto-Schätzung · ") +
-                  report.availablePayMonthCount +
-                  " von 12 Monaten"
-                : "Keine unterstützte Monatsschätzung verfügbar"
+              salaryError
+                ? salaryError
+                : payReady
+                  ? (report.availablePayMonthCount < 12
+                      ? "Brutto-Teilsumme · "
+                      : "Brutto-Schätzung · ") +
+                    report.availablePayMonthCount +
+                    " von 12 Monaten"
+                  : "Keine unterstützte Monatsschätzung verfügbar"
             }
           />
         ),

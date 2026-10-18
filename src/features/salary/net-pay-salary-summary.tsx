@@ -2,6 +2,7 @@ import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import type { NetPayResult } from "@/domain/net-pay";
+import type { AnnualPaymentForecast } from "@/engine/net-pay-annual-payment";
 import { formatMonthTitle } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -30,6 +31,7 @@ export function NetPaySalarySummary({
   onGross,
   onDeductions,
   onPremiums,
+  annualPayment,
 }: {
   readonly pay: AvailablePay;
   readonly pensionOmitted: boolean;
@@ -38,6 +40,7 @@ export function NetPaySalarySummary({
   readonly onGross: () => void;
   readonly onDeductions: () => void;
   readonly onPremiums: () => void;
+  readonly annualPayment?: AnnualPaymentForecast;
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
@@ -45,7 +48,14 @@ export function NetPaySalarySummary({
   const netLabel = netPayForecastEuro(pay);
   const heroType = width < 360 ? TYPOGRAPHY.hero : TYPOGRAPHY.salaryHero;
   const notice = netPayForecastLabel(pay);
-  const title = pensionOmitted ? "Netto vor Zusatzversorgung" : "Voraussichtliches Netto";
+  const title =
+    annualPayment && !annualPayment.netIncluded
+      ? "Netto ohne Sonderzahlung"
+      : annualPayment?.pensionOmitted
+        ? "Netto vor Zusatzversorgung"
+        : pensionOmitted
+          ? "Netto vor Zusatzversorgung"
+          : "Voraussichtliches Netto";
   return (
     <>
       <SalarySectionCard title="Netto-Prognose">
@@ -66,6 +76,15 @@ export function NetPaySalarySummary({
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>{caption}</Text>
           ) : null}
           {notice ? <NetPayText>{notice}</NetPayText> : null}
+          {annualPayment ? (
+            <NetPayText>
+              {!annualPayment.netIncluded
+                ? "Sonderzahlung nur im Brutto"
+                : annualPayment.pensionOmitted
+                  ? "Mit Weihnachtsgeld · vor Zusatzversorgung"
+                  : "Weihnachtsgeld enthalten"}
+            </NetPayText>
+          ) : null}
           {pensionOmitted ? <NetPayText>Zusatzversorgung nicht berücksichtigt</NetPayText> : null}
           <View
             style={{
@@ -80,13 +99,15 @@ export function NetPaySalarySummary({
             <NetPaySummaryMetric
               label="Gesamtbrutto"
               displayLabel="Brutto"
-              cents={pay.amounts.grossCents}
+              cents={annualPayment?.totalGrossCents ?? pay.amounts.grossCents}
               onPress={onGross}
               overview
             />
             {!stacked ? <View style={{ width: 1, backgroundColor: palette.separator }} /> : null}
             <NetPaySummaryMetric
-              label="Abzüge"
+              label={
+                annualPayment && !annualPayment.netIncluded ? "Abzüge laufendes Entgelt" : "Abzüge"
+              }
               cents={pay.amounts.grossCents - pay.netCents}
               onPress={onDeductions}
               negative

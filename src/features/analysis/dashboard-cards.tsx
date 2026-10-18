@@ -177,6 +177,7 @@ export function PayListCard({
   status,
   caption,
   netRow,
+  annualPayments,
 }: {
   readonly onPress: () => void;
   readonly base?: number | null;
@@ -188,7 +189,11 @@ export function PayListCard({
   readonly status?: string;
   readonly caption: string;
   readonly netRow?: ReactNode;
+  readonly annualPayments?: number;
 }) {
+  const annualRow = !!annualPayments ? (
+    <AnalysisValueRow reserveDisclosure label="Weihnachtsgeld" value={formatEuro(annualPayments)} />
+  ) : null;
   return (
     <AnalysisListCard
       title="Gehalt"
@@ -200,13 +205,24 @@ export function PayListCard({
       {status ? (
         <AnalysisValueRow reserveDisclosure first label="Status" value={status} />
       ) : manual ? (
-        <AnalysisValueRow
-          reserveDisclosure
-          first
-          total
-          label={base == null ? "Brutto gesamt" : "Monatsbrutto"}
-          value={formatEuro(gross ?? null)}
-        />
+        <>
+          {annualPayments && base != null ? (
+            <AnalysisValueRow
+              reserveDisclosure
+              first
+              label="Monatsbrutto"
+              value={formatEuro(base)}
+            />
+          ) : null}
+          {annualRow}
+          <AnalysisValueRow
+            reserveDisclosure
+            first
+            total
+            label="Brutto geschätzt"
+            value={formatEuro(gross ?? null)}
+          />
+        </>
       ) : (
         <>
           {base != null ? (
@@ -239,11 +255,12 @@ export function PayListCard({
               value={formatEuro(allowances)}
             />
           ) : null}
+          {annualRow}
           <AnalysisValueRow
             reserveDisclosure
             first={base == null && premiums == null}
             total
-            label="Brutto gesamt"
+            label="Brutto geschätzt"
             value={formatEuro(gross ?? null)}
           />
         </>

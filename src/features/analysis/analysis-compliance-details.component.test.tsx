@@ -5,6 +5,15 @@ import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { AssessmentSummaryCard, ComplianceDetails } from "@/features/analysis/analysis-screen";
 // These cases exercise compliance components; the salary row has dedicated integration coverage.
 jest.mock("@/features/analysis/analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
+jest.mock("@/features/salary/use-net-pay-profile", () => ({
+  useNetPayProfile: () => ({
+    status: "ready",
+    saved: null,
+    timeline: [],
+    annualPayments: [],
+    error: null,
+  }),
+}));
 
 function shift(
   id: string,

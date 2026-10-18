@@ -1,4 +1,6 @@
 import { ReportExportButton } from "@/features/report-export/report-export-button";
+import { useNetPayProfile } from "@/features/salary/use-net-pay-profile";
+import { useAnnualSalaryForecast } from "@/features/salary/use-annual-salary-forecast";
 import { Temporal } from "@js-temporal/polyfill";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -64,6 +66,13 @@ export function AnalysisScreen({
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const [month, setMonth] = useState(() => activeMonthCoordinator.getMonth());
   const [period, setPeriod] = useState<AnalysisPeriod>("MONTH");
+  const salaryPayments = useNetPayProfile(month, period === "MONTH" && !testMonths.includes(month));
+  const annualSalary = useAnnualSalaryForecast(
+    Number(month.slice(0, 4)),
+    salaryPayments.annualPayments,
+    period === "MONTH" && !testMonths.includes(month) && salaryPayments.status === "ready",
+    testMonths,
+  );
   const [year, setYear] = useState(() => Number(activeMonthCoordinator.getMonth().slice(0, 4)));
   const parsedMonth = parseMonthRouteParam(params.month);
   const routeMonth = parsedMonth.status === "valid" ? parsedMonth.value : null;
@@ -256,6 +265,9 @@ export function AnalysisScreen({
               month={month}
               data={monthlyData}
               profile={profile}
+              annualPayments={annualSalary.payments}
+              salaryLoading={!testMonths.includes(month) && salaryPayments.status === "loading"}
+              salaryError={testMonths.includes(month) ? null : salaryPayments.error}
               compliance={compliance}
               checkError={monthlyCompliance.error}
               showPlanning={checkPreferences.enabled !== false}
