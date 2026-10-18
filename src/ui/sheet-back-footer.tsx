@@ -28,7 +28,7 @@ export function SheetBackFooter({
   readonly accessibilityLabel?: string;
   readonly busy?: boolean;
   readonly disabled?: boolean;
-  readonly icon?: "chevron-back" | "close";
+  readonly icon?: "chevron-back" | "close" | "checkmark";
   readonly label?: string;
   readonly onLayout?: ViewProps["onLayout"];
   readonly onPress: () => void;

@@ -45,6 +45,10 @@ export function ShiftTemplateListCard({
   );
 }
 
+type ShiftTemplateRowMoreAction =
+  | { readonly moreAccessibilityLabel: string; readonly onMorePress: () => void }
+  | { readonly moreAccessibilityLabel?: never; readonly onMorePress?: never };
+
 export function ShiftTemplateListRow({
   accessibilityLabel,
   color,
@@ -61,15 +65,13 @@ export function ShiftTemplateListRow({
   readonly accessibilityLabel: string;
   readonly color: string;
   readonly disabled?: boolean;
-  readonly moreAccessibilityLabel: string;
-  readonly onMorePress: () => void;
   readonly onPress: () => void;
   readonly sorting?: boolean;
   readonly subtitle: string;
   readonly symbol: string;
   readonly testID?: string;
   readonly title: string;
-}) {
+} & ShiftTemplateRowMoreAction) {
   const palette = usePalette();
   return (
     <View style={[styles.row, { opacity: disabled ? 0.45 : 1 }]} testID={testID}>
@@ -105,22 +107,24 @@ export function ShiftTemplateListRow({
           </Text>
         </View>
       </Pressable>
-      <Pressable
-        accessibilityLabel={moreAccessibilityLabel}
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        hitSlop={4}
-        onPress={onMorePress}
-        style={({ pressed }) => [styles.moreButton, { opacity: pressed ? 0.58 : 1 }]}
-      >
-        <Ionicons
-          accessibilityElementsHidden
-          color={palette.dark ? palette.text : palette.textMuted}
-          name={sorting ? "reorder-three-outline" : "ellipsis-horizontal-circle"}
-          size={sorting ? 26 : 22}
-        />
-      </Pressable>
+      {onMorePress ? (
+        <Pressable
+          accessibilityLabel={moreAccessibilityLabel}
+          accessibilityRole="button"
+          accessibilityState={{ disabled }}
+          disabled={disabled}
+          hitSlop={4}
+          onPress={onMorePress}
+          style={({ pressed }) => [styles.moreButton, { opacity: pressed ? 0.58 : 1 }]}
+        >
+          <Ionicons
+            accessibilityElementsHidden
+            color={palette.dark ? palette.text : palette.textMuted}
+            name={sorting ? "reorder-three-outline" : "ellipsis-horizontal-circle"}
+            size={sorting ? 26 : 22}
+          />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -133,7 +137,7 @@ export function ShiftTemplateListSeparator() {
 export function ShiftTemplateAddRow({
   accessibilityLabel,
   disabled = false,
-  label = "Schicht hinzufügen",
+  label = "Dienstvorlage erstellen",
   onPress,
   testID,
 }: {

@@ -5,7 +5,10 @@ import { Alert } from "react-native";
 
 export function useProfileLeaveGuard(dirty: boolean, saving: boolean) {
   const navigation = useNavigation();
-  const [exit, setExit] = useState<{ action?: NavigationAction } | null>(null);
+  const [exit, setExit] = useState<{
+    action?: NavigationAction;
+    onLeave?: () => void;
+  } | null>(null);
   const alertOpen = useRef(false);
   const handled = useRef(false);
   usePreventRemove((dirty || saving) && exit === null, ({ data }) => {
@@ -33,12 +36,13 @@ export function useProfileLeaveGuard(dirty: boolean, saving: boolean) {
     if (!exit || handled.current) return;
     handled.current = true;
     if (exit.action) navigation.dispatch(exit.action);
+    else if (exit.onLeave) exit.onLeave();
     else router.back();
   }, [exit, navigation]);
   return {
     cancel: () => {
       if (!saving) setExit({});
     },
-    saved: () => setExit({}),
+    saved: (onLeave?: () => void) => setExit({ onLeave }),
   };
 }

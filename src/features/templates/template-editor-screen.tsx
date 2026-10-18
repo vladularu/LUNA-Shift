@@ -2,15 +2,8 @@ import { SelectionChip } from "@/ui/selection-option";
 import { Text, TextInput } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
-import {
-  ActionSheetIOS,
-  Platform,
-  Pressable,
-  View,
-  useWindowDimensions,
-  type TextInputProps,
-} from "react-native";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { ActionSheetIOS, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { FullWindowOverlay } from "react-native-screens";
 
@@ -28,12 +21,16 @@ import {
 } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import { completeShiftSelectionNavigation } from "@/features/calendar/quick-entry-navigation";
+import { CompactInputRow } from "@/features/templates/compact-input-row";
 import {
   resolveEditorSession,
   resolveEditorTarget,
   useStableEditorSession,
 } from "@/features/editor-session";
-import { saveTemplateWithOptionalCalendarEntry } from "@/features/templates/template-editor-save";
+import {
+  saveTemplateWithOptionalCalendarEntry,
+  type TemplateEditorSaveProgress,
+} from "@/features/templates/template-editor-save";
 import {
   parseIdentifierRouteParam,
   parseLocalDateRouteParam,
@@ -44,10 +41,10 @@ import { MOTION } from "@/theme/motion";
 import { DEFAULT_TEMPLATE_COLOR, SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { CardSeparator, SectionHeader, SurfaceCard } from "@/ui/design-system";
-import { ColorPicker, SecondaryButton, TimePickerField } from "@/ui/form-controls";
+import { ColorPicker, PrimaryButton, SecondaryButton, TimePickerField } from "@/ui/form-controls";
 import { DestructiveFormAction, FormScreen, FormStatus, HeaderSaveAction } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { deletionFeedback, successFeedback, warningFeedback } from "@/ui/haptics";
@@ -79,113 +76,6 @@ const TEMPLATE_TYPES: readonly ShiftType[] = [
 
 function isAbsenceType(type: ShiftType): boolean {
   return type === "VACATION" || type === "SICK" || type === "FREE";
-}
-
-function CompactInputRow({
-  error,
-  inputRef,
-  keyboardType,
-  label,
-  maxLength,
-  onChangeText,
-  suffix,
-  testID,
-  value,
-}: {
-  readonly error?: string | null;
-  readonly inputRef?: Ref<TextInput>;
-  readonly keyboardType?: TextInputProps["keyboardType"];
-  readonly label: string;
-  readonly maxLength?: number;
-  readonly onChangeText: (value: string) => void;
-  readonly suffix?: string;
-  readonly testID?: string;
-  readonly value: string;
-}) {
-  const palette = usePalette();
-  const { fontScale } = useWindowDimensions();
-  const stacked = fontScale >= 1.6;
-
-  return (
-    <View>
-      <View
-        testID={testID}
-        style={{
-          minHeight: CONTROL_HEIGHT.large,
-          flexDirection: stacked ? "column" : "row",
-          alignItems: stacked ? "stretch" : "center",
-          justifyContent: "space-between",
-          gap: SPACING.sm,
-          paddingHorizontal: SPACING.lg,
-          paddingVertical: SPACING.xs,
-        }}
-      >
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-        >
-          {label}
-        </Text>
-        <View
-          style={{
-            minWidth: 0,
-            flex: stacked ? undefined : 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: stacked ? "flex-start" : "flex-end",
-            gap: SPACING.xs,
-          }}
-        >
-          <TextInput
-            ref={inputRef}
-            accessibilityLabel={error ? `${label}, ungültig` : label}
-            accessibilityHint={error ? `Fehler: ${error}` : undefined}
-            enablesReturnKeyAutomatically
-            keyboardType={keyboardType}
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            maxLength={maxLength}
-            onChangeText={onChangeText}
-            placeholderTextColor={palette.textMuted}
-            selectTextOnFocus={keyboardType === "number-pad"}
-            style={{
-              minWidth: keyboardType === "number-pad" ? 44 : 96,
-              minHeight: CONTROL_HEIGHT.compact,
-              flex: keyboardType === "number-pad" ? undefined : 1,
-              color: error ? palette.danger : palette.textSecondary,
-              textAlign: stacked ? "left" : "right",
-              paddingVertical: 0,
-              ...TYPOGRAPHY.body,
-              ...(keyboardType === "number-pad" ? { fontVariant: ["tabular-nums"] } : {}),
-            }}
-            value={value}
-          />
-          {suffix ? (
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-            >
-              {suffix}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-      {error ? (
-        <Text
-          accessibilityLiveRegion="polite"
-          accessibilityRole="alert"
-          selectable
-          style={{
-            color: palette.danger,
-            paddingHorizontal: SPACING.lg,
-            paddingBottom: SPACING.sm,
-            ...TYPOGRAPHY.footnote,
-          }}
-        >
-          {error}
-        </Text>
-      ) : null}
-    </View>
-  );
 }
 
 function CompactActionRow({
@@ -306,7 +196,7 @@ function CompactSwitchRow({
         {label}
       </Text>
       <LabeledSwitch
-        label={`Schicht ${label.toLocaleLowerCase("de-DE")}`}
+        label={`Dienstvorlage ${label.toLocaleLowerCase("de-DE")}`}
         onValueChange={onValueChange}
         value={value}
       />
@@ -485,10 +375,13 @@ function TemplateEditorForm({
   const [symbolError, setSymbolError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const saveState = useRef<"IDLE" | "SAVING" | "DONE">("IDLE");
+  const saveProgress = useRef<TemplateEditorSaveProgress | null>(null);
   const nameRef = useRef<TextInput>(null);
   const symbolRef = useRef<TextInput>(null);
   const absence = isAbsenceType(type);
   const typeLocked = existing !== null && isAbsenceType(existing.type);
+  const createsCalendarEntry = existing === null && quickEntryDate !== undefined;
 
   function changeType(candidate: ShiftType) {
     const useCandidateColor =
@@ -535,6 +428,7 @@ function TemplateEditorForm({
   }
 
   async function submit() {
+    if (saveState.current !== "IDLE") return;
     const nextNameError = requiredFieldError(name, "Titel");
     const nextSymbolError = requiredFieldError(symbol, "Symbol");
     setNameError(nextNameError);
@@ -546,7 +440,9 @@ function TemplateEditorForm({
       focusInvalidField(nextNameError ? nameRef : symbolRef, firstError);
       return;
     }
+    let templateSaved = false;
     try {
+      saveState.current = "SAVING";
       setSaving(true);
       setError(null);
       await saveTemplateWithOptionalCalendarEntry({
@@ -554,6 +450,11 @@ function TemplateEditorForm({
         quickEntryDate,
         upsertShift,
         upsertTemplate,
+        previousSave: saveProgress.current,
+        onTemplateSaved: (progress) => {
+          saveProgress.current = progress;
+          templateSaved = true;
+        },
         input: {
           ...(existing ? { id: existing.id, expectedRevision: existing.revision } : {}),
           name,
@@ -575,12 +476,18 @@ function TemplateEditorForm({
         completeShiftSelectionNavigation();
       }
       successFeedback();
+      saveState.current = "DONE";
       // The calendar picker is replaced by this editor, not left underneath it.
       router.back();
     } catch (submitError) {
       warningFeedback();
-      setError(userFacingErrorMessage(submitError, "Vorlage konnte nicht gespeichert werden."));
+      setError(
+        createsCalendarEntry && templateSaved
+          ? "Vorlage gespeichert, Dienst nicht eingetragen. Versuche es erneut."
+          : userFacingErrorMessage(submitError, "Vorlage konnte nicht gespeichert werden."),
+      );
     } finally {
+      if (saveState.current !== "DONE") saveState.current = "IDLE";
       setSaving(false);
     }
   }
@@ -606,10 +513,12 @@ function TemplateEditorForm({
     <FormScreen>
       <Stack.Screen
         options={{
-          title: "Schicht",
-          headerRight: () => (
-            <HeaderSaveAction busy={saving} label="Fertig" onPress={() => void submit()} />
-          ),
+          title: existing ? "Dienstvorlage" : "Neue Dienstvorlage",
+          headerRight: createsCalendarEntry
+            ? undefined
+            : () => (
+                <HeaderSaveAction busy={saving} label="Speichern" onPress={() => void submit()} />
+              ),
         }}
       />
 
@@ -768,7 +677,7 @@ function TemplateEditorForm({
         <SurfaceCard>
           <CompactActionRow
             icon={notification ? "notifications-outline" : "add"}
-            label="Benachrichtigung"
+            label="Erinnerung"
             onPress={() => setNotificationOpen(true)}
             testID="template-notification-row"
             value={notificationLabel(notification)}
@@ -794,6 +703,11 @@ function TemplateEditorForm({
       </View>
 
       <FormStatus error={error} />
+      {createsCalendarEntry ? (
+        <PrimaryButton disabled={saving} onPress={() => void submit()}>
+          {saving ? "Wird gespeichert …" : "Vorlage erstellen und eintragen"}
+        </PrimaryButton>
+      ) : null}
       {existing ? (
         <DestructiveFormAction disabled={saving} label="Vorlage löschen" onPress={confirmArchive} />
       ) : null}

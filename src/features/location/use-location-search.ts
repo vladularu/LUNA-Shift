@@ -176,7 +176,7 @@ export function useLocationSearch(query: string): {
         } catch {
           if (active) {
             setResults([]);
-            setError("Adressen nicht verfügbar. Du kannst den Ort trotzdem übernehmen.");
+            setError("Adresssuche nicht verfügbar. Übernimm nur den Ortsnamen.");
           }
         } finally {
           if (active) setLoading(false);

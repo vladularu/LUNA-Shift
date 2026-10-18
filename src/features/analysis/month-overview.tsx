@@ -71,7 +71,7 @@ export function MonthOverview({
             caption={
               summary.ok
                 ? undefined
-                : "Erfasste Zeiten · Soll, Saldo und Abwesenheitsgutschriften benötigen einen gültigen Feiertagsstand."
+                : "Feiertagsdaten fehlen. Angezeigt sind nur Arbeits- und Fortbildungszeiten."
             }
           />
         ),
@@ -84,7 +84,7 @@ export function MonthOverview({
             onPress={() => router.push(complianceDetailsRoute(month))}
             caption={
               !data.complianceShifts.ok
-                ? "Die Arbeitszeitprüfung benötigt gültige Regelstände."
+                ? "Für die Prüfung fehlen Berechnungsdaten."
                 : (checkError ?? undefined)
             }
           />

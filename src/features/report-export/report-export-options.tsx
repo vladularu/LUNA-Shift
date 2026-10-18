@@ -5,7 +5,7 @@ import { LabeledSwitch } from "@/ui/labeled-switch";
 import { usePalette } from "@/theme/palette";
 import { CONTROL_HEIGHT, CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import type { ReportOptions } from "./report-document";
+import { REPORT_CHECK_SCOPE, type ReportOptions } from "./report-document";
 import type { ReportFormat } from "./share-report";
 
 export function ReportExportOptions({
@@ -86,8 +86,13 @@ export function ReportExportOptions({
               />
             </View>
           </SurfaceCard>
+          {options.includeSalary ? (
+            <Text maxFontSizeMultiplier={TEXT_MAX_SCALE} style={caption}>
+              Brutto und Netto sind Schätzungen, keine Lohnabrechnung.
+            </Text>
+          ) : null}
           <Text maxFontSizeMultiplier={TEXT_MAX_SCALE} style={caption}>
-            Brutto und Netto sind Schätzungen, keine Lohnabrechnung.
+            Prüfung im PDF: {REPORT_CHECK_SCOPE}
           </Text>
         </>
       ) : (

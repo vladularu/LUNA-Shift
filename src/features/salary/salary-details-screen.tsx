@@ -129,7 +129,7 @@ export function SalaryDetailsScreen() {
       </Text>
       <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
         {blocked
-          ? "In einem aktiven Testmonat ist die persönliche Netto-Prognose gesperrt."
+          ? "Für Testdaten gibt es keine Netto-Prognose."
           : forecast?.result.status === "unavailable"
             ? forecast.result.reason
             : data.status === "loading"
@@ -180,7 +180,7 @@ export function SalaryDetailsScreen() {
     content = (
       <SurfaceCard style={{ padding: SPACING.lg }}>
         <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-          Für diesen Zeitraum liegt kein unterstützter Tarifstand vor.
+          Für diesen Zeitraum fehlen Tarifdaten.
         </Text>
       </SurfaceCard>
     );
@@ -249,6 +249,11 @@ export function SalaryDetailsScreen() {
         </SalarySectionCard>
         {unavailable}
         <SalarySectionCard title="Details">
+          <SalaryNavigationRow
+            title="Zuschläge je Dienst"
+            onPress={() => router.push(salaryDetailsRoute(month, "services"))}
+          />
+          <CardSeparator />
           <SalaryNavigationRow title="Berechnung der Zuschläge" onPress={basis} />
         </SalarySectionCard>
       </>

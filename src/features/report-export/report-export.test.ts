@@ -547,3 +547,85 @@ describe("Grenzen und Vollständigkeit", () => {
     expect(value(report, "Gehaltsprognose", "estimatedGrossAmount")).toBe("5000");
   });
 });
+
+describe("PDF und App mit gleicher Bedeutung", () => {
+  function netPresentationReport(period: string): ReportDocument {
+    const rows: ReportRow[] = [];
+    const month = period.length === 4 ? `${period}-01` : period;
+    const year = Number(period.slice(0, 4));
+    appendReportData(rows, "Netto-Prognose", month, "Netto", {
+      result: {
+        status: "available",
+        pay: {
+          netCents: 314152,
+          calculationBasis: {
+            payrollYear: year,
+            rulesYear: 2026,
+            status: year === 2027 ? "PREVIOUS_YEAR_ESTIMATE" : "VERIFIED",
+          },
+        },
+      },
+    });
+    if (period.length === 4)
+      appendReportData(rows, "Jahresauswertung", period, "Netto", {
+        netCents: 314152,
+        availableNetMonthCount: 1,
+      });
+    return { period, rows, createdAt: "2026-10-15", entries: [] };
+  }
+
+  it.each(["2027-01", "2027"])(
+    "bewahrt Vorläufigkeit, Regelstand und angemessene Netto-Genauigkeit für %s",
+    (period) => {
+      const report = netPresentationReport(period);
+      for (const layout of ["standard", "compact"] as const) {
+        const output = reportToHtml(report, { layout, includeSalary: true });
+        expect(output).toContain("2027 vorläufig · Abzüge nach Stand 2026");
+        expect(output).toContain("3.140 €");
+        expect(output).not.toContain("3.141,52");
+        expect(reportToHtml(report, { layout, includeSalary: false })).not.toContain(
+          "2027 vorläufig",
+        );
+      }
+      expect(value(report, "Netto-Prognose", "result.pay.netCents", "2027-01")).toBe("3141,52");
+    },
+  );
+
+  it("zeigt ein verifiziertes Netto weiter centgenau ohne Vorjahreshinweis", () => {
+    const output = reportToHtml(netPresentationReport("2026-01"));
+    expect(output).toContain("3.141,52 €");
+    expect(output).not.toContain("vorläufig");
+  });
+
+  it.each(["2026-08", "2026"])(
+    "trennt fehlende Prüfgrundlagen von Warnungen im Bericht %s",
+    (period) => {
+      const report = build({
+        period,
+        profile: { ...profile, allEmploymentWorkRecorded: null },
+      });
+      const section = period.length === 4 ? "Jahresauswertung" : "Auswertung";
+      expect(value(report, section, "warningCount", period)).toBe("0");
+      expect(Number(value(report, section, "prerequisiteCount", period))).toBeGreaterThan(0);
+      const output = reportToHtml(report);
+      expect(output).toContain("Prüfgrundlagen unvollständig");
+      expect(output).not.toContain("Arbeitszeiten aus allen Jobs erfasst?");
+    },
+  );
+
+  it("erhält alle Planungshinweise und macht den vollständigen PDF-Prüfumfang sichtbar", () => {
+    const report = build({
+      entries: Array.from({ length: 7 }, (_, i) =>
+        shift(`day-${i}`, `2026-08-${String(i + 3).padStart(2, "0")}`),
+      ),
+    });
+    expect(
+      report.rows.some(
+        (row) => /^issues\.\d+\.rule$/.test(row.field) && row.value === "PLANNING_7_DAYS",
+      ),
+    ).toBe(true);
+    expect(reportToHtml(report)).toContain(
+      "Arbeitszeitregeln und alle Planungshinweise – auch in der App ausgeblendete.",
+    );
+  });
+});

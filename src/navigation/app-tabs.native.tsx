@@ -57,7 +57,7 @@ export function AppTabs() {
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(templates)">
-        <NativeTabs.Trigger.Label>Schichten</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Vorlagen</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           renderingMode="template"
           src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="documents-outline" />}

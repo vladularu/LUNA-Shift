@@ -33,16 +33,32 @@ export function reportView(report: ReportDocument) {
   const periods = annual
     ? REPORT_MONTH_NAMES.map((_, i) => `${report.period}-${String(i + 1).padStart(2, "0")}`)
     : [report.period];
-  const monthly = periods.map((period) => ({
-    period,
-    target: number("Arbeitszeit", "targetMinutes", period),
-    actual: number("Arbeitszeit", "actualMinutes", period),
-    balance: number("Arbeitszeit", "balanceMinutes", period),
-    gross: number("Gehaltsprognose", "estimatedGrossAmount", period),
-    net:
+  const monthly = periods.map((period) => {
+    const net =
       number("Netto-Prognose", "result.pay.netCents", period) ??
-      number("Netto-Prognose", "netCents", period),
-  }));
+      number("Netto-Prognose", "netCents", period);
+    const provisional =
+      net !== null &&
+      text("Netto-Prognose", "result.pay.calculationBasis.status", period) ===
+        "PREVIOUS_YEAR_ESTIMATE";
+    const payrollYear = number("Netto-Prognose", "result.pay.calculationBasis.payrollYear", period);
+    const rulesYear = number("Netto-Prognose", "result.pay.calculationBasis.rulesYear", period);
+    return {
+      period,
+      target: number("Arbeitszeit", "targetMinutes", period),
+      actual: number("Arbeitszeit", "actualMinutes", period),
+      balance: number("Arbeitszeit", "balanceMinutes", period),
+      gross: number("Gehaltsprognose", "estimatedGrossAmount", period),
+      net,
+      provisional,
+      netDisplay: reportNetMoney(net, provisional),
+      netBasisNote: provisional
+        ? payrollYear !== null && rulesYear !== null
+          ? `${payrollYear} vorläufig · Abzüge nach Stand ${rulesYear}`
+          : "Netto vorläufig · Abzüge nach Vorjahresstand"
+        : null,
+    };
+  });
   const section = annual ? "Jahresauswertung" : "Arbeitszeit";
   const completeTime = !annual || text(section, "worktimeCoverageComplete") !== "Nein";
   const sum = (values: readonly (number | null)[]) =>
@@ -60,8 +76,12 @@ export function reportView(report: ReportDocument) {
     count: sum(periods.map((period) => number("Arbeitszeit", `${item.field}.entryCount`, period))),
   }));
   const salarySection = annual ? "Jahresauswertung" : "Gehaltsprognose";
-  const warnings = number("Auswertung", "warningCount");
-  const critical = number("Auswertung", "criticalCount");
+  const checkSection = annual ? "Jahresauswertung" : "Auswertung";
+  const warnings = number(checkSection, "warningCount");
+  const critical = number(checkSection, "criticalCount");
+  const info = number(checkSection, "infoCount") ?? 0;
+  const prerequisites = number(checkSection, "prerequisiteCount") ?? 0;
+  const net = annual ? number("Jahresauswertung", "netCents") : monthly[0].net;
   const issues = report.rows
     .filter(
       (row) =>
@@ -92,7 +112,14 @@ export function reportView(report: ReportDocument) {
     actual: completeTime ? number(section, "actualMinutes") : null,
     balance: completeTime ? number(section, "balanceMinutes") : null,
     gross: number(salarySection, "estimatedGrossAmount"),
-    net: annual ? number("Jahresauswertung", "netCents") : monthly[0].net,
+    net,
+    netDisplay: reportNetMoney(
+      net,
+      monthly.some((month) => month.provisional),
+    ),
+    netBasisNote: [...new Set(monthly.map((month) => month.netBasisNote).filter(Boolean))].join(
+      " · ",
+    ),
     base: annual ? null : number("Gehaltsprognose", "personalBaseAmount"),
     allowances: annual
       ? null
@@ -123,11 +150,12 @@ export function reportView(report: ReportDocument) {
         row.field.startsWith("testMonths.") &&
         row.value.startsWith(report.period),
     ),
-    checks: annual
-      ? "Prüfhinweise siehe Auswertung in der App."
-      : critical === null || warnings === null
+    checks:
+      critical === null || warnings === null
         ? "Prüfung eingeschränkt. Details siehe App."
-        : `${critical} kritische Prüfhinweise · ${warnings} weitere Hinweise. Details siehe App.`,
+        : `${critical} kritisch · ${warnings} ${warnings === 1 ? "Warnung" : "Warnungen"} · ${info} ${info === 1 ? "Hinweis" : "Hinweise"}. Details siehe App.`,
+    checkPrerequisites:
+      prerequisites > 0 ? "Prüfgrundlagen unvollständig. Angaben in der App ergänzen." : null,
     issues,
     entries: report.entries ?? [],
   };
@@ -145,6 +173,19 @@ export function reportMoney(value: number | null): string {
     : new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" })
         .format(value)
         .replaceAll("\u00a0", " ");
+}
+
+function reportNetMoney(value: number | null, provisional: boolean): string {
+  if (value === null || !provisional) return reportMoney(value);
+  // Match the app's netPayForecastEuro precision; report rows already contain euros.
+  return new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+    .format(Math.round(value / 10) * 10)
+    .replaceAll("\u00a0", " ");
 }
 
 export function reportDate(value: string): string {

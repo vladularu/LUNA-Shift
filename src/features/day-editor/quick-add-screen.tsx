@@ -7,34 +7,35 @@ import {
   usePflegeShiftStatus,
   usePflegeShiftTemplates,
 } from "@/application/pflegeshift-provider";
-import { userFacingErrorMessage } from "@/domain/errors";
 import { today } from "@/engine/calendar";
 import {
   buildQuickEntryActions,
-  saveQuickEntryAction,
   type QuickEntryStampAction,
 } from "@/features/calendar/quick-entry-actions";
-import {
-  ShiftSelectionErrorNotice,
-  ShiftSelectionPanel,
-} from "@/features/calendar/shift-selection-panel";
+import { useQuickEntrySelection } from "@/features/calendar/use-quick-entry-selection";
+import { ShiftSelectionPanel } from "@/features/calendar/shift-selection-panel";
 import { parseLocalDateRouteParam, type RouteParam } from "@/navigation/route-params";
 import { templateEditorRoute } from "@/navigation/routes";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
-import { successFeedback, warningFeedback } from "@/ui/haptics";
 import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
 
 export function QuickAddScreen() {
   useThemeStatusBar();
   const params = useLocalSearchParams<{ date?: RouteParam }>();
   const { templates } = usePflegeShiftTemplates();
-  const { upsertShift } = usePflegeShiftEntries();
+  const { entries, upsertShift } = usePflegeShiftEntries();
   const { error: loadError, ready, reload } = usePflegeShiftStatus();
   const parsedDate = parseLocalDateRouteParam(params.date);
   const date = parsedDate.status === "valid" ? parsedDate.value : today();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const actions = useMemo(() => buildQuickEntryActions(templates), [templates]);
+  const saveSelection = useQuickEntrySelection({
+    entries,
+    upsertShift,
+    onBusyChange: setSaving,
+    onError: (message) => setError(message || null),
+  });
 
   if (parsedDate.status !== "valid") {
     return (
@@ -52,18 +53,8 @@ export function QuickAddScreen() {
   if (!ready) return <LoadingView />;
 
   async function saveTemplate(action: QuickEntryStampAction, selectedDate: string) {
-    try {
-      setSaving(true);
-      setError(null);
-      await saveQuickEntryAction(action, selectedDate, upsertShift);
-      successFeedback();
-      router.back();
-    } catch (saveError) {
-      warningFeedback();
-      setError(userFacingErrorMessage(saveError, "Vorlage konnte nicht gespeichert werden."));
-    } finally {
-      setSaving(false);
-    }
+    const saved = await saveSelection(action, selectedDate);
+    if (saved) router.back();
   }
 
   return (
@@ -74,12 +65,12 @@ export function QuickAddScreen() {
         animateEntry={false}
         busy={saving}
         date={date}
-        onAddTemplate={() => router.push(templateEditorRoute())}
+        errorMessage={error}
+        onAddTemplate={() => router.replace(templateEditorRoute(undefined, date))}
         onClose={() => router.back()}
-        onEditTemplate={(templateId) => router.push(templateEditorRoute(templateId))}
+        onEditTemplate={(templateId) => router.replace(templateEditorRoute(templateId))}
         onSelectAction={(action, selectedDate) => void saveTemplate(action, selectedDate)}
       />
-      {error ? <ShiftSelectionErrorNotice message={error} /> : null}
     </View>
   );
 }

@@ -45,7 +45,7 @@ export function TemplatesManagerScreen() {
       <TabRootHeader
         accessory={
           <Pressable
-            accessibilityLabel={sorting ? "Sortieren beenden" : "Schichten sortieren"}
+            accessibilityLabel={sorting ? "Sortieren beenden" : "Vorlagen sortieren"}
             accessibilityRole="button"
             accessibilityState={{ selected: sorting }}
             onPress={() => {
@@ -74,7 +74,7 @@ export function TemplatesManagerScreen() {
           </Pressable>
         }
         surface="groupedBackground"
-        title="Schichten"
+        title="Dienstvorlagen"
       />
       <ScreenScrollView
         scrollRef={reorderScroll.scrollRef}
@@ -117,8 +117,8 @@ export function TemplatesManagerScreen() {
             <ShiftTemplateListCard testID="template-manager-list">
               {templates.length === 0 ? (
                 <EmptyState
-                  title="Keine Vorlagen"
-                  message="Lege häufige Dienste einmal an und stemple sie danach direkt in den Kalender."
+                  title="Noch keine Dienstvorlagen"
+                  message="Speichere häufige Dienste als Vorlage."
                 />
               ) : (
                 templates.map((template, index) => {
@@ -130,8 +130,6 @@ export function TemplatesManagerScreen() {
                         accessibilityLabel={`${template.name}, ${subtitle}, Vorlage bearbeiten`}
                         color={template.color}
                         disabled={busyTemplateId !== null}
-                        moreAccessibilityLabel={`${template.name} bearbeiten`}
-                        onMorePress={() => router.push(templateEditorRoute(template.id))}
                         onPress={() => router.push(templateEditorRoute(template.id))}
                         sorting={sorting}
                         subtitle={subtitle}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, View } from "react-native";
+import { Alert, Modal, View } from "react-native";
 import { DEFAULT_SHARING_RIGHTS, type SharingContentRights } from "@/domain/sharing-content";
 import { usePalette } from "@/theme/palette";
 import { SHARED_CALENDAR_COLORS, SPACING } from "@/theme/tokens";
@@ -8,7 +8,7 @@ import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 import { LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView, TabScreenHeader } from "@/ui/screen-layout";
-import { SharingCalendarManagement, confirmSharingAction } from "./sharing-calendar-management";
+import { SharingPublicationRecovery } from "./sharing-publication-recovery";
 import {
   SharingFlowLayout,
   SharingIconButton,
@@ -18,6 +18,7 @@ import {
 import { SharingActiveInvitationCard } from "./sharing-active-invitation-card";
 import { SharingCalendarColorPicker } from "./sharing-calendar-color-picker";
 import { SharingInvitationSend } from "./sharing-invitation-send";
+import { AccountSyncNotice } from "@/features/account/account-status";
 import {
   SharingParagraph,
   SharingStatus,
@@ -49,9 +50,9 @@ export function CalendarSharingScreen({
 }) {
   const palette = usePalette();
   const action = useSharingAction(controller);
-  const [mode, setMode] = useState<
-    "overview" | "setup" | "ready" | "member" | "manage" | "account" | "recovery"
-  >("overview");
+  const [mode, setMode] = useState<"overview" | "setup" | "ready" | "member" | "recovery">(
+    "overview",
+  );
   const [calendarId, setCalendarId] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
   const [invitation, setInvitation] = useState<SharingInvitation | null>(null);
@@ -79,8 +80,13 @@ export function CalendarSharingScreen({
       .filter((item) => !item.consumedAt && !item.revokedAt && Date.parse(item.expiresAt) > now)
       .map((item) => ({ calendar, item })),
   );
-  const status = <SharingStatus busy={action.busy} failed={action.failed} />;
-  const home = () => setMode("overview");
+  const status = (
+    <SharingStatus busy={action.busy} failed={action.failed} message={action.failureMessage} />
+  );
+  const home = () => {
+    setRecovery(null);
+    setMode("overview");
+  };
   const hasInvites = own.some((calendar) =>
     calendar.invites.some((item) => !item.consumedAt && !item.revokedAt),
   );
@@ -97,6 +103,7 @@ export function CalendarSharingScreen({
       setMode("overview");
       setCalendarId(null);
       setMemberId(null);
+      setRecovery(null);
     }
   }, [controller.status]);
   function invite(id?: string) {
@@ -115,10 +122,6 @@ export function CalendarSharingScreen({
     setAppointments(calendar?.selectedAppointmentIds ?? []);
     setInvitation(null);
     setMode("setup");
-  }
-  function manage(id: string) {
-    setCalendarId(id);
-    setMode("manage");
   }
   async function prepare(id: string) {
     const next = controller.contentRightsAvailable
@@ -171,11 +174,13 @@ export function CalendarSharingScreen({
       !controller.contentRightsAvailable
     )
       return;
-    void action.run(() =>
-      controller.setMemberRights!(selected.id, selectedMember.userId, {
-        ...memberRights,
-        [key]: value,
-      }),
+    void action.run(
+      () =>
+        controller.setMemberRights!(selected.id, selectedMember.userId, {
+          ...memberRights,
+          [key]: value,
+        }),
+      "Zugriffsrechte konnten nicht gespeichert werden. Versuche es erneut.",
     );
   }
   if (controller.status === "loading" || controller.status === "unavailable")
@@ -219,30 +224,28 @@ export function CalendarSharingScreen({
         />
         <ScreenScrollView surface="groupedBackground">
           {status}
-          <SectionHeader title="Gemeinsam den Alltag planen" />
+          <SectionHeader title="Gemeinsam planen" />
           <SharingParagraph>
-            Melde dich an, um deinen Dienstplan zu teilen oder eine Einladung anzunehmen.
+            Automatisch synchronisieren und deinen Dienstplan teilen.
           </SharingParagraph>
           <SignInActions controller={controller} run={action.run} busy={action.busy} />
-          <SharingParagraph>Dein eigener Kalender bleibt ohne Konto nutzbar.</SharingParagraph>
         </ScreenScrollView>
       </View>
     );
-  if (["manage", "account", "recovery"].includes(mode))
+  if (mode === "recovery")
     return (
-      <SharingFlowLayout title={mode === "account" ? "Konto" : "Freigabe verwalten"} onBack={home}>
-        <SharingCalendarManagement
-          controller={controller}
-          action={action}
-          mode={mode}
-          selected={selected}
-          recovery={recovery}
-          setRecovery={setRecovery}
-          setMode={setMode}
-          onInvite={invite}
-          onBack={home}
-          now={now}
-        />
+      <SharingFlowLayout title="Freigabe fortsetzen" onBack={home}>
+        {selected?.isOwner && recovery ? (
+          <SharingPublicationRecovery
+            controller={controller}
+            action={action}
+            calendarId={selected.id}
+            preview={recovery}
+            onBack={home}
+          />
+        ) : (
+          <SharingParagraph>Diese Freigabe ist nicht mehr verfügbar.</SharingParagraph>
+        )}
       </SharingFlowLayout>
     );
   if (mode === "member" && selected?.isOwner && selectedMember)
@@ -285,14 +288,19 @@ export function CalendarSharingScreen({
             }
           />
         </SurfaceCard>
-        <SharingParagraph>{`Diese Inhalte sind für ${selectedMember.displayName} freigegeben. Änderungen sind nicht erlaubt.`}</SharingParagraph>
+        <SharingParagraph>
+          {selectedMember.status === "PENDING"
+            ? `Nach deiner Bestätigung kann ${selectedMember.displayName} diese Inhalte ansehen.`
+            : `${selectedMember.displayName} kann diese Inhalte ansehen, aber nicht bearbeiten.`}
+        </SharingParagraph>
         {selectedMember.status === "PENDING" ? (
           <>
             <PrimaryButton
               disabled={action.busy}
               onPress={() =>
-                void action.run(() =>
-                  controller.setMember(selected.id, selectedMember.userId, "APPROVE"),
+                void action.run(
+                  () => controller.setMember(selected.id, selectedMember.userId, "APPROVE"),
+                  "Zugriff konnte nicht erlaubt werden. Versuche es erneut.",
                 )
               }
             >
@@ -304,7 +312,7 @@ export function CalendarSharingScreen({
                 void action.run(async () => {
                   await controller.setMember(selected.id, selectedMember.userId, "REJECT");
                   home();
-                })
+                }, "Anfrage konnte nicht abgelehnt werden. Versuche es erneut.")
               }
             >
               Anfrage ablehnen
@@ -315,17 +323,25 @@ export function CalendarSharingScreen({
             danger
             disabled={action.busy}
             onPress={() =>
-              confirmSharingAction(
+              Alert.alert(
                 `Freigabe für ${selectedMember.displayName} beenden?`,
-                () =>
-                  void action.run(async () => {
-                    await controller.setMember(selected.id, selectedMember.userId, "REVOKE");
-                    home();
-                  }),
+                "Deine eigenen Dienste bleiben erhalten.",
+                [
+                  { text: "Abbrechen", style: "cancel" },
+                  {
+                    text: "Zugriff entfernen",
+                    style: "destructive",
+                    onPress: () =>
+                      void action.run(async () => {
+                        await controller.setMember(selected.id, selectedMember.userId, "REVOKE");
+                        home();
+                      }, "Zugriff konnte nicht entfernt werden. Versuche es erneut."),
+                  },
+                ],
               )
             }
           >
-            Freigabe beenden
+            Zugriff entfernen
           </PrimaryButton>
         )}
         <SecondaryButton onPress={home}>Zurück zur Übersicht</SecondaryButton>
@@ -351,25 +367,37 @@ export function CalendarSharingScreen({
           title="Teilen"
           surface="groupedBackground"
           accessory={
-            <View style={{ flexDirection: "row", gap: SPACING.sm }}>
-              {onClose ? (
-                <SharingIconButton
-                  label="Zurück zum Kalender"
-                  icon="chevron-back"
-                  onPress={onClose}
-                />
-              ) : null}
+            onClose ? (
               <SharingIconButton
-                label="Neue Einladung erstellen"
-                icon="add"
-                disabled={action.busy}
-                onPress={() => invite()}
+                label="Zurück zum Kalender"
+                icon="chevron-back"
+                onPress={onClose}
               />
-            </View>
+            ) : undefined
           }
         />
         <ScreenScrollView surface="groupedBackground">
           {mode === "overview" ? status : null}
+          <AccountSyncNotice />
+          {own
+            .filter((calendar) => calendar.publicationPaused)
+            .map((calendar) => (
+              <SurfaceCard key={calendar.id}>
+                <RowButton
+                  title="Freigabe prüfen"
+                  subtitle={own.length > 1 ? calendar.name : undefined}
+                  disabled={action.busy}
+                  onPress={() =>
+                    void action.run(async () => {
+                      const preview = await controller.preparePublicationPreview(calendar.id);
+                      setCalendarId(calendar.id);
+                      setRecovery(preview);
+                      setMode("recovery");
+                    }, "Freigabe konnte nicht vorbereitet werden. Versuche es erneut.")
+                  }
+                />
+              </SurfaceCard>
+            ))}
           <View style={{ gap: SPACING.md }}>
             <SectionHeader title="Personen mit Zugriff auf meinen Kalender" />
             {members.length ? (
@@ -394,7 +422,7 @@ export function CalendarSharingScreen({
                 ))}
               </SurfaceCard>
             ) : (
-              <SharingParagraph>Noch niemand eingeladen.</SharingParagraph>
+              <SharingParagraph>Noch niemand beigetreten.</SharingParagraph>
             )}
           </View>
           {activeInvites.length ? (
@@ -437,11 +465,20 @@ export function CalendarSharingScreen({
                     }
                     onCopy={
                       link
-                        ? () => void action.run(() => controller.shareInvitation(link, "copy"))
+                        ? () =>
+                            void action.run(
+                              () => controller.shareInvitation(link, "copy"),
+                              controller.directCopyAvailable
+                                ? "Link konnte nicht kopiert werden. Versuche es erneut."
+                                : "Link konnte nicht geteilt werden. Versuche es erneut.",
+                            )
                         : undefined
                     }
                     onStop={() =>
-                      void action.run(() => controller.revokeInvite(calendar.id, item.id))
+                      void action.run(
+                        () => controller.revokeInvite(calendar.id, item.id),
+                        "Einladung konnte nicht gestoppt werden. Versuche es erneut.",
+                      )
                     }
                   />
                 );
@@ -466,19 +503,23 @@ export function CalendarSharingScreen({
                           value={calendar.color}
                           disabled={action.busy}
                           onChange={(color) =>
-                            void action.run(() => controller.setColor(calendar.id, color))
+                            void action.run(
+                              () => controller.setColor(calendar.id, color),
+                              "Farbe konnte nicht gespeichert werden. Versuche es erneut.",
+                            )
                           }
                         />
                       }
-                      accessibilityLabel={`${calendar.name} ansehen`}
-                      onPress={() => manage(calendar.id)}
                       trailing={
                         <LabeledSwitch
                           label={`${calendar.name} anzeigen`}
                           value={calendar.visible}
                           disabled={action.busy}
                           onValueChange={(on) =>
-                            void action.run(() => controller.setVisible(calendar.id, on))
+                            void action.run(
+                              () => controller.setVisible(calendar.id, on),
+                              "Anzeige konnte nicht gespeichert werden. Versuche es erneut.",
+                            )
                           }
                         />
                       }
@@ -488,23 +529,6 @@ export function CalendarSharingScreen({
               </SurfaceCard>
             </View>
           ) : null}
-          <SurfaceCard>
-            {own.map((calendar) => (
-              <RowButton
-                key={calendar.id}
-                title={calendar.name}
-                subtitle={calendar.publicationPaused ? "Freigabe prüfen" : "Freigabe verwalten"}
-                accessibilityLabel={`${calendar.name} verwalten`}
-                onPress={() => manage(calendar.id)}
-              />
-            ))}
-            <RowButton
-              title="Konto"
-              accessibilityLabel="Konto"
-              subtitle={controller.account?.displayName}
-              onPress={() => setMode("account")}
-            />
-          </SurfaceCard>
         </ScreenScrollView>
       </View>
       <Modal
@@ -524,9 +548,14 @@ export function CalendarSharingScreen({
                   action.busy ||
                   (!shifts && !(controller.contentRightsAvailable && includeAppointments))
                 }
-                onPress={() => void action.run(next)}
+                onPress={() =>
+                  void action.run(
+                    next,
+                    "Einladung konnte nicht erstellt werden. Versuche es erneut.",
+                  )
+                }
               >
-                Weiter
+                Einladung erstellen
               </PrimaryButton>
             ) : undefined
           }
@@ -582,7 +611,12 @@ export function CalendarSharingScreen({
                 />
               </SurfaceCard>
               <SharingParagraph>
-                Wähle aus, was andere sehen können. Andere können keine Änderungen vornehmen.
+                {controller.contentRightsAvailable
+                  ? "Wer den Link erhält, kann diese Inhalte ansehen, aber nicht bearbeiten."
+                  : "Andere können diese Inhalte ansehen, aber nicht bearbeiten."}
+              </SharingParagraph>
+              <SharingParagraph>
+                Die ausgewählten Inhalte werden dafür online gespeichert.
               </SharingParagraph>
               {!controller.contentRightsAvailable ? (
                 <SharingParagraph>Notizen werden derzeit nicht geteilt.</SharingParagraph>
@@ -593,7 +627,10 @@ export function CalendarSharingScreen({
               url={invitation.url}
               busy={action.busy}
               onSend={(channel) =>
-                void action.run(() => controller.shareInvitation(invitation, channel))
+                void action.run(
+                  () => controller.shareInvitation(invitation, channel),
+                  "Einladung konnte nicht geteilt werden. Versuche es erneut.",
+                )
               }
             />
           ) : (

@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 
@@ -89,10 +89,7 @@ describe("TemplatesManagerScreen", () => {
       height: 38,
       borderRadius: RADII.pill,
     });
-    expect(screen.getByRole("button", { name: "Früh bearbeiten" })).toHaveStyle({
-      width: 44,
-      height: 44,
-    });
+    expect(screen.queryByRole("button", { name: "Früh bearbeiten" })).toBeNull();
     expect(screen.queryByTestId("template-manager-add-button")).toBeNull();
     expect(screen.getByTestId("template-manager-add-row")).toHaveStyle({ minHeight: 64 });
     await fireEvent.press(screen.getByRole("button", { name: "Neue Dienstvorlage erstellen" }));
@@ -107,7 +104,7 @@ describe("TemplatesManagerScreen", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Nach unten" })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Schichten sortieren" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlagen sortieren" }));
     expect(screen.getByTestId("template-manager-sort-button")).toHaveStyle({
       backgroundColor: LIGHT_PALETTE.sortAction,
     });
@@ -120,14 +117,23 @@ describe("TemplatesManagerScreen", () => {
     expect(screen.getByTestId("template-manager-add-row")).toBeVisible();
   });
 
-  it("opens the editor from the more action without exposing inline deletion", async () => {
+  it("has one editing action per template row without inline deletion", async () => {
     const screen = await render(
       <FeedbackProvider>
         <TemplatesManagerScreen />
       </FeedbackProvider>,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Früh bearbeiten" }));
+    for (const id of ["early", "late"]) {
+      expect(
+        within(screen.getByTestId(`template-manager-row-${id}`)).getAllByRole("button"),
+      ).toHaveLength(1);
+    }
+    expect(screen.queryByRole("button", { name: "Früh bearbeiten" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Spät bearbeiten" })).toBeNull();
+    await fireEvent.press(
+      within(screen.getByTestId("template-manager-row-early")).getByRole("button"),
+    );
 
     expect(mockPush).toHaveBeenCalledTimes(1);
     expect(mockPush).toHaveBeenCalledWith({

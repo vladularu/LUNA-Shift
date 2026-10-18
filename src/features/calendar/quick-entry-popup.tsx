@@ -447,7 +447,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                 <Pressable
                   key={action.key}
                   ref={!visibleEntries.length && index === 0 ? dialogHeadingRef : undefined}
-                  accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Schicht"} hinzufügen`}
+                  accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Dienst"} hinzufügen`}
                   accessibilityHint={compactDate(date)}
                   accessibilityRole="button"
                   accessibilityState={{ disabled: busy }}
@@ -493,7 +493,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                       fontWeight: "400",
                     }}
                   >
-                    {action.kind === "APPOINTMENT" ? "Termin" : "Schicht"}
+                    {action.kind === "APPOINTMENT" ? "Termin" : "Dienst"}
                   </Text>
                 </Pressable>
               ))}

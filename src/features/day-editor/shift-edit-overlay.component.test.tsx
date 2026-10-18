@@ -185,9 +185,9 @@ describe("ShiftEditOverlay", () => {
     await fireEvent.press(screen.getByLabelText("Auswahl schließen"));
     expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     expect(screen.getByTestId("shift-notification-presets")).toBeTruthy();
-    expect(screen.getByRole("radio", { name: "Zum Ereigniszeitpunkt" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Zum Beginn" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "5 Minuten vor Beginn" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "1 Stunde vor Beginn" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "1 Tag vor Beginn" })).toBeTruthy();
@@ -255,7 +255,7 @@ describe("ShiftEditOverlay", () => {
     try {
       const { screen, props } = await renderOverlay();
       await fireEvent.press(screen.getByRole("button", { name: "Pause: 0 Minuten" }));
-      await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
 
       expect(props.onBreakPress).toHaveBeenCalledTimes(1);
       expect(props.onNotificationPress).toHaveBeenCalledTimes(1);
@@ -316,8 +316,11 @@ describe("ShiftEditOverlay", () => {
     const openSettings = jest.spyOn(Linking, "openSettings").mockResolvedValue();
     const { screen, props } = await renderOverlay();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
-    const settingsButton = await screen.findByRole("button", { name: "iOS Einstellungen" });
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
+    const settingsButton = await screen.findByRole("button", { name: "iOS-Einstellungen" });
+    expect(
+      screen.getByText("Aktiviere Mitteilungen für LUNA in den iOS-Einstellungen."),
+    ).toBeTruthy();
     await fireEvent.press(screen.getByRole("radio", { name: "1 Stunde vor Beginn" }));
 
     expect(props.onNotificationChange).toHaveBeenCalledWith({
@@ -338,7 +341,7 @@ describe("ShiftEditOverlay", () => {
       .mockRejectedValue(new Error("Native bridge unavailable"));
     const { screen, props } = await renderOverlay();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     await waitFor(() => expect(Notifications.getPermissionsAsync).toHaveBeenCalledTimes(1));
     await fireEvent.press(screen.getByRole("radio", { name: "5 Minuten vor Beginn" }));
 
@@ -367,7 +370,7 @@ describe("ShiftEditOverlay", () => {
     } as Notifications.NotificationPermissionsStatus);
     const { screen, props } = await renderOverlay();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     await screen.findByTestId("shift-notification-presets");
     await fireEvent.press(screen.getByRole("radio", { name: "5 Minuten vor Beginn" }));
 
@@ -381,10 +384,29 @@ describe("ShiftEditOverlay", () => {
     await waitFor(() => expect(screen.queryByTestId("shift-notification-presets")).toBeNull());
   });
 
+  it("keeps a zero-offset end reminder clear and preserves its reference when applied", async () => {
+    const notification = {
+      amount: 0,
+      unit: "MINUTE" as const,
+      direction: "BEFORE" as const,
+      reference: "END" as const,
+    };
+    const { screen, props } = await renderOverlay({ notification });
+
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Zum Ende" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Benutzerdefiniert" }));
+
+    expect(
+      within(screen.getByTestId("shift-notification-custom")).getByText("Zum Ende"),
+    ).toBeVisible();
+    await fireEvent.press(screen.getByRole("button", { name: "Fertig" }));
+    expect(props.onNotificationChange).toHaveBeenCalledWith(notification);
+  });
+
   it("discards custom changes when cancelling", async () => {
     const { screen, props } = await renderOverlay();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Benutzerdefiniert" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Abstand: 30" }));
     await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));

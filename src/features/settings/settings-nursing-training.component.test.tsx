@@ -1,6 +1,7 @@
-import type { UserProfile } from "@/domain/types";
+import type { SaveProfileInput, UserProfile } from "@/domain/types";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -10,7 +11,7 @@ import {
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<() => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<void>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -143,25 +144,42 @@ describe("simple nursing training salary form", () => {
     async (tariffRegion) => {
       const saved = { ...trainee, sector: "BT_B" as const, tariffRegion };
       mockProfile = { ...baseProfile, nursingTrainingTariff: saved };
-      const screen = await render(editor());
+      let screen = await render(editor());
       expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
       expect(
         screen.getByRole("button", { name: "Ausbildungsjahr: 2. Ausbildungsjahr" }),
       ).toBeTruthy();
       expect(screen.getAllByText("39 Std.").length).toBeGreaterThan(0);
+      const firstBackCount = jest.mocked(router.back).mock.calls.length;
       await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(firstBackCount + 1));
+      expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
       expect(mockUpdateProfile).toHaveBeenLastCalledWith(
         expect.objectContaining({ nursingTrainingTariff: saved }),
       );
+      mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[0][0] };
+      await screen.unmount();
+      screen = await render(editor());
+      expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
       await select(screen, "Tarifbereich", "Krankenhaus · BT-K");
       expect(screen.getByRole("button", { name: /^Tarifregion:/ })).toBeTruthy();
       expect(screen.getAllByText("38,5 Std.").length).toBeGreaterThan(0);
+      const secondBackCount = jest.mocked(router.back).mock.calls.length;
       await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount + 1));
+      expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
       expect(mockUpdateProfile).toHaveBeenLastCalledWith(
         expect.objectContaining({ nursingTrainingTariff: { ...saved, sector: "BT_K" } }),
       );
+      mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[1][0] };
+      await screen.unmount();
+      screen = await render(editor());
+      expect(screen.getByRole("button", { name: /^Tarifregion:/ })).toBeTruthy();
+      const thirdBackCount = jest.mocked(router.back).mock.calls.length;
       await select(screen, "Tarifbereich", "Pflege · BT-B");
       expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
+      expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
+      expect(router.back).toHaveBeenCalledTimes(thirdBackCount + 1);
     },
   );
   it("restores the saved BT-B region when changing a trainee to the P tariff", async () => {

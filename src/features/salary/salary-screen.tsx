@@ -107,7 +107,7 @@ export function SalaryScreen() {
               Für diesen Monat nicht verfügbar
             </Text>
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-              Für den gewählten Zeitraum liegt kein unterstützter Tarifstand vor.
+              Für diesen Zeitraum fehlen Tarifdaten.
             </Text>
           </SurfaceCard>
         ) : !manual && !monthShifts.length ? (

@@ -80,20 +80,23 @@ describe("LocationPickerScreen", () => {
     consumeLocationSelection();
   });
 
-  it("matches the compact reference and saves a custom location first", async () => {
+  it("returns a name-only location draft from the compact picker", async () => {
     const screen = await render(<LocationPickerScreen />);
 
     expect(screen.getByTestId("location-picker-header")).toHaveStyle({ minHeight: 64 });
     expect(screen.getByTestId("location-picker-input-row")).toHaveStyle({ minHeight: 60 });
     expect(screen.getByRole("header", { name: "Ort" })).toBeTruthy();
     const input = screen.getByLabelText("Ort oder Adresse");
-    expect(input.props.placeholder).toBe("Gib einen Ort ein");
+    expect(input.props.placeholder).toBe("Ort oder Adresse");
     expect(input.props.returnKeyType).toBe("done");
 
     await fireEvent.changeText(input, "Station 3");
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Station 3 als eigenen Ort verwenden" }),
+    const customLocation = screen.getByRole("button", { name: "„Station 3“ als Ort übernehmen" });
+    expect(customLocation).toHaveProp(
+      "accessibilityHint",
+      "Übernimmt die Eingabe ohne Kartenposition",
     );
+    await fireEvent.press(customLocation);
 
     expect(consumeLocationSelection()).toEqual({ name: "Station 3" });
     expect(router.back).toHaveBeenCalledTimes(1);
@@ -187,11 +190,11 @@ describe("LocationPickerScreen", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("alert", {
-          name: "Adresse konnte nicht geladen werden. Du kannst den Ort als freien Ort übernehmen.",
+          name: "Adresse nicht verfügbar. Übernimm nur den Ortsnamen.",
         }),
       ).toBeTruthy(),
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Hepp als eigenen Ort verwenden" }));
+    await fireEvent.press(screen.getByRole("button", { name: "„Hepp“ als Ort übernehmen" }));
     expect(consumeLocationSelection()).toEqual({ name: "Hepp" });
   });
 

@@ -200,7 +200,7 @@ export function ShiftEditOverlay({
             </EntryEditGroup>
             <EntryEditGroup testID="shift-edit-reminder-group">
               <ValueRow
-                label="Benachrichtigung"
+                label="Erinnerung"
                 onPress={openNotificationPicker}
                 separator={shiftIsTimed}
                 value={notificationLabel(notification)}
@@ -213,7 +213,7 @@ export function ShiftEditOverlay({
                     setPopup(null);
                     onAlarmPress();
                   }}
-                  value={alarmEnabled ? "Zum Beginn" : "Aus"}
+                  value={alarmEnabled ? "Zum Dienstbeginn" : "Aus"}
                 />
               ) : null}
             </EntryEditGroup>

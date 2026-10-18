@@ -9,22 +9,29 @@ import {
 const title = "Frühdienst auf der interdisziplinären Station";
 const subtitle = "07:00–15:12 · 30 Min. Pause · Übergabe auf Station 3";
 
-async function renderRow(disabled = false) {
+async function renderRow(disabled = false, withMoreAction = true) {
   const onPress = jest.fn();
   const onMorePress = jest.fn();
+  const props = {
+    accessibilityLabel: `${title}, ${subtitle}, Vorlage bearbeiten`,
+    color: "#33A889",
+    disabled,
+    onPress,
+    subtitle,
+    symbol: "sunny-outline",
+    testID: "template-row",
+    title,
+  };
   const screen = await render(
-    <ShiftTemplateListRow
-      accessibilityLabel={`${title}, ${subtitle}, Vorlage bearbeiten`}
-      color="#33A889"
-      disabled={disabled}
-      moreAccessibilityLabel="Vorlage verwalten"
-      onMorePress={onMorePress}
-      onPress={onPress}
-      subtitle={subtitle}
-      symbol="sunny-outline"
-      testID="template-row"
-      title={title}
-    />,
+    withMoreAction ? (
+      <ShiftTemplateListRow
+        {...props}
+        moreAccessibilityLabel="Vorlage verwalten"
+        onMorePress={onMorePress}
+      />
+    ) : (
+      <ShiftTemplateListRow {...props} />
+    ),
   );
   return { screen, onPress, onMorePress };
 }
@@ -70,12 +77,22 @@ describe("shift template list text reflow", () => {
     expect(onMorePress).not.toHaveBeenCalled();
   });
 
+  it("offers only the row action when no separate action is supplied", async () => {
+    const { screen, onPress, onMorePress } = await renderRow(false, false);
+    const buttons = screen.getAllByRole("button");
+
+    expect(buttons).toHaveLength(1);
+    await fireEvent.press(buttons[0]);
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onMorePress).not.toHaveBeenCalled();
+  });
+
   it("bounds the add label while allowing the row to grow and keeping its action", async () => {
     const onPress = jest.fn();
     const screen = await render(
       <ShiftTemplateAddRow accessibilityLabel="Neue Dienstvorlage erstellen" onPress={onPress} />,
     );
-    const label = screen.getByText("Schicht hinzufügen");
+    const label = screen.getByText("Dienstvorlage erstellen");
     expect(label).toHaveStyle({ flex: 1, minWidth: 0 });
     expect(label.props.numberOfLines).toBeUndefined();
     expect(label).toHaveProp("maxFontSizeMultiplier", 0);

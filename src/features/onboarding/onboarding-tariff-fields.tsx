@@ -20,11 +20,13 @@ export function OnboardingTariffFields({
   onChange,
   errors,
   federalState,
+  showTariffSelector = true,
 }: {
   readonly selection: OnboardingTariffSelection;
   readonly onChange: (value: OnboardingTariffSelection) => void;
   readonly errors: OnboardingTariffErrors;
   readonly federalState: FederalState | null;
+  readonly showTariffSelector?: boolean;
 }) {
   const p = useOnboardingPalette();
   const set = <K extends keyof OnboardingTariffSelection>(
@@ -40,13 +42,15 @@ export function OnboardingTariffFields({
   const mismatch = onboardingTariffRegionMismatch(selection.mode, federalState);
   return (
     <View style={{ gap: SPACING.lg }}>
-      <SelectField
-        label="Tarifvertrag"
-        value={selection.mode}
-        options={modes}
-        error={errors.tariff}
-        onChange={(mode) => onChange({ ...EMPTY_TARIFF_SELECTION, mode })}
-      />
+      {showTariffSelector ? (
+        <SelectField
+          label="Tarifvertrag"
+          value={selection.mode}
+          options={modes}
+          error={errors.tariff}
+          onChange={(mode) => onChange({ ...EMPTY_TARIFF_SELECTION, mode })}
+        />
+      ) : null}
       {selection.mode ? (
         <>
           {isTrainingTariff(selection.mode) ? (

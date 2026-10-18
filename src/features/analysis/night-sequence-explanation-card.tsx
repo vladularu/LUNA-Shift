@@ -23,7 +23,7 @@ interface ExplanationProps {
   readonly month: string;
   readonly timeZone: string;
   readonly explanation?: NightSequenceExplanation;
-  readonly estimateNote?: string;
+  readonly estimateNote?: string | null;
 }
 
 function Explanation({ entries, month, timeZone, explanation, estimateNote }: ExplanationProps) {
@@ -51,8 +51,12 @@ function Explanation({ entries, month, timeZone, explanation, estimateNote }: Ex
               "Urlaub oder Krankheit sind eingetragen. Daraus leiten wir hier keinen Wegfall der Zulage ab.",
             ]
           : []),
-        estimateNote ??
-          "Kalenderbasierte Schätzung, kein bestätigter Monatsanspruch. Eine manuelle Festlegung bleibt maßgeblich.",
+        ...(estimateNote === null
+          ? []
+          : [
+              estimateNote ??
+                "Kalenderbasierte Schätzung, kein bestätigter Monatsanspruch. Eine manuelle Festlegung bleibt maßgeblich.",
+            ]),
       ]
     : [
         "Die Erklärung ist gerade nicht verfügbar. Dein Gehaltswert und deine Angaben bleiben unverändert.",

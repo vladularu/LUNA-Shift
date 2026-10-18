@@ -40,7 +40,7 @@ const DEFAULT_NOTIFICATION: EntryNotification = {
 
 const PRESETS = [
   { label: "Keine", value: null },
-  { label: "Zum Ereigniszeitpunkt", value: DEFAULT_NOTIFICATION },
+  { label: "Zum Beginn", value: DEFAULT_NOTIFICATION },
   {
     label: "5 Minuten vor Beginn",
     value: { ...DEFAULT_NOTIFICATION, amount: 5 },
@@ -104,7 +104,7 @@ function isPreset(value: EntryNotification | null): boolean {
 }
 
 function customSummary(value: EntryNotification): string {
-  return value.amount === 0 ? "Zum Ereigniszeitpunkt" : notificationLabel(value);
+  return notificationLabel(value);
 }
 
 function PresetRow({
@@ -237,7 +237,7 @@ function CustomNotificationView({
     >
       <View style={styles.customHeader}>
         <Pressable
-          accessibilityLabel="Benutzerdefinierte Benachrichtigung schließen"
+          accessibilityLabel="Eigene Erinnerung schließen"
           accessibilityRole="button"
           onPress={onCancel}
           style={({ pressed }) => [
@@ -255,7 +255,7 @@ function CustomNotificationView({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={[styles.customTitle, { color: palette.text }]}
         >
-          Benachrichtigung
+          Erinnerung
         </Text>
         <View style={styles.headerBalance} />
       </View>
@@ -409,7 +409,7 @@ export function ShiftNotificationOverlay({
         style={[StyleSheet.absoluteFill, { backgroundColor: palette.overlay }]}
       >
         <Pressable
-          accessibilityLabel="Benachrichtigung schließen"
+          accessibilityLabel="Erinnerung schließen"
           accessibilityRole="button"
           onPress={onClose}
           style={StyleSheet.absoluteFill}
@@ -441,8 +441,7 @@ export function ShiftNotificationOverlay({
               maxFontSizeMultiplier={TEXT_MAX_SCALE}
               style={[styles.permissionText, { color: palette.textSecondary }]}
             >
-              Benachrichtigungen sind in iOS deaktiviert. Aktiviere sie, damit Erinnerungen
-              erscheinen.
+              Aktiviere Mitteilungen für LUNA in den iOS-Einstellungen.
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -455,7 +454,7 @@ export function ShiftNotificationOverlay({
               ]}
             >
               <Text style={[styles.settingsLabel, { color: palette.onAccent }]}>
-                iOS Einstellungen
+                iOS-Einstellungen
               </Text>
             </Pressable>
           </View>

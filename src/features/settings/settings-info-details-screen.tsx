@@ -25,35 +25,40 @@ interface InfoContent {
 const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
   STORAGE: {
     title: "Lokale Datenspeicherung",
-    intro: `Die ${PRODUCT_NAME}-Kernfunktionen arbeiten offline und speichern deine Angaben auf diesem Gerät.`,
+    intro:
+      "LUNA funktioniert offline und ohne Konto. Deine Daten werden auf diesem Gerät gespeichert.",
     items: [
       {
         title: "Kein Konto erforderlich",
-        text: "Dienste, Termine, Tarifprofil und Einstellungen liegen in einer lokalen SQLite-Datenbank.",
+        text: "Dienste, Termine, Tarifprofil und Einstellungen sind auch ohne Anmeldung offline nutzbar.",
       },
       {
         title: "Kalender teilen ist optional",
-        text: "Ein Konto wird erst zum Teilen oder Annehmen einer Einladung benötigt. Empfänger können bestätigte Freigaben nur ansehen. Du kannst Personen entfernen oder die Freigabe löschen. Fremde Kalender sind höchstens 24 Stunden offline sichtbar und werden bei bekanntem Widerruf sofort entfernt.",
+        text: "Zum Teilen oder Annehmen einer Einladung brauchst du ein Konto. Andere können die Inhalte nur ansehen. Deine Freigaben kannst du jederzeit beenden. Empfangene Kalender sind offline höchstens 24 Stunden sichtbar. Erkennt LUNA einen Widerruf, entfernt sie den Kalender sofort.",
       },
       {
-        title: "Backup bewusst selbst ablegen",
-        text: "Die optionale Kalenderfreigabe ist kein vollständiges Cloud-Backup. Unter Mehr → Datensicherung kannst du eine lokale Backup-Datei erstellen, vor dem Wiederherstellen prüfen und außerhalb der App sicher ablegen. Eine Deinstallation kann sonst lokale Daten entfernen.",
+        title: "Privates Cloud-Konto ist optional",
+        text: "Nach deiner ausdrücklichen Auswahl sichert und synchronisiert dein Cloud-Konto die eigenen Daten, einschließlich Notizen, Gehalts- und Steuerangaben sowie Kalenderfoto. Andere LUNA-Nutzer haben darauf keinen Zugriff. Die Daten sind bei der Übertragung und beim Anbieter verschlüsselt. Die aktuelle Sicherung bleibt erhalten, dazu höchstens eine ältere Sicherung pro Tag für die letzten 30 Kalendertage.",
+      },
+      {
+        title: "Backup selbst ablegen",
+        text: "Unter Mehr → Datensicherung kannst du zusätzlich eine lokale Backup-Datei erstellen, vor dem Wiederherstellen prüfen und außerhalb der App sicher ablegen. Eine Deinstallation kann lokale Daten löschen.",
       },
       {
         title: "Löschen",
-        text: "Gelöschte Dienste und Termine verschwinden sofort aus der App. Der verschlüsselte Datensatz bleibt mindestens 90 Tage lokal gespeichert. Bei einer offenen Kalenderveröffentlichung wartet die Bereinigung zusätzlich auf die Serverbestätigung. Gelöschte Vorlagen bleiben länger erhalten, solange vorhandene Dienste oder ein offenes Testlabor-Backup darauf verweisen.",
+        text: "Gelöschte Dienste und Termine sind sofort ausgeblendet. Ihre Daten bleiben mindestens 90 Tage verschlüsselt auf dem Gerät. Bei ausstehender Freigabeübertragung warten sie zusätzlich auf die Serverbestätigung. Vorlagen bleiben gespeichert, solange Dienste oder ein offenes Testlabor-Backup sie benötigen.",
       },
       {
         title: "Ortssuche",
-        text: `Ab drei Zeichen wird deine Suche online über den Kartendienst des Betriebssystems aufgelöst: auf iOS über Apple, auf Android über den systemseitigen Geocoder. ${PRODUCT_NAME} fragt dabei nicht deine aktuelle GPS-Position ab. Android kann für das Geocoding trotzdem eine Standortberechtigung verlangen. Der Suchtext geht an den Kartendienst und nicht an einen ${PRODUCT_NAME}-Server.`,
+        text: "Ab drei Zeichen geht deine Suche an Apple (iOS) oder den systemseitigen Geocoder (Android), nicht an einen LUNA Shift-Server. Deine aktuelle GPS-Position wird nicht abgefragt. Android kann dafür trotzdem eine Standortberechtigung verlangen.",
       },
       {
         title: "Karten",
-        text: `Die Vorschau lädt auf iOS Kartendaten von Apple und auf Android von Google. Wenn du einen Ort in einer Karten-App öffnest, werden die gespeicherten Koordinaten an Apple Karten oder Google Maps übergeben. Ortsname, Adresse und Koordinaten bleiben zusätzlich verschlüsselt in deiner lokalen ${PRODUCT_NAME}-Datenbank.`,
+        text: "Die Vorschau lädt Karten von Apple (iOS) oder Google (Android). Beim Öffnen einer Karten-App gehen die Koordinaten an Apple Karten oder Google Maps. Ortsname, Adresse und Koordinaten bleiben außerdem verschlüsselt auf deinem Gerät.",
       },
       {
         title: "Datenschutz",
-        text: `${PRODUCT_NAME} überträgt Notizen, Orte, Gehalts- und Steuerdaten nicht in die Kalenderfreigabe. Erst nach Anmeldung und bestätigter Vorschau werden ausgewählte Kalenderangaben an die separate LUNA-Cloud übertragen. Ohne Freigabe bleibt der Dienstplan lokal. Für die Online-Suche und Kartendarstellung gelten zusätzlich die Datenschutzbedingungen von Apple beziehungsweise Google.`,
+        text: "Nur von dir ausgewählte Dienste, Termine und Notizen werden beim Erstellen der Einladung in der LUNA-Cloud gespeichert. Orte, Gehalts- und Steuerdaten werden nicht in der Kalenderfreigabe geteilt. Die private Cloud-Sicherung umfasst diese eigenen Daten und wird erst nach deiner ausdrücklichen Auswahl aktiviert. Für Ortssuche und Karten gelten auch die Datenschutzbedingungen von Apple beziehungsweise Google.",
       },
     ],
   },
@@ -124,7 +129,7 @@ const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
   },
   ABOUT: {
     title: `Über ${PRODUCT_NAME}`,
-    intro: "Ein unabhängiger, offline-first Dienstplaner für Schichtarbeit im Gesundheitswesen.",
+    intro: "Dein Dienstplaner für Schichtarbeit.",
     items: [
       {
         title: "Version",
@@ -132,7 +137,7 @@ const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
       },
       {
         title: "Produktprinzip",
-        text: "Schnelle Dienstplanung, nachvollziehbare Berechnungen und möglichst wenige dauerhaft sichtbare Bedienelemente.",
+        text: "Dienste einfach planen und Berechnungen nachvollziehen.",
       },
       {
         title: "Hinweis",

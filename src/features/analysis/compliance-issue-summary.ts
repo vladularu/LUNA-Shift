@@ -1,87 +1,54 @@
+import {
+  validComplianceIssueFacts,
+  type ComplianceIssueFacts,
+} from "@/domain/compliance-issue-facts";
 import type { ComplianceIssue } from "@/domain/types";
+import { legacyComplianceIssueSummary } from "./compliance-issue-legacy";
 
-const hours = (value: string) => value.replace(".", ",").replace(/,0$/, "");
+// Match the existing engine's two-decimal display; raw minutes stay unchanged.
+export const complianceHours = (minutes: number) =>
+  String(Math.round((minutes / 60) * 100) / 100).replace(".", ",");
+export const complianceLimitHours = (minutes: number) => String(minutes / 60).replace(".", ",");
 
-// Display only: keep complete explanations in the domain model and the disclosure.
-// Match known engine wording; preserve unfamiliar wording in full.
+export function complianceCompensationSummary(
+  facts: Extract<ComplianceIssueFacts, { rule: "ARBZG_5_REST_11H" }>,
+): string {
+  const [year, month, day] = facts.compensationDeadline.split("-");
+  return `Ausgleich: mindestens ${complianceLimitHours(facts.compensationMinutes)} Std. Ruhezeit bis ${day}.${month}.${year}.`;
+}
+
 export function complianceIssueSummary(issue: ComplianceIssue): string {
-  const text = issue.description;
-  let match: RegExpMatchArray | null;
-  switch (issue.rule) {
+  if (!("facts" in issue)) return legacyComplianceIssueSummary(issue);
+  const facts = validComplianceIssueFacts(issue.facts, issue.rule);
+  if (!facts) return issue.description;
+  switch (facts.rule) {
     case "ARBZG_5_REST_10H":
-      match = text.match(
-        /^Zwischen den Diensten liegen nur (\d+(?:[.,]\d+)?) h Ruhezeit\.(?: Damit wird auch die für Krankenhäuser und Pflegeeinrichtungen mögliche Verkürzung auf \d+(?:[.,]\d+)? Stunden unterschritten\.)?$/,
-      );
-      if (match) return `Nur ${hours(match[1])} Std. Ruhezeit.`;
-      break;
+      return `Nur ${complianceHours(facts.restMinutes)} Std. Ruhezeit.`;
     case "ARBZG_5_REST_11H":
-      match = text.match(
-        /^Die Ruhezeit beträgt (\d+(?:[.,]\d+)?) h\. In den eingetragenen Diensten wurde bis (.+?) keine noch unbenutzte Ruhezeit von mindestens (\d+(?:[.,]\d+)?) Stunden als Ausgleich erkannt\.$/,
-      );
-      if (match)
-        return `Ruhezeit: ${hours(match[1])} Std. · Ausgleich: mindestens ${hours(match[3])} Std. Ruhezeit bis ${match[2]}.`;
-      break;
+      return `Ruhezeit: ${complianceHours(facts.restMinutes)} Std. · ${complianceCompensationSummary(facts)}`;
     case "ARBZG_4_BREAK":
-      match = text.match(
-        /^Erfasst sind (\d+) Minuten Pause; erforderlich sind mindestens (\d+) Minuten\.$/,
-      );
-      if (match) return `Pause: ${match[1]} Min. · nötig: ${match[2]} Min.`;
-      break;
+      return `Pause: ${facts.recordedBreakMinutes} Min. · nötig: ${facts.requiredBreakMinutes} Min.`;
     case "ARBZG_4_INTERRUPTION":
-      match = text.match(
-        /^(\d+) Minuten zwischen Diensten könnten die fehlende Pause abdecken\. Bitte die tatsächliche Pausenlage prüfen\.$/,
-      );
-      if (match) return `Pausen prüfen: ${match[1]} Min. zwischen Diensten.`;
-      break;
+      return `Pausen prüfen: ${facts.interruptionMinutes} Min. zwischen Diensten.`;
     case "ARBZG_3_MAX_10H":
-      match = text.match(
-        /^(\d+(?:[.,]\d+)?) h Nettoarbeitszeit überschreiten die (\d+(?:[.,]\d+)?)-Stunden-Grenze\.$/,
-      );
-      if (match) return `${hours(match[1])} Std. Arbeitszeit · Grenze: ${hours(match[2])} Std.`;
-      break;
+      return `${complianceHours(facts.netMinutes)} Std. Arbeitszeit · Grenze: ${complianceLimitHours(facts.maximumMinutes)} Std.`;
     case "ARBZG_3_OVER_8H":
-      match = text.match(
-        /^(\d+(?:[.,]\d+)?) h Nettoarbeitszeit erfordern einen zulässigen Ausgleichszeitraum\.$/,
-      );
-      if (match) return `${hours(match[1])} Std. Arbeitszeit · Ausgleich nötig.`;
-      break;
+      return `${complianceHours(facts.netMinutes)} Std. Arbeitszeit · Ausgleich nötig.`;
     case "ARBZG_4_CONTINUOUS":
-      if (
-        /^Ein zusammenhängender Arbeitsblock überschreitet .+ Stunden ohne dokumentierte Ruhepause\.$/.test(
-          text,
-        )
-      )
-        return "Pausen im Arbeitsblock prüfen.";
-      break;
+      return "Pausen im Arbeitsblock prüfen.";
     case "TIME_PLAUSIBILITY":
-      if (text === "Die eingetragene Pause ist länger als die gesamte Brutto-Dienstzeit.")
-        return "Pause und Dienstzeiten prüfen.";
-      break;
+      return "Pause und Dienstzeiten prüfen.";
     case "TIME_GROSS_OVER_16H":
-      match = text.match(
-        /^Die Brutto-Dienstzeit beträgt (\d+(?:[.,]\d+)?) h und sollte auf einen Eingabefehler geprüft werden\.$/,
-      );
-      if (match) return `${hours(match[1])} Std. Dienstzeit · Eingabe prüfen.`;
-      break;
+      return `${complianceHours(facts.grossMinutes)} Std. Dienstzeit · Eingabe prüfen.`;
     case "PLANNING_7_DAYS":
-      match = text.match(/^(\d+) aufeinanderfolgende Arbeitstage wurden erkannt\.$/);
-      if (match) return `${match[1]} Arbeitstage in Folge.`;
-      break;
+      return `${facts.count} Arbeitstage in Folge.`;
     case "PLANNING_NIGHT_SERIES":
-      match = text.match(/^(\d+) aufeinanderfolgende Nachtdienste wurden erkannt\.$/);
-      if (match) return `${match[1]} Nachtdienste in Folge.`;
-      break;
+      return `${facts.count} Nachtdienste in Folge.`;
     case "PLANNING_LATE_EARLY":
-      if (
-        text ===
-        "Die gesetzliche Ruhezeit ist eingehalten; die kurze Vorwärtsrotation sollte dennoch geprüft werden."
-      )
-        return "Ruhezeit eingehalten · Dienstfolge prüfen.";
-      break;
+      return "Ruhezeit eingehalten · Dienstfolge prüfen.";
     case "PLANNING_WEEKENDS":
-      if (text === "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.")
-        return "Prüfen, ob jedes zweite Wochenende frei sein sollte.";
-      break;
+      return "Prüfen, ob jedes zweite Wochenende frei sein sollte.";
+    default:
+      return issue.description;
   }
-  return text;
 }

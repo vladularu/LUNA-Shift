@@ -20,7 +20,6 @@ import {
   selectAllowanceShifts,
   selectMonthlyAnalysisEntries,
 } from "@/features/analysis/analysis-data";
-import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note";
 import { AnalysisDetailSummaryCard } from "@/features/analysis/analysis-detail-layout";
 import {
   captureRuleComputation,
@@ -140,11 +139,10 @@ export function PremiumDetailsScreen() {
     return (
       <ReportScrollView>
         <AnalysisDetailSummaryCard
-          caption="Für diesen Zeitraum liegt kein geprüfter Tarifstand vor."
+          caption="Für diesen Zeitraum fehlen geprüfte Tarifdaten."
           period={formatMonthTitle(month)}
           title="Nicht verfügbar"
         />
-        <AnalysisCoverageNote message="Zuschlagsdetails werden erst mit einem gültigen Tarifstand angezeigt." />
       </ReportScrollView>
     );
   }

@@ -2,6 +2,7 @@ import type { TvalPflegeTariff } from "./tval-pflege-tariff";
 import type { TvhKrTariff } from "./tvh-kr-tariff";
 import type { TvUkNursingTariff } from "./tvuk-nursing-tariff";
 import type { TvlKrSalaryTariff } from "./tvl-kr-tariff";
+import type { ComplianceIssueFacts } from "./compliance-issue-facts";
 
 export const FEDERAL_STATES = [
   "BW",
@@ -436,6 +437,7 @@ export interface ComplianceIssue {
   readonly relatedShiftIds: readonly string[];
   readonly date: string;
   readonly assessmentRanges?: readonly ComplianceAssessmentRange[];
+  readonly facts?: ComplianceIssueFacts;
 }
 
 export interface MonthlyComplianceResult {

@@ -12,6 +12,7 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ProfilePage } from "./profile-page";
+import { useProfileLeaveGuard } from "./use-profile-leave-guard";
 
 const QUESTIONS = ["work", "night", "sunday", "region"] as const;
 type Question = (typeof QUESTIONS)[number];
@@ -87,6 +88,11 @@ export function CheckProfileForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const answers = questions.map((item) =>
+    item === "region" ? region : item === "work" ? work : item === "night" ? night : sunday,
+  );
+  const [snapshot] = useState(() => JSON.stringify(answers));
+  const leave = useProfileLeaveGuard(JSON.stringify(answers) !== snapshot, saving);
   const question = questions[page];
   const value = question === "work" ? work : question === "night" ? night : sunday;
   const setValue = question === "work" ? setWork : question === "night" ? setNight : setSunday;
@@ -119,11 +125,11 @@ export function CheckProfileForm({
         ...(questions.includes("sunday") ? { sundayHolidayWorkEligible: sunday } : {}),
         ...(questions.includes("region") ? { holidayRegion: region } : {}),
       });
-      router.back();
+      leave.saved();
     } catch (failure) {
+      busyRef.current = false;
       setError(userFacingErrorMessage(failure, "Die Angaben konnten nicht gespeichert werden."));
     } finally {
-      busyRef.current = false;
       setSaving(false);
     }
   }
@@ -132,7 +138,9 @@ export function CheckProfileForm({
     <ProfilePage
       title="Deine Prüfung"
       backLabel="Später"
-      onBack={() => router.back()}
+      onBack={() => {
+        if (!busyRef.current) router.back();
+      }}
       backDisabled={saving}
     >
       <View style={{ gap: SPACING.lg }}>

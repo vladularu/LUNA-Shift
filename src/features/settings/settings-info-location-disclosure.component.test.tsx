@@ -14,12 +14,19 @@ describe("SettingsInfoDetailsScreen location disclosure", () => {
     const screen = await render(<SettingsInfoDetailsScreen />);
 
     expect(
-      screen.getByText(/auf iOS über Apple, auf Android über den systemseitigen Geocoder/),
+      screen.getByText(/Apple \(iOS\) oder den systemseitigen Geocoder \(Android\)/),
     ).toBeTruthy();
-    expect(screen.getByText(/nicht deine aktuelle GPS-Position/)).toBeTruthy();
+    expect(screen.getByText(/aktuelle GPS-Position wird nicht abgefragt/)).toBeTruthy();
+    expect(screen.getByText(/Ab drei Zeichen/)).toBeVisible();
     expect(
-      screen.getByText(/auf iOS Kartendaten von Apple und auf Android von Google/),
-    ).toBeTruthy();
+      screen.getByText(/Android kann dafür trotzdem eine Standortberechtigung verlangen/),
+    ).toBeVisible();
+    expect(screen.getByText(/Karten von Apple \(iOS\) oder Google \(Android\)/)).toBeTruthy();
     expect(screen.getByText(/nicht an einen LUNA Shift-Server/)).toBeTruthy();
+    expect(screen.getByText(/Beim Öffnen einer Karten-App gehen die Koordinaten/)).toBeVisible();
+    expect(screen.getByText(/Koordinaten bleiben außerdem verschlüsselt/)).toBeVisible();
+    expect(
+      screen.getByText(/Datenschutzbedingungen von Apple beziehungsweise Google/),
+    ).toBeVisible();
   });
 });

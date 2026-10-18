@@ -50,6 +50,87 @@ const model = (
 ) => complianceTimeline(finding, shifts, timeZone);
 
 describe("check timeline presentation", () => {
+  it("uses structured rest minimum and compensation instead of German text", () => {
+    const short = {
+      ...issue(),
+      title: "Anderer Titel",
+      description: "Anderer Text",
+      facts: { rule: "ARBZG_5_REST_10H" as const, restMinutes: 570, minimumRestMinutes: 660 },
+    };
+    expect(model(short)).toMatchObject({
+      title: "Ruhezeit zu kurz",
+      note: "Mindestens 11 Std. Ruhezeit nötig.",
+      rest: { minutes: 570 },
+    });
+    const compensation: ComplianceIssue = {
+      ...issue({ rule: "ARBZG_5_REST_11H" }),
+      description: "Frist anders formuliert",
+      facts: {
+        rule: "ARBZG_5_REST_11H",
+        restMinutes: 630,
+        compensationMinutes: 750,
+        compensationDeadline: "2027-01-02",
+      },
+    };
+    expect(model(compensation).note).toBe(
+      "Ausgleich: mindestens 12,5 Std. Ruhezeit bis 02.01.2027.",
+    );
+    const youth = {
+      ...issue({ rule: "JARBSCHG_13_REST" }),
+      description: "Jugendruhe neu formuliert",
+      facts: { rule: "JARBSCHG_13_REST" as const, restMinutes: 570, minimumRestMinutes: 720 },
+    };
+    expect(model(youth).note).toBe("Jugendliche brauchen mindestens 12 Std. Ruhezeit.");
+  });
+
+  it.each([
+    ["2026-03-29", "29.03.2026"],
+    ["2026-10-25", "25.10.2026"],
+    ["2026-12-31", "31.12.2026"],
+    ["2027-01-01", "01.01.2027"],
+  ])("keeps compensation calendar date %s across timezones", (compensationDeadline, displayed) => {
+    const structured: ComplianceIssue = {
+      ...issue({ rule: "ARBZG_5_REST_11H" }),
+      description: "Neu formulierter Text",
+      facts: {
+        rule: "ARBZG_5_REST_11H",
+        restMinutes: 630,
+        compensationMinutes: 720,
+        compensationDeadline,
+      },
+    };
+    for (const timeZone of ["Europe/Berlin", "UTC", "Pacific/Honolulu"]) {
+      expect(model(structured, [late, early], timeZone).note).toBe(
+        `Ausgleich: mindestens 12 Std. Ruhezeit bis ${displayed}.`,
+      );
+    }
+  });
+  it.each([
+    {
+      rule: "ARBZG_5_REST_11H",
+      restMinutes: 630,
+      compensationMinutes: 720,
+      compensationDeadline: "2026-02-30",
+    },
+    {
+      rule: "ARBZG_5_REST_11H",
+      restMinutes: 630,
+      compensationMinutes: 720,
+      compensationDeadline: "17.10.2026",
+    },
+    { rule: "ARBZG_5_REST_10H", restMinutes: 630, minimumRestMinutes: 600 },
+    {},
+    null,
+  ])("does not parse canonical text again when facts are present but invalid: %j", (facts) => {
+    const original = issue({
+      rule: "ARBZG_5_REST_11H",
+      description:
+        "Die Ruhezeit beträgt 10.5 h. In den eingetragenen Diensten wurde bis 17.10.2026 keine noch unbenutzte Ruhezeit von mindestens 12 Stunden als Ausgleich erkannt.",
+    });
+    expect(model({ ...original, facts } as unknown as ComplianceIssue).note).toBe(
+      original.description,
+    );
+  });
   it("shows exact end, next start and elapsed gap independent of input order", () => {
     const result = model();
     expect(result.rest).toMatchObject({
@@ -145,6 +226,52 @@ describe("check timeline presentation", () => {
     description: "12 aufeinanderfolgende Arbeitstage wurden erkannt.",
     relatedShiftIds: seriesShifts.map((s) => s.id),
   });
+  it.each(["PLANNING_7_DAYS", "PLANNING_NIGHT_SERIES"] as const)(
+    "retains %s from facts after text changes and keeps partial ranges unknown",
+    (rule) => {
+      const structured = {
+        ...series,
+        rule,
+        description: "Die Serie wird neu beschrieben.",
+        facts: { rule, count: 12 },
+      };
+      const unit = rule === "PLANNING_7_DAYS" ? "Arbeitstage" : "Nachtdienste";
+      expect(model(structured, seriesShifts).series).toEqual({
+        count: 12,
+        unit,
+        from: "2026-11-19",
+        until: "2026-11-30",
+      });
+      expect(model(structured, seriesShifts.slice(1)).series).toEqual({
+        count: 12,
+        unit,
+        from: null,
+        until: null,
+      });
+      const duplicate = { ...seriesShifts[0], id: "same-day-second-shift" };
+      expect(
+        model({ ...structured, relatedShiftIds: [...structured.relatedShiftIds, duplicate.id] }, [
+          ...seriesShifts,
+          duplicate,
+        ]).series?.count,
+      ).toBe(12);
+      expect(
+        model(
+          structured,
+          seriesShifts.map((shift, i) => (i === 0 ? { ...shift, date: "invalid" } : shift)),
+        ).series?.from,
+      ).toBeNull();
+    },
+  );
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, "12"])(
+    "never uses an invalid structured series count: %s",
+    (count) => {
+      const structured = { ...series, facts: { rule: series.rule, count } };
+      const result = model(structured as unknown as ComplianceIssue, seriesShifts);
+      expect(result.series).toBeNull();
+      expect(result.note).toBe(series.description);
+    },
+  );
   it("takes the series count from the engine, with an independently verified date range", () => {
     expect(model(series, seriesShifts).series).toEqual({
       count: 12,

@@ -16,7 +16,9 @@ import {
   type RouteParam,
 } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
+import { calendarRoute } from "@/navigation/routes";
 import { EmptyState, SurfaceCard } from "@/ui/design-system";
+import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ReportScrollView } from "@/ui/report-layout";
 import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
@@ -89,11 +91,7 @@ export function WorktimeDetailsScreen() {
   return (
     <ReportScrollView>
       <Stack.Screen options={{ title: "Stunden" }} />
-      <AnalysisDetailSummaryCard
-        title="Deine Stunden"
-        period={formatMonthTitle(month)}
-        caption="Arbeitszeit und Schichten für diesen Monat."
-      />
+      <AnalysisDetailSummaryCard title="Deine Stunden" period={formatMonthTitle(month)} />
       <WorktimeCard
         actual={formatMinutes(
           summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
@@ -109,13 +107,18 @@ export function WorktimeDetailsScreen() {
         }
       />
       {!summary.ok ? (
-        <AnalysisCoverageNote message="Soll, Saldo und Abwesenheitsgutschriften benötigen einen gültigen Feiertagsstand. Angezeigt werden erfasste Arbeits- und Fortbildungszeiten." />
+        <AnalysisCoverageNote message="Feiertagsdaten fehlen: Soll, Saldo und Zeitgutschriften sind nicht berechenbar." />
       ) : null}
       {shiftTypeAnalysis.totalCount === 0 ? (
         <SurfaceCard>
           <EmptyState
             title="Noch keine Dienste"
             message="Trage Dienste ein, um den Monat auszuwerten."
+            action={
+              <PrimaryButton onPress={() => router.push(calendarRoute(month))}>
+                Kalender öffnen
+              </PrimaryButton>
+            }
           />
         </SurfaceCard>
       ) : (

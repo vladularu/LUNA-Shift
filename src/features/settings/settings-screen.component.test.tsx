@@ -1,6 +1,7 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
+import type { UserProfile } from "@/domain/types";
 
 import { SettingsScreen } from "@/features/settings/settings-screen";
 import { SPACING } from "@/theme/tokens";
@@ -15,7 +16,7 @@ const mockBaseProfile = {
   weeklyMinutes: 2_400,
   timeZone: "Europe/Berlin",
   manualMonthlyGrossCents: null as number | null,
-  tariff: null,
+  tariff: null as UserProfile["tariff"],
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
@@ -78,10 +79,27 @@ jest.mock("@/infrastructure/dev-tools-policy", () => ({
 }));
 
 describe("SettingsScreen production gates", () => {
-  it("opens the personal profile and appearance selection", async () => {
+  it("opens the shared account from the LUNA Cloud section", async () => {
     const screen = await render(<SettingsScreen />);
-    await fireEvent.press(screen.getByRole("button", { name: "Arbeitsprofil bearbeiten" }));
-    expect(router.push).toHaveBeenCalledWith("/work-profile");
+    expect(screen.getAllByText("LUNA Cloud")).toHaveLength(2);
+    await fireEvent.press(screen.getByRole("button", { name: "Konto" }));
+    expect(router.push).toHaveBeenCalledWith("/account");
+    expect(screen.queryByText("Cloud-Konto")).toBeNull();
+  });
+  it("opens employment editors directly from More and retains appearance selection", async () => {
+    const screen = await render(<SettingsScreen />);
+    expect(screen.queryByRole("button", { name: "Arbeitsprofil bearbeiten" })).toBeNull();
+    for (const [label, section] of [
+      ["Arbeitgeber", "EMPLOYER"],
+      ["Arbeitszeit & Ort", "WORK"],
+      ["Tarif & Gehalt", "TARIFF"],
+    ]) {
+      await fireEvent.press(screen.getByText(label));
+      expect(router.push).toHaveBeenLastCalledWith({
+        pathname: "/settings-editor",
+        params: { section, origin: "settings" },
+      });
+    }
     await fireEvent.press(screen.getByText("Kalender gestalten"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/calendar-design",
@@ -143,7 +161,7 @@ describe("SettingsScreen production gates", () => {
     expect(setDeveloperMode).not.toHaveBeenCalled();
     expect(screen.getByText("Über LUNA Shift")).toBeTruthy();
     expect(screen.getByText("Datensicherung")).toBeTruthy();
-    expect(screen.getByText("Dein Arbeitsprofil")).toBeTruthy();
+    expect(screen.getByText("Arbeitgeber")).toBeTruthy();
     expect(screen.queryByText("Schichtmodell")).toBeNull();
   });
 
@@ -154,6 +172,25 @@ describe("SettingsScreen production gates", () => {
 
     expect(screen.getByText(/Manuell.*3\.450,50/)).toBeTruthy();
     expect(screen.queryByText("Schichtmodell")).toBeNull();
+  });
+
+  it("keeps the supported shift-model assessment directly reachable", async () => {
+    mockProfile = {
+      ...mockBaseProfile,
+      tariff: {
+        payGroup: "P8",
+        payLevel: 4,
+        sector: "BT_K",
+        tariffRegion: "OTHER",
+        fullTimeWeeklyMinutes: 2310,
+      },
+    };
+    const screen = await render(<SettingsScreen />);
+    await fireEvent.press(screen.getByText("Schichtmodell"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/tariff-assessment",
+      params: { month: expect.stringMatching(/^\d{4}-\d{2}$/u) },
+    });
   });
 
   it("opens a non-persisting onboarding preview in internal builds", async () => {

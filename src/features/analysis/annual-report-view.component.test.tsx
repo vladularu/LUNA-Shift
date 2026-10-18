@@ -103,6 +103,7 @@ describe("annual report view", () => {
     expect(screen.getByLabelText("Ist: 1800:00 h")).toBeTruthy();
     expect(screen.getByLabelText("Soll: 1920:00 h")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: −120:00 h")).toBeTruthy();
+    expect(screen.getByText("Brutto-Teilsumme · 7 von 12 Monaten")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Stunden,/ })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Prüfung, 3 Meldungen" }));
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "CHECK"));
@@ -123,6 +124,8 @@ describe("annual report view", () => {
     expect(screen.getByRole("button", { name: "Gehalt, Wird berechnet …" })).toBeTruthy();
     expect(screen.getByLabelText("Soll: Wird berechnet")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: Wird berechnet")).toBeTruthy();
+    expect(screen.getByText("Erfasste Zeiten · Soll und Saldo werden berechnet.")).toBeTruthy();
+    expect(screen.queryByText(/Soll und Saldo nicht berechenbar/)).toBeNull();
     expect(screen.queryByText("28.700,00 €")).toBeNull();
     expect(screen.queryByText("3 Meldungen")).toBeNull();
   });
@@ -228,6 +231,7 @@ describe("annual report view", () => {
       />,
     );
     expect(screen.getByText("28.700,00 €")).toBeTruthy();
+    expect(screen.getByText("Brutto-Teilsumme · 7 von 12 Monaten")).toBeTruthy();
     expect(screen.getByText("7 von 12")).toBeTruthy();
     expect(screen.getByText("1.470,00 €")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /2026,/ })).toHaveLength(12);
@@ -251,9 +255,36 @@ describe("annual report view", () => {
     const screen = await render(<AnnualReportScreen {...props} report={partial} />);
     expect(screen.getByLabelText("Soll: Nicht verfügbar")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: Nicht verfügbar")).toBeTruthy();
+    expect(screen.getByText("Erfasste Zeiten · Soll und Saldo nicht berechenbar")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Prüfung, Nicht verfügbar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Nicht verfügbar" })).toBeTruthy();
     expect(screen.queryByText("Keine sichtbaren Auffälligkeiten")).toBeNull();
+    await screen.rerender(
+      <AnnualReportDetails
+        report={partial}
+        testMonths={[]}
+        section="WORK"
+        onSelectMonth={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "Feiertagsdaten fehlen: Soll, Saldo und Zeitgutschriften sind nicht berechenbar.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Ist: 1800:00 h")).toBeTruthy();
+    expect(screen.getByLabelText("Soll: Nicht verfügbar")).toBeTruthy();
+    await screen.rerender(
+      <AnnualReportDetails
+        report={partial}
+        pending
+        testMonths={[]}
+        section="WORK"
+        onSelectMonth={jest.fn()}
+      />,
+    );
+    expect(screen.getByLabelText("Soll: Wird berechnet")).toBeTruthy();
+    expect(screen.queryByText(/Zeitgutschriften sind nicht berechenbar/)).toBeNull();
     await screen.rerender(
       <AnnualReportDetails
         report={partial}
@@ -272,7 +303,9 @@ describe("annual report view", () => {
         onSelectMonth={jest.fn()}
       />,
     );
-    expect(screen.getByText(/benötigt vollständige Regelstände/)).toBeTruthy();
+    expect(
+      screen.getByText(/Für die vollständige Jahresprüfung fehlen Berechnungsdaten/),
+    ).toBeTruthy();
     expect(screen.queryByText(/keine Auffälligkeiten erkannt/)).toBeNull();
   });
 });

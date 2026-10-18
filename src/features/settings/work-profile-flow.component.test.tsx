@@ -10,6 +10,7 @@ import {
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 let mockSection = "WORK";
+let mockOrigin: string | undefined;
 let mockProfile: UserProfile;
 let mockPalette = LIGHT_PALETTE;
 const mockUpdate = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
@@ -32,8 +33,8 @@ jest.mock("expo-router/react-navigation", () => ({
   },
 }));
 jest.mock("expo-router", () => ({
-  router: { back: jest.fn(), push: jest.fn() },
-  useLocalSearchParams: () => ({ section: mockSection }),
+  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+  useLocalSearchParams: () => ({ section: mockSection, origin: mockOrigin }),
   useNavigation: () => mockNavigation,
   Stack: {
     Screen: ({ options }: { options: MockHeaderOptions }) => {
@@ -60,6 +61,7 @@ describe("work profile draft flow", () => {
     jest.clearAllMocks();
     mockHeaderOptions = {};
     mockSection = "WORK";
+    mockOrigin = undefined;
     mockPalette = LIGHT_PALETTE;
     mockProfile = {
       displayName: "Alex",
@@ -87,18 +89,52 @@ describe("work profile draft flow", () => {
       return mockProfile;
     });
   });
-  it("loads all saved work evidence, saves the whole draft once and reloads saved values", async () => {
+  it("edits only the employer from More and keeps the report name and salary intact", async () => {
+    mockSection = "EMPLOYER";
+    mockOrigin = "settings";
+    const original = { ...mockProfile };
+    const screen = await render(<SettingsEditorTestFlow />);
+    expect(screen.queryByLabelText("Name")).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText("Arbeitgeber"), "Neues Klinikum");
+    await fireEvent.press(screen.getByRole("button", { name: "Fertig" }));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).toHaveBeenCalledWith({ ...original, employerName: "Neues Klinikum" });
+    expect(router.back).toHaveBeenCalledTimes(1);
+  });
+  it("uses compact tariff choices and a More footer without saving until Done", async () => {
+    mockSection = "TARIFF";
+    mockOrigin = "settings";
+    const screen = await render(<SettingsEditorTestFlow />);
+    expect(screen.getByRole("button", { name: "Tarif: TVöD-P" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Zurück zu Mehr" })).toBeTruthy();
+    expect(screen.queryByTestId("salary-basis-selection")).toBeNull();
+    await select(screen, "Entgeltgruppe", "P8");
+    await select(screen, "Stufe", "Stufe 4");
+    expect(mockUpdate).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Fertig" }));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][0].tariff).toMatchObject({ payGroup: "P8", payLevel: 4 });
+  });
+  it("retains manual gross as a selectable alternative in the compact tariff flow", async () => {
+    mockSection = "TARIFF";
+    mockOrigin = "settings";
+    const screen = await render(<SettingsEditorTestFlow />);
+    await select(screen, "Tarif", "Monatsbrutto selbst eintragen");
+    expect(screen.getByLabelText("Monatliches Brutto in Euro")).toBeTruthy();
+    expect(screen.getByTestId("salary-basis-selection")).toBeTruthy();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+  it("keeps check answers in their shared editor while preserving them when saving work", async () => {
     mockHeaderOptions = { headerLeft: jest.fn(() => null) };
     let screen = await render(<SettingsEditorTestFlow />);
     expect(mockHeaderOptions.headerBackVisible).toBe(true);
     expect(mockHeaderOptions.presentation).toBe("card");
     expect(mockHeaderOptions.headerLeft).toBeUndefined();
     expect(screen.queryByRole("button", { name: "Abbrechen" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: /Regelmäßige Nacht.*Noch nicht bestätigt/ }),
-    ).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Sonn- und Feiertagsarbeit.*Nein/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Arbeitszeit aus allen.*Ja/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Arbeitest du regelmäßig nachts/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Sonn- und Feiertagsarbeit/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Arbeitszeiten aus allen Jobs/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Angaben zur Prüfung" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Regionale Feiertage:/ })).toBeNull();
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
     await select(screen, "Bundesland", "Bayern");
@@ -123,6 +159,93 @@ describe("work profile draft flow", () => {
     expect(screen.getByDisplayValue("30")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bundesland: Bayern" })).toBeTruthy();
     expect(mockGuard.active).toBe(false);
+  });
+  it("replaces unchanged work with the shared check editor once without writing", async () => {
+    const screen = await render(<SettingsEditorTestFlow />);
+    const button = screen.getByRole("button", { name: "Angaben zur Prüfung" });
+    await fireEvent.press(button);
+    await fireEvent.press(button);
+    expect(router.replace).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith("/check-profile");
+    expect(router.back).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+  it("saves the current work place before replacing the editor and blocks repeated success taps", async () => {
+    let complete!: (value: UserProfile) => void;
+    mockUpdate.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const screen = await render(<SettingsEditorTestFlow />);
+    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await select(screen, "Bundesland", "Bayern");
+    jest.mocked(router.back).mockClear();
+    const button = screen.getByRole("button", { name: "Speichern & Angaben öffnen" });
+    await fireEvent.press(button);
+    await fireEvent.press(button);
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weeklyMinutes: 1800,
+        federalState: "BY",
+        holidayRegion: "UNKNOWN",
+        regularRotatingNightWork: null,
+        sundayHolidayWorkEligible: false,
+        allEmploymentWorkRecorded: true,
+      }),
+    );
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(mockGuard.active).toBe(true);
+    await act(() => complete(mockProfile));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/check-profile"));
+    await fireEvent.press(button);
+    await fireEvent.press(saveButton(screen));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Arbeitsprofil" }));
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledTimes(1);
+    expect(router.back).not.toHaveBeenCalled();
+    expect(mockGuard.active).toBe(false);
+  });
+  it("keeps invalid or failed work drafts in place and opens check questions only after retry succeeds", async () => {
+    const screen = await render(<SettingsEditorTestFlow />);
+    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "keine Zahl");
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern & Angaben öffnen" }));
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("keine Zahl")).toBeTruthy();
+    await fireEvent.changeText(screen.getByDisplayValue("keine Zahl"), "30");
+    mockUpdate.mockRejectedValueOnce(new Error("storage"));
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern & Angaben öffnen" }));
+    await waitFor(() => expect(screen.getByText("Speichern fehlgeschlagen.")).toBeTruthy());
+    expect(screen.getByDisplayValue("30")).toBeTruthy();
+    expect(mockGuard.active).toBe(true);
+    expect(router.replace).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern & Angaben öffnen" }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).toHaveBeenCalledTimes(2);
+    expect(mockUpdate).toHaveBeenLastCalledWith(expect.objectContaining({ weeklyMinutes: 1800 }));
+  });
+  it("preserves the latest check answers instead of hidden initial values during work save", async () => {
+    const screen = await render(<SettingsEditorTestFlow />);
+    mockProfile = {
+      ...mockProfile,
+      regularRotatingNightWork: true,
+      sundayHolidayWorkEligible: null,
+      allEmploymentWorkRecorded: false,
+    };
+    await screen.rerender(<SettingsEditorTestFlow />);
+    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.press(saveButton(screen));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        regularRotatingNightWork: true,
+        sundayHolidayWorkEligible: null,
+        allEmploymentWorkRecorded: false,
+      }),
+    );
   });
   it("preserves a failed save through a theme change and confirms discarding before going back", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
@@ -313,6 +436,9 @@ describe("work profile draft flow", () => {
     expect(router.back).not.toHaveBeenCalled();
     await act(() => complete(mockProfile));
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Arbeitsprofil" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
   });
   it("returns an unchanged editor from its footer without saving", async () => {
     const screen = await render(<SettingsEditorTestFlow />);

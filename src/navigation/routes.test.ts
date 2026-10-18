@@ -207,3 +207,14 @@ describe("navigation contracts", () => {
     expect(localBackupRoute()).toEqual({ pathname: "/data-backup" });
   });
 });
+
+it("builds direct employment routes with a More origin without changing legacy links", () => {
+  expect(settingsEditorRoute("EMPLOYER", "settings")).toEqual({
+    pathname: "/settings-editor",
+    params: { section: "EMPLOYER", origin: "settings" },
+  });
+  expect(settingsEditorRoute("TARIFF")).toEqual({
+    pathname: "/settings-editor",
+    params: { section: "TARIFF" },
+  });
+});

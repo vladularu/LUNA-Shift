@@ -1,24 +1,33 @@
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useContext, useEffect, useState, type ComponentProps } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import { Alert, Platform, View, useWindowDimensions } from "react-native";
 
+import { AccountSummaryCard } from "@/features/account/account-summary-card";
 import { PRODUCT_NAME } from "@/brand";
-import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
+import {
+  usePflegeShiftProfile,
+  usePflegeShiftStatus,
+  usePflegeShiftTariff,
+} from "@/application/pflegeshift-provider";
 import {
   isDeveloperModeEnabled,
   setDeveloperMode,
 } from "@/infrastructure/database/dev-tools-repository";
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { APP_RUNTIME_LABEL } from "@/infrastructure/app-version";
-import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { CalendarPerformanceControls } from "@/features/calendar/calendar-performance-controls";
-import { localBackupRoute, settingsInfoRoute } from "@/navigation/routes";
+import {
+  localBackupRoute,
+  settingsInfoRoute,
+  settingsEditorRoute,
+  tariffAssessmentRoute,
+} from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
-import { AppearanceContext } from "@/theme/appearance-context";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
-import { WorkProfileCard } from "./work-profile-card";
+import { profileSalaryLabel, profileWorkLabel } from "./work-profile-summary";
+import { currentMonth } from "@/engine/calendar";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -35,10 +44,7 @@ export function SettingsScreen() {
   const db = useSQLiteContext();
   const { error, ready, reload } = usePflegeShiftStatus();
   const { profile } = usePflegeShiftProfile();
-  const appearance = useContext(AppearanceContext);
-  const modeName =
-    appearance?.mode === "light" ? "Hell" : appearance?.mode === "dark" ? "Dunkel" : "System";
-  const calendarPreferences = useCalendarPreferences();
+  const { workPatternSettings } = usePflegeShiftTariff();
   const [developerMode, setDeveloperModeState] = useState(false);
 
   useEffect(() => {
@@ -72,20 +78,62 @@ export function SettingsScreen() {
     }
   }
 
-  const visibleCalendarContentCount = [
-    calendarPreferences.showShifts,
-    calendarPreferences.showAppointments,
-    calendarPreferences.showHolidays,
-  ].filter(Boolean).length;
-  const calendarDisplayLabel =
-    visibleCalendarContentCount === 3
-      ? "Dienste, Termine und Feiertage"
-      : `${visibleCalendarContentCount} von 3 Inhalten sichtbar`;
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
       <TabRootHeader surface="groupedBackground" title="Mehr" />
       <ScreenScrollView surface="groupedBackground">
-        <WorkProfileCard profile={profile} />
+        {Platform.OS === "ios" ? (
+          <View style={{ gap: SPACING.sm }}>
+            <SectionHeader title="LUNA Cloud" />
+            <AccountSummaryCard />
+          </View>
+        ) : null}
+        <View style={{ gap: SPACING.sm }}>
+          <SectionHeader title="Arbeit" />
+          <SurfaceCard>
+            <RowButton
+              title="Arbeitgeber"
+              subtitle={profile.employerName || "Ergänzen"}
+              subtitleBelow={subtitleBelow}
+              leading={<SettingsIcon name="briefcase-outline" />}
+              onPress={() => router.push(settingsEditorRoute("EMPLOYER", "settings"))}
+            />
+            <CardSeparator />
+            <RowButton
+              title="Arbeitszeit & Ort"
+              subtitle={profileWorkLabel(profile)}
+              subtitleBelow={subtitleBelow}
+              leading={<SettingsIcon name="time-outline" />}
+              onPress={() => router.push(settingsEditorRoute("WORK", "settings"))}
+            />
+            <CardSeparator />
+            <RowButton
+              title="Tarif & Gehalt"
+              subtitle={profileSalaryLabel(profile).split(" · ").slice(0, 3).join(" · ")}
+              subtitleBelow={subtitleBelow}
+              leading={<SettingsIcon name="document-text-outline" />}
+              onPress={() => router.push(settingsEditorRoute("TARIFF", "settings"))}
+            />
+            {profile.tariff || profile.vkaETariff || profile.tvlKrTariff ? (
+              <>
+                <CardSeparator />
+                <RowButton
+                  title="Schichtmodell"
+                  subtitle={
+                    workPatternSettings.workplaceCoverage === "AROUND_THE_CLOCK"
+                      ? "Durchgehend 24/7"
+                      : workPatternSettings.workplaceCoverage === "NOT_AROUND_THE_CLOCK"
+                        ? "Nicht durchgehend 24/7"
+                        : "Noch nicht bestätigt"
+                  }
+                  subtitleBelow={subtitleBelow}
+                  leading={<SettingsIcon name="repeat-outline" />}
+                  onPress={() => router.push(tariffAssessmentRoute(currentMonth(profile.timeZone)))}
+                />
+              </>
+            ) : null}
+          </SurfaceCard>
+        </View>
         <View style={{ gap: SPACING.sm }}>
           <SectionHeader title="Deine App" />
           <SurfaceCard>
@@ -93,15 +141,13 @@ export function SettingsScreen() {
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="color-palette-outline" />}
               title="Kalender gestalten"
-              subtitle={modeName + " · " + calendarDisplayLabel}
               onPress={() => router.push(calendarDesignRoute("settings"))}
             />
             <CardSeparator />
             <RowButton
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="shield-checkmark-outline" />}
-              title="Prüfung"
-              subtitle="Planungshinweise anzeigen"
+              title="Prüfung & Hinweise"
               onPress={() => router.push("/check-settings")}
             />
           </SurfaceCard>

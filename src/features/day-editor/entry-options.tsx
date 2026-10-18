@@ -323,7 +323,7 @@ export function NotificationSheet({
   const [reference, setReference] = useState<NotificationReference>(value?.reference ?? "START");
   const [enabled, setEnabled] = useState(value !== null);
   return (
-    <SheetShell onClose={onClose} title="Benachrichtigung">
+    <SheetShell onClose={onClose} title="Erinnerung">
       <ChoiceButton
         label="Keine"
         onPress={() => {
@@ -346,7 +346,7 @@ export function NotificationSheet({
         }}
       >
         <TextInput
-          accessibilityLabel="Benachrichtigungsabstand"
+          accessibilityLabel="Erinnerungsabstand"
           keyboardType="number-pad"
           onChangeText={(nextAmount) => {
             setEnabled(true);
@@ -366,7 +366,7 @@ export function NotificationSheet({
         />
         <View
           accessibilityRole="radiogroup"
-          accessibilityLabel="Benachrichtigungseinheit"
+          accessibilityLabel="Erinnerungseinheit"
           style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
         >
           {(["MINUTE", "HOUR", "DAY", "WEEK"] as const).map((candidate) => (
@@ -382,7 +382,7 @@ export function NotificationSheet({
           ))}
         </View>
         <SelectionControl
-          accessibilityLabel="Benachrichtigungsrichtung"
+          accessibilityLabel="Erinnerungsrichtung"
           value={direction}
           items={[
             { value: "BEFORE", label: "vor" },
@@ -394,7 +394,7 @@ export function NotificationSheet({
           }}
         />
         <SelectionControl
-          accessibilityLabel="Benachrichtigungsbezug"
+          accessibilityLabel="Erinnerungsbezug"
           value={reference}
           items={[
             { value: "START", label: "Beginn" },
@@ -406,7 +406,7 @@ export function NotificationSheet({
           }}
         />
         <Pressable
-          accessibilityLabel="Benachrichtigung übernehmen"
+          accessibilityLabel="Erinnerung übernehmen"
           accessibilityRole="button"
           onPress={() => {
             onChange(
@@ -563,8 +563,7 @@ export function AlarmSheet({
           lineHeight: TYPOGRAPHY.small.lineHeight,
         }}
       >
-        Der Wecker verwendet den iOS-Standardton. Fokusmodus und Stummschaltung können den Ton
-        unterdrücken.
+        Fokusmodus und Stummschaltung können den Ton unterdrücken.
       </Text>
     </SheetShell>
   );

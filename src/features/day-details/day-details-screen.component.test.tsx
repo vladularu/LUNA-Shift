@@ -56,7 +56,7 @@ describe("DayDetailsScreen", () => {
     );
     expect(within(scroll).queryByRole("button", { name: "Zurück" })).toBeNull();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Schicht hinzufügen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst hinzufügen" }));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/quick-add",
       params: { date: "2026-08-04" },

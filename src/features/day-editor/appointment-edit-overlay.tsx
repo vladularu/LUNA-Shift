@@ -166,14 +166,14 @@ export function AppointmentEditOverlay({
             </View>
 
             <ValueRow
-              label="Benachrichtigung"
+              label="Erinnerung"
               onPress={openNotificationPicker}
               separator={false}
               value={notificationLabel(notification)}
             />
           </EntryEditGroup>
           <EntryEditNotesLocation
-            emptyLocationLabel="Nicht festgelegt"
+            emptyLocationLabel="Kein Ort"
             location={location}
             note={note}
             onLocationPress={onLocationPress}

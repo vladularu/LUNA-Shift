@@ -25,6 +25,11 @@ import {
   CircleDot,
   CircleEllipsis,
   Clock,
+  Cloud,
+  CloudCheck,
+  Ellipsis,
+  Repeat2,
+  UserRound,
   CreditCard,
   Files,
   FlaskConical,
@@ -78,6 +83,12 @@ import {
 // Keep existing control props and stored identifiers; draw the kit's Lucide
 // outlines instead of introducing a second icon language in the design build.
 export const DESIGN_ICON_MAP = {
+  "cloud-outline": Cloud,
+  "cloud-done-outline": CloudCheck,
+  "document-text-outline": FileText,
+  "ellipsis-horizontal": Ellipsis,
+  "repeat-outline": Repeat2,
+  "person-outline": UserRound,
   "share-outline": Share,
   coffee: Coffee,
   "weather-sunset-up": Sunrise,

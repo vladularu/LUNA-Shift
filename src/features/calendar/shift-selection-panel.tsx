@@ -40,6 +40,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
   inNativeSheet = false,
   busy,
   date,
+  errorMessage,
   onAddTemplate,
   onClose,
   onEditTemplate,
@@ -50,6 +51,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
   readonly inNativeSheet?: boolean;
   readonly busy: boolean;
   readonly date: string;
+  readonly errorMessage?: string | null;
   readonly onAddTemplate: () => void;
   readonly onClose: () => void;
   readonly onEditTemplate: (templateId: string) => void;
@@ -68,7 +70,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
 
   return (
     <Animated.View
-      accessibilityLabel={`Schicht für ${longDate(date)} auswählen`}
+      accessibilityLabel={`Dienst für ${longDate(date)} auswählen`}
       accessibilityViewIsModal
       entering={
         animateEntry
@@ -94,7 +96,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
           <>
             <View style={[styles.navigationBar, { backgroundColor: palette.background }]}>
               <Pressable
-                accessibilityLabel="Schichtauswahl schließen"
+                accessibilityLabel="Dienstauswahl schließen"
                 accessibilityRole="button"
                 accessibilityState={{ disabled: busy }}
                 disabled={busy}
@@ -109,7 +111,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
               <View
                 ref={headingRef}
                 accessible
-                accessibilityLabel={`Schicht auswählen für ${longDate(date)}, Überschrift`}
+                accessibilityLabel={`Dienst auswählen für ${longDate(date)}`}
                 accessibilityRole="header"
                 style={styles.navigationTitleWrap}
               >
@@ -118,7 +120,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
                   style={[styles.navigationTitle, { color: palette.text }]}
                 >
-                  Schicht auswählen
+                  Dienst auswählen
                 </Text>
                 <Text
                   dynamicTypeRamp="caption1"
@@ -148,7 +150,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
                   style={[styles.sectionHeading, { color: palette.text }]}
                 >
-                  Meine Dienste
+                  Dienstvorlagen
                 </Text>
                 <ShiftTemplateListCard>
                   {templateActions.length > 0 ? (
@@ -174,13 +176,14 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
                         maxFontSizeMultiplier={TEXT_MAX_SCALE}
                         style={[styles.emptyTemplatesText, { color: palette.textMuted }]}
                       >
-                        Noch keine Dienstvorlagen vorhanden.
+                        Noch keine Dienstvorlagen
                       </Text>
                     </View>
                   )}
                   {templateActions.length > 0 ? <ShiftTemplateListSeparator /> : null}
                   <ShiftTemplateAddRow
-                    accessibilityLabel="Neue Schichtvorlage hinzufügen"
+                    accessibilityLabel="Vorlage erstellen und eintragen"
+                    label="Vorlage erstellen und eintragen"
                     disabled={busy}
                     onPress={onAddTemplate}
                   />
@@ -190,6 +193,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
           </>
         )}
       </BackFooterLayout>
+      {errorMessage ? <ShiftSelectionErrorNotice message={errorMessage} /> : null}
     </Animated.View>
   );
 });

@@ -35,7 +35,7 @@ export function CalendarDesignScreen({
     confirmDestructiveAction({
       title: "Kalenderoptionen zurücksetzen?",
       message:
-        "Kalenderhintergrund, Bildsichtbarkeit, sichtbare Inhalte, Dienstbezeichnung, Startzeit und Gesamtdauer werden zurückgesetzt. Dein Kalenderfoto und die Foto-Rückgängig-Möglichkeit werden entfernt. Der appweite Hell-/Dunkel-/Systemmodus, Schichtfarben, Profile und Dienste bleiben erhalten.",
+        "Dein Kalenderfoto wird entfernt und die Kalenderanzeige zurückgesetzt. Das lässt sich nicht rückgängig machen. Hell-/Dunkelmodus, Schichtfarben, Profile und Dienste bleiben erhalten.",
       confirmLabel: "Zurücksetzen",
       onConfirm: () => {
         void (async () => {

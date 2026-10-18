@@ -46,7 +46,7 @@ export function ShiftAnalysisDetails({
       caption={
         creditsAvailable
           ? undefined
-          : "Stunden ohne Abwesenheitsgutschriften. Urlaub und Krankheit benötigen einen gültigen Feiertagsstand."
+          : "Ohne Feiertagsdaten fehlen die Zeitgutschriften für Urlaub und Krankheit."
       }
     >
       {analysis.totalCount === 0 ? (

@@ -101,9 +101,9 @@ describe("AppointmentEditOverlay", () => {
     expect(screen.getByRole("button", { name: "Wiederholen: Niemals" })).toBeTruthy();
     expect(screen.getByText("Kalender")).toBeTruthy();
     expect(screen.getByText("Termine")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Benachrichtigung: Keine" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Erinnerung: Keine" })).toBeTruthy();
     expect(screen.queryByPlaceholderText("Notizen")).toBeNull();
-    expect(screen.getByRole("button", { name: "Ort: Nicht festgelegt" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ort: Kein Ort" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
 
@@ -130,12 +130,12 @@ describe("AppointmentEditOverlay", () => {
     expect(props.onRecurrenceChange).toHaveBeenCalledWith({ frequency: "WEEK", interval: 2 });
     expect(screen.queryByTestId("appointment-recurrence-presets")).toBeNull();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     expect(screen.getByTestId("shift-notification-presets")).toBeTruthy();
     expect(props.onNotificationPress).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung schließen" }));
 
-    await fireEvent.press(screen.getByRole("button", { name: "Ort: Nicht festgelegt" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Ort: Kein Ort" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     const deleteAction = screen.getByRole("button", { name: "Termin löschen" });
@@ -163,7 +163,7 @@ describe("AppointmentEditOverlay", () => {
     const { screen } = await renderOverlay({ onDelete: undefined });
 
     expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Ort: Nicht festgelegt" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ort: Kein Ort" })).toBeTruthy();
   });
 
   it("blocks close and delete while saving without losing the visible close label", async () => {

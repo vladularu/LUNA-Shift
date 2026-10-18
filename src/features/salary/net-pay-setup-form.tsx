@@ -341,7 +341,7 @@ export function NetPaySetupForm({
             </NetPayText>
           ) : null}
           <NetPayWorkflowLink onPress={() => setHelp(!help)} disabled={locked} expanded={help}>
-            {help ? "Hinweise schließen" : "Was wird angenommen?"}
+            {help ? "Erklärung schließen" : "So rechnen wir"}
           </NetPayWorkflowLink>
           {help ? (
             <NetPayText>
@@ -358,7 +358,7 @@ export function NetPaySetupForm({
           disabled={locked}
           expanded={details}
         >
-          {details ? "Details schließen" : "Genauer einstellen"}
+          {details ? "Weitere Angaben schließen" : "Weitere Angaben"}
         </NetPayWorkflowLink>
       ) : null}
       {details && step === 0 ? (

@@ -32,14 +32,14 @@ describe("NotificationSheet", () => {
     const { props, screen } = await renderNotificationSheet();
 
     expect(screen.getByRole("radio", { name: "Keine", checked: true })).toBeTruthy();
-    await fireEvent.changeText(screen.getByLabelText("Benachrichtigungsabstand"), "2");
+    await fireEvent.changeText(screen.getByLabelText("Erinnerungsabstand"), "2");
     await fireEvent.press(screen.getByRole("radio", { name: "Stunden" }));
     await fireEvent.press(screen.getByRole("radio", { name: "nach" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Ende" }));
 
     expect(props.onChange).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung übernehmen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung übernehmen" }));
     expect(props.onChange).toHaveBeenCalledWith({
       amount: 2,
       unit: "HOUR",
@@ -57,7 +57,7 @@ describe("NotificationSheet", () => {
     await fireEvent.press(screen.getByRole("radio", { name: "Keine" }));
     expect(props.onChange).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Benachrichtigung übernehmen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung übernehmen" }));
     expect(props.onChange).toHaveBeenCalledWith(null);
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });

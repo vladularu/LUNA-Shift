@@ -31,12 +31,18 @@ export function SharingUnavailableScreen() {
     </ScreenScrollView>
   );
 }
+const DEFAULT_SHARING_ERROR = "Freigaben konnten nicht aktualisiert werden. Versuche es erneut.";
+
 export function useSharingAction(controller: SharingController) {
   const locked = useRef(false);
   const [working, setWorking] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failureMessage, setFailureMessage] = useState(DEFAULT_SHARING_ERROR);
   const busy = working || controller.busy;
-  async function run(action: () => Promise<void>): Promise<boolean> {
+  async function run(
+    action: () => Promise<void>,
+    message = DEFAULT_SHARING_ERROR,
+  ): Promise<boolean> {
     if (locked.current || controller.busy) return false;
     locked.current = true;
     setWorking(true);
@@ -45,6 +51,7 @@ export function useSharingAction(controller: SharingController) {
       await action();
       return true;
     } catch {
+      setFailureMessage(message);
       setFailed(true);
       return false;
     } finally {
@@ -52,20 +59,25 @@ export function useSharingAction(controller: SharingController) {
       setWorking(false);
     }
   }
-  return { busy, failed: failed || controller.error, run };
+  return {
+    busy,
+    failed: failed || controller.error,
+    failureMessage: failed ? failureMessage : DEFAULT_SHARING_ERROR,
+    run,
+  };
 }
 export function SharingStatus({
   failed,
   busy,
+  message = DEFAULT_SHARING_ERROR,
 }: {
   readonly failed: boolean;
   readonly busy: boolean;
+  readonly message?: string;
 }) {
   return (
     <>
-      {failed ? (
-        <InlineNotice tone="error" message="Das hat nicht geklappt. Bitte versuche es erneut." />
-      ) : null}
+      {failed ? <InlineNotice tone="error" message={message} /> : null}
       {busy ? <ActivityIndicator accessibilityLabel="Wird bearbeitet" /> : null}
     </>
   );
@@ -75,8 +87,8 @@ export function SignInActions({
   run,
   busy,
 }: {
-  readonly controller: SharingController;
-  readonly run: (action: () => Promise<void>) => Promise<boolean>;
+  readonly controller: Pick<SharingController, "appleAvailable" | "signIn">;
+  readonly run: (action: () => Promise<void>, message?: string) => Promise<boolean>;
   readonly busy: boolean;
 }) {
   const palette = usePalette();
@@ -95,7 +107,12 @@ export function SignInActions({
           accessibilityLabel={option.title}
           accessibilityState={{ disabled: busy }}
           disabled={busy}
-          onPress={() => void run(() => controller.signIn(option.provider))}
+          onPress={() =>
+            void run(
+              () => controller.signIn(option.provider),
+              "Anmeldung fehlgeschlagen. Versuche es erneut.",
+            )
+          }
           style={({ pressed }) => ({
             minHeight: CONTROL_HEIGHT.large,
             gap: SPACING.md,

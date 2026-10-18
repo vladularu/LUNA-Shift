@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
 import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
-import { salaryDetailsRoute, settingsEditorRoute } from "@/navigation/routes";
+import { dayEditorRoute, salaryDetailsRoute, settingsEditorRoute } from "@/navigation/routes";
 import { SPACING } from "@/theme/tokens";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
@@ -60,11 +60,24 @@ export function NetPayAutomaticEntryCard({
     if (!data.busy) setDialog(null);
   }
   const components = () => router.push(salaryDetailsRoute(month, "components"));
-  const services = () => router.push(salaryDetailsRoute(month, "services"));
   const premiums = () => router.push(salaryDetailsRoute(month, "premiums"));
   const showServices = available !== null || showPremiumDetails;
+  const showComponentsLink = available === null && proposedGrossCents === null;
+  const showPremiumsLink = available === null && showServices && premiumCents === undefined;
+  const showSettingsLink = configured && !blocked && data.status === "ready";
+  const recovery =
+    forecast?.recovery ??
+    (forecast?.result.status === "unavailable" && forecast.result.stage === "net-pay"
+      ? { kind: "net-settings" as const }
+      : null);
+  function recover() {
+    if (recovery?.kind === "entry")
+      router.push(dayEditorRoute(recovery.date, "SHIFT", recovery.entryId));
+    else if (recovery?.kind === "profile") router.push(settingsEditorRoute(recovery.section));
+    else if (recovery?.kind === "net-settings") open("settings");
+  }
   const summary = configured
-    ? `Klasse ${settings.profile.taxClass} · ${settings.profile.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer${forecast?.pensionOmitted ? " · ZVK offen" : ""}`
+    ? `Steuerklasse ${settings.profile.taxClass} · ${settings.profile.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer${forecast?.pensionOmitted ? " · Zusatzversorgung nicht berücksichtigt" : ""}`
     : "Einmal einrichten · danach automatisch";
   return (
     <>
@@ -98,9 +111,7 @@ export function NetPayAutomaticEntryCard({
                 />
               ) : null}
               {blocked ? (
-                <NetPayText>
-                  In einem aktiven Testmonat ist die persönliche Netto-Prognose gesperrt.
-                </NetPayText>
+                <NetPayText>Für Testdaten gibt es keine Netto-Prognose.</NetPayText>
               ) : data.status === "loading" ? (
                 <NetPayText>Netto-Angaben werden geladen …</NetPayText>
               ) : data.status === "error" ? (
@@ -125,17 +136,15 @@ export function NetPayAutomaticEntryCard({
                       ? forecast.result.reason
                       : "Netto wird berechnet …"}
                   </NetPayText>
-                  {forecast?.result.status === "unavailable" ? (
-                    <SecondaryButton
-                      onPress={
-                        forecast.result.stage === "net-pay"
-                          ? () => open("settings")
-                          : () => router.push(settingsEditorRoute("TARIFF"))
-                      }
-                    >
-                      {forecast.result.stage === "net-pay"
-                        ? "Netto-Angaben prüfen"
-                        : "Gehaltsgrundlage ansehen"}
+                  {forecast?.result.status === "unavailable" && recovery ? (
+                    <SecondaryButton onPress={recover}>
+                      {recovery.kind === "entry"
+                        ? "Dienstzeiten prüfen"
+                        : recovery.kind === "net-settings"
+                          ? "Netto-Angaben prüfen"
+                          : recovery.section === "WORK"
+                            ? "Arbeitsprofil prüfen"
+                            : "Gehaltsangaben prüfen"}
                     </SecondaryButton>
                   ) : null}
                 </>
@@ -151,26 +160,30 @@ export function NetPayAutomaticEntryCard({
             ) : null}
           </>
         )}
-        <SalarySectionCard title="Details">
-          <SalaryNavigationRow title="Gehaltsbestandteile" onPress={components} />
-          {showServices ? (
-            <>
-              <CardSeparator />
-              <SalaryNavigationRow title="Zuschläge je Dienst" onPress={services} />
-            </>
-          ) : null}
-          {!blocked && data.status === "ready" ? (
-            <>
-              <CardSeparator />
-              <SalaryNavigationRow
-                title="Netto-Einstellungen"
-                subtitle={summary}
-                onPress={() => open(configured ? "settings" : "setup")}
-                disabled={data.busy}
-              />
-            </>
-          ) : null}
-        </SalarySectionCard>
+        {showComponentsLink || showPremiumsLink || showSettingsLink ? (
+          <SalarySectionCard title="Details">
+            {showComponentsLink ? (
+              <SalaryNavigationRow title="Gehaltsbestandteile" onPress={components} />
+            ) : null}
+            {showPremiumsLink ? (
+              <>
+                {showComponentsLink ? <CardSeparator /> : null}
+                <SalaryNavigationRow title="Zeitzuschläge" onPress={premiums} />
+              </>
+            ) : null}
+            {showSettingsLink ? (
+              <>
+                {showComponentsLink || showPremiumsLink ? <CardSeparator /> : null}
+                <SalaryNavigationRow
+                  title="Netto-Angaben"
+                  subtitle={summary}
+                  onPress={() => open("settings")}
+                  disabled={data.busy}
+                />
+              </>
+            ) : null}
+          </SalarySectionCard>
+        ) : null}
         <Text style={{ textAlign: "center", color: palette.textMuted, ...TYPOGRAPHY.footnote }}>
           Prognose aus deinem geplanten Dienstplan.
         </Text>

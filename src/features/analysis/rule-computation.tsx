@@ -30,18 +30,18 @@ export function captureRuleComputation<T>(compute: () => T): RuleComputationResu
 
 function ruleFailureMessage(failure: RuleResolutionFailure): string {
   if (failure.code === "INVALID_EFFECTIVE_DATE") {
-    return "Der gewählte Zeitraum ist ungültig. Die Berechnung wurde nicht durchgeführt.";
+    return "Der gewählte Zeitraum ist ungültig.";
   }
   if (failure.code === "RULE_PACKAGE_AMBIGUOUS") {
-    return "Für diesen Zeitraum sind mehrere Regelstände aktiv. Die Berechnung wurde nicht durchgeführt.";
+    return "Für diesen Zeitraum liegen widersprüchliche Berechnungsdaten vor.";
   }
   if (failure.kind === "HOLIDAY") {
-    return "Für diesen Zeitraum fehlen gültige Feiertagsregeln. Die Berechnung wurde nicht durchgeführt.";
+    return "Für diesen Zeitraum fehlen geprüfte Feiertagsdaten.";
   }
   if (failure.kind === "TARIFF") {
-    return "Für diesen Zeitraum fehlen gültige Tarifregeln. Die Berechnung wurde nicht durchgeführt.";
+    return "Für diesen Zeitraum fehlen geprüfte Tarifdaten.";
   }
-  return "Für diesen Zeitraum fehlen gültige Arbeitszeitregeln. Die Berechnung wurde nicht durchgeführt.";
+  return "Für diesen Zeitraum fehlen geprüfte Arbeitszeitregeln.";
 }
 
 export function RuleComputationFailureView({
@@ -84,9 +84,10 @@ export function RuleComputationNotice({
   }, [code, failure.error]);
 
   return (
-    <View accessibilityRole="alert" accessible>
+    <View>
       <SurfaceCard style={{ gap: SPACING.sm, padding: SPACING.lg }}>
         <Text
+          accessibilityRole="alert"
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
           style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}

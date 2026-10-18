@@ -75,9 +75,7 @@ export function LocationPickerScreen() {
         choose(location);
       } catch {
         setResolvingId(null);
-        setSelectionError(
-          "Adresse konnte nicht geladen werden. Du kannst den Ort als freien Ort übernehmen.",
-        );
+        setSelectionError("Adresse nicht verfügbar. Übernimm nur den Ortsnamen.");
       }
     })();
   }
@@ -87,7 +85,7 @@ export function LocationPickerScreen() {
       return (
         <Pressable
           accessibilityHint="Übernimmt die Eingabe ohne Kartenposition"
-          accessibilityLabel={`${item.query} als eigenen Ort verwenden`}
+          accessibilityLabel={`„${item.query}“ als Ort übernehmen`}
           accessibilityRole="button"
           disabled={resolvingId !== null}
           onPress={() => choose({ name: item.query })}
@@ -105,7 +103,7 @@ export function LocationPickerScreen() {
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             style={[styles.customResultText, { color: palette.text }]}
           >
-            {item.query}
+            {`„${item.query}“ als Ort übernehmen`}
           </Text>
         </Pressable>
       );
@@ -190,7 +188,7 @@ export function LocationPickerScreen() {
                 setQuery(value);
               }}
               onSubmitEditing={submitCustomLocation}
-              placeholder="Gib einen Ort ein"
+              placeholder="Ort oder Adresse"
               placeholderTextColor={palette.textMuted}
               returnKeyType="done"
               selectionColor={palette.primary}

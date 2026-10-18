@@ -1,6 +1,6 @@
 import { Text } from "@/ui/text";
 import { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding";
 import { SelectField } from "./onboarding-controls";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
@@ -20,12 +20,14 @@ export function PercentageSlider({
   onBasisChange,
   onHoursChange,
   onInteractionChange,
+  showValue = true,
 }: {
   readonly weeklyHours: string;
   readonly basis: number;
   readonly onBasisChange: (value: number) => void;
   readonly onHoursChange: (value: string) => void;
   readonly onInteractionChange: (active: boolean) => void;
+  readonly showValue?: boolean;
 }) {
   const p = useOnboardingPalette();
   const [width, setWidth] = useState(0);
@@ -37,8 +39,8 @@ export function PercentageSlider({
       ? "Noch nicht gewählt"
       : `${Number(percentage.toFixed(1)).toLocaleString("de-DE")} %`;
   const position = ((clamped - 10) / 90) * 100;
-  function choose(value: number) {
-    const minutes = weeklyMinutesFromPercentage(basis, value);
+  function choose(value: number, fullTime = basis) {
+    const minutes = weeklyMinutesFromPercentage(fullTime, value);
     onHoursChange(String(Number((minutes / 60).toFixed(2))).replace(".", ","));
   }
   function touch(locationX: number) {
@@ -48,9 +50,14 @@ export function PercentageSlider({
     <View style={styles.root}>
       <View style={styles.heading}>
         <Text style={[styles.label, { color: p.text }]}>Teilzeit in Prozent</Text>
-        <Text testID="onboarding-percentage-value" style={[styles.label, { color: p.accentText }]}>
-          {display}
-        </Text>
+        {showValue ? (
+          <Text
+            testID="onboarding-percentage-value"
+            style={[styles.label, { color: p.accentText }]}
+          >
+            {display}
+          </Text>
+        ) : null}
       </View>
       <View
         testID="onboarding-percentage-slider"
@@ -58,7 +65,12 @@ export function PercentageSlider({
         accessibilityRole="adjustable"
         accessibilityLabel="Teilzeit in Prozent"
         accessibilityHint="In Schritten von einem Prozent anpassen. Die Wochenstunden werden daraus berechnet."
-        accessibilityValue={{ min: 10, max: 100, now: clamped, text: display }}
+        accessibilityValue={{
+          min: 10,
+          max: 100,
+          now: clamped,
+          text: `${display}, ${weeklyHours} Wochenstunden`,
+        }}
         accessibilityActions={[
           { name: "increment", label: "Ein Prozent mehr" },
           { name: "decrement", label: "Ein Prozent weniger" },
@@ -97,6 +109,35 @@ export function PercentageSlider({
           />
         </View>
       </View>
+      <View accessibilityElementsHidden style={styles.heading}>
+        <Text style={[styles.caption, { color: p.muted }]}>10 %</Text>
+        <Text style={[styles.caption, { color: p.muted }]}>100 %</Text>
+      </View>
+      <View style={styles.presets}>
+        {[50, 75, 80, 100].map((value) => {
+          const selected = percentage != null && Math.abs(percentage - value) < 0.05;
+          return (
+            <Pressable
+              key={value}
+              accessibilityRole="button"
+              accessibilityLabel={`${value} Prozent auswählen`}
+              accessibilityState={{ selected }}
+              onPress={() => choose(value)}
+              style={[
+                styles.preset,
+                {
+                  backgroundColor: selected ? p.highlight : p.surface,
+                  borderColor: selected ? p.highlight : p.control,
+                },
+              ]}
+            >
+              <Text style={[styles.caption, { color: selected ? p.onHighlight : p.muted }]}>
+                {value} %
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
       <SelectField
         compact
         label="100 % entsprechen"
@@ -105,7 +146,11 @@ export function PercentageSlider({
           value,
           label: `${String(value).replace(".", ",")} h`,
         }))}
-        onChange={onBasisChange}
+        onChange={(value) => {
+          onBasisChange(value);
+          if (percentage != null && percentage >= 10 && percentage <= 100)
+            choose(percentage, value);
+        }}
       />
       {percentage != null && (percentage < 10 || percentage > 100) ? (
         <Text style={[styles.caption, { color: p.muted }]}>
@@ -129,6 +174,17 @@ const styles = StyleSheet.create({
     minHeight: CONTROL_HEIGHT.compact,
     justifyContent: "center",
     marginHorizontal: SPACING.md,
+  },
+  presets: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
+  preset: {
+    flexGrow: 1,
+    minWidth: 54,
+    minHeight: CONTROL_HEIGHT.compact,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: RADII.control,
+    paddingHorizontal: SPACING.xxs,
   },
   track: { height: 6, borderRadius: RADII.pill },
   fill: { height: "100%", borderRadius: RADII.pill },

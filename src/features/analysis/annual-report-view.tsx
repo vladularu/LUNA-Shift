@@ -75,7 +75,7 @@ export function AnnualReportScreen({
           {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
           {preferences.error ? <AnalysisCoverageNote message={preferences.error} /> : null}
           {preferences.enabled === null && !preferences.error ? (
-            <AnalysisCoverageNote message="Prüfungseinstellungen werden geladen … Hinweise sind vorläufig vollständig sichtbar." />
+            <AnalysisCoverageNote message="Prüfung wird geladen …" />
           ) : null}
 
           <AnnualOverview report={report} pending={pending} />
@@ -155,20 +155,16 @@ export function AnnualReportDetails({
                 message={
                   pending
                     ? "Die Jahresprüfung wird berechnet …"
-                    : "Die Jahresprüfung benötigt vollständige Regelstände."
+                    : "Für die vollständige Jahresprüfung fehlen Berechnungsdaten."
                 }
               />
             ) : null}
           </>
         ) : (
           <AnalysisDetailSummaryCard
-            title={section === "WORK" ? "Deine Stunden" : "Dein Jahresgehalt"}
+            title={section === "WORK" ? "Deine Stunden" : "Gehaltsprognose"}
             period={String(report.year)}
-            caption={
-              section === "WORK"
-                ? "Arbeitszeit und Schichten im Jahresverlauf."
-                : "Brutto-Schätzungen nach Monaten · antippen für Details."
-            }
+            caption={section === "WORK" ? undefined : "Brutto nach Monaten"}
           />
         )}
         {testMonthCount > 0 ? <AnnualTestBadge count={testMonthCount} /> : null}
@@ -177,7 +173,7 @@ export function AnnualReportDetails({
             {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
             {preferences.error ? <AnalysisCoverageNote message={preferences.error} /> : null}
             {preferences.enabled === null && !preferences.error ? (
-              <AnalysisCoverageNote message="Prüfungseinstellungen werden geladen … Hinweise sind vorläufig vollständig sichtbar." />
+              <AnalysisCoverageNote message="Prüfung wird geladen …" />
             ) : null}
             {!pending && report.complianceCoverageComplete ? (
               <AnnualCheckDetails report={report} onSelectMonth={onSelectMonth} />
@@ -217,7 +213,7 @@ export function AnnualReportDetails({
             />
 
             {!pending && !report.worktimeCoverageComplete ? (
-              <AnalysisCoverageNote message="Soll, Saldo und Abwesenheitsgutschriften sind ohne vollständigen Feiertagsstand nicht verfügbar. Angezeigt werden sicher berechenbare Arbeits- und Fortbildungszeiten." />
+              <AnalysisCoverageNote message="Feiertagsdaten fehlen: Soll, Saldo und Zeitgutschriften sind nicht berechenbar." />
             ) : null}
 
             <MonthlyBars
@@ -418,7 +414,7 @@ function AnnualSalaryDetails({
           style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
         >
           {available
-            ? `Summe aus ${report.availablePayMonthCount} von 12 Monatsschätzungen`
+            ? `${report.availablePayMonthCount < 12 ? "Brutto-Teilsumme" : "Brutto-Schätzung"} · ${report.availablePayMonthCount} von 12 Monaten`
             : "Keine unterstützte Monatsschätzung verfügbar"}
         </Text>
       </View>

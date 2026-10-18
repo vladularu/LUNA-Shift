@@ -249,7 +249,7 @@ export function AnalysisScreen({
               <AnalysisCoverageNote message={checkPreferences.error} />
             ) : null}
             {checkPreferences.enabled === null && !checkPreferences.error ? (
-              <AnalysisCoverageNote message="Prüfungseinstellungen werden geladen … Hinweise sind vorläufig vollständig sichtbar." />
+              <AnalysisCoverageNote message="Prüfung wird geladen …" />
             ) : null}
 
             <MonthOverview

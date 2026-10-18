@@ -1,0 +1,64 @@
+# LUNA: Gehaltswege, Einstieg und Erinnerungen P18–P20
+
+Freigabe: P18–P20 in kleinen Arbeitspaketen umsetzen und gründlich testen. Erinnerungen ausdrücklich ohne persönliche Titel, Orte oder Notizen. Kein Commit, Push, App-Build oder OTA.
+
+## Task-Vertrag
+
+- Ziel: die drei zurückgestellten Befunde AS-11, OS-11 und CE-09 im freigegebenen Umfang bearbeiten: klare Gehaltsnavigation, kürzerer Einstieg mit Korrekturmöglichkeiten und neutrale verständliche Erinnerungen.
+- Nicht-Ziele: Gehalts-/Prüfregeln, neue Abhängigkeiten, Datenmigrationen, neue Berechtigungen, native Konfiguration, neue Deep Links, Veröffentlichung oder zusätzliche persönliche Daten in Benachrichtigungen.
+- Zielplattform: iPhone. TestFlight Build 5 ist der zuletzt genannte installierte Stand; die lokalen Änderungen sind nicht verteilt. Geräteabnahme bleibt separat offen.
+- Arbeitskopie: `.worktrees/luna-copy-flows`, Branch `codex/luna-copy-flows`, Basis `84d23045a3525eddee4827f1daa82b806b734dbe`. Alle 122 zuvor geänderten/neuen Dateien sind vor Beginn mit dem letzten Manifest hashgleich geprüft; nichts gestaged. Andere Checkouts bleiben unberührt.
+- Expo: `~57.0.22`, offizielle [SDK-57-Referenz](https://docs.expo.dev/versions/v57.0.0/) und [Notifications-Dokumentation](https://docs.expo.dev/versions/v57.0.0/sdk/notifications/) vor Änderungen gelesen. Keine Versionsänderung.
+- Ablauf: read-only Analyse, begrenzter Scope, bestehende Tests zuerst an das gewünschte Verhalten anpassen, RED/GREEN, unabhängiger Review, anschließend gemeinsamer `npm.cmd run verify:fast`. Schwere Tests seriell; keine schwächeren Timeouts oder Prüfgrenzen.
+- Jede Umsetzung bleibt innerhalb von 15 Dateien einschließlich Tests. Zentrale Berichte und Befundstatus bearbeitet nur der übergeordnete Task. Implementierung und Review laufen nach `ecc:orch-change-feature`; der Nutzer hat den Plan bereits ausdrücklich freigegeben. Commit und Lieferung bleiben ausgeschlossen.
+
+## P18 / AS-11: Gehaltswege ordnen
+
+Scope: sechs bestehende Dateien unter `src/features/salary/`: `net-pay-automatic-entry-card.tsx`, `net-pay-salary-summary.tsx`, `salary-detail-views.tsx`, `salary-details-screen.tsx`, `net-pay-premium-details.tsx`, `net-pay-automatic-screen.component.test.tsx`, sowie `src/features/analysis/analysis-rule-coverage.component.test.tsx`; insgesamt sieben Dateien einschließlich Tests. Der zusätzliche bestehende Integrationstest wird nach dem Vollgate-Befund auf die freigegebene Navigation umgestellt; alle fachlichen Erwartungen bleiben erhalten.
+
+- Brutto und Abzüge bleiben direkte, sichtbar bedienbare Einstiege. Die zusätzliche Bestandteile-Zeile entfällt nur bei bereits vorhandenem Brutto-Einstieg; der Fallback ohne Bruttobetrag bleibt.
+- Dienstbezogene Zuschläge sind unter Zuschläge gebündelt, auch ohne verfügbare Nettoprognose. Angaben erhalten einen eindeutigen Einstieg; Einrichtung und Fehler-Recovery bleiben möglich.
+- Fachliche Erklärung steht im passenden Detailbereich, SFN-Details sind bei Bedarf aufklappbar. Die bisherige Basis-Route bleibt für bestehende Links erhalten.
+- Monatswechsel, Parameter, Rückwege, ungültige Links, Testdaten-Sperre, fehlende Angaben, Vorläufigkeit und Zusatzversorgungsgrenzen werden abgesichert. Keine Engine-, Hook-, Persistenz- oder Routenvertragsänderung.
+
+## P19 / OS-11: vierseitiger Einstieg
+
+Scope: `src/features/onboarding/onboarding-screen.tsx` und bestehende `onboarding-screen.component.test.tsx`; zwei Dateien.
+
+- Vier Seiten: Begrüßung mit Berufsbereich, Arbeitszeit/Arbeitsort, aufschiebbares Gehalt und Zusammenfassung. Fortschritt folgt der tatsächlichen Reihenfolge.
+- Alle gezielten Korrekturen aus der Zusammenfassung bleiben möglich. Übernehmen beziehungsweise interner Rückweg erhält die übrigen Eingaben und führt passend zurück.
+- Bestehende Tarif-/Stunden-/Regionsvalidierung, gespeicherte Payloads, Vorschau ohne Speicherung und spätere Gehaltseinrichtung bleiben erhalten. Keine neue Zwischenspeicherung oder Autosave-Zusage.
+- Speichern, Fehler/Retry, Mehrfachtippen, Navigation und Abschluss werden gezielt geprüft; keine neue Berechnungslogik.
+
+## P20 / CE-09: Erinnerungen ohne persönliche Angaben
+
+Scope: `src/infrastructure/notifications/entry-notifications.native.ts` und bestehende `entry-notifications.native.test.ts`; zwei Dateien je Teilschritt mit getrennten Vorhersnapshots. Inhalt und ein neu belegter Zeitbezugsfehler werden getrennt bearbeitet.
+
+- P20a: „Erinnerung an deinen Dienstbeginn.“ beziehungsweise „Erinnerung an dein Dienstende.“, Termin analog; Alarm ebenfalls neutraler Beginnbezug. Keine persönlichen Titel, Orte oder Notizen in sichtbarem Inhalt oder neuem Payload. Keine Behauptung einer aktuellen Restzeit bei möglicherweise verspäteter Zustellung. Produktname, Ton und bestehendes `data: { reminderKind }` bleiben erhalten.
+- Ganztägige Einträge erhalten einen neutralen Bezug, weil die bestehende Zeitplanung für START und END Mitternacht verwendet. Keine unangekündigte Änderung dieser Fachsemantik.
+- P20b: Die read-only Analyse belegt am Dienst 20.10.2026, 22–06 Uhr (Berlin), dass END derzeit auf den 20. statt 21.10. fällt. Ein erneuter Abgleich nach Mitternacht verwirft außerdem den noch laufenden Dienst. Der Fix verwendet die bestehende Semantik `Ende <= Beginn → Folgetag` und einen begrenzten Vortagsblick für Overnight-Einträge mit künftigem Trigger. Keine beliebigen Rückblicke für AFTER-Days/Weeks; ganztägige Mitternachtssemantik bleibt erhalten. Eigene RED/GREEN-Fälle prüfen START/END, Nullvorlauf/BEFORE/AFTER, Mitternacht, 24-Stunden-Einträge, DST und Wiederholungen. Kalendertage werden vor der lokalen Zeitauflösung verschoben, nicht pauschal 24 Stunden auf einen Instant addiert.
+- Bestehende Berechtigungs-, Stornierungs-, Wiederholungs- und Fehlerbereinigungswege bleiben erhalten. Ändern, Deaktivieren, Löschen, keine Doppelungen und neutrale Payloads werden geprüft. Kein neues Öffnungsziel versprechen.
+
+## Nachweise und Geräteabnahme
+
+P18: vollständige betroffene Komponentensuite mit 40/40 Fällen grün, Exitstatus 0. Der RED-Lauf zeigte 14 passende Verhaltensabweichungen und eine falsche neue 2027-Testvorbedingung; diese wurde ausschließlich durch einen bestehenden verfügbaren Januar-Zeitraum und einen passenden Dienst korrigiert, ohne fachliche Assertions abzuschwächen. Unabhängiger Quellcode-/Sicherheitsreview ohne Restbefunde; der frühere Fixture-Hinweis ist mit finalem Hash und GREEN-Nachweis aufgelöst. Geänderte Pfade und Vorher-/Nachherstände sind im Phasen-Diff getrennt von früheren Paketen erfasst.
+
+Der Vollgate fand zusätzlich acht bestehende Navigationstests in `analysis-rule-coverage.component.test.tsx`, die noch den entfernten direkten Dienstzuschlagseinstieg erwarteten. Als siebte Scope-Datei prüfen sie jetzt den tatsächlichen Weg Brutto → Bestandteile → Zuschläge → Zuschläge je Dienst, mit expliziten Monats-/Routenprüfungen und tatsächlichen Detailansichten. Alle bisherigen fachlichen Betrags-/Tarif-/Regel-/SFN-Erwartungen bleiben erhalten; keine Produktänderung war nötig. Die nun tatsächlich gerenderte Serviceansicht benötigt im bestehenden Test-Mock feste Safe-Area-Insets; eine zusätzliche Header-Existenzprüfung berücksichtigt die legitimen gleichlautenden Überschriften von Seite und Betragskarte. Die Zielrouten und gerenderten Inhalte sichern den jeweiligen Seitenwechsel ab. Fehlversuche bleiben archiviert. Beide vollständigen Suiten sind gemeinsam mit 87/87 Fällen grün (47 Coverage, 40 Gehalt); Typecheck und unabhängiger Zusatzreview ohne Befund.
+
+P19: drei Komponentensuiten mit 41/41 Fällen (31 Onboarding, darunter neun zusätzliche Fälle; zehn unveränderte Controls/Slider) und drei unveränderte Unitsuiten mit 24/24 Fällen grün. Die neue Schrittfolge wurde zuerst rot nachgewiesen; zusätzliche gezielte RED-Fälle belegen Mehrfachabschluss und tatsächlich mehrfaches Speichern nach bereits erfolgreichem Save. Die minimale Ref-Sperre verhindert dies und erlaubt nach einem Fehler weiterhin Retry. Ein erster GREEN-Versuch hatte eine falsche neue TVöD-Testannahme; die Fixture verwendet jetzt TV-H KR mit dessen bestehender Wochenstundenvalidierung, ohne Produktionsregeländerung. Scoped ESLint, Prettier und Diffprüfung bestanden; unabhängiger Code-/Sicherheitsreview ohne Restbefunde.
+
+P20a: 15/15 fokussierte Fälle grün nach erwartetem Inhalts-RED. Vollständige SDK-Requests werden auf unveränderten Produktnamen, Sound und neutrale Metadaten sowie Abwesenheit persönlicher Testwerte geprüft. Unabhängiger Inhalts-/Sicherheitsreview ohne Befund.
+
+P20b: abschließend 37/37 fokussierte Fälle einschließlich des optionalen Altangabenfelds grün. Der validierte RED-Lauf belegte zehn echte Zeit-/Abgleich-/Registryfehler; ein vorausgehender Versuch mit zwei falschen Recurrence-Fixtures bleibt separat archiviert. Der Review fand zusätzlich eine zu weit reichende DST-Auflösung für START beziehungsweise gleichentägiges END. Zwei eigene Kompatibilitätsfälle wurden vor der Korrektur rot nachgewiesen und sind jetzt grün: Die bestehende `compatible`-Auflösung bleibt dort erhalten, die wiederverwendeten Bounds greifen ausschließlich bei END eines zeitgebundenen Overnight-Eintrags. Die eigentliche Kalendertag-/DST-Berechnung stammt aus dem bestehenden `calculateTimedShiftBounds`; keine doppelte Fachlogik. Das tatsächliche Laden und Reconcile umfasst den Vortag auch am Jahreswechsel, sodass der begrenzte Rückblick wirksam ist. Abschließend sind 47/47 Unit-/Integrationsfälle für Native Scheduler, Reconcile und Ports sowie 13/13 Provider-Komponentenfälle bestanden, jeweils Exitstatus 0. Scoped ESLint, Prettier und Diffprüfung sind ebenfalls grün. Der unabhängige Code-/Sicherheitsreview bestätigt beide finalen Quellhashes ohne Restbefund. Ganztägige Mitternachtsplanung und die bisherige Minuten-Semantik der DAY-/WEEK-Abstände bleiben unverändert.
+
+Der gemeinsame `npm.cmd run verify:fast` ist am 15.10.2026 um 22:53 Uhr vollständig bestanden (22:44:12–22:53:58, Europe/Berlin), Exitstatus 0: Regelprüfung, Typecheck, ESLint ohne Warnungen, Prettier, 8.832 Unit-Tests in 450 Dateien, 1.178 Komponententests in 137 Suiten, alle 13 nachfolgenden Skriptprüfungen und Diffprüfung. Alle 126 geänderten/neuen Dateien blieben im Lauf hashgleich. Danach wurden ausschließlich dieser Bericht und der Gesamtbericht ergänzt; nichts ist gestaged, HEAD bleibt unverändert. Der lokale Graft-Suchindex ist aktualisiert.
+
+Der erste gemeinsame Lauf stoppte beim Typecheck: `CalendarEntry.allDay` ist bei älteren Einträgen optional. Der reine Aufrufzusatz `entry.allDay === true` normalisiert diese Angabe für den neuen Texthelfer; die bisherige Laufzeitsemantik bleibt erhalten. Ein echter Legacy-Eintrag ohne Feld prüft zusätzlich den vollständigen neutralen Request und den exakten Zeitpunkt. Danach 37/37 native und 47/47 Unit-/Integrationsfälle grün; Zusatzdelta unabhängig ohne Befund geprüft. Der erste Fehlerlauf und sein Quellmanifest bleiben archiviert. Der zweite Gesamtgate fand die acht oben beschriebenen alten Navigationen; beide Fehlerläufe und ihre Quellmanifeste bleiben archiviert. Der erfolgreiche dritte Lauf prüft sämtliche ergänzten finalen Quellen, ohne gelockerte Typregeln, Timeouts oder Fachassertions.
+
+Von 46 ursprünglichen Befunden sind damit 45 im Code umgesetzt und einer als überholt korrigiert; keiner ist mehr teilweise umgesetzt oder zurückgestellt. Dies ist der Code-/Teststatus, keine Gerätefreigabe.
+
+Bestehende Zeitgrenzen außerhalb dieses Pakets: Ganztägige START-/END-Erinnerungen behalten ihre Mitternachtsplanung. Erinnerungen mehrere Tage oder Wochen nach einem älteren Eintrag werden beim erneuten Abgleich weiterhin nicht generell rekonstruiert; der hier korrigierte Rückblick ist auf Overnight und höchstens einen Vortag begrenzt. Bereits beim Betriebssystem registrierte Texte wechseln durch vorhandenes erneutes Planen/Abgleichen; eine globale Migration wurde nicht eingeführt.
+
+Die [iPhone-Prüfliste](C:/Users/veron/.codex/visualizations/2026/10/15/01a14034-a8b5-77b2-b0e1-6cfcd4126913/implementation/P18-P20/iPhone-Abnahme.md) enthält 18 konkrete Fälle, alle offen und nicht durchgeführt. Automatisierte Tests ersetzen keine iPhone-Zustellung, Screenshots, VoiceOver oder Gestenprüfung.
+
+Nachweise: [Gesamtprüflauf](C:/Users/veron/.codex/visualizations/2026/10/15/01a14034-a8b5-77b2-b0e1-6cfcd4126913/implementation/P18-P20/verify-fast.log), [Exitstatus und Zeiten](C:/Users/veron/.codex/visualizations/2026/10/15/01a14034-a8b5-77b2-b0e1-6cfcd4126913/implementation/P18-P20/verify-fast-result.json), [Hashabgleich](C:/Users/veron/.codex/visualizations/2026/10/15/01a14034-a8b5-77b2-b0e1-6cfcd4126913/implementation/P18-P20/verified-source-evidence.json), [Reviews](C:/Users/veron/.codex/visualizations/2026/10/15/01a14034-a8b5-77b2-b0e1-6cfcd4126913/implementation/P18-P20/review.md). Kein Commit, Push, App-Build oder OTA; aus dieser Arbeit wurde nichts verteilt.

@@ -468,10 +468,10 @@ describe("appearance controls", () => {
     const screen = await render(screenWith({ mode: "dark" }));
     await fireEvent.press(screen.getByRole("button", { name: "Kalenderoptionen zurücksetzen" }));
     expect(alert.mock.calls[0][1]).toMatch(
-      /Kalenderhintergrund, Bildsichtbarkeit, sichtbare Inhalte, Dienstbezeichnung, Startzeit und Gesamtdauer/,
+      /Kalenderfoto wird entfernt und die Kalenderanzeige zurückgesetzt/,
     );
     expect(alert.mock.calls[0][1]).toMatch(
-      /appweite Hell-\/Dunkel-\/Systemmodus, Schichtfarben, Profile und Dienste bleiben erhalten/,
+      /Hell-\/Dunkelmodus, Schichtfarben, Profile und Dienste bleiben erhalten/,
     );
     await alert.mock.calls[0][2]?.find((button) => button.text === "Zurücksetzen")?.onPress?.();
     expect(mockDisplay.resetDisplay).toHaveBeenCalledTimes(1);

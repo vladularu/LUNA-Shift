@@ -67,7 +67,7 @@ export function AppTabs() {
       <Tabs.Screen
         name="(templates)"
         options={{
-          title: "Schichten",
+          title: "Vorlagen",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               accessible={false}

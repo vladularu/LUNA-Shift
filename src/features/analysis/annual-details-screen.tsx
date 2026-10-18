@@ -93,7 +93,7 @@ export function AnnualDetailsScreen() {
       {annual.error || annual.ruleFailure ? (
         <LoadFailureView
           title="Jahresdetails nicht verfügbar"
-          message={annual.error ?? "Für diese Auswertung fehlen gültige Regelstände."}
+          message={annual.error ?? "Für diese Auswertung fehlen Berechnungsdaten."}
           onRetry={annual.retry}
         />
       ) : !ready || !report ? (

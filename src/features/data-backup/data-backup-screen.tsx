@@ -53,7 +53,7 @@ export function DataBackupScreen() {
     try {
       const result = await createAndShare();
       if (result === "shared") {
-        showFeedback({ message: "Backup wurde an iOS übergeben." });
+        showFeedback({ message: "Prüfe am gewählten Ort, ob dein Backup gespeichert ist." });
       }
     } catch (error) {
       if (error instanceof BackupTempCleanupError) {
@@ -124,7 +124,7 @@ export function DataBackupScreen() {
     if (candidate === null) return;
     confirmDestructiveAction({
       title: "Aktuelle Daten ersetzen?",
-      message: `Das Backup vom ${backupDate(candidate.preview.createdAt)} ersetzt dein Profil, deine Vorlagen, Dienste, Termine, Tarifentscheidungen und sichtbaren Einstellungen. Dieser Schritt lässt sich nicht rückgängig machen.`,
+      message: `Das Backup vom ${backupDate(candidate.preview.createdAt)} ersetzt deine aktuellen Daten. Das lässt sich nicht rückgängig machen.`,
       confirmLabel: "Daten ersetzen",
       onConfirm: () => void restoreBackup(),
     });
@@ -151,8 +151,8 @@ export function DataBackupScreen() {
 
           <View style={{ gap: SPACING.sm }}>
             <SectionHeader
-              caption="Eine vollständige Kopie deiner aktuellen LUNA-Shift-Daten."
-              title="Lokales Backup"
+              caption="Dienste, Termine und Einstellungen als Datei sichern."
+              title="Backup erstellen"
             />
             <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
               <Text
@@ -167,8 +167,7 @@ export function DataBackupScreen() {
                 selectable
                 style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
               >
-                Profil, Dienstvorlagen, Dienste, Termine, Tarifentscheidungen und sichtbare
-                Einstellungen.
+                Profil, Vorlagen, Dienste, Termine, Tarifangaben und sichtbare Einstellungen.
               </Text>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
@@ -182,13 +181,13 @@ export function DataBackupScreen() {
                 selectable
                 style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
               >
-                Testlabor-Zustand, geplante Systemmitteilungen und der lokale Regelwerkscache.
+                Testlabor-Zustand, geplante Mitteilungen und zwischengespeicherte Regeln.
               </Text>
             </SurfaceCard>
           </View>
 
           <InlineNotice
-            message="Die JSON-Datei enthält persönliche Daten und ist außerhalb der App nicht verschlüsselt. Lege sie nur an einem geschützten Ort ab."
+            message="Die Datei enthält persönliche Daten und ist nicht verschlüsselt. Bewahre sie geschützt auf."
             tone="warning"
           />
 
@@ -201,22 +200,11 @@ export function DataBackupScreen() {
             Backup erstellen und teilen
           </PrimaryButton>
 
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.textMuted, textAlign: "center", ...TYPOGRAPHY.caption }}
-          >
-            Beim Erstellen wird die lokale Datenbank nicht verändert.
-          </Text>
-
           <View style={{ gap: SPACING.sm }}>
-            <SectionHeader
-              caption="Eine lokale JSON-Sicherung auswählen und vor dem Ersetzen prüfen."
-              title="Backup wiederherstellen"
-            />
+            <SectionHeader title="Backup wiederherstellen" />
 
             <InlineNotice
-              message="Beim Wiederherstellen werden deine aktuellen Daten ersetzt. Lege vorher ein aktuelles Backup an einem geschützten Ort ab."
+              message="Beim Wiederherstellen werden deine aktuellen Daten ersetzt. Sichere sie vorher."
               tone="warning"
             />
 

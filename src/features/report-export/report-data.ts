@@ -9,6 +9,10 @@ import type {
 } from "@/domain/types";
 import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
 import { buildAnnualAvailableReportSteps } from "@/features/analysis/annual-core-report";
+import {
+  selectAnnualCheckDisplay,
+  selectVisibleCompliance,
+} from "@/features/analysis/check-visibility";
 import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
 import { RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { appendReportData, type ReportDocument, type ReportRow } from "./report-document";
@@ -77,7 +81,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       yield;
       step = steps.next();
     }
-    const annual = step.value;
+    const annual = selectAnnualCheckDisplay(step.value, true);
     add("Jahresauswertung", input.period, "Jahresübersicht", {
       ...annual,
       premiumAmount: annual.availablePayMonthCount === 0 ? null : annual.premiumAmount,
@@ -85,12 +89,15 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       allowanceAmount: annual.availablePayMonthCount === 0 ? null : annual.allowanceAmount,
       criticalCount: annual.complianceCoverageComplete ? annual.criticalCount : null,
       warningCount: annual.complianceCoverageComplete ? annual.warningCount : null,
+      infoCount: annual.complianceCoverageComplete ? annual.infoCount : null,
+      prerequisiteCount: annual.complianceCoverageComplete ? (annual.prerequisiteCount ?? 0) : null,
       months: annual.months.map((item) => ({
         ...item,
         premiumAmount: item.estimatedGrossAmount === null ? null : item.premiumAmount,
         criticalCount: item.complianceComplete === false ? null : item.criticalCount,
         warningCount: item.complianceComplete === false ? null : item.warningCount,
         infoCount: item.complianceComplete === false ? null : item.infoCount,
+        prerequisiteCount: item.complianceComplete === false ? null : (item.prerequisiteCount ?? 0),
       })),
       estimatedGrossAmount:
         annual.availablePayMonthCount === 0 ? null : annual.estimatedGrossAmount,
@@ -196,7 +203,11 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
           yield;
           step = steps.next();
         }
-        add("Auswertung", month, "Arbeitszeitrecht und Planung/Erholung", step.value);
+        const compliance = selectVisibleCompliance(step.value, true);
+        add("Auswertung", month, "Arbeitszeitrecht und Planung/Erholung", {
+          ...compliance,
+          prerequisiteCount: compliance.prerequisiteCount ?? 0,
+        });
       } catch (error) {
         if (!(error instanceof RuleResolutionError)) throw error;
         add("Auswertung", month, "Arbeitszeitprüfung", {

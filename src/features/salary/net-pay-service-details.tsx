@@ -189,7 +189,7 @@ export function NetPayServiceDetails({
                   </Text>
                   <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
                     Sozialversicherungsfrei {netPayEuro(selected.tax.socialInsuranceFreeCents)} ·
-                    SV-pflichtig {netPayEuro(selected.tax.socialInsuranceLiablePremiumCents)}
+                    Beitragspflichtig {netPayEuro(selected.tax.socialInsuranceLiablePremiumCents)}
                   </Text>
                 </>
               ) : (
@@ -220,8 +220,8 @@ export function NetPayServiceDetails({
                 </View>
               ) : null}
               <Text style={{ ...TYPOGRAPHY.footnote, color: palette.textMuted }}>
-                Die Aufteilung folgt den geplanten Arbeitszeiten und den SFN-Grenzen. Für die
-                Sozialversicherung gelten eigene Höchstgrenzen.
+                Die Aufteilung nutzt geplante Zeiten. Für Steuern und Sozialversicherung gelten
+                unterschiedliche Grenzen.
               </Text>
             </View>
           ) : null
