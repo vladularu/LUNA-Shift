@@ -211,8 +211,8 @@ describe("ShiftEditOverlay", () => {
     expect(props.onAlarmPress).toHaveBeenCalledTimes(1);
 
     await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Nacht" }));
-    expect(props.onShiftTypeChange).toHaveBeenCalledWith("NIGHT");
+    await fireEvent.press(screen.getByRole("radio", { name: "Fortbildung" }));
+    expect(props.onShiftTypeChange).toHaveBeenCalledWith("TRAINING");
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Station 3" }));
     expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
@@ -303,8 +303,54 @@ describe("ShiftEditOverlay", () => {
     await fireEvent.press(screen.getByLabelText("Auswahl schließen"));
     await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
     expect(screen.getByTestId("shift-edit-type-popover")).toHaveStyle({ top: 6 });
-    expect(screen.getByRole("radio", { name: "Nacht" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("radio", { name: "Nacht" }));
+    expect(screen.getByRole("radio", { name: "Fortbildung" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "Fortbildung" }));
+  });
+
+  it("offers the same five entry kinds as the template editor with one checked option", async () => {
+    const { screen } = await renderOverlay();
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
+
+    const menu = within(screen.getByTestId("shift-edit-type-popover"));
+    expect(menu.getByText("Eintragsart")).toBeVisible();
+    expect(menu.getAllByRole("radio").map((row) => row.props.accessibilityLabel)).toEqual([
+      "Dienst",
+      "Fortbildung",
+      "Urlaub",
+      "Krank",
+      "Frei",
+    ]);
+    expect(menu.getAllByRole("radio", { checked: true })).toHaveLength(1);
+    expect(menu.getByRole("radio", { name: "Dienst", checked: true })).toBeVisible();
+  });
+
+  it.each(["EARLY", "LATE", "NIGHT", "DAY", "CUSTOM"] as const)(
+    "keeps an existing %s service unchanged when Dienst is selected again",
+    async (shiftType) => {
+      const { screen, props } = await renderOverlay({ shiftType, shiftTitle: "Station A" });
+      await fireEvent.press(screen.getByRole("button", { name: /^Dienst: / }));
+      await fireEvent.press(screen.getByRole("radio", { name: "Dienst", checked: true }));
+
+      expect(props.onShiftTypeChange).not.toHaveBeenCalled();
+      expect(props.onStartTimeChange).not.toHaveBeenCalled();
+      expect(props.onEndTimeChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("shift-edit-type-popover")).toBeNull();
+    },
+  );
+
+  it.each([
+    ["Fortbildung", "TRAINING"],
+    ["Urlaub", "VACATION"],
+    ["Krank", "SICK"],
+    ["Frei", "FREE"],
+  ])("changes the entry kind to %s", async (label, type) => {
+    const { screen, props } = await renderOverlay();
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
+    await fireEvent.press(screen.getByRole("radio", { name: label }));
+
+    expect(props.onShiftTypeChange).toHaveBeenCalledTimes(1);
+    expect(props.onShiftTypeChange).toHaveBeenCalledWith(type);
+    expect(screen.queryByTestId("shift-edit-type-popover")).toBeNull();
   });
 
   it("shows the iOS settings action when notifications are denied", async () => {

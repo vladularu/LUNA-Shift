@@ -8,10 +8,6 @@ export const SHIFT_TYPE_GRID_STYLE = Object.freeze({
 
 export const DAY_EDITOR_SHIFT_TYPES: readonly ShiftType[] = Object.freeze([
   "CUSTOM",
-  "EARLY",
-  "LATE",
-  "NIGHT",
-  "DAY",
   "TRAINING",
   "VACATION",
   "SICK",

@@ -62,17 +62,7 @@ import {
 import { locationPickerRoute } from "@/navigation/routes";
 import { focusInvalidField, requiredFieldError } from "@/ui/form-validation";
 
-const TEMPLATE_TYPES: readonly ShiftType[] = [
-  "EARLY",
-  "LATE",
-  "NIGHT",
-  "DAY",
-  "TRAINING",
-  "VACATION",
-  "SICK",
-  "FREE",
-  "CUSTOM",
-];
+const TEMPLATE_TYPES: readonly ShiftType[] = ["CUSTOM", "TRAINING", "VACATION", "SICK", "FREE"];
 
 function isAbsenceType(type: ShiftType): boolean {
   return type === "VACATION" || type === "SICK" || type === "FREE";
@@ -380,10 +370,15 @@ function TemplateEditorForm({
   const nameRef = useRef<TextInput>(null);
   const symbolRef = useRef<TextInput>(null);
   const absence = isAbsenceType(type);
+  const entryType = TEMPLATE_TYPES.includes(type) ? type : "CUSTOM";
   const typeLocked = existing !== null && isAbsenceType(existing.type);
   const createsCalendarEntry = existing === null && quickEntryDate !== undefined;
 
   function changeType(candidate: ShiftType) {
+    if (candidate === entryType) {
+      setTypePickerExpanded(false);
+      return;
+    }
     const useCandidateColor =
       existing === null && (color === SHIFT_TYPE_COLORS[type] || color === DEFAULT_TEMPLATE_COLOR);
     const useCandidateSymbol = existing === null && symbol === DEFAULT_SHIFT_SYMBOLS[type];
@@ -402,7 +397,7 @@ function TemplateEditorForm({
             ...TEMPLATE_TYPES.map((candidate) => SHIFT_TYPE_LABELS[candidate]),
             "Abbrechen",
           ],
-          title: "Dienstart",
+          title: "Eintragsart",
           userInterfaceStyle: palette.dark ? "dark" : "light",
         },
         (index) => {
@@ -586,10 +581,10 @@ function TemplateEditorForm({
           <CompactActionRow
             disabled={typeLocked}
             expanded={Platform.OS === "ios" ? undefined : typePickerExpanded}
-            label="Dienstart"
+            label="Eintragsart"
             onPress={openTypePicker}
             testID="template-type-row"
-            value={SHIFT_TYPE_LABELS[type]}
+            value={SHIFT_TYPE_LABELS[entryType]}
           />
           {typePickerExpanded ? (
             <>
@@ -604,12 +599,12 @@ function TemplateEditorForm({
                 style={{ gap: SPACING.md, padding: SPACING.lg }}
               >
                 <View
-                  accessibilityLabel="Dienstart auswählen"
+                  accessibilityLabel="Eintragsart auswählen"
                   accessibilityRole="radiogroup"
                   style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm }}
                 >
                   {TEMPLATE_TYPES.map((candidate) => {
-                    const selected = candidate === type;
+                    const selected = candidate === entryType;
                     return (
                       <SelectionChip
                         key={candidate}

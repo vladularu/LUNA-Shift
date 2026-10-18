@@ -125,6 +125,7 @@ export function ShiftEditOverlay({
   const [pauseRowBottom, setPauseRowBottom] = useState(144);
   const headerColor = palette.dark ? shiftColor : accessibleChipBackgroundColor(shiftColor);
   const serviceLabel = shiftType === "CUSTOM" ? shiftTitle : SHIFT_TYPE_LABELS[shiftType];
+  const entryType = DAY_EDITOR_SHIFT_TYPES.includes(shiftType) ? shiftType : "CUSTOM";
 
   const openPausePicker = useCallback(() => {
     if (Platform.OS !== "ios") {
@@ -276,9 +277,24 @@ export function ShiftEditOverlay({
               ]}
               testID="shift-edit-type-popover"
             >
-              <ScrollView style={styles.typeScroll}>
+              <Text
+                style={{
+                  ...TYPOGRAPHY.label,
+                  color: palette.textSecondary,
+                  paddingHorizontal: SPACING.lg,
+                  paddingTop: SPACING.md,
+                  paddingBottom: SPACING.sm,
+                }}
+              >
+                Eintragsart
+              </Text>
+              <ScrollView
+                accessibilityRole="radiogroup"
+                accessibilityLabel="Eintragsart auswählen"
+                style={styles.typeScroll}
+              >
                 {DAY_EDITOR_SHIFT_TYPES.map((type) => {
-                  const selected = type === shiftType;
+                  const selected = type === entryType;
                   return (
                     <SelectionRow
                       key={type}
@@ -286,7 +302,7 @@ export function ShiftEditOverlay({
                       selected={selected}
                       separator
                       onPress={() => {
-                        onShiftTypeChange(type);
+                        if (!selected) onShiftTypeChange(type);
                         setPopup(null);
                       }}
                     />
