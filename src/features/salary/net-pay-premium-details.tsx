@@ -31,9 +31,9 @@ export function NetPayPremiumExplanation({
   return (
     <View style={{ gap: SPACING.sm }}>
       <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
-        Die Aufteilung folgt den geplanten Arbeitszeiten und den SFN-Grenzen. Nacht-, Sonn- und
-        Feiertagszuschläge können steuerfrei sein. Samstagszuschläge, bezahlte Pausen und Beträge
-        oberhalb der Grenzen bleiben steuerpflichtig.
+        Die Aufteilung nutzt deine geplanten Zeiten. Nacht-, Sonn- und Feiertagszuschläge können
+        steuerfrei sein. Samstagszuschläge, bezahlte Pausen und Beträge über den Grenzen bleiben
+        steuerpflichtig.
       </Text>
       <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
         Sozialversicherungsfrei: {netPayEuro(classification.socialInsuranceFreeCents)}. Dafür gelten
@@ -110,7 +110,7 @@ export function NetPayPremiumDetails({
         <CardSeparator />
         <SalaryAmountRow
           quiet
-          label="SV-pflichtige Zuschläge"
+          label="Beitragspflichtige Zuschläge"
           value={netPayEuro(
             classification.paidPremiumCents - classification.socialInsuranceFreeCents,
           )}

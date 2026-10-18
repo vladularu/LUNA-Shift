@@ -62,187 +62,195 @@ export async function restoreLocalBackup(
   db: SQLiteDatabase,
   backup: ValidatedLocalBackup,
 ): Promise<void> {
+  await withImmediateTransaction(db, (transaction) =>
+    restoreLocalBackupInTransaction(transaction, backup),
+  );
+}
+
+/** Only for callers already holding the keyed connection's immediate transaction. */
+export async function restoreLocalBackupInTransaction(
+  transaction: SQLiteDatabase,
+  backup: ValidatedLocalBackup,
+  preserveSharing = false,
+): Promise<void> {
   const document = requireValidatedLocalBackupDocument(backup);
-  await withImmediateTransaction(db, async (transaction) => {
-    const openTestRun = await transaction.getFirstAsync<{ readonly month: string }>(
-      "SELECT month FROM dev_test_backups ORDER BY month LIMIT 1",
-    );
-    if (openTestRun !== null) throw new LocalBackupBlockedError();
-    const currentSchemaVersion = await loadCurrentDatabaseSchemaVersion(transaction);
-    if (document.databaseSchemaVersion > currentSchemaVersion) {
-      throw new LocalBackupValidationError(
-        "Das Backup stammt aus einer neueren LUNA-Shift-Version.",
-      );
-    }
+  const openTestRun = await transaction.getFirstAsync<{ readonly month: string }>(
+    "SELECT month FROM dev_test_backups ORDER BY month LIMIT 1",
+  );
+  if (openTestRun !== null) throw new LocalBackupBlockedError();
+  const currentSchemaVersion = await loadCurrentDatabaseSchemaVersion(transaction);
+  if (document.databaseSchemaVersion > currentSchemaVersion) {
+    throw new LocalBackupValidationError("Das Backup stammt aus einer neueren LUNA-Shift-Version.");
+  }
 
+  if (!preserveSharing) {
     await isolateSharingForBackupRestore(transaction);
+    const cloudTable = await transaction.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='private_cloud_device'",
+    );
+    if (cloudTable) await transaction.runAsync("DELETE FROM private_cloud_device");
+  }
 
-    await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
-    await transaction.runAsync("DELETE FROM net_pay_profiles");
-    await transaction.runAsync("DELETE FROM tvl_shift_work");
-    await transaction.runAsync("DELETE FROM caritas_work_days");
-    await transaction.runAsync("DELETE FROM caritas_month_facts");
-    await transaction.runAsync("DELETE FROM caritas_overtime");
-    await transaction.runAsync("DELETE FROM tvoed_annex_a_month_confirmations");
-    await transaction.runAsync("DELETE FROM tvoed_sue_month_confirmations");
-    await transaction.runAsync("DELETE FROM tvoed_sue_allowance_confirmations");
-    await transaction.runAsync("DELETE FROM tvoed_annex_a_premium_facts");
-    await transaction.runAsync("DELETE FROM drk_employee_month_confirmations");
-    await transaction.runAsync("DELETE FROM drk_training_month_confirmations");
-    await transaction.runAsync("DELETE FROM tariff_annual_claims");
-    await transaction.runAsync("DELETE FROM actual_annual_payments");
-    await transaction.runAsync("DELETE FROM shift_training_details");
-    await transaction.runAsync("DELETE FROM training_profiles");
-    await transaction.runAsync("DELETE FROM paid_absences");
-    await transaction.runAsync("DELETE FROM overtime_allocations");
-    await transaction.runAsync("DELETE FROM scoped_allowance_decisions");
-    await transaction.runAsync("DELETE FROM shift_entries");
-    await transaction.runAsync("DELETE FROM appointments");
-    await transaction.runAsync("DELETE FROM monthly_tariff_decisions");
-    await transaction.runAsync("DELETE FROM shift_templates");
-    await transaction.runAsync("DELETE FROM remuneration_profiles");
-    await transaction.runAsync("DELETE FROM user_profile");
-    const preferencePlaceholders = USER_DATA_PREFERENCE_KEYS.map(() => "?").join(",");
-    await transaction.runAsync(
-      `DELETE FROM app_preferences WHERE key IN (${preferencePlaceholders})`,
-      ...USER_DATA_PREFERENCE_KEYS,
-    );
+  await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
+  await transaction.runAsync("DELETE FROM net_pay_profiles");
+  await transaction.runAsync("DELETE FROM tvl_shift_work");
+  await transaction.runAsync("DELETE FROM caritas_work_days");
+  await transaction.runAsync("DELETE FROM caritas_month_facts");
+  await transaction.runAsync("DELETE FROM caritas_overtime");
+  await transaction.runAsync("DELETE FROM tvoed_annex_a_month_confirmations");
+  await transaction.runAsync("DELETE FROM tvoed_sue_month_confirmations");
+  await transaction.runAsync("DELETE FROM tvoed_sue_allowance_confirmations");
+  await transaction.runAsync("DELETE FROM tvoed_annex_a_premium_facts");
+  await transaction.runAsync("DELETE FROM drk_employee_month_confirmations");
+  await transaction.runAsync("DELETE FROM drk_training_month_confirmations");
+  await transaction.runAsync("DELETE FROM tariff_annual_claims");
+  await transaction.runAsync("DELETE FROM actual_annual_payments");
+  await transaction.runAsync("DELETE FROM shift_training_details");
+  await transaction.runAsync("DELETE FROM training_profiles");
+  await transaction.runAsync("DELETE FROM paid_absences");
+  await transaction.runAsync("DELETE FROM overtime_allocations");
+  await transaction.runAsync("DELETE FROM scoped_allowance_decisions");
+  await transaction.runAsync("DELETE FROM shift_entries");
+  await transaction.runAsync("DELETE FROM appointments");
+  await transaction.runAsync("DELETE FROM monthly_tariff_decisions");
+  await transaction.runAsync("DELETE FROM shift_templates");
+  await transaction.runAsync("DELETE FROM remuneration_profiles");
+  await transaction.runAsync("DELETE FROM user_profile");
+  const preferencePlaceholders = USER_DATA_PREFERENCE_KEYS.map(() => "?").join(",");
+  await transaction.runAsync(
+    `DELETE FROM app_preferences WHERE key IN (${preferencePlaceholders})`,
+    ...USER_DATA_PREFERENCE_KEYS,
+  );
 
-    if (document.data.profile !== null) {
-      await insertRows(transaction, "user_profile", PROFILE_COLUMNS, [document.data.profile]);
-    }
+  if (document.data.profile !== null) {
+    await insertRows(transaction, "user_profile", PROFILE_COLUMNS, [document.data.profile]);
+  }
+  await insertRows(
+    transaction,
+    "net_pay_profiles",
+    NET_PAY_PROFILE_COLUMNS,
+    document.data.netPayProfiles,
+  );
+  if (document.version === 1) await initializeLegacyRemunerationProfile(transaction);
+  else
     await insertRows(
       transaction,
-      "net_pay_profiles",
-      NET_PAY_PROFILE_COLUMNS,
-      document.data.netPayProfiles,
+      "remuneration_profiles",
+      REMUNERATION_PROFILE_COLUMNS,
+      document.data.remunerationProfiles,
     );
-    if (document.version === 1) await initializeLegacyRemunerationProfile(transaction);
-    else
-      await insertRows(
-        transaction,
-        "remuneration_profiles",
-        REMUNERATION_PROFILE_COLUMNS,
-        document.data.remunerationProfiles,
-      );
-    await insertRows(transaction, "shift_templates", TEMPLATE_COLUMNS, document.data.templates);
-    await insertRows(transaction, "shift_entries", SHIFT_COLUMNS, document.data.shifts);
-    await insertRows(
-      transaction,
-      "scoped_allowance_decisions",
-      ALLOWANCE_DECISION_COLUMNS,
-      document.data.allowanceDecisions,
-    );
-    await insertRows(
-      transaction,
-      "overtime_allocations",
-      OVERTIME_ALLOCATION_COLUMNS,
-      document.data.overtimeAllocations,
-    );
-    await insertRows(
-      transaction,
-      "paid_absences",
-      PAID_ABSENCE_COLUMNS,
-      document.data.paidAbsences,
-    );
-    await insertRows(
-      transaction,
-      "training_profiles",
-      TRAINING_PROFILE_COLUMNS,
-      document.data.trainingProfiles,
-    );
-    await insertRows(
-      transaction,
-      "shift_training_details",
-      SHIFT_TRAINING_COLUMNS,
-      document.data.shiftTrainingDetails,
-    );
-    await insertRows(
-      transaction,
-      "actual_annual_payments",
-      ANNUAL_PAYMENT_COLUMNS,
-      document.data.actualAnnualPayments,
-    );
-    await insertRows(
-      transaction,
-      "tariff_annual_claims",
-      TARIFF_ANNUAL_CLAIM_COLUMNS,
-      document.data.tariffAnnualClaims,
-    );
-    await insertRows(
-      transaction,
-      "tvl_shift_work",
-      TVL_SHIFT_WORK_COLUMNS,
-      document.data.tvlShiftWork,
-    );
-    await insertRows(
-      transaction,
-      "caritas_work_days",
-      CARITAS_WORK_DAY_COLUMNS,
-      document.data.caritasWorkDays,
-    );
-    await insertRows(
-      transaction,
-      "caritas_month_facts",
-      CARITAS_MONTH_FACTS_COLUMNS,
-      document.data.caritasMonthFacts,
-    );
-    await insertRows(
-      transaction,
-      "caritas_overtime",
-      CARITAS_OVERTIME_COLUMNS,
-      document.data.caritasOvertime,
-    );
-    await insertRows(
-      transaction,
-      "tvoed_annex_a_month_confirmations",
-      TVOED_ANNEX_A_MONTH_CONFIRMATION_COLUMNS,
-      document.data.tvoedAnnexAMonthConfirmations,
-    );
-    await insertRows(
-      transaction,
-      "tvoed_sue_month_confirmations",
-      TVOED_SUE_MONTH_CONFIRMATION_COLUMNS,
-      document.data.tvoedSueMonthConfirmations,
-    );
-    await insertRows(
-      transaction,
-      "tvoed_sue_allowance_confirmations",
-      TVOED_SUE_ALLOWANCE_CONFIRMATION_COLUMNS,
-      document.data.tvoedSueAllowanceConfirmations,
-    );
-    await insertRows(
-      transaction,
-      "tvoed_annex_a_premium_facts",
-      TVOED_ANNEX_A_PREMIUM_FACTS_COLUMNS,
-      document.data.tvoedAnnexAPremiumFacts,
-    );
-    await insertRows(
-      transaction,
-      "drk_employee_month_confirmations",
-      DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS,
-      document.data.drkEmployeeMonthConfirmations,
-    );
-    await insertRows(
-      transaction,
-      "drk_training_month_confirmations",
-      DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS,
-      document.data.drkTrainingMonthConfirmations,
-    );
-    await insertRows(transaction, "appointments", APPOINTMENT_COLUMNS, document.data.appointments);
-    await insertRows(
-      transaction,
-      "monthly_tariff_decisions",
-      TARIFF_DECISION_COLUMNS,
-      document.data.monthlyTariffDecisions,
-    );
-    await insertRows(transaction, "app_preferences", PREFERENCE_COLUMNS, document.data.preferences);
+  await insertRows(transaction, "shift_templates", TEMPLATE_COLUMNS, document.data.templates);
+  await insertRows(transaction, "shift_entries", SHIFT_COLUMNS, document.data.shifts);
+  await insertRows(
+    transaction,
+    "scoped_allowance_decisions",
+    ALLOWANCE_DECISION_COLUMNS,
+    document.data.allowanceDecisions,
+  );
+  await insertRows(
+    transaction,
+    "overtime_allocations",
+    OVERTIME_ALLOCATION_COLUMNS,
+    document.data.overtimeAllocations,
+  );
+  await insertRows(transaction, "paid_absences", PAID_ABSENCE_COLUMNS, document.data.paidAbsences);
+  await insertRows(
+    transaction,
+    "training_profiles",
+    TRAINING_PROFILE_COLUMNS,
+    document.data.trainingProfiles,
+  );
+  await insertRows(
+    transaction,
+    "shift_training_details",
+    SHIFT_TRAINING_COLUMNS,
+    document.data.shiftTrainingDetails,
+  );
+  await insertRows(
+    transaction,
+    "actual_annual_payments",
+    ANNUAL_PAYMENT_COLUMNS,
+    document.data.actualAnnualPayments,
+  );
+  await insertRows(
+    transaction,
+    "tariff_annual_claims",
+    TARIFF_ANNUAL_CLAIM_COLUMNS,
+    document.data.tariffAnnualClaims,
+  );
+  await insertRows(
+    transaction,
+    "tvl_shift_work",
+    TVL_SHIFT_WORK_COLUMNS,
+    document.data.tvlShiftWork,
+  );
+  await insertRows(
+    transaction,
+    "caritas_work_days",
+    CARITAS_WORK_DAY_COLUMNS,
+    document.data.caritasWorkDays,
+  );
+  await insertRows(
+    transaction,
+    "caritas_month_facts",
+    CARITAS_MONTH_FACTS_COLUMNS,
+    document.data.caritasMonthFacts,
+  );
+  await insertRows(
+    transaction,
+    "caritas_overtime",
+    CARITAS_OVERTIME_COLUMNS,
+    document.data.caritasOvertime,
+  );
+  await insertRows(
+    transaction,
+    "tvoed_annex_a_month_confirmations",
+    TVOED_ANNEX_A_MONTH_CONFIRMATION_COLUMNS,
+    document.data.tvoedAnnexAMonthConfirmations,
+  );
+  await insertRows(
+    transaction,
+    "tvoed_sue_month_confirmations",
+    TVOED_SUE_MONTH_CONFIRMATION_COLUMNS,
+    document.data.tvoedSueMonthConfirmations,
+  );
+  await insertRows(
+    transaction,
+    "tvoed_sue_allowance_confirmations",
+    TVOED_SUE_ALLOWANCE_CONFIRMATION_COLUMNS,
+    document.data.tvoedSueAllowanceConfirmations,
+  );
+  await insertRows(
+    transaction,
+    "tvoed_annex_a_premium_facts",
+    TVOED_ANNEX_A_PREMIUM_FACTS_COLUMNS,
+    document.data.tvoedAnnexAPremiumFacts,
+  );
+  await insertRows(
+    transaction,
+    "drk_employee_month_confirmations",
+    DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS,
+    document.data.drkEmployeeMonthConfirmations,
+  );
+  await insertRows(
+    transaction,
+    "drk_training_month_confirmations",
+    DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS,
+    document.data.drkTrainingMonthConfirmations,
+  );
+  await insertRows(transaction, "appointments", APPOINTMENT_COLUMNS, document.data.appointments);
+  await insertRows(
+    transaction,
+    "monthly_tariff_decisions",
+    TARIFF_DECISION_COLUMNS,
+    document.data.monthlyTariffDecisions,
+  );
+  await insertRows(transaction, "app_preferences", PREFERENCE_COLUMNS, document.data.preferences);
 
-    const foreignKeyErrors = await transaction.getAllAsync<{ readonly table: string }>(
-      "PRAGMA foreign_key_check",
-    );
-    if (foreignKeyErrors.length > 0) {
-      throw new LocalBackupValidationError("Das Backup enthält ungültige Datenverknüpfungen.");
-    }
-  });
+  const foreignKeyErrors = await transaction.getAllAsync<{ readonly table: string }>(
+    "PRAGMA foreign_key_check",
+  );
+  if (foreignKeyErrors.length > 0) {
+    throw new LocalBackupValidationError("Das Backup enthält ungültige Datenverknüpfungen.");
+  }
 }

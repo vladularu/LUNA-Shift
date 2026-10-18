@@ -20,4 +20,4 @@ export const DATA_LOAD_FAILURE_MESSAGE =
   "Lokale Daten konnten nicht geladen werden. Bitte versuche es erneut.";
 
 export const APP_RENDER_FAILURE_MESSAGE =
-  "Die Ansicht konnte nicht sicher angezeigt werden. Bitte versuche es erneut.";
+  "Die Ansicht konnte nicht angezeigt werden. Versuche es erneut.";

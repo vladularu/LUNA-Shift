@@ -250,6 +250,7 @@ function fixture({
     }),
     signInApple: vi.fn(async () => account),
     signInGoogle: vi.fn(async () => account),
+    updateName: vi.fn(),
     signOut: vi.fn(async () => {
       actorListener(null);
     }),

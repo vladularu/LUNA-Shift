@@ -51,6 +51,18 @@ describe("DataBackupScreen", () => {
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
   });
 
+  it("shows included and excluded data alongside export and replacement risks", async () => {
+    const screen = await render(<DataBackupScreen />);
+    expect(screen.getByText("Enthalten")).toBeVisible();
+    expect(screen.getByText(/Profil, Vorlagen, Dienste, Termine, Tarifangaben/)).toBeVisible();
+    expect(screen.getByText("Nicht enthalten")).toBeVisible();
+    expect(screen.getByText(/Testlabor-Zustand, geplante Mitteilungen/)).toBeVisible();
+    expect(screen.getByText(/nicht verschlüsselt/)).toBeVisible();
+    expect(screen.getByText(/aktuellen Daten ersetzt/)).toBeVisible();
+    expect(mockCreateAndShare).not.toHaveBeenCalled();
+    expect(mockRestoreSelected).not.toHaveBeenCalled();
+  });
+
   it("distinguishes an export cleanup warning from a failed export", async () => {
     mockCreateAndShare.mockRejectedValue(
       new BackupTempCleanupError(false, new Error("private path")),
@@ -85,7 +97,7 @@ describe("DataBackupScreen", () => {
     const screen = await render(<DataBackupScreen />);
 
     expect(screen.getByText("Enthalten")).toBeTruthy();
-    expect(screen.getByText(/außerhalb der App nicht verschlüsselt/)).toBeTruthy();
+    expect(screen.getByText(/nicht verschlüsselt/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Backup erstellen und teilen" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Backup-Datei auswählen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
@@ -199,7 +211,7 @@ describe("DataBackupScreen", () => {
     fireEvent.press(screen.getByRole("button", { name: "Backup erstellen und teilen" }));
     await waitFor(() =>
       expect(mockShowFeedback).toHaveBeenCalledWith({
-        message: "Backup wurde an iOS übergeben.",
+        message: "Prüfe am gewählten Ort, ob dein Backup gespeichert ist.",
       }),
     );
 

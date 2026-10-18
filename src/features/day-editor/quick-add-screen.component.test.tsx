@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import type { ShiftEntry } from "@/domain/types";
+import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { QuickAddScreen } from "@/features/day-editor/quick-add-screen";
 import { FeedbackProvider } from "@/ui/feedback";
 import { successFeedback } from "@/ui/haptics";
 
 const mockUpsertShift = jest.fn<() => Promise<ShiftEntry>>();
+let mockEntries: readonly CalendarEntry[] = [];
 
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
@@ -17,7 +18,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/application/pflegeshift-provider", () => ({
-  usePflegeShiftEntries: () => ({ upsertShift: mockUpsertShift }),
+  usePflegeShiftEntries: () => ({ entries: mockEntries, upsertShift: mockUpsertShift }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTemplates: () => ({
     templates: [
@@ -49,10 +50,26 @@ jest.mock("@/ui/haptics", () => ({
 
 jest.mock("@/ui/use-theme-status-bar", () => ({ useThemeStatusBar: () => undefined }));
 
+function TestScreen() {
+  return (
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 430, height: 932 },
+        insets: { top: 59, right: 0, bottom: 34, left: 0 },
+      }}
+    >
+      <QuickAddScreen />
+    </SafeAreaProvider>
+  );
+}
+
 describe("QuickAddScreen", () => {
   beforeEach(() => {
     jest.mocked(router.back).mockClear();
     jest.mocked(router.push).mockClear();
+    jest.mocked(router.replace).mockClear();
+    mockEntries = [];
+    mockUpsertShift.mockReset();
     mockUpsertShift.mockResolvedValue({} as ShiftEntry);
   });
 
@@ -70,21 +87,17 @@ describe("QuickAddScreen", () => {
       </SafeAreaProvider>,
     );
 
-    expect(screen.getByRole("header", { name: /Schicht auswählen/ })).toBeVisible();
+    expect(screen.getByRole("header", { name: /Dienst auswählen/ })).toBeVisible();
     expect(screen.getByText(/4\. August 2026/)).toBeVisible();
     expect(screen.getByTestId("shift-selection-panel").props.entering).toBeUndefined();
 
-    await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "Neue Schichtvorlage hinzufügen" }));
-    });
-    expect(router.push).toHaveBeenLastCalledWith({
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlage erstellen und eintragen" }));
+    expect(router.replace).toHaveBeenLastCalledWith({
       pathname: "/template-editor",
-      params: {},
+      params: { quickEntryDate: "2026-08-04" },
     });
 
-    await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "Tag direkt eintragen" }));
-    });
+    await fireEvent.press(screen.getByRole("button", { name: "Tag direkt eintragen" }));
 
     await waitFor(() => expect(mockUpsertShift).toHaveBeenCalledTimes(1));
     expect(mockUpsertShift).toHaveBeenCalledWith(
@@ -96,5 +109,69 @@ describe("QuickAddScreen", () => {
     expect(successFeedback).toHaveBeenCalledTimes(1);
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("Eintrag gespeichert.")).toBeNull();
+  });
+
+  it("keeps an already assigned service and closes only once on repeated taps", async () => {
+    mockEntries = [
+      {
+        kind: "SHIFT",
+        id: "existing-day",
+        templateId: "day",
+        date: "2026-08-04",
+        title: "Tag",
+        type: "DAY",
+        allDay: false,
+        startTime: "08:00",
+        endTime: "16:00",
+        breakMinutes: 30,
+        color: "#2F80ED",
+        symbol: "T",
+        note: null,
+        overtimeMinutes: 0,
+        holidayPremiumMode: "WITH_TIME_OFF",
+        revision: 1,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        deletedAt: null,
+      },
+    ];
+    const screen = await render(<TestScreen />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Tag direkt eintragen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Tag direkt eintragen" }));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+  });
+
+  it("edits a reusable template without passing a calendar insertion date", async () => {
+    const screen = await render(<TestScreen />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Tag Dienstvorlage bearbeiten" }));
+
+    expect(router.replace).toHaveBeenLastCalledWith({
+      pathname: "/template-editor",
+      params: { id: "day" },
+    });
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+  });
+
+  it("inserts only once when the same service is tapped while saving", async () => {
+    let finishSave!: (entry: ShiftEntry) => void;
+    mockUpsertShift.mockReturnValue(
+      new Promise<ShiftEntry>((resolve) => {
+        finishSave = resolve;
+      }),
+    );
+    const screen = await render(<TestScreen />);
+    const service = screen.getByRole("button", { name: "Tag direkt eintragen" });
+
+    await fireEvent.press(service);
+    await fireEvent.press(service);
+
+    expect(mockUpsertShift).toHaveBeenCalledTimes(1);
+    expect(router.back).not.toHaveBeenCalled();
+    await act(async () => finishSave({} as ShiftEntry));
+    expect(router.back).toHaveBeenCalledTimes(1);
   });
 });

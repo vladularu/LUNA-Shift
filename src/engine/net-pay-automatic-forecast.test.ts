@@ -79,6 +79,71 @@ function calculateMonth(
   };
 }
 describe("automatic payroll across every selectable salary model", () => {
+  it("identifies the affected service when work times are missing", () => {
+    const shift = forecastShift({
+      id: "missing-times",
+      allDay: true,
+      startTime: null,
+      endTime: null,
+    });
+    const { forecast } = calculate(forecastProfile, shift);
+    expect(forecast.result.status).toBe("unavailable");
+    expect(forecast).toMatchObject({
+      recovery: { kind: "entry", date: shift.date, entryId: shift.id },
+    });
+  });
+
+  it("identifies the work profile when weekly hours are missing", () => {
+    const profile = { ...forecastProfile, weeklyMinutes: 0 };
+    const pay = calculate(forecastProfile).pay;
+    const forecast = calculateAutomaticNetPayForecast(
+      {
+        month: pay.month,
+        profile,
+        settings: automatedSettings("2026-06"),
+        shifts: [forecastShift()],
+        pay,
+      },
+      resolver,
+    );
+    expect(forecast).toMatchObject({
+      result: { status: "unavailable" },
+      recovery: { kind: "profile", section: "WORK" },
+    });
+  });
+
+  it("identifies invalid pauses even when they also prevent a complete gross forecast", () => {
+    const shift = forecastShift({ id: "invalid-pause", breakMinutes: 9999 });
+    const { forecast } = calculate(forecastProfile, shift);
+    expect(forecast).toMatchObject({
+      result: { status: "unavailable" },
+      recovery: { kind: "entry", date: shift.date, entryId: shift.id },
+    });
+  });
+
+  it("does not invent a profile setting for unsupported time zones or unavailable tariff data", () => {
+    const pay = calculate(forecastProfile).pay;
+    const input = {
+      month: pay.month,
+      profile: forecastProfile,
+      settings: automatedSettings("2026-06"),
+      shifts: [forecastShift()],
+      pay,
+    };
+    const unsupported = calculateAutomaticNetPayForecast(
+      { ...input, profile: { ...forecastProfile, timeZone: "Europe/Vienna" } },
+      resolver,
+    );
+    const incomplete = calculateAutomaticNetPayForecast(
+      { ...input, pay: { ...pay, available: false, estimatedGrossAmount: null } },
+      resolver,
+    );
+    for (const forecast of [unsupported, incomplete]) {
+      expect(forecast.result.status).toBe("unavailable");
+      expect(forecast.recovery).toBeUndefined();
+    }
+  });
+
   for (const [label, profile] of models) {
     it.each(["2027-01-01", "2027-01-31", "2027-03-28"])(
       `${label}: forecasts %s with its actual gross and a labelled previous-year deduction model`,

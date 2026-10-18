@@ -1,6 +1,6 @@
 # Lokale Datenaufbewahrung
 
-LUNA Shift speichert Nutzerdaten ausschließlich lokal. Normale Löschaktionen für
+LUNA Shift speichert den persönlichen Arbeitsstand lokal. Normale Löschaktionen für
 Dienste, Termine und Dienstvorlagen erzeugen zunächst einen Tombstone mit
 Revision und Löschzeitpunkt. Damit bleiben konkurrierende Änderungen erkennbar
 und eine spätere Synchronisation kann Löschungen eindeutig übertragen.
@@ -13,8 +13,11 @@ Einzelwiederherstellung für gelöschte Einträge. Der vollständige Datensatz b
 verschlüsselt in der lokalen Datenbank. Diese verzögerte physische Löschung ist
 in der App unter **Mehr → Lokale Datenspeicherung** sichtbar beschrieben.
 
-Der Vertrag gilt unabhängig von einer Cloud-Synchronisation. LUNA Shift bietet
-aktuell weder Cloud-Sync noch ein automatisches Backup an. Unter **Mehr →
+Der Vertrag gilt unabhängig von einer Cloud-Synchronisation. Die im separaten
+Cloud-Arbeitsbranch implementierte optionale private Sicherung und Synchronisation
+ist im Testprojekt eingerichtet und als iOS-Preview-OTA verfügbar. Die Abnahme
+auf zwei iPhones steht aus; Umfang und bestätigte Aufbewahrung stehen in
+[Persönliches Cloud-Konto](private-cloud-account.md). Unter **Mehr →
 Datensicherung** kann die Person jedoch manuell eine versionierte JSON-Datei mit
 Profil, Vorlagen, Diensten, Terminen, Tarifentscheidungen und sichtbaren
 Einstellungen erstellen. Die Datei trägt einen SHA-256-Prüfwert, ist nach dem

@@ -12,7 +12,8 @@ import type { SaveShiftTemplateInput, ShiftTemplate } from "@/domain/types";
 const mockUpsertShift = jest.fn<() => Promise<void>>();
 const mockUpsertTemplate = jest.fn<(input: SaveShiftTemplateInput) => Promise<ShiftTemplate>>();
 const mockRemoveTemplate = jest.fn<() => Promise<void>>();
-let mockParams: { quickEntryDate?: string } = {};
+let mockParams: { id?: string; quickEntryDate?: string } = {};
+let mockTemplates: readonly ShiftTemplate[] = [];
 
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), dismiss: jest.fn(), push: jest.fn() },
@@ -28,7 +29,7 @@ jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftEntries: () => ({ entries: [], upsertShift: mockUpsertShift }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTemplates: () => ({
-    templates: [],
+    templates: mockTemplates,
     removeTemplate: mockRemoveTemplate,
     upsertTemplate: mockUpsertTemplate,
   }),
@@ -51,6 +52,7 @@ describe("TemplateEditorScreen compact layout", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockParams = {};
+    mockTemplates = [];
     jest.mocked(Notifications.getPermissionsAsync).mockResolvedValue({
       granted: true,
     } as Notifications.NotificationPermissionsStatus);
@@ -76,9 +78,84 @@ describe("TemplateEditorScreen compact layout", () => {
     mockUpsertShift.mockResolvedValue(undefined);
     await renderEditor();
     await fireEvent.changeText(screen.getByLabelText("Titel"), "Testdienst");
-    await fireEvent.press(screen.getByRole("button", { name: "Fertig und schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlage erstellen und eintragen" }));
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(mockUpsertTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Testdienst" }),
+    );
+    expect(mockUpsertShift).toHaveBeenCalledWith(
+      expect.objectContaining({ date: "2026-08-15", templateId: "saved-template" }),
+    );
+    expect(screen.queryByRole("button", { name: "Speichern und schließen" })).toBeNull();
     expect(router.dismiss).not.toHaveBeenCalled();
+  });
+
+  it("saves an existing template without inserting a service from an old dated link", async () => {
+    const existing: ShiftTemplate = {
+      id: "saved-template",
+      name: "Früh",
+      type: "EARLY",
+      allDay: false,
+      startTime: "06:00",
+      endTime: "14:00",
+      breakMinutes: 30,
+      color: "#7C4DCC",
+      symbol: "F",
+      notification: null,
+      location: null,
+      sortOrder: 10,
+      revision: 1,
+      createdAt: "2026-08-15T00:00:00.000Z",
+      updatedAt: "2026-08-15T00:00:00.000Z",
+      deletedAt: null,
+    };
+    mockTemplates = [existing];
+    mockParams = { id: existing.id, quickEntryDate: "2026-08-15" };
+    mockUpsertTemplate.mockResolvedValue(existing);
+    await renderEditor();
+
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Früh geändert");
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(mockUpsertTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: existing.id, name: "Früh geändert" }),
+    );
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Vorlage erstellen und eintragen" })).toBeNull();
+  });
+
+  it("retries only the calendar entry when the new template was already saved", async () => {
+    mockParams = { quickEntryDate: "2026-08-15" };
+    mockUpsertTemplate.mockImplementation(async (input) => ({
+      ...input,
+      id: "saved-template",
+      revision: 1,
+      createdAt: "2026-08-15T00:00:00.000Z",
+      updatedAt: "2026-08-15T00:00:00.000Z",
+      deletedAt: null,
+    }));
+    mockUpsertShift.mockRejectedValueOnce(new Error("Temporary write failure"));
+    mockUpsertShift.mockResolvedValueOnce(undefined);
+    await renderEditor();
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Testdienst");
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlage erstellen und eintragen" }));
+    await waitFor(() => expect(mockUpsertShift).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(
+        screen.getByText("Vorlage gespeichert, Dienst nicht eingetragen. Versuche es erneut."),
+      ).toBeVisible(),
+    );
+    expect(router.back).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlage erstellen und eintragen" }));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(mockUpsertTemplate).toHaveBeenCalledTimes(1);
+    expect(mockUpsertShift).toHaveBeenCalledTimes(2);
+    expect(mockUpsertShift).toHaveBeenLastCalledWith(
+      expect.objectContaining({ date: "2026-08-15", templateId: "saved-template" }),
+    );
   });
 
   it("keeps the default editor compact and preserves usable row heights", async () => {
@@ -144,12 +221,12 @@ describe("TemplateEditorScreen compact layout", () => {
     await fireEvent.press(screen.getByTestId("template-notification-row"));
 
     expect(screen.getByTestId("shift-notification-presets")).toBeVisible();
-    expect(screen.queryByLabelText("Benachrichtigung übernehmen")).toBeNull();
+    expect(screen.queryByLabelText("Erinnerung übernehmen")).toBeNull();
 
     await fireEvent.press(screen.getByRole("radio", { name: "5 Minuten vor Beginn" }));
 
     await waitFor(() => expect(screen.queryByTestId("shift-notification-presets")).toBeNull());
-    expect(screen.getByLabelText("Benachrichtigung: 5 Min. vor Beginn")).toBeVisible();
+    expect(screen.getByLabelText("Erinnerung: 5 Min. vor Beginn")).toBeVisible();
   });
 
   it("selects the service type from the compact iOS row", async () => {
@@ -166,7 +243,7 @@ describe("TemplateEditorScreen compact layout", () => {
   it("hides timed values when the template is all-day", async () => {
     await renderEditor();
 
-    await fireEvent(screen.getByLabelText("Schicht ganztägig"), "valueChange", true);
+    await fireEvent(screen.getByLabelText("Dienstvorlage ganztägig"), "valueChange", true);
 
     expect(screen.queryByTestId("template-start-row")).toBeNull();
     expect(screen.queryByTestId("template-end-row")).toBeNull();

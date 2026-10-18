@@ -1,6 +1,7 @@
-import type { UserProfile } from "@/domain/types";
+import type { SaveProfileInput, UserProfile } from "@/domain/types";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -10,7 +11,7 @@ import {
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<() => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<void>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -167,21 +168,32 @@ describe("simple E table salary form", () => {
   );
   it("hides the irrelevant E BT-B region while retaining it when returning to BT-K", async () => {
     mockProfile = { ...baseProfile, vkaETariff: { ...e, tariffRegion: "KAV_BW" } };
-    const screen = await render(editor());
+    let screen = await render(editor());
     const savedRegion = screen.getByRole("button", { name: /^Tarifregion:/ }).props
       .accessibilityLabel;
     await select(screen, "Tarifbereich", "Pflege · BT-B");
     expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
     expect(screen.getAllByText("39 Std.").length).toBeGreaterThan(0);
+    const firstBackCount = jest.mocked(router.back).mock.calls.length;
     await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(firstBackCount + 1));
+    expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
     expect(mockUpdateProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({ vkaETariff: { ...e, sector: "BT_B", tariffRegion: "KAV_BW" } }),
     );
+    mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[0][0] };
+    await screen.unmount();
+    screen = await render(editor());
+    expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
+    expect(screen.getAllByText("39 Std.").length).toBeGreaterThan(0);
     await select(screen, "Tarifbereich", "Krankenhaus · BT-K");
     expect(screen.getByRole("button", { name: /^Tarifregion:/ }).props.accessibilityLabel).toBe(
       savedRegion,
     );
+    const secondBackCount = jest.mocked(router.back).mock.calls.length;
     await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount + 1));
+    expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
     expect(mockUpdateProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({ vkaETariff: { ...e, tariffRegion: "KAV_BW" } }),
     );

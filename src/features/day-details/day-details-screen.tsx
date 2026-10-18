@@ -185,7 +185,7 @@ export function DayDetailsScreen() {
               </>
             ) : null}
             <PrimaryButton onPress={() => router.push(quickAddRoute(date))}>
-              Schicht hinzufügen
+              Dienst hinzufügen
             </PrimaryButton>
             <SecondaryButton onPress={() => router.push(dayEditorRoute(date, "APPOINTMENT"))}>
               Termin hinzufügen

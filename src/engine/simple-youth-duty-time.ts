@@ -166,6 +166,7 @@ function serviceFindings(intervals: readonly ComplianceInterval[]): ComplianceIs
             " Stunden. Jugendliche brauchen mindestens 12 zusammenhängende Stunden Freizeit (§ 13).",
           [period.current.shift, period.next.shift],
           period.next.shift.date,
+          { rule: "JARBSCHG_13_REST", restMinutes: period.minutes, minimumRestMinutes: 720 },
         ),
       );
   }

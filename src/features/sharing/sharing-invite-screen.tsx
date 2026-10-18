@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { router } from "expo-router";
 import { View } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -50,40 +51,36 @@ export function SharingInviteScreen({
   const name = displayName ?? controller.account?.displayName ?? "";
   return (
     <ScreenScrollView surface="groupedBackground">
-      <SharingStatus busy={action.busy} failed={action.failed} />
+      <SharingStatus busy={action.busy} failed={action.failed} message={action.failureMessage} />
       <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.md }}>
         <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>
           {result
             ? result.status === "PENDING"
               ? "Anfrage gesendet"
-              : "Kalender freigegeben"
+              : "Kalender hinzugefügt"
             : "Einladung zu einem Kalender"}
         </Text>
         {result ? (
           <>
             <SharingParagraph>{result.calendarName}</SharingParagraph>
-            <SharingParagraph>
-              {result.status === "PENDING"
-                ? "Die Person muss deinen Zugriff noch bestätigen. Danach erscheint der Kalender unter Kalender teilen."
-                : "Du findest diesen Kalender unter Kalender teilen. Du kannst ihn ansehen oder wieder verlassen."}
-            </SharingParagraph>
+            {result.status === "PENDING" ? (
+              <SharingParagraph>Die Person muss deinen Zugriff noch bestätigen.</SharingParagraph>
+            ) : null}
           </>
         ) : (
-          <>
-            <SharingParagraph>
-              Fordere Zugriff an. Die Person bestätigt dich, bevor Kalenderdaten sichtbar werden.
-            </SharingParagraph>
-            <SharingParagraph>
-              Du kannst den Kalender nur ansehen. Deine eigenen Dienste bleiben unverändert.
-            </SharingParagraph>
-          </>
+          <SharingParagraph>
+            Du kannst den geteilten Kalender nur ansehen. Deine eigenen Dienste bleiben unverändert.
+          </SharingParagraph>
         )}
       </SurfaceCard>
-      {result ? null : controller.status === "signedOut" ? (
-        <>
-          <SignInActions controller={controller} run={action.run} busy={action.busy} />
-          <SharingParagraph>Dein eigener Kalender bleibt ohne Konto nutzbar.</SharingParagraph>
-        </>
+      {result ? (
+        <PrimaryButton
+          onPress={() => router.replace(result.status === "ACTIVE" ? "/" : "/calendar-sharing")}
+        >
+          {result.status === "ACTIVE" ? "Zum Kalender" : "Zu den Freigaben"}
+        </PrimaryButton>
+      ) : controller.status === "signedOut" ? (
+        <SignInActions controller={controller} run={action.run} busy={action.busy} />
       ) : (
         <View style={{ gap: SPACING.xl }}>
           <Field
@@ -97,13 +94,16 @@ export function SharingInviteScreen({
             disabled={action.busy || name.trim().length === 0}
             onPress={() =>
               void action
-                .run(() => controller.claimInvite(parsedToken, name.trim()))
+                .run(
+                  () => controller.claimInvite(parsedToken, name.trim()),
+                  "Einladung konnte nicht angenommen werden. Versuche es erneut.",
+                )
                 .then((accepted) => {
                   if (accepted) setAcceptedToken(parsedToken);
                 })
             }
           >
-            Zugriff anfordern
+            Einladung annehmen
           </PrimaryButton>
         </View>
       )}

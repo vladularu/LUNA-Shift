@@ -29,7 +29,7 @@ export function CheckSettingsScreen() {
           error ? (
             <LoadFailureView message={error} onRetry={retry} />
           ) : (
-            <LoadingView label="Prüfungseinstellungen werden geladen …" />
+            <LoadingView label="Prüfung wird geladen …" />
           )
         ) : (
           <ScreenScrollView bottomPadding={bottomPadding} surface="groupedBackground">
@@ -48,10 +48,10 @@ export function CheckSettingsScreen() {
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
                   style={{ ...TYPOGRAPHY.body, color: palette.text, flex: 1 }}
                 >
-                  Jugendlichenprüfung
+                  Prüfung für Jugendliche
                 </Text>
                 <LabeledSwitch
-                  label="Jugendlichenprüfung"
+                  label="Prüfung für Jugendliche"
                   value={youthEnabled}
                   disabled={saving}
                   onValueChange={(value) => void saveYouth(value)}
@@ -61,7 +61,7 @@ export function CheckSettingsScreen() {
                 <InfoDisclosure
                   summary="Für 15–17-Jährige ohne Vollzeitschulpflicht."
                   details="Prüft die erfassten Dienstzeiten nach dem Jugendarbeitsschutzgesetz."
-                  label="Über die Jugendlichenprüfung"
+                  label="Über die Prüfung für Jugendliche"
                 />
               </View>
             </SurfaceCard>
@@ -91,7 +91,7 @@ export function CheckSettingsScreen() {
               <View style={{ padding: SPACING.md, paddingTop: 0 }}>
                 <InfoDisclosure
                   summary="Dienstfolgen, Nächte, Wochenenden – freiwillige Hinweise."
-                  details="Zum Beispiel Hinweise zu Dienstfolgen, Nachtserien und aufeinanderfolgenden Wochenenden. Dies sind keine eigenständigen gesetzlichen Verstöße."
+                  details="Planungshinweise sind keine festgestellten Gesetzesverstöße."
                   label="Über die Planungshinweise"
                 />
               </View>

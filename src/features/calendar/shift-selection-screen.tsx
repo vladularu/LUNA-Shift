@@ -12,11 +12,8 @@ import {
   type QuickEntryStampAction,
 } from "@/features/calendar/quick-entry-actions";
 import { completeShiftSelectionNavigation } from "@/features/calendar/quick-entry-navigation";
-import {
-  ShiftSelectionErrorNotice,
-  ShiftSelectionPanel,
-} from "@/features/calendar/shift-selection-panel";
-import { useQuickStampAction } from "@/features/calendar/use-quick-stamp-action";
+import { ShiftSelectionPanel } from "@/features/calendar/shift-selection-panel";
+import { useQuickEntrySelection } from "@/features/calendar/use-quick-entry-selection";
 import { templateEditorRoute } from "@/navigation/routes";
 import { parseLocalDateRouteParam, type RouteParam } from "@/navigation/route-params";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -28,13 +25,12 @@ export function ShiftSelectionScreen() {
   const parsedDate = parseLocalDateRouteParam(params.date);
   const { ready, error, reload } = usePflegeShiftStatus();
   const { templates } = usePflegeShiftTemplates();
-  const { entries, removeEntry, upsertShift } = usePflegeShiftEntries();
+  const { entries, upsertShift } = usePflegeShiftEntries();
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const actions = useMemo(() => buildQuickEntryActions(templates), [templates]);
-  const saveStampAction = useQuickStampAction({
+  const saveSelection = useQuickEntrySelection({
     entries,
-    removeEntry,
     upsertShift,
     onBusyChange: setBusy,
     onError: (message) => setSaveError(message || null),
@@ -46,7 +42,7 @@ export function ShiftSelectionScreen() {
         actionLabel="Schließen"
         message="Der ausgewählte Kalendertag ist ungültig."
         onRetry={() => router.back()}
-        title="Schichtauswahl kann nicht geöffnet werden"
+        title="Dienstauswahl nicht verfügbar"
       />
     );
   }
@@ -56,7 +52,7 @@ export function ShiftSelectionScreen() {
   const date = parsedDate.value;
 
   async function selectAction(action: QuickEntryStampAction, selectedDate: string) {
-    const saved = await saveStampAction(action, selectedDate);
+    const saved = await saveSelection(action, selectedDate);
     if (saved) {
       completeShiftSelectionNavigation();
       router.back();
@@ -72,12 +68,12 @@ export function ShiftSelectionScreen() {
         inNativeSheet
         busy={busy}
         date={date}
+        errorMessage={saveError}
         onAddTemplate={() => router.replace(templateEditorRoute(undefined, date))}
         onClose={() => router.back()}
-        onEditTemplate={(templateId) => router.replace(templateEditorRoute(templateId, date))}
+        onEditTemplate={(templateId) => router.replace(templateEditorRoute(templateId))}
         onSelectAction={(action, selectedDate) => void selectAction(action, selectedDate)}
       />
-      {saveError ? <ShiftSelectionErrorNotice message={saveError} /> : null}
     </View>
   );
 }

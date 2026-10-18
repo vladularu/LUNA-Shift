@@ -148,21 +148,27 @@ export class LocalBackupBlockedError extends Error {
 }
 
 export async function loadLocalBackupSnapshot(db: SQLiteDatabase): Promise<LocalBackupSnapshot> {
-  return withImmediateTransaction(db, async (transaction) => {
-    const openTestRun = await transaction.getFirstAsync<{ readonly month: string }>(
-      "SELECT month FROM dev_test_backups ORDER BY month LIMIT 1",
-    );
-    if (openTestRun !== null) throw new LocalBackupBlockedError();
+  return withImmediateTransaction(db, readLocalBackupSnapshotInTransaction);
+}
 
-    const schema = await transaction.getFirstAsync<{ readonly version: number }>(
-      "SELECT MAX(version) AS version FROM schema_migrations",
-    );
-    if (schema === null || !Number.isInteger(schema.version) || schema.version < 1) {
-      throw new Error("Die lokale Datenbankversion konnte nicht bestimmt werden.");
-    }
+/** Caller owns the immediate transaction; used for atomic cloud compare-and-apply. */
+export async function readLocalBackupSnapshotInTransaction(
+  transaction: SQLiteDatabase,
+): Promise<LocalBackupSnapshot> {
+  const openTestRun = await transaction.getFirstAsync<{ readonly month: string }>(
+    "SELECT month FROM dev_test_backups ORDER BY month LIMIT 1",
+  );
+  if (openTestRun !== null) throw new LocalBackupBlockedError();
 
-    const profile = await transaction.getFirstAsync<BackupRow>(
-      `SELECT id,federal_state,weekly_minutes,time_zone,pay_group,pay_level,tariff_sector,
+  const schema = await transaction.getFirstAsync<{ readonly version: number }>(
+    "SELECT MAX(version) AS version FROM schema_migrations",
+  );
+  if (schema === null || !Number.isInteger(schema.version) || schema.version < 1) {
+    throw new Error("Die lokale Datenbankversion konnte nicht bestimmt werden.");
+  }
+
+  const profile = await transaction.getFirstAsync<BackupRow>(
+    `SELECT id,federal_state,weekly_minutes,time_zone,pay_group,pay_level,tariff_sector,
               full_time_weekly_minutes,holiday_region,tariff_region,
               regular_rotating_night_work,sunday_holiday_work_eligible,
               all_employment_work_recorded,industry,manual_monthly_gross_cents,
@@ -170,156 +176,147 @@ export async function loadLocalBackupSnapshot(db: SQLiteDatabase): Promise<Local
               created_at,updated_at
          FROM user_profile
         WHERE id='singleton'`,
-    );
-    const netPayProfiles = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${NET_PAY_PROFILE_COLUMNS.join(",")} FROM net_pay_profiles ORDER BY month`,
-    );
-    netPayProfiles.forEach(mapNetPayProfileRow);
-    if (profile === null && netPayProfiles.length > 0)
-      throw new Error("Das Arbeitsprofil für gespeicherte Netto-Angaben fehlt.");
-    const remunerationProfiles = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        REMUNERATION_PROFILE_COLUMNS.join(",") +
-        " FROM remuneration_profiles ORDER BY effective_from",
-    );
-    const allowanceDecisions = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        ALLOWANCE_DECISION_COLUMNS.join(",") +
-        " FROM scoped_allowance_decisions ORDER BY month",
-    );
-    const overtimeAllocations = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        OVERTIME_ALLOCATION_COLUMNS.join(",") +
-        " FROM overtime_allocations ORDER BY shift_id",
-    );
-    const paidAbsences = await transaction.getAllAsync<BackupRow>(
-      "SELECT " + PAID_ABSENCE_COLUMNS.join(",") + " FROM paid_absences ORDER BY shift_id",
-    );
-    const trainingProfiles = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        TRAINING_PROFILE_COLUMNS.join(",") +
-        " FROM training_profiles ORDER BY effective_from",
-    );
-    const shiftTrainingDetails = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        SHIFT_TRAINING_COLUMNS.join(",") +
-        " FROM shift_training_details ORDER BY shift_id",
-    );
-    const actualAnnualPayments = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        ANNUAL_PAYMENT_COLUMNS.join(",") +
-        " FROM actual_annual_payments ORDER BY entitlement_year,payment_id",
-    );
-    validateSavedActualOwnAnnualPayments(actualAnnualPayments.map(mapAnnualPaymentRow));
-    const tariffAnnualClaims = await transaction.getAllAsync<BackupRow>(
-      "SELECT " +
-        TARIFF_ANNUAL_CLAIM_COLUMNS.join(",") +
-        " FROM tariff_annual_claims ORDER BY entitlement_year,claim_id",
-    );
-    validateSavedTariffAnnualClaims(tariffAnnualClaims.map(mapTariffAnnualClaimRow));
-    const tvlShiftWork = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${TVL_SHIFT_WORK_COLUMNS.join(",")} FROM tvl_shift_work ORDER BY shift_id,profile_effective_from`,
-    );
-    const caritasWorkDays = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${CARITAS_WORK_DAY_COLUMNS.join(",")} FROM caritas_work_days ORDER BY shift_id,date`,
-    );
-    const caritasMonthFacts = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${CARITAS_MONTH_FACTS_COLUMNS.join(",")} FROM caritas_month_facts ORDER BY month`,
-    );
-    const caritasOvertime = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${CARITAS_OVERTIME_COLUMNS.join(",")} FROM caritas_overtime ORDER BY shift_id`,
-    );
-    const tvoedAnnexAMonthConfirmations = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${TVOED_ANNEX_A_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_annex_a_month_confirmations ORDER BY month`,
-    );
-    const tvoedSueMonthConfirmations = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${TVOED_SUE_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_sue_month_confirmations ORDER BY month`,
-    );
-    const tvoedSueAllowanceConfirmations = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${TVOED_SUE_ALLOWANCE_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_sue_allowance_confirmations ORDER BY month`,
-    );
-    const tvoedAnnexAPremiumFacts = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${TVOED_ANNEX_A_PREMIUM_FACTS_COLUMNS.join(",")} FROM tvoed_annex_a_premium_facts ORDER BY month`,
-    );
-    const drkEmployeeMonthConfirmations = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM drk_employee_month_confirmations ORDER BY month`,
-    );
-    drkEmployeeMonthConfirmations.forEach(mapDrkEmployeeMonthConfirmationRow);
-    const drkTrainingMonthConfirmations = await transaction.getAllAsync<BackupRow>(
-      `SELECT ${DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM drk_training_month_confirmations ORDER BY month`,
-    );
-    drkTrainingMonthConfirmations.forEach(mapDrkTrainingMonthConfirmationRow);
-    const templates = await transaction.getAllAsync<BackupRow>(
-      `SELECT id,name,type,start_time,end_time,break_minutes,color,symbol,sort_order,
+  );
+  const netPayProfiles = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${NET_PAY_PROFILE_COLUMNS.join(",")} FROM net_pay_profiles ORDER BY month`,
+  );
+  netPayProfiles.forEach(mapNetPayProfileRow);
+  if (profile === null && netPayProfiles.length > 0)
+    throw new Error("Das Arbeitsprofil für gespeicherte Netto-Angaben fehlt.");
+  const remunerationProfiles = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      REMUNERATION_PROFILE_COLUMNS.join(",") +
+      " FROM remuneration_profiles ORDER BY effective_from",
+  );
+  const allowanceDecisions = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      ALLOWANCE_DECISION_COLUMNS.join(",") +
+      " FROM scoped_allowance_decisions ORDER BY month",
+  );
+  const overtimeAllocations = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      OVERTIME_ALLOCATION_COLUMNS.join(",") +
+      " FROM overtime_allocations ORDER BY shift_id",
+  );
+  const paidAbsences = await transaction.getAllAsync<BackupRow>(
+    "SELECT " + PAID_ABSENCE_COLUMNS.join(",") + " FROM paid_absences ORDER BY shift_id",
+  );
+  const trainingProfiles = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      TRAINING_PROFILE_COLUMNS.join(",") +
+      " FROM training_profiles ORDER BY effective_from",
+  );
+  const shiftTrainingDetails = await transaction.getAllAsync<BackupRow>(
+    "SELECT " + SHIFT_TRAINING_COLUMNS.join(",") + " FROM shift_training_details ORDER BY shift_id",
+  );
+  const actualAnnualPayments = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      ANNUAL_PAYMENT_COLUMNS.join(",") +
+      " FROM actual_annual_payments ORDER BY entitlement_year,payment_id",
+  );
+  validateSavedActualOwnAnnualPayments(actualAnnualPayments.map(mapAnnualPaymentRow));
+  const tariffAnnualClaims = await transaction.getAllAsync<BackupRow>(
+    "SELECT " +
+      TARIFF_ANNUAL_CLAIM_COLUMNS.join(",") +
+      " FROM tariff_annual_claims ORDER BY entitlement_year,claim_id",
+  );
+  validateSavedTariffAnnualClaims(tariffAnnualClaims.map(mapTariffAnnualClaimRow));
+  const tvlShiftWork = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${TVL_SHIFT_WORK_COLUMNS.join(",")} FROM tvl_shift_work ORDER BY shift_id,profile_effective_from`,
+  );
+  const caritasWorkDays = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${CARITAS_WORK_DAY_COLUMNS.join(",")} FROM caritas_work_days ORDER BY shift_id,date`,
+  );
+  const caritasMonthFacts = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${CARITAS_MONTH_FACTS_COLUMNS.join(",")} FROM caritas_month_facts ORDER BY month`,
+  );
+  const caritasOvertime = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${CARITAS_OVERTIME_COLUMNS.join(",")} FROM caritas_overtime ORDER BY shift_id`,
+  );
+  const tvoedAnnexAMonthConfirmations = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${TVOED_ANNEX_A_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_annex_a_month_confirmations ORDER BY month`,
+  );
+  const tvoedSueMonthConfirmations = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${TVOED_SUE_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_sue_month_confirmations ORDER BY month`,
+  );
+  const tvoedSueAllowanceConfirmations = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${TVOED_SUE_ALLOWANCE_CONFIRMATION_COLUMNS.join(",")} FROM tvoed_sue_allowance_confirmations ORDER BY month`,
+  );
+  const tvoedAnnexAPremiumFacts = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${TVOED_ANNEX_A_PREMIUM_FACTS_COLUMNS.join(",")} FROM tvoed_annex_a_premium_facts ORDER BY month`,
+  );
+  const drkEmployeeMonthConfirmations = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM drk_employee_month_confirmations ORDER BY month`,
+  );
+  drkEmployeeMonthConfirmations.forEach(mapDrkEmployeeMonthConfirmationRow);
+  const drkTrainingMonthConfirmations = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS.join(",")} FROM drk_training_month_confirmations ORDER BY month`,
+  );
+  drkTrainingMonthConfirmations.forEach(mapDrkTrainingMonthConfirmationRow);
+  const templates = await transaction.getAllAsync<BackupRow>(
+    `SELECT id,name,type,start_time,end_time,break_minutes,color,symbol,sort_order,
               all_day,notification_json,location_json,revision,created_at,updated_at,deleted_at
          FROM shift_templates
         ORDER BY sort_order,id`,
-    );
-    const shifts = await transaction.getAllAsync<BackupRow>(
-      `SELECT id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,
+  );
+  const shifts = await transaction.getAllAsync<BackupRow>(
+    `SELECT id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,
               color,symbol,note,notification_json,alarm_enabled,location_json,
               overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,
               revision,created_at,updated_at,deleted_at
          FROM shift_entries
         ORDER BY date,id`,
-    );
-    const appointments = await transaction.getAllAsync<BackupRow>(
-      `SELECT id,date,title,all_day,start_time,end_time,color,note,
+  );
+  const appointments = await transaction.getAllAsync<BackupRow>(
+    `SELECT id,date,title,all_day,start_time,end_time,color,note,
               recurrence_frequency,recurrence_interval,notification_json,location_json,
               revision,created_at,updated_at,deleted_at
          FROM appointments
         ORDER BY date,id`,
-    );
-    const monthlyTariffDecisions = await transaction.getAllAsync<BackupRow>(
-      `SELECT month,allowance_status,revision,confirmed_at,updated_at
+  );
+  const monthlyTariffDecisions = await transaction.getAllAsync<BackupRow>(
+    `SELECT month,allowance_status,revision,confirmed_at,updated_at
          FROM monthly_tariff_decisions
         ORDER BY month`,
-    );
-    const placeholders = USER_DATA_PREFERENCE_KEYS.map(() => "?").join(",");
-    const preferences = await transaction.getAllAsync<BackupRow>(
-      `SELECT key,value,updated_at
+  );
+  const placeholders = USER_DATA_PREFERENCE_KEYS.map(() => "?").join(",");
+  const preferences = await transaction.getAllAsync<BackupRow>(
+    `SELECT key,value,updated_at
          FROM app_preferences
         WHERE key IN (${placeholders})
         ORDER BY key`,
-      ...USER_DATA_PREFERENCE_KEYS,
-    );
+    ...USER_DATA_PREFERENCE_KEYS,
+  );
 
-    return Object.freeze({
-      databaseSchemaVersion: schema.version,
-      netPayProfiles: Object.freeze(netPayProfiles.map(Object.freeze)),
-      profile: profile === null ? null : Object.freeze(profile),
-      remunerationProfiles: Object.freeze(remunerationProfiles.map(Object.freeze)),
-      allowanceDecisions: Object.freeze(allowanceDecisions.map(Object.freeze)),
-      overtimeAllocations: Object.freeze(overtimeAllocations.map(Object.freeze)),
-      paidAbsences: Object.freeze(paidAbsences.map(Object.freeze)),
-      trainingProfiles: Object.freeze(trainingProfiles.map(Object.freeze)),
-      shiftTrainingDetails: Object.freeze(shiftTrainingDetails.map(Object.freeze)),
-      actualAnnualPayments: Object.freeze(actualAnnualPayments.map(Object.freeze)),
-      tariffAnnualClaims: Object.freeze(tariffAnnualClaims.map(Object.freeze)),
-      tvlShiftWork: Object.freeze(tvlShiftWork.map(Object.freeze)),
-      caritasWorkDays: Object.freeze(caritasWorkDays.map(Object.freeze)),
-      caritasMonthFacts: Object.freeze(caritasMonthFacts.map(Object.freeze)),
-      caritasOvertime: Object.freeze(caritasOvertime.map(Object.freeze)),
-      tvoedAnnexAMonthConfirmations: Object.freeze(
-        tvoedAnnexAMonthConfirmations.map(Object.freeze),
-      ),
-      tvoedSueMonthConfirmations: Object.freeze(tvoedSueMonthConfirmations.map(Object.freeze)),
-      tvoedSueAllowanceConfirmations: Object.freeze(
-        tvoedSueAllowanceConfirmations.map(Object.freeze),
-      ),
-      tvoedAnnexAPremiumFacts: Object.freeze(tvoedAnnexAPremiumFacts.map(Object.freeze)),
-      drkEmployeeMonthConfirmations: Object.freeze(
-        drkEmployeeMonthConfirmations.map(Object.freeze),
-      ),
-      drkTrainingMonthConfirmations: Object.freeze(
-        drkTrainingMonthConfirmations.map(Object.freeze),
-      ),
-      templates: Object.freeze(templates.map(Object.freeze)),
-      shifts: Object.freeze(shifts.map(Object.freeze)),
-      appointments: Object.freeze(appointments.map(Object.freeze)),
-      monthlyTariffDecisions: Object.freeze(monthlyTariffDecisions.map(Object.freeze)),
-      preferences: Object.freeze(preferences.map(Object.freeze)),
-    });
+  return Object.freeze({
+    databaseSchemaVersion: schema.version,
+    netPayProfiles: Object.freeze(netPayProfiles.map(Object.freeze)),
+    profile: profile === null ? null : Object.freeze(profile),
+    remunerationProfiles: Object.freeze(remunerationProfiles.map(Object.freeze)),
+    allowanceDecisions: Object.freeze(allowanceDecisions.map(Object.freeze)),
+    overtimeAllocations: Object.freeze(overtimeAllocations.map(Object.freeze)),
+    paidAbsences: Object.freeze(paidAbsences.map(Object.freeze)),
+    trainingProfiles: Object.freeze(trainingProfiles.map(Object.freeze)),
+    shiftTrainingDetails: Object.freeze(shiftTrainingDetails.map(Object.freeze)),
+    actualAnnualPayments: Object.freeze(actualAnnualPayments.map(Object.freeze)),
+    tariffAnnualClaims: Object.freeze(tariffAnnualClaims.map(Object.freeze)),
+    tvlShiftWork: Object.freeze(tvlShiftWork.map(Object.freeze)),
+    caritasWorkDays: Object.freeze(caritasWorkDays.map(Object.freeze)),
+    caritasMonthFacts: Object.freeze(caritasMonthFacts.map(Object.freeze)),
+    caritasOvertime: Object.freeze(caritasOvertime.map(Object.freeze)),
+    tvoedAnnexAMonthConfirmations: Object.freeze(tvoedAnnexAMonthConfirmations.map(Object.freeze)),
+    tvoedSueMonthConfirmations: Object.freeze(tvoedSueMonthConfirmations.map(Object.freeze)),
+    tvoedSueAllowanceConfirmations: Object.freeze(
+      tvoedSueAllowanceConfirmations.map(Object.freeze),
+    ),
+    tvoedAnnexAPremiumFacts: Object.freeze(tvoedAnnexAPremiumFacts.map(Object.freeze)),
+    drkEmployeeMonthConfirmations: Object.freeze(drkEmployeeMonthConfirmations.map(Object.freeze)),
+    drkTrainingMonthConfirmations: Object.freeze(drkTrainingMonthConfirmations.map(Object.freeze)),
+    templates: Object.freeze(templates.map(Object.freeze)),
+    shifts: Object.freeze(shifts.map(Object.freeze)),
+    appointments: Object.freeze(appointments.map(Object.freeze)),
+    monthlyTariffDecisions: Object.freeze(monthlyTariffDecisions.map(Object.freeze)),
+    preferences: Object.freeze(preferences.map(Object.freeze)),
   });
 }
 

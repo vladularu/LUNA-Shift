@@ -199,17 +199,19 @@ it("offers just one additional switch and keeps the previous youth choice after 
   mockSaveYouth.mockRejectedValueOnce(new Error("write failed"));
   const screen = await render(<CheckSettingsScreen />);
   await waitFor(() =>
-    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+    expect(screen.getByLabelText("Prüfung für Jugendliche").props.accessibilityState.checked).toBe(
       false,
     ),
   );
   expect(screen.queryAllByRole("textbox")).toHaveLength(0);
-  await fireEvent(screen.getByLabelText("Jugendlichenprüfung"), "valueChange", true);
+  await fireEvent(screen.getByLabelText("Prüfung für Jugendliche"), "valueChange", true);
   await waitFor(() => expect(screen.getByText(/Nicht gespeichert/)).toBeTruthy());
-  expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(false);
-  await fireEvent(screen.getByLabelText("Jugendlichenprüfung"), "valueChange", true);
+  expect(screen.getByLabelText("Prüfung für Jugendliche").props.accessibilityState.checked).toBe(
+    false,
+  );
+  await fireEvent(screen.getByLabelText("Prüfung für Jugendliche"), "valueChange", true);
   await waitFor(() =>
-    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+    expect(screen.getByLabelText("Prüfung für Jugendliche").props.accessibilityState.checked).toBe(
       true,
     ),
   );
@@ -223,10 +225,10 @@ it("restores an enabled youth choice on opening and blocks on an unreadable pref
   await waitFor(() =>
     expect(screen.getByText("Prüfungseinstellungen konnten nicht geladen werden.")).toBeTruthy(),
   );
-  expect(screen.queryByLabelText("Jugendlichenprüfung")).toBeNull();
+  expect(screen.queryByLabelText("Prüfung für Jugendliche")).toBeNull();
   await fireEvent.press(screen.getByText("Erneut versuchen"));
   await waitFor(() =>
-    expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(
+    expect(screen.getByLabelText("Prüfung für Jugendliche").props.accessibilityState.checked).toBe(
       true,
     ),
   );
@@ -235,20 +237,22 @@ it("restores an enabled youth choice on opening and blocks on an unreadable pref
 
 it("keeps the youth scope visible while extra explanation is optional", async () => {
   const screen = await render(<CheckSettingsScreen />);
-  await waitFor(() => expect(screen.getByLabelText("Jugendlichenprüfung")).toBeTruthy());
+  await waitFor(() => expect(screen.getByLabelText("Prüfung für Jugendliche")).toBeTruthy());
   expect(screen.getByText("Für 15–17-Jährige ohne Vollzeitschulpflicht.")).toBeTruthy();
   expect(
     screen.queryByText(/Prüft die erfassten Dienstzeiten nach dem Jugendarbeitsschutzgesetz/),
   ).toBeNull();
   await fireEvent.press(
     screen.getByRole("button", {
-      name: "Über die Jugendlichenprüfung. Für 15–17-Jährige ohne Vollzeitschulpflicht.",
+      name: "Über die Prüfung für Jugendliche. Für 15–17-Jährige ohne Vollzeitschulpflicht.",
     }),
   );
   expect(
     screen.getByText(/Prüft die erfassten Dienstzeiten nach dem Jugendarbeitsschutzgesetz/),
   ).toBeTruthy();
-  expect(screen.getByLabelText("Jugendlichenprüfung").props.accessibilityState.checked).toBe(false);
+  expect(screen.getByLabelText("Prüfung für Jugendliche").props.accessibilityState.checked).toBe(
+    false,
+  );
   expect(mockSaveYouth).not.toHaveBeenCalled();
   expect(mockSave).not.toHaveBeenCalled();
 });

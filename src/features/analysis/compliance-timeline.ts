@@ -1,7 +1,16 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { calculateTimedShiftBounds } from "@/engine/working-time";
-import { complianceIssueSummary } from "./compliance-issue-summary";
+import { validComplianceIssueFacts } from "@/domain/compliance-issue-facts";
+import {
+  complianceCompensationSummary,
+  complianceIssueSummary,
+  complianceLimitHours,
+} from "./compliance-issue-summary";
+import {
+  legacyComplianceRestPresentation,
+  legacyComplianceSeriesCount,
+} from "./compliance-issue-legacy";
 
 export interface RestTimeline {
   readonly previous: ShiftEntry;
@@ -80,14 +89,14 @@ export function complianceTimeline(
     }
   }
   let series: WorkSeries | null = null;
-  const seriesMatch =
-    issue.rule === "PLANNING_7_DAYS"
-      ? issue.description.match(/^(\d+) aufeinanderfolgende Arbeitstage wurden erkannt\.$/)
-      : issue.rule === "PLANNING_NIGHT_SERIES"
-        ? issue.description.match(/^(\d+) aufeinanderfolgende Nachtdienste wurden erkannt\.$/)
-        : null;
-  if (seriesMatch) {
-    const count = Number(seriesMatch[1]);
+  const legacy = !("facts" in issue);
+  const facts = validComplianceIssueFacts(issue.facts, issue.rule);
+  const count = legacy
+    ? legacyComplianceSeriesCount(issue)
+    : facts?.rule === "PLANNING_7_DAYS" || facts?.rule === "PLANNING_NIGHT_SERIES"
+      ? facts.count
+      : null;
+  if (count !== null) {
     const dates = [...new Set(related.map((shift) => shift.date))].sort();
     let complete = !missing && dates.length === count;
     try {
@@ -113,26 +122,17 @@ export function complianceTimeline(
   }
   const summary = complianceIssueSummary(issue);
   let note = summary;
-  if (rest && issue.rule === "ARBZG_5_REST_10H" && summary !== issue.description) {
-    const minimum = issue.title.match(/^Ruhezeit unter (\d+(?:[.,]\d+)?) Stunden$/);
-    if (minimum) note = `Mindestens ${minimum[1].replace(".", ",")} Std. Ruhezeit nötig.`;
-  } else if (rest && issue.rule === "ARBZG_5_REST_11H" && summary !== issue.description) {
-    note = summary.replace(/^Ruhezeit: .+? Std\. \u00b7 /, "");
-  } else if (
-    rest &&
-    issue.rule === "JARBSCHG_13_REST" &&
-    /^Zwischen diesen Arbeitstagen liegen [\d,]+ Stunden\. Jugendliche brauchen mindestens 12 zusammenhängende Stunden Freizeit \(§ 13\)\.$/.test(
-      issue.description,
-    )
-  ) {
-    note = "Jugendliche brauchen mindestens 12 Std. Ruhezeit.";
+  let title = issue.title;
+  if (rest) {
+    if (legacy) ({ title, note } = legacyComplianceRestPresentation(issue, summary));
+    else if (facts?.rule === "ARBZG_5_REST_10H") {
+      title = "Ruhezeit zu kurz";
+      note = `Mindestens ${complianceLimitHours(facts.minimumRestMinutes)} Std. Ruhezeit nötig.`;
+    } else if (facts?.rule === "ARBZG_5_REST_11H") note = complianceCompensationSummary(facts);
+    else if (facts?.rule === "JARBSCHG_13_REST")
+      note = `Jugendliche brauchen mindestens ${complianceLimitHours(facts.minimumRestMinutes)} Std. Ruhezeit.`;
   }
-  const title =
-    rest && issue.rule === "ARBZG_5_REST_10H" && summary !== issue.description
-      ? "Ruhezeit zu kurz"
-      : series
-        ? `${series.count} ${series.unit} hintereinander`
-        : issue.title;
+  if (series) title = `${series.count} ${series.unit} hintereinander`;
   return { related, missing, rest, series, title, note };
 }
 

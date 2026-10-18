@@ -17,13 +17,13 @@ export function SharingInvitationSend({
   const palette = usePalette();
   return (
     <>
-      <SectionHeader title="QR" />
+      <SectionHeader title="QR-Code" />
       <SurfaceCard style={{ padding: SPACING.xl }}>
         <SharingQr url={url} />
       </SurfaceCard>
       <SurfaceCard>
         <RowButton
-          title="Sonstige"
+          title="Einladung teilen"
           disabled={busy}
           onPress={() => onSend("system")}
           leading={<Share2 size={24} color={palette.primary} accessible={false} />}

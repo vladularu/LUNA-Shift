@@ -115,7 +115,7 @@ describe("analysis Dynamic Type layout", () => {
       />,
     );
     expect(screen.getByLabelText("Urlaub, Anzahl 2, Stunden Nicht verfügbar")).toBeTruthy();
-    expect(screen.getByText(/Stunden ohne Abwesenheitsgutschriften/)).toBeTruthy();
+    expect(screen.getByText(/Ohne Feiertagsdaten fehlen die Zeitgutschriften/)).toBeTruthy();
   });
 
   it.each(["COUNT", "HOURS"])(

@@ -4,6 +4,19 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 
 describe("loading and failure states", () => {
+  it("shows a safe diagnostic code directly and keeps retry reachable", async () => {
+    const onRetry = jest.fn();
+    const screen = await render(
+      <LoadFailureView
+        diagnosticCode="APP_RENDER_FAILED"
+        message="Die Ansicht konnte nicht angezeigt werden."
+        onRetry={onRetry}
+      />,
+    );
+    expect(screen.getByText("Diagnosecode: APP_RENDER_FAILED")).toBeVisible();
+    await fireEvent.press(screen.getByRole("button", { name: "Erneut versuchen" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
   it("announces loading progress", async () => {
     const screen = await render(<LoadingView label="Daten werden geladen" />);
 

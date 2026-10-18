@@ -35,11 +35,11 @@ export function ShiftOvertimeFields({
             { color: compact ? palette.textMuted : palette.text },
           ]}
         >
-          Überstunden
+          Überstunden (Min.)
         </Text>
         <TextInput
           ref={inputRef}
-          accessibilityLabel="Tariflich bestätigte Überstunden in Minuten"
+          accessibilityLabel="Überstunden in Minuten"
           keyboardType="number-pad"
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           onChangeText={onMinutesChange}
@@ -70,10 +70,10 @@ export function ShiftOvertimeConfirmation({
   readonly onConfirmedChange: (value: boolean) => void;
 }) {
   const palette = usePalette();
-  const status = confirmed ? "Als Überstunden bestätigt" : "Nicht bestätigt";
+  const status = confirmed ? "Ja" : "Nein";
   return (
     <Pressable
-      accessibilityLabel={`Tarifstatus: ${status}`}
+      accessibilityLabel={`Überstunden tariflich bestätigt: ${status}`}
       accessibilityRole="button"
       onPress={() => onConfirmedChange(!confirmed)}
       style={({ pressed }) => [
@@ -85,7 +85,7 @@ export function ShiftOvertimeConfirmation({
       ]}
     >
       <Text maxFontSizeMultiplier={TEXT_MAX_SCALE} style={[styles.label, { color: palette.text }]}>
-        Tarifstatus
+        Tariflich bestätigt
       </Text>
       <Text maxFontSizeMultiplier={TEXT_MAX_SCALE} style={[styles.value, { color: palette.text }]}>
         {status}

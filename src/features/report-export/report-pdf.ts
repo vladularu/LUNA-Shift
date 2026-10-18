@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 import {
   DEFAULT_REPORT_OPTIONS,
+  REPORT_CHECK_SCOPE,
   type ReportDocument,
   type ReportEntry,
   type ReportOptions,
@@ -46,11 +47,11 @@ function salary(view: View, details: boolean): string {
   const coverage = view.annual
     ? `<p class="muted">Brutto: ${view.payCount}/12 Monate verfügbar. Netto: ${view.netCount}/12 Monate verfügbar. Summen enthalten nur verfügbare Monate.</p>`
     : "";
-  return `<section><h2>Gehaltsprognose</h2><div class="salary metrics"><div><small>Brutto geschätzt${view.annual ? " (Teilwert möglich)" : ""}</small><strong class="${view.gross === null ? "unavailable" : ""}">${html(reportMoney(view.gross))}</strong></div><div class="net"><small>Netto geschätzt${view.annual ? " (Teilwert möglich)" : ""}</small><strong class="${view.net === null ? "unavailable" : ""}">${html(reportMoney(view.net))}</strong></div></div>${coverage}${details && !view.annual ? `<div class="columns"><div><h3>Brutto setzt sich zusammen aus</h3><table>${row("Grundgehalt", reportMoney(view.base))}${row("Zulagen", reportMoney(view.allowances))}${row("Zeitzuschläge", reportMoney(view.premiums))}${view.overtime ? row("Überstunden", reportMoney(view.overtime)) : ""}</table></div><div><h3>Berücksichtigte Abzüge</h3><table>${row("Steuern", reportMoney(view.tax))}${row("Sozialversicherung", reportMoney(view.insurance))}${row("Zusatzversorgung", reportMoney(view.pension))}</table></div></div>` : ""}<p class="muted">Schätzung aus den eingetragenen Monatseinträgen. Keine Lohnabrechnung.${view.pensionOmitted ? " Zusatzversorgung nicht berücksichtigt." : ""}</p></section>`;
+  return `<section><h2>Gehaltsprognose</h2><div class="salary metrics"><div><small>Brutto geschätzt${view.annual ? " (Teilwert möglich)" : ""}</small><strong class="${view.gross === null ? "unavailable" : ""}">${html(reportMoney(view.gross))}</strong></div><div class="net"><small>Netto geschätzt${view.annual ? " (Teilwert möglich)" : ""}</small><strong class="${view.net === null ? "unavailable" : ""}">${html(view.netDisplay)}</strong></div></div>${view.netBasisNote ? `<p class="muted">${html(view.netBasisNote)}</p>` : ""}${coverage}${details && !view.annual ? `<div class="columns"><div><h3>Brutto setzt sich zusammen aus</h3><table>${row("Grundgehalt", reportMoney(view.base))}${row("Zulagen", reportMoney(view.allowances))}${row("Zeitzuschläge", reportMoney(view.premiums))}${view.overtime ? row("Überstunden", reportMoney(view.overtime)) : ""}</table></div><div><h3>Berücksichtigte Abzüge</h3><table>${row("Steuern", reportMoney(view.tax))}${row("Sozialversicherung", reportMoney(view.insurance))}${row("Zusatzversorgung", reportMoney(view.pension))}</table></div></div>` : ""}<p class="muted">Schätzung aus den eingetragenen Monatseinträgen. Keine Lohnabrechnung.${view.pensionOmitted ? " Zusatzversorgung nicht berücksichtigt." : ""}</p></section>`;
 }
 
 function notice(view: View): string {
-  return `<aside><b>${view.testData ? "Enthält Testdaten · " : ""}Prüfhinweise</b><p>${html(view.checks)}</p>${view.issues.map((issue) => `<p>${html(short(issue, 120))}</p>`).join("")}</aside>`;
+  return `<aside><b>${view.testData ? "Enthält Testdaten · " : ""}Prüfhinweise</b><p>${html(view.checks)}${view.checkPrerequisites ? `<br>${html(view.checkPrerequisites)}` : ""}<br>${html(REPORT_CHECK_SCOPE)}</p>${view.issues.map((issue) => `<p>${html(short(issue, 120))}</p>`).join("")}</aside>`;
 }
 
 function monthCalendar(view: View): string {
@@ -70,7 +71,7 @@ function monthCalendar(view: View): string {
 }
 
 function annualTable(view: View, includeSalary: boolean): string {
-  return `<section><h2>Zwölf Monate im Überblick</h2><table class="annual"><thead><tr><th>Monat</th><th>Soll</th><th>Kontozeit</th><th>Saldo</th>${includeSalary ? "<th>Brutto</th><th>Netto</th>" : ""}</tr></thead><tbody>${view.monthly.map((month, i) => `<tr><td>${REPORT_MONTH_NAMES[i]}</td><td>${html(reportMinutes(month.target))}</td><td>${html(reportMinutes(month.actual))}</td><td>${html(reportMinutes(month.balance, true))}</td>${includeSalary ? `<td>${html(reportMoney(month.gross))}</td><td>${html(reportMoney(month.net))}</td>` : ""}</tr>`).join("")}</tbody></table><p class="muted">Vollständige tägliche Einzelliste im CSV-Export.</p></section>`;
+  return `<section><h2>Zwölf Monate im Überblick</h2><table class="annual"><thead><tr><th>Monat</th><th>Soll</th><th>Kontozeit</th><th>Saldo</th>${includeSalary ? "<th>Brutto</th><th>Netto</th>" : ""}</tr></thead><tbody>${view.monthly.map((month, i) => `<tr><td>${REPORT_MONTH_NAMES[i]}</td><td>${html(reportMinutes(month.target))}</td><td>${html(reportMinutes(month.actual))}</td><td>${html(reportMinutes(month.balance, true))}</td>${includeSalary ? `<td>${html(reportMoney(month.gross))}</td><td>${html(month.netDisplay)}</td>` : ""}</tr>`).join("")}</tbody></table>${includeSalary && view.netBasisNote ? `<p class="muted">${html(view.netBasisNote)}</p>` : ""}<p class="muted">Vollständige tägliche Einzelliste im CSV-Export.</p></section>`;
 }
 
 function categories(view: View): string {

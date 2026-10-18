@@ -315,6 +315,11 @@ function checkWorkingTime(
           `${hours(net)} Nettoarbeitszeit überschreiten die ${rules.workingTime.maxDailyMinutes / 60}-Stunden-Grenze.`,
           shifts,
           date,
+          {
+            rule: "ARBZG_3_MAX_10H",
+            netMinutes: net,
+            maximumMinutes: rules.workingTime.maxDailyMinutes,
+          },
         ),
       );
     } else if (
@@ -331,6 +336,7 @@ function checkWorkingTime(
           `${hours(net)} Nettoarbeitszeit erfordern einen zulässigen Ausgleichszeitraum.`,
           shifts,
           date,
+          { rule: "ARBZG_3_OVER_8H", netMinutes: net },
         ),
       );
     }
@@ -347,6 +353,7 @@ function checkWorkingTime(
             `${interruptions} Minuten zwischen Diensten könnten die fehlende Pause abdecken. Bitte die tatsächliche Pausenlage prüfen.`,
             shifts,
             date,
+            { rule: "ARBZG_4_INTERRUPTION", interruptionMinutes: interruptions },
           ),
         );
       } else {
@@ -359,6 +366,11 @@ function checkWorkingTime(
             `Erfasst sind ${recordedBreak} Minuten Pause; erforderlich sind mindestens ${requiredBreak} Minuten.`,
             shifts,
             date,
+            {
+              rule: "ARBZG_4_BREAK",
+              recordedBreakMinutes: recordedBreak,
+              requiredBreakMinutes: requiredBreak,
+            },
           ),
         );
       }
@@ -375,6 +387,7 @@ function checkWorkingTime(
           `Ein zusammenhängender Arbeitsblock überschreitet ${thresholdLabel} Stunden ohne dokumentierte Ruhepause.`,
           shifts,
           date,
+          { rule: "ARBZG_4_CONTINUOUS", maximumContinuousMinutes: continuousWorkThreshold(rules) },
         ),
       );
     }
@@ -388,6 +401,12 @@ function checkWorkingTime(
             "Pause länger als Dienst",
             "Die eingetragene Pause ist länger als die gesamte Brutto-Dienstzeit.",
             [item.shift],
+            undefined,
+            {
+              rule: "TIME_PLAUSIBILITY",
+              breakMinutes: item.shift.breakMinutes,
+              grossMinutes: item.grossMinutes,
+            },
           ),
         );
       }
@@ -400,6 +419,8 @@ function checkWorkingTime(
             "Dienst länger als 16 Stunden",
             `Die Brutto-Dienstzeit beträgt ${hours(item.grossMinutes)} und sollte auf einen Eingabefehler geprüft werden.`,
             [item.shift],
+            undefined,
+            { rule: "TIME_GROSS_OVER_16H", grossMinutes: item.grossMinutes },
           ),
         );
       }
@@ -436,6 +457,8 @@ function checkRestAndSequence(
           `Ruhezeit unter ${minimumMinutes / 60} Stunden`,
           `Zwischen den Diensten liegen nur ${hours(rest)} Ruhezeit. Damit wird auch die für Krankenhäuser und Pflegeeinrichtungen mögliche Verkürzung auf ${minimumMinutes / 60} Stunden unterschritten.`,
           [current.shift, next.shift],
+          undefined,
+          { rule: "ARBZG_5_REST_10H", restMinutes: rest, minimumRestMinutes: minimumMinutes },
         ),
       );
     } else if (
@@ -460,6 +483,13 @@ function checkRestAndSequence(
             : "Ausgleich für verkürzte Ruhezeit offen",
           `Die Ruhezeit beträgt ${hours(rest)}. In den eingetragenen Diensten wurde bis ${dateLabel(deadline)} keine noch unbenutzte Ruhezeit von mindestens ${deviation.compensationMinutes / 60} Stunden als Ausgleich erkannt.`,
           [current.shift, next.shift],
+          undefined,
+          {
+            rule: "ARBZG_5_REST_11H",
+            restMinutes: rest,
+            compensationMinutes: deviation.compensationMinutes,
+            compensationDeadline: deadline.toString(),
+          },
         ),
       );
     } else if (
@@ -477,6 +507,8 @@ function checkRestAndSequence(
           "Ungünstige Folge Spät zu Früh",
           "Die gesetzliche Ruhezeit ist eingehalten; die kurze Vorwärtsrotation sollte dennoch geprüft werden.",
           [current.shift, next.shift],
+          undefined,
+          { rule: "PLANNING_LATE_EARLY" },
         ),
       );
     }
@@ -500,6 +532,8 @@ function checkPlanningSeries(
           `${germanQuantity(rules.planning.consecutiveWorkDaysWarning, true)} oder mehr Arbeitstage in Folge`,
           `${streak.length} aufeinanderfolgende Arbeitstage wurden erkannt.`,
           streak,
+          undefined,
+          { rule: "PLANNING_7_DAYS", count: streak.length },
         ),
       );
     }
@@ -518,6 +552,8 @@ function checkPlanningSeries(
           `${germanQuantity(rules.planning.consecutiveNightShiftsWarning, true)} oder mehr Nachtdienste in Folge`,
           `${streak.length} aufeinanderfolgende Nachtdienste wurden erkannt.`,
           streak,
+          undefined,
+          { rule: "PLANNING_NIGHT_SERIES", count: streak.length },
         ),
       );
     }
@@ -543,6 +579,8 @@ function checkPlanningSeries(
           "Zwei Wochenenden in Folge gearbeitet",
           "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.",
           [weekends.get(keys[index])!, weekends.get(keys[index + 1])!],
+          undefined,
+          { rule: "PLANNING_WEEKENDS" },
         ),
       );
     }

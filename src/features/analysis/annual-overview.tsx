@@ -64,9 +64,11 @@ export function AnnualOverview({
                   : formatSignedMinutes(report.balanceMinutes) + " h"
             }
             caption={
-              pending || !report.worktimeCoverageComplete
-                ? "Erfasste Zeiten · Soll und Saldo benötigen vollständige Regelstände."
-                : undefined
+              pending
+                ? "Erfasste Zeiten · Soll und Saldo werden berechnet."
+                : !report.worktimeCoverageComplete
+                  ? "Erfasste Zeiten · Soll und Saldo nicht berechenbar"
+                  : undefined
             }
           />
         ),
@@ -84,7 +86,7 @@ export function AnnualOverview({
             onPress={() => router.push(annualDetailsRoute(report.year, "CHECK"))}
             caption={
               !pending && !report.complianceCoverageComplete
-                ? "Die Jahresprüfung benötigt vollständige Regelstände."
+                ? "Für die vollständige Jahresprüfung fehlen Berechnungsdaten."
                 : undefined
             }
           />
@@ -101,7 +103,11 @@ export function AnnualOverview({
             manual={report.salarySource === "MANUAL"}
             caption={
               payReady
-                ? "Brutto-Schätzung · " + report.availablePayMonthCount + " von 12 Monaten"
+                ? (report.availablePayMonthCount < 12
+                    ? "Brutto-Teilsumme · "
+                    : "Brutto-Schätzung · ") +
+                  report.availablePayMonthCount +
+                  " von 12 Monaten"
                 : "Keine unterstützte Monatsschätzung verfügbar"
             }
           />

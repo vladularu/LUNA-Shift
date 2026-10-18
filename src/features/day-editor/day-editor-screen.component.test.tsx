@@ -475,7 +475,11 @@ describe("DayEditorScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Pause: 30 Minuten" }));
     await fireEvent.press(screen.getByRole("radio", { name: "60 Minuten" }));
     await fireEvent.press(screen.getByRole("button", { name: "Wecker: Aus" }));
+    expect(
+      screen.getByText("Fokusmodus und Stummschaltung können den Ton unterdrücken."),
+    ).toBeTruthy();
     await fireEvent.press(screen.getByRole("radio", { name: "Zum Dienstbeginn" }));
+    expect(screen.getByRole("button", { name: "Wecker: Zum Dienstbeginn" })).toBeTruthy();
     const preventDefault = jest.fn();
     await act(async () => {
       mockBeforeRemoveListener?.({

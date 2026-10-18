@@ -29,7 +29,7 @@ export type KnownNetPayPensionScheme = Exclude<NetPayPensionScheme, "NONE" | "UN
 
 export const NET_PAY_PENSION_LABELS = Object.freeze({
   ...Object.fromEntries(NET_PAY_PENSION_OPTIONS.map(({ value, label }) => [value, label])),
-  UNKNOWN: "Zusatzversorgung offen",
+  UNKNOWN: "Zusatzversorgung nicht berücksichtigt",
   OTHER: "Andere Kasse · offen",
 }) as Readonly<Record<NetPayPensionScheme, string>>;
 

@@ -114,6 +114,12 @@ describe("ArbZG compliance", () => {
     );
     expect(result.issues.map((item) => item.rule)).toContain("ARBZG_3_MAX_10H");
     expect(result.issues.map((item) => item.rule)).toContain("ARBZG_4_BREAK");
+    expect(result.issues.find((item) => item.rule === "ARBZG_3_MAX_10H")).toMatchObject({
+      facts: { rule: "ARBZG_3_MAX_10H", netMinutes: 645, maximumMinutes: 600 },
+    });
+    expect(result.issues.find((item) => item.rule === "ARBZG_4_BREAK")).toMatchObject({
+      facts: { rule: "ARBZG_4_BREAK", recordedBreakMinutes: 15, requiredBreakMinutes: 45 },
+    });
   });
 
   it("uses the preceding eight days for rest-time checks", () => {
@@ -164,6 +170,7 @@ describe("ArbZG compliance", () => {
     const streak = result.issues.find((item) => item.rule === "PLANNING_7_DAYS");
     expect(streak?.kind).toBe("PLANNING");
     expect(streak?.severity).toBe("warning");
+    expect(streak).toMatchObject({ facts: { rule: "PLANNING_7_DAYS", count: 7 } });
   });
 
   it("allows four consecutive night shifts without a series warning", () => {

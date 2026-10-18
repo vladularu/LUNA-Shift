@@ -1,17 +1,16 @@
 import { Text, TextInput } from "@/ui/text";
-import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding";
-import { CORNER_CURVE, RADII, SPACING, SCREEN_LAYOUT, CONTROL_HEIGHT } from "@/theme/tokens";
+import { useOnboardingPalette } from "@/theme/onboarding";
+import { CONTROL_HEIGHT, SPACING } from "@/theme/tokens";
+import { s } from "./onboarding-screen.styles";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +21,6 @@ import {
   FEDERAL_STATES,
   FEDERAL_STATE_LABELS,
   HOLIDAY_REGION_LABELS,
-  INDUSTRIES,
   INDUSTRY_LABELS,
   type FederalState,
   type HolidayRegion,
@@ -36,14 +34,15 @@ import { focusInvalidField, weeklyHoursFieldError } from "@/ui/form-validation";
 import {
   BlueprintIcon,
   type BlueprintIconName,
-  Choice,
   FieldError,
-  NumberField,
   SelectField,
 } from "./onboarding-controls";
-import { PercentageSlider } from "./percentage-slider";
+import { OnboardingWorkTime } from "./onboarding-work-time";
 import { SALARY_BASIS_OPTIONS } from "@/features/settings/salary-basis-options";
-import { OnboardingTariffFields } from "./onboarding-tariff-fields";
+import { OnboardingSalary, type OnboardingSalaryView } from "./onboarding-salary";
+import { OnboardingBrand } from "./onboarding-brand";
+import { OnboardingCheck, OnboardingIndustry } from "./onboarding-industry";
+import { OnboardingReveal, useOnboardingReducedMotion } from "./onboarding-motion";
 import {
   EMPTY_TARIFF_SELECTION,
   onboardingTariffErrors,
@@ -52,9 +51,9 @@ import {
   type OnboardingTariffSelection,
 } from "./onboarding-tariff-values";
 
-type Step = 1 | 2 | 3 | 4 | 5;
+type Step = 2 | 3 | 4 | 5;
 type SalaryMode = "MANUAL" | "TARIFF" | "LATER";
-const STEP_ORDER = [1, 2, 4, 3, 5] as const;
+const STEP_ORDER = [2, 4, 3, 5] as const;
 type Errors = Partial<
   Record<
     | "industry"
@@ -73,7 +72,6 @@ type Errors = Partial<
     string
   >
 >;
-const ONBOARDING_LOGO = require("../../../assets/brand/lunashift/onboarding-logo-user.png");
 
 /** Shared settings conversion, retaining decimal-comma and decimal-point compatibility. */
 export function parseWeeklyHours(value: string): number {
@@ -88,11 +86,13 @@ export function normalizeOnboardingGross(value: string): string {
 }
 export function OnboardingScreen({ preview = false }: { readonly preview?: boolean }) {
   const p = useOnboardingPalette();
+  const reduced = useOnboardingReducedMotion();
   const { profile, updateProfile } = usePflegeShiftProfile();
   const testMode = preview || profile != null;
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(STEP_ORDER[0]);
   const [industry, setIndustry] = useState<Industry | null>(null);
   const [salaryMode, setSalaryMode] = useState<SalaryMode | null>(null);
+  const [salaryView, setSalaryView] = useState<OnboardingSalaryView>("choice");
   const [gross, setGross] = useState("");
   const [tariffSelection, setTariffSelection] =
     useState<OnboardingTariffSelection>(EMPTY_TARIFF_SELECTION);
@@ -109,18 +109,88 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   const grossRef = useRef<TextInput>(null);
   const hoursRef = useRef<TextInput>(null);
   const [editingSummary, setEditingSummary] = useState(false);
+  function draft() {
+    return {
+      industry,
+      salaryMode,
+      salaryView,
+      gross,
+      tariffSelection,
+      weeklyHours,
+      percentageBasis,
+      federalState,
+      holidayRegion,
+    };
+  }
+  const editSnapshot = useRef<ReturnType<typeof draft> | null>(null);
   const displayStep = STEP_ORDER.indexOf(step) + 1;
   function moveTo(next: Step) {
     if (savingRef.current) return;
     setErrors({});
     setSaveError(undefined);
+    setAdjustingPercentage(false);
+    if (next === 3)
+      setSalaryView(
+        salaryMode === "MANUAL"
+          ? "manual"
+          : salaryMode === "TARIFF"
+            ? tariffSelection.mode
+              ? "details"
+              : "tariffs"
+            : "choice",
+      );
     setStep(next);
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }
   function clearError(key: keyof Errors) {
     setErrors((previous) => ({ ...previous, [key]: undefined }));
   }
+  function moveSalary(view: OnboardingSalaryView) {
+    if (savingRef.current) return;
+    setSalaryView(view);
+    setErrors({});
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }
+  function skipSalary() {
+    if (savingRef.current) return;
+    setSalaryMode("LATER");
+    setSalaryView("choice");
+    setEditingSummary(false);
+    editSnapshot.current = null;
+    moveTo(5);
+  }
+  function edit(target: Step) {
+    if (savingRef.current) return;
+    editSnapshot.current = draft();
+    setEditingSummary(true);
+    moveTo(target);
+  }
+  function back() {
+    if (savingRef.current) return;
+    if (step === 3 && salaryView !== "choice") {
+      moveSalary(salaryView === "details" ? "tariffs" : "choice");
+      return;
+    }
+    if (editingSummary) {
+      const previous = editSnapshot.current;
+      if (previous) {
+        setIndustry(previous.industry);
+        setSalaryMode(previous.salaryMode);
+        setSalaryView(previous.salaryView);
+        setGross(previous.gross);
+        setTariffSelection(previous.tariffSelection);
+        setWeeklyHours(previous.weeklyHours);
+        setPercentageBasis(previous.percentageBasis);
+        setFederalState(previous.federalState);
+        setHolidayRegion(previous.holidayRegion);
+      }
+      editSnapshot.current = null;
+      setEditingSummary(false);
+      moveTo(5);
+    } else moveTo(STEP_ORDER[Math.max(0, displayStep - 2)]);
+  }
   function advance() {
+    if (savingRef.current) return;
     const nextErrors: Errors = {};
     if (step === 2 && !industry) nextErrors.industry = "Bitte wähle deinen Berufsbereich aus.";
     if (step === 3) {
@@ -154,6 +224,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       return;
     }
     if (editingSummary) {
+      editSnapshot.current = null;
       setEditingSummary(false);
       moveTo(5);
     } else {
@@ -164,6 +235,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   async function finish() {
     if (savingRef.current) return;
     if (testMode) {
+      savingRef.current = true;
       router.back();
       return;
     }
@@ -171,6 +243,8 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     if (salaryMode === "TARIFF") {
       const tariffErrors = onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours));
       if (Object.values(tariffErrors).some(Boolean)) {
+        editSnapshot.current = draft();
+        setSalaryView("details");
         setErrors(tariffErrors);
         setEditingSummary(true);
         setStep(3);
@@ -199,32 +273,35 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       });
       router.replace("/");
     } catch (error) {
+      savingRef.current = false;
       setSaveError(
         userFacingErrorMessage(error, "Einrichtung fehlgeschlagen. Bitte erneut versuchen."),
       );
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
   }
-  const titles = [
-    "Dein Dienstplan.\nEinfach im Blick.",
-    "Wo arbeitest du?",
-    "Wie möchtest du dein Gehalt einrichten?",
-    "Wie viel arbeitest du?",
-    "Bereit für deinen Dienstplan.",
-  ];
-  const copies = [
-    "Schichten planen. Zeit verstehen.",
-    "Wähle deinen Berufsbereich.",
-    "Jetzt oder später – du entscheidest.",
-    "Deine Wochenstunden und dein Arbeitsort.",
-    "Du kannst deine Angaben jederzeit ändern.",
-  ];
+  const titles: Record<Step, string> = {
+    2: "Wo arbeitest du?",
+    3: {
+      choice: "Wie möchtest du dein Gehalt einrichten?",
+      tariffs: "Welcher Tarif gilt für dich?",
+      details: "Deine Tarifangaben",
+      manual: "Wie hoch ist dein Monatsbrutto?",
+    }[salaryView],
+    4: "Wie viel arbeitest du?",
+    5: "Passt alles?",
+  };
+  const copies: Record<Step, string> = {
+    2: "",
+    3: salaryView === "choice" ? "Für deine Gehaltsprognose." : "",
+    4: "",
+    5: "Du kannst deine Angaben jederzeit ändern.",
+  };
   const grossCents = parseManualMonthlyGrossCents(normalizeOnboardingGross(gross));
   const salaryLabel =
     salaryMode === "LATER"
-      ? "Gehalt später einrichten"
+      ? "Später einrichten"
       : salaryMode === "MANUAL"
         ? `${((grossCents ?? 0) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € brutto / Monat`
         : `${SALARY_BASIS_OPTIONS.find((option) => option.value === tariffSelection.mode)?.label ?? "Tarif"} · ${isTrainingTariff(tariffSelection.mode) ? `${tariffSelection.trainingYear}. Ausbildungsjahr` : `${tariffSelection.group} · Stufe ${tariffSelection.level}`}`;
@@ -235,14 +312,14 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
           <Pressable
             accessibilityLabel="Zurück"
             accessibilityRole="button"
-            disabled={saving || step === 1}
-            onPress={() => {
-              setEditingSummary(false);
-              moveTo(STEP_ORDER[Math.max(0, displayStep - 2)]);
-            }}
-            style={[s.back, { opacity: step === 1 ? 0 : saving ? 0.5 : 1 }]}
+            disabled={saving || (step === STEP_ORDER[0] && !editingSummary)}
+            onPress={back}
+            style={[
+              s.back,
+              { opacity: step === STEP_ORDER[0] && !editingSummary ? 0 : saving ? 0.5 : 1 },
+            ]}
           >
-            <Text style={[s.label, { color: p.text }]}>‹ Zurück</Text>
+            <Text style={[s.label, { color: p.text }]}>‹</Text>
           </Pressable>
           <View style={s.progressRight}>
             {testMode ? (
@@ -250,32 +327,35 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                 accessibilityLabel="Testmodus schließen"
                 accessibilityRole="button"
                 disabled={saving}
-                onPress={() => router.back()}
+                onPress={() => void finish()}
                 style={s.back}
               >
                 <Text style={[s.caption, { color: p.muted }]} testID="onboarding-preview-hint">
-                  Testmodus · Schließen
+                  Schließen
                 </Text>
               </Pressable>
             ) : null}
             <View
               accessible
-              accessibilityLabel={`Schritt ${displayStep} von 5`}
+              accessibilityLabel={`Schritt ${displayStep} von ${STEP_ORDER.length}`}
               accessibilityRole="progressbar"
-              accessibilityValue={{ min: 1, max: 5, now: displayStep }}
+              accessibilityValue={{ min: 1, max: STEP_ORDER.length, now: displayStep }}
               style={s.progressDots}
             >
-              <Text style={[s.caption, { color: p.text }]}>{displayStep} / 5</Text>
-              <View accessibilityElementsHidden style={s.track}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <View
-                    key={n}
-                    style={[s.segment, { backgroundColor: n <= displayStep ? p.accent : p.border }]}
-                  />
-                ))}
-              </View>
+              <Text style={[s.caption, { color: p.text }]}>
+                {displayStep} / {STEP_ORDER.length}
+              </Text>
             </View>
+            <Text style={[s.caption, { color: p.text, fontWeight: "600" }]}>LUNA Shift</Text>
           </View>
+        </View>
+        <View accessibilityElementsHidden style={s.track}>
+          {STEP_ORDER.map((value, index) => (
+            <View
+              key={value}
+              style={[s.segment, { backgroundColor: index < displayStep ? p.accent : p.control }]}
+            />
+          ))}
         </View>
         <ScrollView
           testID="onboarding-scroll-content"
@@ -286,365 +366,254 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           contentContainerStyle={s.scroll}
         >
-          <View
-            style={[s.content, step === 1 && s.welcome]}
-            pointerEvents={saving ? "none" : "auto"}
-          >
-            {step === 1 ? (
-              <View style={s.brand}>
-                <Image
-                  source={ONBOARDING_LOGO}
-                  accessibilityLabel="LUNA Shift Logo"
-                  style={s.logo}
-                  resizeMode="contain"
-                />
-              </View>
-            ) : null}
-            <View style={s.titleGroup}>
-              <Text
-                accessibilityRole="header"
-                style={[s.title, step === 1 && s.display, { color: p.text }]}
-              >
-                {titles[step - 1]}
-              </Text>
-              <Text style={[s.body, s.centered, { color: p.muted }]}>{copies[step - 1]}</Text>
-            </View>
-            {step === 1 ? (
-              <View>
-                <View style={s.chips}>
-                  {[
-                    { label: "F", time: "Frühschicht", color: p.rose },
-                    { label: "S", time: "Spätschicht", color: p.apricot },
-                    { label: "N", time: "Nachtschicht", color: p.lavender },
-                  ].map((chip) => (
-                    <View key={chip.label} style={s.chipColumn}>
-                      <View style={[s.chip, { backgroundColor: chip.color }]}>
-                        <Text style={[s.title, { color: p.text }]}>{chip.label}</Text>
-                      </View>
-                      <Text style={[s.caption, { color: p.text }]}>{chip.time}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-            {step === 2 ? (
-              <View style={s.list}>
-                {INDUSTRIES.map((value) => (
-                  <Choice
-                    key={value}
-                    selected={industry === value}
-                    title={INDUSTRY_LABELS[value]}
-                    icon={
-                      {
-                        HEALTHCARE: "heart-pulse",
-                        EMERGENCY_SERVICES: "ambulance",
-                        SOCIAL_SERVICES: "account-group-outline",
-                        OTHER_SHIFT_WORK: "briefcase-outline",
-                      }[value] as BlueprintIconName
-                    }
-                    onPress={() => {
-                      setIndustry(value);
-                      clearError("industry");
-                    }}
-                  />
-                ))}
-                <FieldError message={errors.industry} />
-              </View>
-            ) : null}
-            {step === 3 ? (
-              <View style={s.fields}>
-                <View style={s.list}>
-                  {(
-                    [
-                      { value: "TARIFF", label: "Nach Tarif", icon: "file-document-outline" },
-                      { value: "MANUAL", label: "Eigenes Brutto", icon: "cash-multiple" },
-                      { value: "LATER", label: "Später", icon: "clock-outline" },
-                    ] as const
-                  ).map((option) => (
-                    <Choice
-                      key={option.value}
-                      selected={salaryMode === option.value}
-                      title={option.label}
-                      icon={option.icon}
-                      onPress={() => {
-                        setSalaryMode(option.value);
-                        setErrors({});
-                      }}
-                    />
-                  ))}
-                  <FieldError message={errors.salary} />
-                </View>
-                {salaryMode === "MANUAL" ? (
-                  <View style={s.list}>
-                    <NumberField
-                      label="Monatsbrutto in Euro"
-                      value={gross}
-                      onChangeText={(value) => {
-                        setGross(value);
-                        clearError("gross");
-                      }}
-                      placeholder="3.450,50"
-                      inputRef={grossRef}
-                      error={errors.gross}
-                      testID="onboarding-manual-gross"
-                    />
-                    <Text style={[s.caption, { color: p.muted }]}>
-                      Dein Monatsbrutto ohne zusätzliche Zuschläge.
-                    </Text>
+          <View pointerEvents={saving ? "none" : "auto"}>
+            <OnboardingReveal reduced={reduced} appearance={step} style={s.content}>
+              {step === STEP_ORDER[0] ? <OnboardingBrand reduced={reduced} /> : null}
+              <View style={s.titleGroup}>
+                {step === 3 && salaryView !== "choice" ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Gehaltsgrundlage"
+                    onPress={() => moveSalary("choice")}
+                    style={s.back}
+                  >
+                    <Text style={[s.caption, { color: p.muted }]}>‹ Gehaltsgrundlage</Text>
+                  </Pressable>
+                ) : null}
+                {step === 5 ? (
+                  <View
+                    accessibilityElementsHidden
+                    style={[s.complete, { backgroundColor: p.highlight }]}
+                  >
+                    <OnboardingCheck color={p.onHighlight} size={24} />
                   </View>
                 ) : null}
-                {salaryMode === "TARIFF" ? (
-                  <OnboardingTariffFields
-                    selection={tariffSelection}
-                    errors={errors}
-                    federalState={federalState}
-                    onChange={(value) => {
-                      setTariffSelection(value);
-                      setErrors({});
-                    }}
-                  />
+                {step === 2 ? (
+                  <Text style={[s.caption, { color: p.muted }]}>Dein Bereich</Text>
+                ) : null}
+                <Text accessibilityRole="header" style={[s.title, { color: p.text }]}>
+                  {titles[step]}
+                </Text>
+                {copies[step] ? (
+                  <Text style={[s.body, { color: p.muted }]}>{copies[step]}</Text>
                 ) : null}
               </View>
-            ) : null}
-            {step === 4 ? (
-              <View style={s.fields}>
-                <View style={s.list}>
-                  <NumberField
-                    label="Wochenstunden"
-                    large
-                    value={weeklyHours}
-                    onChangeText={(value) => {
-                      setWeeklyHours(value);
-                      clearError("hours");
-                    }}
-                    placeholder="38,5"
-                    error={errors.hours}
-                    inputRef={hoursRef}
-                    testID="onboarding-weekly-hours"
-                  />
-                  <PercentageSlider
-                    weeklyHours={weeklyHours}
-                    basis={percentageBasis}
-                    onBasisChange={setPercentageBasis}
-                    onHoursChange={(value) => {
-                      setWeeklyHours(value);
-                      clearError("hours");
-                    }}
-                    onInteractionChange={setAdjustingPercentage}
-                  />
-                </View>
-                <SelectField
-                  label="Bundesland deines Arbeitsorts"
-                  icon="map-marker-outline"
-                  value={federalState}
-                  options={FEDERAL_STATES.map((value) => ({
-                    value,
-                    label: FEDERAL_STATE_LABELS[value],
-                  }))}
-                  error={errors.state}
+              {step === 2 ? (
+                <OnboardingIndustry
+                  value={industry}
                   onChange={(value) => {
-                    setFederalState(value);
-                    setHolidayRegion(defaultHolidayRegion(value));
-                    setErrors((previous) => ({ ...previous, state: undefined, region: undefined }));
+                    setIndustry(value);
+                    clearError("industry");
                   }}
+                  error={errors.industry}
+                  reduced={reduced}
                 />
-                {federalState && holidayRegionsForState(federalState).length > 1 ? (
+              ) : null}
+              {step === 3 ? (
+                <OnboardingSalary
+                  view={salaryView}
+                  reduced={reduced}
+                  selection={tariffSelection}
+                  errors={errors}
+                  federalState={federalState}
+                  gross={gross}
+                  grossRef={grossRef}
+                  onGrossChange={(value) => {
+                    setGross(value);
+                    clearError("gross");
+                  }}
+                  onSelectionChange={(value) => {
+                    setTariffSelection(value);
+                    setErrors({});
+                  }}
+                  onModeChange={(mode) => {
+                    setSalaryMode(mode);
+                    moveSalary(
+                      mode === "MANUAL" ? "manual" : tariffSelection.mode ? "details" : "tariffs",
+                    );
+                  }}
+                  onTariffChange={(mode) => {
+                    if (tariffSelection.mode !== mode)
+                      setTariffSelection({ ...EMPTY_TARIFF_SELECTION, mode });
+                    moveSalary("details");
+                  }}
+                  onTariffPicker={() => moveSalary("tariffs")}
+                />
+              ) : null}
+              {step === 4 ? (
+                <View style={s.fields}>
+                  <View style={s.list}>
+                    <OnboardingWorkTime
+                      hours={weeklyHours}
+                      basis={percentageBasis}
+                      onBasisChange={setPercentageBasis}
+                      onHoursChange={(value) => {
+                        setWeeklyHours(value);
+                        clearError("hours");
+                      }}
+                      onInteractionChange={setAdjustingPercentage}
+                      inputRef={hoursRef}
+                      error={errors.hours}
+                    />
+                  </View>
                   <SelectField
-                    label="Regionale Feiertage am Arbeitsort"
-                    value={holidayRegion === "UNKNOWN" ? null : holidayRegion}
-                    options={holidayRegionsForState(federalState)
-                      .filter((value) => value !== "UNKNOWN")
-                      .map((value) => ({ value, label: HOLIDAY_REGION_LABELS[value] }))}
-                    error={errors.region}
+                    label="Bundesland deines Arbeitsorts"
+                    icon="map-marker-outline"
+                    value={federalState}
+                    options={FEDERAL_STATES.map((value) => ({
+                      value,
+                      label: FEDERAL_STATE_LABELS[value],
+                    }))}
+                    error={errors.state}
                     onChange={(value) => {
-                      setHolidayRegion(value);
-                      clearError("region");
+                      setFederalState(value);
+                      setHolidayRegion(defaultHolidayRegion(value));
+                      setErrors((previous) => ({
+                        ...previous,
+                        state: undefined,
+                        region: undefined,
+                      }));
                     }}
                   />
-                ) : null}
-              </View>
-            ) : null}
-            {step === 5 ? (
-              <View>
-                <View
-                  style={[s.summaryCard, { borderColor: p.border, backgroundColor: p.surface }]}
-                >
-                  {[
-                    {
-                      label: "Berufsbranche",
-                      icon: "heart-pulse",
-                      value: industry ? INDUSTRY_LABELS[industry] : "",
-                      target: 2,
-                    },
-                    { label: "Gehalt", value: salaryLabel, target: 3, icon: "database" },
-                    {
-                      label: "Arbeitszeit",
-                      value: `${weeklyHours} h / Woche`,
-                      target: 4,
-                      icon: "clock-outline",
-                    },
-                    {
-                      label: "Arbeitsort",
-                      icon: "map-marker-outline",
-                      value: federalState
-                        ? `${FEDERAL_STATE_LABELS[federalState]}${holidayRegionsForState(federalState).length > 1 ? ` · ${HOLIDAY_REGION_LABELS[holidayRegion]}` : ""}`
-                        : "",
-                      target: 4,
-                    },
-                  ].map((row) => (
-                    <View
-                      key={row.label}
-                      style={[
-                        s.summaryRow,
-                        {
-                          borderBottomColor: p.border,
-                          borderBottomWidth: row.label === "Arbeitsort" ? 0 : 1,
-                        },
-                      ]}
-                    >
-                      <BlueprintIcon name={row.icon as BlueprintIconName} />
-                      <View style={s.summaryCopy}>
-                        <Text style={[s.body, { color: p.text }]}>{row.value}</Text>
-                      </View>
+                  {federalState && holidayRegionsForState(federalState).length > 1 ? (
+                    <SelectField
+                      label="Regionale Feiertage am Arbeitsort"
+                      value={holidayRegion === "UNKNOWN" ? null : holidayRegion}
+                      options={holidayRegionsForState(federalState)
+                        .filter((value) => value !== "UNKNOWN")
+                        .map((value) => ({ value, label: HOLIDAY_REGION_LABELS[value] }))}
+                      error={errors.region}
+                      onChange={(value) => {
+                        setHolidayRegion(value);
+                        clearError("region");
+                      }}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
+              {step === 5 ? (
+                <View>
+                  <View style={[s.summaryCard, { backgroundColor: p.canvas }]}>
+                    {[
+                      {
+                        label: "Berufsbereich",
+                        icon: "heart-pulse",
+                        value: industry ? INDUSTRY_LABELS[industry] : "",
+                        target: 2,
+                      },
+                      {
+                        label: "Arbeitszeit",
+                        value: `${weeklyHours} h / Woche`,
+                        target: 4,
+                        icon: "clock-outline",
+                      },
+                      {
+                        label: "Arbeitsort",
+                        icon: "map-marker-outline",
+                        value: federalState
+                          ? `${FEDERAL_STATE_LABELS[federalState]}${holidayRegionsForState(federalState).length > 1 ? ` · ${HOLIDAY_REGION_LABELS[holidayRegion]}` : ""}`
+                          : "",
+                        target: 4,
+                      },
+                      { label: "Gehalt", value: salaryLabel, target: 3, icon: "database" },
+                    ].map((row) => (
                       <Pressable
+                        key={row.label}
                         accessibilityRole="button"
                         accessibilityLabel={`${row.label} bearbeiten`}
+                        accessibilityHint={row.value}
                         disabled={saving}
-                        onPress={() => {
-                          setEditingSummary(true);
-                          moveTo(row.target as Step);
-                        }}
-                        style={s.edit}
+                        onPress={() => edit(row.target as Step)}
+                        style={[
+                          s.summaryRow,
+                          {
+                            borderBottomColor: p.border,
+                            borderBottomWidth: row.label === "Gehalt" ? 0 : 1,
+                          },
+                        ]}
                       >
-                        <Text style={[s.label, { color: p.muted }]}>›</Text>
+                        <BlueprintIcon name={row.icon as BlueprintIconName} />
+                        <View style={s.summaryCopy}>
+                          <Text style={[s.caption, { color: p.muted }]}>{row.label}</Text>
+                          <Text style={[s.body, { color: p.text }]}>{row.value}</Text>
+                        </View>
+                        <Text accessibilityElementsHidden style={[s.label, { color: p.muted }]}>
+                          ↗
+                        </Text>
                       </Pressable>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
+                  <Text style={[s.caption, s.centered, { color: p.muted, marginTop: SPACING.xl }]}>
+                    Ohne Konto. Auf deinem Gerät.
+                  </Text>
                 </View>
-                <Text style={[s.caption, s.centered, { color: p.muted, marginTop: SPACING.xl }]}>
-                  Ohne Konto. Auf deinem Gerät.
-                </Text>
-              </View>
-            ) : null}
+              ) : null}
+            </OnboardingReveal>
           </View>
         </ScrollView>
         <View style={[s.footer, { backgroundColor: p.canvas }]} testID="onboarding-fixed-footer">
           <FieldError message={saveError} />
-          <Pressable
-            hitSlop={2}
-            accessibilityRole="button"
-            accessibilityLabel={saving ? "LUNA Shift wird eingerichtet" : undefined}
-            accessibilityState={{ busy: saving, disabled: saving }}
-            disabled={saving}
-            onPress={() => {
-              if (step === 5) void finish();
-              else advance();
-            }}
-            testID="onboarding-primary-action"
-            style={[s.primary, { backgroundColor: p.accent, opacity: saving ? 0.55 : 1 }]}
-          >
-            {saving ? (
-              <ActivityIndicator color={p.onAccent} />
-            ) : (
-              <Text style={[s.buttonText, { color: p.onAccent }]}>
-                {step === 1
-                  ? "Los geht’s"
-                  : step === 5
+          {step !== 3 || salaryView !== "tariffs" ? (
+            <Pressable
+              hitSlop={2}
+              accessibilityRole="button"
+              accessibilityLabel={saving ? "LUNA Shift wird eingerichtet" : undefined}
+              accessibilityState={{ busy: saving, disabled: saving || (step === 2 && !industry) }}
+              disabled={saving || (step === 2 && !industry)}
+              onPress={() => {
+                if (step === 5) void finish();
+                else if (step === 3 && salaryView === "choice") skipSalary();
+                else advance();
+              }}
+              testID="onboarding-primary-action"
+              style={[
+                s.primary,
+                {
+                  backgroundColor: p.accent,
+                  opacity: saving || (step === 2 && !industry) ? 0.4 : 1,
+                },
+              ]}
+            >
+              {saving ? (
+                <ActivityIndicator color={p.onAccent} />
+              ) : (
+                <Text style={[s.buttonText, { color: p.onAccent }]}>
+                  {step === 5
                     ? "Zum Kalender"
-                    : editingSummary
-                      ? "Übernehmen"
-                      : "Weiter"}
-              </Text>
-            )}
-          </Pressable>
+                    : step === 3 && salaryView === "choice"
+                      ? "Später einrichten"
+                      : editingSummary
+                        ? "Übernehmen"
+                        : "Weiter"}
+                </Text>
+              )}
+            </Pressable>
+          ) : null}
+          {step === 3 && salaryView !== "choice" ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={skipSalary}
+              style={s.back}
+            >
+              <Text style={[s.caption, s.centered, { color: p.muted }]}>Später einrichten</Text>
+            </Pressable>
+          ) : null}
+          {step === STEP_ORDER[0] && !preview && Platform.OS === "ios" ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/account")}
+              style={{
+                minHeight: CONTROL_HEIGHT.regular,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={[s.caption, { color: p.text }]}>Schon ein Konto? Anmelden</Text>
+            </Pressable>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-const s = StyleSheet.create({
-  safe: { flex: 1 },
-  body: ONBOARDING_TYPOGRAPHY.body,
-  centered: { textAlign: "center" },
-  scrollViewport: { flex: 1, minHeight: 0 },
-  progressRight: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
-  progressDots: { alignItems: "flex-end", gap: SPACING.xxs },
-  summaryCard: {
-    borderCurve: CORNER_CURVE,
-    borderWidth: 1,
-    borderRadius: RADII.control,
-    paddingHorizontal: SPACING.md,
-  },
-  chipColumn: { alignItems: "center", gap: SPACING.sm },
-  caption: ONBOARDING_TYPOGRAPHY.caption,
-  label: ONBOARDING_TYPOGRAPHY.label,
-  progressHeader: {
-    paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-    minHeight: CONTROL_HEIGHT.large,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: SPACING.md,
-  },
-  back: {
-    minHeight: CONTROL_HEIGHT.compact,
-    minWidth: CONTROL_HEIGHT.compact,
-    justifyContent: "center",
-  },
-  track: { flexDirection: "row", gap: SPACING.sm },
-  segment: { width: 8, height: 8, borderRadius: RADII.pill },
-  scroll: { flexGrow: 1, padding: SPACING.xl, gap: SPACING.lg },
-  content: { gap: SPACING.xl },
-  welcome: { flexGrow: 1, justifyContent: "center", paddingVertical: SPACING.md },
-  brand: { gap: SPACING.xl, alignItems: "center" },
-  logo: {
-    borderCurve: CORNER_CURVE,
-    width: 260,
-    maxWidth: "100%",
-    height: 260,
-    borderRadius: RADII.card,
-  },
-  titleGroup: { gap: SPACING.sm },
-  title: { ...ONBOARDING_TYPOGRAPHY.title, textAlign: "center" },
-  display: { ...ONBOARDING_TYPOGRAPHY.display, textAlign: "center" },
-  list: { gap: SPACING.md },
-  fields: { gap: SPACING.lg },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xl, justifyContent: "center" },
-  chip: {
-    borderCurve: CORNER_CURVE,
-    minWidth: 64,
-    minHeight: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: RADII.control,
-  },
-  summaryRow: {
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: SPACING.md,
-    alignItems: "center",
-  },
-  summaryCopy: { flex: 1, gap: 5 },
-  edit: {
-    minHeight: CONTROL_HEIGHT.compact,
-    minWidth: CONTROL_HEIGHT.compact,
-    justifyContent: "center",
-  },
-  footer: {
-    paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-    paddingTop: SPACING.md,
-    gap: SPACING.md,
-    paddingBottom: SPACING.md,
-  },
-  primary: {
-    borderCurve: CORNER_CURVE,
-    minHeight: CONTROL_HEIGHT.large,
-    width: "100%",
-    borderRadius: RADII.control,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: ONBOARDING_TYPOGRAPHY.button,
-});

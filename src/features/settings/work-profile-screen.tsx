@@ -72,7 +72,7 @@ function WorkProfileForm({ profile }: { readonly profile: UserProfile }) {
           />
           <CardSeparator />
           <RowButton
-            title="Dienstplanprüfung"
+            title="Angaben zur Prüfung"
             subtitle="Angaben ansehen oder ergänzen"
             onPress={() => router.push("/check-profile")}
           />

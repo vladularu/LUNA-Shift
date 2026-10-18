@@ -1,5 +1,8 @@
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 
+export const REPORT_CHECK_SCOPE =
+  "Arbeitszeitregeln und alle Planungshinweise – auch in der App ausgeblendete.";
+
 export interface ReportRow {
   readonly section: string;
   readonly period: string;

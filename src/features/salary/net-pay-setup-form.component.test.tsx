@@ -301,7 +301,7 @@ describe("three short net forecast setup steps", () => {
   it("clears incompatible optional child allowances on tax class change and keeps errors in the current step", async () => {
     const { element, onSave } = setup(automatedSettings());
     const screen = await render(element);
-    await fireEvent.press(screen.getByRole("button", { name: "Genauer einstellen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben" }));
     await fireEvent.changeText(
       screen.getByLabelText("Kinderfreibetrag laut Gehaltsabrechnung"),
       "0,7",

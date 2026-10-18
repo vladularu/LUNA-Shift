@@ -236,10 +236,13 @@ export function localBackupRoute() {
   return Object.freeze({ pathname: "/data-backup" as const });
 }
 
-export function settingsEditorRoute(section: "WORK" | "TARIFF" | "PERSONAL") {
+export function settingsEditorRoute(
+  section: "WORK" | "TARIFF" | "PERSONAL" | "EMPLOYER",
+  origin?: "settings",
+) {
   return Object.freeze({
     pathname: "/settings-editor" as const,
-    params: Object.freeze({ section }),
+    params: Object.freeze({ section, ...(origin ? { origin } : {}) }),
   });
 }
 

@@ -93,7 +93,7 @@ describe("QuickEntryPopup", () => {
       expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: withEntry ? 118 : 58 });
       expect(screen.queryByRole("header")).toBeNull();
       expect(screen.queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
-      expect(screen.getByRole("button", { name: "Schicht hinzufügen" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Dienst hinzufügen" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeTruthy();
       expect(screen.getByTestId("quick-entry-popup")).toHaveProp("accessibilityActions", [
         { name: "dismiss", label: "Schnellauswahl schließen" },
@@ -252,12 +252,12 @@ describe("QuickEntryPopup", () => {
     expect(screen.getByTestId("quick-entry-overlay")).toBeVisible();
     expect(screen.queryByTestId("quick-entry-native-modal")).toBeNull();
     expect(screen.getByText("Nacht")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Schicht hinzufügen" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Dienst hinzufügen" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeVisible();
     expect(screen.queryByTestId("shift-selection-panel")).toBeNull();
     expect(screen.queryByText("Früh")).toBeNull();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Schicht hinzufügen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst hinzufügen" }));
     expect(onOpenShiftPicker).toHaveBeenCalledWith("2026-08-04");
     expect(screen.queryByTestId("shift-selection-panel")).toBeNull();
   });

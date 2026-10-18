@@ -33,7 +33,7 @@ describe("percentage conversion", () => {
     expect(weeklyPercentage("", 40)).toBeNull();
     expect(weeklyPercentage("1e1", 40)).toBeNull();
   });
-  it("provides incremental accessibility actions without duplicate percentage buttons", async () => {
+  it("provides incremental accessibility actions and deliberate percentage presets", async () => {
     const change = jest.fn();
     const screen = await render(
       <PercentageSlider
@@ -52,7 +52,8 @@ describe("percentage conversion", () => {
       nativeEvent: { actionName: "decrement" },
     });
     expect(change).toHaveBeenLastCalledWith("29,6");
-    expect(screen.queryByRole("button", { name: "50 Prozent auswählen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "50 Prozent auswählen" }));
+    expect(change).toHaveBeenLastCalledWith("20");
   });
   it("uses measured touch travel and releases parent scrolling", async () => {
     const change = jest.fn(),
@@ -111,5 +112,22 @@ describe("percentage conversion", () => {
     await fireEvent.press(screen.getByRole("radio", { name: "38,5 h" }));
     expect(basis).toHaveBeenCalledWith(38.5);
     expect(change).not.toHaveBeenCalled();
+  });
+  it("retains the selected percentage when changing a valid full-time basis", async () => {
+    const change = jest.fn(),
+      basis = jest.fn();
+    const screen = await render(
+      <PercentageSlider
+        weeklyHours="32"
+        basis={40}
+        onBasisChange={basis}
+        onHoursChange={change}
+        onInteractionChange={jest.fn()}
+      />,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "100 % entsprechen: 40 h" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "38,5 h" }));
+    expect(basis).toHaveBeenCalledWith(38.5);
+    expect(change).toHaveBeenCalledWith("30,8");
   });
 });

@@ -9,7 +9,7 @@ export default function CheckSettingsRoute() {
     <>
       <Stack.Screen
         options={{
-          title: "Prüfung",
+          title: "Prüfung & Hinweise",
           headerShown: true,
           headerStyle: { backgroundColor: palette.groupedBackground },
           headerTintColor: palette.text,

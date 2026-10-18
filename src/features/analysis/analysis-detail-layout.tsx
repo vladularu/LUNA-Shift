@@ -13,7 +13,7 @@ export function AnalysisDetailSummaryCard({
   title,
 }: {
   readonly accent?: string;
-  readonly caption: string;
+  readonly caption?: string;
   readonly emphasis?: "metric" | "title";
   readonly period: string;
   readonly title: string;
@@ -43,13 +43,15 @@ export function AnalysisDetailSummaryCard({
       >
         {title}
       </Text>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-      >
-        {caption}
-      </Text>
+      {caption ? (
+        <Text
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          selectable
+          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+        >
+          {caption}
+        </Text>
+      ) : null}
     </SurfaceCard>
   );
 }

@@ -10,7 +10,14 @@ import { NetPayText } from "./net-pay-controls";
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
 import { NetPayAmountRow } from "./net-pay-amount-row";
 import { CardSeparator } from "@/ui/design-system";
-import { SalaryAmountRow, SalaryPremiumCard, SalarySectionCard } from "./salary-ui";
+import {
+  SalaryAmountRow,
+  SalaryNavigationRow,
+  SalaryPremiumCard,
+  SalarySectionCard,
+} from "./salary-ui";
+import { router } from "expo-router";
+import { settingsInfoRoute } from "@/navigation/routes";
 
 type AvailablePay = Extract<NetPayResult, { status: "available" }>;
 type Premiums = { readonly paidPremiumCents: number; readonly taxFreeCents: number };
@@ -59,7 +66,7 @@ export function NetPaySalarySummary({
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>{caption}</Text>
           ) : null}
           {notice ? <NetPayText>{notice}</NetPayText> : null}
-          {pensionOmitted ? <NetPayText>Zusatzversorgung offen</NetPayText> : null}
+          {pensionOmitted ? <NetPayText>Zusatzversorgung nicht berücksichtigt</NetPayText> : null}
           <View
             style={{
               flexDirection: "row",
@@ -148,7 +155,7 @@ export function NetPaySummaryMetric({
         >
           {displayLabel ?? label}
         </Text>
-        {onPress && !overview ? (
+        {onPress ? (
           <Ionicons
             accessibilityElementsHidden
             name={
@@ -260,7 +267,7 @@ export function NetPayDeductionDetails({
         />
         <CardSeparator />
         <SalaryAmountRow
-          label="SV-Brutto"
+          label="Brutto für Sozialversicherung"
           value={netPayEuro(pay.amounts.socialInsuranceGrossCents)}
           quiet
         />
@@ -290,6 +297,12 @@ export function NetPayDeductionDetails({
           fehlen noch.
         </NetPayText>
       ) : null}
+      <SalarySectionCard title="Details">
+        <SalaryNavigationRow
+          title="So rechnen wir"
+          onPress={() => router.push(settingsInfoRoute("CALCULATION"))}
+        />
+      </SalarySectionCard>
     </View>
   );
 }

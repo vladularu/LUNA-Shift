@@ -16,7 +16,7 @@ export function SharingIconButton({
   onPress,
 }: {
   readonly label: string;
-  readonly icon: "add" | "close" | "chevron-back" | "share-outline";
+  readonly icon: "add" | "close" | "chevron-back" | "share-outline" | "ellipsis-horizontal";
   readonly disabled?: boolean;
   readonly onPress: () => void;
 }) {

@@ -193,7 +193,7 @@ function TariffAssessmentForm({
               period={formatMonthTitle(month)}
               title="Nicht verfügbar"
             />
-            <AnalysisCoverageNote message="Die Tarifprüfung ist für diesen Monat ohne gültigen Tarifstand deaktiviert." />
+            <AnalysisCoverageNote message="Schichtzulage nicht berechenbar: Tarifdaten fehlen." />
           </ReportScrollView>
         )}
       </BackFooterLayout>
@@ -251,9 +251,9 @@ function TariffAssessmentForm({
           <AnalysisDetailSummaryCard
             caption={
               decision
-                ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
+                ? "Für diesen Monat gilt deine Auswahl."
                 : (assessment.estimateNote ??
-                  "Wir schätzen dein Dienstmuster automatisch ein. Deine Angaben zum Arbeitsplatz bleiben gespeichert.")
+                  "Schätzung aus deinen Diensten, kein bestätigter Monatsanspruch.")
             }
             period={formatMonthTitle(month)}
             title={resultTitle}
@@ -337,11 +337,7 @@ function TariffAssessmentForm({
               month={month}
               timeZone={profile.timeZone}
               explanation={assessmentResult.nightSequence}
-              estimateNote={
-                decision
-                  ? "Deine manuelle Monatsfestlegung bleibt maßgeblich."
-                  : assessment.estimateNote
-              }
+              estimateNote={null}
             />
           ) : null}
 
@@ -380,7 +376,7 @@ function TariffAssessmentForm({
           </PrimaryButton>
 
           <Pressable
-            accessibilityLabel="Monatswert manuell festlegen"
+            accessibilityLabel="Schichtzulage selbst festlegen"
             accessibilityRole="button"
             accessibilityState={{ expanded: showOverride }}
             onPress={() => setShowOverride((current) => !current)}
@@ -399,7 +395,7 @@ function TariffAssessmentForm({
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
                 style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
               >
-                Monatswert manuell festlegen
+                Schichtzulage selbst festlegen
               </Text>
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
@@ -419,14 +415,14 @@ function TariffAssessmentForm({
           {showOverride ? (
             <SurfaceCard>
               <View
-                accessibilityLabel="Monatswert manuell festlegen"
+                accessibilityLabel="Schichtzulage selbst festlegen"
                 accessibilityRole="radiogroup"
               >
                 {ALLOWANCE_STATUSES.map((status, index) => (
                   <View key={status}>
                     {index > 0 ? <CardSeparator inset={SPACING.lg} /> : null}
                     <Pressable
-                      accessibilityLabel={`Monatswert manuell festlegen: ${ALLOWANCE_LABELS[status]}`}
+                      accessibilityLabel={`Schichtzulage selbst festlegen: ${ALLOWANCE_LABELS[status]}`}
                       accessibilityRole="radio"
                       accessibilityState={{
                         checked: decision?.allowanceStatus === status,

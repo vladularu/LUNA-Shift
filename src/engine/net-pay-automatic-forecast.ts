@@ -17,6 +17,11 @@ import { calculateTvalPflegeShift } from "./simple-tval-pflege-pay";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
 
+export type AutomaticNetPayRecovery =
+  | { readonly kind: "entry"; readonly date: string; readonly entryId: string }
+  | { readonly kind: "profile"; readonly section: "WORK" | "TARIFF" }
+  | { readonly kind: "net-settings" };
+
 export interface AutomaticNetPayForecast {
   readonly result: SfnNetPayResult;
   readonly basicHourlyPayCents?: number;
@@ -24,6 +29,7 @@ export interface AutomaticNetPayForecast {
   readonly sourceMonth: string;
   /** Includes no pension contributions or pension-related tax/SV adjustments. */
   readonly pensionOmitted?: boolean;
+  readonly recovery?: AutomaticNetPayRecovery;
 }
 const unavailable = (reason: string): SfnNetPayResult => ({
   status: "unavailable",
@@ -50,22 +56,37 @@ export function calculateAutomaticNetPayForecast(
 ): AutomaticNetPayForecast {
   const { month, profile, settings, pay } = input;
   const sourceMonth = settings.month;
-  const stop = (reason: string): AutomaticNetPayForecast => ({
+  const stop = (reason: string, recovery?: AutomaticNetPayRecovery): AutomaticNetPayForecast => ({
     sourceMonth,
     result: unavailable(reason),
+    ...(recovery ? { recovery } : {}),
   });
   try {
     validateMonthlyNetPaySettings(settings);
     if (settings.version !== 2 || !settings.automation)
-      return stop("Richte die fortlaufenden Netto-Angaben einmal ein.");
+      return stop("Richte deine Netto-Angaben ein.", { kind: "net-settings" });
     if (settings.month > month || pay.month !== month)
       return stop("Die Berechnungsgrundlagen gehören zu unterschiedlichen Monaten.");
-    if (profile.salaryBasisConflict || profile.timeZone !== "Europe/Berlin")
-      return stop("Gehaltsbasis oder Zeitzone im Arbeitsprofil prüfen.");
+    if (profile.salaryBasisConflict)
+      return stop("Prüfe deine Gehaltsangaben.", { kind: "profile", section: "TARIFF" });
+    if (profile.timeZone !== "Europe/Berlin")
+      return stop("Für diese Zeitzone ist keine Netto-Prognose verfügbar.");
+    if (!Number.isSafeInteger(profile.weeklyMinutes) || profile.weeklyMinutes <= 0)
+      return stop("Deine Wochenarbeitszeit fehlt.", { kind: "profile", section: "WORK" });
+    const shifts = input.shifts.filter(
+      (s) => s.deletedAt === null && s.date.startsWith(`${month}-`),
+    );
+    const incompleteShift = shifts.find(
+      (s) => ["EARLY", "LATE", "NIGHT", "DAY", "CUSTOM"].includes(s.type) && !isPayWorkShift(s),
+    );
+    if (incompleteShift)
+      return stop("Prüfe die Zeiten dieses Dienstes.", {
+        kind: "entry",
+        date: incompleteShift.date,
+        entryId: incompleteShift.id,
+      });
     if (!pay.available || pay.personalBaseAmount === null || pay.estimatedGrossAmount === null)
       return stop("Die vollständige Brutto-Gehaltsprognose fehlt.");
-    if (!Number.isSafeInteger(profile.weeklyMinutes) || profile.weeklyMinutes <= 0)
-      return stop("Die vertragliche Wochenarbeitszeit fehlt.");
     const components = [
       pay.personalBaseAmount,
       pay.timePremiumAmount,
@@ -92,15 +113,6 @@ export function calculateAutomaticNetPayForecast(
     const basicHourlyPayCents = Math.round(
       (regularGrossCents * 6000) / (435 * profile.weeklyMinutes),
     );
-    const shifts = input.shifts.filter(
-      (s) => s.deletedAt === null && s.date.startsWith(`${month}-`),
-    );
-    if (
-      shifts.some(
-        (s) => ["EARLY", "LATE", "NIGHT", "DAY", "CUSTOM"].includes(s.type) && !isPayWorkShift(s),
-      )
-    )
-      return stop("Eine Schicht hat keine vollständigen Arbeitszeiten.");
     const workShifts = shifts.filter(isPayWorkShift);
     const manual =
       profile.manualMonthlyGrossCents != null &&
@@ -122,7 +134,11 @@ export function calculateAutomaticNetPayForecast(
         shift.breakMinutes < 0 ||
         shift.breakMinutes >= bounds.grossMinutes
       )
-        return stop("Arbeits- und Pausenzeiten sind unvollständig.");
+        return stop("Prüfe Arbeitszeit und Pause dieses Dienstes.", {
+          kind: "entry",
+          date: shift.date,
+          entryId: shift.id,
+        });
       let breakdown;
       let trace: SfnShift;
       if (profile.tvalPflegeTariff)
@@ -186,9 +202,9 @@ export function calculateAutomaticNetPayForecast(
       const { payrollTrace, ...cashBreakdown } = breakdown;
       const recorded = pay.shiftBreakdowns.find((b) => b.shiftId === shift.id);
       if (!recorded || JSON.stringify(recorded) !== JSON.stringify(cashBreakdown))
-        return stop("Die Zuschlagszeitspur stimmt nicht mit dem Brutto überein.");
+        return stop("Die Zuschläge konnten nicht vollständig berechnet werden.");
       trace = payrollTrace ?? trace!;
-      if (!trace) return stop("Die Zuschlagszeitspur fehlt.");
+      if (!trace) return stop("Die Zuschläge konnten nicht vollständig berechnet werden.");
       traces.push(trace);
     }
     if (
@@ -250,6 +266,7 @@ export function calculateAutomaticNetPayForecast(
       basicHourlyPayCents,
       regularGrossCents,
       pensionOmitted,
+      ...(result.status !== "available" ? { recovery: { kind: "net-settings" as const } } : {}),
       result:
         result.status === "available"
           ? { status: "available", classification, pay: result }

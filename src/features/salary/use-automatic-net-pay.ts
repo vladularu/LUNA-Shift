@@ -6,7 +6,10 @@ import {
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
-import { calculateAutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
+import {
+  calculateAutomaticNetPayForecast,
+  type AutomaticNetPayForecast,
+} from "@/engine/net-pay-automatic-forecast";
 import { createAutomaticNetPayCache } from "@/engine/net-pay-automatic-cache";
 import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
@@ -30,7 +33,7 @@ export function useAutomaticNetPay(
   const { profile } = usePflegeShiftProfile();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { resolver } = useRuleCatalogRuntime();
-  return useMemo(() => {
+  return useMemo<AutomaticNetPayForecast | null>(() => {
     if (!enabled || !profile || !settings) return null;
     try {
       const shifts = selectMonthlyAnalysisEntries(entries, month).monthShifts;

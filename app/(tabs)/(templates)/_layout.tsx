@@ -18,7 +18,7 @@ export default function TemplatesStack() {
         statusBarStyle: palette.dark ? "light" : "dark",
       }}
     >
-      <Stack.Screen name="templates" options={{ headerShown: false, title: "Schichten" }} />
+      <Stack.Screen name="templates" options={{ headerShown: false, title: "Dienstvorlagen" }} />
     </Stack>
   );
 }

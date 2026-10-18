@@ -5,6 +5,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { PRODUCT_NAME } from "@/brand";
 import type { CalendarEntry, EntryNotification } from "@/domain/types";
 import { expandAppointmentSeries } from "@/engine/recurrence";
+import { calculateTimedShiftBounds } from "@/engine/working-time";
 import {
   listAllScheduledNotificationIds,
   listScheduledNotificationIds,
@@ -35,6 +36,19 @@ function scheduledInstant(
   rule: EntryNotification,
   timeZone: string,
 ): Date {
+  if (rule.reference === "END" && isOvernight(entry)) {
+    const bounds = calculateTimedShiftBounds(
+      {
+        date: occurrenceDate,
+        startTime: entry.startTime,
+        endTime: entry.endTime,
+        allDay: entry.allDay,
+        breakMinutes: 0,
+      },
+      timeZone,
+    );
+    if (bounds) return new Date((bounds.endEpochMinutes + offsetMinutes(rule)) * 60_000);
+  }
   const localDate = Temporal.PlainDate.from(occurrenceDate);
   const referenceTime = entry.allDay
     ? "00:00"
@@ -76,11 +90,35 @@ function reminderSpecs(entry: CalendarEntry): readonly ReminderSpec[] {
   return Object.freeze(specs);
 }
 
-function occurrenceDates(entry: CalendarEntry, today: string, endDate: string): readonly string[] {
+function reminderBody(
+  kind: CalendarEntry["kind"],
+  allDay: boolean,
+  reference: EntryNotification["reference"],
+): string {
+  if (allDay) return kind === "SHIFT" ? "Erinnerung: Dienst" : "Erinnerung: Termin";
+  if (kind === "SHIFT")
+    return reference === "END" ? "Erinnerung: Dienstende" : "Erinnerung: Dienstbeginn";
+  return reference === "END" ? "Erinnerung: Terminende" : "Erinnerung: Terminbeginn";
+}
+
+function isOvernight(entry: CalendarEntry): boolean {
+  return (
+    !entry.allDay &&
+    entry.startTime !== null &&
+    entry.endTime !== null &&
+    Temporal.PlainTime.compare(entry.endTime, entry.startTime) <= 0
+  );
+}
+
+function occurrenceDates(
+  entry: CalendarEntry,
+  startDate: string,
+  endDate: string,
+): readonly string[] {
   if (entry.kind === "SHIFT")
-    return entry.date >= today ? Object.freeze([entry.date]) : Object.freeze([]);
+    return entry.date >= startDate ? Object.freeze([entry.date]) : Object.freeze([]);
   return Object.freeze(
-    expandAppointmentSeries(entry, today, endDate)
+    expandAppointmentSeries(entry, startDate, endDate)
       .slice(0, MAX_PENDING_FOR_ENTRY)
       .map((occurrence) => occurrence.date),
   );
@@ -117,11 +155,20 @@ export async function syncEntryNotifications(
 
   const now = Temporal.Now.zonedDateTimeISO(timeZone);
   const today = now.toPlainDate().toString();
+  const yesterday = now.toPlainDate().subtract({ days: 1 }).toString();
+  const startDate =
+    isOvernight(entry) &&
+    specs.some(
+      (spec) =>
+        scheduledInstant(entry, yesterday, spec.rule, timeZone).getTime() > now.epochMilliseconds,
+    )
+      ? yesterday
+      : today;
   const endDate = now.add({ years: 2 }).toPlainDate().toString();
   const schedules: { occurrenceDate: string; notificationId: string }[] = [];
 
   try {
-    for (const occurrenceDate of occurrenceDates(entry, today, endDate)) {
+    for (const occurrenceDate of occurrenceDates(entry, startDate, endDate)) {
       for (const spec of specs) {
         const triggerDate = scheduledInstant(entry, occurrenceDate, spec.rule, timeZone);
         if (triggerDate.getTime() <= Date.now()) continue;
@@ -129,7 +176,7 @@ export async function syncEntryNotifications(
         const notificationId = await Notifications.scheduleNotificationAsync({
           content: {
             title: PRODUCT_NAME,
-            body: alarm ? "Dein Dienst beginnt jetzt." : "Deine Erinnerung ist fällig.",
+            body: reminderBody(entry.kind, entry.allDay === true, spec.rule.reference),
             sound: alarm ? "default" : undefined,
             data: { reminderKind: spec.kind },
           },

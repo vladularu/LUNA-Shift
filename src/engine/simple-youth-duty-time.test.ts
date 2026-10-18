@@ -135,6 +135,9 @@ describe("simple opt-in youth duty checks", () => {
       "JARBSCHG_13_REST",
     );
     expect(result[0]?.date).toBe("2026-10-01");
+    expect(result[0]).toMatchObject({
+      facts: { rule: "JARBSCHG_13_REST", restMinutes: 660, minimumRestMinutes: 720 },
+    });
   });
   it.each([
     ["06:00", "20:00", null],

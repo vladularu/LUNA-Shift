@@ -75,12 +75,37 @@ const list = (
 );
 
 describe("visible check timelines", () => {
+  it("keeps a structured series and its shift detail route after copy changes", async () => {
+    const shifts = Array.from({ length: 7 }, (_, index) => ({
+      ...shift,
+      id: `series-${index}`,
+      date: `2026-12-0${index + 1}`,
+    }));
+    const finding = {
+      ...issue({
+        rule: "PLANNING_7_DAYS",
+        kind: "PLANNING",
+        severity: "warning",
+        title: "Dienstfolge",
+        description: "Eine kurze neue Formulierung.",
+        relatedShiftIds: shifts.map((shift) => shift.id),
+      }),
+      facts: { rule: "PLANNING_7_DAYS" as const, count: 7 },
+    };
+    const screen = await render(list([finding], shifts));
+    expect(screen.getByText("7 Arbeitstage hintereinander")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
+    expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(7);
+    await fireEvent.press(screen.getByRole("button", { name: "Auswahl abbrechen" }));
+    await waitFor(() => expect(screen.queryByTestId("check-shift-series-0")).toBeNull());
+    expect(screen.getByText("7 Arbeitstage hintereinander")).toBeTruthy();
+  });
   it("shows limited coverage separately, offers setup and never claims completion", async () => {
     const open = issue({
       id: "open",
       rule: "ARBZG_DATA_ALL_EMPLOYMENT",
       severity: "warning",
-      title: "Gesamtarbeitszeit noch nicht bestätigt",
+      title: "Arbeitszeiten aus allen Jobs erfasst?",
     });
     const screen = await render(list([open]));
     expect(screen.getByText("Prüfung eingeschränkt")).toBeTruthy();

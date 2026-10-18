@@ -214,9 +214,7 @@ describe("analysis overview cards", () => {
 
     await screen.rerender(<SalarySummaryCard {...sharedProps} pay={null} salaryReady />);
 
-    expect(
-      screen.getByText(/Für die Gehaltsberechnung fehlt ein geprüfter Tarifstand/),
-    ).toBeTruthy();
+    expect(screen.getByText(/Für die Gehaltsberechnung fehlen geprüfte Tarifdaten/)).toBeTruthy();
   });
 
   it("shows a manual monthly gross without TVöD additions", async () => {

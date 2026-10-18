@@ -100,7 +100,7 @@ export function ComplianceDetailsScreen() {
     >
       {preferences.error ? <AnalysisCoverageNote message={preferences.error} /> : null}
       {preferences.enabled === null && !preferences.error ? (
-        <AnalysisCoverageNote message="Prüfungseinstellungen werden geladen … Hinweise sind vorläufig vollständig sichtbar." />
+        <AnalysisCoverageNote message="Prüfung wird geladen …" />
       ) : null}
       <CheckPeriod period={formatMonthTitle(month)} />
       <ComplianceDayList

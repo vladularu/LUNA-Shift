@@ -70,7 +70,7 @@ export function SalaryComponentsView({
           ))
         ) : (
           <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted, padding: SPACING.lg }}>
-            Für diesen Monat liegt kein unterstützter Tarifstand vor.
+            Für diesen Monat fehlen Tarifdaten.
           </Text>
         )}
         {extra > 0 ? (
@@ -116,7 +116,7 @@ export function SalaryComponentsView({
             ) : null}
             {pensionOmitted ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, padding: SPACING.lg }}>
-                Zusatzversorgung offen
+                Zusatzversorgung nicht berücksichtigt
               </Text>
             ) : null}
           </>
@@ -150,7 +150,7 @@ export function SalaryBasisView({
           <SalaryAmountRow label="Steuerbrutto" value={netPayEuro(net.amounts.taxableGrossCents)} />
           <CardSeparator />
           <SalaryAmountRow
-            label="SV-Brutto"
+            label="Brutto für Sozialversicherung"
             value={netPayEuro(net.amounts.socialInsuranceGrossCents)}
           />
           <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>

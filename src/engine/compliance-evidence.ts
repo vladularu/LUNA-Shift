@@ -27,8 +27,8 @@ export function checkEvidenceCompleteness(
         "warning",
         "LEGAL",
         "ARBZG_DATA_ALL_EMPLOYMENT",
-        "Gesamtarbeitszeit noch nicht bestätigt",
-        "Die ArbZG-Prüfung ist nur vollständig, wenn Arbeitszeiten aus allen Arbeitsverhältnissen erfasst sind.",
+        "Arbeitszeiten aus allen Jobs erfasst?",
+        "Für eine vollständige Prüfung müssen die Arbeitszeiten aus allen Jobs erfasst sein.",
         [firstShift],
       ),
     );
@@ -42,8 +42,8 @@ export function checkEvidenceCompleteness(
         "warning",
         "LEGAL",
         "ARBZG_6_NIGHT_STATUS_UNKNOWN",
-        "Nachtarbeitnehmer-Status offen",
-        "Bitte bestätigen, ob regelmäßig Nacht- oder Wechselschichtarbeit geleistet wird. Ohne diese Angabe kann die strengere Nachtarbeitsprüfung unvollständig sein.",
+        "Regelmäßige Nacht- oder Wechselschichtarbeit?",
+        "Diese Angabe fehlt für die Nachtarbeitsprüfung.",
         [firstShift],
       ),
     );
@@ -58,8 +58,8 @@ export function checkEvidenceCompleteness(
         "warning",
         "LEGAL",
         "HOLIDAY_REGION_UNKNOWN",
-        "Regionale Feiertage noch nicht festgelegt",
-        "Für den Arbeitsort ist offen, ob ein regionaler gesetzlicher Feiertag gilt. Feiertags- und Ersatzruheprüfungen können deshalb unvollständig sein.",
+        "Welche regionalen Feiertage gelten?",
+        "Fehlende Angaben können die Prüfung von Feiertagen und Ersatzruhetagen einschränken.",
         [firstShift],
       ),
     );

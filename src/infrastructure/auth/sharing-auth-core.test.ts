@@ -408,3 +408,114 @@ it("does not exchange a delayed provider response after the user logged out", as
   expect(client.auth.signInWithIdToken).not.toHaveBeenCalled();
   expect(await port.getSession()).toBeNull();
 });
+
+describe("shared account name", () => {
+  it.each(["apple", "google"] as const)(
+    "reopens both account subscribers after explicit %s relogin",
+    async (provider) => {
+      const { port, client, authListener } = setup();
+      const cloud = vi.fn(),
+        sharing = vi.fn();
+      port.subscribe(cloud);
+      port.subscribe(sharing);
+      await port.signOut();
+      cloud.mockClear();
+      sharing.mockClear();
+      // Supabase emits SIGNED_IN before the provider request resolves. A locally
+      // signed-out port must announce the explicitly completed login afterwards.
+      const original =
+        provider === "apple" ? client.auth.signInWithIdToken : client.auth.exchangeCodeForSession;
+      original.mockImplementationOnce(async () => {
+        authListener("SIGNED_IN", { user });
+        return { data: { user }, error: null };
+      });
+      await (provider === "apple" ? port.signInApple() : port.signInGoogle());
+      expect(cloud).toHaveBeenCalledWith(expect.objectContaining({ id: "user-1" }));
+      expect(sharing).toHaveBeenCalledWith(expect.objectContaining({ id: "user-1" }));
+    },
+  );
+  it("persists first/last name and notifies every subscriber of the same identity", async () => {
+    const { port, client, runtime } = setup();
+    const a = vi.fn(),
+      b = vi.fn();
+    port.subscribe(a);
+    port.subscribe(b);
+    client.auth.updateUser.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: "user-1",
+          user_metadata: { full_name: "Kim Sommer", given_name: "Kim", family_name: "Sommer" },
+        },
+      },
+      error: null,
+    });
+    expect(await port.updateName("user-1", " Kim  ", " Sommer ")).toMatchObject({
+      id: "user-1",
+      displayName: "Kim Sommer",
+      givenName: "Kim",
+      familyName: "Sommer",
+    });
+    expect(client.auth.updateUser).toHaveBeenCalledWith({
+      data: { full_name: "Kim Sommer", given_name: "Kim", family_name: "Sommer" },
+    });
+    expect(runtime.nameStorage.setItem).toHaveBeenCalledWith(
+      "luna.sharing.apple-name.user-1",
+      "Kim Sommer",
+    );
+    expect(a).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user-1", displayName: "Kim Sommer" }),
+    );
+    expect(b).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user-1", displayName: "Kim Sommer" }),
+    );
+  });
+  it.each([
+    ["", ""],
+    ["x".repeat(81), ""],
+    ["Alex", "bad\u0000name"],
+  ])("rejects invalid names before sending them", async (first, last) => {
+    const { port, client } = setup();
+    await expect(port.updateName("user-1", first, last)).rejects.toThrow("80 Zeichen");
+    expect(client.auth.updateUser).not.toHaveBeenCalled();
+  });
+  it("rejects the wrong current account before updating metadata", async () => {
+    const { port, client } = setup();
+    await expect(port.updateName("other", "Kim", "Sommer")).rejects.toThrow("erneut");
+    expect(client.auth.updateUser).not.toHaveBeenCalled();
+  });
+  it.each(["logout", "switch"])("does not emit a late name after %s", async (action) => {
+    const { port, client, authListener, runtime } = setup();
+    const listener = vi.fn();
+    port.subscribe(listener);
+    let done!: (value: Awaited<ReturnType<SharingAuthClient["auth"]["updateUser"]>>) => void;
+    client.auth.updateUser.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          done = resolve;
+        }),
+    );
+    const saved = port.updateName("user-1", "Kim", "Sommer");
+    await vi.waitFor(() => expect(client.auth.updateUser).toHaveBeenCalledTimes(1));
+    if (action === "logout") await port.signOut();
+    else
+      authListener("SIGNED_IN", { user: { id: "other", user_metadata: { full_name: "Other" } } });
+    listener.mockClear();
+    done({
+      data: { user: { id: "user-1", user_metadata: { full_name: "Kim Sommer" } } },
+      error: null,
+    });
+    await expect(saved).rejects.toThrow("Konto hat sich geändert");
+    expect(listener).not.toHaveBeenCalled();
+    expect(runtime.nameStorage.setItem).not.toHaveBeenCalled();
+  });
+  it("sanitizes metadata errors and allows retry", async () => {
+    const { port, client } = setup();
+    client.auth.updateUser.mockRejectedValueOnce(new Error("backend secret"));
+    await expect(port.updateName("user-1", "Kim", "Sommer")).rejects.toThrow(
+      "Name konnte nicht gespeichert",
+    );
+    await expect(port.updateName("user-1", "Kim", "Sommer")).resolves.toMatchObject({
+      id: "user-1",
+    });
+  });
+});
