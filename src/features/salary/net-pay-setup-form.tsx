@@ -39,6 +39,14 @@ const YES_NO = [
   { value: true, label: "Ja" },
   { value: false, label: "Nein" },
 ] as const;
+const EMPLOYMENT_CASES = new Set([
+  "MINIJOB",
+  "MIDIJOB",
+  "MULTIPLE_EMPLOYMENTS",
+  "PARTIAL_MONTH",
+  "PENSIONER",
+  "APPRENTICE",
+]);
 
 export function NetPaySetupForm({
   month,
@@ -105,6 +113,7 @@ export function NetPaySetupForm({
     decimalFormValue(initial?.automation?.additionalNetDeductionCents ?? 0),
   );
   const locked = busy || saving;
+  const employmentCases = (form.specialCases ?? []).filter((value) => EMPLOYMENT_CASES.has(value));
   function change<K extends keyof NetPayFormValues>(key: K, value: NetPayFormValues[K]) {
     setForm((current) => ({ ...current, [key]: value }));
     setError(null);
@@ -264,7 +273,9 @@ export function NetPaySetupForm({
               <NetPayText>
                 {form.specialCases?.includes("PRIVATE_INSURANCE")
                   ? "Privat versichert · Standardprognose nicht verfügbar"
-                  : `Gesetzlich · Zusatzbeitrag ${form.healthAdditionalRate} %`}
+                  : form.specialCases?.includes("OTHER_INSURANCE_STATUS")
+                    ? "Abweichender Versicherungsfall · Standardprognose nicht verfügbar"
+                    : `Gesetzlich · Zusatzbeitrag ${form.healthAdditionalRate} %`}
               </NetPayText>
             </View>
             <NetPayWorkflowLink
@@ -277,6 +288,30 @@ export function NetPaySetupForm({
           </View>
           {healthExpanded ? (
             <>
+              <NetPayChoice
+                label="Versicherungsart"
+                value={
+                  form.specialCases?.includes("PRIVATE_INSURANCE")
+                    ? "PRIVATE_INSURANCE"
+                    : form.specialCases?.includes("OTHER_INSURANCE_STATUS")
+                      ? "OTHER_INSURANCE_STATUS"
+                      : "GKV"
+                }
+                disabled={locked}
+                options={[
+                  { value: "GKV", label: "Gesetzlich" },
+                  { value: "PRIVATE_INSURANCE", label: "Privat" },
+                  { value: "OTHER_INSURANCE_STATUS", label: "Anderer Fall" },
+                ]}
+                onChange={(value) =>
+                  change("specialCases", [
+                    ...(form.specialCases ?? []).filter(
+                      (v) => v !== "PRIVATE_INSURANCE" && v !== "OTHER_INSURANCE_STATUS",
+                    ),
+                    ...(value === "GKV" ? [] : [value]),
+                  ])
+                }
+              />
               <NetPayChoice
                 label="Beitrag für die Prognose"
                 value={customHealth}
@@ -346,8 +381,9 @@ export function NetPaySetupForm({
           {help ? (
             <NetPayText>
               Voller bezahlter Monat, gesetzliche Versicherungen, geplante Dienste mit mittiger
-              Pause, ohne Einmalzahlungen. Deine Zusatzversorgung steht auf der Gehaltsabrechnung
-              und hängt vom Arbeitgeber ab. Das Bundesland allein reicht zur Auswahl nicht aus.
+              Pause. Sonderzahlungen erfasst du getrennt in der Gehaltsübersicht. Deine
+              Zusatzversorgung steht auf der Gehaltsabrechnung und hängt vom Arbeitgeber ab. Das
+              Bundesland allein reicht zur Auswahl nicht aus.
             </NetPayText>
           ) : null}
         </>
@@ -411,26 +447,43 @@ export function NetPaySetupForm({
         </>
       ) : details && step === 2 ? (
         <>
-          <NetPayText>
-            Falls etwas davon zutrifft, kann die Standardprognose noch kein Netto berechnen. Deine
-            Auswahl bleibt gespeichert.
-          </NetPayText>
-          {NET_PAY_SPECIAL_CASE_OPTIONS.map((option) => (
-            <NetPayCheck
-              key={option.value}
-              label={option.label}
-              checked={form.specialCases?.includes(option.value) ?? false}
-              disabled={locked}
-              onChange={(checked) =>
-                change(
-                  "specialCases",
-                  checked
-                    ? [...(form.specialCases ?? []), option.value]
-                    : (form.specialCases ?? []).filter((value) => value !== option.value),
-                )
-              }
-            />
-          ))}
+          <NetPayWorkflowSelect
+            label="Beschäftigungsfall"
+            value={
+              employmentCases.length > 1 ? "LEGACY_MULTIPLE" : (employmentCases[0] ?? "STANDARD")
+            }
+            disabled={locked}
+            options={[
+              { value: "STANDARD", label: "Reguläre Beschäftigung" },
+              ...NET_PAY_SPECIAL_CASE_OPTIONS.filter((option) =>
+                EMPLOYMENT_CASES.has(option.value),
+              ),
+              ...(employmentCases.length > 1
+                ? [{ value: "LEGACY_MULTIPLE", label: "Mehrere gespeicherte Sonderfälle" }]
+                : []),
+            ]}
+            onChange={(value) => {
+              if (value === "LEGACY_MULTIPLE") return;
+              change("specialCases", [
+                ...(form.specialCases ?? []).filter((v) => !EMPLOYMENT_CASES.has(v)),
+                ...(value === "STANDARD"
+                  ? []
+                  : [value as NonNullable<NetPayFormValues["specialCases"]>[number]]),
+              ]);
+            }}
+          />
+          {employmentCases.length ? (
+            <NetPayText>
+              Abweichende Beschäftigungsfälle benötigen eine eigene Berechnung. Ausbildung wird bei
+              passender Gehaltsbasis unterstützt.
+            </NetPayText>
+          ) : null}
+          {form.specialCases?.includes("ONE_OFF_PAYMENT") ? (
+            <NetPayText>
+              Deine frühere Einmalzahlungsmarkierung bleibt erhalten. Ergänze Betrag und Monat unter
+              „Jahressonderzahlung“ in der Gehaltsübersicht.
+            </NetPayText>
+          ) : null}
           <Field
             label="Weitere feste monatliche Zulage (€)"
             value={additionalGross}
@@ -454,6 +507,21 @@ export function NetPaySetupForm({
             editable={!locked}
             keyboardType="decimal-pad"
           />
+          <NetPayCheck
+            label="Weitere steuer- oder SV-wirksame Abzüge, die hier noch fehlen"
+            checked={form.specialCases?.includes("ADDITIONAL_DEDUCTIONS") ?? false}
+            disabled={locked}
+            onChange={(checked) =>
+              change("specialCases", [
+                ...(form.specialCases ?? []).filter((v) => v !== "ADDITIONAL_DEDUCTIONS"),
+                ...(checked ? ["ADDITIONAL_DEDUCTIONS" as const] : []),
+              ])
+            }
+          />
+          <NetPayText>
+            Zusatzversorgung oben auswählen. Reine Abzüge vom ausgezahlten Netto gehören ins
+            Euro-Feld.
+          </NetPayText>
         </>
       ) : null}
     </View>

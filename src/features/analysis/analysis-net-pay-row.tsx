@@ -19,12 +19,17 @@ export function AnalysisNetPayRow({ month }: { readonly month: string }) {
     month,
     settings,
     !blocked && data.status === "ready" && settings?.version === 2,
+    testMonths,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const label =
-    available && forecast?.pensionOmitted
-      ? "Netto vor Zusatzversorgung"
-      : "Voraussichtliches Netto";
+    forecast?.annualPayment && !forecast.annualPayment.netIncluded
+      ? "Netto ohne Sonderzahlung"
+      : forecast?.annualPayment?.pensionOmitted
+        ? "Netto vor Zusatzversorgung"
+        : available && forecast?.pensionOmitted
+          ? "Netto vor Zusatzversorgung"
+          : "Voraussichtliches Netto";
   const value = blocked
     ? "Im Testmonat gesperrt"
     : available
@@ -49,6 +54,13 @@ export function AnalysisNetPayRow({ month }: { readonly month: string }) {
       {notice ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.md }}>
           {notice}
+        </Text>
+      ) : null}
+      {forecast?.annualPayment ? (
+        <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.md }}>
+          {forecast.annualPayment.netIncluded
+            ? "Weihnachtsgeld enthalten"
+            : "Sonderzahlung nur im Brutto"}
         </Text>
       ) : null}
     </View>

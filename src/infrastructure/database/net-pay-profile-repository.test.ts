@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
+import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { loadProfile } from "./profile-repository";
 import { generateTestRun, restoreTestBackup, setDeveloperMode } from "./dev-tools-repository";
 import { migrateDatabase } from "./migrations";
@@ -34,6 +35,46 @@ describe("local monthly net-pay profile storage", () => {
     expect(july.revision).toBe(1);
     expect(await loadMonthlyNetPaySettings(f.db, "2026-07")).toEqual(july);
     expect(await loadMonthlyNetPaySettings(f.db, "2026-08")).toBeNull();
+  });
+  it("roundtrips cash-month payments, their revisions and annual payroll facts through SQLite", async () => {
+    const initial = automatedSettings("2026-10");
+    const value = {
+      ...initial,
+      automation: {
+        ...initial.automation!,
+        annualPayments: [
+          {
+            revision: 1,
+            payoutMonth: "2026-11",
+            grossCents: 360_000,
+            netBasis: {
+              kind: "PAYROLL" as const,
+              annualTaxableGrossCents: 4_800_000,
+              socialInsuranceDays: 330,
+              healthAssessedCents: 4_400_000,
+              pensionAssessedCents: 4_400_000,
+            },
+          },
+        ],
+      },
+    };
+    const saved = await saveMonthlyNetPaySettings(f.db, { settings: value, expected: null });
+    expect((await loadMonthlyNetPaySettings(f.db, "2026-10"))?.settings).toEqual(value);
+    const cancelled = {
+      ...value,
+      automation: {
+        ...value.automation,
+        annualPayments: value.automation.annualPayments.map((p) => ({
+          ...p,
+          grossCents: 0,
+          revision: 2,
+        })),
+      },
+    };
+    await saveMonthlyNetPaySettings(f.db, { settings: cancelled, expected: saved });
+    expect(
+      (await loadMonthlyNetPaySettings(f.db, "2026-10"))?.settings.automation?.annualPayments?.[0],
+    ).toMatchObject({ grossCents: 0, revision: 2 });
   });
   it("updates one month and retains a past month's complete settings", async () => {
     const july = await saveMonthlyNetPaySettings(f.db, { settings: settings(), expected: null });

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import * as forecastEngine from "@/engine/net-pay-automatic-forecast";
 import * as payEngine from "@/engine/simple-pay";
@@ -30,6 +31,7 @@ jest.mock("@/features/report-export/report-export-button", () => ({
 
 let mockParams: { month: string; section?: SalaryDetailSection } = { month: "2026-07" };
 let mockSettings: MonthlyNetPaySettings | null = automatedSettings("2026-06");
+let mockAnnualPayments: readonly AnnualSalaryPayment[] | undefined;
 let mockProfile = forecastProfile;
 let mockMonth = "2026-07";
 const mockSetMonth = jest.fn<(month: string) => void>((month) => {
@@ -84,6 +86,7 @@ jest.mock("./use-net-pay-profile", () => ({
     return {
       status: "ready",
       saved: value ? { settings: value, revision: 1 } : null,
+      annualPayments: mockAnnualPayments ?? value?.automation?.annualPayments,
       error: null,
       busy: false,
       reload: jest.fn(),
@@ -102,6 +105,7 @@ describe("integrated salary-to-net workflow", () => {
     mockProfile = forecastProfile;
     mockExport.mockClear();
     mockSettings = automatedSettings("2026-06");
+    mockAnnualPayments = undefined;
     mockEntries = [forecastShift()];
     mockTestMonths = [];
     mockSave.mockReset().mockResolvedValue(undefined);
@@ -117,6 +121,74 @@ describe("integrated salary-to-net workflow", () => {
     mockParams = { month, section };
     return render(<SalaryDetailsScreen />);
   }
+  it("does not show saved November Christmas pay or its explanation in October", async () => {
+    mockEntries = [];
+    const initial = automatedSettings("2026-01");
+    mockSettings = {
+      ...initial,
+      automation: {
+        ...initial.automation!,
+        annualPayments: [
+          {
+            revision: 1,
+            payoutMonth: "2026-11",
+            grossCents: 381_816,
+            netBasis: { kind: "CONSTANT_PAY" },
+          },
+        ],
+      },
+    };
+    const screen = await overview("2026-10");
+    expect(screen.queryByText(/Weihnachtsgeld/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Anpassen,/ })).toBeNull();
+    expect(screen.getByRole("header", { name: "Netto-Prognose" })).toBeTruthy();
+    await screen.unmount();
+    const basis = await details("basis", "2026-10");
+    expect(basis.queryByText(/Weihnachtsgeld/)).toBeNull();
+    expect(basis.queryByText(/vollem Jahresanspruch/)).toBeNull();
+    await basis.unmount();
+    const november = await overview("2026-11");
+    expect(november.getByRole("header", { name: "Weihnachtsgeld" })).toBeTruthy();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+  it("includes tariff Christmas pay and net automatically without opening or saving a form", async () => {
+    mockEntries = [];
+    const screen = await overview("2026-11");
+    expect(screen.getByText("Weihnachtsgeld enthalten")).toBeTruthy();
+    expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
+    expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+    expect(screen.queryByText(/Jahresprognose mit gleichbleibendem/)).toBeNull();
+    expect(screen.getByRole("button", { name: /^Anpassen,/ })).toBeTruthy();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+  it("keeps the analysis calculation order from components to bonus to gross and net", async () => {
+    const screen = await render(
+      <PayListCard
+        onPress={jest.fn()}
+        base={4000}
+        premiums={200}
+        allowances={150}
+        annualPayments={3600}
+        gross={7950}
+        caption="Unverbindliche Schätzung"
+        netRow={<AnalysisNetPayRow month="2026-11" />}
+      />,
+    );
+    const output = JSON.stringify(screen.toJSON());
+    const labels = [
+      "Grundgehalt",
+      "Zeitzuschläge",
+      "Weitere Zulagen",
+      "Weihnachtsgeld",
+      "Brutto geschätzt",
+      "Voraussichtliches Netto",
+    ];
+    for (let i = 1; i < labels.length; i++) {
+      expect(output.indexOf(labels[i - 1])).toBeGreaterThan(-1);
+      expect(output.indexOf(labels[i])).toBeGreaterThan(output.indexOf(labels[i - 1]));
+    }
+    expect(screen.queryByText(/Jahresprognose mit gleichbleibendem/)).toBeNull();
+  });
   it("opens the affected service rather than tariff settings for missing service times", async () => {
     const spy = jest.spyOn(forecastEngine, "calculateAutomaticNetPayForecast").mockReturnValue({
       sourceMonth: "2026-06",
@@ -231,7 +303,7 @@ describe("integrated salary-to-net workflow", () => {
       expect(within(table.getByTestId("analysis-net-pay-row")).queryByRole("button")).toBeNull();
       await fireEvent.press(table.getByRole("button", { name: /^Gehalt,/ }));
       expect(openSalary).toHaveBeenCalledTimes(1);
-      expect(table.getByLabelText(/^Brutto gesamt:/)).toBeTruthy();
+      expect(table.getByLabelText(/^Brutto geschätzt:/)).toBeTruthy();
       expect(calculate).toHaveBeenCalledTimes(1);
       expect(mockSave).not.toHaveBeenCalled();
     } finally {
@@ -873,6 +945,21 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.queryByRole("button", { name: "Zuschläge je Dienst" })).toBeNull();
     const detail = await details("components");
     expect(detail.getByLabelText(/^Monatsbrutto: 4.500,00/)).toBeTruthy();
+  });
+  it("includes confirmed cash-month gross before the first effective net profile in summary and components", async () => {
+    mockSettings = null;
+    mockEntries = [];
+    mockProfile = { ...forecastProfile, tariff: null, manualMonthlyGrossCents: 450000 };
+    mockAnnualPayments = [
+      { revision: 1, payoutMonth: "2026-07", grossCents: 10000, netBasis: null },
+    ];
+    const screen = await render(<SalaryScreen />);
+    expect(screen.getByLabelText(/^Gesamtbrutto: 4.600,00/)).toBeTruthy();
+    await screen.unmount();
+    const detail = await details("components");
+    expect(detail.getByLabelText(/^Gesamtbrutto: 4.600,00/)).toBeTruthy();
+    expect(detail.getByLabelText(/^Jahressonderzahlung \/ Einmalzahlung: 100,00/)).toBeTruthy();
+    expect(detail.queryByText("Voraussichtliches Netto")).toBeNull();
   });
   it("keeps full labels and money at small widths, larger type and in dark mode", async () => {
     jest

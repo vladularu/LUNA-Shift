@@ -2,7 +2,8 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
-import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
+import { usePflegeShiftProfile, usePflegeShiftTestData } from "@/application/pflegeshift-provider";
+import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
 import { dayEditorRoute, salaryDetailsRoute, settingsEditorRoute } from "@/navigation/routes";
 import { SPACING } from "@/theme/tokens";
 import { usePalette } from "@/theme/palette";
@@ -12,6 +13,8 @@ import { SecondaryButton } from "@/ui/form-controls";
 import { FormStatus } from "@/ui/form-layout";
 import { NetPayText } from "./net-pay-controls";
 import { NetPaySalarySummary, NetPaySummaryMetric } from "./net-pay-salary-summary";
+import { AnnualSalaryPaymentEditor } from "./annual-salary-payment-editor";
+import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
 import { NetPaySheet } from "./net-pay-sheet";
 import { NetPaySetupForm } from "./net-pay-setup-form";
 import { useNetPayProfile } from "./use-net-pay-profile";
@@ -42,13 +45,21 @@ export function NetPayAutomaticEntryCard({
 }) {
   const palette = usePalette();
   const { profile } = usePflegeShiftProfile();
+  const { testMonths } = usePflegeShiftTestData();
   const data = useNetPayProfile(month, !blocked);
+  const annual = useAnnualSalaryForecast(
+    Number(month.slice(0, 4)),
+    data.annualPayments,
+    !blocked && data.status === "ready",
+    testMonths,
+  );
   const settings = data.saved?.settings ?? null;
   const configured = settings?.version === 2;
   const forecast = useAutomaticNetPay(
     month,
     settings,
     configured && !blocked && data.status === "ready",
+    testMonths,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const [dialog, setDialog] = useState<{ month: string; view: Dialog } | null>(null);
@@ -90,6 +101,7 @@ export function NetPayAutomaticEntryCard({
           <NetPaySalarySummary
             pay={available.pay}
             pensionOmitted={forecast!.pensionOmitted ?? false}
+            annualPayment={forecast?.annualPayment}
             premiums={available.classification}
             caption={caption}
             onGross={components}
@@ -105,7 +117,11 @@ export function NetPayAutomaticEntryCard({
               {proposedGrossCents !== null ? (
                 <NetPaySummaryMetric
                   label="Gesamtbrutto"
-                  cents={proposedGrossCents}
+                  cents={
+                    proposedGrossCents +
+                    (settings?.automation?.additionalRecurringGrossCents ?? 0) +
+                    annualSalaryGrossCents(month, annual.payments)
+                  }
                   onPress={components}
                   large
                 />
@@ -160,6 +176,19 @@ export function NetPayAutomaticEntryCard({
             ) : null}
           </>
         )}
+        {configured && settings && profile && !blocked && data.status === "ready" ? (
+          <AnnualSalaryPaymentEditor
+            key={`${month}:${settings.month}:${data.saved?.revision}:${JSON.stringify(settings.automation?.annualPayments)}`}
+            month={month}
+            profile={profile}
+            settings={settings}
+            busy={data.busy}
+            onSave={data.save}
+            forecastPayments={annual.payments}
+            proposal={annual.proposal}
+            automatic={annual.automatic}
+          />
+        ) : null}
         {showComponentsLink || showPremiumsLink || showSettingsLink ? (
           <SalarySectionCard title="Details">
             {showComponentsLink ? (

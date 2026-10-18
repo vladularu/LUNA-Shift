@@ -84,6 +84,9 @@ export function netPaySetupSettings(
     version: 2,
     sfnBasicHourlyPayCents: null,
     automation: {
+      ...(initial?.automation?.annualPayments
+        ? { annualPayments: initial.automation.annualPayments }
+        : {}),
       pensionScheme,
       ...(netPayPensionMaxOwnRate(pensionScheme) !== null
         ? {

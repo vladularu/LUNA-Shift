@@ -1,5 +1,6 @@
 import { isNetPayPensionScheme, netPayPensionMaxOwnRate } from "./net-pay-pension-schemes";
 import type { NetPayPensionScheme } from "./net-pay-pension-schemes";
+import { validateAnnualSalaryPayments, type AnnualSalaryPayment } from "./annual-salary-payment";
 export type { NetPayPensionScheme } from "./net-pay-pension-schemes";
 
 export interface NetPayAutomation {
@@ -10,6 +11,7 @@ export interface NetPayAutomation {
   readonly pensionScheme: NetPayPensionScheme;
   /** Optional EZVK employee share; missing/null means unknown, zero explicitly means none. */
   readonly pensionEmployeeRateBps?: number | null;
+  readonly annualPayments?: readonly AnnualSalaryPayment[];
 }
 
 export function validateNetPayAutomation(value: unknown): NetPayAutomation {
@@ -27,6 +29,7 @@ export function validateNetPayAutomation(value: unknown): NetPayAutomation {
     "additionalNetDeductionCents",
     "pensionScheme",
     ...(hasOwnRate ? ["pensionEmployeeRateBps"] : []),
+    ...(Object.hasOwn(row, "annualPayments") ? ["annualPayments"] : []),
   ];
   if (
     Object.keys(row).length !== keys.length ||
@@ -50,5 +53,10 @@ export function validateNetPayAutomation(value: unknown): NetPayAutomation {
     )
   )
     throw new Error("Die Grundlagen der automatischen Netto-Prognose sind unvollständig.");
-  return Object.freeze({ ...row }) as unknown as NetPayAutomation;
+  return Object.freeze({
+    ...row,
+    ...(Object.hasOwn(row, "annualPayments")
+      ? { annualPayments: validateAnnualSalaryPayments(row.annualPayments) }
+      : {}),
+  }) as unknown as NetPayAutomation;
 }

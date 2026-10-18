@@ -361,7 +361,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.getByText("Grundgehalt")).toBeTruthy();
     expect(screen.getByLabelText(/^Grundgehalt: 1\.490,69/)).toBeTruthy();
     expect(screen.getByText("Zeitzuschläge")).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.getByText("Unverbindliche Schätzung")).toBeTruthy();
     expect(screen.queryByText("Monatsbrutto")).toBeNull();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
@@ -419,7 +419,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     };
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByLabelText(/^Grundgehalt: 1\.440,70/)).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
   it("keeps TVA-L training pay and grouped night premiums in the existing details", async () => {
@@ -462,7 +462,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     };
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByLabelText(/^Grundgehalt: 4\.108,81/)).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
   it("shows TV-UK salary in the familiar overview as tariff pay", async () => {
@@ -474,7 +474,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     };
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByLabelText(/^Grundgehalt: 4\.352,00/)).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
   it("shows TV-H pay and familiar grouped premiums", async () => {
@@ -558,7 +558,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     };
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByLabelText(/^Grundgehalt: 4\.052,74/)).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
   it("opens TV-L allowance details and grouped premiums directly", async () => {
@@ -606,7 +606,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByLabelText(/^Grundgehalt: 4\.690,55/)).toBeTruthy();
     expect(screen.getByText("Zeitzuschläge")).toBeTruthy();
-    expect(screen.getByText("Brutto gesamt")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
   });
   it("navigates E salary to grouped calculated premium cards", async () => {

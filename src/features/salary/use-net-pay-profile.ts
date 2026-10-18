@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import { collectAnnualSalaryPayments } from "@/domain/net-pay-profile";
 import {
   loadApplicableNetPaySettings,
   saveContinuousNetPaySettings,
@@ -80,5 +81,11 @@ export function useNetPayProfile(month: string, enabled: boolean) {
       setBusy(false);
     }
   }
-  return { ...visible, busy, save, reload };
+  return {
+    ...visible,
+    annualPayments: collectAnnualSalaryPayments(visible.timeline),
+    busy,
+    save,
+    reload,
+  };
 }

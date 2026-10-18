@@ -35,8 +35,10 @@ export function reportView(report: ReportDocument) {
     : [report.period];
   const monthly = periods.map((period) => {
     const net =
-      number("Netto-Prognose", "result.pay.netCents", period) ??
-      number("Netto-Prognose", "netCents", period);
+      annual && text("Netto-Prognose", "annualPayment.netIncluded", period) === "Nein"
+        ? null
+        : (number("Netto-Prognose", "result.pay.netCents", period) ??
+          number("Netto-Prognose", "netCents", period));
     const provisional =
       net !== null &&
       text("Netto-Prognose", "result.pay.calculationBasis.status", period) ===
@@ -142,6 +144,22 @@ export function reportView(report: ReportDocument) {
     pensionOmitted:
       text("Netto-Prognose", "result.pay.pensionOmitted") === "Ja" ||
       text("Netto-Prognose", "pensionOmitted") === "Ja",
+    annualPaymentAmount: number("Gehaltsprognose", "annualPaymentAmount"),
+    annualPaymentNote: annual
+      ? [
+          ...new Set(
+            periods
+              .map((period) => text("Netto-Prognose", "annualPayment.note", period))
+              .filter(Boolean),
+          ),
+        ].join(" ")
+      : text("Netto-Prognose", "annualPayment.note"),
+    netLabel:
+      !annual && text("Netto-Prognose", "annualPayment.netIncluded") === "Nein"
+        ? "Netto ohne Sonderzahlung"
+        : !annual && text("Netto-Prognose", "annualPayment.pensionOmitted") === "Ja"
+          ? "Netto vor Zusatzversorgung der Sonderzahlung"
+          : "Netto geschätzt",
     payCount: annual ? (number("Jahresauswertung", "availablePayMonthCount") ?? 0) : 0,
     netCount: annual ? (number("Jahresauswertung", "availableNetMonthCount") ?? 0) : 0,
     testData: report.rows.some(

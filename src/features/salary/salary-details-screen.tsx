@@ -16,6 +16,7 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { useSalaryReport } from "./use-salary-report";
 import { useNetPayProfile } from "./use-net-pay-profile";
 import { useAutomaticNetPay } from "./use-automatic-net-pay";
+import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
 import {
   SalaryPage,
   SalaryAmountRow,
@@ -55,10 +56,17 @@ export function SalaryDetailsScreen() {
   const blocked = report.testMonths.includes(month);
   const data = useNetPayProfile(month, valid && !blocked);
   const settings = data.saved?.settings ?? null;
+  const annual = useAnnualSalaryForecast(
+    Number(month.slice(0, 4)),
+    data.annualPayments,
+    valid && !blocked && data.status === "ready",
+    report.testMonths,
+  );
   const forecast = useAutomaticNetPay(
     month,
     settings,
     valid && !blocked && data.status === "ready" && settings?.version === 2,
+    report.testMonths,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const palette = usePalette();
@@ -155,6 +163,8 @@ export function SalaryDetailsScreen() {
         net={available?.pay ?? null}
         settings={settings}
         pensionOmitted={forecast?.pensionOmitted ?? false}
+        annualPayment={forecast?.annualPayment}
+        annualPayments={annual.payments}
       />
     );
   else if (section === "deductions")
@@ -174,6 +184,10 @@ export function SalaryDetailsScreen() {
         classification={available?.classification ?? null}
         pensionOmitted={forecast?.pensionOmitted ?? false}
         nightMinutes={pay.nightCompensatoryMinutes ?? 0}
+        annualPayment={forecast?.annualPayment}
+        annualProposal={
+          annual.payments.some((payment) => payment.payoutMonth === month) ? annual.proposal : null
+        }
       />
     );
   else if (!pay.available)

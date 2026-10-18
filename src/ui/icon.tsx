@@ -183,6 +183,7 @@ function DesignIcon({
   name,
   size = 24,
   color,
+  style,
   accessible = false,
   accessibilityElementsHidden = true,
   importantForAccessibility = "no-hide-descendants",
@@ -197,6 +198,7 @@ function DesignIcon({
       size={size}
       color={typeof color === "string" ? color : palette.text}
       strokeWidth={2}
+      style={style}
       accessible={accessible}
       accessibilityElementsHidden={accessibilityElementsHidden}
       importantForAccessibility={importantForAccessibility}

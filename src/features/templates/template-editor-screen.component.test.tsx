@@ -7,7 +7,7 @@ import { ActionSheetIOS } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TemplateEditorScreen } from "@/features/templates/template-editor-screen";
-import type { SaveShiftTemplateInput, ShiftTemplate } from "@/domain/types";
+import type { SaveShiftTemplateInput, ShiftTemplate, ShiftType } from "@/domain/types";
 
 const mockUpsertShift = jest.fn<() => Promise<void>>();
 const mockUpsertTemplate = jest.fn<(input: SaveShiftTemplateInput) => Promise<ShiftTemplate>>();
@@ -81,7 +81,7 @@ describe("TemplateEditorScreen compact layout", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Vorlage erstellen und eintragen" }));
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     expect(mockUpsertTemplate).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Testdienst" }),
+      expect.objectContaining({ name: "Testdienst", type: "CUSTOM" }),
     );
     expect(mockUpsertShift).toHaveBeenCalledWith(
       expect.objectContaining({ date: "2026-08-15", templateId: "saved-template" }),
@@ -90,40 +90,56 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(router.dismiss).not.toHaveBeenCalled();
   });
 
-  it("saves an existing template without inserting a service from an old dated link", async () => {
-    const existing: ShiftTemplate = {
-      id: "saved-template",
-      name: "Früh",
-      type: "EARLY",
-      allDay: false,
-      startTime: "06:00",
-      endTime: "14:00",
-      breakMinutes: 30,
-      color: "#7C4DCC",
-      symbol: "F",
-      notification: null,
-      location: null,
-      sortOrder: 10,
-      revision: 1,
-      createdAt: "2026-08-15T00:00:00.000Z",
-      updatedAt: "2026-08-15T00:00:00.000Z",
-      deletedAt: null,
-    };
-    mockTemplates = [existing];
-    mockParams = { id: existing.id, quickEntryDate: "2026-08-15" };
-    mockUpsertTemplate.mockResolvedValue(existing);
-    await renderEditor();
+  it.each(["EARLY", "LATE", "NIGHT", "DAY"] as const)(
+    "preserves the existing %s service type when selecting Dienst and saving",
+    async (type) => {
+      const existing: ShiftTemplate = {
+        id: "saved-template",
+        name: "Früh",
+        type,
+        allDay: false,
+        startTime: "06:00",
+        endTime: "14:00",
+        breakMinutes: 30,
+        color: "#7C4DCC",
+        symbol: "F",
+        notification: null,
+        location: null,
+        sortOrder: 10,
+        revision: 1,
+        createdAt: "2026-08-15T00:00:00.000Z",
+        updatedAt: "2026-08-15T00:00:00.000Z",
+        deletedAt: null,
+      };
+      mockTemplates = [existing];
+      mockParams = { id: existing.id, quickEntryDate: "2026-08-15" };
+      mockUpsertTemplate.mockResolvedValue(existing);
+      await renderEditor();
 
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Früh geändert");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
+      expect(screen.getByLabelText("Eintragsart: Dienst")).toBeVisible();
+      jest
+        .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
+        .mockImplementation((_options, callback) => callback(0));
+      await fireEvent.press(screen.getByTestId("template-type-row"));
+      await fireEvent.changeText(screen.getByLabelText("Titel"), "Früh geändert");
+      await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
 
-    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
-    expect(mockUpsertTemplate).toHaveBeenCalledWith(
-      expect.objectContaining({ id: existing.id, name: "Früh geändert" }),
-    );
-    expect(mockUpsertShift).not.toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: "Vorlage erstellen und eintragen" })).toBeNull();
-  });
+      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+      expect(mockUpsertTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: existing.id,
+          name: "Früh geändert",
+          type,
+          startTime: existing.startTime,
+          endTime: existing.endTime,
+          color: existing.color,
+          symbol: existing.symbol,
+        }),
+      );
+      expect(mockUpsertShift).not.toHaveBeenCalled();
+      expect(screen.queryByRole("button", { name: "Vorlage erstellen und eintragen" })).toBeNull();
+    },
+  );
 
   it("retries only the calendar entry when the new template was already saved", async () => {
     mockParams = { quickEntryDate: "2026-08-15" };
@@ -229,15 +245,63 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(screen.getByLabelText("Erinnerung: 5 Min. vor Beginn")).toBeVisible();
   });
 
-  it("selects the service type from the compact iOS row", async () => {
-    jest
+  it.each<[number, string, ShiftType]>([
+    [0, "Dienst", "CUSTOM"],
+    [1, "Fortbildung", "TRAINING"],
+    [2, "Urlaub", "VACATION"],
+    [3, "Krank", "SICK"],
+    [4, "Frei", "FREE"],
+  ])("selects and saves entry type %s: %s", async (index, label, type) => {
+    const picker = jest
       .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-      .mockImplementation((_options, callback) => callback(2));
+      .mockImplementation((_options, callback) => callback(index));
+    mockUpsertTemplate.mockImplementation(async (input) => ({
+      ...input,
+      id: "saved-template",
+      revision: 1,
+      createdAt: "2026-08-15T00:00:00.000Z",
+      updatedAt: "2026-08-15T00:00:00.000Z",
+      deletedAt: null,
+    }));
     await renderEditor();
 
     await fireEvent.press(screen.getByTestId("template-type-row"));
 
-    expect(screen.getByLabelText("Dienstart: Nacht")).toBeVisible();
+    expect(picker).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Eintragsart",
+        options: ["Dienst", "Fortbildung", "Urlaub", "Krank", "Frei", "Abbrechen"],
+        cancelButtonIndex: 5,
+      }),
+      expect.any(Function),
+    );
+    expect(screen.getByLabelText(`Eintragsart: ${label}`)).toBeVisible();
+    const absence = (["VACATION", "SICK", "FREE"] as readonly ShiftType[]).includes(type);
+    if (absence) {
+      expect(screen.queryByTestId("template-start-row")).toBeNull();
+      expect(screen.queryByTestId("template-end-row")).toBeNull();
+      expect(screen.queryByTestId("template-pause-row")).toBeNull();
+    } else {
+      expect(screen.getByTestId("template-start-row")).toBeVisible();
+    }
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
+    await waitFor(() =>
+      expect(mockUpsertTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({ type, allDay: absence }),
+      ),
+    );
+  });
+
+  it("keeps Dienst selected when the entry-type picker is cancelled", async () => {
+    jest
+      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
+      .mockImplementation((_options, callback) => callback(5));
+    await renderEditor();
+
+    await fireEvent.press(screen.getByTestId("template-type-row"));
+
+    expect(screen.getByLabelText("Eintragsart: Dienst")).toBeVisible();
+    expect(mockUpsertTemplate).not.toHaveBeenCalled();
   });
 
   it("hides timed values when the template is all-day", async () => {

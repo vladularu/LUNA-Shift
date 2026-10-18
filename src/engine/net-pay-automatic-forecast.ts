@@ -5,6 +5,7 @@ import type { SfnNetPayResult, SfnShift } from "@/domain/net-pay-sfn";
 import type { MonthlyPayEstimate, ShiftEntry, UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { calculateMonthlyNetPay } from "./net-pay";
+import { addAnnualSalaryPayment, type AnnualPaymentForecast } from "./net-pay-annual-payment";
 import { classifySfnPayroll2026 } from "./net-pay-sfn";
 import { premiumCategory, premiumKind } from "./net-pay-premium-trace";
 import { calculateTvoedShiftPremiumTrace } from "./simple-pay";
@@ -30,6 +31,7 @@ export interface AutomaticNetPayForecast {
   /** Includes no pension contributions or pension-related tax/SV adjustments. */
   readonly pensionOmitted?: boolean;
   readonly recovery?: AutomaticNetPayRecovery;
+  readonly annualPayment?: AnnualPaymentForecast;
 }
 const unavailable = (reason: string): SfnNetPayResult => ({
   status: "unavailable",
@@ -246,7 +248,11 @@ export function calculateAutomaticNetPayForecast(
         month,
         profile: { ...settings.profile, worksInSaxony: profile.federalState === "SN" },
         amounts: classification.amounts,
-        specialCases: settings.specialCases,
+        specialCases: automation.annualPayments?.some((p) =>
+          p.payoutMonth.startsWith(month.slice(0, 4)),
+        )
+          ? settings.specialCases.filter((value) => value !== "ONE_OFF_PAYMENT")
+          : settings.specialCases,
         employmentKind:
           profile.nursingTrainingTariff || profile.tvalPflegeTariff ? "APPRENTICE" : "EMPLOYEE",
         pension: {
@@ -261,15 +267,24 @@ export function calculateAutomaticNetPayForecast(
       },
       "FORECAST",
     );
+    const annual =
+      result.status === "available"
+        ? addAnnualSalaryPayment(
+            result,
+            { ...settings.profile, worksInSaxony: profile.federalState === "SN" },
+            automation.annualPayments ?? [],
+          )
+        : null;
     return {
       sourceMonth,
       basicHourlyPayCents,
       regularGrossCents,
       pensionOmitted,
       ...(result.status !== "available" ? { recovery: { kind: "net-settings" as const } } : {}),
+      ...(annual?.annualPayment ? { annualPayment: annual.annualPayment } : {}),
       result:
         result.status === "available"
-          ? { status: "available", classification, pay: result }
+          ? { status: "available", classification, pay: annual!.pay }
           : { status: "unavailable", stage: "net-pay", reason: result.reason },
     };
   } catch {

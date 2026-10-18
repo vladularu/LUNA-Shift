@@ -7,6 +7,7 @@ import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
+import { annualSalaryGrossCents, type AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 
 export function MonthOverview({
   month,
@@ -15,6 +16,9 @@ export function MonthOverview({
   compliance,
   checkError,
   showPlanning,
+  annualPayments,
+  salaryLoading = false,
+  salaryError,
 }: {
   readonly month: string;
   readonly data: MonthlyAnalysisCalculation;
@@ -22,6 +26,9 @@ export function MonthOverview({
   readonly compliance: MonthlyComplianceResult | null;
   readonly checkError: string | null;
   readonly showPlanning: boolean;
+  readonly annualPayments?: readonly AnnualSalaryPayment[];
+  readonly salaryLoading?: boolean;
+  readonly salaryError?: string | null;
 }) {
   const { summary, pay, shiftTypeAnalysis } = data;
   const visible = compliance === null ? null : selectVisibleCompliance(compliance, showPlanning);
@@ -50,6 +57,7 @@ export function MonthOverview({
     profile.tvalPflegeTariff != null ||
     profile.manualMonthlyGrossCents != null;
   const estimate = pay.ok && pay.value.available ? pay.value : null;
+  const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
   return (
     <AnalysisDashboard
       cards={{
@@ -92,7 +100,15 @@ export function MonthOverview({
         PAY: (
           <PayListCard
             onPress={() => router.push(salaryRoute(month))}
-            status={!salaryReady ? "Gehalt einrichten" : !estimate ? "Nicht verfügbar" : undefined}
+            status={
+              !salaryReady
+                ? "Gehalt einrichten"
+                : salaryLoading
+                  ? "Wird berechnet …"
+                  : salaryError || !estimate
+                    ? "Nicht verfügbar"
+                    : undefined
+            }
             base={estimate?.personalBaseAmount}
             premiums={estimate?.timePremiumAmount}
             overtime={estimate?.overtimeAmount}
@@ -103,15 +119,22 @@ export function MonthOverview({
                   estimate.careAllowanceAmount
                 : undefined
             }
-            gross={estimate?.estimatedGrossAmount}
+            gross={
+              estimate?.estimatedGrossAmount == null
+                ? undefined
+                : Math.round(estimate.estimatedGrossAmount * 100 + annualGross * 100) / 100
+            }
+            annualPayments={annualGross}
             manual={manualSalary}
             netRow={<AnalysisNetPayRow month={month} />}
             caption={
-              !salaryReady
-                ? "Tarif oder Monatsbrutto hinterlegen"
-                : manualSalary
-                  ? "Manuell hinterlegtes Monatsbrutto"
-                  : "Unverbindliche Schätzung"
+              salaryError
+                ? salaryError
+                : !salaryReady
+                  ? "Tarif oder Monatsbrutto hinterlegen"
+                  : manualSalary
+                    ? "Manuell hinterlegtes Monatsbrutto"
+                    : "Unverbindliche Schätzung"
             }
           />
         ),

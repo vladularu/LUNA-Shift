@@ -15,6 +15,7 @@ import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { calculateAutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
+import { annualSalaryForecast } from "@/features/salary/annual-salary-forecast";
 vi.mock("@/features/analysis/rule-computation", () => ({
   captureRuleComputation: (compute: () => unknown) => {
     try {
@@ -96,6 +97,27 @@ function savedNet(settings: MonthlyNetPaySettings): SavedMonthlyNetPaySettings {
 }
 
 describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
+  it("includes the unsaved tariff forecast consistently in monthly gross, net and the annual total", () => {
+    const base = input({
+      profile: forecastProfile,
+      entries: [],
+      period: "2026-11",
+      netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+    });
+    const annual = annualSalaryForecast(2026, base.profile, {
+      ...base,
+      resolver: base.ruleResolver,
+    });
+    const monthly = build(base);
+    const yearly = build({ ...base, period: "2026" });
+    const bonus = String(annual.proposal!.grossCents / 100).replace(".", ",");
+    expect(value(monthly, "Gehaltsprognose", "annualPaymentAmount", "2026-11")).toBe(bonus);
+    expect(value(yearly, "Gehaltsprognose", "annualPaymentAmount", "2026-11")).toBe(bonus);
+    expect(value(yearly, "Jahresauswertung", "annualPaymentAmount", "2026")).toBe(bonus);
+    expect(value(monthly, "Netto-Prognose", "annualPayment.netIncluded", "2026-11")).toBe("Ja");
+    expect(reportToHtml(monthly)).toContain("Jahressonderzahlung");
+    expect(value(yearly, "Gehaltsprognose", "annualPaymentAmount", "2026-12")).toBeUndefined();
+  });
   const period = "2026-07";
   const netInput = {
     period,
@@ -145,6 +167,32 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(reportToCsv(report)).not.toContain('"Netto-Prognose"');
     expect(reportToHtml(report)).toContain("Netto geschätzt");
     expect(reportToHtml(report)).toContain("Steuern");
+  });
+  it("enthält bestätigte Sonderzahlungen im Monatsbrutto und kennzeichnet fehlende Jahresgrundlagen im PDF", () => {
+    const initial = automatedSettings(period);
+    const withBonus = {
+      ...initial,
+      automation: {
+        ...initial.automation!,
+        annualPayments: [{ revision: 1, payoutMonth: period, grossCents: 360_000, netBasis: null }],
+      },
+    };
+    const baseline = build(netInput);
+    const data = { ...netInput, netPayTimeline: [savedNet(withBonus)] };
+    const actual = build(data);
+    const gross = (document: ReportDocument) =>
+      Number(value(document, "Gehaltsprognose", "estimatedGrossAmount", period)?.replace(",", "."));
+    expect(Math.round((gross(actual) - gross(baseline)) * 100)).toBe(360_000);
+    expect(reportToHtml(actual)).toContain("Netto ohne Sonderzahlung");
+    expect(reportToHtml(actual)).toContain("Jahresgrundlagen ergänzen");
+    expect(
+      value(
+        build({ ...data, period: "2026" }),
+        "Jahresauswertung",
+        "availableNetMonthCount",
+        "2026",
+      ),
+    ).toBe("5");
   });
   it("verwendet eine neue datierte Netto-Konfiguration erst ab ihrem Gültigkeitsmonat", () => {
     const first = automatedSettings("2026-01");

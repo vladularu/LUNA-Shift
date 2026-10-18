@@ -26,6 +26,7 @@ import { ShiftAnalysisDetails } from "./shift-analysis-details";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { AnnualPremiumReport } from "./annual-premium-report";
 import { AnnualOverview } from "./annual-overview";
+import { useAnnualSalaryPayments } from "./use-annual-salary-payments";
 import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
 import { CheckPeriod } from "./check-summary-card";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
@@ -57,7 +58,8 @@ export function AnnualReportScreen({
   const palette = usePalette();
   const preferences = useCheckPreferences();
   const showPlanning = preferences.enabled !== false;
-  const report = selectAnnualCheckDisplay(sourceReport, showPlanning);
+  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths);
+  const report = selectAnnualCheckDisplay(salaryData.report, showPlanning);
   const testMonthCount = report.months.filter((item) => testMonths.includes(item.month)).length;
 
   return (
@@ -78,7 +80,12 @@ export function AnnualReportScreen({
             <AnalysisCoverageNote message="Prüfung wird geladen …" />
           ) : null}
 
-          <AnnualOverview report={report} pending={pending} />
+          <AnnualOverview
+            report={report}
+            pending={pending}
+            salaryPending={salaryData.loading}
+            salaryError={salaryData.error}
+          />
           <AnalysisViewControls />
           {exportControl}
         </ReportPeriodContent>
@@ -103,8 +110,15 @@ export function AnnualReportDetails({
   const palette = usePalette();
   const preferences = useCheckPreferences();
   const showPlanning = preferences.enabled !== false;
-  const report = selectAnnualCheckDisplay(sourceReport, showPlanning);
+  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths);
+  const report = selectAnnualCheckDisplay(salaryData.report, showPlanning);
   const testMonthCount = report.months.filter((item) => testMonths.includes(item.month)).length;
+  if (section === "PAY" && (salaryData.loading || salaryData.error))
+    return (
+      <AnalysisCoverageNote
+        message={salaryData.error ?? "Jahressonderzahlungen werden geladen …"}
+      />
+    );
   if (section === "PREMIUM")
     return <AnnualPremiumReport report={report} pending={pending} onSelectMonth={onSelectMonth} />;
   if (section === "SHIFTS")

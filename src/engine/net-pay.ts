@@ -26,10 +26,11 @@ function ageOn(birthDate: Temporal.PlainDate, date: Temporal.PlainDate): number 
   return birthDate.until(date, { largestUnit: "years" }).years;
 }
 
-function calculateTax2026(
+export function calculateTax2026(
   taxableGrossCents: number,
   profile: NetPayProfile,
   childlessSurcharge: boolean,
+  oneOff?: { readonly grossCents: number; readonly annualTaxableGrossCents: number },
 ): NetPayTax {
   // All PAP defaults are made explicit where they affect the supported scope.
   // In 2026 KRV=0 and ALV=0 mean insured (older PAP years differ).
@@ -51,17 +52,24 @@ function calculateTax2026(
     ALTER1: 0,
     LZZFREIB: String(profile.monthlyTaxAllowanceCents),
     LZZHINZU: "0",
-    SONSTB: "0",
+    SONSTB: String(oneOff?.grossCents ?? 0),
+    JRE4: String(oneOff?.annualTaxableGrossCents ?? 0),
+    JFREIB: String(profile.monthlyTaxAllowanceCents * 12),
   });
   tax.MAIN();
-  const wageTaxCents = tax.getLstlzz().numberValue();
-  const solidarityCents = tax.getSolzlzz().numberValue();
-  const churchTaxBasisCents = tax.getBk().numberValue();
+  const wageTaxCents = tax.getLstlzz().numberValue() + tax.getSts().numberValue();
+  const solidarityCents = tax.getSolzlzz().numberValue() + tax.getSolzs().numberValue();
+  const churchTaxBasisCents = tax.getBk().numberValue() + tax.getBks().numberValue();
   // Fractions of a cent are discarded, not rounded commercially.
-  const churchTaxCents = Big(String(churchTaxBasisCents))
-    .multiply(Big(String(profile.churchTaxRatePercent)))
-    .divide(Big("100"), 0, RoundingMode.DOWN)
-    .numberValue();
+  const churchTaxCents = [tax.getBk().numberValue(), tax.getBks().numberValue()].reduce(
+    (sum, basis) =>
+      sum +
+      Big(String(basis))
+        .multiply(Big(String(profile.churchTaxRatePercent)))
+        .divide(Big("100"), 0, RoundingMode.DOWN)
+        .numberValue(),
+    0,
+  );
   return Object.freeze({
     wageTaxCents,
     solidarityCents,

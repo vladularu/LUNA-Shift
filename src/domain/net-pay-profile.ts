@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import type { NetPayProfile, NetPaySpecialCase } from "./net-pay";
 import { validateNetPayAutomation, type NetPayAutomation } from "./net-pay-automation";
+import type { AnnualSalaryPayment } from "./annual-salary-payment";
 
 export interface MonthlyNetPaySettings {
   readonly version: 1 | 2;
@@ -166,10 +167,47 @@ export function resolveNetPaySettings(
     return row;
   });
   const exact = candidates.find((row) => row.settings.month === month);
-  if (exact) return exact;
-  return (
+  const selected =
+    exact ??
     candidates
       .filter((row) => row.settings.version === 2 && row.settings.month <= month)
-      .sort((a, b) => b.settings.month.localeCompare(a.settings.month))[0] ?? null
+      .sort((a, b) => b.settings.month.localeCompare(a.settings.month))[0] ??
+    null;
+  const payments = collectAnnualSalaryPayments(candidates);
+  if (!selected?.settings.automation) return selected;
+  // Cash-month payments are independent of the effective date of tax-class changes.
+  // Every editor starts from this merged snapshot; 0 is an explicit cancellation.
+  if (!payments.length) return selected;
+  return {
+    ...selected,
+    settings: {
+      ...selected.settings,
+      automation: { ...selected.settings.automation, annualPayments: payments },
+    },
+  };
+}
+
+/** Per-payment revisions survive clock changes and dated tax-profile edits. */
+export function collectAnnualSalaryPayments(
+  timeline: readonly SavedMonthlyNetPaySettings[],
+): readonly AnnualSalaryPayment[] {
+  const payments = new Map<string, AnnualSalaryPayment>();
+  for (const row of timeline)
+    for (const payment of row.settings.automation?.annualPayments ?? []) {
+      const previous = payments.get(payment.payoutMonth);
+      const content = (item: AnnualSalaryPayment) =>
+        JSON.stringify([
+          item.grossCents,
+          Object.entries(item.netBasis ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+        ]);
+      if (previous?.revision === payment.revision && content(previous) !== content(payment))
+        throw new Error(
+          "Widersprüchliche Versionen einer Sonderzahlung. Bitte die gespeicherten Angaben prüfen.",
+        );
+      if (!previous || previous.revision < payment.revision)
+        payments.set(payment.payoutMonth, payment);
+    }
+  return Object.freeze(
+    [...payments.values()].sort((a, b) => a.payoutMonth.localeCompare(b.payoutMonth)),
   );
 }
