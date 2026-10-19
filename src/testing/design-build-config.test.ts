@@ -75,7 +75,11 @@ describe("isolated iPhone design build", () => {
         variant === "internal" ? "lunashift-internal" : "lunashift",
       ]);
       expect(config.ios?.bundleIdentifier).toBe(id);
-      expect(config.updates).toEqual(original.updates);
+      expect(config.updates).toEqual({
+        ...original.updates,
+        checkAutomatically: "ON_LOAD",
+        fallbackToCacheTimeout: 8000,
+      });
       const otherPlugins = (value: typeof config) =>
         value.plugins?.filter((plugin) => !(Array.isArray(plugin) && plugin[0] === "expo-widgets"));
       expect(otherPlugins(config)).toEqual(otherPlugins(configFor("design")));

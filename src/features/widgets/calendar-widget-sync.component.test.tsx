@@ -2,6 +2,8 @@ import { afterEach, beforeEach, expect, it, jest } from "@jest/globals";
 import { act, render } from "@testing-library/react-native";
 import { AppState } from "react-native";
 import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
+import { SharedCalendarsContext } from "@/application/shared-calendars-context";
+import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import { CalendarWidgetSync } from "./calendar-widget-sync";
 import { calendarWidgetsAvailable, publishCalendarWidgetTimeline } from "./native-calendar-widget";
 
@@ -98,6 +100,54 @@ it("loads today's range independently and refreshes after data changes", async (
   await screen.rerender(<CalendarWidgetSync ports={p.value} />);
   await act(async () => {});
   expect(publish).toHaveBeenCalledTimes(2);
+  await screen.unmount();
+});
+
+it("publishes visible shared shifts and removes them after account data is cleared", async () => {
+  const shared: CachedSharedCalendar = {
+    accountId: "reader",
+    visible: true,
+    fetchedAt: "2026-12-31T12:00:00Z",
+    calendar: {
+      id: "shared-plan",
+      ownerId: "other",
+      name: "Loni",
+      color: "#0088CC",
+      visibility: "DETAILS",
+      revision: 1,
+      isOwner: false,
+      publishedAt: "2026-12-31T12:00:00Z",
+    },
+    entries: [
+      {
+        id: "shared-night",
+        title: "Nacht",
+        color: "#CCAA33",
+        symbol: "moon",
+        startsAt: "2026-12-31T20:00:00Z",
+        endsAt: "2027-01-01T06:00:00Z",
+        allDay: false,
+        timeZone: "Europe/Berlin",
+      },
+    ],
+  };
+  const p = ports();
+  const screen = await render(
+    <SharedCalendarsContext value={[shared]}>
+      <CalendarWidgetSync ports={p.value} />
+    </SharedCalendarsContext>,
+  );
+  await act(async () => {});
+  expect(publish.mock.calls.at(-1)?.[0][0].props.days[0].shifts).toEqual([
+    expect.objectContaining({ ownerName: "Loni", color: "#CCAA33", ownerColor: "#0088CC" }),
+  ]);
+  await screen.rerender(
+    <SharedCalendarsContext value={[]}>
+      <CalendarWidgetSync ports={p.value} />
+    </SharedCalendarsContext>,
+  );
+  await act(async () => {});
+  expect(publish.mock.calls.at(-1)?.[0][0].props.days.flatMap((day) => day.shifts)).toEqual([]);
   await screen.unmount();
 });
 

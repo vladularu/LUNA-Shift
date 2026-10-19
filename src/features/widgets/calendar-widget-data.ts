@@ -1,4 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill";
+import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
+import {
+  sharedCalendarDays,
+  SHARED_CALENDAR_CACHE_MAX_AGE,
+} from "@/features/calendar/shared-calendar-display";
 
 import type { CalendarEntry, CalendarPreferencesData, ShiftEntry } from "@/domain/types";
 import { calendarShiftDetail } from "@/features/calendar/calendar-display";
@@ -10,6 +15,8 @@ import { calendarChipPalette, readableTextColor } from "@/theme/color-contrast";
 import { DARK_PALETTE, LIGHT_PALETTE, type Palette } from "@/theme/palette-values";
 
 export interface WidgetShift {
+  readonly ownerName?: string;
+  readonly ownerColor?: string;
   readonly id: string;
   readonly label: string;
   readonly title: string;
@@ -179,7 +186,9 @@ export function buildCalendarWidgetTimeline({
   themeMode = "system",
   backgroundFileName = null,
   backgroundStrength = "medium",
+  sharedCalendars = [],
 }: {
+  readonly sharedCalendars?: readonly CachedSharedCalendar[];
   readonly entries: readonly CalendarEntry[];
   readonly now: Date;
   readonly timeZone: string;
@@ -233,7 +242,11 @@ export function buildCalendarWidgetTimeline({
       monthTitle: monthNames[date.month - 1],
     };
   }
-  function daysFrom(date: Temporal.PlainDate, count: number, url: string): WidgetDay[] {
+  function daysFrom(date: Temporal.PlainDate, count: number, at: number): WidgetDay[] {
+    const shared = sharedCalendarDays(sharedCalendars, timeZone, at, {
+      startDate: date.toString(),
+      endDate: date.add({ days: count }).toString(),
+    });
     return Array.from({ length: count }, (_, index) => {
       const day = date.add({ days: index });
       const iso = day.toString();
@@ -243,10 +256,36 @@ export function buildCalendarWidgetTimeline({
         weekdayIndex: day.dayOfWeek,
         weekNumber: day.weekOfYear!,
         shortDate: `${String(day.day).padStart(2, "0")}.${String(day.month).padStart(2, "0")}.`,
-        shifts: display.showShifts
-          ? (byDate.get(iso) ?? []).map((entry) => shiftData(entry, display, timeZone))
-          : [],
-        url,
+        shifts: [
+          ...(display.showShifts
+            ? (byDate.get(iso) ?? []).map((entry) => shiftData(entry, display, timeZone))
+            : []),
+          ...(shared.get(iso) ?? []).map((row): WidgetShift => {
+            const entry = row.entry;
+            const from = Temporal.Instant.from(entry.startsAt).toZonedDateTimeISO(timeZone);
+            const to = Temporal.Instant.from(entry.endsAt).toZonedDateTimeISO(timeZone);
+            const startTime = entry.allDay ? "" : from.toPlainTime().toString().slice(0, 5);
+            const endTime = entry.allDay ? "" : to.toPlainTime().toString().slice(0, 5);
+            return {
+              id: `shared:${row.calendarId}:${entry.id}`,
+              label: entry.title.slice(0, 1),
+              title: entry.title,
+              displayLabel: display.labelMode === "SHORT" ? entry.title.slice(0, 1) : entry.title,
+              start: startTime,
+              end: endTime,
+              nextDay: !from.toPlainDate().equals(to.toPlainDate()),
+              color: entry.color,
+              textColor: readableTextColor(entry.color),
+              light: calendarChipPalette(entry.color, false),
+              dark: calendarChipPalette(entry.color, true),
+              symbol: null,
+              detail: display.showShiftTimes ? (entry.allDay ? "GT" : startTime) : null,
+              ownerName: row.calendarName,
+              ownerColor: row.calendarColor,
+            };
+          }),
+        ],
+        url: `${scheme}://widget-day?date=${iso}`,
       };
     });
   }
@@ -265,23 +304,39 @@ export function buildCalendarWidgetTimeline({
       },
     ];
 
-  return Array.from({ length: WIDGET_TIMELINE_DAYS + 1 }, (_, offset) => {
-    const date = start.add({ days: offset });
-    const expired = offset === WIDGET_TIMELINE_DAYS;
-    const monthStart = date.with({ day: 1 });
-    const monthCount = Math.ceil((monthStart.dayOfWeek - 1 + date.daysInMonth) / 7) * 7;
-    const url = `${scheme}:///?month=${date.toString().slice(0, 7)}`;
-    return {
-      date: offset === 0 ? now : new Date(date.toZonedDateTime(timeZone).epochMilliseconds),
-      props: {
-        ...base,
-        ...dateFields(date),
-        url,
-        state: expired ? ("expired" as const) : ("ready" as const),
-        days: expired ? [] : daysFrom(date, 6, url),
-        weekDays: expired ? [] : daysFrom(monday(date), WIDGET_VISIBLE_DAYS, url),
-        monthDays: expired ? [] : daysFrom(monday(monthStart), monthCount, url),
-      },
-    };
-  });
+  const timestamps = new Set(
+    Array.from({ length: WIDGET_TIMELINE_DAYS + 1 }, (_, offset) =>
+      offset === 0
+        ? now.getTime()
+        : start.add({ days: offset }).toZonedDateTime(timeZone).epochMilliseconds,
+    ),
+  );
+  const expiresAt = start
+    .add({ days: WIDGET_TIMELINE_DAYS })
+    .toZonedDateTime(timeZone).epochMilliseconds;
+  for (const calendar of sharedCalendars) {
+    const expiry = Date.parse(calendar.fetchedAt) + SHARED_CALENDAR_CACHE_MAX_AGE;
+    if (expiry > now.getTime() && expiry < expiresAt) timestamps.add(expiry);
+  }
+  return [...timestamps]
+    .sort((a, b) => a - b)
+    .map((at) => {
+      const date = widgetToday(new Date(at), timeZone);
+      const expired = at >= expiresAt;
+      const monthStart = date.with({ day: 1 });
+      const monthCount = Math.ceil((monthStart.dayOfWeek - 1 + date.daysInMonth) / 7) * 7;
+      const url = `${scheme}:///?month=${date.toString().slice(0, 7)}`;
+      return {
+        date: new Date(at),
+        props: {
+          ...base,
+          ...dateFields(date),
+          url,
+          state: expired ? ("expired" as const) : ("ready" as const),
+          days: expired ? [] : daysFrom(date, 6, at),
+          weekDays: expired ? [] : daysFrom(monday(date), WIDGET_VISIBLE_DAYS, at),
+          monthDays: expired ? [] : daysFrom(monday(monthStart), monthCount, at),
+        },
+      };
+    });
 }
