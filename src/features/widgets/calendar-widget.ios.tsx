@@ -52,7 +52,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
     const spoken = day.shifts
       .map(
         (shift) =>
-          `${shift.title}, ${shift.start ? shift.start + " bis " + shift.end + (shift.nextDay ? " am Folgetag" : "") : "ganztägig"}`,
+          `${shift.ownerName ? shift.ownerName + ", nur ansehen, " : ""}${shift.title}, ${shift.start ? shift.start + " bis " + shift.end + (shift.nextDay ? " am Folgetag" : "") : "ganztägig"}`,
       )
       .join("; ");
     return (
@@ -78,33 +78,51 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
           {String(Number(day.date.slice(-2)))}
         </Text>
         {first ? (
-          <VStack spacing={0} modifiers={[frame({ maxWidth: Infinity }), cornerRadius(2)]}>
-            <Text
-              modifiers={[
-                font({ size: 10, weight: "medium" }),
-                foregroundStyle(tinted ? primary : (props.chipStyle?.textColor ?? first.textColor)),
-                background(chip?.main ?? first.color),
-                frame({ maxWidth: Infinity, minHeight: 12 }),
-                lineLimit(1),
-                minimumScaleFactor(0.7),
-              ]}
-            >
-              {first.displayLabel ?? first.title}
-            </Text>
-            {first.detail ? (
-              <Text
+          <HStack spacing={0} modifiers={[frame({ maxWidth: Infinity }), cornerRadius(2)]}>
+            {first.ownerColor ? (
+              <VStack
                 modifiers={[
-                  font({ size: 10 }),
-                  foregroundStyle(tinted ? primary : (chip?.onDetail ?? first.textColor)),
-                  background(chip?.detail ?? first.color),
-                  frame({ maxWidth: Infinity, minHeight: 12 }),
-                  lineLimit(1),
+                  frame({ width: 3, height: first.detail ? 24 : 12 }),
+                  background(first.ownerColor),
                 ]}
               >
-                {first.detail}
-              </Text>
+                {null}
+              </VStack>
             ) : null}
-          </VStack>
+            <VStack spacing={0} modifiers={[frame({ maxWidth: Infinity })]}>
+              <Text
+                modifiers={[
+                  font({ size: 10, weight: "medium" }),
+                  foregroundStyle(
+                    tinted
+                      ? primary
+                      : first.ownerColor
+                        ? (chip?.onDetail ?? first.textColor)
+                        : (props.chipStyle?.textColor ?? first.textColor),
+                  ),
+                  background((first.ownerColor ? chip?.detail : chip?.main) ?? first.color),
+                  frame({ maxWidth: Infinity, minHeight: 12 }),
+                  lineLimit(1),
+                  minimumScaleFactor(0.7),
+                ]}
+              >
+                {first.displayLabel ?? first.title}
+              </Text>
+              {first.detail ? (
+                <Text
+                  modifiers={[
+                    font({ size: 10 }),
+                    foregroundStyle(tinted ? primary : (chip?.onDetail ?? first.textColor)),
+                    background(chip?.detail ?? first.color),
+                    frame({ maxWidth: Infinity, minHeight: 12 }),
+                    lineLimit(1),
+                  ]}
+                >
+                  {first.detail}
+                </Text>
+              ) : null}
+            </VStack>
+          </HStack>
         ) : null}
         {day.shifts.length > 1 ? (
           <Text

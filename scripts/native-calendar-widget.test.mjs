@@ -93,7 +93,8 @@ for (const [scheme, bundle, group = "group." + bundle] of [
     assert.ok(monthSource.includes(".supportedFamilies([.systemSmall])"));
     assert.doesNotMatch(monthSource, /WidgetsEntryView|__LUNA_/);
     assert.ok(source.includes(".supportedFamilies([.systemSmall, .systemMedium, .systemLarge])"));
-    assert.doesNotMatch(source, /Link\(destination:|widget-day/);
+    assert.ok(source.includes("Link(destination: URL(string: day.url)"));
+    assert.ok(source.includes("let ownerName, ownerColor: String?"));
     await native.replaceWidgetSource(ios, native.widgetOptions(configured(scheme, bundle)));
     assert.equal(
       await readFile(destination, "utf8"),

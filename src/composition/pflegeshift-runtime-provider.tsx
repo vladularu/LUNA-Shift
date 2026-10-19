@@ -14,13 +14,11 @@ export function PflegeShiftRuntimeProvider({ children }: PropsWithChildren) {
   const ruleCatalog = useMemo(() => createRuleCatalogRuntimePort(db), [db]);
   return (
     <PflegeShiftProvider activeMonth={activeMonth} ports={ports}>
-      <CalendarWidgetSync ports={ports} />
-      <RuleCatalogRuntimeProvider
-        loadStoredCatalog={ruleCatalog.loadStoredCatalog}
-        synchronizeCatalog={ruleCatalog.synchronizeCatalog}
-        recordDiagnostic={ruleCatalog.recordDiagnostic}
-      >
-        <SharingRuntimeProvider>{children}</SharingRuntimeProvider>
+      <RuleCatalogRuntimeProvider {...ruleCatalog}>
+        <SharingRuntimeProvider>
+          <CalendarWidgetSync ports={ports} />
+          {children}
+        </SharingRuntimeProvider>
       </RuleCatalogRuntimeProvider>
     </PflegeShiftProvider>
   );

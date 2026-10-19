@@ -46,6 +46,7 @@ struct LUNAWidgetShift: Decodable, Sendable {
   let nextDay: Bool
   // Optional fields keep the already-published Build-38 timeline readable.
   let displayLabel, symbol, detail: String?
+  let ownerName, ownerColor: String?
   let light, dark: LUNAChipPalette?
 }
 
@@ -208,12 +209,16 @@ struct LUNACalendarContent: View {
   private var rows: [[LUNAWidgetDay]] {
     stride(from: 0, to: days.count, by: columns).map { Array(days[$0..<min($0 + columns, days.count)]) }
   }
+  private var sharedPeople: [String] {
+    Array(Set(days.flatMap { $0.shifts.compactMap { $0.ownerName } })).sorted()
+  }
 
   var body: some View {
     if data.state == "ready" && !days.isEmpty {
       GeometryReader { geometry in
         let headingHeight: CGFloat = month ? 25 : family == .systemLarge ? 17 : 0
-        let height = max(1, (geometry.size.height - headingHeight) / CGFloat(rowCount))
+        let legendHeight: CGFloat = sharedPeople.isEmpty ? 0 : 12
+        let height = max(1, (geometry.size.height - headingHeight - legendHeight) / CGFloat(rowCount))
         VStack(alignment: .leading, spacing: 0) {
           if month {
             Text(data.monthTitle ?? "Dieser Monat").font(.system(size: 17, weight: .semibold))
@@ -230,9 +235,18 @@ struct LUNACalendarContent: View {
             HStack(alignment: .top, spacing: 2) {
               ForEach(row) { day in
                 if month { monthCell(day, height: height) }
-                else { serviceCell(day, height: height) }
+                else {
+                  Link(destination: URL(string: day.url) ?? data.destination) {
+                    serviceCell(day, height: height)
+                  }.buttonStyle(.plain)
+                }
               }
             }.frame(height: height, alignment: .top)
+          }
+          if !sharedPeople.isEmpty {
+            Text("Geteilt: " + sharedPeople.joined(separator: " · "))
+              .font(.system(size: 8)).foregroundStyle(muted).lineLimit(1)
+              .frame(height: legendHeight, alignment: .bottomLeading)
           }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       }
@@ -296,9 +310,9 @@ struct LUNACalendarContent: View {
       Group {
         if let symbol = shift.symbol { Image(systemName: symbol).font(.system(size: size, weight: .medium)) }
         else { Text(shift.displayLabel ?? shift.title).font(.system(size: size, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7) }
-      }.foregroundStyle(tinted ? primary : Color.lunaHex(data.chipStyle?.textColor ?? "#FFFFFF"))
+      }.foregroundStyle(tinted ? primary : Color.lunaHex(shift.ownerColor == nil ? (data.chipStyle?.textColor ?? "#FFFFFF") : (colors?.onDetail ?? shift.textColor)))
         .frame(maxWidth: .infinity, minHeight: lineHeight)
-        .background(Color.lunaHex(colors?.main ?? shift.color))
+        .background(Color.lunaHex(shift.ownerColor == nil ? (colors?.main ?? shift.color) : (colors?.detail ?? shift.color)))
       if let detail, !detail.isEmpty {
         Text(detail).font(.system(size: size, weight: .regular)).monospacedDigit()
           .lineLimit(1).minimumScaleFactor(0.7)
@@ -306,11 +320,15 @@ struct LUNACalendarContent: View {
           .frame(maxWidth: .infinity, minHeight: lineHeight)
           .background(Color.lunaHex(colors?.detail ?? shift.color))
       }
+    }.overlay(alignment: .leading) {
+      if let ownerColor = shift.ownerColor {
+        Rectangle().fill(tinted ? primary : Color.lunaHex(ownerColor)).frame(width: 3)
+      }
     }.clipShape(RoundedRectangle(cornerRadius: data.chipStyle?.radius ?? 2, style: .continuous))
   }
   private func spokenLabel(_ day: LUNAWidgetDay) -> String {
     let shifts = day.shifts.map { shift in
-      shift.start.isEmpty ? "\(shift.title), ganztägig" : "\(shift.title), \(shift.start) bis \(shift.end)\(shift.nextDay ? " am Folgetag" : "")"
+      (shift.ownerName.map { "\($0), nur ansehen, " } ?? "Dein Dienst, ") + (shift.start.isEmpty ? "\(shift.title), ganztägig" : "\(shift.title), \(shift.start) bis \(shift.end)\(shift.nextDay ? " am Folgetag" : "")")
     }.joined(separator: "; ")
     return "\(day.date == todayDate ? "Heute, " : "")\(day.weekday), \(day.shortDate), \(shifts.isEmpty ? "kein Eintrag" : shifts)"
   }

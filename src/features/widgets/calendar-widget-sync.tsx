@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
 
@@ -35,6 +36,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
   const { profile } = usePflegeShiftProfile();
   const { entries } = usePflegeShiftEntries();
   const { templates } = usePflegeShiftTemplates();
+  const sharedCalendars = useVisibleSharedCalendars();
   const sequence = useRef(0);
   const publicationQueue = useRef<Promise<void>>(Promise.resolve());
   const display = useCalendarPreferences();
@@ -96,6 +98,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
           publishCalendarWidgetTimeline(
             buildCalendarWidgetTimeline({
               entries: loaded,
+              sharedCalendars,
               now: publishedAt,
               timeZone,
               scheme,
@@ -160,6 +163,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
     profile,
     entries,
     templates,
+    sharedCalendars,
     display.ready,
     display.labelMode,
     display.showShiftTimes,

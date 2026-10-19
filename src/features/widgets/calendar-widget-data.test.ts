@@ -49,7 +49,7 @@ describe("calendar widget timeline", () => {
       date: "2026-12-31",
       weekday: "Do",
       shortDate: "31.12.",
-      url: "pflegeshift-internal:///?month=2026-12",
+      url: "pflegeshift-internal://widget-day?date=2026-12-31",
     });
     expect(result[0].props.weekDays).toHaveLength(28);
     expect(result[0].props.weekDays[0]).toMatchObject({
@@ -68,7 +68,7 @@ describe("calendar widget timeline", () => {
     for (const entry of result) {
       expect(entry.props.url).not.toContain("widget-day");
       for (const day of [...entry.props.days, ...entry.props.weekDays, ...entry.props.monthDays])
-        expect(day.url).toBe(entry.props.url);
+        expect(day.url).toBe(`pflegeshift-internal://widget-day?date=${day.date}`);
     }
   });
   it("keeps the calendar abbreviation, color and overnight times", () => {
