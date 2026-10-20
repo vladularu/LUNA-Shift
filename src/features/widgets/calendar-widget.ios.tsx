@@ -9,6 +9,7 @@ import {
   frame,
   lineLimit,
   minimumScaleFactor,
+  padding,
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
@@ -18,6 +19,10 @@ import type { CalendarWidgetProps, WidgetDay } from "./calendar-widget-data";
 export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEnvironment) {
   "widget";
   const small = environment.widgetFamily === "systemSmall";
+  // Shared with every native service-widget size; constants stay in the isolated runtime.
+  const dayFont = 14;
+  const chipFont = 11;
+  const lineHeight = 13;
   const dark =
     props?.themeMode === "dark" ||
     (props?.themeMode !== "light" && environment.colorScheme === "dark");
@@ -46,10 +51,10 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
     ? { type: "hierarchical" as const, style: "primary" as const }
     : colors.text;
   function dayCell(day: WidgetDay) {
-    const first = day.shifts[0];
+    const first = day.shifts.find((shift) => !shift.ownerName) ?? day.shifts[0];
     const today = day.date === (props.todayDate ?? props.days[0].date);
     const chip = dark ? first?.dark : first?.light;
-    const spoken = day.shifts
+    const spoken = (first ? [first] : [])
       .map(
         (shift) =>
           `${shift.ownerName ? shift.ownerName + ", nur ansehen, " : ""}${shift.title}, ${shift.start ? shift.start + " bis " + shift.end + (shift.nextDay ? " am Folgetag" : "") : "ganztägig"}`,
@@ -58,9 +63,13 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
     return (
       <VStack
         key={day.date}
-        spacing={3}
+        spacing={2}
         modifiers={[
-          frame({ maxWidth: Infinity }),
+          frame({
+            maxWidth: Infinity,
+            maxHeight: Infinity,
+            alignment: "top",
+          }),
           accessibilityLabel(
             `${today ? "Heute, " : ""}${day.weekday}, ${day.shortDate}, ${spoken || "kein Eintrag"}`,
           ),
@@ -68,11 +77,12 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
       >
         <Text
           modifiers={[
-            font({ size: 12, weight: today ? "semibold" : "regular" }),
+            font({ size: dayFont, weight: today ? "semibold" : "regular" }),
             foregroundStyle(tinted ? primary : today ? colors.onToday : colors.text),
-            frame({ minWidth: 25, minHeight: 18 }),
+            frame({ minWidth: 28, minHeight: 20 }),
             ...(today ? [background(colors.today)] : []),
-            cornerRadius(9),
+            cornerRadius(10),
+            padding({ bottom: 6 }),
           ]}
         >
           {String(Number(day.date.slice(-2)))}
@@ -82,7 +92,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
             {first.ownerColor ? (
               <VStack
                 modifiers={[
-                  frame({ width: 3, height: first.detail ? 24 : 12 }),
+                  frame({ width: 3, height: lineHeight * (first.detail ? 2 : 1) }),
                   background(first.ownerColor),
                 ]}
               >
@@ -92,7 +102,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
             <VStack spacing={0} modifiers={[frame({ maxWidth: Infinity })]}>
               <Text
                 modifiers={[
-                  font({ size: 10, weight: "medium" }),
+                  font({ size: chipFont, weight: "medium" }),
                   foregroundStyle(
                     tinted
                       ? primary
@@ -101,7 +111,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
                         : (props.chipStyle?.textColor ?? first.textColor),
                   ),
                   background((first.ownerColor ? chip?.detail : chip?.main) ?? first.color),
-                  frame({ maxWidth: Infinity, minHeight: 12 }),
+                  frame({ maxWidth: Infinity, minHeight: lineHeight }),
                   lineLimit(1),
                   minimumScaleFactor(0.7),
                 ]}
@@ -111,10 +121,10 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
               {first.detail ? (
                 <Text
                   modifiers={[
-                    font({ size: 10 }),
+                    font({ size: chipFont }),
                     foregroundStyle(tinted ? primary : (chip?.onDetail ?? first.textColor)),
                     background(chip?.detail ?? first.color),
-                    frame({ maxWidth: Infinity, minHeight: 12 }),
+                    frame({ maxWidth: Infinity, minHeight: lineHeight }),
                     lineLimit(1),
                   ]}
                 >
@@ -124,17 +134,12 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
             </VStack>
           </HStack>
         ) : null}
-        {day.shifts.length > 1 ? (
-          <Text
-            modifiers={[font({ size: 8 }), foregroundStyle(primary)]}
-          >{`+${day.shifts.length - 1}`}</Text>
-        ) : null}
       </VStack>
     );
   }
   return (
     <VStack
-      spacing={8}
+      spacing={0}
       modifiers={[
         containerBackground(colors.background, "widget"),
         widgetURL(destination),
@@ -142,7 +147,12 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
       ]}
     >
       {rows.map((row) => (
-        <HStack key={row[0].date} spacing={2} alignment="top">
+        <HStack
+          key={row[0].date}
+          spacing={2}
+          alignment="top"
+          modifiers={[frame({ maxWidth: Infinity, maxHeight: Infinity, alignment: "top" })]}
+        >
           {row.map(dayCell)}
         </HStack>
       ))}

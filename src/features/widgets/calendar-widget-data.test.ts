@@ -41,6 +41,18 @@ function timeline(entries: readonly ShiftEntry[] = [], now = NOW, hasProfile = t
 }
 
 describe("calendar widget timeline", () => {
+  it.each([
+    ["2027-02-01", 28],
+    ["2026-12-01", 35],
+    ["2026-08-01", 42],
+  ] as const)("keeps the full %s month grid without week numbers", (date, count) => {
+    const props = timeline([], new Date(date + "T12:00:00Z"))[0].props;
+    expect(props.monthDays).toHaveLength(count);
+    for (const day of [...props.days, ...props.weekDays, ...props.monthDays]) {
+      expect(day).not.toHaveProperty("weekNumber");
+      expect(day.url).toBe(props.url);
+    }
+  });
   it("provides six rolling days, aligned four-week rows and complete month data across a year boundary", () => {
     const result = timeline();
     expect(result).toHaveLength(15);
@@ -49,13 +61,12 @@ describe("calendar widget timeline", () => {
       date: "2026-12-31",
       weekday: "Do",
       shortDate: "31.12.",
-      url: "pflegeshift-internal://widget-day?date=2026-12-31",
+      url: "pflegeshift-internal:///?month=2026-12",
     });
     expect(result[0].props.weekDays).toHaveLength(28);
     expect(result[0].props.weekDays[0]).toMatchObject({
       date: "2026-12-28",
       weekdayIndex: 1,
-      weekNumber: 53,
     });
     expect(result[0].props.weekDays[27].date).toBe("2027-01-24");
     expect(result[13].props.weekDays[27].date).toBe("2027-02-07");
@@ -68,7 +79,7 @@ describe("calendar widget timeline", () => {
     for (const entry of result) {
       expect(entry.props.url).not.toContain("widget-day");
       for (const day of [...entry.props.days, ...entry.props.weekDays, ...entry.props.monthDays])
-        expect(day.url).toBe(`pflegeshift-internal://widget-day?date=${day.date}`);
+        expect(day.url).toBe(entry.props.url);
     }
   });
   it("keeps the calendar abbreviation, color and overnight times", () => {

@@ -19,6 +19,7 @@ Aktueller Stand: Expo SDK 57. Referenz: https://docs.expo.dev/versions/v57.0.0/
 5. `npm.cmd run verify:fast` und die aufgabenspezifischen Tests ausführen.
 6. Native und visuelle Änderungen auf dem Zielgerät abnehmen. EAS-Metadaten, Exporte und Komponententests ersetzen keinen Screenshot- oder Gerätenachweis.
 7. Erst nach erfolgreicher Pull-Request-CI nach `master` mergen.
+8. Änderungen zuerst im bestehenden iOS-Preview-Kanal (`preview`, `APP_VARIANT=internal`) testen. Kleine Korrekturen werden zunächst dort geprüft und anschließend gesammelt nach separater Freigabe in die TestFlight-Beta übernommen; siehe `WORKFLOW.md`.
 
 Commit, Push, EAS Build, EAS Update und Store-Veröffentlichung benötigen jeweils eine ausdrückliche Freigabe. Unabhängige Änderungen im Arbeitsverzeichnis bleiben unberührt.
 

@@ -119,9 +119,50 @@ for (const [family, count, rows] of [
       assert.ok(JSON.stringify(tree).includes("Heute"));
       assert.ok(JSON.stringify(tree).includes("am Folgetag"));
       assert.ok(JSON.stringify(tree).includes("Nacht"));
-      assert.ok(JSON.stringify(tree).includes("+1"));
+      assert.ok(!JSON.stringify(tree).includes("+1"), "no hidden-entry counters in any family");
       assert.ok(JSON.stringify(tree).includes(props.url));
       assert.ok(!JSON.stringify(tree).includes("widget-day"));
+      const renderedDates = directRows
+        .flatMap((row) => row.props.children)
+        .map((cell) => cell.props.children[0]);
+      for (const date of renderedDates) {
+        assert.ok(
+          JSON.stringify(date).includes('"size":14'),
+          "same date typography in all service families",
+        );
+      }
+      const oldMixed = structuredClone(props);
+      const shared = {
+        ...oldMixed.days[0].shifts[1],
+        title: "Fremder Dienst",
+        displayLabel: "Fremder Dienst",
+        ownerName: "Andere Person",
+        ownerColor: "#0088CC",
+      };
+      oldMixed.days[0].shifts.unshift(shared);
+      oldMixed.weekDays[0] = oldMixed.days[0];
+      const ownTree = context.__expoWidgetRender(oldMixed, {
+        widgetFamily: family,
+        colorScheme,
+        widgetRenderingMode,
+      });
+      assert.ok(JSON.stringify(ownTree).includes("Nacht"));
+      assert.ok(
+        !JSON.stringify(ownTree).includes("Fremder Dienst"),
+        "legacy snapshots also prefer own shifts",
+      );
+      oldMixed.days[0].shifts = [
+        shared,
+        { ...shared, title: "Weiterer Dienst", displayLabel: "Weiterer Dienst" },
+      ];
+      const sharedTree = context.__expoWidgetRender(oldMixed, {
+        widgetFamily: family,
+        colorScheme,
+        widgetRenderingMode,
+      });
+      assert.ok(JSON.stringify(sharedTree).includes("Fremder Dienst"));
+      assert.ok(!JSON.stringify(sharedTree).includes("Weiterer Dienst"));
+      assert.ok(!JSON.stringify(sharedTree).includes("+1"));
       const serialized = JSON.parse(JSON.stringify(tree));
       assert.ok(serialized.props);
     }

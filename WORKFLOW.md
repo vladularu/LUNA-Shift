@@ -25,11 +25,21 @@ Eine Aufgabe umfasst einen Nutzerfluss. Wenn UI, Fachlogik und native Integratio
 3. **Branch:** Von aktuellem `master` einen kurzlebigen Branch `codex/<thema>` erstellen.
 4. **Implementierung:** Nur den bestätigten Scope ändern; fachliche Regressionen zuerst durch Tests absichern.
 5. **Schnelles Gate:** `npm.cmd run verify:fast` sowie relevante fokussierte Tests ausführen.
-6. **Native Abnahme:** UI-, Safe-Area-, SQLCipher- und andere Native-Änderungen im passenden Development- oder Preview-Build prüfen.
+6. **Native Abnahme:** UI-, Safe-Area-, SQLCipher- und andere Native-Änderungen zuerst im passenden Preview-Build auf dem Zielgerät prüfen.
 7. **Pull Request:** Scope, Tests und Gerätenachweise dokumentieren; vollständige CI abwarten.
 8. **Veröffentlichung:** Merge, Push, EAS Build, OTA oder Store-Schritt nur im ausdrücklich freigegebenen Umfang durchführen.
 
 Wenn der Scope während der Umsetzung wächst, ein Zielgerät fehlt oder das reale Geräteergebnis den Tests widerspricht, wird vor weiteren Änderungen angehalten und neu eingegrenzt.
+
+### Preview vor TestFlight
+
+Änderungen werden zuerst mit dem bestehenden Build-Profil preview, dem Kanal/Branch preview, dem Environment preview und APP_VARIANT=internal geprüft. Die interne App-Variante ist die Preview-App und kann neben der TestFlight-Beta installiert werden.
+
+Kompatible JavaScript-/Asset-Korrekturen können nach Veröffentlichungsfreigabe als iOS-Preview-OTA getestet werden. Bei nativen Änderungen, SDK-/Plugin-Änderungen oder einer anderen Runtime ist zuerst ein neuer Preview-Build erforderlich. Ein Update darf nur zu einer passenden Runtime veröffentlicht werden.
+
+Vor der Übernahme in die Beta stehen die Funktions- und Sichtprüfung auf dem iPhone sowie die zugehörige Build-/Update-ID fest. Kleine Änderungen werden gesammelt; Production-/TestFlight-Veröffentlichungen erfolgen nach eigener ausdrücklicher Freigabe. Ein Preview-Auftrag erteilt keine Production-, TestFlight- oder Git-Freigabe.
+
+Bei einer späteren TestFlight-Veröffentlichung bleiben bestehende Gruppen, Detailtext und öffentlicher Link erhalten, sofern der Nutzer keine Änderung daran beauftragt.
 
 ## 3. Prüfbefehle
 
