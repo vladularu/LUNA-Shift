@@ -40,7 +40,8 @@ const mockSetMonth = jest.fn<(month: string) => void>((month) => {
 const mockCoordinator = { getMonth: () => mockMonth, setMonth: mockSetMonth };
 let mockEntries = [forecastShift()];
 let mockTestMonths: string[] = [];
-const mockSave = jest.fn<(value: MonthlyNetPaySettings) => Promise<void>>();
+const mockSave =
+  jest.fn<(value: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>>();
 // The native modal measures its own safe area on-device; the JS renderer has no layout events.
 jest.mock("react-native-safe-area-context", () => ({
   ...jest.requireActual<typeof import("react-native-safe-area-context")>(
@@ -86,13 +87,15 @@ jest.mock("./use-net-pay-profile", () => ({
     return {
       status: "ready",
       saved: value ? { settings: value, revision: 1 } : null,
+      timeline: value ? [{ settings: value, revision: 1 }] : [],
       annualPayments: mockAnnualPayments ?? value?.automation?.annualPayments,
       error: null,
       busy: false,
       reload: jest.fn(),
-      save: async (next: MonthlyNetPaySettings) => {
-        await mockSave(next);
-        setValue(next);
+      save: async (next: MonthlyNetPaySettings, effectiveMonth?: string) => {
+        if (effectiveMonth) await mockSave(next, effectiveMonth);
+        else await mockSave(next);
+        setValue(effectiveMonth ? { ...next, month: effectiveMonth } : next);
       },
     };
   },
@@ -121,6 +124,22 @@ describe("integrated salary-to-net workflow", () => {
     mockParams = { month, section };
     return render(<SalaryDetailsScreen />);
   }
+  it("passes the chosen effective month from the salary editor to persistence", async () => {
+    const screen = await overview();
+    await fireEvent.press(screen.getByText("Netto-Angaben"));
+    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
+    await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Gültig ab: Januar 2026" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 4" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
+    expect(mockSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        month: "2026-07",
+        profile: expect.objectContaining({ taxClass: 4 }),
+      }),
+      "2026-01",
+    );
+  });
   it("does not show saved November Christmas pay or its explanation in October", async () => {
     mockEntries = [];
     const initial = automatedSettings("2026-01");

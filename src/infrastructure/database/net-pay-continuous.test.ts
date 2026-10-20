@@ -29,6 +29,74 @@ describe("continuous net-pay persistence", () => {
     source.adapter.database.close();
     target.adapter.database.close();
   });
+  it.each(["2026-01", "2026-10", "2027-06"])(
+    "applies the first setup in %s from January with a single dated row",
+    async (month) => {
+      const saved = await saveContinuousNetPaySettings(source.db, {
+        settings: automatedSettings(month),
+        expectedTimeline: [],
+      });
+      const year = month.slice(0, 4);
+      expect(saved.settings.month).toBe(year + "-01");
+      for (let index = 1; index <= 12; index++) {
+        const targetMonth = year + "-" + String(index).padStart(2, "0");
+        expect((await loadApplicableNetPaySettings(source.db, targetMonth)).saved).toEqual(saved);
+      }
+      expect(
+        (await loadApplicableNetPaySettings(source.db, Number(year) - 1 + "-12")).saved,
+      ).toBeNull();
+      expect(await loadNetPayProfileTimeline(source.db)).toEqual([saved]);
+    },
+  );
+  it("keeps January through June when the tax class changes from July", async () => {
+    const january = await saveContinuousNetPaySettings(source.db, {
+      settings: automatedSettings("2026-10"),
+      expectedTimeline: [],
+    });
+    const next = automatedSettings("2026-07");
+    const july = await saveContinuousNetPaySettings(source.db, {
+      settings: { ...next, profile: { ...next.profile, taxClass: 4 } },
+      expectedTimeline: [january],
+    });
+    expect(july.settings.month).toBe("2026-07");
+    for (let index = 1; index <= 12; index++) {
+      const result = await loadApplicableNetPaySettings(
+        source.db,
+        "2026-" + String(index).padStart(2, "0"),
+      );
+      expect(result.saved).toEqual(index < 7 ? january : july);
+    }
+    expect(await loadNetPayProfileTimeline(source.db)).toEqual([january, july]);
+  });
+  it("does not backdate a later change just because it is in a new year", async () => {
+    const january = await saveContinuousNetPaySettings(source.db, {
+      settings: automatedSettings("2026-10"),
+      expectedTimeline: [],
+    });
+    const next = automatedSettings("2027-10");
+    const october = await saveContinuousNetPaySettings(source.db, {
+      settings: { ...next, profile: { ...next.profile, taxClass: 4 } },
+      expectedTimeline: [january],
+    });
+    expect(october.settings.month).toBe("2027-10");
+    expect((await loadApplicableNetPaySettings(source.db, "2027-09")).saved).toEqual(january);
+    expect((await loadApplicableNetPaySettings(source.db, "2027-10")).saved).toEqual(october);
+  });
+  it("blocks first-year setup when an earlier affected month has an active test run", async () => {
+    await setDeveloperMode(source.db, true);
+    await generateTestRun(
+      source.db,
+      { startMonth: "2026-09", scenario: "NORMAL_ROTATION", range: 1 },
+      (await loadProfile(source.db))!,
+    );
+    await expect(
+      saveContinuousNetPaySettings(source.db, {
+        settings: automatedSettings("2026-10"),
+        expectedTimeline: [],
+      }),
+    ).rejects.toThrow("Testlabor");
+    expect(await loadNetPayProfileTimeline(source.db)).toHaveLength(0);
+  });
   it.each(NET_PAY_PENSION_OPTIONS.map(({ value }) => value))(
     "restores and inherits the pension model %s without changing it",
     async (pensionScheme) => {
@@ -100,7 +168,7 @@ describe("continuous net-pay persistence", () => {
         expectedTimeline: stale,
       }),
     ).rejects.toThrow("zwischenzeitlich");
-    expect(await loadNetPayProfileTimeline(source.db)).toHaveLength(1);
+    expect(await loadNetPayProfileTimeline(source.db)).toHaveLength(2);
   });
   it("blocks an effective change that would influence a later active test month", async () => {
     await setDeveloperMode(source.db, true);

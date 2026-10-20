@@ -1,10 +1,42 @@
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, renderHook, waitFor } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import type { ShiftEntry } from "@/domain/types";
+import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { QuickEntryPopup } from "@/features/calendar/quick-entry-popup";
+import { usePopupEntryDeletion } from "@/features/calendar/use-popup-entry-deletion";
+import { deletionFeedback } from "@/ui/haptics";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+
+jest.mock("@/ui/haptics", () => ({ deletionFeedback: jest.fn() }));
+
+// Native pan recognition is covered by the device acceptance, while this adapter
+// delivers Swipeable's open/close events to the real popup and deletion flow.
+jest.mock("react-native-gesture-handler/ReanimatedSwipeable", () => {
+  const React = jest.requireActual<typeof import("react")>("react");
+  const { View } = jest.requireActual<typeof import("react-native")>("react-native");
+  return {
+    __esModule: true,
+    default: React.forwardRef(function SwipeableMock(
+      props: {
+        children: React.ReactNode;
+        testID: string;
+        onSwipeableWillOpen: () => void;
+        onSwipeableClose: () => void;
+        renderRightActions: () => React.ReactNode;
+      },
+      ref,
+    ) {
+      React.useImperativeHandle(ref, () => ({ close: props.onSwipeableClose }));
+      return React.createElement(
+        View,
+        { testID: props.testID, ...{ onSwipeableWillOpen: props.onSwipeableWillOpen } },
+        props.renderRightActions(),
+        props.children,
+      );
+    }),
+  };
+});
 
 const earlyTemplateAction = {
   kind: "TEMPLATE" as const,
@@ -51,13 +83,13 @@ const existingShift: ShiftEntry = {
 };
 
 async function renderCompact(
-  entries: readonly ShiftEntry[],
+  entries: readonly CalendarEntry[],
   props: Partial<React.ComponentProps<typeof QuickEntryPopup>> = {},
 ) {
   jest
     .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useWindowDimensions")
     .mockReturnValue({ width: 400, height: 800, scale: 1, fontScale: 1 });
-  return render(
+  const content = (currentEntries: readonly CalendarEntry[]) => (
     <SafeAreaProvider
       initialMetrics={{
         frame: { height: 800, width: 400, x: 0, y: 0 },
@@ -72,7 +104,7 @@ async function renderCompact(
         anchor={{ height: 48, width: 48, x: 40, y: 100 }}
         busy={false}
         date="2026-08-04"
-        entries={entries}
+        entries={currentEntries}
         animateEntry={false}
         onClose={jest.fn()}
         onOpenDetails={jest.fn()}
@@ -81,11 +113,186 @@ async function renderCompact(
         onSelectAction={jest.fn()}
         {...props}
       />
-    </SafeAreaProvider>,
+    </SafeAreaProvider>
   );
+  const screen = await render(content(entries));
+  return {
+    ...screen,
+    updateEntries: (next: readonly CalendarEntry[]) => screen.rerender(content(next)),
+  };
 }
 
 describe("QuickEntryPopup", () => {
+  it("reveals delete on swipe, cancels locally and keeps the popup open after confirmed deletion", async () => {
+    const onDeleteEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>().mockResolvedValue();
+    const onClose = jest.fn();
+    const onOpenEntry = jest.fn();
+    const screen = await renderCompact([existingShift], { onDeleteEntry, onClose, onOpenEntry });
+    const swipe = () =>
+      fireEvent(screen.getByTestId("swipe-entry-SHIFT:shift-night"), "swipeableWillOpen");
+    await swipe();
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht löschen" }));
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quick-entry-delete-confirmation")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Löschen abbrechen" }));
+    expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull();
+    expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeTruthy();
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+
+    await swipe();
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht löschen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
+    await waitFor(() => expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull());
+    expect(onDeleteEntry).toHaveBeenCalledTimes(1);
+    expect(onDeleteEntry).toHaveBeenCalledWith(existingShift);
+    expect(deletionFeedback).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onOpenEntry).not.toHaveBeenCalled();
+    await screen.updateEntries([]);
+    expect(screen.queryByRole("button", { name: "Nacht bearbeiten" })).toBeNull();
+    expect(screen.getByTestId("quick-entry-popup")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienst hinzufügen" })).toBeTruthy();
+  });
+
+  it("invalidates confirmation when the selected entry was changed or removed elsewhere", async () => {
+    const onDeleteEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>().mockResolvedValue();
+    const screen = await renderCompact([existingShift], { onDeleteEntry });
+    await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
+    await screen.updateEntries([{ ...existingShift, revision: 2 }]);
+    expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull();
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+    await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
+    await screen.updateEntries([]);
+    expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull();
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+  });
+
+  it("guards two confirmations in the same frame and clears selection when leaving the day", async () => {
+    let resolveDelete!: () => void;
+    const removeEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    const hook = await renderHook(
+      ({ active }: { active: boolean }) =>
+        usePopupEntryDeletion({
+          entries: [existingShift],
+          date: existingShift.date,
+          active,
+          removeEntry,
+        }),
+      { initialProps: { active: true } },
+    );
+    await act(() => hook.result.current.request(existingShift));
+    let first!: Promise<boolean>;
+    await act(async () => {
+      first = hook.result.current.confirm();
+      await hook.result.current.confirm();
+    });
+    expect(removeEntry).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resolveDelete();
+      await first;
+    });
+    await act(() => hook.result.current.request(existingShift));
+    await hook.rerender({ active: false });
+    expect(hook.result.current.pending).toBeNull();
+    await act(async () => {
+      await hook.result.current.confirm();
+    });
+    expect(removeEntry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a failed deletion visible, prevents duplicate writes and allows a retry", async () => {
+    let rejectDelete!: (reason: Error) => void;
+    const onDeleteEntry = jest
+      .fn<(entry: CalendarEntry) => Promise<void>>()
+      .mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectDelete = reject;
+          }),
+      )
+      .mockResolvedValue(undefined);
+    const onClose = jest.fn();
+    const screen = await renderCompact([existingShift], { onDeleteEntry, onClose });
+    await fireEvent(
+      screen.getByRole("button", { name: "Nacht bearbeiten" }),
+      "accessibilityAction",
+      {
+        nativeEvent: { actionName: "delete" },
+      },
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
+    await fireEvent.press(
+      screen.getByTestId("quick-entry-backdrop", { includeHiddenElements: true }),
+    );
+    expect(onDeleteEntry).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+    await act(async () => {
+      rejectDelete(new Error("offline"));
+    });
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(screen.getByTestId("quick-entry-delete-confirmation")).toBeTruthy();
+    expect(deletionFeedback).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
+    expect(onDeleteEntry).toHaveBeenCalledTimes(2);
+    expect(deletionFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports appointments and cancels confirmation on a backdrop tap", async () => {
+    const appointment: CalendarEntry = {
+      kind: "APPOINTMENT",
+      id: "appointment",
+      title: "Zahnarzt",
+      color: "#527D92",
+      date: "2026-08-04",
+      startTime: "10:00",
+      endTime: "11:00",
+      allDay: false,
+      note: null,
+      revision: 1,
+      createdAt: existingShift.createdAt,
+      updatedAt: existingShift.updatedAt,
+      deletedAt: null,
+    };
+    const onDeleteEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>().mockResolvedValue();
+    const onClose = jest.fn();
+    const screen = await renderCompact([appointment], { onDeleteEntry, onClose });
+    await fireEvent(screen.getByRole("button", { name: "Zahnarzt bearbeiten" }), "longPress");
+    await fireEvent.press(
+      screen.getByTestId("quick-entry-backdrop", { includeHiddenElements: true }),
+    );
+    expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+    await fireEvent(screen.getByRole("button", { name: "Zahnarzt bearbeiten" }), "longPress");
+    await fireEvent.press(screen.getByRole("button", { name: "Zahnarzt endgültig löschen" }));
+    expect(onDeleteEntry).toHaveBeenCalledWith(appointment);
+  });
+
+  it("only reveals one row at a time and a tap on an exposed row closes it without editing", async () => {
+    const onOpenEntry = jest.fn();
+    const screen = await renderCompact(
+      [existingShift, { ...existingShift, id: "second", title: "Spät" }],
+      {
+        onDeleteEntry: jest.fn(async () => {}),
+        onOpenEntry,
+      },
+    );
+    await fireEvent(screen.getByTestId("swipe-entry-SHIFT:shift-night"), "swipeableWillOpen");
+    await fireEvent(screen.getByTestId("swipe-entry-SHIFT:second"), "swipeableWillOpen");
+    expect(screen.queryByRole("button", { name: "Nacht löschen" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Spät löschen" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Spät bearbeiten" }));
+    expect(onOpenEntry).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Spät löschen" })).toBeNull();
+  });
+
   it.each([false, true])(
     "shows only compact content and actions (withEntry=%s)",
     async (withEntry) => {
@@ -401,11 +608,14 @@ it("opens own and foreign services from the same normal day tile", async () => {
   };
   const screen = await renderCompact([existingShift], {
     sharedEntries: [shared],
+    onDeleteEntry: jest.fn(async () => {}),
     onOpenEntry: ownOpen,
     onOpenSharedEntry: sharedOpen,
   });
   expect(screen.getByText("07:00–15:00 · Selena")).toBeTruthy();
   expect(screen.queryByText("sunrise")).toBeNull();
+  expect(screen.getAllByTestId(/^swipe-entry-/)).toHaveLength(1);
+  expect(screen.getByLabelText("Früh ansehen").props.accessibilityActions).toBeUndefined();
   await fireEvent.press(screen.getByLabelText("Nacht bearbeiten"));
   expect(ownOpen).toHaveBeenCalledWith(existingShift);
   expect(sharedOpen).not.toHaveBeenCalled();

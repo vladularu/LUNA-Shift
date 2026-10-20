@@ -71,6 +71,47 @@ describe("effective-dated net profile lifecycle", () => {
     });
     expect(hook.result.current.saved!.revision).toBe(2);
   });
+  it("reloads the first profile anchored in January for the visible July", async () => {
+    load
+      .mockResolvedValueOnce({ saved: null, timeline: [] })
+      .mockResolvedValueOnce(snapshot("2026-01"));
+    save.mockResolvedValueOnce(snapshot("2026-01").saved);
+    const hook = await renderHook(() => useNetPayProfile("2026-07", true));
+    await act(async () => hook.result.current.save(automatedSettings()));
+    expect(save).toHaveBeenCalledWith(mockDb, {
+      settings: automatedSettings(),
+      expectedTimeline: [],
+    });
+    expect(hook.result.current.month).toBe("2026-07");
+    expect(hook.result.current.saved!.settings.month).toBe("2026-01");
+  });
+  it("writes a chosen effective month while retaining the stale-editor guard", async () => {
+    const previous = snapshot();
+    load.mockResolvedValueOnce(previous).mockResolvedValueOnce(snapshot("2026-01", 2));
+    const hook = await renderHook(() => useNetPayProfile("2026-07", true));
+    await act(async () => hook.result.current.save(automatedSettings(), "2026-01"));
+    expect(save).toHaveBeenCalledWith(mockDb, {
+      settings: { ...automatedSettings(), month: "2026-01" },
+      expectedTimeline: previous.timeline,
+    });
+    await act(async () => {
+      await expect(
+        hook.result.current.save(automatedSettings("2026-08"), "2026-01"),
+      ).rejects.toThrow("erneut laden");
+    });
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+  it.each(["2026-13", "2027-01", "invalid"])(
+    "rejects an invalid effective month %s",
+    async (month) => {
+      const hook = await renderHook(() => useNetPayProfile("2026-07", true));
+      await act(async () => {
+        await expect(hook.result.current.save(automatedSettings(), month)).rejects.toThrow();
+      });
+      expect(save).not.toHaveBeenCalled();
+      expect(hook.result.current.busy).toBe(false);
+    },
+  );
   it("retains the old inherited profile on a write conflict", async () => {
     save.mockRejectedValue(new Error("zwischenzeitlich geändert"));
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));

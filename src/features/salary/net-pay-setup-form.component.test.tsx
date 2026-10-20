@@ -29,6 +29,19 @@ function setup(
 }
 
 describe("three short net forecast setup steps", () => {
+  it.each<NetPaySetupSection>(["tax", "family", "insurance"])(
+    "lets a later %s change start in a chosen month without another step",
+    async (section) => {
+      const initial = automatedSettings();
+      const { element, onSave } = setup(initial, false, section);
+      const screen = await render(element);
+      await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
+      expect(screen.getAllByRole("radio", { name: /^Gültig ab:/ })).toHaveLength(12);
+      await fireEvent.press(screen.getByRole("radio", { name: "Gültig ab: Januar 2026" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
+      expect(onSave).toHaveBeenCalledWith({ ...initial, month: "2026-07" }, "2026-01");
+    },
+  );
   it.each([
     ["ZVK_DARMSTADT_I", "ZVK Darmstadt · Verband I"],
     ["ZVK_DARMSTADT_II", "ZVK Darmstadt · Verband II"],
@@ -161,11 +174,14 @@ describe("three short net forecast setup steps", () => {
     await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
     expect(screen.queryByRole("button", { name: /^Familie ·/ })).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Gültig ab: Januar 2026" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 2" }));
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     expect(screen.getByRole("button", { name: /^Steuern · Klasse 1/ })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
     expect(screen.getByRole("radio", { name: "Steuerklasse: 1", checked: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" })).toBeTruthy();
     expect(onSave).not.toHaveBeenCalled();
   });
   it("keeps invalid family answers in the editor and leaves other areas unchanged", async () => {
@@ -203,6 +219,8 @@ describe("three short net forecast setup steps", () => {
     const { element, onSave } = setup();
     const screen = await render(element);
     expect(screen.getByText("Schritt 1 von 3")).toBeTruthy();
+    expect(screen.getByText("Für das ganze Jahr 2026")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Gültig ab auswählen/ })).toBeNull();
     expect(screen.queryByLabelText("Kinderfreibetrag laut Gehaltsabrechnung")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
     expect(screen.getByText("Bitte deine Steuerklasse auswählen.")).toBeTruthy();
@@ -384,7 +402,7 @@ describe("three short net forecast setup steps", () => {
       };
       const { element, onSave } = setup(custom, false, section);
       const screen = await render(element);
-      expect(screen.getByText("Gültig ab Juli 2026")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" })).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();
       expect(screen.queryByRole("button", { name: "Zurück" })).toBeNull();
       await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));

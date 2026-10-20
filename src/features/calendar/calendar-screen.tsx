@@ -634,6 +634,7 @@ export function CalendarScreen() {
             highlightOpacity={dayHighlightOpacity}
             onOpenDetails={openDayDetails}
             onOpenEntry={openEntry}
+            onDeleteEntry={removeEntry}
             onOpenShiftPicker={openShiftPicker}
             onSelectAction={selectPopupAction}
           />
