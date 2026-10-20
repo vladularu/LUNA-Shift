@@ -32,6 +32,10 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { QuickEntrySwipeRow } from "./quick-entry-swipe-row";
+import { QuickEntryDeleteConfirmation } from "./quick-entry-delete-confirmation";
+import { usePopupEntryDeletion } from "./use-popup-entry-deletion";
 
 const HOLIDAY_HEADER_HEIGHT = 28;
 const ENTRY_ROW_HEIGHT = 60;
@@ -90,6 +94,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   onClose,
   highlightOpacity,
   onOpenEntry,
+  onDeleteEntry,
   onOpenDetails,
   onOpenShiftPicker,
   onSelectAction,
@@ -109,6 +114,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   readonly onClose: () => void;
   readonly highlightOpacity?: SharedValue<number>;
   readonly onOpenEntry: (entry: CalendarEntry) => void;
+  readonly onDeleteEntry?: (entry: CalendarEntry) => Promise<void>;
   readonly onOpenDetails: (date: string) => void;
   readonly onOpenShiftPicker: (date: string) => void;
   readonly onSelectAction: (action: QuickEntryAction, date: string) => void;
@@ -123,6 +129,19 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   const actionRowHeight = Math.ceil(ACTION_ROW_HEIGHT * layoutScale);
   const popupWidth = Math.min(420, width - 24);
   const [entryLimit, setEntryLimit] = useState(25);
+  const [swipedEntry, setSwipedEntry] = useState<string | null>(null);
+  const [confirmationHeight, setConfirmationHeight] = useState(58);
+  const deletion = usePopupEntryDeletion({ entries, active, date, removeEntry: onDeleteEntry });
+  const interactionBlocked = busy || deletion.busy || deletion.pending !== null;
+  const cancelDeletion = () => {
+    if (deletion.busy) return;
+    deletion.cancel();
+    setSwipedEntry(null);
+    scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
+  };
+  useEffect(() => {
+    setSwipedEntry(null);
+  }, [active, date]);
   const popupRows = [
     ...entries.map((entry) => ({
       key: entry.kind + ":" + entry.id,
@@ -132,6 +151,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
       subtitle: entrySubtitle(entry),
       duration: entryDuration(entry, timeZone),
       readOnly: false,
+      localEntry: entry,
       onPress: () => onOpenEntry(entry),
     })),
     ...sharedEntries.map((row) => ({
@@ -142,6 +162,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
       subtitle: row.when + " · " + row.calendarName,
       duration: null,
       readOnly: true,
+      localEntry: null,
       onPress: () => onOpenSharedEntry?.(row, date),
     })),
   ];
@@ -190,8 +211,19 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
     if (active) scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
   }, [active]);
 
+  const dismiss = () => {
+    if (deletion.busy) return;
+    if (deletion.pending) cancelDeletion();
+    else if (swipedEntry) setSwipedEntry(null);
+    else closePopup();
+  };
+  const confirmationTop =
+    placement.top - confirmationHeight - 8 >= insets.top + 8
+      ? placement.top - confirmationHeight - 8
+      : Math.min(placement.top + popupHeight + 8, height - insets.bottom - confirmationHeight - 8);
+
   const content = (
-    <View
+    <GestureHandlerRootView
       pointerEvents={!active || closing ? "none" : "box-none"}
       accessibilityElementsHidden={!active || closing}
       importantForAccessibility={!active || closing ? "no-hide-descendants" : "auto"}
@@ -213,7 +245,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
         accessibilityElementsHidden
         aria-hidden
         importantForAccessibility="no-hide-descendants"
-        onPress={closePopup}
+        onPress={dismiss}
         style={{
           position: "absolute",
           top: 0,
@@ -225,14 +257,16 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
       />
       <Animated.View
         accessibilityLabel={`Schnellauswahl für ${compactDate(date)}`}
-        accessibilityViewIsModal={windowOverlay}
-        onAccessibilityEscape={closePopup}
+        accessibilityViewIsModal={windowOverlay && !deletion.pending}
+        onAccessibilityEscape={dismiss}
         accessibilityActions={[{ name: "dismiss", label: "Schnellauswahl schließen" }]}
         onAccessibilityAction={(event) => {
-          if (event.nativeEvent.actionName === "dismiss") closePopup();
+          if (event.nativeEvent.actionName === "dismiss") dismiss();
         }}
         testID="quick-entry-popup"
-        pointerEvents={closing ? "none" : "auto"}
+        pointerEvents={closing || deletion.pending || deletion.busy ? "none" : "auto"}
+        accessibilityElementsHidden={deletion.pending !== null}
+        importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
         style={[
           {
             position: "absolute",
@@ -312,20 +346,40 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
           <ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={{ flexShrink: 1 }}>
             {visibleEntries.map((entry, index) => {
               const duration = entry.duration;
-              return (
+              const localEntry = entry.localEntry;
+              const canDelete = localEntry !== null && onDeleteEntry !== undefined;
+              const row = (
                 <Pressable
                   key={entry.key}
                   ref={index === 0 ? dialogHeadingRef : undefined}
                   accessibilityLabel={`${entry.title} ${entry.readOnly ? "ansehen" : "bearbeiten"}`}
                   accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
                   accessibilityRole="button"
-                  onPress={entry.onPress}
+                  disabled={interactionBlocked}
+                  accessibilityState={{ disabled: interactionBlocked }}
+                  accessibilityActions={
+                    canDelete ? [{ name: "delete", label: "Löschen" }] : undefined
+                  }
+                  onAccessibilityAction={(event) => {
+                    if (
+                      !interactionBlocked &&
+                      localEntry &&
+                      event.nativeEvent.actionName === "delete"
+                    ) {
+                      deletion.request(localEntry);
+                    }
+                  }}
+                  onLongPress={canDelete ? () => deletion.request(localEntry) : undefined}
+                  onPress={() => {
+                    if (swipedEntry) setSwipedEntry(null);
+                    else entry.onPress();
+                  }}
                   style={({ pressed }) => ({
                     minHeight: entryRowHeight,
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 10,
-                    backgroundColor: pressed ? palette.surfaceMuted : "transparent",
+                    backgroundColor: pressed ? palette.surfaceMuted : palette.surfaceRaised,
                     paddingHorizontal: 14,
                   })}
                 >
@@ -399,6 +453,22 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                   />
                 </Pressable>
               );
+              return canDelete ? (
+                <QuickEntrySwipeRow
+                  key={entry.key}
+                  entryKey={entry.key}
+                  title={entry.title}
+                  enabled={active && !closing && !interactionBlocked}
+                  open={swipedEntry === entry.key}
+                  onOpen={() => setSwipedEntry(entry.key)}
+                  onClose={() => setSwipedEntry((key) => (key === entry.key ? null : key))}
+                  onDelete={() => deletion.request(localEntry)}
+                >
+                  {row}
+                </QuickEntrySwipeRow>
+              ) : (
+                row
+              );
             })}
 
             {overflowCount > 0 ? (
@@ -409,6 +479,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                     : `${overflowCount} weitere Einträge in den Tagesdetails anzeigen`
                 }
                 accessibilityRole="button"
+                disabled={interactionBlocked}
                 onPress={() =>
                   sharedEntries.length ? setEntryLimit((limit) => limit + 25) : onOpenDetails(date)
                 }
@@ -450,8 +521,8 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                   accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Dienst"} hinzufügen`}
                   accessibilityHint={compactDate(date)}
                   accessibilityRole="button"
-                  accessibilityState={{ disabled: busy }}
-                  disabled={busy}
+                  accessibilityState={{ disabled: interactionBlocked }}
+                  disabled={interactionBlocked}
                   onPress={() => {
                     if (action.kind === "CUSTOM_SHIFT") {
                       onOpenShiftPicker(date);
@@ -501,7 +572,27 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
           </ScrollView>
         </View>
       </Animated.View>
-    </View>
+      {deletion.pending ? (
+        <QuickEntryDeleteConfirmation
+          title={deletion.pending.title}
+          busy={deletion.busy}
+          error={deletion.error}
+          top={confirmationTop}
+          left={placement.left}
+          width={popupWidth}
+          onLayout={(event) => setConfirmationHeight(Math.ceil(event.nativeEvent.layout.height))}
+          onCancel={cancelDeletion}
+          onConfirm={() => {
+            void deletion.confirm().then((deleted) => {
+              if (deleted) {
+                setSwipedEntry(null);
+                scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
+              }
+            });
+          }}
+        />
+      ) : null}
+    </GestureHandlerRootView>
   );
 
   return windowOverlay && Platform.OS === "ios" ? (
