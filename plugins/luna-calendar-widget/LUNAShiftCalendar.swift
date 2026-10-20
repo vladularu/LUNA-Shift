@@ -8,6 +8,18 @@ import WidgetKit
 private let lunaWidgetKind = "LUNAShiftCalendar"
 private let lunaDefaultURL = __LUNA_DEFAULT_URL__
 
+// Shared proportions for every widget; the month grid scales to its available row height.
+private enum LUNAWidgetLayout {
+  static let horizontalInset: CGFloat = 12
+  static let verticalInset: CGFloat = 10
+  static let dayFont: CGFloat = 14
+  static let dayWidth: CGFloat = 28
+  static let dayHeight: CGFloat = 20
+  static let dateGap: CGFloat = 8
+  static let chipFont: Double = 11
+  static let lineHeight: Double = 13
+}
+
 struct LUNAShiftCalendar: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: lunaWidgetKind, provider: LUNACalendarProvider()) { entry in
@@ -53,7 +65,9 @@ struct LUNAWidgetShift: Decodable, Sendable {
 struct LUNAWidgetDay: Decodable, Identifiable, Sendable {
   let date, weekday, shortDate, url: String
   let shifts: [LUNAWidgetShift]
-  let weekdayIndex, weekNumber: Int?
+  let weekdayIndex: Int?
+  // Prefer own entries even when reading an older snapshot containing both sources.
+  var primaryShift: LUNAWidgetShift? { shifts.first(where: { $0.ownerName == nil }) ?? shifts.first }
   var id: String { date }
   var dayNumber: String { Int(date.suffix(2)).map { String($0) } ?? shortDate }
 }
@@ -142,7 +156,8 @@ struct LUNACalendarEntryView: View {
       let dark = entry.data.usesDark(systemDark: colorScheme == .dark)
       let palette = dark ? entry.data.dark : entry.data.light
       LUNACalendarContent(data: entry.data, palette: palette, dark: dark, tinted: false, month: month)
-        .padding(16)
+        .padding(.horizontal, LUNAWidgetLayout.horizontalInset)
+        .padding(.vertical, LUNAWidgetLayout.verticalInset)
         .background(LUNAWidgetBackground(entry: entry, palette: palette, tinted: false))
         .widgetURL(entry.data.destination)
     }
@@ -152,14 +167,24 @@ struct LUNACalendarEntryView: View {
 @available(iOS 17.0, *)
 struct LUNAModernCalendarView: View {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.widgetContentMargins) private var contentMargins
   @Environment(\.widgetRenderingMode) private var renderingMode
   let entry: LUNACalendarEntry
   var month = false
+  // WidgetKit applies system margins first; use the same final insets for every kind.
+  private var insetAdjustment: EdgeInsets {
+    return EdgeInsets(
+      top: LUNAWidgetLayout.verticalInset - contentMargins.top,
+      leading: LUNAWidgetLayout.horizontalInset - contentMargins.leading,
+      bottom: LUNAWidgetLayout.verticalInset - contentMargins.bottom,
+      trailing: LUNAWidgetLayout.horizontalInset - contentMargins.trailing)
+  }
   var body: some View {
     let dark = entry.data.usesDark(systemDark: colorScheme == .dark)
     let palette = dark ? entry.data.dark : entry.data.light
     let tinted = renderingMode != .fullColor
     LUNACalendarContent(data: entry.data, palette: palette, dark: dark, tinted: tinted, month: month)
+      .padding(insetAdjustment)
       .containerBackground(for: .widget) { LUNAWidgetBackground(entry: entry, palette: palette, tinted: tinted) }
       .widgetURL(entry.data.destination)
   }
@@ -209,26 +234,16 @@ struct LUNACalendarContent: View {
   private var rows: [[LUNAWidgetDay]] {
     stride(from: 0, to: days.count, by: columns).map { Array(days[$0..<min($0 + columns, days.count)]) }
   }
-  private var sharedPeople: [String] {
-    Array(Set(days.flatMap { $0.shifts.compactMap { $0.ownerName } })).sorted()
-  }
 
   var body: some View {
     if data.state == "ready" && !days.isEmpty {
       GeometryReader { geometry in
-        let headingHeight: CGFloat = month ? 25 : family == .systemLarge ? 17 : 0
-        let legendHeight: CGFloat = sharedPeople.isEmpty ? 0 : 12
-        let height = max(1, (geometry.size.height - headingHeight - legendHeight) / CGFloat(rowCount))
+        let headingHeight: CGFloat = month ? 20 : 0
+        let height = max(1, (geometry.size.height - headingHeight) / CGFloat(rowCount))
         VStack(alignment: .leading, spacing: 0) {
           if month {
-            Text(data.monthTitle ?? "Dieser Monat").font(.system(size: 17, weight: .semibold))
+            Text(data.monthTitle ?? "Dieser Monat").font(.system(size: LUNAWidgetLayout.dayFont, weight: .semibold))
               .foregroundStyle(primary).lineLimit(1).minimumScaleFactor(0.8).frame(height: headingHeight, alignment: .topLeading)
-          } else if family == .systemLarge {
-            HStack(spacing: 2) {
-              ForEach(Array(["M", "D", "M", "D", "F", "S", "S"].enumerated()), id: \.offset) { _, name in
-                Text(name).font(.system(size: 10)).foregroundStyle(muted).frame(maxWidth: .infinity)
-              }
-            }.frame(height: headingHeight)
           }
           ForEach(rows.map { LUNAWidgetRow(days: $0) }) { item in
             let row = item.days
@@ -237,16 +252,11 @@ struct LUNACalendarContent: View {
                 if month { monthCell(day, height: height) }
                 else {
                   Link(destination: URL(string: day.url) ?? data.destination) {
-                    serviceCell(day, height: height)
+                    serviceCell(day)
                   }.buttonStyle(.plain)
                 }
               }
             }.frame(height: height, alignment: .top)
-          }
-          if !sharedPeople.isEmpty {
-            Text("Geteilt: " + sharedPeople.joined(separator: " · "))
-              .font(.system(size: 8)).foregroundStyle(muted).lineLimit(1)
-              .frame(height: legendHeight, alignment: .bottomLeading)
           }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       }
@@ -259,53 +269,56 @@ struct LUNACalendarContent: View {
     }
   }
 
-  private func dayNumber(_ day: LUNAWidgetDay, compact: Bool) -> some View {
+  private func dayNumber(_ day: LUNAWidgetDay, compactHeight: CGFloat? = nil) -> some View {
     let today = day.date == todayDate
     let outside = month && String(day.date.prefix(7)) != data.month
+    let height = compactHeight ?? LUNAWidgetLayout.dayHeight
     return Text(day.dayNumber)
-      .font(.system(size: compact ? 10 : 12, weight: today ? .semibold : .regular))
+      .font(.system(size: min(LUNAWidgetLayout.dayFont, height - 4), weight: today ? .semibold : .regular))
       .lineLimit(1).minimumScaleFactor(0.8)
       .foregroundStyle(today && !tinted ? Color.lunaHex(palette.onToday) : outside ? muted : primary)
-      .frame(minWidth: compact ? 16 : 25, minHeight: compact ? 12 : 18)
+      .frame(minWidth: compactHeight == nil ? LUNAWidgetLayout.dayWidth : 14, minHeight: height)
       .background(today ? Color.lunaHex(palette.today) : Color.clear)
       .clipShape(Capsule())
   }
   private func weekend(_ day: LUNAWidgetDay) -> Color {
-    (["Sa", "So"].contains(day.weekday)) ? (tinted ? Color.secondary.opacity(0.08) : Color.lunaHex(palette.surface).opacity(0.45)) : .clear
+    (["Sa", "So"].contains(day.weekday)) ? (tinted ? Color.secondary.opacity(0.08) : Color.lunaHex(palette.surface).opacity(0.18)) : .clear
   }
-  private func serviceCell(_ day: LUNAWidgetDay, height: CGFloat) -> some View {
-    let lineHeight = min(data.chipStyle?.rowHeight ?? 17, small ? 13 : 12)
-    let chipHeight = lineHeight * (day.shifts.first?.detail == nil ? 1 : 2)
-    let capacity = max(1, min(2, Int(max(0, height - 25 - (day.shifts.count > 2 ? 9 : 0)) / max(1, chipHeight + 2))))
-    let visible = Array(day.shifts.prefix(capacity))
+  private func serviceCell(_ day: LUNAWidgetDay) -> some View {
+    let lineHeight = min(data.chipStyle?.rowHeight ?? 17, LUNAWidgetLayout.lineHeight)
     return VStack(spacing: 2) {
-      dayNumber(day, compact: false).frame(maxWidth: .infinity).padding(.bottom, 2)
-      ForEach(visible, id: \.stableID) { shift in shiftChip(shift, lineHeight: lineHeight) }
-      if day.shifts.count > capacity {
-        Text("+\(day.shifts.count - capacity)").font(.system(size: 8)).foregroundStyle(muted)
-      }
+      dayNumber(day).frame(maxWidth: .infinity)
+        .padding(.bottom, LUNAWidgetLayout.dateGap - 2)
+      if let shift = day.primaryShift { shiftChip(shift, lineHeight: lineHeight) }
       Spacer(minLength: 0)
     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background(weekend(day)).clipShape(RoundedRectangle(cornerRadius: 2))
       .accessibilityElement(children: .ignore).accessibilityLabel(spokenLabel(day))
   }
   private func monthCell(_ day: LUNAWidgetDay, height: CGFloat) -> some View {
-    VStack(spacing: 1) {
-      dayNumber(day, compact: true)
-      HStack(spacing: 1) {
-        ForEach(Array(day.shifts.prefix(3)), id: \.stableID) { shift in
-          Circle().fill(tinted ? primary : Color.lunaHex(shift.color)).frame(width: 3, height: 3)
-        }
-      }.frame(height: 3)
-      Spacer(minLength: 0)
+    // Six-row months still fit: date + 2 pt gap + one 3 pt service marker.
+    let dateHeight = min(LUNAWidgetLayout.dayHeight, max(10, height - 5))
+    return VStack(spacing: 2) {
+      dayNumber(day, compactHeight: dateHeight)
+      Group {
+        if let shift = day.primaryShift {
+          RoundedRectangle(cornerRadius: 1.5)
+            .fill(tinted ? primary : Color.lunaHex(shift.color))
+            .overlay(alignment: .leading) {
+              if let ownerColor = shift.ownerColor {
+                Rectangle().fill(tinted ? primary : Color.lunaHex(ownerColor)).frame(width: 2)
+              }
+            }.clipShape(RoundedRectangle(cornerRadius: 1.5))
+        } else { Color.clear }
+      }.frame(width: 10, height: 3)
     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .background(weekend(day))
+      .background(weekend(day)).clipShape(RoundedRectangle(cornerRadius: 2))
       .accessibilityElement(children: .ignore).accessibilityLabel(spokenLabel(day))
   }
   private func shiftChip(_ shift: LUNAWidgetShift, lineHeight: Double) -> some View {
     let colors = dark ? shift.dark : shift.light
     let detail = shift.displayLabel == nil ? (shift.start.isEmpty ? "GT" : shift.start) : shift.detail
-    let size = min(data.chipStyle?.fontSize ?? 12, small ? 11 : 10)
+    let size = min(data.chipStyle?.fontSize ?? 12, LUNAWidgetLayout.chipFont)
     return VStack(spacing: 0) {
       Group {
         if let symbol = shift.symbol { Image(systemName: symbol).font(.system(size: size, weight: .medium)) }
@@ -327,7 +340,7 @@ struct LUNACalendarContent: View {
     }.clipShape(RoundedRectangle(cornerRadius: data.chipStyle?.radius ?? 2, style: .continuous))
   }
   private func spokenLabel(_ day: LUNAWidgetDay) -> String {
-    let shifts = day.shifts.map { shift in
+    let shifts = [day.primaryShift].compactMap { $0 }.map { shift in
       (shift.ownerName.map { "\($0), nur ansehen, " } ?? "Dein Dienst, ") + (shift.start.isEmpty ? "\(shift.title), ganztägig" : "\(shift.title), \(shift.start) bis \(shift.end)\(shift.nextDay ? " am Folgetag" : "")")
     }.joined(separator: "; ")
     return "\(day.date == todayDate ? "Heute, " : "")\(day.weekday), \(day.shortDate), \(shifts.isEmpty ? "kein Eintrag" : shifts)"

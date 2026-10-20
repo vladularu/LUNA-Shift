@@ -11,7 +11,11 @@ import { calendarImageOverlayOpacity, type CalendarImageStrength } from "@/theme
 import type { AppearanceMode } from "@/domain/appearance";
 import { CALENDAR_METRICS } from "@/theme/tokens";
 import { compareCalendarEntries } from "@/engine/calendar-entry-order";
-import { calendarChipPalette, readableTextColor } from "@/theme/color-contrast";
+import {
+  calendarChipPalette,
+  readableTextColor,
+  sharedCalendarChipPalette,
+} from "@/theme/color-contrast";
 import { DARK_PALETTE, LIGHT_PALETTE, type Palette } from "@/theme/palette-values";
 
 export interface WidgetShift {
@@ -36,7 +40,6 @@ export interface WidgetDay {
   readonly date: string;
   readonly weekday: string;
   readonly weekdayIndex: number;
-  readonly weekNumber: number;
   readonly shortDate: string;
   readonly shifts: readonly WidgetShift[];
   readonly url: string;
@@ -242,7 +245,7 @@ export function buildCalendarWidgetTimeline({
       monthTitle: monthNames[date.month - 1],
     };
   }
-  function daysFrom(date: Temporal.PlainDate, count: number, at: number): WidgetDay[] {
+  function daysFrom(date: Temporal.PlainDate, count: number, at: number, url: string): WidgetDay[] {
     const shared = sharedCalendarDays(sharedCalendars, timeZone, at, {
       startDate: date.toString(),
       endDate: date.add({ days: count }).toString(),
@@ -250,17 +253,26 @@ export function buildCalendarWidgetTimeline({
     return Array.from({ length: count }, (_, index) => {
       const day = date.add({ days: index });
       const iso = day.toString();
+      const own = byDate.get(iso) ?? [];
+      // Sharing fills empty days only; hidden own shifts must not be replaced by another person's shift.
+      const sharedFallback = own.length
+        ? []
+        : [...(shared.get(iso) ?? [])]
+            .sort(
+              (a, b) =>
+                Date.parse(a.entry.startsAt) - Date.parse(b.entry.startsAt) ||
+                a.calendarId.localeCompare(b.calendarId) ||
+                a.entry.id.localeCompare(b.entry.id),
+            )
+            .slice(0, 1);
       return {
         date: iso,
         weekday: WEEKDAYS[day.dayOfWeek - 1],
         weekdayIndex: day.dayOfWeek,
-        weekNumber: day.weekOfYear!,
         shortDate: `${String(day.day).padStart(2, "0")}.${String(day.month).padStart(2, "0")}.`,
         shifts: [
-          ...(display.showShifts
-            ? (byDate.get(iso) ?? []).map((entry) => shiftData(entry, display, timeZone))
-            : []),
-          ...(shared.get(iso) ?? []).map((row): WidgetShift => {
+          ...(display.showShifts ? own.map((entry) => shiftData(entry, display, timeZone)) : []),
+          ...sharedFallback.map((row): WidgetShift => {
             const entry = row.entry;
             const from = Temporal.Instant.from(entry.startsAt).toZonedDateTimeISO(timeZone);
             const to = Temporal.Instant.from(entry.endsAt).toZonedDateTimeISO(timeZone);
@@ -276,8 +288,8 @@ export function buildCalendarWidgetTimeline({
               nextDay: !from.toPlainDate().equals(to.toPlainDate()),
               color: entry.color,
               textColor: readableTextColor(entry.color),
-              light: calendarChipPalette(entry.color, false),
-              dark: calendarChipPalette(entry.color, true),
+              light: sharedCalendarChipPalette(entry.color, false),
+              dark: sharedCalendarChipPalette(entry.color, true),
               symbol: null,
               detail: display.showShiftTimes ? (entry.allDay ? "GT" : startTime) : null,
               ownerName: row.calendarName,
@@ -285,7 +297,7 @@ export function buildCalendarWidgetTimeline({
             };
           }),
         ],
-        url: `${scheme}://widget-day?date=${iso}`,
+        url,
       };
     });
   }
@@ -333,9 +345,9 @@ export function buildCalendarWidgetTimeline({
           ...dateFields(date),
           url,
           state: expired ? ("expired" as const) : ("ready" as const),
-          days: expired ? [] : daysFrom(date, 6, at),
-          weekDays: expired ? [] : daysFrom(monday(date), WIDGET_VISIBLE_DAYS, at),
-          monthDays: expired ? [] : daysFrom(monday(monthStart), monthCount, at),
+          days: expired ? [] : daysFrom(date, 6, at, url),
+          weekDays: expired ? [] : daysFrom(monday(date), WIDGET_VISIBLE_DAYS, at, url),
+          monthDays: expired ? [] : daysFrom(monday(monthStart), monthCount, at, url),
         },
       };
     });
