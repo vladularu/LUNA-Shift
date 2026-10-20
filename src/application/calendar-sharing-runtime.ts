@@ -1,3 +1,4 @@
+import { createSharingLocalVisibility, retainSharingCaches } from "./sharing-local-visibility";
 import { sharingContentSignature, type SharingContentRights } from "@/domain/sharing-content";
 import type {
   SharingAuthPort,
@@ -165,19 +166,32 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     if (!user || status !== "signedIn") throw new Error("SHARE_UNAUTHENTICATED");
     return { ticket: epoch, accountId: user.id };
   }
+  const visibility = createSharingLocalVisibility({
+    actor,
+    check,
+    read: () => caches,
+    changed: () => {
+      caches = visibility.apply(caches);
+      emit();
+    },
+    save: (accountId, calendarId, visible) =>
+      options.local.setVisible(accountId, calendarId, visible),
+  });
+  let lastVisible: readonly CachedSharedCalendar[] = [];
   async function localState(ticket: number, accountId: string) {
     check(ticket, accountId);
     const nextCaches = await options.local.listCaches(accountId);
     check(ticket, accountId);
     const nextBindings = await options.local.listBindings(accountId);
     check(ticket, accountId);
+    caches = retainSharingCaches(caches, visibility.apply(nextCaches));
+    bindings = nextBindings;
+    emit();
     const nextSource = await options.local.readEntries();
     check(ticket, accountId);
     const nextInvitations = (await options.local.listInvitations?.(accountId)) ?? [];
     check(ticket, accountId);
     issuedInvitations = nextInvitations;
-    caches = nextCaches;
-    bindings = nextBindings;
     source = nextSource;
     emit();
   }
@@ -185,6 +199,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     check(ticket, accountId);
     await options.local.removeCalendar(accountId, calendarId);
     check(ticket, accountId);
+    visibility.remove(calendarId);
     caches = caches.filter((item) => item.calendar.id !== calendarId);
     bindings = bindings.filter((item) => item.calendarId !== calendarId);
     members.delete(calendarId);
@@ -366,6 +381,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     if (!valid(ticket)) return;
     const cleanupTicket = ++epoch;
     prepared.clear();
+    visibility.clear();
     busyTicket = cleanupTicket;
     user = null;
     status = "signedOut";
@@ -414,6 +430,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     }
     const ticket = ++epoch;
     prepared.clear();
+    visibility.clear();
     busyTicket = null;
     user = next;
     status = next ? "signedIn" : "signedOut";
@@ -428,6 +445,9 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     emit();
     activation = queue(async () => {
       if (!valid(ticket)) return;
+      // A previous session's in-flight SQLite write must finish before activating another.
+      await visibility.settled();
+      check(ticket);
       await options.local.setActiveAccount(next?.id ?? null);
       check(ticket);
       if (next) await refreshSafely(ticket, next.id);
@@ -654,11 +674,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       });
     },
     async setVisible(calendarId: string, visible: boolean) {
-      await run(async (ticket, accountId) => {
-        requireCalendar(calendarId);
-        await options.local.setVisible(accountId, calendarId, visible);
-        await localState(ticket, accountId);
-      });
+      await visibility.set(calendarId, visible);
     },
     async invite(calendarId: string) {
       const invitation = await actions.createInvitation(calendarId);
@@ -782,6 +798,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     async signOut() {
       const cleanupTicket = ++epoch;
       prepared.clear();
+      visibility.clear();
       busyTicket = cleanupTicket;
       user = null;
       status = "signedOut";
@@ -830,6 +847,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         check(ticket, accountId);
         const cleanupTicket = ++epoch;
         prepared.clear();
+        visibility.clear();
         busyTicket = cleanupTicket;
         user = null;
         status = "signedOut";
@@ -853,14 +871,19 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     },
   };
   function visibleCalendars(): readonly CachedSharedCalendar[] {
-    if (!user || status !== "signedIn") return [];
-    return caches.filter(
-      (item) =>
-        !item.calendar.isOwner &&
-        item.accountId === user!.id &&
-        item.visible &&
-        cacheUsable(item, options.now()),
-    );
+    const next =
+      !user || status !== "signedIn"
+        ? []
+        : caches.filter(
+            (item) =>
+              !item.calendar.isOwner &&
+              item.accountId === user!.id &&
+              item.visible &&
+              cacheUsable(item, options.now()),
+          );
+    if (next.length !== lastVisible.length || next.some((item, i) => item !== lastVisible[i]))
+      lastVisible = next;
+    return lastVisible;
   }
   function getController(): SharingController {
     const calendarViews: SharingCalendarView[] = caches.map((item) => {
@@ -997,6 +1020,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       stopped = true;
       ++epoch;
       prepared.clear();
+      visibility.clear();
       unsubscribe();
       listeners.clear();
     },

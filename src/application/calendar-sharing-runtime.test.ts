@@ -285,6 +285,245 @@ function fixture({
   };
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
+describe("responsive local calendar visibility", () => {
+  it("shows the local reader cache before the publication source has finished loading", async () => {
+    const cached: CachedSharedCalendar = {
+      accountId: account.id,
+      calendar,
+      entries: [],
+      visible: true,
+      fetchedAt: calendar.publishedAt!,
+    };
+    const f = fixture({ initialCaches: [cached] });
+    const source = deferred<readonly CalendarEntry[]>();
+    vi.mocked(f.local.readEntries).mockReturnValueOnce(source.promise);
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(f.local.readEntries).toHaveBeenCalled());
+    expect(runtime.getSnapshot().visibleCalendars).toEqual([cached]);
+    expect(f.cloud.listCalendars).not.toHaveBeenCalled();
+    source.resolve([]);
+    await starting;
+    runtime.stop();
+  });
+
+  it("updates immediately during startup refresh and persists without waiting for the network", async () => {
+    const cached: CachedSharedCalendar = {
+      accountId: account.id,
+      calendar,
+      entries: [],
+      visible: true,
+      fetchedAt: calendar.publishedAt!,
+    };
+    const f = fixture({ initialCaches: [cached] });
+    const network = deferred<readonly CloudSharedCalendar[]>();
+    vi.mocked(f.cloud.listCalendars).mockReturnValueOnce(network.promise);
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(f.cloud.listCalendars).toHaveBeenCalled());
+    const reads = vi.mocked(f.local.readEntries).mock.calls.length;
+    const saved = runtime.getController().setVisible(calendar.id, false);
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    expect(runtime.getController().busy).toBe(false);
+    await vi.waitFor(() =>
+      expect(f.local.setVisible).toHaveBeenCalledWith(account.id, calendar.id, false),
+    );
+    await saved;
+    expect(f.local.readEntries).toHaveBeenCalledTimes(reads);
+    network.resolve([calendar]);
+    await starting;
+    expect(runtime.getController().calendars[0].visible).toBe(false);
+    runtime.stop();
+  });
+
+  it("accepts rapid toggles and rolls back only the latest failed write to the last saved choice", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const first = deferred<void>();
+    vi.mocked(f.local.setVisible)
+      .mockReturnValueOnce(first.promise)
+      .mockRejectedValueOnce(new Error("disk full"));
+    const hide = runtime.getController().setVisible(calendar.id, false);
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    const show = runtime.getController().setVisible(calendar.id, true);
+    const failure = expect(show).rejects.toThrow("disk full");
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(1);
+    first.resolve();
+    await hide;
+    await failure;
+    expect(runtime.getController().calendars[0].visible).toBe(false);
+    expect(f.local.setVisible).toHaveBeenNthCalledWith(2, account.id, calendar.id, true);
+    runtime.stop();
+  });
+
+  it("does not let an older cache read overwrite a completed visibility write", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const old = [...f.caches()];
+    const read = deferred<readonly CachedSharedCalendar[]>();
+    vi.mocked(f.local.listCaches).mockReturnValueOnce(read.promise);
+    const refreshing = runtime.backgroundRefresh();
+    await vi.waitFor(() => expect(f.local.listCaches).toHaveBeenLastCalledWith(account.id));
+    const before = vi.mocked(f.local.setVisible).mock.calls.length;
+    const saving = runtime.getController().setVisible(calendar.id, false);
+    await vi.waitFor(() => expect(f.local.setVisible).toHaveBeenCalledTimes(before + 1));
+    await saving;
+    read.resolve(old);
+    await refreshing;
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    runtime.stop();
+  });
+
+  it("does not roll back a newer choice when an older write fails", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const write = deferred<void>();
+    vi.mocked(f.local.setVisible).mockReturnValueOnce(write.promise);
+    const hide = runtime.getController().setVisible(calendar.id, false);
+    const failed = expect(hide).rejects.toThrow("disk full");
+    const show = runtime.getController().setVisible(calendar.id, true);
+    write.reject(new Error("disk full"));
+    await failed;
+    await show;
+    expect(runtime.getController().calendars[0].visible).toBe(true);
+    expect(f.caches()[0].visible).toBe(true);
+    runtime.stop();
+  });
+
+  it("keeps projection inputs stable across timestamp refreshes without hiding changed content or expiry", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const original = runtime.getSnapshot().visibleCalendars[0];
+    const nextTime = Date.parse(original.fetchedAt) + 60000;
+    f.setNow(nextTime);
+    await runtime.backgroundRefresh();
+    const next = runtime.getSnapshot().visibleCalendars[0];
+    expect(next.entries).toBe(original.entries);
+    expect(next.fetchedAt).toBe(new Date(nextTime).toISOString());
+    vi.mocked(f.cloud.fetch).mockResolvedValue({
+      calendar,
+      revision: calendar.revision,
+      reset: true,
+      unchanged: false,
+      entries: [
+        {
+          id: "new",
+          startsAt: "2026-10-12T06:00:00Z",
+          endsAt: "2026-10-12T14:00:00Z",
+          timeZone: "Europe/Berlin",
+          allDay: false,
+          title: "Früh",
+          color: "#123456",
+          symbol: "sunny",
+        },
+      ],
+      fetchedAt: next.fetchedAt,
+    });
+    await runtime.backgroundRefresh();
+    expect(runtime.getSnapshot().visibleCalendars[0].entries).not.toBe(next.entries);
+    expect(runtime.getSnapshot().visibleCalendars[0].entries[0].title).toBe("Früh");
+    f.setNow(nextTime + 86400000);
+    vi.mocked(f.cloud.listCalendars).mockRejectedValue(new Error("offline"));
+    await runtime.backgroundRefresh();
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    runtime.stop();
+  });
+
+  it("does not resurrect a revoked calendar when a pending visibility write finishes", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const write = deferred<void>();
+    vi.mocked(f.local.setVisible).mockReturnValueOnce(write.promise);
+    const saving = runtime.getController().setVisible(calendar.id, false);
+    const settled = saving.catch(() => undefined);
+    await vi.waitFor(() => expect(f.local.setVisible).toHaveBeenCalled());
+    vi.mocked(f.cloud.listCalendars).mockResolvedValue([]);
+    await runtime.backgroundRefresh();
+    write.resolve();
+    await settled;
+    expect(runtime.getController().calendars).toHaveLength(0);
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    runtime.stop();
+  });
+
+  it("cancels queued local writes on account change and never restores old data", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const write = deferred<void>();
+    vi.mocked(f.local.setVisible).mockReturnValueOnce(write.promise);
+    const first = runtime
+      .getController()
+      .setVisible(calendar.id, false)
+      .catch(() => undefined);
+    await vi.waitFor(() => expect(f.local.setVisible).toHaveBeenCalledTimes(1));
+    const second = runtime
+      .getController()
+      .setVisible(calendar.id, true)
+      .catch(() => undefined);
+    f.changeAccount(null);
+    write.resolve();
+    await Promise.all([first, second]);
+    expect(f.local.setVisible).toHaveBeenCalledTimes(1);
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    runtime.stop();
+  });
+
+  it("retains visible data references for status-only changes and identical database reads", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const before = runtime.getSnapshot().visibleCalendars;
+    runtime.setAppleAvailable(false);
+    expect(runtime.getSnapshot().visibleCalendars).toBe(before);
+    const read = vi.mocked(f.local.listCaches).getMockImplementation()!;
+    vi.mocked(f.local.listCaches).mockImplementation(async (id) =>
+      JSON.parse(JSON.stringify(await read(id))),
+    );
+    await runtime.backgroundRefresh();
+    expect(runtime.getSnapshot().visibleCalendars).toBe(before);
+    runtime.stop();
+  });
+
+  it("finishes old local writes before activating a new account in SQLite", async () => {
+    const f = fixture();
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    const write = deferred<void>();
+    vi.mocked(f.local.setVisible).mockReturnValueOnce(write.promise);
+    const saving = runtime
+      .getController()
+      .setVisible(calendar.id, false)
+      .catch(() => undefined);
+    await vi.waitFor(() => expect(f.local.setVisible).toHaveBeenCalled());
+    f.changeAccount({ id: "next-account", displayName: "Sam" });
+    const refreshing = runtime.backgroundRefresh();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(f.local.setActiveAccount).toHaveBeenCalledTimes(1);
+    expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+    write.resolve();
+    await saving;
+    await refreshing;
+    expect(f.local.setActiveAccount).toHaveBeenLastCalledWith("next-account");
+    runtime.stop();
+  });
+});
+
 describe("sharing runtime", () => {
   it("does not inherit former note or appointment consent after manually resuming a restored source", async () => {
     const f = fixture({

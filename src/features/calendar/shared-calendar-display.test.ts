@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { Temporal } from "@js-temporal/polyfill";
 import { sharedCalendarDays } from "./shared-calendar-display";
-import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
+import type { CachedSharedCalendar, SharedCalendarEntry } from "@/domain/calendar-sharing";
 const now = Date.parse("2026-10-25T12:00:00Z");
 const item: CachedSharedCalendar = {
   accountId: "viewer",
@@ -96,6 +97,14 @@ describe("separate read-only shared calendar display", () => {
         now,
       ).size,
     ).toBe(0);
+    expect(
+      sharedCalendarDays(
+        [{ ...item, entries: [null as unknown as SharedCalendarEntry] }],
+        "Europe/Berlin",
+        now,
+        { startDate: "2026-10-01", endDate: "2026-11-01" },
+      ).size,
+    ).toBe(0);
   });
 });
 
@@ -106,3 +115,82 @@ it("uses the local calendar marker while retaining the owner's original service"
   expect(row.entry).toBe(item.entries[0]);
   expect(item.calendar.color).toBe("#123456");
 });
+
+it("skips old entries before expensive time-zone conversion", () => {
+  const convert = vi.spyOn(Temporal.Instant, "from");
+  try {
+    const entries = Array.from({ length: 3000 }, (_, i) => ({
+      ...item.entries[0],
+      id: `old-${i}`,
+    }));
+    expect(
+      sharedCalendarDays([{ ...item, entries }], "Europe/Berlin", now, {
+        startDate: "2027-01-01",
+        endDate: "2027-02-01",
+      }).size,
+    ).toBe(0);
+    expect(convert).not.toHaveBeenCalled();
+  } finally {
+    convert.mockRestore();
+  }
+});
+
+it("reuses prepared entry times while keeping fresh metadata and expiry checks", () => {
+  const cached = { ...item, entries: [{ ...item.entries[0] }] };
+  const convert = vi.spyOn(Temporal.Instant, "from");
+  try {
+    sharedCalendarDays([cached], "Europe/Berlin", now);
+    expect(convert).toHaveBeenCalledTimes(2);
+    const refreshed = {
+      ...cached,
+      fetchedAt: "2026-10-25T11:30:00Z",
+      localColor: "#AA4455",
+      calendar: { ...cached.calendar, name: "Sam" },
+    };
+    const row = sharedCalendarDays([refreshed], "Europe/Berlin", now).get("2026-10-24")![0];
+    expect(convert).toHaveBeenCalledTimes(2);
+    expect(row).toMatchObject({
+      calendarName: "Sam",
+      calendarColor: "#AA4455",
+      fetchedAt: refreshed.fetchedAt,
+    });
+    expect(sharedCalendarDays([refreshed], "Europe/Berlin", now + 86400000).size).toBe(0);
+    sharedCalendarDays([cached], "America/New_York", now);
+    expect(convert).toHaveBeenCalledTimes(4);
+  } finally {
+    convert.mockRestore();
+  }
+});
+
+it.each(["Europe/Berlin", "Pacific/Kiritimati", "Pacific/Pago_Pago", "America/New_York"])(
+  "preserves window boundaries for overnight and all-day entries in %s",
+  (timeZone) => {
+    const entries = [
+      { ...item.entries[0], startsAt: "2026-09-30T22:00:00Z", endsAt: "2026-10-01T06:00:00Z" },
+      { ...item.entries[0], startsAt: "2026-10-31T23:30:00Z", endsAt: "2026-11-01T06:00:00Z" },
+      {
+        ...item.entries[0],
+        allDay: true,
+        startsAt: "2026-09-30T10:00:00Z",
+        endsAt: "2026-10-02T10:00:00Z",
+        timeZone: "Pacific/Kiritimati",
+      },
+      {
+        ...item.entries[0],
+        allDay: true,
+        startsAt: "2026-10-24T22:00:00Z",
+        endsAt: "2026-10-25T23:00:00Z",
+      },
+    ];
+    const source = [{ ...item, entries }];
+    const full = [...sharedCalendarDays(source, timeZone, now)].filter(
+      ([date]) => date >= "2026-10-01" && date < "2026-11-01",
+    );
+    expect([
+      ...sharedCalendarDays(source, timeZone, now, {
+        startDate: "2026-10-01",
+        endDate: "2026-11-01",
+      }),
+    ]).toEqual(full);
+  },
+);

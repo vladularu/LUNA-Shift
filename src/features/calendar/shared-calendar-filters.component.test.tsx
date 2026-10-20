@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, jest } from "@jest/globals";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { SharingCalendarView, SharingController } from "@/domain/sharing-ui-contract";
 import { MINIMUM_TOUCH_TARGET } from "@/theme/tokens";
 import { SharedCalendarFilters } from "./shared-calendar-filters";
@@ -25,7 +25,7 @@ const foreign: SharingCalendarView = {
   invites: [],
 };
 beforeEach(() => {
-  mockSetVisible.mockClear();
+  mockSetVisible.mockReset().mockResolvedValue();
   mockController = {
     status: "loading",
     calendars: [],
@@ -82,4 +82,66 @@ it("adds shared visibility controls inside the same horizontal row", async () =>
   await waitFor(() => expect(mockSetVisible).toHaveBeenCalledWith("foreign", false));
   expect(onOwnVisible).not.toHaveBeenCalled();
   expect(viewport).toHaveStyle({ height: MINIMUM_TOUCH_TARGET });
+});
+
+it("keeps person controls responsive during cloud work and pending local saves", async () => {
+  let finish!: () => void;
+  mockSetVisible.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      finish = resolve;
+    }),
+  );
+  mockController = { ...mockController, status: "signedIn", calendars: [foreign], busy: true };
+  const onOwnVisible = jest.fn();
+  const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
+  expect(mockSetVisible).toHaveBeenLastCalledWith("foreign", false);
+  mockController = { ...mockController, calendars: [{ ...foreign, visible: false }] };
+  await screen.rerender(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
+  expect(
+    screen.getByRole("button", { name: "Selena Müller anzeigen", selected: false }),
+  ).toBeEnabled();
+  await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
+  expect(mockSetVisible).toHaveBeenLastCalledWith("foreign", true);
+  await fireEvent.press(screen.getByRole("button", { name: "Du anzeigen" }));
+  expect(onOwnVisible).toHaveBeenCalledWith(false);
+  await act(async () => {
+    finish();
+  });
+});
+
+it("shows a persistence error without locking the person controls", async () => {
+  mockController = { ...mockController, status: "signedIn", calendars: [foreign] };
+  mockSetVisible.mockRejectedValueOnce(new Error("disk full"));
+  const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
+  await waitFor(() =>
+    expect(
+      screen.getByText("Freigaben konnten nicht aktualisiert werden. Versuche es erneut."),
+    ).toBeTruthy(),
+  );
+  expect(screen.getByRole("button", { name: "Selena Müller anzeigen" })).toBeEnabled();
+});
+
+it("reports a failed person save even when another person was toggled afterwards", async () => {
+  let fail!: (error: Error) => void;
+  mockSetVisible.mockReturnValueOnce(
+    new Promise<void>((_resolve, reject) => {
+      fail = reject;
+    }),
+  );
+  mockController = {
+    ...mockController,
+    status: "signedIn",
+    calendars: [foreign, { ...foreign, id: "other", name: "Sam" }],
+  };
+  const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Sam anzeigen" }));
+  await act(async () => {
+    fail(new Error("disk full"));
+  });
+  expect(
+    screen.getByText("Freigaben konnten nicht aktualisiert werden. Versuche es erneut."),
+  ).toBeTruthy();
 });
