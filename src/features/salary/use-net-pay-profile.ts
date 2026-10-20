@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
-import { collectAnnualSalaryPayments } from "@/domain/net-pay-profile";
+import { collectAnnualSalaryPayments, requireNetPaySettingsMonth } from "@/domain/net-pay-profile";
 import {
   loadApplicableNetPaySettings,
   saveContinuousNetPaySettings,
@@ -65,14 +65,20 @@ export function useNetPayProfile(month: string, enabled: boolean) {
     state.month === month && enabled
       ? state
       : { month, status: "loading", saved: null, timeline: [], error: null };
-  async function save(settings: MonthlyNetPaySettings) {
+  async function save(settings: MonthlyNetPaySettings, effectiveMonth = month) {
     if (writing.current || visible.status !== "ready" || settings.month !== month)
       throw new Error("Bitte die Netto-Angaben erneut laden.");
+    requireNetPaySettingsMonth(effectiveMonth);
+    if (effectiveMonth.slice(0, 4) !== month.slice(0, 4))
+      throw new Error("Bitte einen Monat aus dem ausgewählten Jahr wählen.");
     const current = ++generation.current;
     writing.current = true;
     setBusy(true);
     try {
-      await saveContinuousNetPaySettings(db, { settings, expectedTimeline: visible.timeline });
+      await saveContinuousNetPaySettings(db, {
+        settings: effectiveMonth === month ? settings : { ...settings, month: effectiveMonth },
+        expectedTimeline: visible.timeline,
+      });
       const next = await loadApplicableNetPaySettings(db, month);
       if (current === generation.current)
         setState({ month, status: "ready", ...next, error: null });

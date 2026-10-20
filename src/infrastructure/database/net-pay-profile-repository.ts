@@ -159,15 +159,20 @@ export async function saveContinuousNetPaySettings(
   const settings = validateMonthlyNetPaySettings(input.settings);
   if (settings.version !== 2) throw new Error("Das fortgeltende Netto-Profil fehlt.");
   return withImmediateTransaction(db, async (tx) => {
-    if (await tx.getFirstAsync("SELECT month FROM dev_test_backups WHERE month>=?", settings.month))
-      throw new Error("Im Testlabor ist für einen betroffenen Monat noch ein Testlauf offen.");
-    if (!(await tx.getFirstAsync("SELECT id FROM user_profile WHERE id='singleton'")))
-      throw new Error("Das Arbeitsprofil fehlt.");
     const timeline = await loadNetPayProfileTimeline(tx);
     if (canonicalize(timeline) !== canonicalize(input.expectedTimeline))
       throw new NetPayProfileConflictError();
-    const previous = timeline.find((row) => row.settings.month === settings.month) ?? null;
-    return writeNetPaySettings(tx, settings, previous);
+    const effective = timeline.length
+      ? settings
+      : validateMonthlyNetPaySettings({ ...settings, month: settings.month.slice(0, 4) + "-01" });
+    if (
+      await tx.getFirstAsync("SELECT month FROM dev_test_backups WHERE month>=?", effective.month)
+    )
+      throw new Error("Im Testlabor ist für einen betroffenen Monat noch ein Testlauf offen.");
+    if (!(await tx.getFirstAsync("SELECT id FROM user_profile WHERE id='singleton'")))
+      throw new Error("Das Arbeitsprofil fehlt.");
+    const previous = timeline.find((row) => row.settings.month === effective.month) ?? null;
+    return writeNetPaySettings(tx, effective, previous);
   });
 }
 

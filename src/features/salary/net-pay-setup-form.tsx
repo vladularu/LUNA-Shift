@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Text } from "@/ui/text";
 import { Keyboard, View } from "react-native";
-import { formatMonthTitle } from "@/engine/calendar";
+import { NetPayValidity } from "./net-pay-validity";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { NetPayPensionScheme } from "@/domain/net-pay-automation";
 import { NET_PAY_PENSION_OPTIONS, netPayPensionMaxOwnRate } from "@/domain/net-pay-pension-schemes";
@@ -60,13 +60,14 @@ export function NetPaySetupForm({
   onStepChange,
   renderLayout,
   allowSectionSwitch = false,
+  firstSetup = initial === null,
 }: {
   readonly month: string;
   readonly initial: MonthlyNetPaySettings | null;
   readonly worksInSaxony: boolean;
   readonly churchTaxDefaultPercent: 8 | 9;
   readonly busy: boolean;
-  readonly onSave: (settings: MonthlyNetPaySettings) => Promise<void>;
+  readonly onSave: (settings: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>;
   readonly section?: NetPaySetupSection;
   readonly showTitle?: boolean;
   readonly onStepChange?: (step: number) => void;
@@ -79,6 +80,7 @@ export function NetPaySetupForm({
     page: number;
   }) => ReactNode;
   readonly allowSectionSwitch?: boolean;
+  readonly firstSetup?: boolean;
 }) {
   const palette = usePalette();
   const [form, setForm] = useState(() => netPaySetupValues(initial, worksInSaxony));
@@ -88,6 +90,7 @@ export function NetPaySetupForm({
   const [details, setDetails] = useState(false);
   const [help, setHelp] = useState(false);
   const [healthExpanded, setHealthExpanded] = useState(false);
+  const [effectiveMonth, setEffectiveMonth] = useState(month);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [churchRate, setChurchRate] = useState<8 | 9>(
@@ -147,7 +150,8 @@ export function NetPaySetupForm({
           pensionEmployeeRate,
         );
         setSaving(true);
-        await onSave(value);
+        if (effectiveMonth === month) await onSave(value);
+        else await onSave(value, effectiveMonth);
         if (allowSectionSwitch) {
           setStep(-1);
           setDetails(false);
@@ -569,9 +573,13 @@ export function NetPaySetupForm({
             {STEPS[step]}
           </Text>
         ) : null}
-        {section || allowSectionSwitch ? (
-          <NetPayText>{`Gültig ab ${formatMonthTitle(month)}`}</NetPayText>
-        ) : null}
+        <NetPayValidity
+          month={month}
+          firstSetup={firstSetup}
+          value={effectiveMonth}
+          onChange={setEffectiveMonth}
+          disabled={locked}
+        />
       </View>
       <SurfaceCard style={{ padding: SPACING.md }}>{fields}</SurfaceCard>
       <FormStatus error={error} />
@@ -580,6 +588,7 @@ export function NetPaySetupForm({
   function discardEdit() {
     if (locked) return;
     setForm(netPaySetupValues(initial, worksInSaxony));
+    setEffectiveMonth(month);
     setPensionScheme(initial?.automation?.pensionScheme ?? null);
     setPensionEmployeeRate(
       initial?.automation?.pensionEmployeeRateBps == null

@@ -222,6 +222,7 @@ export function NetPayAutomaticEntryCard({
           key={`${month}:${view}`}
           month={month}
           initial={settings}
+          firstSetup={data.timeline.length === 0}
           allowSectionSwitch={view === "settings"}
           worksInSaxony={profile?.federalState === "SN"}
           churchTaxDefaultPercent={
@@ -250,8 +251,8 @@ export function NetPayAutomaticEntryCard({
               {content}
             </NetPaySheet>
           )}
-          onSave={async (value) => {
-            await data.save(value);
+          onSave={async (value, effectiveMonth) => {
+            await data.save(value, effectiveMonth);
             if (view === "setup")
               setDialog((current) => (current?.month === value.month ? null : current));
           }}
