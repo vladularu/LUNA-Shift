@@ -626,7 +626,24 @@ describe("sharing runtime", () => {
     f.cloud.supportsContentRights = vi.fn(async () => true);
     const runtime = createCalendarSharingRuntime(f.options);
     await runtime.start();
-    expect(f.cloud.fetch).toHaveBeenCalledWith(calendar.id, null);
+    expect(f.cloud.fetch).toHaveBeenCalledWith(calendar.id, null, undefined);
+  });
+  it("preserves persisted duration support across startup so the adapter can reuse the revision cursor", async () => {
+    const f = fixture({
+      initialCaches: [
+        {
+          accountId: account.id,
+          calendar: { ...calendar, contentVersion: 2, durationVersion: 1 },
+          entries: [],
+          fetchedAt: "2026-10-12T12:00:00Z",
+          visible: true,
+        },
+      ],
+    });
+    f.cloud.supportsContentRights = vi.fn(async () => true);
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(f.cloud.fetch).toHaveBeenCalledWith(calendar.id, calendar.revision, 1);
   });
   it("does not resume a restored source just because the server supports content rights", async () => {
     const f = fixture({ remote: [owner], bindings: [{ ...binding, enabled: false }] });
@@ -1420,5 +1437,54 @@ it("copies a valid invitation directly only when the native copy port exists", a
   await runtime.getController().shareInvitation(invite, "copy");
   expect(copyUrl).toHaveBeenCalledWith(invite.url);
   expect(f.options.shareUrl).not.toHaveBeenCalled();
+  runtime.stop();
+});
+
+it("publishes a ready shared calendar while another person's fetch is still pending", async () => {
+  const fast = { ...calendar, id: "fast", name: "Fast" };
+  const f = fixture({ remote: [calendar, fast] });
+  const normal = vi.mocked(f.cloud.fetch).getMockImplementation()!;
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  vi.mocked(f.cloud.fetch).mockImplementation(async (...args) => {
+    if (args[0] === calendar.id) await held;
+    return normal(...args);
+  });
+  const runtime = createCalendarSharingRuntime(f.options);
+  const starting = runtime.start();
+  await vi.waitFor(() =>
+    expect(runtime.getSnapshot().visibleCalendars.map((item) => item.calendar.id)).toContain(
+      "fast",
+    ),
+  );
+  expect(
+    runtime.getSnapshot().visibleCalendars.some((item) => item.calendar.id === calendar.id),
+  ).toBe(false);
+  release();
+  await starting;
+  expect(runtime.getSnapshot().visibleCalendars).toHaveLength(2);
+  runtime.stop();
+});
+
+it("invalidates a denied session before a slow sibling fetch completes", async () => {
+  const slow = { ...calendar, id: "slow" };
+  const f = fixture({ remote: [calendar, slow] });
+  const normal = vi.mocked(f.cloud.fetch).getMockImplementation()!;
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  vi.mocked(f.cloud.fetch).mockImplementation(async (...args) => {
+    if (args[0] === calendar.id) throw new SharingCloudError("SHARE_UNAUTHENTICATED");
+    await held;
+    return normal(...args);
+  });
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  expect(runtime.getController().status).toBe("signedOut");
+  expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+  release();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(runtime.getController().status).toBe("signedOut");
+  expect(runtime.getSnapshot().visibleCalendars).toHaveLength(0);
+  expect(f.local.cacheSnapshot).not.toHaveBeenCalled();
   runtime.stop();
 });

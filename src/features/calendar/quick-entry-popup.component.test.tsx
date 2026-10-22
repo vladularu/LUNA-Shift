@@ -1,4 +1,4 @@
-import { act, fireEvent, render, renderHook, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, renderHook, waitFor, within } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -123,6 +123,38 @@ async function renderCompact(
 }
 
 describe("QuickEntryPopup", () => {
+  it("replaces the fixed footer with accessible confirmation without moving the day card", async () => {
+    const screen = await renderCompact([existingShift], {
+      onDeleteEntry: jest.fn(async () => {}),
+    });
+    const popup = screen.getByTestId("quick-entry-popup");
+    expect(popup).toHaveStyle({ height: 118 });
+    await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
+
+    const footer = screen.getByTestId("quick-entry-footer");
+    expect(within(footer).getByRole("button", { name: "Nacht endgültig löschen" })).toBeEnabled();
+    expect(within(footer).getByRole("button", { name: "Löschen abbrechen" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Dienst hinzufügen" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Termin hinzufügen" })).toBeNull();
+    expect(popup).toHaveStyle({ height: 118 });
+    expect(popup).toHaveProp("pointerEvents", "auto");
+    expect(screen.getByTestId("quick-entry-scroll", { includeHiddenElements: true })).toHaveProp(
+      "accessibilityElementsHidden",
+      true,
+    );
+    expect(
+      within(
+        screen.getByTestId("quick-entry-scroll", { includeHiddenElements: true }),
+      ).queryByTestId("quick-entry-delete-confirmation", { includeHiddenElements: true }),
+    ).toBeNull();
+
+    await fireEvent.press(within(footer).getByRole("button", { name: "Löschen abbrechen" }));
+    expect(within(footer).getByRole("button", { name: "Dienst hinzufügen" })).toBeEnabled();
+    expect(within(footer).getByRole("button", { name: "Termin hinzufügen" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeEnabled();
+    expect(popup).toHaveStyle({ height: 118 });
+  });
+
   it("reveals delete on swipe, cancels locally and keeps the popup open after confirmed deletion", async () => {
     const onDeleteEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>().mockResolvedValue();
     const onClose = jest.fn();
@@ -166,6 +198,24 @@ describe("QuickEntryPopup", () => {
     await screen.updateEntries([]);
     expect(screen.queryByTestId("quick-entry-delete-confirmation")).toBeNull();
     expect(onDeleteEntry).not.toHaveBeenCalled();
+  });
+
+  it("does not reuse the taller error footer when a deletion is cancelled and requested again", async () => {
+    const onDeleteEntry = jest
+      .fn<(entry: CalendarEntry) => Promise<void>>()
+      .mockRejectedValue(new Error("offline"));
+    const screen = await renderCompact([existingShift], { onDeleteEntry });
+    await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
+    await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+    await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
+    });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
+    await fireEvent.press(screen.getByRole("button", { name: "Löschen abbrechen" }));
+    await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 118 });
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("guards two confirmations in the same frame and clears selection when leaving the day", async () => {
@@ -238,6 +288,13 @@ describe("QuickEntryPopup", () => {
     });
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.getByTestId("quick-entry-delete-confirmation")).toBeTruthy();
+    const footer = screen.getByTestId("quick-entry-footer");
+    expect(within(footer).getByRole("alert")).toBeTruthy();
+    await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
+    });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
+    expect(within(footer).getByRole("button", { name: "Nacht endgültig löschen" })).toBeEnabled();
     expect(deletionFeedback).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
     expect(onDeleteEntry).toHaveBeenCalledTimes(2);

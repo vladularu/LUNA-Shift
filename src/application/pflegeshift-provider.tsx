@@ -1,3 +1,4 @@
+import { createEntryNotificationReconciler } from "./entry-notification-queue";
 import React, {
   createContext,
   useCallback,
@@ -148,6 +149,11 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     setNotificationWarning({ id: ++notificationWarningSequence.current, message });
   }, []);
 
+  const notificationQueue = useMemo(
+    () => createEntryNotificationReconciler(notifications, diagnostics),
+    [notifications, diagnostics],
+  );
+
   const clearNotificationWarning = useCallback((id: number) => {
     setNotificationWarning((current) => (current?.id === id ? null : current));
   }, []);
@@ -260,34 +266,28 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     async (input: SaveShiftInput) => {
       const saved = await repository.saveShift(input);
       setEntries((current) => upsertSortedCalendarEntry(current, saved));
-      try {
-        await notifications.syncEntry(saved, profile?.timeZone ?? "Europe/Berlin");
-      } catch (notificationError) {
-        diagnostics.record("notifications", "SHIFT_NOTIFICATION_SYNC_FAILED", notificationError);
-        publishNotificationWarning("Gespeichert. Erinnerung konnte nicht eingerichtet werden.");
-      }
+      notificationQueue.sync(
+        saved,
+        profile?.timeZone ?? "Europe/Berlin",
+        publishNotificationWarning,
+      );
       return saved;
     },
-    [diagnostics, notifications, profile, publishNotificationWarning, repository],
+    [notificationQueue, profile?.timeZone, publishNotificationWarning, repository],
   );
 
   const upsertAppointment = useCallback(
     async (input: SaveAppointmentInput) => {
       const saved = await repository.saveAppointment(input);
       setEntries((current) => upsertSortedCalendarEntry(current, saved));
-      try {
-        await notifications.syncEntry(saved, profile?.timeZone ?? "Europe/Berlin");
-      } catch (notificationError) {
-        diagnostics.record(
-          "notifications",
-          "APPOINTMENT_NOTIFICATION_SYNC_FAILED",
-          notificationError,
-        );
-        publishNotificationWarning("Gespeichert. Erinnerung konnte nicht eingerichtet werden.");
-      }
+      notificationQueue.sync(
+        saved,
+        profile?.timeZone ?? "Europe/Berlin",
+        publishNotificationWarning,
+      );
       return saved;
     },
-    [diagnostics, notifications, profile, publishNotificationWarning, repository],
+    [notificationQueue, profile?.timeZone, publishNotificationWarning, repository],
   );
 
   const removeEntry = useCallback(
@@ -295,25 +295,24 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
       await repository.deleteCalendarEntry(entry);
       recordDeletion(entry);
       setEntries((current) => current.filter((item) => item.id !== entry.id));
-      try {
-        await notifications.cancelEntry(entry);
-      } catch (notificationError) {
-        diagnostics.record("notifications", "ENTRY_NOTIFICATION_CANCEL_FAILED", notificationError);
-        publishNotificationWarning(
-          "Gelöscht. Eine geplante Erinnerung konnte nicht entfernt werden.",
-        );
-      }
+      notificationQueue.cancel(entry, publishNotificationWarning);
     },
-    [diagnostics, notifications, publishNotificationWarning, recordDeletion, repository],
+    [notificationQueue, publishNotificationWarning, recordDeletion, repository],
   );
 
   const restoreEntry = useCallback(
     async (entry: CalendarEntry) => {
       const restored = await repository.restoreCalendarEntry(entry);
       setEntries((current) => upsertSortedCalendarEntry(current, restored));
+      notificationQueue.sync(
+        restored,
+        profile?.timeZone ?? "Europe/Berlin",
+        publishNotificationWarning,
+        true,
+      );
       return restored;
     },
-    [repository],
+    [notificationQueue, profile?.timeZone, publishNotificationWarning, repository],
   );
 
   const upsertTariffDecision = useCallback(

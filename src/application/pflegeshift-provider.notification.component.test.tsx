@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DataLoadFailure } from "@/domain/data-load-failure";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
@@ -507,7 +508,7 @@ describe("PflegeShiftProvider notification feedback", () => {
     ["2026-12", "2027-01"],
     ["2027-01", "2026-12"],
   ])(
-    "keeps calendar data while loading %s to %s without reloading metadata or reminders",
+    "keeps cached calendar and reports ready while loading %s to %s without reloading metadata or reminders",
     async (from, to) => {
       const pending = deferred<readonly CalendarEntry[]>();
       jest
@@ -528,7 +529,7 @@ describe("PflegeShiftProvider notification feedback", () => {
         </PflegeShiftProvider>,
       );
       expect(screen.getByText("Kalender bereit")).toBeTruthy();
-      expect(screen.getByText("Auswertung wartet")).toBeTruthy();
+      expect(screen.getByText("Auswertung bereit")).toBeTruthy();
       expect(screen.getByText("Intensivstation")).toBeTruthy();
       expect(repository.loadProfile).toHaveBeenCalledTimes(1);
       expect(repository.listTemplates).toHaveBeenCalledTimes(1);
@@ -714,4 +715,30 @@ describe("PflegeShiftProvider notification feedback", () => {
     expect(screen.queryByText("Intensivstation")).toBeNull();
     expect(screen.getByText("Neues Fenster")).toBeTruthy();
   });
+});
+
+function CompletionHarness() {
+  const { upsertShift } = usePflegeShiftEntries();
+  const [done, setDone] = useState(false);
+  return (
+    <>
+      <Text>{done ? "Lokal gespeichert" : "Bereit"}</Text>
+      <Pressable onPress={() => void upsertShift(mockSavedShift).then(() => setDone(true))}>
+        <Text>Direkt speichern</Text>
+      </Pressable>
+    </>
+  );
+}
+it("resolves a local save while native reminder scheduling is still pending", async () => {
+  const pending = deferred<void>();
+  jest.mocked(repository.saveShift).mockResolvedValue(mockSavedShift);
+  jest.mocked(notifications.syncEntry).mockReturnValue(pending.promise);
+  const view = await render(
+    <PflegeShiftProvider activeMonth="2026-08" ports={ports}>
+      <CompletionHarness />
+    </PflegeShiftProvider>,
+  );
+  await fireEvent.press(view.getByText("Direkt speichern"));
+  await waitFor(() => expect(view.getByText("Lokal gespeichert")).toBeTruthy());
+  await act(async () => pending.resolve());
 });

@@ -616,3 +616,24 @@ it("changes only the selected received calendar color directly from the overview
   expect(c.setColor).toHaveBeenLastCalledWith("second", color);
   expect(c.deleteCalendar).not.toHaveBeenCalled();
 });
+
+it("keeps visibility switches enabled and the page free of a global spinner during a local write", async () => {
+  let resolve!: () => void;
+  const pending = new Promise<void>((done) => {
+    resolve = done;
+  });
+  const c = controller({
+    calendars: [foreign],
+    setVisible: jest.fn<SharingController["setVisible"]>().mockReturnValue(pending),
+  });
+  const screen = await render(<CalendarSharingScreen controller={c} />);
+  const toggle = screen.getByLabelText("Sams Plan anzeigen");
+  await fireEvent(toggle, "valueChange", false);
+  expect(screen.queryByText("Wird bearbeitet")).toBeNull();
+  expect(screen.getByLabelText("Sams Plan anzeigen").props.accessibilityState?.disabled).not.toBe(
+    true,
+  );
+  await fireEvent(screen.getByLabelText("Sams Plan anzeigen"), "valueChange", true);
+  expect(c.setVisible).toHaveBeenCalledTimes(2);
+  await act(async () => resolve());
+});

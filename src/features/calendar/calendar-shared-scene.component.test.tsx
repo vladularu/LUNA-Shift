@@ -308,3 +308,15 @@ describe("shared live calendar scene", () => {
     expect(screen.getByTestId("calendar-custom-background", hidden)).toBe(photo);
   });
 });
+
+it("makes the selected quick-stamp day distinct and gives empty days a readable light-mode outline", async () => {
+  const screen = await render(<Tree stampMode />);
+  expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({
+    borderWidth: 2,
+    borderColor: LIGHT_PALETTE.textMuted,
+  });
+  expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
+    borderWidth: 1.5,
+    borderColor: LIGHT_PALETTE.textMuted,
+  });
+});

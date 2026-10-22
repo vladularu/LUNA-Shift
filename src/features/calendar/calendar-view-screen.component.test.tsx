@@ -124,12 +124,13 @@ describe("CalendarViewScreen", () => {
     const screen = await renderView();
     const singleLineProp = ["number", "OfLines"].join("");
 
-    for (const title of ["Früh", "Spät", "Nacht", "Tag", "Urlaub"]) {
-      expect(screen.getByText(title)).toBeTruthy();
+    for (const title of ["Früh", "Spät", "Nacht", "Frei"]) {
+      expect(screen.getAllByText(title).length).toBeGreaterThan(0);
     }
-    expect(screen.getByText("Früh")).toHaveStyle({ color: "#FFFFFF", fontWeight: "500" });
-    expect(screen.getByText("Früh").parent?.parent).toHaveStyle({ borderRadius: 2 });
-    expect(screen.getByText("Früh")).toHaveProp(singleLineProp, 1);
+    const early = screen.getAllByText("Früh")[0];
+    expect(early).toHaveStyle({ color: "#FFFFFF", fontWeight: "500" });
+    expect(early.parent?.parent).toHaveStyle({ borderRadius: 2 });
+    expect(early).toHaveProp(singleLineProp, 1);
   });
 
   it("previews short labels independently from symbols", async () => {
@@ -137,14 +138,13 @@ describe("CalendarViewScreen", () => {
 
     const screen = await renderView();
 
-    for (const [index, label] of ["F", "S", "N", "T", "U"].entries()) {
-      expect(
-        within(
-          screen.getByLabelText(
-            `2026-10-0${index + 1}, ${["Früh", "Spät", "Nacht", "Tag", "Urlaub"][index]}`,
-          ),
-        ).getByText(label),
-      ).toBeTruthy();
+    for (const [date, title, label] of [
+      ["2026-10-06", "Früh", "F"],
+      ["2026-10-01", "Spät", "S"],
+      ["2026-10-02", "Nacht", "N"],
+      ["2026-10-04", "Frei", "F"],
+    ]) {
+      expect(within(screen.getByLabelText(`${date}, ${title}`)).getByText(label)).toBeTruthy();
     }
     expect(screen.queryByTestId("shift-symbol-rise")).toBeNull();
   });
@@ -159,8 +159,9 @@ describe("CalendarViewScreen", () => {
     expect(screen.getByTestId("calendar-date-marker-2026-10-01", hidden)).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Dienste & Abwesenheiten" })).toBeTruthy();
     expect(screen.getByText("Dienstanzeige")).toBeTruthy();
-    expect(screen.getByText("GT")).toBeTruthy();
-    expect(screen.getByText("Feiertag (Beispiel)")).toBeTruthy();
+    expect(screen.getAllByText("Frei")).toHaveLength(4);
+    expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
+    expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
   });
 
   it("hides preview shifts when services are disabled", async () => {
@@ -169,8 +170,8 @@ describe("CalendarViewScreen", () => {
     expect(screen.queryByText("Früh")).toBeNull();
     expect(screen.queryByText("Urlaub")).toBeNull();
     expect(screen.getByLabelText("2026-10-01, Keine Einträge")).toBeTruthy();
-    expect(screen.getByText("• Termin (Beispiel)")).toBeTruthy();
-    expect(screen.getByText("Feiertag (Beispiel)")).toBeTruthy();
+    expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
+    expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
   });
 
   it("tracks light and dark calendar surfaces", async () => {
@@ -189,8 +190,8 @@ describe("CalendarViewScreen", () => {
 
     const screen = await renderView();
 
-    for (const symbol of ["rise", "sun", "moon", "home", "palm"]) {
-      expect(screen.getByTestId(`shift-symbol-${symbol}`)).toBeTruthy();
+    for (const symbol of ["rise", "sun", "moon", "star"]) {
+      expect(screen.getAllByTestId(`shift-symbol-${symbol}`).length).toBeGreaterThan(0);
     }
     expect(screen.queryByText("Früh")).toBeNull();
   });
@@ -205,7 +206,7 @@ describe("CalendarViewScreen", () => {
   it("shows total duration instead of start time in the preview", async () => {
     const screen = await renderView();
 
-    expect(screen.getAllByText("8:00 h")).toHaveLength(4);
+    expect(screen.getAllByText("7:30 h")).toHaveLength(7);
     expect(screen.queryByText("06:00")).toBeNull();
   });
 
@@ -214,7 +215,7 @@ describe("CalendarViewScreen", () => {
 
     const screen = await renderView();
 
-    expect(screen.getByText("06:00 · 8:00 h")).toBeTruthy();
+    expect(screen.getAllByText("06:00 · 7:30 h")).toHaveLength(2);
   });
 
   it("shows only the start time when total duration is disabled", async () => {
@@ -223,8 +224,8 @@ describe("CalendarViewScreen", () => {
 
     const screen = await renderView();
 
-    expect(screen.getByText("06:00")).toBeTruthy();
-    expect(screen.queryByText("8:00 h")).toBeNull();
+    expect(screen.getAllByText("06:00")).toHaveLength(2);
+    expect(screen.queryByText("7:30 h")).toBeNull();
   });
 
   it("hides the detail row when both details are disabled", async () => {
@@ -233,29 +234,29 @@ describe("CalendarViewScreen", () => {
     const screen = await renderView();
 
     expect(screen.queryByText("06:00")).toBeNull();
-    expect(screen.queryByText("8:00 h")).toBeNull();
+    expect(screen.queryByText("7:30 h")).toBeNull();
     expect(screen.queryByText("GT")).toBeNull();
   });
-  it("updates all three content filters in the shared preview", async () => {
+  it("keeps example appointments and holidays absent when their filters change", async () => {
     const screen = await renderView();
-    expect(screen.getByText("Früh")).toBeTruthy();
-    expect(screen.getByText("• Termin (Beispiel)")).toBeTruthy();
-    expect(screen.getByText("Feiertag (Beispiel)")).toBeTruthy();
+    expect(screen.getAllByText("Früh")).toHaveLength(2);
+    expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
+    expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
     mockPreferences.showAppointments = false;
     mockPreferences.showHolidays = false;
     await screen.rerender(page());
     expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
     expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
-    expect(screen.getByText("Früh")).toBeTruthy();
+    expect(screen.getAllByText("Früh")).toHaveLength(2);
     mockPreferences.showShifts = false;
     await screen.rerender(page());
     expect(screen.queryByText("Früh")).toBeNull();
-    expect(screen.queryByText("Urlaub")).toBeNull();
+    expect(screen.queryByText("Frei")).toBeNull();
     mockPreferences.showShifts = true;
     mockPreferences.showAppointments = true;
     mockPreferences.showHolidays = true;
     await screen.rerender(page());
-    expect(screen.getByText("Urlaub")).toBeTruthy();
-    expect(screen.getByText("• Termin (Beispiel)")).toBeTruthy();
+    expect(screen.getAllByText("Frei")).toHaveLength(4);
+    expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
   });
 });

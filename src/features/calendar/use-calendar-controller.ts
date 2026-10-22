@@ -84,14 +84,22 @@ export function useCalendarController({
     const id = ++epoch.current;
     animationEpoch.value = id;
     const changed = previousMode.current !== mode;
-    previousMode.current = mode;
     const end = mode === "MONTH" ? 1 : 0;
     cancelAnimation(progress);
-    onTransitionStart(mode);
-    if (!changed || !active || !foreground || reduced || !ready) {
+    const animate = changed && active && foreground && !reduced;
+    // An external jump first commits its destination and waits for native
+    // position acknowledgement. Do not consume the mode change while preparing.
+    if (animate && !ready) {
+      transitionInFlight.current = true;
+      setBusy(true);
+    } else if (!animate) {
+      previousMode.current = mode;
+      onTransitionStart(mode);
       progress.value = end;
       complete(id);
     } else {
+      previousMode.current = mode;
+      onTransitionStart(mode);
       transitionInFlight.current = true;
       setBusy(true);
       progress.value = withTiming(
