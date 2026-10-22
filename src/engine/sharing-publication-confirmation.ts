@@ -15,6 +15,7 @@ export function sharingProjectionSignature(entries: readonly SharedCalendarEntry
           entry.symbol,
           entry.kind ?? null,
           entry.note ?? null,
+          entry.breakMinutes ?? null,
         ]),
       )
       .sort(),

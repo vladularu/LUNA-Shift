@@ -3,7 +3,6 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import type { ActiveMonthCoordinator } from "@/navigation/active-month";
 import { clampDateToMonth } from "./calendar-metrics";
 import { monthAtPagerOffset, shouldRecenterMonthWindow } from "./month-window";
-import { selectionFeedback } from "@/ui/haptics";
 import { calendarPerformance } from "@/application/calendar-performance";
 
 export function useCalendarPaging({
@@ -89,7 +88,6 @@ export function useCalendarPaging({
         setSelectionVisible(false);
       }
       if (shouldRecenterMonthWindow(months, month)) setMonthAnchor(month);
-      if (didChangeMonth) selectionFeedback();
     },
     [
       eventMonth,

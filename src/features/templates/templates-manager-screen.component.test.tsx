@@ -83,10 +83,10 @@ describe("TemplatesManagerScreen", () => {
     expect(screen.getByTestId("template-manager-list")).toHaveStyle({
       borderRadius: RADII.card,
     });
-    expect(screen.getByTestId("template-manager-row-early")).toHaveStyle({ minHeight: 72 });
+    expect(screen.getByTestId("template-manager-row-early")).toHaveStyle({ minHeight: 68 });
     expect(screen.getByTestId("template-manager-row-early-badge")).toHaveStyle({
-      width: 38,
-      height: 38,
+      width: 30,
+      height: 30,
       borderRadius: RADII.pill,
     });
     expect(screen.queryByRole("button", { name: "Früh bearbeiten" })).toBeNull();

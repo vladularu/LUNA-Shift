@@ -1,3 +1,5 @@
+import { calendarDataMonths } from "./calendar-render-data";
+import { useCalendarMonthRenderer } from "./use-calendar-month-renderer";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { useSharedCalendarDays } from "./use-shared-calendar-days";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
@@ -24,8 +26,9 @@ import { calendarPerformance } from "@/application/calendar-performance";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
 import { CalendarHeader } from "@/features/calendar/calendar-header";
 import { CalendarMonthBackground } from "./calendar-background";
-import { SharedCalendarScene, SharedCalendarMonth } from "./calendar-shared-scene";
+import { SharedCalendarScene } from "./calendar-shared-scene";
 import { CalendarStablePager } from "./calendar-stable-pager";
+import { calendarPageTarget } from "./calendar-page-window";
 import { useCalendarController } from "./use-calendar-controller";
 import { calendarDayPressAction } from "@/features/calendar/calendar-display";
 import * as CalendarHolidays from "@/features/calendar/calendar-holidays";
@@ -101,23 +104,24 @@ export function CalendarScreen() {
   const initialDate =
     targetMonth === currentMonth(timeZone) ? today(timeZone) : `${targetMonth}-01`;
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [, setSelectionVisible] = useState(false);
+  const [selectionVisible, setSelectionVisible] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(targetMonth);
-  const visibleYear = visibleMonth.slice(0, 4);
-  const dataMonths = useMemo(() => {
-    const january = `${visibleYear}-01`;
-    return Array.from({ length: 14 }, (_, index) => addMonths(january, index - 1));
-  }, [visibleYear]);
   useCalendarPerformance(isFocused, visibleMonth, preferences.viewMode);
   const [pageHeight, setPageHeight] = useState(0);
   const [pagerResetRevision, setPagerResetRevision] = useState(0);
+  const [positionedTarget, setPositionedTarget] = useState<string | null>(null);
   const controller = useCalendarController({
     month: visibleMonth,
     mode: preferences.viewMode,
     active: isFocused,
-    ready: pageHeight > 0,
+    ready:
+      pageHeight > 0 &&
+      positionedTarget ===
+        calendarPageTarget(visibleMonth, pagerResetRevision, months[0], pageHeight),
     revision: pagerResetRevision,
   });
+  const dataYear = controller.displayMonth.slice(0, 4);
+  const dataMonths = useMemo(() => calendarDataMonths(dataYear), [dataYear]);
   const isTransitionInFlight = controller.isTransitionInFlight;
   const tryBeginTransition = controller.tryBeginTransition;
   const monthSelectionPending = useRef(false);
@@ -136,7 +140,7 @@ export function CalendarScreen() {
   const [quickPopup, setQuickPopup] = useState<QuickPopupState | null>(null);
   const dayHighlightOpacity = useSharedValue(1);
   const closeQuickPopup = useCallback(() => setQuickPopup(null), []);
-  const { sharedEntriesByDate } = useSharedCalendarDays(timeZone, visibleMonth);
+  const { sharedEntriesByDate } = useSharedCalendarDays(timeZone, controller.displayMonth);
   const popupRevision = useRef(0);
   const pendingSelectedDate = useRef<string | null>(null);
   const settledMonth = useRef(targetMonth);
@@ -168,8 +172,16 @@ export function CalendarScreen() {
     setPlannerError(null);
   }, [isFocused]);
 
-  const entryIndex = useMeasuredCalendarEntries(
+  const { stamp: saveStampAction, displayEntries } = useQuickStampAction({
     entries,
+    removeEntry,
+    upsertShift,
+    onBusyChange: setPlannerBusy,
+    onError: (message) => setPlannerError(message || null),
+  });
+
+  const entryIndex = useMeasuredCalendarEntries(
+    displayEntries,
     dataMonths,
     preferences.showAppointments,
     preferences.showShifts,
@@ -187,14 +199,6 @@ export function CalendarScreen() {
     if (profile === null || quickPopup === null) return undefined;
     return CalendarHolidays.holidayNameForDate(quickPopup.date, profile, ruleResolver);
   }, [profile, quickPopup, ruleResolver]);
-
-  const saveStampAction = useQuickStampAction({
-    entries,
-    removeEntry,
-    upsertShift,
-    onBusyChange: setPlannerBusy,
-    onError: (message) => setPlannerError(message || null),
-  });
 
   const stampDate = useCallback(
     async (date: string) => {
@@ -342,7 +346,6 @@ export function CalendarScreen() {
     setStampTool(null);
     setHeaderTransition("CROSSFADE");
     preferences.setViewMode("YEAR");
-    selectionFeedback();
   }, [
     activeMonthCoordinator,
     controller.displayMonth,
@@ -479,50 +482,29 @@ export function CalendarScreen() {
       settledMonth.current = nextMonth;
       setSelectedDate((date) => clampDateToMonth(date, nextMonth));
       setSelectionVisible(false);
-      selectionFeedback();
     },
     [activeMonthCoordinator, isTransitionInFlight, visibleMonth],
   );
-  const renderMonth = useCallback(
-    (item: string) =>
-      profile ? (
-        <SharedCalendarMonth
-          accessibilityVisible={isFocused && item === visibleMonth}
-          entriesByDate={entriesByDate}
-          sharedEntriesByDate={sharedEntriesByDate}
-          display={preferences}
-          month={item}
-          onSelectDate={selectDate}
-          pageHeight={pageHeight}
-          profile={profile}
-          ruleResolver={ruleResolver}
-          selectedDate={isFocused ? (quickPopup?.date ?? null) : null}
-          selectedDayOpacity={dayHighlightOpacity}
-          showHolidays={preferences.showHolidays}
-          testData={testMonths.includes(item)}
-          stampMode={plannerMode}
-          stampTransitionProgress={plannerTransition}
-          stampToolLabel={stampTool?.label ?? null}
-        />
-      ) : null,
-    [
-      entriesByDate,
-      sharedEntriesByDate,
-      dayHighlightOpacity,
-      isFocused,
-      pageHeight,
-      preferences,
-      plannerMode,
-      plannerTransition,
-      stampTool,
-      profile,
-      ruleResolver,
-      selectDate,
-      quickPopup,
-      testMonths,
-      visibleMonth,
-    ],
-  );
+  const renderMonth = useCalendarMonthRenderer({
+    entriesByDate,
+    sharedEntriesByDate,
+    display: preferences,
+    profile,
+    onSelectDate: selectDate,
+    pageHeight,
+    ruleResolver,
+    selectedDate: isFocused
+      ? (quickPopup?.date ?? (plannerMode && selectionVisible ? selectedDate : null))
+      : null,
+    selectedDayOpacity: dayHighlightOpacity,
+    showHolidays: preferences.showHolidays,
+    stampMode: plannerMode,
+    stampTransitionProgress: plannerTransition,
+    stampToolLabel: stampTool?.label ?? null,
+    testMonths,
+    isFocused,
+    visibleMonth,
+  });
 
   if (ready && error) return <LoadFailureView message={error} onRetry={() => void reload()} />;
   if (profile === null) return <LoadingView />;
@@ -604,6 +586,8 @@ export function CalendarScreen() {
                 height={pageHeight}
                 revision={pagerResetRevision}
                 enabled={preferences.viewMode === "MONTH" && !todayScrollActive}
+                transitioning={controller.busy}
+                onPositioned={setPositionedTarget}
                 onSettled={finishPaging}
                 onBeginDrag={() => {
                   calendarPerformance.begin("scroll-begin", visibleMonth);

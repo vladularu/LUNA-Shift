@@ -74,7 +74,11 @@ export interface SharingCloudPort {
     readonly publishedAt: string;
   }>;
   listCalendars(): Promise<readonly CloudSharedCalendar[]>;
-  fetch(calendarId: string, afterRevision: number | null): Promise<SharedCalendarSnapshot>;
+  fetch(
+    calendarId: string,
+    afterRevision: number | null,
+    cachedDurationVersion?: 1,
+  ): Promise<SharedCalendarSnapshot>;
   createInvite(
     calendarId: string,
     mutationId: string,

@@ -1,6 +1,6 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Pressable, Text, StyleSheet } from "react-native";
 import type { UserProfile } from "@/domain/types";
 import { createMonthWindow } from "./month-window";
@@ -8,6 +8,8 @@ import { CalendarStablePager } from "./calendar-stable-pager";
 import { SharedCalendarMonth, SharedCalendarScene } from "./calendar-shared-scene";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { PROTOTYPE_MONTH_NAMES } from "./calendar-prototype-layout";
+import { useCalendarController } from "./use-calendar-controller";
+import { calendarPageTarget } from "./calendar-page-window";
 
 const profile = {
   timeZone: "Europe/Berlin",
@@ -23,6 +25,13 @@ function Harness() {
   const [mode, setMode] = useState<"MONTH" | "YEAR">("MONTH");
   const [revision, setRevision] = useState(0);
   const [months] = useState(() => createMonthWindow("2026-09", 24, 36));
+  const [positioned, setPositioned] = useState<string | null>(null);
+  const controller = useCalendarController({
+    month,
+    mode,
+    active: true,
+    ready: positioned === calendarPageTarget(month, revision, months[0], 700),
+  });
   return (
     <>
       <Text testID="heading">
@@ -43,6 +52,7 @@ function Harness() {
         }}
       />
       <SharedCalendarScene
+        controller={controller}
         month={month}
         viewMode={mode}
         active
@@ -59,6 +69,8 @@ function Harness() {
           months={months}
           height={700}
           enabled={mode === "MONTH"}
+          transitioning={controller.busy}
+          onPositioned={setPositioned}
           revision={revision}
           onBeginDrag={noop}
           onSettled={(e) => setMonth(months[Math.round(e.nativeEvent.contentOffset.y / 700)])}
@@ -111,8 +123,10 @@ describe("permanent calendar slots with the real shared scene", () => {
           screen.getByTestId(`calendar-date-marker-${month}-01`, { includeHiddenElements: true }),
         ).toBe(glyphs[i]);
       });
-      expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
-        5,
+      await waitFor(() =>
+        expect(
+          screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }),
+        ).toHaveLength(5),
       );
       previousIndex = index;
     }
@@ -294,9 +308,129 @@ describe("permanent calendar slots with the real shared scene", () => {
         within(screen.getByTestId("calendar-slot-0")).getByTestId(`shared-month-${month}`),
       ).toBeTruthy();
       expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
-      expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
-        5,
+      await waitFor(() =>
+        expect(
+          screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }),
+        ).toHaveLength(5),
       );
     }
   }, 20_000);
+});
+
+function TrackedMonth({ month, mounted }: { month: string; mounted: string[] }) {
+  useLayoutEffect(() => {
+    mounted.push(month);
+  }, [month, mounted]);
+  return <Text>{month}</Text>;
+}
+
+it("retains prepared neighbours through year mode without rebuilding their native bodies", async () => {
+  const props = {
+    month: "2026-09",
+    months: createMonthWindow("2026-09", 24, 36),
+    height: 700,
+    revision: 0,
+    renderMonth: (month: string) => <Text>{month}</Text>,
+    onBeginDrag: noop,
+    onSettled: noop,
+  };
+  const screen = await render(<CalendarStablePager {...props} enabled />);
+  const before = screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true });
+  await screen.rerender(<CalendarStablePager {...props} enabled={false} transitioning />);
+  expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toEqual(before);
+  await screen.rerender(<CalendarStablePager {...props} enabled transitioning />);
+  expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toEqual(before);
+  expect(screen.getByTestId("calendar-month-pager").props.scrollEnabled).toBe(false);
+  await screen.rerender(<CalendarStablePager {...props} enabled />);
+  expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toEqual(before);
+});
+
+it("commits only the destination and defers neighbour mounts until the real morph completion", async () => {
+  const frames = new Map<number, FrameRequestCallback>();
+  let sequence = 0;
+  const frame = jest.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback) => {
+    frames.set(++sequence, callback);
+    return sequence;
+  });
+  const cancel = jest.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+    if (typeof id === "number") frames.delete(id);
+  });
+  const flushFrame = () =>
+    act(async () => {
+      const pending = [...frames.values()];
+      frames.clear();
+      for (const callback of pending) callback(0);
+    });
+  const mounted: string[] = [];
+  const onPositioned = jest.fn();
+  const props = {
+    month: "2026-09",
+    months: createMonthWindow("2026-09", 24, 36),
+    height: 700,
+    revision: 0,
+    renderMonth: (month: string) => <TrackedMonth month={month} mounted={mounted} />,
+    onBeginDrag: noop,
+    onSettled: noop,
+    onPositioned,
+  };
+  try {
+    const screen = await render(<CalendarStablePager {...props} enabled={false} />);
+    expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
+      1,
+    );
+    mounted.length = 0;
+    await screen.rerender(<CalendarStablePager {...props} month="2026-01" enabled transitioning />);
+    expect(within(screen.getByTestId("calendar-slot-0")).getByText("2026-01")).toBeTruthy();
+    expect(mounted).toEqual(["2026-01"]);
+    const destination = screen.getByTestId("calendar-slot-0");
+    for (let i = 0; i < 5; i++) await flushFrame();
+    expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
+      1,
+    );
+    expect(mounted).toEqual(["2026-01"]);
+    await fireEvent.scroll(screen.getByTestId("calendar-month-pager"), {
+      nativeEvent: { contentOffset: { x: 0, y: 16 * 700 } },
+    });
+    expect(screen.getByTestId("calendar-month-pager").props.scrollEnabled).toBe(false);
+    await screen.rerender(<CalendarStablePager {...props} month="2026-01" enabled />);
+    await flushFrame();
+    expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
+      5,
+    );
+    expect(screen.getByTestId("calendar-slot-0")).toBe(destination);
+    expect(mounted.filter((month) => month === "2026-01")).toHaveLength(1);
+    expect(screen.getByTestId("calendar-month-pager").props.scrollEnabled).toBe(true);
+
+    // A new transition cancels preparation already scheduled by the previous render.
+    await screen.rerender(<CalendarStablePager {...props} month="2026-05" enabled />);
+    await screen.rerender(<CalendarStablePager {...props} month="2026-05" enabled transitioning />);
+    const during = [...mounted];
+    await flushFrame();
+    expect(mounted).toEqual(during);
+
+    // The next destination supersedes both old native position and deferred work.
+    await screen.rerender(<CalendarStablePager {...props} month="2027-01" enabled transitioning />);
+    await flushFrame();
+    expect(within(screen.getByTestId("calendar-slot-0")).getByText("2027-01")).toBeTruthy();
+    onPositioned.mockClear();
+    await fireEvent.scroll(screen.getByTestId("calendar-month-pager"), {
+      nativeEvent: { contentOffset: { x: 0, y: 20 * 700 } },
+    });
+    expect(onPositioned).not.toHaveBeenCalled();
+    await screen.rerender(<CalendarStablePager {...props} month="2027-01" enabled />);
+    expect(screen.getByTestId("calendar-month-pager").props.scrollEnabled).toBe(false);
+    await fireEvent.scroll(screen.getByTestId("calendar-month-pager"), {
+      nativeEvent: { contentOffset: { x: 0, y: 28 * 700 } },
+    });
+    expect(onPositioned).toHaveBeenCalledWith(
+      calendarPageTarget("2027-01", 0, props.months[0], 700),
+    );
+    await fireEvent(screen.getByTestId("calendar-month-pager"), "scrollBeginDrag");
+    expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
+      5,
+    );
+  } finally {
+    frame.mockRestore();
+    cancel.mockRestore();
+  }
 });

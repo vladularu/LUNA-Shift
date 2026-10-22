@@ -1,6 +1,6 @@
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
-import { createContext, use, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, memo, use, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -26,6 +26,8 @@ import {
   QUICK_PLANNER_EASING,
   quickPlannerTransitionDuration,
 } from "./quick-planner-control-motion";
+
+import { calendarMonthRows } from "./calendar-render-data";
 
 interface SceneValue {
   progress: SharedValue<number>;
@@ -109,22 +111,17 @@ function CalendarSceneContent({
         }}
       >
         {showBackground ? <CalendarMonthBackground progress={progress} /> : null}
-        <View
-          testID="calendar-year-overview-shell"
-          style={[StyleSheet.absoluteFill, { opacity: yearVisible ? 1 : 0 }]}
-          pointerEvents={viewMode === "YEAR" && !busy ? "auto" : "none"}
-          accessibilityElementsHidden={viewMode !== "YEAR"}
-          importantForAccessibility={viewMode === "YEAR" ? "auto" : "no-hide-descendants"}
-        >
-          <PrototypeYear
-            layouts={layouts}
-            selectedMonth={month}
-            onSelect={onSelectMonth}
-            progress={progress}
-            referenceMonth={referenceMonth}
-            entriesByDate={entriesByDate}
-          />
-        </View>
+        <CalendarYearOverview
+          visible={yearVisible}
+          busy={busy}
+          mode={viewMode}
+          layouts={layouts}
+          selectedMonth={month}
+          onSelect={onSelectMonth}
+          progress={progress}
+          referenceMonth={referenceMonth}
+          entriesByDate={entriesByDate}
+        />
         <View
           style={styles.fill}
           pointerEvents={viewMode === "MONTH" && !busy ? "auto" : "none"}
@@ -136,6 +133,44 @@ function CalendarSceneContent({
       </View>
     </Scene>
   );
+}
+
+// Retain the moving glyphs, but freeze their React data while the year is hidden.
+const CalendarYearOverview = memo(
+  function CalendarYearOverview({
+    visible,
+    busy,
+    mode,
+    ...props
+  }: Parameters<typeof PrototypeYear>[0] & {
+    visible: boolean;
+    busy: boolean;
+    mode: CalendarViewMode;
+  }) {
+    return (
+      <View
+        testID="calendar-year-overview-shell"
+        style={[StyleSheet.absoluteFill, { opacity: visible ? 1 : 0 }]}
+        pointerEvents={mode === "YEAR" && !busy ? "auto" : "none"}
+        accessibilityElementsHidden={mode !== "YEAR"}
+        importantForAccessibility={mode === "YEAR" ? "auto" : "no-hide-descendants"}
+      >
+        <PrototypeYear {...props} />
+      </View>
+    );
+  },
+  (old, next) => !old.visible && !next.visible,
+);
+
+function useMonthRows<T>(rows: ReadonlyMap<string, readonly T[]> | undefined, month: string) {
+  const [select] = useState(() => {
+    let previous: ReadonlyMap<string, readonly T[]> = new Map();
+    return (next: ReadonlyMap<string, readonly T[]> | undefined, key: string) => {
+      previous = calendarMonthRows(previous, next ?? new Map(), key);
+      return previous;
+    };
+  });
+  return useMemo(() => select(rows, month), [month, rows, select]);
 }
 
 export function SharedCalendarMonth({
@@ -186,32 +221,44 @@ export function SharedCalendarMonth({
     });
   }, [internalStampProgress, reduced, stampMode, stampTransitionProgress]);
   const holidays = useCalendarHolidayResolution(month, profile, ruleResolver, showHolidays);
-  if (!scene) throw new Error("SharedCalendarMonth requires SharedCalendarScene");
+  const ownRows = useMonthRows(entriesByDate, month);
+  const sharedRows = useMonthRows(sharedEntriesByDate, month);
+  const selected = scene?.month === month;
+  const { progress, mode, busy, width, height } = scene ?? {};
+  const monthScene = useMemo(
+    () =>
+      progress && mode && busy !== undefined && width !== undefined && height !== undefined
+        ? { progress, mode, busy, width, height, month: selected ? month : "" }
+        : null,
+    [progress, mode, busy, width, height, selected, month],
+  );
+  if (!monthScene) throw new Error("SharedCalendarMonth requires SharedCalendarScene");
   return (
     <SharedMonthBody
       month={month}
       pageHeight={pageHeight}
-      entriesByDate={entriesByDate}
-      sharedEntriesByDate={sharedEntriesByDate}
+      entriesByDate={ownRows}
+      sharedEntriesByDate={sharedRows}
       display={display}
       profile={profile}
       onSelectDate={onSelectDate}
-      selectedDate={selectedDate}
+      selectedDate={selectedDate?.startsWith(month) ? selectedDate : null}
       selectedDayOpacity={selectedDayOpacity}
       accessibilityVisible={accessibilityVisible}
       testData={testData}
       stampMode={stampMode}
       stampTransitionProgress={stampTransitionProgress ?? internalStampProgress}
       stampToolLabel={stampToolLabel}
-      scene={scene}
+      scene={monthScene}
       still={still}
       holidays={holidays.holidays}
-      separator={palette.separator}
+      separator={palette.textMuted}
+      selectionFill={palette.primarySoft}
     />
   );
 }
 
-function SharedMonthBody({
+const SharedMonthBody = memo(function SharedMonthBody({
   month,
   pageHeight,
   entriesByDate,
@@ -227,6 +274,7 @@ function SharedMonthBody({
   still,
   holidays,
   separator,
+  selectionFill,
   stampMode,
   stampTransitionProgress,
   stampToolLabel,
@@ -235,6 +283,7 @@ function SharedMonthBody({
   still: SharedValue<number>;
   holidays: ReadonlyMap<string, { name: string }>;
   separator: string;
+  selectionFill: string;
 }) {
   const layout = useMemo(
     () => calendarPrototypeLayout(month, scene.width, scene.height),
@@ -300,8 +349,10 @@ function SharedMonthBody({
               width: layout.cellWidth,
               height: layout.weekHeight,
               borderRadius: RADII.small,
-              borderWidth: 0,
+              borderWidth: stampMode && selectedDate === day.date ? 2 : 0,
               borderColor: separator,
+              backgroundColor:
+                stampMode && selectedDate === day.date ? selectionFill + "20" : "transparent",
             }}
           >
             {!entriesByDate.get(day.date)?.length &&
@@ -320,7 +371,7 @@ function SharedMonthBody({
       {testData ? <Text style={{ position: "absolute", bottom: 0 }}>Testdaten</Text> : null}
     </Animated.View>
   );
-}
+});
 
 function StampDayOutline({
   date,
@@ -339,7 +390,7 @@ function StampDayOutline({
       style={[
         StyleSheet.absoluteFill,
         {
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderColor: color,
           borderRadius: RADII.small,
           borderCurve: CORNER_CURVE,

@@ -26,6 +26,7 @@ const cache: CachedSharedCalendar = {
       startsAt: "2026-11-01T20:00:00Z",
       endsAt: "2026-11-02T06:00:00Z",
       allDay: false,
+      breakMinutes: 60,
       timeZone: "Europe/Berlin",
     },
   ],
@@ -65,6 +66,58 @@ function timeline(
   });
 }
 describe("geteilte Dienste im Widget", () => {
+  it.each([
+    [true, false, "21:00"],
+    [false, true, "9:00 h"],
+    [true, true, "21:00 · 9:00 h"],
+    [false, false, null],
+  ] as const)(
+    "applies time=%s and duration=%s in every grid",
+    (showShiftTimes, showShiftDuration, detail) => {
+      const props = timeline([cache], {
+        display: { labelMode: "FULL", showShifts: true, showShiftTimes, showShiftDuration },
+      })[0].props;
+      for (const grid of [props.days, props.weekDays, props.monthDays]) {
+        expect(grid.find((day) => day.date === "2026-11-01")!.shifts[0]).toMatchObject({
+          detail,
+          ownerName: "Loni",
+          ownerColor: "#0088CC",
+        });
+      }
+    },
+  );
+  it.each([
+    ["FULL", "Nacht", null],
+    ["SHORT", "N", null],
+    ["SYMBOL", "moon", "moon"],
+  ] as const)("uses the viewer's %s label setting", (labelMode, displayLabel, symbol) => {
+    const day = timeline([cache], {
+      display: { labelMode, showShiftTimes: true, showShiftDuration: false, showShifts: true },
+    })[0].props.weekDays.find((item) => item.date === "2026-11-01")!;
+    expect(day.shifts[0]).toMatchObject({
+      displayLabel,
+      symbol,
+      detail: "21:00",
+      ownerName: "Loni",
+    });
+  });
+  it.each([
+    ["sunrise", "sunrise"],
+    ["clock", "clock"],
+    ["calendar", "calendar"],
+    ["unavailable", "xmark.circle"],
+  ])("renders the shared %s symbol", (symbol, nativeSymbol) => {
+    const shared = { ...cache, entries: [{ ...cache.entries[0], symbol }] };
+    const day = timeline([shared], {
+      display: {
+        labelMode: "SYMBOL",
+        showShiftTimes: false,
+        showShiftDuration: false,
+        showShifts: true,
+      },
+    })[0].props.weekDays.find((item) => item.date === "2026-11-01")!;
+    expect(day.shifts[0].symbol).toBe(nativeSymbol);
+  });
   it("preserves the shift color and a separate person marker across months", () => {
     const day = timeline([cache])[0].props.days.find((item) => item.date === "2026-11-01")!;
     expect(day.shifts[0]).toMatchObject({

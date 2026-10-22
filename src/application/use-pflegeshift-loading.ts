@@ -9,7 +9,10 @@ import {
 } from "react";
 
 import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
-import { reconcileCalendarRange } from "@/application/calendar-entry-loading";
+import {
+  calendarRangeCoversYear,
+  reconcileCalendarRange,
+} from "@/application/calendar-entry-loading";
 import { reconcileLoadedEntryNotifications } from "@/application/pflegeshift-notifications";
 import {
   entryRangeForYear,
@@ -137,5 +140,11 @@ export function usePflegeShiftLoading(
     };
   }, [load]);
   const reload = useCallback(() => load(true), [load]);
-  return { ready: loadedKey === rangeKey, calendarRange, error, reload, recordDeletion };
+  return {
+    ready: loadedKey === rangeKey || calendarRangeCoversYear(calendarRange, activeYear),
+    calendarRange,
+    error,
+    reload,
+    recordDeletion,
+  };
 }

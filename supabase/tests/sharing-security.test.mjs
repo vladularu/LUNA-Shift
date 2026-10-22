@@ -28,6 +28,9 @@ const entry = (id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee") => ({
 });
 let db;
 const rpcNames = new Set([
+  "sharing_capabilities_v3",
+  "sharing_publish_calendar_v3",
+  "sharing_fetch_calendar_v3",
   "sharing_capabilities",
   "sharing_publish_calendar_v2",
   "sharing_fetch_calendar_v2",
@@ -150,6 +153,9 @@ before(async () => {
   await db.exec(
     await readFile("supabase/migrations/202610130002_sharing_content_rights.sql", "utf8"),
   );
+  await db.exec(
+    await readFile("supabase/migrations/20261021134519_sharing_shift_duration.sql", "utf8"),
+  );
 });
 beforeEach(async () => {
   await db.exec("reset role; truncate realtime.messages");
@@ -203,6 +209,129 @@ const typedEntries = () => [
     note: "Terminnotiz",
   },
 ];
+
+const durationEntries = () =>
+  typedEntries().map((entry) => ({ ...entry, breakMinutes: entry.kind === "SHIFT" ? 60 : null }));
+const publishV3 = (
+  entries = durationEntries(),
+  revision = 0,
+  mutation = MUTATION,
+  user = OWNER,
+  secret = DEVICE_SECRET,
+) =>
+  rpc(user, "sharing_publish_calendar_v3", [
+    CALENDAR,
+    DEVICE,
+    secret,
+    mutation,
+    revision,
+    JSON.stringify(entries),
+  ]);
+
+test("v3 automatically includes pauses within existing shift rights and retains legacy response shapes", async () => {
+  await create();
+  const published = await publishV3();
+  assert.deepEqual(await publishV3(), published);
+  await joinV2();
+  assert.deepEqual(await rpc(OWNER, "sharing_capabilities"), { contentVersion: 2 });
+  assert.deepEqual(await rpc(OWNER, "sharing_capabilities_v3"), {
+    contentVersion: 2,
+    durationVersion: 1,
+  });
+  const snapshot = await rpc(VIEWER, "sharing_fetch_calendar_v3", [CALENDAR, null]);
+  assert.equal(snapshot.entries.length, 1);
+  assert.equal(snapshot.entries[0].breakMinutes, 60);
+  assert.equal(snapshot.entries[0].note, null);
+  for (const name of ["sharing_fetch_calendar", "sharing_fetch_calendar_v2"]) {
+    const old = await rpc(VIEWER, name, [CALENDAR, null]);
+    assert.equal("breakMinutes" in old.entries[0], false);
+    assert.equal(Object.keys(old.entries[0]).length, name.endsWith("v2") ? 10 : 8);
+  }
+  const unchanged = await rpc(VIEWER, "sharing_fetch_calendar_v3", [CALENDAR, snapshot.revision]);
+  assert.equal(unchanged.unchanged, true);
+  assert.deepEqual(unchanged.entries, []);
+  await rpc(OWNER, "sharing_set_member_rights", [
+    CALENDAR,
+    VIEWER,
+    JSON.stringify(rights(false, true)),
+  ]);
+  const reduced = await rpc(VIEWER, "sharing_fetch_calendar_v3", [CALENDAR, snapshot.revision]);
+  assert.equal(reduced.unchanged, false);
+  assert.equal(reduced.entries.length, 1);
+  assert.equal(reduced.entries[0].kind, "APPOINTMENT");
+  assert.equal(reduced.entries[0].breakMinutes, null);
+});
+
+test("v3 enforces device ownership, membership, session and anonymous boundaries", async () => {
+  await create();
+  await assert.rejects(
+    publishV3(undefined, 0, MUTATION, OTHER),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+  await assert.rejects(publishV3(undefined, 0, MUTATION, OWNER, "b".repeat(64)));
+  await publishV3();
+  await joinV2();
+  await assert.rejects(
+    rpc(OTHER, "sharing_fetch_calendar_v3", [CALENDAR, null]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "REVOKE"]);
+  await assert.rejects(
+    rpc(VIEWER, "sharing_fetch_calendar_v3", [CALENDAR, null]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+  await assert.rejects(rpc(OWNER, "sharing_capabilities_v3", [], "anon"));
+  await assert.rejects(rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null], "anon"));
+  await db.query("delete from auth.sessions where user_id=$1", [OWNER]);
+  await assert.rejects(rpc(OWNER, "sharing_capabilities_v3"));
+  await assert.rejects(rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null]));
+});
+
+test("v3 validates pauses and binds them into the mutation receipt", async () => {
+  await create();
+  for (const breakMinutes of [-1, 2881, 1.5, "60", true, {}, []])
+    await assert.rejects(
+      publishV3([{ ...durationEntries()[0], breakMinutes }]),
+      failure("SHARE_INVALID_ARGUMENT"),
+    );
+  for (const patch of [{ allDay: true }, { kind: "APPOINTMENT" }, { unexpected: true }])
+    await assert.rejects(
+      publishV3([{ ...durationEntries()[0], ...patch }]),
+      failure("SHARE_INVALID_ARGUMENT"),
+    );
+  await publishV3();
+  await assert.rejects(
+    publishV3([{ ...durationEntries()[0], breakMinutes: 30 }, durationEntries()[1]]),
+    failure("SHARE_MUTATION_REUSED"),
+  );
+  await publishV3([{ ...durationEntries()[0], breakMinutes: 0 }], 1, crypto.randomUUID());
+  assert.equal(
+    (await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null])).entries[0].breakMinutes,
+    0,
+  );
+  await publishV2(typedEntries(), 2, crypto.randomUUID());
+  assert.equal(
+    (await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null])).entries[0].breakMinutes,
+    null,
+  );
+});
+
+test("v3 preserves unknown legacy durations and never exposes pauses in availability shares", async () => {
+  await create("AVAILABILITY");
+  const neutral = {
+    ...durationEntries()[0],
+    title: "Nicht verfügbar",
+    symbol: "unavailable",
+    color: "#737373",
+    note: null,
+  };
+  await assert.rejects(publishV3([neutral]), failure("SHARE_INVALID_ARGUMENT"));
+  await publishV3([{ ...neutral, kind: null, breakMinutes: null }]);
+  assert.equal(
+    (await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null])).entries[0].breakMinutes,
+    null,
+  );
+});
 test("v2 invitation remains active for 48 hours with multiple joins, and stop blocks further claims", async () => {
   await create();
   await publishV2(typedEntries());

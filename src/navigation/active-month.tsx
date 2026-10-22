@@ -7,8 +7,10 @@ import React, {
 
 import { currentMonth } from "@/engine/calendar";
 import { parseMonthRouteParam } from "@/navigation/route-params";
+import { createAnalysisPeriodRequests } from "./analysis-period-navigation";
 
 export interface ActiveMonthCoordinator {
+  readonly analysisRequests: ReturnType<typeof createAnalysisPeriodRequests>;
   readonly completeTodayRequest: (revision: number) => void;
   readonly getMonth: () => string;
   readonly getTodayRequestRevision: () => number;
@@ -37,6 +39,7 @@ export function createActiveMonthCoordinator(
   const todayRequestListeners = new Set<() => void>();
 
   return Object.freeze({
+    analysisRequests: createAnalysisPeriodRequests(),
     completeTodayRequest: (revision: number) => {
       completedTodayRequestRevision = Math.max(
         completedTodayRequestRevision,
@@ -105,15 +108,6 @@ export function useActiveMonth(): string {
   );
 }
 
-export function calendarTabShouldOpenToday(calendarIsFocused: boolean): boolean {
-  return calendarIsFocused;
-}
-
-export function requestCalendarTodayOnReselect(
-  coordinator: ActiveMonthCoordinator,
-  calendarIsFocused: boolean,
-): boolean {
-  if (!calendarTabShouldOpenToday(calendarIsFocused)) return false;
+export function requestCalendarTodayOnPress(coordinator: ActiveMonthCoordinator): void {
   coordinator.requestToday();
-  return true;
 }

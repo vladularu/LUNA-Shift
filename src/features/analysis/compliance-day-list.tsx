@@ -1,20 +1,14 @@
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { useMemo } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { AnalysisCoverageNote } from "./analysis-coverage-note";
 import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
-import {
-  ComplianceIssueContent,
-  issueCategory,
-  issueSeverity,
-  checkDate,
-} from "./compliance-issue-content";
-import { complianceTimeline } from "./compliance-timeline";
+import { ComplianceIssueContent, checkDate, checkDayParts } from "./compliance-issue-content";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import { CheckRunnerEgg } from "./check-runner-egg";
 const PRIORITY = { critical: 0, warning: 1, info: 2 };
@@ -31,6 +25,8 @@ export function ComplianceDayList({
   readonly timeZone: string;
 }) {
   const palette = usePalette();
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = fontScale >= 1.3 || width < 360;
   const visible = selectVisibleCompliance(compliance, showPlanning);
   const limited = (visible.prerequisiteCount ?? 0) > 0;
   const issues = useMemo(
@@ -45,7 +41,7 @@ export function ComplianceDayList({
   );
   const days = [...new Set(issues.map((issue) => issue.date))];
   return (
-    <View style={{ gap: SPACING.xxl, flexGrow: issues.length ? undefined : 1 }}>
+    <View style={{ gap: SPACING.lg, flexGrow: issues.length ? undefined : 1 }}>
       {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
       {limited ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
       {!issues.length ? (
@@ -87,78 +83,53 @@ export function ComplianceDayList({
       ) : null}
       {days.map((date) => {
         const dayIssues = issues.filter((issue) => issue.date === date);
-        const sharedCategory = dayIssues.every((issue) => issue.kind === dayIssues[0].kind);
+        const [day, month] = checkDayParts(date);
         return (
-          <View key={date} style={{ gap: SPACING.md }}>
+          <View
+            key={date}
+            testID={`check-day-group-${date}`}
+            style={{ flexDirection: stacked ? "column" : "row", gap: SPACING.sm }}
+          >
             <View
+              accessible
+              accessibilityRole="header"
+              accessibilityLabel={checkDate(date)}
               style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: SPACING.sm,
+                width: stacked ? undefined : 36,
+                paddingTop: stacked ? 0 : SPACING.md,
+                alignItems: stacked ? "flex-start" : "center",
               }}
             >
               <Text
-                accessibilityRole="header"
-                style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{
+                  color: palette.text,
+                  ...(stacked ? TYPOGRAPHY.sectionTitle : TYPOGRAPHY.value),
+                  fontWeight: "500",
+                  fontVariant: ["tabular-nums"],
+                }}
               >
-                {checkDate(date, false)}
+                {stacked ? checkDate(date, false) : day}
               </Text>
-              {sharedCategory ? (
-                <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
-                  {issueCategory(dayIssues[0])}
+              {!stacked ? (
+                <Text
+                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                  style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+                >
+                  {month}
                 </Text>
               ) : null}
             </View>
-            {dayIssues.map((issue) => {
-              const model = complianceTimeline(issue, shifts, timeZone);
-              return (
-                <View key={issue.id} style={{ gap: SPACING.md }}>
-                  {!model.series || !sharedCategory ? (
-                    <View
-                      style={{ flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm }}
-                    >
-                      <Ionicons
-                        name={
-                          issue.severity === "critical"
-                            ? "alert-circle-outline"
-                            : issue.severity === "warning"
-                              ? "warning-outline"
-                              : "information-circle-outline"
-                        }
-                        size={20}
-                        color={
-                          issue.severity === "critical"
-                            ? palette.danger
-                            : issue.severity === "warning"
-                              ? palette.warning
-                              : palette.primary
-                        }
-                        accessibilityElementsHidden
-                        importantForAccessibility="no"
-                      />
-                      <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
-                        {!model.series ? (
-                          <Text
-                            accessibilityLabel={`${model.title}, ${issueCategory(issue)}, ${issueSeverity(issue)}`}
-                            style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-                          >
-                            {model.title}
-                          </Text>
-                        ) : null}
-                        {!sharedCategory ? (
-                          <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
-                            {issueCategory(issue)}
-                          </Text>
-                        ) : null}
-                      </View>
-                    </View>
-                  ) : null}
-                  <ComplianceIssueContent issue={issue} shifts={shifts} timeZone={timeZone} />
-                </View>
-              );
-            })}
+            <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: SPACING.sm }}>
+              {dayIssues.map((issue) => (
+                <ComplianceIssueContent
+                  key={issue.id}
+                  issue={issue}
+                  shifts={shifts}
+                  timeZone={timeZone}
+                />
+              ))}
+            </View>
           </View>
         );
       })}

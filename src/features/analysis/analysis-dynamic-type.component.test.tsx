@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { StyleSheet } from "react-native";
 
@@ -12,16 +12,58 @@ import {
 } from "./analysis-report-cards";
 import { ExpandableHighlightCard } from "./expandable-highlight-card";
 import { ComplianceDetails } from "./compliance-details";
+import { ShiftAnalysisCard } from "./shift-analysis-card";
 
 let mockFontScale = 1;
+let mockWindowWidth = 430;
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
-  default: () => ({ width: 430, height: 932, scale: 3, fontScale: mockFontScale }),
+  default: () => ({ width: mockWindowWidth, height: 932, scale: 3, fontScale: mockFontScale }),
 }));
 
 describe("analysis Dynamic Type layout", () => {
   beforeEach(() => {
     mockFontScale = 1;
+    mockWindowWidth = 430;
+  });
+
+  it("keeps the shift metric in the header, separate from details, through text and width changes", async () => {
+    const openDetails = jest.fn();
+    const card = () => (
+      <ShiftAnalysisCard
+        onPress={openDetails}
+        analysis={{
+          items: [{ type: "EARLY", count: 3, minutes: 1386 }],
+          totalCount: 3,
+          totalMinutes: 1386,
+        }}
+      />
+    );
+    const screen = await render(card());
+    for (const [width, fontScale] of [
+      [430, 1],
+      [320, 1],
+      [430, 1.3],
+      [430, 3.1],
+    ]) {
+      mockWindowWidth = width;
+      mockFontScale = fontScale;
+      await screen.rerender(card());
+      const header = screen.getByTestId("analysis-card-header-with-accessory");
+      expect(header).toHaveStyle({
+        flexDirection: fontScale >= 1.3 || width < 360 ? "column" : "row",
+      });
+      await fireEvent.press(within(header).getByRole("tab", { name: "Schichten: Anzahl" }));
+      expect(screen.getByLabelText("Gesamt: 3")).toBeTruthy();
+      await fireEvent.press(within(header).getByRole("tab", { name: "Schichten: Stunden" }));
+      expect(screen.getByLabelText("Gesamt: 23:06 h")).toBeTruthy();
+      expect(openDetails).not.toHaveBeenCalled();
+      const title = screen.getByText("Schichten");
+      expect(title.props.numberOfLines).toBeUndefined();
+      expect(title.props.maxFontSizeMultiplier).toBe(0);
+    }
+    await fireEvent.press(screen.getByRole("button", { name: "Schichten: Details öffnen" }));
+    expect(openDetails).toHaveBeenCalledTimes(1);
   });
 
   it.each([1, 1.29, 1.3, 2, 3.1])(

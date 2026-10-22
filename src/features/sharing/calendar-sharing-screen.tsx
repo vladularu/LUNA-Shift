@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Modal, View } from "react-native";
 import { DEFAULT_SHARING_RIGHTS, type SharingContentRights } from "@/domain/sharing-content";
 import { usePalette } from "@/theme/palette";
@@ -50,6 +50,28 @@ export function CalendarSharingScreen({
 }) {
   const palette = usePalette();
   const action = useSharingAction(controller);
+  const visibilityRequests = useRef(new Map<string, number>());
+  const [visibilityErrors, setVisibilityErrors] = useState<ReadonlyMap<string, string>>(new Map());
+  const setCalendarVisible = (id: string, visible: boolean) => {
+    const revision = (visibilityRequests.current.get(id) ?? 0) + 1;
+    visibilityRequests.current.set(id, revision);
+    setVisibilityErrors((old) => {
+      const next = new Map(old);
+      next.delete(id);
+      return next;
+    });
+    void controller.setVisible(id, visible).catch((error: unknown) => {
+      if (
+        error instanceof Error &&
+        ["SHARE_ACCOUNT_CHANGED", "SHARE_NOT_FOUND"].includes(error.message)
+      )
+        return;
+      if (visibilityRequests.current.get(id) !== revision) return;
+      setVisibilityErrors((old) =>
+        new Map(old).set(id, "Anzeige konnte nicht gespeichert werden. Versuche es erneut."),
+      );
+    });
+  };
   const [mode, setMode] = useState<"overview" | "setup" | "ready" | "member" | "recovery">(
     "overview",
   );
@@ -514,16 +536,17 @@ export function CalendarSharingScreen({
                         <LabeledSwitch
                           label={`${calendar.name} anzeigen`}
                           value={calendar.visible}
-                          disabled={action.busy}
-                          onValueChange={(on) =>
-                            void action.run(
-                              () => controller.setVisible(calendar.id, on),
-                              "Anzeige konnte nicht gespeichert werden. Versuche es erneut.",
-                            )
-                          }
+                          onValueChange={(on) => setCalendarVisible(calendar.id, on)}
                         />
                       }
                     />
+                    {visibilityErrors.has(calendar.id) ? (
+                      <SharingStatus
+                        busy={false}
+                        failed
+                        message={visibilityErrors.get(calendar.id)}
+                      />
+                    ) : null}
                   </View>
                 ))}
               </SurfaceCard>

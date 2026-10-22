@@ -1,10 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Temporal } from "@js-temporal/polyfill";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
 import { formatMonthTitle } from "@/engine/calendar";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
-import { useActiveMonthCoordinator } from "@/navigation/active-month";
+import { useReportMonth } from "@/navigation/use-report-month";
+import { ReportPeriodPager } from "@/ui/report-period-pager";
 import { salaryDetailsRoute, type SalaryDetailSection } from "@/navigation/routes";
 import { CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -25,7 +25,6 @@ import {
   SalarySectionCard,
   SalaryNavigationRow,
 } from "./salary-ui";
-import { selectionFeedback } from "@/ui/haptics";
 import { SalaryComponentsView, SalaryBasisView } from "./salary-detail-views";
 import { NetPayDeductionDetails } from "./net-pay-salary-summary";
 import { NetPayPremiumDetails } from "./net-pay-premium-details";
@@ -43,15 +42,48 @@ export const SALARY_DETAIL_TITLES: Readonly<Record<SalaryDetailSection, string>>
 };
 
 export function SalaryDetailsScreen() {
-  const coordinator = useActiveMonthCoordinator();
   const params = useLocalSearchParams<{ month?: RouteParam; section?: RouteParam }>();
   const parsed = parseMonthRouteParam(params.month);
   const section =
     typeof params.section === "string" && Object.hasOwn(SALARY_DETAIL_TITLES, params.section)
       ? (params.section as SalaryDetailSection)
       : null;
-  const valid = parsed.status === "valid" && section !== null;
-  const month = parsed.status === "valid" ? parsed.value : "1970-01";
+  const { month, selectMonth, focused } = useReportMonth(
+    parsed.status === "valid" ? parsed.value : null,
+  );
+  if (parsed.status !== "valid" || !section)
+    return (
+      <SalaryPage title="Gehalt">
+        <LoadFailureView
+          title="Gehaltsdetails können nicht geöffnet werden"
+          message="Der Link enthält keinen gültigen Monat oder Bereich."
+          actionLabel="Schließen"
+          onRetry={() => router.back()}
+        />
+      </SalaryPage>
+    );
+  return (
+    <ReportPeriodPager
+      value={month}
+      enabled={focused}
+      onChange={selectMonth}
+      renderPage={(pageMonth, moveMonth) => (
+        <SalaryDetailsMonthPage month={pageMonth} section={section} moveMonth={moveMonth} />
+      )}
+    />
+  );
+}
+
+function SalaryDetailsMonthPage({
+  month,
+  section,
+  moveMonth,
+}: {
+  readonly month: string;
+  readonly section: SalaryDetailSection;
+  readonly moveMonth: (delta: number) => void;
+}) {
+  const valid = true;
   const report = useSalaryReport(month, valid);
   const blocked = report.testMonths.includes(month);
   const data = useNetPayProfile(month, valid && !blocked);
@@ -70,32 +102,12 @@ export function SalaryDetailsScreen() {
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const palette = usePalette();
-  if (!valid || !section)
-    return (
-      <SalaryPage title="Gehalt">
-        <LoadFailureView
-          title="Gehaltsdetails können nicht geöffnet werden"
-          message="Der Link enthält keinen gültigen Monat oder Bereich."
-          actionLabel="Schließen"
-          onRetry={() => router.back()}
-        />
-      </SalaryPage>
-    );
   const heading = SALARY_DETAIL_TITLES[section];
   const caption = formatMonthTitle(month);
   const pageProps = {
     title: heading,
     month: section === "components" ? undefined : caption,
   };
-  function moveMonth(delta: number) {
-    const next = Temporal.PlainDate.from(`${month}-01`)
-      .add({ months: delta })
-      .toString()
-      .slice(0, 7);
-    coordinator.setMonth(next);
-    router.setParams({ month: next });
-    selectionFeedback();
-  }
   const navigation =
     section === "components" ? (
       <SalaryMonthNavigator

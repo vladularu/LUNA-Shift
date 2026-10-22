@@ -94,7 +94,7 @@ export function TemplatesManagerScreen() {
                 id: template.id,
                 title: template.name,
                 subtitle: shiftTemplateSubtitle(template),
-                leading: <ColorBadge color={template.color} label={template.symbol} size={38} />,
+                leading: <ColorBadge color={template.color} label={template.symbol} size={30} />,
               }))}
               onMove={async (id, index) => {
                 const template = templates.find((item) => item.id === id);
@@ -127,6 +127,7 @@ export function TemplatesManagerScreen() {
                     <View key={template.id}>
                       {index > 0 ? <ShiftTemplateListSeparator /> : null}
                       <ShiftTemplateListRow
+                        compact
                         accessibilityLabel={`${template.name}, ${subtitle}, Vorlage bearbeiten`}
                         color={template.color}
                         disabled={busyTemplateId !== null}

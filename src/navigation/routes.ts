@@ -85,6 +85,13 @@ export function salaryRoute(month: string) {
   });
 }
 
+export function analysisPeriodRoute(month: string, period: "MONTH" | "YEAR") {
+  return {
+    pathname: "/(tabs)/(analysis)/period" as const,
+    params: { month: requireMonth(month), period },
+  };
+}
+
 export type SalaryDetailSection = "components" | "deductions" | "premiums" | "services" | "basis";
 
 export function salaryDetailsRoute(month: string, section: SalaryDetailSection) {

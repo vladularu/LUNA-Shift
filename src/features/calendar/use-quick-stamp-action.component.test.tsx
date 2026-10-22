@@ -60,8 +60,9 @@ const mockBusyChange = jest.fn<(busy: boolean) => void>();
 const mockError = jest.fn<(message: string) => void>();
 
 function Harness({ entries }: { readonly entries: readonly ShiftEntry[] }) {
-  const saveStamp = useQuickStampAction({
-    entries,
+  const { stamp: saveStamp } = useQuickStampAction({
+    // A fresh database read can have identical values with new array/object identities.
+    entries: entries.map((value) => ({ ...value })),
     removeEntry: mockRemoveEntry,
     upsertShift: mockUpsertShift,
     onBusyChange: mockBusyChange,

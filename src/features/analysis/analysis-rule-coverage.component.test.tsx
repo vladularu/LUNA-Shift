@@ -27,6 +27,7 @@ import type {
 } from "@/rules/contracts.generated";
 import { createRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
+import { currentMonth } from "@/engine/calendar";
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
@@ -119,6 +120,8 @@ let mockCheckError: string | null = null;
 let mockEntries: readonly ShiftEntry[] = [];
 let mockRuleResolver: RuleResolver = GENERATION_ONE_REVIEWED_RESOLVER;
 let mockRouteMonth = "2027-01";
+let mockRoutePeriod: "MONTH" | "YEAR" | undefined;
+let mockActivePeriod: "MONTH" | "YEAR" = "MONTH";
 let mockAnnualSection: string | undefined;
 let mockAnnualFatalError: Error | null = null;
 let mockAnnualInputFailure: {
@@ -135,6 +138,7 @@ let mockAnnualRuleFailure: {
 } | null = null;
 
 let mockFocused = true;
+let mockAnalysisRequest = 0;
 jest.mock("@/features/salary/use-net-pay-profile", () => ({
   useNetPayProfile: () => ({
     status: "ready",
@@ -145,17 +149,36 @@ jest.mock("@/features/salary/use-net-pay-profile", () => ({
   }),
 }));
 const mockActiveMonthCoordinator = {
+  analysisRequests: {
+    getRevision: () => mockAnalysisRequest,
+    getPeriod: () => mockActivePeriod,
+    setPeriod: (period: "MONTH" | "YEAR") => {
+      mockActivePeriod = period;
+    },
+    subscribe: () => () => {},
+  },
   getMonth: () => mockRouteMonth,
   setMonth: jest.fn((month: string) => month),
 };
 
 jest.mock("expo-router", () => ({
   Stack: { Screen: () => null },
-  router: { back: jest.fn(), push: jest.fn() },
+  router: {
+    back: jest.fn(),
+    push: jest.fn(),
+    setParams: jest.fn((next: { month: string; period: "MONTH" | "YEAR" }) => {
+      mockRouteMonth = next.month;
+      mockRoutePeriod = next.period;
+    }),
+  },
   useFocusEffect: (effect: () => void | (() => void)) =>
     MockReact.useEffect(() => (mockFocused ? effect() : undefined), [effect, mockFocused]),
   useIsFocused: () => mockFocused,
-  useLocalSearchParams: () => ({ month: mockRouteMonth, section: mockAnnualSection }),
+  useLocalSearchParams: () => ({
+    month: mockRouteMonth,
+    period: mockRoutePeriod,
+    section: mockAnnualSection,
+  }),
 }));
 
 jest.mock("@/application/pflegeshift-provider", () => ({
@@ -265,12 +288,38 @@ async function expectRuleCoverageDiagnostic(component: ReactElement) {
   expect(screen.queryByText("LUNA Shift konnte nicht angezeigt werden")).toBeNull();
 }
 
+async function followNativePeriod(screen: Awaited<ReturnType<typeof render>>) {
+  const route = jest.mocked(router.push).mock.calls.at(-1)?.[0] as {
+    pathname: string;
+    params: { month: string; period: "MONTH" | "YEAR" };
+  };
+  expect(route.pathname).toBe("/(tabs)/(analysis)/period");
+  mockRouteMonth = route.params.month;
+  mockRoutePeriod = route.params.period;
+  await screen.rerender(
+    mockAnnualFatalError ? (
+      <AppErrorBoundary>
+        <AnalysisScreen />
+      </AppErrorBoundary>
+    ) : (
+      <AnalysisScreen />
+    ),
+  );
+}
+async function openAnalysisMode(screen: Awaited<ReturnType<typeof render>>, label: string) {
+  await fireEvent.press(screen.getByLabelText(label));
+  await followNativePeriod(screen);
+}
+
 describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   beforeEach(() => {
     mockComplianceResult = mockCompliance;
     mockCheckError = null;
     mockEntries = [];
     mockFocused = true;
+    mockAnalysisRequest = 0;
+    mockRoutePeriod = undefined;
+    mockActivePeriod = "MONTH";
     mockRuleResolver = GENERATION_ONE_REVIEWED_RESOLVER;
     mockRouteMonth = "2027-01";
     mockAnnualSection = undefined;
@@ -298,6 +347,98 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(calculate).toHaveBeenCalled();
     expect(calculate.mock.calls.at(-1)?.[0]).toBe("2026-10");
     await screen.unmount();
+  });
+
+  it("returns a reselected monthly analysis to the current month while retaining monthly mode", async () => {
+    mockRouteMonth = "2030-01";
+    const screen = await render(<AnalysisScreen />);
+    mockAnalysisRequest += 1;
+    await screen.rerender(<AnalysisScreen />);
+    const present = currentMonth(mockProfile.timeZone);
+    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(present);
+    expect(screen.getByTestId("analysis-month-toolbar")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-year-toolbar")).toBeNull();
+  });
+
+  it("pages months and years in both chronological directions without native route pushes", async () => {
+    mockRouteMonth = "2030-12";
+    const screen = await render(<AnalysisScreen />);
+    const measure = () =>
+      fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+        nativeEvent: { layout: { width: 390, height: 700 } },
+      });
+    const settle = (index: number) =>
+      fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+        nativeEvent: { contentOffset: { x: index * 390, y: 0 } },
+      });
+    const calls = jest.mocked(router.push).mock.calls.length;
+    await measure();
+    await settle(13);
+    expect(screen.getByTestId("analysis-month-page-2031-01")).toBeTruthy();
+    await settle(11);
+    expect(screen.getByTestId("analysis-month-page-2030-11")).toBeTruthy();
+    expect(router.push).toHaveBeenCalledTimes(calls);
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
+    await measure();
+    await settle(11);
+    expect(screen.getByLabelText("Vorheriges Jahr, aktuell 2029")).toBeTruthy();
+    await settle(13);
+    expect(screen.getByLabelText("Vorheriges Jahr, aktuell 2031")).toBeTruthy();
+  });
+
+  it("keeps the source report until native paging settles, then exposes the target's explicit check error", async () => {
+    mockRouteMonth = "2026-09";
+    mockEntries = [{ ...januaryShift(), date: "2026-09-03" }];
+    const screen = await render(<AnalysisScreen />);
+    await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+      nativeEvent: { layout: { width: 390, height: 700 } },
+    });
+    expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
+    mockComplianceResult = null;
+    await fireEvent.press(screen.getByRole("button", { name: /Nächster Monat/ }));
+    expect(screen.getByTestId("analysis-month-page-2026-09")).toBeTruthy();
+    expect(
+      screen.getByTestId("analysis-month-page-2026-10", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    mockCheckError = "Prüfung fehlgeschlagen";
+    await screen.rerender(<AnalysisScreen />);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { x: 13 * 390, y: 0 } },
+    });
+    expect(screen.getByTestId("analysis-month-page-2026-10")).toBeTruthy();
+    expect(screen.getByLabelText("Ist: 0:00 h")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prüfung, Nicht verfügbar" })).toBeTruthy();
+  });
+
+  it("returns a reselected yearly analysis to the current year and preserves its mode and month selection", async () => {
+    mockRouteMonth = "2030-03";
+    const screen = await render(<AnalysisScreen />);
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
+    mockAnalysisRequest += 1;
+    await screen.rerender(<AnalysisScreen />);
+    const presentYear = currentMonth(mockProfile.timeZone).slice(0, 4);
+    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(`${presentYear}-03`);
+    expect(screen.getByTestId("analysis-year-toolbar")).toBeTruthy();
+    expect(screen.getByLabelText(`Vorheriges Jahr, aktuell ${presentYear}`)).toBeTruthy();
+    expect(screen.queryByTestId("analysis-month-toolbar")).toBeNull();
+    await openAnalysisMode(screen, "Monatsauswertung öffnen");
+    expect(screen.getByTestId(`analysis-month-page-${presentYear}-03`)).toBeTruthy();
+  });
+
+  it("retains a tab-reset request while a detail page is focused and applies it when the overview returns", async () => {
+    mockRouteMonth = "2030-03";
+    const screen = await render(<AnalysisScreen />);
+    mockFocused = false;
+    await screen.rerender(<AnalysisScreen />);
+    mockActiveMonthCoordinator.setMonth.mockClear();
+    mockAnalysisRequest += 1;
+    await screen.rerender(<AnalysisScreen />);
+    expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
+    mockFocused = true;
+    await screen.rerender(<AnalysisScreen />);
+    const present = currentMonth(mockProfile.timeZone);
+    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(present);
+    expect(screen.getByTestId(`analysis-month-page-${present}`)).toBeTruthy();
   });
 
   it.each([
@@ -663,6 +804,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
 
     await fireEvent.press(screen.getByRole("button", { name: /Nächster Monat/ }));
 
+    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2027-02", period: "MONTH" });
     expect(mockActiveMonthCoordinator.setMonth).toHaveBeenCalledWith("2027-02");
     expect(
       (await render(<WorktimeDetailsScreen />)).getByLabelText(
@@ -919,20 +1061,31 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.queryByText("0,00 €")).toBeNull();
   });
 
+  it("retains a completed yearly report underneath a native detail page", async () => {
+    mockAnnualCoreValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
+    const screen = await render(<AnalysisScreen />);
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
+    expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
+    mockFocused = false;
+    mockAnnualCoreValue = null;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
+    expect(screen.getByTestId("analysis-year-toolbar")).toBeTruthy();
+  });
   it("keeps year navigation and return to month available while calculating", async () => {
     const screen = await render(<AnalysisScreen />);
-    await fireEvent.press(screen.getByLabelText("Jahresauswertung öffnen"));
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
     expect(screen.getByText("Jahresauswertung wird berechnet …")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/Nächstes Jahr, aktuell/));
     expect(screen.getByTestId("analysis-year-toolbar")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Monatsauswertung öffnen"));
+    await openAnalysisMode(screen, "Monatsauswertung öffnen");
     expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
   });
 
   it("renders current core content before the complete annual result", async () => {
     mockAnnualCoreValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
     const screen = await render(<AnalysisScreen />);
-    await fireEvent.press(screen.getByLabelText("Jahresauswertung öffnen"));
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
     expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
     expect(screen.getByText("Arbeitszeit")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Prüfung, Wird geprüft …" })).toBeTruthy();
@@ -948,7 +1101,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnnualRuleFailure = { ok: false, error, failure: error.failure };
     const screen = await render(<AnalysisScreen />);
 
-    fireEvent.press(screen.getByLabelText("Jahresauswertung öffnen"));
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
 
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText("Jahresauswertung nicht verfügbar")).toBeTruthy();
@@ -965,7 +1118,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnnualReportValue = buildAnnualCoreReport(2027, mockEntries, mockProfile);
     const screen = await render(<AnalysisScreen />);
 
-    await fireEvent.press(screen.getByLabelText("Jahresauswertung öffnen"));
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
 
     expect(await screen.findByTestId("analysis-year-toolbar")).toBeTruthy();
     expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
@@ -982,7 +1135,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       </AppErrorBoundary>,
     );
 
-    fireEvent.press(screen.getByLabelText("Jahresauswertung öffnen"));
+    await openAnalysisMode(screen, "Jahresauswertung öffnen");
 
     expect(await screen.findByText("Diagnosecode: APP_RENDER_FAILED")).toBeTruthy();
     consoleError.mockRestore();

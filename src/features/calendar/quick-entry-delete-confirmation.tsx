@@ -1,19 +1,21 @@
 import { useEffect, useRef } from "react";
 import { findNodeHandle, Pressable, View, type LayoutChangeEvent } from "react-native";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 
 import { useInversePalette } from "@/theme/palette";
-import { RADII, SHADOWS } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { SPACING } from "@/theme/tokens";
+import { TYPOGRAPHY, TEXT_MAX_SCALE } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
+import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
+
+const FOOTER_ENTERING = FadeIn.duration(140).reduceMotion(ReduceMotion.System);
 
 export function QuickEntryDeleteConfirmation({
   title,
   busy,
   error,
-  top,
-  left,
-  width,
+  minHeight,
   onLayout,
   onCancel,
   onConfirm,
@@ -21,9 +23,7 @@ export function QuickEntryDeleteConfirmation({
   readonly title: string;
   readonly busy: boolean;
   readonly error: string | null;
-  readonly top: number;
-  readonly left: number;
-  readonly width: number;
+  readonly minHeight: number;
   readonly onLayout: (event: LayoutChangeEvent) => void;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
@@ -34,37 +34,35 @@ export function QuickEntryDeleteConfirmation({
     scheduleAccessibilityFocus(findNodeHandle(cancel.current));
   }, []);
   return (
-    <View
+    <Animated.View
       testID="quick-entry-delete-confirmation"
       accessibilityViewIsModal
       accessibilityLabel={`${title} löschen?`}
       onAccessibilityEscape={onCancel}
       onLayout={onLayout}
+      entering={FOOTER_ENTERING}
       style={{
-        position: "absolute",
-        top,
-        left,
-        width,
-        padding: 6,
-        gap: 6,
-        borderRadius: RADII.card,
         backgroundColor: palette.surfaceRaised,
-        borderWidth: 1,
-        borderColor: palette.border,
-        boxShadow: SHADOWS.overlay,
-        zIndex: 10_002,
-        elevation: 26,
+        borderTopWidth: 1,
+        borderTopColor: palette.separator,
+        flexShrink: 0,
       }}
     >
       {error ? (
         <Text
           accessibilityRole="alert"
-          style={{ ...TYPOGRAPHY.caption, color: palette.danger, padding: 8 }}
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          style={{
+            ...TYPOGRAPHY.caption,
+            color: palette.danger,
+            paddingHorizontal: SPACING.lg,
+            paddingTop: SPACING.sm,
+          }}
         >
           {error}
         </Text>
       ) : null}
-      <View style={{ flexDirection: "row", gap: 6 }}>
+      <View style={{ flexDirection: "row", minHeight: minHeight - 1 }}>
         <Pressable
           ref={cancel}
           accessibilityRole="button"
@@ -75,15 +73,24 @@ export function QuickEntryDeleteConfirmation({
           style={({ pressed }) => ({
             flex: 1,
             minHeight: 44,
-            padding: 10,
+            paddingHorizontal: SPACING.lg,
+            paddingVertical: SPACING.sm,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: RADII.card,
-            backgroundColor: palette.surfaceMuted,
             opacity: busy || pressed ? 0.5 : 1,
           })}
         >
-          <Text style={{ ...TYPOGRAPHY.label, color: palette.text }}>Abbrechen</Text>
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{
+              ...TYPOGRAPHY.small,
+              color: palette.textMuted,
+              textAlign: "center",
+              flexShrink: 1,
+            }}
+          >
+            Abbrechen
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -94,19 +101,29 @@ export function QuickEntryDeleteConfirmation({
           style={({ pressed }) => ({
             flex: 1,
             minHeight: 44,
-            padding: 10,
+            paddingHorizontal: SPACING.lg,
+            paddingVertical: SPACING.sm,
+            flexDirection: "row",
+            gap: 8,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: RADII.card,
-            backgroundColor: palette.surfaceMuted,
             opacity: busy || pressed ? 0.5 : 1,
           })}
         >
-          <Text style={{ ...TYPOGRAPHY.label, color: palette.danger }}>
+          <Ionicons accessible={false} color={palette.danger} name="trash-outline" size={18} />
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{
+              ...TYPOGRAPHY.small,
+              color: palette.danger,
+              textAlign: "center",
+              flexShrink: 1,
+            }}
+          >
             {busy ? "Löscht …" : "Löschen"}
           </Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }

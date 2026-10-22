@@ -1,63 +1,70 @@
 import { AccessibilityInfo } from "react-native";
-import { useCallback, useRef } from "react";
-
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CalendarEntry, SaveShiftInput, ShiftEntry } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
-import {
-  matchingQuickEntries,
-  saveQuickEntryAction,
-  type QuickEntryStampAction,
-} from "@/features/calendar/quick-entry-actions";
-import { announceStampResult } from "@/features/calendar/stamp-accessibility";
+import type { QuickEntryStampAction } from "./quick-entry-actions";
+import { createQuickStampQueue, type StampPreviewDay } from "./quick-stamp-queue";
+import { applyCalendarPreview } from "./calendar-render-data";
+import { announceStampResult } from "./stamp-accessibility";
 import { selectionFeedback } from "@/ui/haptics";
 
-export function useQuickStampAction({
-  entries,
-  removeEntry,
-  upsertShift,
-  onBusyChange,
-  onError,
-}: {
+export function useQuickStampAction(options: {
   readonly entries: readonly CalendarEntry[];
   readonly removeEntry: (entry: CalendarEntry) => Promise<void>;
   readonly upsertShift: (input: SaveShiftInput) => Promise<ShiftEntry>;
   readonly onBusyChange: (busy: boolean) => void;
   readonly onError: (message: string) => void;
 }) {
-  const savingDates = useRef(new Set<string>());
-
-  return useCallback(
-    async (action: QuickEntryStampAction, date: string) => {
-      if (savingDates.current.has(date)) return false;
-      savingDates.current.add(date);
-      onBusyChange(true);
-      onError("");
-      try {
-        const matches = matchingQuickEntries(action, date, entries);
-        if (matches.length > 0) {
-          for (const entry of matches) await removeEntry(entry);
-          announceStampResult(
-            AccessibilityInfo.announceForAccessibility,
-            action.label,
-            date,
-            matches.length,
+  const latest = useRef(options);
+  const mounted = useRef(true);
+  const [preview, setPreview] = useState<readonly StampPreviewDay[]>([]);
+  const queue = useRef<ReturnType<typeof createQuickStampQueue> | null>(null);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    queue.current = createQuickStampQueue({
+      entries: () => latest.current.entries,
+      save: (input) => latest.current.upsertShift(input),
+      remove: (entry) => latest.current.removeEntry(entry),
+      changed: (days, busy) => {
+        if (!mounted.current) return;
+        setPreview(days);
+        latest.current.onBusyChange(busy);
+      },
+      failed: (error) => {
+        if (mounted.current)
+          latest.current.onError(
+            userFacingErrorMessage(error, "Eintrag konnte nicht geändert werden."),
           );
-          selectionFeedback();
-        } else {
-          await saveQuickEntryAction(action, date, upsertShift);
-          announceStampResult(AccessibilityInfo.announceForAccessibility, action.label, date, 0);
-          selectionFeedback();
-        }
-        return true;
-      } catch (saveError) {
-        selectionFeedback();
-        onError(userFacingErrorMessage(saveError, "Eintrag konnte nicht geändert werden."));
-        return false;
-      } finally {
-        savingDates.current.delete(date);
-        onBusyChange(savingDates.current.size > 0);
-      }
-    },
-    [entries, onBusyChange, onError, removeEntry, upsertShift],
+      },
+      completed: (action, date, removed) => {
+        if (!mounted.current) return;
+        announceStampResult(
+          AccessibilityInfo.announceForAccessibility,
+          action.label,
+          date,
+          removed,
+        );
+      },
+    });
+    return () => {
+      mounted.current = false;
+      queue.current = null;
+    };
+  }, []);
+  useLayoutEffect(() => {
+    latest.current = options;
+  });
+  useEffect(() => {
+    queue.current?.reconcile();
+  }, [options.entries]);
+  const stamp = useCallback((action: QuickEntryStampAction, date: string) => {
+    latest.current.onError("");
+    selectionFeedback();
+    return queue.current?.stamp(action, date) ?? Promise.resolve(false);
+  }, []);
+  const displayEntries = useMemo(
+    () => applyCalendarPreview(options.entries, preview),
+    [options.entries, preview],
   );
+  return { stamp, displayEntries };
 }

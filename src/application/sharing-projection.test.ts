@@ -70,6 +70,7 @@ describe("explicit shift sharing and calendar times", () => {
     const [entry] = make([shift]);
     expect(Object.keys(entry).sort()).toEqual([
       "allDay",
+      "breakMinutes",
       "color",
       "endsAt",
       "id",
@@ -85,7 +86,6 @@ describe("explicit shift sharing and calendar times", () => {
       "private-template",
       "Private Notiz",
       "Private Klinik",
-      "breakMinutes",
       "overtime",
     ])
       expect(wire).not.toContain(secret);
@@ -94,6 +94,7 @@ describe("explicit shift sharing and calendar times", () => {
     const [entry] = make([shift]);
     expect(entry.startsAt).toBe("2026-10-24T19:00:00Z");
     expect(entry.endsAt).toBe("2026-10-25T06:30:00Z");
+    expect(entry.breakMinutes).toBe(60);
   });
   it("shares explicitly entered absences with their own title and color", () => {
     const [entry] = make([
@@ -104,6 +105,7 @@ describe("explicit shift sharing and calendar times", () => {
       color: shift.color,
       symbol: shift.symbol,
       allDay: true,
+      breakMinutes: null,
     });
   });
   it("shares vacation and free days but excludes deleted records", () => {
@@ -130,6 +132,7 @@ describe("explicit shift sharing and calendar times", () => {
       title: "Nicht verfügbar",
       color: "#737373",
       symbol: "unavailable",
+      breakMinutes: null,
     }));
   it("handles empty calendars", () => expect(make([])).toEqual([]));
   it("rejects invalid public IDs instead of exposing local IDs", () =>

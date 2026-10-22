@@ -277,34 +277,71 @@ describe("sharing SQLite atomic outbox and isolation", () => {
   });
 });
 
-it("republishes existing detailed shares once after the service-name upgrade without resuming paused shares", async () => {
-  await test.db.runAsync(
-    "UPDATE sharing_local_bindings SET acknowledged_generation=generation WHERE calendar_id=?",
-    calendarId,
-  );
-  await test.db.runAsync(
-    "INSERT INTO sharing_local_bindings SELECT 'paused',account_id,device_id,device_secret,name,color,visibility,appointment_ids_json,generation,acknowledged_generation,server_revision,0,NULL FROM sharing_local_bindings WHERE calendar_id=?",
-    calendarId,
-  );
-  await test.db.runAsync(
-    "INSERT INTO sharing_local_bindings SELECT 'availability',account_id,device_id,device_secret,name,color,'AVAILABILITY',appointment_ids_json,generation,acknowledged_generation,server_revision,1,NULL FROM sharing_local_bindings WHERE calendar_id=?",
-    calendarId,
-  );
-  const before = await listSharingBindings(test.db, account);
-  await test.db.runAsync("DELETE FROM sharing_projection_version");
-  await migrateCalendarSharing(test.db);
-  const upgraded = await listSharingBindings(test.db, account);
-  for (const previous of before) {
-    const current = upgraded.find((item) => item.calendarId === previous.calendarId)!;
-    expect(current.enabled).toBe(previous.enabled);
-    expect(current.visibility).toBe(previous.visibility);
-    expect(current.generation).toBe(
-      previous.generation + (previous.enabled && previous.visibility === "DETAILS" ? 1 : 0),
+it.each([1, 2])(
+  "republishes detailed shares once from projection version %s without resuming paused shares",
+  async (version) => {
+    await test.db.runAsync(
+      "UPDATE sharing_local_bindings SET acknowledged_generation=generation WHERE calendar_id=?",
+      calendarId,
     );
-    expect(current.acknowledgedGeneration).toBe(previous.acknowledgedGeneration);
-  }
+    await test.db.runAsync(
+      "INSERT INTO sharing_local_bindings SELECT 'paused',account_id,device_id,device_secret,name,color,visibility,appointment_ids_json,generation,acknowledged_generation,server_revision,0,NULL FROM sharing_local_bindings WHERE calendar_id=?",
+      calendarId,
+    );
+    await test.db.runAsync(
+      "INSERT INTO sharing_local_bindings SELECT 'availability',account_id,device_id,device_secret,name,color,'AVAILABILITY',appointment_ids_json,generation,acknowledged_generation,server_revision,1,NULL FROM sharing_local_bindings WHERE calendar_id=?",
+      calendarId,
+    );
+    const before = await listSharingBindings(test.db, account);
+    await test.db.runAsync("UPDATE sharing_projection_version SET version=?", version);
+    await migrateCalendarSharing(test.db);
+    const upgraded = await listSharingBindings(test.db, account);
+    for (const previous of before) {
+      const current = upgraded.find((item) => item.calendarId === previous.calendarId)!;
+      expect(current.enabled).toBe(previous.enabled);
+      expect(current.visibility).toBe(previous.visibility);
+      expect(current.generation).toBe(
+        previous.generation + (previous.enabled && previous.visibility === "DETAILS" ? 1 : 0),
+      );
+      expect(current.acknowledgedGeneration).toBe(previous.acknowledgedGeneration);
+    }
+    await migrateCalendarSharing(test.db);
+    expect(await listSharingBindings(test.db, account)).toEqual(upgraded);
+  },
+);
+
+it("keeps an old queued mutation intact and automatically sends pauses after its acknowledgement", async () => {
+  await saveShift(test.db, shiftInput);
+  const [binding] = await listSharingBindings(test.db, account);
+  const queued = (await stageSharingPublication(test.db, binding, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  const legacyEntries = queued.entries.map(({ breakMinutes: _pause, ...entry }) => entry);
+  await test.db.runAsync(
+    "UPDATE sharing_publication_outbox SET snapshot_json=? WHERE calendar_id=?",
+    JSON.stringify(legacyEntries),
+    calendarId,
+  );
+  await test.db.runAsync("UPDATE sharing_projection_version SET version=2");
   await migrateCalendarSharing(test.db);
-  expect(await listSharingBindings(test.db, account)).toEqual(upgraded);
+  const [upgraded] = await listSharingBindings(test.db, account);
+  const pending = (await stageSharingPublication(test.db, upgraded, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(pending).toEqual({ ...queued, entries: legacyEntries });
+  await acknowledgeSharingPublication(test.db, pending, 1);
+  const [dirty] = await listSharingBindings(test.db, account);
+  const next = (await stageSharingPublication(test.db, dirty, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(next.mutationId).not.toBe(pending.mutationId);
+  expect(next.entries[0].breakMinutes).toBe(60);
+  await acknowledgeSharingPublication(test.db, next, 2);
+  await migrateCalendarSharing(test.db);
+  const [clean] = await listSharingBindings(test.db, account);
+  expect(
+    await stageSharingPublication(test.db, clean, "Europe/Berlin", () => crypto.randomUUID()),
+  ).toBeNull();
 });
 
 it("retains independent reader colors on upgrade and snapshot replacement without changing owner metadata", async () => {

@@ -1,11 +1,22 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Pressable } from "react-native";
 import Swipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import { ReduceMotion } from "react-native-reanimated";
 
 import { useInversePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
+
+// Follow the finger directly, then settle with a small, damped overshoot.
+const SWIPE_SPRING = {
+  mass: 0.9,
+  damping: 26,
+  stiffness: 300,
+  overshootClamping: false,
+  energyThreshold: 0.00001,
+  reduceMotion: ReduceMotion.System,
+};
 
 /** Revealing the action never deletes an entry, including a full swipe. */
 export function QuickEntrySwipeRow({
@@ -38,7 +49,8 @@ export function QuickEntrySwipeRow({
       ref={swipe}
       testID={`swipe-entry-${entryKey}`}
       enabled={enabled}
-      friction={1.5}
+      friction={1}
+      animationOptions={SWIPE_SPRING}
       rightThreshold={40}
       overshootLeft={false}
       overshootRight={false}

@@ -329,8 +329,19 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       if (!remoteIds.has(cached.calendar.id)) await remove(ticket, accountId, cached.calendar.id);
     for (const binding of bindings)
       if (!remoteIds.has(binding.calendarId)) await remove(ticket, accountId, binding.calendarId);
+    let publication = Promise.resolve();
+    const publishCached = () => {
+      publication = publication.then(async () => {
+        check(ticket, accountId);
+        const next = await options.local.listCaches(accountId);
+        check(ticket, accountId);
+        caches = retainSharingCaches(caches, visibility.apply(next));
+        emit();
+      });
+      return publication;
+    };
     let networkFailure = false;
-    for (const calendar of remote) {
+    const fetchCalendar = async (calendar: (typeof remote)[number]) => {
       check(ticket, accountId);
       const cached = caches.find((item) => item.calendar.id === calendar.id);
       try {
@@ -339,10 +350,12 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
           contentRightsAvailable && cached?.calendar.contentVersion !== 2
             ? null
             : (cached?.calendar.revision ?? null),
+          cached?.calendar.durationVersion,
         );
         check(ticket, accountId);
         await options.local.cacheSnapshot(accountId, snapshot);
         check(ticket, accountId);
+        await publishCached();
         if (calendar.isOwner) {
           const list = await cloud().listMembers(calendar.id);
           check(ticket, accountId);
@@ -353,7 +366,24 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         if (errorCode(error) === "SHARE_NOT_FOUND") await remove(ticket, accountId, calendar.id);
         else networkFailure = true;
       }
-    }
+    };
+    let cursor = 0;
+    let stoppedFetching = false;
+    await Promise.all(
+      Array.from({ length: Math.min(3, remote.length) }, async () => {
+        while (cursor < remote.length && !stoppedFetching) {
+          const calendar = remote[cursor++];
+          try {
+            await fetchCalendar(calendar);
+          } catch (error) {
+            // Reject immediately so session denial invalidates the epoch while
+            // slower sibling requests are still running. Their checks prevent publication.
+            stoppedFetching = true;
+            throw error;
+          }
+        }
+      }),
+    );
     for (const calendar of remote)
       if (calendar.isOwner) await ensureSourceContent(ticket, accountId, calendar.id);
     await localState(ticket, accountId);

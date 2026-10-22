@@ -52,6 +52,7 @@ type ShiftTemplateRowMoreAction =
 export function ShiftTemplateListRow({
   accessibilityLabel,
   color,
+  compact = false,
   disabled = false,
   moreAccessibilityLabel,
   onMorePress,
@@ -64,6 +65,7 @@ export function ShiftTemplateListRow({
 }: {
   readonly accessibilityLabel: string;
   readonly color: string;
+  readonly compact?: boolean;
   readonly disabled?: boolean;
   readonly onPress: () => void;
   readonly sorting?: boolean;
@@ -74,7 +76,10 @@ export function ShiftTemplateListRow({
 } & ShiftTemplateRowMoreAction) {
   const palette = usePalette();
   return (
-    <View style={[styles.row, { opacity: disabled ? 0.45 : 1 }]} testID={testID}>
+    <View
+      style={[styles.row, compact && styles.compactRow, { opacity: disabled ? 0.45 : 1 }]}
+      testID={testID}
+    >
       <Pressable
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
@@ -83,19 +88,24 @@ export function ShiftTemplateListRow({
         onPress={onPress}
         style={({ pressed }) => [
           styles.select,
+          compact && styles.compactSelect,
           { backgroundColor: pressed ? palette.surfaceMuted : "transparent" },
         ]}
       >
         <View
-          style={[styles.badge, { backgroundColor: accessibleChipBackgroundColor(color) }]}
+          style={[
+            styles.badge,
+            compact && styles.compactBadge,
+            { backgroundColor: accessibleChipBackgroundColor(color) },
+          ]}
           testID={testID ? `${testID}-badge` : undefined}
         >
-          <ShiftSymbol color={chipTextColor} size={18} value={symbol} />
+          <ShiftSymbol color={chipTextColor} size={compact ? 16 : 18} value={symbol} />
         </View>
         <View style={styles.copy}>
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.title, { color: palette.text }]}
+            style={[styles.title, compact && styles.compactTitle, { color: palette.text }]}
           >
             {title}
           </Text>
@@ -202,12 +212,24 @@ const styles = StyleSheet.create({
     borderRadius: RADII.control,
     paddingVertical: SPACING.sm,
   },
+  compactRow: {
+    minHeight: 68,
+  },
+  compactSelect: {
+    minHeight: 68,
+    // Preserve the text column and separator alignment as the circle shrinks.
+    gap: SPACING.lg + SPACING.xxs,
+  },
   badge: {
     width: 38,
     height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: RADII.pill,
+  },
+  compactBadge: {
+    width: 30,
+    height: 30,
   },
   copy: {
     minWidth: 0,
@@ -217,6 +239,9 @@ const styles = StyleSheet.create({
   title: {
     ...TYPOGRAPHY.body,
     fontWeight: "600",
+  },
+  compactTitle: {
+    fontWeight: "500",
   },
   subtitle: {
     ...TYPOGRAPHY.caption,

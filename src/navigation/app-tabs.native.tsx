@@ -2,10 +2,8 @@ import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import {
-  requestCalendarTodayOnReselect,
-  useActiveMonthCoordinator,
-} from "@/navigation/active-month";
+import { requestCalendarTodayOnPress, useActiveMonthCoordinator } from "@/navigation/active-month";
+import { requestAnalysisCurrentPeriodOnReselect } from "./analysis-period-navigation";
 import { useCalendarTabDate } from "@/navigation/calendar-tab-date";
 import { calendarTabIconSource } from "@/navigation/calendar-tab-icon";
 import { usePalette } from "@/theme/palette";
@@ -38,9 +36,9 @@ export function AppTabs() {
     >
       <NativeTabs.Trigger
         disableScrollToTop
-        listeners={({ navigation }) => ({
+        listeners={() => ({
           tabPress: () => {
-            requestCalendarTodayOnReselect(activeMonthCoordinator, navigation.isFocused());
+            requestCalendarTodayOnPress(activeMonthCoordinator);
           },
         })}
         name="(calendar)"
@@ -49,7 +47,14 @@ export function AppTabs() {
         <NativeTabs.Trigger.Label>Kalender</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={calendarTabIconSource(today.day)} renderingMode="template" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="(analysis)">
+      <NativeTabs.Trigger
+        name="(analysis)"
+        disableScrollToTop
+        listeners={({ navigation }) => ({
+          tabPress: () =>
+            requestAnalysisCurrentPeriodOnReselect(activeMonthCoordinator, navigation.isFocused()),
+        })}
+      >
         <NativeTabs.Trigger.Label>Auswertung</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           renderingMode="template"
