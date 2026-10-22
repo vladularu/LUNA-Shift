@@ -11,15 +11,10 @@ describe("calendar design examples", () => {
       const examples = calendarDesignPreviewData(month, [], []);
       const visible = createMonthGrid(month)
         .slice(0, 14)
-        .map((item) => item.date);
-      for (const entry of examples.entries) expect(visible).toContain(entry.date);
-      for (const day of examples.holidays.keys()) expect(visible).toContain(day);
-      expect(examples.entries.filter((entry) => entry.kind === "SHIFT")).toHaveLength(5);
-      expect(
-        examples.entries.some((entry) => entry.kind === "SHIFT" && entry.type === "VACATION"),
-      ).toBe(true);
-      expect(examples.entries.some((entry) => entry.kind === "APPOINTMENT")).toBe(true);
-      expect(examples.holidays.size).toBe(1);
+        .filter((item) => item.inMonth);
+      expect(examples.entries.map((entry) => entry.date)).toEqual(visible.map((item) => item.date));
+      expect(examples.entries.every((entry) => entry.kind === "SHIFT")).toBe(true);
+      expect(examples.holidays.size).toBe(0);
     },
   );
   it("uses saved template colors and symbols without modifying the templates or plan", () => {
@@ -42,11 +37,11 @@ describe("calendar design examples", () => {
     const existing = Object.freeze(calendarDesignPreviewData("2026-08", [], []).entries);
     const before = JSON.stringify({ templates, existing });
     const examples = calendarDesignPreviewData("2026-10", templates, existing);
-    expect(examples.entries[0]).toMatchObject({
+    expect(examples.entries.find((entry) => entry.date === "2026-10-06")).toMatchObject({
       color: template.color,
       symbol: template.symbol,
       title: "Früh",
-      date: "2026-10-01",
+      date: "2026-10-06",
     });
     expect(JSON.stringify({ templates, existing })).toBe(before);
     expect(examples.entries).not.toBe(existing);
@@ -54,16 +49,58 @@ describe("calendar design examples", () => {
       true,
     );
   });
-  it("applies the actual calendar index filters to services and appointments independently", () => {
+  it("shows realistic service blocks with rest days and deducted breaks", () => {
+    const examples = calendarDesignPreviewData("2026-06", [], []);
+    expect(examples.entries.map((entry) => entry.kind === "SHIFT" && entry.type)).toEqual([
+      "EARLY",
+      "EARLY",
+      "LATE",
+      "LATE",
+      "NIGHT",
+      "NIGHT",
+      "FREE",
+      "FREE",
+      "EARLY",
+      "EARLY",
+      "LATE",
+      "LATE",
+      "FREE",
+      "FREE",
+    ]);
+    let previousEnd: number | undefined;
+    let workingMinutes = 0;
+    for (const entry of examples.entries) {
+      if (entry.kind !== "SHIFT") throw new Error("Unexpected sample appointment");
+      if (entry.type === "FREE") {
+        expect(entry).toMatchObject({
+          allDay: true,
+          startTime: null,
+          endTime: null,
+          breakMinutes: 0,
+        });
+        continue;
+      }
+      expect(entry).toMatchObject({ allDay: false, breakMinutes: 30 });
+      const start = Date.parse(`${entry.date}T${entry.startTime}:00Z`);
+      let end = Date.parse(`${entry.date}T${entry.endTime}:00Z`);
+      if (end <= start) end += 24 * 60 * 60 * 1000;
+      if (previousEnd !== undefined)
+        expect((start - previousEnd) / (60 * 60 * 1000)).toBeGreaterThanOrEqual(16);
+      workingMinutes += (end - start) / (60 * 1000) - entry.breakMinutes;
+      previousEnd = end;
+    }
+    expect(workingMinutes).toBe(75 * 60);
+  });
+  it("keeps services controlled by their filter without introducing appointments", () => {
     const examples = calendarDesignPreviewData("2026-10", [], []);
     expect(
       buildCalendarEntryIndex(examples.entries, { showShifts: false, showAppointments: true })
         .entriesByDate.size,
-    ).toBe(1);
+    ).toBe(0);
     expect(
       buildCalendarEntryIndex(examples.entries, { showShifts: true, showAppointments: false })
         .entriesByDate.size,
-    ).toBe(5);
+    ).toBe(11);
     expect(
       buildCalendarEntryIndex(examples.entries, { showShifts: false, showAppointments: false })
         .entriesByDate.size,

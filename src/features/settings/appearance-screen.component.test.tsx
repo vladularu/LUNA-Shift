@@ -245,8 +245,8 @@ describe("appearance controls", () => {
     await layoutPreview(screen);
     const preview = screen.getByTestId("appearance-calendar-preview");
     expect(within(preview).getByText("Oktober 2026")).toBeTruthy();
-    expect(within(preview).getByLabelText("2026-10-01, Früh")).toBeTruthy();
-    const chip = within(within(preview).getByLabelText("2026-10-01, Früh")).getByText("F");
+    expect(within(preview).getByLabelText("2026-10-06, Früh")).toBeTruthy();
+    const chip = within(within(preview).getByLabelText("2026-10-06, Früh")).getByText("F");
     expect(chip.parent).toHaveStyle({
       backgroundColor: calendarChipPalette("#7E57C2", false).main,
     });
@@ -259,6 +259,26 @@ describe("appearance controls", () => {
     expect(JSON.stringify(root).indexOf("appearance-calendar-preview")).toBeLessThan(
       JSON.stringify(root).indexOf("appearance-settings"),
     );
+  });
+  it("keeps the live preview outside the scrolling controls", async () => {
+    const screen = await render(pictureScreen());
+    await layoutPreview(screen);
+    const preview = screen.getByTestId("appearance-calendar-preview");
+    const controls = screen.getByTestId("calendar-design-controls");
+    expect(within(controls).queryByTestId("appearance-calendar-preview")).toBeNull();
+    expect(within(controls).getByText("Darstellung")).toBeTruthy();
+    expect(
+      within(controls).getByRole("button", { name: "Kalenderoptionen zurücksetzen" }),
+    ).toBeTruthy();
+    await fireEvent.scroll(controls, {
+      nativeEvent: {
+        contentOffset: { x: 0, y: 600 },
+        contentSize: { width: 390, height: 1400 },
+        layoutMeasurement: { width: 390, height: 350 },
+      },
+    });
+    expect(screen.getByTestId("appearance-calendar-preview")).toBe(preview);
+    expect(preview).toBeVisible();
   });
   it("updates the real preview for each saved strength and mode without replacing its date nodes", async () => {
     const screen = await render(pictureScreen());
@@ -314,7 +334,7 @@ describe("appearance controls", () => {
       expect(dates.length + adjacentDates.length).toBe(14);
       expect(screen.queryByTestId("calendar-date-marker-2026-10-12", hidden)).toBeNull();
       expect(screen.queryByLabelText(/2026-10-12/, hidden)).toBeNull();
-      expect(screen.getByLabelText("2026-10-01, Früh")).toBeTruthy();
+      expect(screen.getByLabelText("2026-10-06, Früh")).toBeTruthy();
       expect(screen.getByTestId("appearance-preview-month").props.style.height).toBeLessThan(300);
     },
   );
@@ -341,7 +361,7 @@ describe("appearance controls", () => {
       expect(screen.getByTestId("appearance-preview-month")).toHaveStyle({ height });
       expect(datePositions()).toEqual(positions);
       const shift = within(screen.getByTestId("appearance-calendar-preview")).getByLabelText(
-        "2026-10-01, Früh",
+        "2026-10-06, Früh",
       );
       expect(within(shift).queryByText(/06:00/) !== null).toBe(times);
     }
