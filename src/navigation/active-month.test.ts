@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  calendarTabShouldOpenToday,
   createActiveMonthCoordinator,
-  requestCalendarTodayOnReselect,
+  requestCalendarTodayOnPress,
   requireActiveMonth,
 } from "@/navigation/active-month";
+import { requestAnalysisCurrentPeriodOnReselect } from "./analysis-period-navigation";
 
 describe("active month coordinator", () => {
   it("shares the latest valid month without React updates", () => {
@@ -35,21 +35,12 @@ describe("active month coordinator", () => {
     expect(() => requireActiveMonth("2026-13")).toThrow();
   });
 
-  it("uses Today only when the calendar tab is selected again", () => {
-    expect(calendarTabShouldOpenToday(false)).toBe(false);
-    expect(calendarTabShouldOpenToday(true)).toBe(true);
-  });
-
-  it("publishes a Today request only for a focused calendar reselect", () => {
+  it("publishes exactly one Today request for each calendar tab press", () => {
     const coordinator = createActiveMonthCoordinator("2026-08");
     const listener = vi.fn();
     const unsubscribe = coordinator.subscribeTodayRequests(listener);
 
-    expect(requestCalendarTodayOnReselect(coordinator, false)).toBe(false);
-    expect(coordinator.getTodayRequestRevision()).toBe(0);
-    expect(listener).not.toHaveBeenCalled();
-
-    expect(requestCalendarTodayOnReselect(coordinator, true)).toBe(true);
+    requestCalendarTodayOnPress(coordinator);
     expect(coordinator.getTodayRequestRevision()).toBe(1);
     expect(coordinator.hasPendingTodayRequest(1)).toBe(true);
     expect(listener).toHaveBeenCalledTimes(1);
@@ -57,6 +48,27 @@ describe("active month coordinator", () => {
     unsubscribe();
     coordinator.requestToday();
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps analysis reselects separate from calendar Today and preserves periods on normal tab switches", () => {
+    const coordinator = createActiveMonthCoordinator("2026-08");
+    const analysis = vi.fn();
+    const today = vi.fn();
+    const stop = coordinator.analysisRequests.subscribe(analysis);
+    coordinator.subscribeTodayRequests(today);
+    requestAnalysisCurrentPeriodOnReselect(coordinator, false);
+    expect(coordinator.analysisRequests.getRevision()).toBe(0);
+    requestAnalysisCurrentPeriodOnReselect(coordinator, true);
+    expect(coordinator.analysisRequests.getRevision()).toBe(1);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    expect(today).not.toHaveBeenCalled();
+    expect(coordinator.getMonth()).toBe("2026-08");
+    requestCalendarTodayOnPress(coordinator);
+    expect(today).toHaveBeenCalledTimes(1);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    stop();
+    requestAnalysisCurrentPeriodOnReselect(coordinator, true);
+    expect(analysis).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the newest Today request pending until it is completed", () => {

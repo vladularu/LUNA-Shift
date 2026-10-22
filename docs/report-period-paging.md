@@ -1,0 +1,17 @@
+# Ruhiges Blättern zwischen Berichtszeiträumen
+
+Referenz: ScreenRecording_10-21-2026 19-25-46_1.mp4, 13,26 Sekunden, iPhone 14 Pro Max. Die Aufnahme zeigt nebeneinanderliegende Auswertungen mit gemeinsam bewegtem Kopf und Inhalt. Oktober → November bewegt sich nach links; Oktober → September nach rechts. Schnelle Richtungswechsel bleiben räumlich nachvollziehbar. Die Aufnahme allein belegt weder Haptik noch Berechnungszeiten.
+
+Ziel: direktes natives horizontales Blättern in Monats-/Jahresauswertung sowie Gehalt und Gehaltsdetails, chronologisch in beide Richtungen. Pfeile verwenden denselben Pager. Keine Auswahlvibration bei Zeitraumwechseln. Nachbarberichte werden vorab montiert; vorhandene Berichte bleiben stabil. Monats-/Jahres-Heute-Funktion und Exporte verwenden ausschließlich den bestätigten Zeitraum.
+
+Plattform: iOS / iPhone 14 Pro Max / Expo SDK 57 (~57.0.22). Referenzdokumentation: https://docs.expo.dev/versions/v57.0.0/sdk/reanimated/ und https://docs.expo.dev/versions/v57.0.0/sdk/gesture-handler/. Vorhandene native ScrollView-Seitenbewegung, keine neuen Pakete oder nativen Änderungen.
+
+Arbeitspaket 1: wiederverwendbarer ReportPeriodPager mit nativer Bewegung, chronologischen Seiten, vorbereiteten Nachbarn, Abbruch ohne Auswahländerung, Layout-/Heute-Sprüngen und reduzierter Bewegung. Neue UI-Komponente und fokussierte Komponententests.
+
+Arbeitspaket 2: Zeitraumzustand und Berechnung der Auswertung trennen. Pager-Seiten behalten jeweils ihren Monat oder ihr Jahr. Native Push-Routen bleiben für echte Unterseiten und Moduswechsel; Monats-/Jahresschritte erzeugen keinen Navigationsverlauf. Dateiscope: analysis-screen.tsx, use-analysis-navigation.ts samt Tests, Auswertungs-Stack und Auswertungs-Integrationstests. Zusätzlich bleibt in use-pflegeshift-loading.ts ein bereits vollständig geladener Nachbarjahrgang während der Erweiterung des Drei-Jahres-Bereichs bereit. Ein Regressionstest reproduziert den bisherigen Ladeblitz; Erststart, nicht abgedeckte Jahre, explizites Neuladen und Fehler behalten ihre Lade-/Fehlerbehandlung. Die beiden bestehenden Jahreswechsel-Erwartungen in pflegeshift-provider.notification.component.test.tsx werden entsprechend auf durchgehende Bereitschaft umgestellt; ihre Daten-, Metadaten- und Erinnerungsprüfungen bleiben erhalten.
+
+Arbeitspaket 3: gleicher Pager in Gehalt und allen Gehaltsdetailbereichen; gemeinsamer Hook für den bestätigten Monatszustand; native Zurückgeste auf den linken Bildschirmrand begrenzen, damit Rechtswischen im Bericht zum Vormonat führt. Dateiscope: salary-screen.tsx, salary-details-screen.tsx, neuer use-report-month.ts, horizontal-back-gesture.ts und zugehörige Tests. Nicht mehr verwendete vorherige Swipe-Komponente samt Test werden entfernt.
+
+Nicht-Ziele: Berechnungsformeln, Server, Widgets, globale Haptik, Kalendergesten, Stiländerungen. Ausgangspunkt: veröffentlichte Preview-OTA d24d9916-a74a-4940-bf54-b7b7b0f9cf71. Bestehende Freigabe-/Widget-Änderungen bleiben unverändert. Umsetzung auf codex/analysis-period-navigation; weitere OTA, Git-Delivery oder native Builds sind nicht beauftragt.
+
+Abnahme: beide Richtungen per Wischen und Pfeil; Abbruch bleibt im selben Zeitraum; vertikales Scrollen bleibt möglich; keine Zeitraum-Haptik; Nachbarseiten schon vor Wischende vorhanden; korrekte Jahresgrenzen und getrennte Monats-/Jahres-Rücksprünge; korrekte Gehaltsbereiche und Exporte; begrenzte Anzahl montierter Berichte. Fokussierte Tests und verify:fast. Gleichmäßigkeit und Fingerverfolgung müssen erneut auf dem iPhone abgenommen werden.

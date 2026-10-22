@@ -4,10 +4,15 @@ import { AppState, type AppStateStatus } from "react-native";
 import { AppTabs as NativeAppTabs } from "./app-tabs.native";
 import { AppTabs as JavaScriptAppTabs } from "./app-tabs-js";
 import { calendarTabIconSource } from "./calendar-tab-icon";
+import { requestCalendarTodayOnPress } from "./active-month";
+import { requestAnalysisCurrentPeriodOnReselect } from "./analysis-period-navigation";
 
 jest.mock("@/navigation/active-month", () => ({
   useActiveMonthCoordinator: () => ({}),
-  requestCalendarTodayOnReselect: jest.fn(),
+  requestCalendarTodayOnPress: jest.fn(),
+}));
+jest.mock("./analysis-period-navigation", () => ({
+  requestAnalysisCurrentPeriodOnReselect: jest.fn(),
 }));
 jest.mock("@/theme/palette", () => ({
   usePalette: () => ({ accent: "#FFEB3B", primary: "#007AFF", textMuted: "#808080" }),
@@ -49,6 +54,7 @@ let changeState: (state: AppStateStatus) => void;
 const removeListener = jest.fn();
 
 beforeEach(() => {
+  jest.clearAllMocks();
   jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask"] });
   jest.setSystemTime(new Date(2026, 9, 8, 12));
   AppState.currentState = "active";
@@ -64,6 +70,33 @@ afterEach(() => {
 });
 
 describe("current calendar day in the tab bar", () => {
+  it.each([NativeAppTabs, JavaScriptAppTabs])(
+    "issues Today on the first calendar tab press even when another tab is focused",
+    async (Tabs) => {
+      const screen = await render(<Tabs />);
+      const listeners = screen
+        .getByTestId("tab-(calendar)")
+        .props.listeners({ navigation: { isFocused: () => false } });
+      listeners.tabPress();
+      expect(requestCalendarTodayOnPress).toHaveBeenCalledTimes(1);
+      expect(requestAnalysisCurrentPeriodOnReselect).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([NativeAppTabs, JavaScriptAppTabs])(
+    "forwards analysis focus to its own period-reset handler",
+    async (Tabs) => {
+      const screen = await render(<Tabs />);
+      for (const focused of [false, true]) {
+        screen
+          .getByTestId("tab-(analysis)")
+          .props.listeners({ navigation: { isFocused: () => focused } })
+          .tabPress();
+        expect(requestAnalysisCurrentPeriodOnReselect).toHaveBeenLastCalledWith({}, focused);
+      }
+      expect(requestCalendarTodayOnPress).not.toHaveBeenCalled();
+    },
+  );
   it("keeps every native footer icon as an outline without an iOS SF override", async () => {
     const screen = await render(<NativeAppTabs />);
     for (const name of [

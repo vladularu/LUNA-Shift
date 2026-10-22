@@ -40,6 +40,7 @@ export function SelectionSheet({
   visible,
   disabled = false,
   cancelLabel = "Abbrechen",
+  titleWeight,
   keyboardAware = false,
   closeInHeader = false,
   onBack,
@@ -53,6 +54,7 @@ export function SelectionSheet({
   readonly visible: boolean;
   readonly disabled?: boolean;
   readonly cancelLabel?: string;
+  readonly titleWeight?: "500" | "600";
   readonly keyboardAware?: boolean;
   readonly closeInHeader?: boolean;
   readonly onBack?: () => void;
@@ -325,7 +327,11 @@ export function SelectionSheet({
                   >
                     <Text
                       maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+                      style={{
+                        color: palette.text,
+                        ...TYPOGRAPHY.sectionTitle,
+                        fontWeight: titleWeight ?? TYPOGRAPHY.sectionTitle.fontWeight,
+                      }}
                     >
                       {title}
                     </Text>

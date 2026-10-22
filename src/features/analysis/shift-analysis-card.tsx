@@ -30,8 +30,11 @@ export function ShiftAnalysisCard({
   const metric = view.ready ? view.preferences.shiftMetric : localMetric;
   const items = analysis.items.filter((item) => metric === "COUNT" || item.minutes > 0);
   return (
-    <AnalysisListCard title="Schichten" onPress={onPress} caption={caption}>
-      <View style={{ alignSelf: "flex-end", paddingTop: SPACING.sm }}>
+    <AnalysisListCard
+      title="Schichten"
+      onPress={onPress}
+      caption={caption}
+      headerAccessory={
         <SelectionControl<ShiftMetric>
           kind="view"
           density="compact"
@@ -47,7 +50,8 @@ export function ShiftAnalysisCard({
             view.update((current) => ({ ...current, shiftMetric: value }));
           }}
         />
-      </View>
+      }
+    >
       {items.length ? (
         items.map((item, index) => (
           <AnalysisValueRow
@@ -62,14 +66,14 @@ export function ShiftAnalysisCard({
             leading={
               analysis.appearances?.[item.type]?.length ? (
                 <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.xxs, maxWidth: 64 }}
+                  style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.xxs, maxWidth: 48 }}
                 >
                   {analysis.appearances[item.type]!.map((style) => (
                     <ColorBadge
                       key={JSON.stringify(style)}
                       color={style.color}
                       label={style.symbol}
-                      size={26}
+                      size={20}
                     />
                   ))}
                 </View>
@@ -77,7 +81,7 @@ export function ShiftAnalysisCard({
                 <ColorBadge
                   color={SHIFT_TYPE_COLORS[item.type]}
                   label={DEFAULT_SHIFT_SYMBOLS[item.type]}
-                  size={24}
+                  size={18}
                 />
               )
             }

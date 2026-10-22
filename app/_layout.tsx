@@ -14,6 +14,7 @@ import { NotificationFeedbackBridge } from "@/features/notifications/notificatio
 import { SecureDatabaseProvider } from "@/infrastructure/database/secure-database-provider";
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { ActiveMonthProvider } from "@/navigation/active-month";
+import { horizontalBackGestureOptions } from "@/navigation/horizontal-back-gesture";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
@@ -94,7 +95,8 @@ function ThemedApp() {
                       <PrivateCloudProvider>
                         <ProfileSelectionProvider>
                           <Stack
-                            screenOptions={{
+                            screenOptions={({ route }) => ({
+                              ...horizontalBackGestureOptions(route.name),
                               headerBackButtonDisplayMode: "minimal",
                               headerShadowVisible: false,
                               headerStyle: { backgroundColor: palette.background },
@@ -106,7 +108,7 @@ function ThemedApp() {
                               },
                               statusBarStyle: dark ? "light" : "dark",
                               headerTransparent: false,
-                            }}
+                            })}
                           >
                             <Stack.Screen
                               name="(tabs)"

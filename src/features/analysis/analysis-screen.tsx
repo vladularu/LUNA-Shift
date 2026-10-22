@@ -1,11 +1,9 @@
 import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { useNetPayProfile } from "@/features/salary/use-net-pay-profile";
 import { useAnnualSalaryForecast } from "@/features/salary/use-annual-salary-forecast";
-import { Temporal } from "@js-temporal/polyfill";
-import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { router, useIsFocused } from "expo-router";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 
 import {
   usePflegeShiftEntries,
@@ -27,22 +25,23 @@ import {
   ExpandableHighlightCard,
   formatMonthRangeLabel,
 } from "@/features/analysis/analysis-overview-cards";
-import { AnnualReportScreen, type AnalysisPeriod } from "@/features/analysis/annual-report-view";
+import { AnnualReportScreen } from "@/features/analysis/annual-report-view";
 import { useAnnualReportInputs } from "@/features/analysis/use-annual-report-inputs";
 import { useSimpleAnnualReport as useDeferredAnnualReport } from "@/features/analysis/use-simple-annual-report";
 import { useDeferredMonthlyCompliance } from "@/features/analysis/use-monthly-compliance";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
 import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
-import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
-import { MOTION } from "@/theme/motion";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
-import { selectionFeedback } from "@/ui/haptics";
 import { ReportPeriodContent, ReportScrollView, ReportTestBadge } from "@/ui/report-layout";
 
 import { ComplianceDetails } from "./compliance-details";
+import { AnalysisMonthTransition } from "./analysis-month-transition";
+import { useAnalysisNavigation } from "./use-analysis-navigation";
+import { ReportPeriodPager } from "@/ui/report-period-pager";
+import { AnalysisScene } from "./analysis-scene";
 export type AnalysisExpandedCard = "CHECK" | "PAY";
 export { ComplianceDetails } from "./compliance-details";
 
@@ -53,37 +52,11 @@ export function AnalysisScreen({
 }: {
   readonly initialExpandedCard?: AnalysisExpandedCard | null;
 }) {
-  const palette = usePalette();
-  const isFocused = useIsFocused();
-  const checkPreferences = useCheckPreferences();
-  const activeMonthCoordinator = useActiveMonthCoordinator();
-  const params = useLocalSearchParams<{ month?: RouteParam }>();
-  const { error, ready, reload } = usePflegeShiftStatus();
   const { profile } = usePflegeShiftProfile();
-  const { entries } = usePflegeShiftEntries();
-  const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
-  const { testMonths } = usePflegeShiftTestData();
-  const { resolver: ruleResolver } = useRuleCatalogRuntime();
-  const [month, setMonth] = useState(() => activeMonthCoordinator.getMonth());
-  const [period, setPeriod] = useState<AnalysisPeriod>("MONTH");
-  const salaryPayments = useNetPayProfile(month, period === "MONTH" && !testMonths.includes(month));
-  const annualSalary = useAnnualSalaryForecast(
-    Number(month.slice(0, 4)),
-    salaryPayments.annualPayments,
-    period === "MONTH" && !testMonths.includes(month) && salaryPayments.status === "ready",
-    testMonths,
-  );
-  const [year, setYear] = useState(() => Number(activeMonthCoordinator.getMonth().slice(0, 4)));
-  const parsedMonth = parseMonthRouteParam(params.month);
-  const routeMonth = parsedMonth.status === "valid" ? parsedMonth.value : null;
-
-  useEffect(() => {
-    if (routeMonth !== null) {
-      activeMonthCoordinator.setMonth(routeMonth);
-      setMonth(routeMonth);
-    }
-  }, [activeMonthCoordinator, routeMonth]);
-
+  const isFocused = useIsFocused();
+  const activeMonthCoordinator = useActiveMonthCoordinator();
+  const navigation = useAnalysisNavigation(profile?.timeZone);
+  const { month, period, routeMonth, selectMonth, changePeriod } = navigation;
   useEffect(() => {
     if (initialExpandedCard) {
       const targetMonth = routeMonth ?? activeMonthCoordinator.getMonth();
@@ -94,22 +67,66 @@ export function AnalysisScreen({
       );
     }
   }, [initialExpandedCard, routeMonth, activeMonthCoordinator]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const activeMonth = activeMonthCoordinator.getMonth();
-      setMonth((current) => (current === activeMonth ? current : activeMonth));
-      setYear((current) =>
-        current === Number(activeMonth.slice(0, 4)) ? current : Number(activeMonth.slice(0, 4)),
-      );
-    }, [activeMonthCoordinator]),
+  return (
+    <AnalysisScene focused={isFocused}>
+      <ReportPeriodPager
+        key={period}
+        value={month}
+        unit={period}
+        enabled={isFocused}
+        onChange={selectMonth}
+        renderPage={(pageMonth, move, active) => (
+          <AnalysisPage
+            month={pageMonth}
+            period={period}
+            move={move}
+            active={active}
+            changePeriod={changePeriod}
+          />
+        )}
+      />
+    </AnalysisScene>
   );
+}
 
+function AnalysisPage({
+  month,
+  period,
+  move,
+  active,
+  changePeriod,
+}: {
+  readonly month: string;
+  readonly period: "MONTH" | "YEAR";
+  readonly move: (delta: number) => void;
+  readonly active: boolean;
+  readonly changePeriod: (period: "MONTH" | "YEAR") => void;
+}) {
+  const year = Number(month.slice(0, 4));
+  const moveMonth = move;
+  const moveYear = move;
+  const palette = usePalette();
+  const isFocused = useIsFocused();
+  const checkPreferences = useCheckPreferences();
+  const { error, ready, reload } = usePflegeShiftStatus();
+  const { profile } = usePflegeShiftProfile();
+  const { entries } = usePflegeShiftEntries();
+  const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
+  const { testMonths } = usePflegeShiftTestData();
+  const { resolver: ruleResolver } = useRuleCatalogRuntime();
+  const calculationMonth = month;
+  const salaryPayments = useNetPayProfile(month, period === "MONTH" && !testMonths.includes(month));
+  const annualSalary = useAnnualSalaryForecast(
+    Number(month.slice(0, 4)),
+    salaryPayments.annualPayments,
+    period === "MONTH" && !testMonths.includes(month) && salaryPayments.status === "ready",
+    testMonths,
+  );
   const monthlyCalculation = useMemo(() => {
     if (!isFocused || period !== "MONTH" || !ready || error !== null || profile === null)
       return null;
     return calculateMonthlyAnalysis(
-      month,
+      calculationMonth,
       entries,
       profile,
       tariffDecisions,
@@ -120,7 +137,7 @@ export function AnalysisScreen({
     entries,
     error,
     isFocused,
-    month,
+    calculationMonth,
     period,
     profile,
     ready,
@@ -131,8 +148,12 @@ export function AnalysisScreen({
   const monthlyData = monthlyCalculation;
   const monthlyCompliance = useDeferredMonthlyCompliance({
     enabled:
-      isFocused && period === "MONTH" && monthlyData !== null && monthlyData.complianceShifts.ok,
-    month,
+      isFocused &&
+      period === "MONTH" &&
+      calculationMonth === month &&
+      monthlyData !== null &&
+      monthlyData.complianceShifts.ok,
+    month: calculationMonth,
     profile,
     ruleResolver,
     shifts:
@@ -158,41 +179,39 @@ export function AnalysisScreen({
     year,
   });
 
-  if (ready && error) {
-    return <LoadFailureView message={error} onRetry={() => void reload()} />;
+  function retainScene(content: ReactNode) {
+    return <AnalysisScene focused={isFocused}>{content}</AnalysisScene>;
   }
 
-  function changePeriod(nextPeriod: AnalysisPeriod) {
-    setPeriod(nextPeriod);
-    if (nextPeriod === "YEAR") setYear(Number(month.slice(0, 4)));
-    selectionFeedback();
+  if (ready && error) {
+    return retainScene(<LoadFailureView message={error} onRetry={() => void reload()} />);
   }
 
   if (period === "YEAR") {
-    if (annualReport.fatalError !== null) throw annualReport.fatalError;
+    if (active && annualReport.fatalError !== null) throw annualReport.fatalError;
     if (annualReport.ruleFailure !== null) {
-      return (
+      return retainScene(
         <AnnualReportRuleFailure
           failure={annualReport.ruleFailure}
           onBackToMonth={() => changePeriod("MONTH")}
           onMoveYear={moveYear}
           onRetry={annualReport.retry}
           year={year}
-        />
+        />,
       );
     }
     if (annualReport.error) {
-      return (
+      return retainScene(
         <LoadFailureView
           message={annualReport.error}
           onRetry={annualReport.retry}
           title="Jahresauswertung nicht verfügbar"
-        />
+        />,
       );
     }
     const visibleReport = annualReport.report ?? annualReport.coreReport;
     if (!ready || visibleReport === null)
-      return (
+      return retainScene(
         <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
           <AnalysisYearHeader
             year={year}
@@ -201,9 +220,9 @@ export function AnalysisScreen({
             onOpenMonth={() => changePeriod("MONTH")}
           />
           <LoadingView label="Jahresauswertung wird berechnet …" />
-        </View>
+        </View>,
       );
-    return (
+    return retainScene(
       <AnnualReportScreen
         exportControl={<ReportExportButton period={String(year)} />}
         report={visibleReport}
@@ -211,74 +230,69 @@ export function AnalysisScreen({
         testMonths={testMonths}
         onBackToMonth={() => changePeriod("MONTH")}
         onMoveYear={moveYear}
-      />
+      />,
     );
   }
 
-  if (!ready || profile === null || monthlyData === null) return <LoadingView />;
-
-  function moveMonth(delta: number) {
-    const nextMonth = Temporal.PlainDate.from(`${month}-01`)
-      .add({ months: delta })
-      .toString()
-      .slice(0, 7);
-    activeMonthCoordinator.setMonth(nextMonth);
-    setMonth(nextMonth);
-    selectionFeedback();
-  }
-
-  function moveYear(delta: number) {
-    const nextYear = year + delta;
-    const nextMonth = `${nextYear}-${month.slice(5, 7)}`;
-    activeMonthCoordinator.setMonth(nextMonth);
-    setMonth(nextMonth);
-    setYear(nextYear);
-    selectionFeedback();
-  }
-
-  return (
+  return retainScene(
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-      <AnalysisMonthHeader
-        label={formatMonthRangeLabel(month)}
-        onOpenYear={() => changePeriod("YEAR")}
-        onNext={() => moveMonth(1)}
-        onPrevious={() => moveMonth(-1)}
-      />
-      <ReportScrollView>
-        <Animated.View
-          key={`month-analysis-${month}`}
-          entering={FadeIn.duration(MOTION.duration.normal).reduceMotion(MOTION.reduceMotion)}
-        >
-          <ReportPeriodContent>
-            {testMonths.includes(month) ? <ReportTestBadge /> : null}
-            {checkPreferences.enabled === false ? (
-              <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} />
-            ) : null}
-            {checkPreferences.error ? (
-              <AnalysisCoverageNote message={checkPreferences.error} />
-            ) : null}
-            {checkPreferences.enabled === null && !checkPreferences.error ? (
-              <AnalysisCoverageNote message="Prüfung wird geladen …" />
-            ) : null}
+      <AnalysisMonthTransition
+        month={month}
+        available={ready && profile !== null && monthlyData !== null && calculationMonth === month}
+        ready={
+          ready &&
+          profile !== null &&
+          monthlyData !== null &&
+          calculationMonth === month &&
+          (!monthlyData.complianceShifts.ok ||
+            compliance !== null ||
+            monthlyCompliance.error !== null) &&
+          (testMonths.includes(month) || salaryPayments.status !== "loading")
+        }
+        header={(visibleMonth) => (
+          <AnalysisMonthHeader
+            label={formatMonthRangeLabel(visibleMonth)}
+            onOpenYear={() => changePeriod("YEAR")}
+            onNext={() => moveMonth(1)}
+            onPrevious={() => moveMonth(-1)}
+          />
+        )}
+      >
+        {!ready || profile === null || monthlyData === null || calculationMonth !== month ? (
+          <LoadingView />
+        ) : (
+          <ReportScrollView>
+            <ReportPeriodContent>
+              {testMonths.includes(month) ? <ReportTestBadge /> : null}
+              {checkPreferences.enabled === false ? (
+                <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} />
+              ) : null}
+              {checkPreferences.error ? (
+                <AnalysisCoverageNote message={checkPreferences.error} />
+              ) : null}
+              {checkPreferences.enabled === null && !checkPreferences.error ? (
+                <AnalysisCoverageNote message="Prüfung wird geladen …" />
+              ) : null}
 
-            <MonthOverview
-              month={month}
-              data={monthlyData}
-              profile={profile}
-              annualPayments={annualSalary.payments}
-              salaryLoading={!testMonths.includes(month) && salaryPayments.status === "loading"}
-              salaryError={testMonths.includes(month) ? null : salaryPayments.error}
-              compliance={compliance}
-              checkError={monthlyCompliance.error}
-              showPlanning={checkPreferences.enabled !== false}
-            />
+              <MonthOverview
+                month={month}
+                data={monthlyData}
+                profile={profile}
+                annualPayments={annualSalary.payments}
+                salaryLoading={!testMonths.includes(month) && salaryPayments.status === "loading"}
+                salaryError={testMonths.includes(month) ? null : salaryPayments.error}
+                compliance={compliance}
+                checkError={monthlyCompliance.error}
+                showPlanning={checkPreferences.enabled !== false}
+              />
 
-            <AnalysisViewControls />
-            <ReportExportButton period={month} />
-          </ReportPeriodContent>
-        </Animated.View>
-      </ReportScrollView>
-    </View>
+              <AnalysisViewControls />
+              <ReportExportButton period={month} />
+            </ReportPeriodContent>
+          </ReportScrollView>
+        )}
+      </AnalysisMonthTransition>
+    </View>,
   );
 }
 

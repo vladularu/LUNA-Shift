@@ -1,17 +1,18 @@
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
-import { describe, expect, it, jest } from "@jest/globals";
+import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ComplianceIssue, MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { Temporal } from "@js-temporal/polyfill";
-import { checkDate } from "./compliance-issue-content";
+import { checkDate, checkDayParts } from "./compliance-issue-content";
 import { ComplianceDayList } from "./compliance-day-list";
 jest.mock(
   "react-native-safe-area-context",
   () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,
 );
 let mockFontScale = 1;
+let mockWindowWidth = 390;
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
-  default: () => ({ width: 390, height: 844, scale: 3, fontScale: mockFontScale }),
+  default: () => ({ width: mockWindowWidth, height: 844, scale: 3, fontScale: mockFontScale }),
 }));
 const shift: ShiftEntry = {
   kind: "SHIFT",
@@ -75,6 +76,45 @@ const list = (
 );
 
 describe("visible check timelines", () => {
+  beforeEach(() => {
+    mockFontScale = 1;
+    mockWindowWidth = 390;
+  });
+
+  it("keeps mixed findings in one day group with category and severity on each card", async () => {
+    const findings = [
+      issue({
+        id: "planning",
+        kind: "PLANNING",
+        severity: "warning",
+        rule: "UNKNOWN",
+        title: "Dienstfolge prüfen",
+      }),
+      issue({ id: "info", severity: "info", rule: "UNKNOWN", title: "Weiterer Hinweis" }),
+      issue(),
+    ];
+    const screen = await render(list(findings));
+    expect(screen.getAllByTestId(/^check-day-group-/)).toHaveLength(1);
+    expect(screen.getAllByTestId(/^check-details-/).map((row) => row.props.testID)).toEqual([
+      "check-details-rest",
+      "check-details-planning",
+      "check-details-info",
+    ]);
+    expect(
+      within(screen.getByTestId("check-details-planning")).getByLabelText(
+        "Dienstfolge prüfen, Planung, Warnung",
+      ),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("check-details-rest")).getByLabelText(
+        "Ruhezeit zu kurz, Gesetzlich, Kritisch",
+      ),
+    ).toBeTruthy();
+    await screen.rerender(list(findings, [shift, early], false));
+    expect(screen.queryByTestId("check-details-planning")).toBeNull();
+    expect(screen.getAllByTestId(/^check-day-group-/)).toHaveLength(1);
+    expect(screen.getByTestId("check-details-info")).toBeTruthy();
+  });
   it("keeps a structured series and its shift detail route after copy changes", async () => {
     const shifts = Array.from({ length: 7 }, (_, index) => ({
       ...shift,
@@ -96,7 +136,7 @@ describe("visible check timelines", () => {
     expect(screen.getByText("7 Arbeitstage hintereinander")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
     expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(7);
-    await fireEvent.press(screen.getByRole("button", { name: "Auswahl abbrechen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-series-0")).toBeNull());
     expect(screen.getByText("7 Arbeitstage hintereinander")).toBeTruthy();
   });
@@ -119,32 +159,43 @@ describe("visible check timelines", () => {
     expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
     expect(screen.getByText("Prüfung eingeschränkt")).toBeTruthy();
   });
-  it.each([1, 3.1])(
-    "shows both endpoints and the gap without opening an explanation at text scale %s",
-    async (scale) => {
-      mockFontScale = scale;
-      const screen = await render(list([issue()]));
-      expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
-      expect(screen.getByText("9:30 h")).toBeTruthy();
-      expect(screen.getByText("Spät endet")).toBeTruthy();
-      expect(screen.getByText("Früh beginnt")).toBeTruthy();
-      expect(screen.getByText("21:30")).toBeTruthy();
-      expect(screen.getByText("07:00")).toBeTruthy();
-      expect(screen.getByText("Mindestens 10 Std. Ruhezeit nötig.")).toBeTruthy();
-      expect(screen.queryByText(issue().description)).toBeNull();
-      expect(screen.queryByRole("button", { name: /Erklärung|Über die Prüfung/ })).toBeNull();
-      expect(screen.queryByTestId("check-shift-late")).toBeNull();
-      await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
-      expect(screen.getAllByTestId(/^check-shift-/).map((row) => row.props.testID)).toEqual([
-        "check-shift-late",
-        "check-shift-early",
-      ]);
-      expect(screen.getByText("13:18–21:30")).toBeTruthy();
-      await fireEvent.press(screen.getByRole("button", { name: "Auswahl abbrechen" }));
-      await waitFor(() => expect(screen.queryByTestId("check-shift-late")).toBeNull());
-      expect(screen.getByText("9:30 h")).toBeTruthy();
-    },
-  );
+  it.each([
+    [390, 1],
+    [320, 1],
+    [390, 3.1],
+  ])("shows both endpoints and the gap at width %s and text scale %s", async (width, scale) => {
+    mockFontScale = scale;
+    mockWindowWidth = width;
+    const screen = await render(list([issue()]));
+    expect(screen.getByTestId("check-day-group-2026-12-01")).toHaveStyle({
+      flexDirection: scale >= 1.3 || width < 360 ? "column" : "row",
+    });
+    expect(screen.getByRole("header", { name: "1. Dezember 2026" })).toBeTruthy();
+    expect(screen.getByLabelText("Spät endet, 21:30, 30. November 2026")).toBeTruthy();
+    expect(screen.getByLabelText("Früh beginnt, 07:00, 1. Dezember 2026")).toBeTruthy();
+    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
+    expect(screen.getByText("9:30 h")).toBeTruthy();
+    expect(screen.getByText("Spät endet")).toBeTruthy();
+    expect(screen.getByText("Früh beginnt")).toBeTruthy();
+    expect(screen.getByText("21:30")).toBeTruthy();
+    expect(screen.getByText("07:00")).toBeTruthy();
+    expect(screen.getByText("Mindestens 10 Std. Ruhezeit nötig.")).toBeTruthy();
+    expect(screen.queryByText(issue().description)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Erklärung|Über die Prüfung/ })).toBeNull();
+    expect(screen.queryByTestId("check-shift-late")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
+    expect(screen.getAllByTestId(/^check-shift-/).map((row) => row.props.testID)).toEqual([
+      "check-shift-late",
+      "check-shift-early",
+    ]);
+    expect(screen.getByText("13:18–21:30")).toBeTruthy();
+    expect(screen.getByText("13:18–21:30").parent).toHaveStyle({
+      flexDirection: scale >= 1.3 ? "column" : "row",
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await waitFor(() => expect(screen.queryByTestId("check-shift-late")).toBeNull());
+    expect(screen.getByText("9:30 h")).toBeTruthy();
+  });
   it("keeps every finding immediately visible, in date and severity order", async () => {
     const screen = await render(
       list([
@@ -160,9 +211,9 @@ describe("visible check timelines", () => {
         issue(),
       ]),
     );
-    expect(screen.getAllByRole("header").map((h) => h.props.children)).toEqual([
-      "1. Dezember",
-      "4. Dezember",
+    expect(screen.getAllByRole("header").map((h) => h.props.accessibilityLabel)).toEqual([
+      "1. Dezember 2026",
+      "4. Dezember 2026",
     ]);
     expect(screen.getByTestId("check-details-rest")).toBeTruthy();
     expect(screen.getByTestId("check-details-later")).toBeTruthy();
@@ -199,7 +250,7 @@ describe("visible check timelines", () => {
       const screen = await render(list([series], [...shifts].reverse()));
       expect(screen.getByText("12 Arbeitstage hintereinander")).toBeTruthy();
       expect(screen.getByText("23. November")).toBeTruthy();
-      expect(screen.getAllByText("4. Dezember")).toHaveLength(2);
+      expect(screen.getAllByText("4. Dezember")).toHaveLength(scale >= 1.3 ? 2 : 1);
       expect(screen.queryByTestId("check-shift-day-0")).toBeNull();
       await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
       expect(screen.getAllByTestId(/^check-shift-/).map((r) => r.props.testID)).toEqual(
@@ -249,6 +300,9 @@ it("formats dates even when localization is unavailable", () => {
     expect(checkDate("2026-08-25")).toBe("25. August 2026");
     expect(checkDate("2024-02-29", false)).toBe("29. Februar");
     expect(checkDate("2026-02-30")).toBe("Datum nicht verfügbar");
+    expect(checkDayParts("2026-12-01")).toEqual(["1", "Dez."]);
+    expect(checkDayParts("2024-02-29")).toEqual(["29", "Feb."]);
+    expect(checkDayParts("2026-02-30")).toEqual(["—", ""]);
     expect(locale).not.toHaveBeenCalled();
   } finally {
     locale.mockRestore();

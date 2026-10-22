@@ -20,6 +20,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
+import { AffectedCheckShifts } from "./compliance-issue-content";
 
 interface ComplianceIssueGroup {
   readonly rule: string;
@@ -324,50 +325,7 @@ function ComplianceIssueList({
                               >
                                 Betroffene Dienste
                               </Text>
-                              {relatedShifts.map((shift, shiftIndex) => (
-                                <View
-                                  key={shift.id}
-                                  style={{
-                                    flexDirection: "row",
-                                    flexWrap: "wrap",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    gap: SPACING.sm,
-                                    minHeight: 56,
-                                    paddingVertical: SPACING.md,
-                                    borderTopWidth: shiftIndex > 0 ? 1 : 0,
-                                    borderTopColor: palette.separator,
-                                  }}
-                                >
-                                  <View style={{ gap: SPACING.xxs, flexShrink: 1 }}>
-                                    <Text
-                                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                                      selectable
-                                      style={{ color: palette.text, ...TYPOGRAPHY.label }}
-                                    >
-                                      {shift.title}
-                                    </Text>
-                                    <Text
-                                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                                      style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                                    >
-                                      {formatComplianceDate(shift.date)}
-                                    </Text>
-                                  </View>
-                                  <Text
-                                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                                    selectable
-                                    style={{
-                                      color: palette.textMuted,
-                                      ...TYPOGRAPHY.label,
-                                      fontVariant: ["tabular-nums"],
-                                    }}
-                                  >
-                                    {shift.startTime ?? "ganztägig"}
-                                    {shift.endTime ? `–${shift.endTime}` : ""}
-                                  </Text>
-                                </View>
-                              ))}
+                              <AffectedCheckShifts shifts={relatedShifts} />
                             </View>
                           ) : null}
                         </View>

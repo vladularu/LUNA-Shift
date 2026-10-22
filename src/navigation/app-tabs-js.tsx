@@ -2,10 +2,8 @@ import Ionicons from "@/ui/icon";
 import { Tabs } from "expo-router";
 import { useReducedMotion } from "react-native-reanimated";
 
-import {
-  requestCalendarTodayOnReselect,
-  useActiveMonthCoordinator,
-} from "@/navigation/active-month";
+import { requestCalendarTodayOnPress, useActiveMonthCoordinator } from "@/navigation/active-month";
+import { requestAnalysisCurrentPeriodOnReselect } from "./analysis-period-navigation";
 import { appTabMotionOptions } from "@/navigation/app-tabs-motion";
 import { useCalendarTabDate } from "@/navigation/calendar-tab-date";
 import { CalendarTabIcon } from "@/navigation/calendar-tab-icon";
@@ -34,9 +32,9 @@ export function AppTabs() {
       }}
     >
       <Tabs.Screen
-        listeners={({ navigation }) => ({
+        listeners={() => ({
           tabPress: () => {
-            requestCalendarTodayOnReselect(activeMonthCoordinator, navigation.isFocused());
+            requestCalendarTodayOnPress(activeMonthCoordinator);
           },
         })}
         name="(calendar)"
@@ -52,6 +50,10 @@ export function AppTabs() {
       />
       <Tabs.Screen
         name="(analysis)"
+        listeners={({ navigation }) => ({
+          tabPress: () =>
+            requestAnalysisCurrentPeriodOnReselect(activeMonthCoordinator, navigation.isFocused()),
+        })}
         options={{
           title: "Auswertung",
           tabBarIcon: ({ color, size, focused }) => (

@@ -11,7 +11,7 @@ describe("app tab platform shell", () => {
     const nativeSource = readFileSync(join(NAVIGATION_ROOT, "app-tabs.native.tsx"), "utf8");
 
     expect(nativeSource).toContain('from "expo-router/unstable-native-tabs"');
-    expect(nativeSource).toContain("requestCalendarTodayOnReselect");
+    expect(nativeSource).toContain("requestCalendarTodayOnPress");
     expect(nativeSource).toContain('minimizeBehavior="never"');
     expect(existsSync(join(NAVIGATION_ROOT, "app-tabs.ios.tsx"))).toBe(false);
     expect(existsSync(join(NAVIGATION_ROOT, "app-tabs.android.tsx"))).toBe(false);

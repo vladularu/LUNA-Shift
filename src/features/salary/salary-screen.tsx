@@ -1,20 +1,18 @@
 import { Text } from "@/ui/text";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
-import { Temporal } from "@js-temporal/polyfill";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import { Pressable } from "react-native";
 import { formatMonthTitle } from "@/engine/calendar";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
 import { settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
-import { useActiveMonthCoordinator } from "@/navigation/active-month";
+import { useReportMonth } from "@/navigation/use-report-month";
+import { ReportPeriodPager } from "@/ui/report-period-pager";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
-import { selectionFeedback } from "@/ui/haptics";
 import { ReportPeriodContent, ReportTestBadge } from "@/ui/report-layout";
 import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
 import { useSalaryReport } from "./use-salary-report";
@@ -22,37 +20,10 @@ import { salaryProfileCaption } from "./salary-composition";
 import { SalaryMonthNavigator, SalaryPage } from "./salary-ui";
 
 export function SalaryScreen() {
-  const palette = usePalette();
-  const coordinator = useActiveMonthCoordinator();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const parsed = parseMonthRouteParam(params.month);
   const routeMonth = parsed.status === "valid" ? parsed.value : null;
-  const [month, setMonth] = useState(() => routeMonth ?? coordinator.getMonth());
-  useEffect(() => {
-    if (routeMonth !== null) {
-      coordinator.setMonth(routeMonth);
-      setMonth(routeMonth);
-    }
-  }, [coordinator, routeMonth]);
-  useFocusEffect(
-    useCallback(() => {
-      const active = coordinator.getMonth();
-      setMonth((current) => (current === active ? current : active));
-    }, [coordinator]),
-  );
-  const { ready, error, reload, profile, calculation, retryRules, testMonths } = useSalaryReport(
-    month,
-    parsed.status !== "invalid",
-  );
-  function moveMonth(delta: number) {
-    const next = Temporal.PlainDate.from(`${month}-01`)
-      .add({ months: delta })
-      .toString()
-      .slice(0, 7);
-    coordinator.setMonth(next);
-    setMonth(next);
-    selectionFeedback();
-  }
+  const { month, selectMonth, focused } = useReportMonth(routeMonth);
   if (parsed.status === "invalid")
     return (
       <SalaryPage title="Gehalt">
@@ -64,6 +35,28 @@ export function SalaryScreen() {
         />
       </SalaryPage>
     );
+  return (
+    <ReportPeriodPager
+      value={month}
+      enabled={focused}
+      onChange={selectMonth}
+      renderPage={(pageMonth, moveMonth) => (
+        <SalaryMonthPage month={pageMonth} moveMonth={moveMonth} />
+      )}
+    />
+  );
+}
+
+function SalaryMonthPage({
+  month,
+  moveMonth,
+}: {
+  readonly month: string;
+  readonly moveMonth: (delta: number) => void;
+}) {
+  const palette = usePalette();
+  const { ready, error, reload, profile, calculation, retryRules, testMonths } =
+    useSalaryReport(month);
   const navigation = (
     <SalaryMonthNavigator
       label={formatMonthTitle(month)}

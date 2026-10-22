@@ -25,7 +25,8 @@ const mockExport = jest.fn<(props: { period: string; variant: string }) => void>
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: (props: { period: string; variant: string }) => {
     mockExport(props);
-    return null;
+    const { Text: MockText } = jest.requireActual<typeof import("react-native")>("react-native");
+    return <MockText testID="salary-export-current">{props.period}</MockText>;
   },
 }));
 
@@ -58,8 +59,9 @@ jest.mock("expo-router", () => ({
       mockParams = { ...mockParams, ...mockNextParams };
     }),
   },
+  useIsFocused: () => true,
   useLocalSearchParams: () => mockParams,
-  useFocusEffect: jest.fn(),
+  useFocusEffect: (callback: () => void) => MockReact.useEffect(callback, [callback]),
 }));
 jest.mock("@/navigation/active-month", () => ({
   useActiveMonthCoordinator: () => mockCoordinator,
@@ -869,10 +871,42 @@ describe("integrated salary-to-net workflow", () => {
     expect(deduction.queryByLabelText(/^Netto rechnerisch:/)).toBeNull();
     expect(mockSave).not.toHaveBeenCalled();
   });
+  it.each(["salary", "components", "deductions", "premiums", "services", "basis"] as const)(
+    "natively pages %s in both directions, preserves its section and publishes only the settled month",
+    async (section) => {
+      const screen = section === "salary" ? await render(<SalaryScreen />) : await details(section);
+      const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+      await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+        nativeEvent: { layout: { width: 390, height: 700 } },
+      });
+      expect(mockCoordinator.getMonth()).toBe("2026-07");
+      const settle = (index: number) =>
+        fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+          nativeEvent: { contentOffset: { x: index * 390, y: 0 } },
+        });
+      await settle(13);
+      expect(screen.getByText("August 2026")).toBeTruthy();
+      expect(mockCoordinator.getMonth()).toBe("2026-08");
+      if (section === "salary")
+        expect(screen.getByTestId("salary-export-current").props.children).toBe("2026-08");
+      else expect(mockParams.section).toBe(section);
+      await settle(11);
+      expect(screen.getByText("Juni 2026")).toBeTruthy();
+      expect(mockCoordinator.getMonth()).toBe("2026-06");
+      await settle(12);
+      expect(screen.getByText("Juli 2026")).toBeTruthy();
+      expect(router.push).not.toHaveBeenCalled();
+      expect(mockSave).not.toHaveBeenCalled();
+    },
+  );
   it("passes the selected month to detail navigation and the header export after switching", async () => {
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     const screen = await render(<SalaryScreen />);
     const before = screen.getByLabelText(/^Voraussichtliches Netto:/).props.accessibilityLabel;
     await fireEvent.press(screen.getByRole("button", { name: /^Nächster Monat/ }));
+    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
+    mockParams = { month: "2026-08" };
+    await screen.rerender(<SalaryScreen />);
     expect(screen.getByText("August 2026")).toBeTruthy();
     expect(mockSetMonth).toHaveBeenLastCalledWith("2026-08");
     expect(mockExport).toHaveBeenLastCalledWith(
@@ -882,25 +916,28 @@ describe("integrated salary-to-net workflow", () => {
       before,
     );
     await fireEvent.press(screen.getByRole("button", { name: /^Gesamtbrutto:/ }));
-    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/salary-details",
       params: { month: "2026-08", section: "components" },
     });
     await fireEvent.press(screen.getByRole("button", { name: /^Vorheriger Monat/ }));
+    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
+    mockParams = { month: "2026-07" };
+    await screen.rerender(<SalaryScreen />);
     expect(screen.getByLabelText(/^Voraussichtliches Netto:/).props.accessibilityLabel).toBe(
       before,
     );
   });
-  it("switches the component month without adding history and updates all linked details", async () => {
+  it("changes the component month without pushing a new route and updates all linked details", async () => {
     const screen = await details("components");
     const before = screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     await fireEvent.press(screen.getByRole("button", { name: /^Nächster Monat/ }));
     expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
     expect(router.push).not.toHaveBeenCalled();
-    expect(mockCoordinator.getMonth()).toBe("2026-08");
+    mockParams = { month: "2026-08", section: "components" };
     await screen.rerender(<SalaryDetailsScreen />);
+    expect(mockCoordinator.getMonth()).toBe("2026-08");
     expect(screen.getByText("August 2026")).toBeTruthy();
     expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).not.toBe(before);
     expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
@@ -916,6 +953,8 @@ describe("integrated salary-to-net workflow", () => {
       params: { month: "2026-08", section: "basis" },
     });
     await fireEvent.press(screen.getByRole("button", { name: /^Vorheriger Monat/ }));
+    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
+    mockParams = { month: "2026-07", section: "components" };
     await screen.rerender(<SalaryDetailsScreen />);
     expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(before);
     expect(mockCoordinator.getMonth()).toBe("2026-07");

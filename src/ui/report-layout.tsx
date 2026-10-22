@@ -6,15 +6,18 @@ import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { RADII, REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { PeriodSwipeScroll } from "@/ui/period-swipe-scroll";
 
 export function ReportScrollView({
   children,
   bottomPadding,
 }: PropsWithChildren<{ readonly bottomPadding?: number }>) {
   return (
-    <ScreenScrollView surface="groupedBackground" bottomPadding={bottomPadding}>
-      {children}
-    </ScreenScrollView>
+    <PeriodSwipeScroll>
+      <ScreenScrollView surface="groupedBackground" bottomPadding={bottomPadding}>
+        {children}
+      </ScreenScrollView>
+    </PeriodSwipeScroll>
   );
 }
 

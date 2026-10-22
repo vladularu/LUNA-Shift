@@ -6,6 +6,9 @@ export default function AnalysisStack() {
   return (
     <Stack
       screenOptions={{
+        freezeOnBlur: true,
+        gestureEnabled: true,
+        fullScreenGestureEnabled: false,
         contentStyle: { backgroundColor: palette.background },
         headerLargeTitle: false,
         headerShadowVisible: false,
@@ -16,6 +19,7 @@ export default function AnalysisStack() {
       }}
     >
       <Stack.Screen name="analysis" options={{ title: "Auswertung" }} />
+      <Stack.Screen name="period" options={{ title: "Auswertung", headerShown: false }} />
     </Stack>
   );
 }

@@ -1,12 +1,10 @@
 import { Text } from "@/ui/text";
-import Ionicons from "@/ui/icon";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
-import { CardFooterLine, CardHeader, SurfaceCard } from "@/ui/design-system";
-import { selectionFeedback } from "@/ui/haptics";
-import { ReportCardTitle } from "./report-card-title";
+import { CardFooterLine, SurfaceCard } from "@/ui/design-system";
+import { AnalysisCardHeader } from "./analysis-list-card";
 
 export function WorktimeCard({
   target,
@@ -35,24 +33,11 @@ export function WorktimeCard({
   ];
   return (
     <SurfaceCard>
-      {onPress ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Stunden, Ist ${withUnit(actual)}, Soll ${withUnit(target)}, Saldo ${withUnit(balance)}`}
-          onPress={() => {
-            selectionFeedback();
-            onPress();
-          }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
-        >
-          <CardHeader
-            title="Arbeitszeit"
-            action={<Ionicons name="ellipsis-horizontal-circle" size={20} color={secondaryText} />}
-          />
-        </Pressable>
-      ) : (
-        <ReportCardTitle title="Arbeitszeit" />
-      )}
+      <AnalysisCardHeader
+        title="Arbeitszeit"
+        label={`Stunden, Ist ${withUnit(actual)}, Soll ${withUnit(target)}, Saldo ${withUnit(balance)}`}
+        onPress={onPress}
+      />
       <View
         testID="worktime-values"
         style={{ flexDirection: stacked ? "column" : "row", paddingVertical: SPACING.md }}
