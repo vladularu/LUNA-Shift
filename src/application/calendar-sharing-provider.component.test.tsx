@@ -5,6 +5,7 @@ import { Text } from "@/ui/text";
 import { SharingRuntimeProvider } from "@/composition/calendar-sharing-provider";
 import { useVisibleSharedCalendars } from "./shared-calendars-context";
 import { useSharingUiController } from "@/features/sharing/sharing-ui-provider";
+import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 
 let mockInvalidate: () => void;
 const mockStopRealtime = jest.fn();
@@ -22,6 +23,8 @@ let mockProfile: { timeZone: string } | null = { timeZone: "Europe/Berlin" };
 let mockConfigured = false;
 const mockList = jest.fn<() => Promise<readonly unknown[]>>().mockResolvedValue([]);
 const mockGetSession = jest.fn<() => Promise<{ id: string; displayName: string } | null>>();
+const mockCachedSession = jest.fn<() => Promise<{ id: string; displayName: string } | null>>();
+const mockCaches = jest.fn<() => Promise<readonly CachedSharedCalendar[]>>();
 const mockInitialize = jest.fn<() => Promise<void>>().mockResolvedValue();
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("@/application/pflegeshift-provider", () => ({
@@ -34,6 +37,7 @@ jest.mock("@/infrastructure/auth/sharing-auth", () => ({
   createSharingAuthPort: () => ({
     isConfigured: mockConfigured,
     getSession: mockGetSession,
+    getCachedSession: mockCachedSession,
     subscribe: () => () => {},
     signOut: async () => {},
   }),
@@ -56,7 +60,7 @@ jest.mock("@/infrastructure/database/calendar-sharing-repository", () => ({
   migrateCalendarSharing: () => mockInitialize(),
   setSharingActiveAccount: async () => {},
   listSharingBindings: async () => [],
-  listCachedSharingCalendars: async () => [],
+  listCachedSharingCalendars: () => mockCaches(),
   listSharingInvitations: async () => [],
   rememberSharingInvitation: async () => {},
   configureSharingContent: async () => {},
@@ -72,9 +76,51 @@ beforeEach(() => {
   mockProfile = { timeZone: "Europe/Berlin" };
   mockConfigured = false;
   mockGetSession.mockReset().mockResolvedValue(null);
+  mockCachedSession.mockReset().mockResolvedValue(null);
+  mockCaches.mockReset().mockResolvedValue([]);
   mockInitialize.mockClear();
   mockList.mockClear();
   mockStopRealtime.mockClear();
+});
+it("mounts the calendar with its shared cache before online authentication completes", async () => {
+  mockConfigured = true;
+  let restore!: (value: { id: string; displayName: string }) => void;
+  mockCachedSession.mockReturnValue(
+    new Promise((resolve) => {
+      restore = resolve;
+    }),
+  );
+  mockGetSession.mockReturnValue(new Promise(() => {}));
+  mockCaches.mockResolvedValue([
+    {
+      accountId: "account",
+      visible: true,
+      entries: [],
+      fetchedAt: new Date().toISOString(),
+      calendar: {
+        id: "shared",
+        ownerId: "other",
+        name: "Sam",
+        color: "#527D92",
+        visibility: "DETAILS",
+        revision: 1,
+        isOwner: false,
+        publishedAt: null,
+      },
+    },
+  ]);
+  const screen = await render(
+    <SharingRuntimeProvider>
+      <Harness />
+    </SharingRuntimeProvider>,
+  );
+  expect(screen.queryByText("loading · 0")).toBeNull();
+  await act(async () => {
+    restore({ id: "account", displayName: "Alex" });
+  });
+  await waitFor(() => expect(screen.getByText("loading · 1")).toBeTruthy());
+  expect(mockList).not.toHaveBeenCalled();
+  await screen.unmount();
 });
 it("keeps the local app mounted while missing cloud setup remains explicitly unavailable", async () => {
   const screen = await render(
@@ -95,6 +141,7 @@ it("waits for the main database/profile before initializing optional sharing", a
     </SharingRuntimeProvider>,
   );
   expect(mockInitialize).not.toHaveBeenCalled();
+  expect(screen.queryByText("loading · 0")).toBeNull();
   mockReady = true;
   await screen.rerender(
     <SharingRuntimeProvider>
@@ -102,7 +149,7 @@ it("waits for the main database/profile before initializing optional sharing", a
     </SharingRuntimeProvider>,
   );
   await waitFor(() => expect(screen.getByText("signedOut · 0")).toBeTruthy());
-  expect(mockInitialize).toHaveBeenCalledTimes(1);
+  expect(mockInitialize).not.toHaveBeenCalled();
 });
 it("keeps the initialized sharing session while another calendar year loads and when returning", async () => {
   mockConfigured = true;
@@ -122,7 +169,7 @@ it("keeps the initialized sharing session while another calendar year loads and 
       </SharingRuntimeProvider>,
     );
     expect(screen.getByText("signedIn · 0")).toBeTruthy();
-    expect(mockInitialize).toHaveBeenCalledTimes(1);
+    expect(mockInitialize).not.toHaveBeenCalled();
     expect(mockStopRealtime).not.toHaveBeenCalled();
   }
 });
@@ -143,7 +190,7 @@ it("waits for the replacement database instead of retaining the previous initial
     </SharingRuntimeProvider>,
   );
   expect(screen.queryByText("signedIn · 0")).toBeNull();
-  expect(mockInitialize).toHaveBeenCalledTimes(1);
+  expect(mockInitialize).not.toHaveBeenCalled();
   expect(mockStopRealtime).toHaveBeenCalledTimes(1);
   mockReady = true;
   await screen.rerender(
@@ -152,7 +199,7 @@ it("waits for the replacement database instead of retaining the previous initial
     </SharingRuntimeProvider>,
   );
   await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
-  expect(mockInitialize).toHaveBeenCalledTimes(2);
+  expect(mockInitialize).not.toHaveBeenCalled();
 });
 it("stops sharing when the profile is removed and waits for initialization on return", async () => {
   mockConfigured = true;
@@ -178,7 +225,7 @@ it("stops sharing when the profile is removed and waits for initialization on re
       <Harness />
     </SharingRuntimeProvider>,
   );
-  expect(mockInitialize).toHaveBeenCalledTimes(1);
+  expect(mockInitialize).not.toHaveBeenCalled();
   mockReady = true;
   await screen.rerender(
     <SharingRuntimeProvider>
@@ -186,7 +233,7 @@ it("stops sharing when the profile is removed and waits for initialization on re
     </SharingRuntimeProvider>,
   );
   await waitFor(() => expect(screen.getByText("signedIn · 0")).toBeTruthy());
-  expect(mockInitialize).toHaveBeenCalledTimes(2);
+  expect(mockInitialize).not.toHaveBeenCalled();
 });
 it("refreshes on foreground and every fifteen active seconds, and removes listeners on unmount", async () => {
   jest.useFakeTimers();

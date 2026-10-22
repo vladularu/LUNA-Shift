@@ -4,6 +4,7 @@ import { PRODUCT_NAME } from "@/brand";
 import { APP_RENDER_FAILURE_MESSAGE } from "@/domain/errors";
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
 import { LoadFailureView } from "@/ui/loading-view";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 
 interface AppErrorBoundaryProps {
   readonly children: ReactNode;
@@ -22,6 +23,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   }
 
   componentDidCatch(error: unknown) {
+    startupPresentation.complete();
     recordDiagnostic("app", "APP_RENDER_FAILED", error);
   }
 

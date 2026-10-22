@@ -26,7 +26,7 @@ export function SalaryScreen() {
   const { month, selectMonth, focused } = useReportMonth(routeMonth);
   if (parsed.status === "invalid")
     return (
-      <SalaryPage title="Gehalt">
+      <SalaryPage title="Gehalt" backLabel="Zurück zur Auswertung">
         <LoadFailureView
           title="Gehalt kann nicht geöffnet werden"
           message="Der Link enthält keinen gültigen Monat."
@@ -133,6 +133,7 @@ function SalaryMonthPage({
   return (
     <SalaryPage
       title="Gehalt"
+      backLabel="Zurück zur Auswertung"
       action={<ReportExportButton key={month} period={month} variant="icon" />}
     >
       {navigation}
@@ -167,13 +168,13 @@ function SetupCard() {
           justifyContent: "center",
           borderRadius: RADII.control,
           borderCurve: CORNER_CURVE,
-          backgroundColor: palette.accent,
+          backgroundColor: palette.primaryAction,
           opacity: pressed ? 0.75 : 1,
         })}
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.onAccent, ...TYPOGRAPHY.button }}
+          style={{ color: palette.onPrimaryAction, ...TYPOGRAPHY.button }}
         >
           Gehalt einrichten
         </Text>

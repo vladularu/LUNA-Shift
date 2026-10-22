@@ -17,6 +17,7 @@ import {
 } from "./sharing-auth-core";
 import { bindSharingSessionRefresh } from "./sharing-auth-refresh";
 import { createChunkedAuthStorage } from "./sharing-auth-storage";
+import { readStoredSharingUser } from "./sharing-stored-user";
 
 export type { SharingAuthUser, SharingAuthPort } from "./sharing-auth-core";
 
@@ -104,6 +105,12 @@ function runtime(): SharingAuthRuntime {
       }),
     openBrowser: (url, callback) => WebBrowser.openAuthSessionAsync(url, callback),
     nameStorage: storage,
+    readStoredUser: async () => {
+      const config = configuration();
+      if (!config || !sessionWritesAllowed) return null;
+      const value = await sessionStorage.getItem(config.storageKey);
+      return sessionWritesAllowed ? readStoredSharingUser(value) : null;
+    },
     allowSessionWrites: () => {
       sessionWritesAllowed = true;
     },

@@ -30,6 +30,7 @@ import type {
 } from "@/domain/sharing-ui-contract";
 import { projectSharingEntries } from "@/engine/sharing-projection";
 import { sharingProjectionSignature } from "@/engine/sharing-publication-confirmation";
+import type { SharingStartupDisplay } from "./sharing-startup-cache";
 
 export const SHARED_CALENDAR_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export interface CalendarSharingRuntimeOptions {
@@ -49,10 +50,13 @@ export interface CalendarSharingRuntimeOptions {
   confirmManualAppleDeletion(): Promise<boolean>;
   notifyDeletion(status: SharingRevocationStatus): void;
   forgetAuthProfile(userId: string): Promise<void>;
+  beforeInitialRefresh?(): Promise<void>;
+  readInitialDisplay?(): Promise<SharingStartupDisplay>;
 }
 export interface CalendarSharingRuntimeSnapshot {
   readonly controller: SharingController;
   readonly visibleCalendars: readonly CachedSharedCalendar[];
+  readonly localReady: boolean;
 }
 class AccountChanged extends Error {}
 function accountChanged(): never {
@@ -116,6 +120,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
   let epoch = 0;
   let authRevision = 0;
   let user: SharingAuthUser | null = null;
+  let presentationAccountId: string | null = null;
+  let localReady = false;
   let status: SharingController["status"] = "loading";
   let busyTicket: number | null = null;
   let failed = false;
@@ -178,13 +184,18 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       options.local.setVisible(accountId, calendarId, visible),
   });
   let lastVisible: readonly CachedSharedCalendar[] = [];
-  async function localState(ticket: number, accountId: string) {
+  async function localCaches(ticket: number, accountId: string) {
     check(ticket, accountId);
     const nextCaches = await options.local.listCaches(accountId);
     check(ticket, accountId);
+    caches = retainSharingCaches(caches, visibility.apply(nextCaches));
+    localReady = true;
+    emit();
+  }
+  async function localState(ticket: number, accountId: string) {
+    await localCaches(ticket, accountId);
     const nextBindings = await options.local.listBindings(accountId);
     check(ticket, accountId);
-    caches = retainSharingCaches(caches, visibility.apply(nextCaches));
     bindings = nextBindings;
     emit();
     const nextSource = await options.local.readEntries();
@@ -364,7 +375,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       } catch (error) {
         if (error instanceof AccountChanged || sessionDenied(error)) throw error;
         if (errorCode(error) === "SHARE_NOT_FOUND") await remove(ticket, accountId, calendar.id);
-        else networkFailure = true;
+        else if (errorCode(error) === "SHARE_NETWORK_FAILED") networkFailure = true;
+        else failed = true;
       }
     };
     let cursor = 0;
@@ -399,8 +411,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         await publishBinding(ticket, accountId, binding);
       } catch (error) {
         if (error instanceof AccountChanged || sessionDenied(error)) throw error;
-        failed = true;
-        networkFailure ||= errorCode(error) === "SHARE_NETWORK_FAILED";
+        if (errorCode(error) === "SHARE_NETWORK_FAILED") networkFailure = true;
+        else failed = true;
       }
     }
     check(ticket, accountId);
@@ -414,6 +426,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     visibility.clear();
     busyTicket = cleanupTicket;
     user = null;
+    presentationAccountId = null;
+    localReady = true;
     status = "signedOut";
     caches = [];
     issuedInvitations = [];
@@ -443,8 +457,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         return;
       }
       if (valid(ticket, accountId)) {
-        offline = true;
-        failed = true;
+        offline = errorCode(error) === "SHARE_NETWORK_FAILED";
+        failed = !offline;
         await localState(ticket, accountId);
       }
       if (error instanceof AccountChanged) return;
@@ -459,12 +473,15 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       return activation;
     }
     const ticket = ++epoch;
+    const retainPresentation = next !== null && next.id === presentationAccountId;
     prepared.clear();
     visibility.clear();
     busyTicket = null;
     user = next;
+    presentationAccountId = next?.id ?? null;
     status = next ? "signedIn" : "signedOut";
-    caches = [];
+    if (!retainPresentation) caches = [];
+    if (!next) localReady = true;
     issuedInvitations = [];
     bindings = [];
     source = [];
@@ -480,10 +497,20 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       check(ticket);
       await options.local.setActiveAccount(next?.id ?? null);
       check(ticket);
-      if (next) await refreshSafely(ticket, next.id);
+      if (next) {
+        // Only cached display data belongs on the first frame. Bindings, full
+        // publication sources and network refresh follow the presented calendar.
+        if (options.beforeInitialRefresh) {
+          if (!retainPresentation || !localReady) await localCaches(ticket, next.id);
+          await options.beforeInitialRefresh();
+          check(ticket, next.id);
+        }
+        await refreshSafely(ticket, next.id);
+      }
     }).catch((error) => {
       if (valid(ticket) && !(error instanceof AccountChanged)) {
         failed = true;
+        localReady = true;
         emit();
       }
     });
@@ -901,16 +928,16 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     },
   };
   function visibleCalendars(): readonly CachedSharedCalendar[] {
-    const next =
-      !user || status !== "signedIn"
-        ? []
-        : caches.filter(
-            (item) =>
-              !item.calendar.isOwner &&
-              item.accountId === user!.id &&
-              item.visible &&
-              cacheUsable(item, options.now()),
-          );
+    const accountId = user?.id ?? (status === "loading" ? presentationAccountId : null);
+    const next = !accountId
+      ? []
+      : caches.filter(
+          (item) =>
+            !item.calendar.isOwner &&
+            item.accountId === accountId &&
+            item.visible &&
+            cacheUsable(item, options.now()),
+        );
     if (next.length !== lastVisible.length || next.some((item, i) => item !== lastVisible[i]))
       lastVisible = next;
     return lastVisible;
@@ -951,6 +978,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       account: user ? { displayName: user.displayName } : null,
       busy: busyTicket === epoch,
       error: failed,
+      offline,
       calendars: calendarViews,
       claimResult,
       appleAvailable,
@@ -987,6 +1015,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       return (cachedSnapshot ??= {
         controller: getController(),
         visibleCalendars: visibleCalendars(),
+        localReady,
       });
     },
     subscribe(listener: () => void) {
@@ -998,6 +1027,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     async start() {
       if (!options.auth.isConfigured || !options.cloud) {
         status = "unavailable";
+        localReady = true;
         emit();
         return;
       }
@@ -1005,6 +1035,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         await options.local.initialize();
       } catch {
         status = "unavailable";
+        localReady = true;
         failed = true;
         emit();
         return;
@@ -1016,12 +1047,43 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       });
       const revision = authRevision;
       try {
+        if (options.readInitialDisplay) {
+          const display = await options.readInitialDisplay();
+          if (stopped) return;
+          if (revision === authRevision && status === "loading") {
+            presentationAccountId = display.accountId;
+            caches = display.calendars;
+            localReady = true;
+            emit();
+          }
+        } else if (options.auth.getCachedSession) {
+          const stored = await options.auth.getCachedSession().catch(() => null);
+          if (stopped) return;
+          if (revision === authRevision && status === "loading") {
+            const storedCaches = stored ? await options.local.listCaches(stored.id) : [];
+            if (stopped) return;
+            if (revision === authRevision && status === "loading") {
+              presentationAccountId = stored?.id ?? null;
+              caches = storedCaches;
+              localReady = true;
+              emit();
+            }
+          }
+        }
         const session = await options.auth.getSession();
         if (revision === authRevision && !stopped) await switchUser(session);
-      } catch {
-        if (!stopped) {
-          status = "signedOut";
-          failed = true;
+      } catch (error) {
+        if (!stopped && revision === authRevision) {
+          // A transport failure cannot revoke a previously stored display cache.
+          // An authoritative SIGNED_OUT event clears it via switchUser(null).
+          status = presentationAccountId ? "loading" : "signedOut";
+          if (sessionDenied(error)) {
+            await invalidateSession(epoch);
+            return;
+          }
+          offline = errorCode(error) === "SHARE_NETWORK_FAILED";
+          localReady = true;
+          failed = !offline;
           emit();
         }
       }

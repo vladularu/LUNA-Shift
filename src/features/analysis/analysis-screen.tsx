@@ -14,6 +14,7 @@ import {
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
+import { currentMonth } from "@/engine/calendar";
 import { AnalysisViewControls } from "./analysis-view-controls";
 import { MonthOverview } from "./month-overview";
 import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
@@ -59,7 +60,8 @@ export function AnalysisScreen({
   const { month, period, routeMonth, selectMonth, changePeriod } = navigation;
   useEffect(() => {
     if (initialExpandedCard) {
-      const targetMonth = routeMonth ?? activeMonthCoordinator.getMonth();
+      const targetMonth =
+        routeMonth ?? activeMonthCoordinator.analysisRequests.getMonth() ?? currentMonth();
       router.push(
         initialExpandedCard === "PAY"
           ? salaryRoute(targetMonth)

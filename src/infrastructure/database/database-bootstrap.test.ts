@@ -55,6 +55,24 @@ describe("database encryption bootstrap state machine", () => {
     ).toBe("validate-secure-and-clean");
   });
 
+  it("uses the provider's validated connection for an ordinary encrypted startup", () => {
+    expect(decideDatabaseBootstrap(state({ secureExists: true, keyExists: true }))).toBe(
+      "open-secure",
+    );
+  });
+
+  it.each([{ legacyExists: true }, { temporaryExists: true }])(
+    "keeps preflight validation when recovery artifacts exist: %j",
+    (artifacts) => {
+      expect(
+        decideDatabaseBootstrap(state({ secureExists: true, keyExists: true, ...artifacts })),
+      ).toBe("validate-secure-and-clean");
+      expect(decideDatabaseBootstrap(state({ secureExists: true, ...artifacts }))).toBe(
+        "block-missing-key",
+      );
+    },
+  );
+
   it("runs concurrent bootstrap requests only once", async () => {
     let executions = 0;
     let release: (() => void) | undefined;

@@ -112,13 +112,13 @@ export function ReportExportOptions({
           padding: SPACING.sm,
           borderRadius: RADII.control,
           borderCurve: CORNER_CURVE,
-          backgroundColor: palette.primary,
+          backgroundColor: palette.primaryAction,
           opacity: pressed ? 0.6 : 1,
         })}
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ ...TYPOGRAPHY.button, color: palette.onPrimary }}
+          style={{ ...TYPOGRAPHY.button, color: palette.onPrimaryAction }}
         >
           {format} erstellen und teilen
         </Text>

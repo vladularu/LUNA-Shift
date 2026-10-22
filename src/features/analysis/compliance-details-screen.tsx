@@ -22,10 +22,23 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { ReportScrollView } from "@/ui/report-layout";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 const EMPTY_SHIFTS: readonly ShiftEntry[] = Object.freeze([]);
 
 export function ComplianceDetailsScreen() {
+  return (
+    <BackFooterLayout
+      footerTestID="compliance-back-footer"
+      label="Zurück zur Auswertung"
+      onPress={() => router.back()}
+    >
+      {(bottomPadding) => <ComplianceDetailsContent bottomPadding={bottomPadding} />}
+    </BackFooterLayout>
+  );
+}
+
+function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: number }) {
   const preferences = useCheckPreferences();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const { error, ready, reload } = usePflegeShiftStatus();
@@ -72,7 +85,7 @@ export function ComplianceDetailsScreen() {
   }
   if (window && !window.ok)
     return (
-      <ReportScrollView>
+      <ReportScrollView bottomPadding={bottomPadding}>
         <CheckPeriod period={formatMonthTitle(month)} />
         <RuleComputationNotice
           failure={window}
@@ -95,6 +108,7 @@ export function ComplianceDetailsScreen() {
   return (
     <ScreenScrollView
       surface="groupedBackground"
+      bottomPadding={bottomPadding}
       style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1 }}
     >

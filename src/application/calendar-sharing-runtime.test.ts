@@ -296,6 +296,113 @@ function deferred<T>() {
 }
 
 describe("responsive local calendar visibility", () => {
+  it("presents cached sharing while auth is pending and defers publication work until the first frame", async () => {
+    const cached: CachedSharedCalendar = {
+      accountId: account.id,
+      calendar,
+      entries: [],
+      visible: true,
+      fetchedAt: calendar.publishedAt!,
+    };
+    const f = fixture({ initialCaches: [cached] });
+    const session = deferred<SharingAuthUser | null>();
+    const presented = deferred<void>();
+    f.auth.getCachedSession = vi.fn(async () => account);
+    vi.mocked(f.auth.getSession).mockReturnValue(session.promise);
+    f.options.beforeInitialRefresh = () => presented.promise;
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(runtime.getSnapshot().localReady).toBe(true));
+    expect(runtime.getSnapshot().controller.status).toBe("loading");
+    const first = runtime.getSnapshot().visibleCalendars;
+    expect(first).toEqual([cached]);
+    expect(f.local.readEntries).not.toHaveBeenCalled();
+    expect(f.cloud.listCalendars).not.toHaveBeenCalled();
+    session.resolve(account);
+    await vi.waitFor(() => expect(f.local.setActiveAccount).toHaveBeenCalledWith(account.id));
+    expect(runtime.getSnapshot().visibleCalendars).toBe(first);
+    expect(f.local.listCaches).toHaveBeenCalledTimes(1);
+    expect(f.local.readEntries).not.toHaveBeenCalled();
+    presented.resolve();
+    await starting;
+    expect(f.cloud.listCalendars).toHaveBeenCalledTimes(1);
+    runtime.stop();
+  });
+
+  it("keeps local sharing on an offline restore failure, then clears it immediately on sign-out", async () => {
+    const cached: CachedSharedCalendar = {
+      accountId: account.id,
+      calendar,
+      entries: [],
+      visible: true,
+      fetchedAt: calendar.publishedAt!,
+    };
+    const f = fixture({ initialCaches: [cached] });
+    f.auth.getCachedSession = async () => account;
+    vi.mocked(f.auth.getSession).mockRejectedValue(new Error("SHARE_NETWORK_FAILED"));
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(runtime.getSnapshot().localReady).toBe(true);
+    expect(runtime.visibleCalendars()).toEqual([cached]);
+    expect(runtime.getController()).toMatchObject({ offline: true, error: false });
+    expect(f.cloud.listCalendars).not.toHaveBeenCalled();
+    f.changeAccount(null);
+    expect(runtime.visibleCalendars()).toEqual([]);
+    expect(runtime.getController().status).toBe("signedOut");
+    runtime.stop();
+  });
+
+  it("does not wait for online auth when no stored session exists", async () => {
+    const f = fixture({ user: null });
+    const session = deferred<SharingAuthUser | null>();
+    f.auth.getCachedSession = async () => null;
+    vi.mocked(f.auth.getSession).mockReturnValue(session.promise);
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(runtime.getSnapshot().localReady).toBe(true));
+    expect(runtime.visibleCalendars()).toEqual([]);
+    session.resolve(null);
+    await starting;
+    expect(f.cloud.listCalendars).not.toHaveBeenCalled();
+    runtime.stop();
+  });
+
+  it("ignores a stale cached identity when auth switches accounts during local restore", async () => {
+    const f = fixture({ remote: [] });
+    const stored = deferred<SharingAuthUser | null>();
+    f.auth.getCachedSession = () => stored.promise;
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(f.auth.subscribe).toHaveBeenCalled());
+    f.changeAccount({ id: "next", displayName: "Next" });
+    stored.resolve(account);
+    await starting;
+    expect(runtime.visibleCalendars()).toEqual([]);
+    expect(runtime.getController().account?.displayName).toBe("Next");
+    expect(f.local.listCaches).not.toHaveBeenCalledWith(account.id);
+    runtime.stop();
+  });
+
+  it("applies expiration and visibility to the initial local display cache", async () => {
+    const cached: CachedSharedCalendar = {
+      accountId: account.id,
+      calendar,
+      entries: [],
+      visible: true,
+      fetchedAt: "2026-10-10T12:00:00Z",
+    };
+    const f = fixture({
+      initialCaches: [cached, { ...cached, fetchedAt: calendar.publishedAt!, visible: false }],
+    });
+    f.auth.getCachedSession = async () => account;
+    vi.mocked(f.auth.getSession).mockRejectedValue(new Error("offline"));
+    const runtime = createCalendarSharingRuntime(f.options);
+    await runtime.start();
+    expect(runtime.getSnapshot().localReady).toBe(true);
+    expect(runtime.visibleCalendars()).toEqual([]);
+    runtime.stop();
+  });
+
   it("shows the local reader cache before the publication source has finished loading", async () => {
     const cached: CachedSharedCalendar = {
       accountId: account.id,
@@ -718,11 +825,68 @@ describe("sharing runtime", () => {
     await runtime.backgroundRefresh();
     expect(runtime.visibleCalendars()).toHaveLength(1);
     expect(runtime.getController().calendars[0].syncState).toBe("offline");
+    expect(runtime.getController()).toMatchObject({ offline: true, error: false });
     f.setNow(Date.parse("2026-10-13T12:01:00Z"));
     await runtime.backgroundRefresh();
     expect(runtime.visibleCalendars()).toEqual([]);
     expect(runtime.getController().calendars[0].syncState).toBe("expired");
   });
+  it("consumes the early display read without repeating the session or cache lookup", async () => {
+    const f = fixture();
+    const session = deferred<SharingAuthUser | null>();
+    f.options.readInitialDisplay = vi.fn(async () => ({ accountId: account.id, calendars: [] }));
+    f.auth.getCachedSession = vi.fn(async () => account);
+    vi.mocked(f.auth.getSession).mockReturnValue(session.promise);
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(runtime.getSnapshot().localReady).toBe(true));
+    expect(f.options.readInitialDisplay).toHaveBeenCalledTimes(1);
+    expect(f.auth.getCachedSession).not.toHaveBeenCalled();
+    expect(f.local.listCaches).not.toHaveBeenCalled();
+    runtime.stop();
+    session.resolve(null);
+    await starting;
+  });
+  it("does not publish a prefetched account after the runtime observes a different account", async () => {
+    const f = fixture({ remote: [] });
+    const display = deferred<{ accountId: string; calendars: readonly CachedSharedCalendar[] }>();
+    f.options.readInitialDisplay = () => display.promise;
+    const runtime = createCalendarSharingRuntime(f.options);
+    const starting = runtime.start();
+    await vi.waitFor(() => expect(f.auth.subscribe).toHaveBeenCalled());
+    f.changeAccount({ id: "next", displayName: "Sam" });
+    display.resolve({
+      accountId: account.id,
+      calendars: [
+        {
+          accountId: account.id,
+          calendar,
+          entries: [],
+          visible: true,
+          fetchedAt: calendar.publishedAt!,
+        },
+      ],
+    });
+    await starting;
+    expect(runtime.visibleCalendars()).toEqual([]);
+    expect(runtime.getController().account?.displayName).toBe("Sam");
+    runtime.stop();
+  });
+  it.each(["fetch", "cacheSnapshot", "listCalendars"] as const)(
+    "keeps real %s failures distinct from offline and recovers",
+    async (operation) => {
+      const f = fixture();
+      const runtime = createCalendarSharingRuntime(f.options);
+      await runtime.start();
+      const method = operation === "cacheSnapshot" ? f.local.cacheSnapshot : f.cloud[operation];
+      vi.mocked(method).mockRejectedValueOnce(new Error("storage or permission failure"));
+      await runtime.backgroundRefresh();
+      expect(runtime.getController()).toMatchObject({ offline: false, error: true });
+      await runtime.backgroundRefresh();
+      expect(runtime.getController()).toMatchObject({ offline: false, error: false });
+      runtime.stop();
+    },
+  );
   it("pauses conflicting publication and resumes only on explicit user publication", async () => {
     const f = fixture({ remote: [owner], bindings: [binding] });
     vi.mocked(f.cloud.publish).mockRejectedValueOnce(

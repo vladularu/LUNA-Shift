@@ -6,6 +6,7 @@ import { Pressable as MockPressable, Text as MockText, View as MockView } from "
 
 import { addMonths, today } from "@/engine/calendar";
 import { CalendarScreen } from "@/features/calendar/calendar-screen";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
 import {
@@ -66,7 +67,8 @@ const photoBackground = {
 };
 
 const mockPreferences = {
-  error: null,
+  error: null as string | null,
+  ready: true,
   labelMode: "FULL",
   retry: jest.fn(),
   saving: false,
@@ -302,6 +304,9 @@ describe("CalendarScreen quick-entry navigation", () => {
     mockTodayRequestRevision = 0;
     mockCompletedTodayRequestRevision = 0;
     mockRuleResolver = bundledRuleResolver;
+    startupPresentation.complete();
+    mockPreferences.ready = true;
+    mockPreferences.error = null;
     mockReady = true;
     mockCalendarRange = null;
     mockPreferences.viewMode = "MONTH";
@@ -313,6 +318,39 @@ describe("CalendarScreen quick-entry navigation", () => {
       callback(0);
       return 1;
     });
+  });
+
+  it("reveals the first month only after its viewport and initial page are positioned", async () => {
+    startupPresentation.begin();
+    const screen = await render(<CalendarScreen />);
+    expect(startupPresentation.isReady()).toBe(false);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    expect(startupPresentation.isReady()).toBe(true);
+    mockPreferences.viewMode = "YEAR";
+    await screen.rerender(<CalendarScreen />);
+    expect(startupPresentation.isReady()).toBe(true);
+  });
+
+  it("reveals a saved annual view without waiting for an invisible month pager", async () => {
+    startupPresentation.begin();
+    mockPreferences.viewMode = "YEAR";
+    const screen = await render(<CalendarScreen />);
+    expect(startupPresentation.isReady()).toBe(true);
+    expect(screen.getByTestId("calendar-year-overview-shell")).toBeTruthy();
+  });
+
+  it("reveals the retry notice when calendar preferences fail to load", async () => {
+    startupPresentation.begin();
+    mockPreferences.ready = false;
+    mockPreferences.error = "Kalenderansicht konnte nicht geladen werden.";
+    const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    expect(startupPresentation.isReady()).toBe(true);
+    expect(screen.getByText("Kalenderansicht konnte nicht geladen werden.")).toBeTruthy();
   });
 
   it("keeps Plus mounted and usable above the popup with the same day-marker clock", async () => {

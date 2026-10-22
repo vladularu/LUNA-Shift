@@ -70,7 +70,7 @@ export function QuickEntrySwipeRow({
             paddingHorizontal: SPACING.lg,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: palette.danger,
+            backgroundColor: palette.dangerAction,
             opacity: pressed ? 0.7 : 1,
           })}
         >

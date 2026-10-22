@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useState, useSyncExternalStore, type PropsWithChildren } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PropsWithChildren,
+} from "react";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
+import type { SharingStartupCache } from "@/application/sharing-startup-cache";
 import { Alert, AppState } from "react-native";
 import * as Crypto from "expo-crypto";
 import Constants from "expo-constants";
@@ -56,9 +65,12 @@ function notifyDeletion(status: SharingRevocationStatus) {
 }
 
 /** Native adapters live in composition; the serial application worker stays framework independent. */
-export function SharingRuntimeProvider({ children }: PropsWithChildren) {
+export function SharingRuntimeProvider({
+  children,
+  startup,
+}: PropsWithChildren<{ startup?: SharingStartupCache }>) {
   const db = useSQLiteContext();
-  const { ready } = usePflegeShiftStatus();
+  const { ready, error } = usePflegeShiftStatus();
   const { profile } = usePflegeShiftProfile();
   const { entries } = usePflegeShiftEntries();
   const { testMonths } = usePflegeShiftTestData();
@@ -77,7 +89,8 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
       auth,
       cloud: client ? createCloudSharingClient(client) : null,
       local: {
-        initialize: () => local.migrateCalendarSharing(db),
+        // The secure provider's migrateDatabase already installs sharing schema 33.
+        initialize: async () => {},
         setActiveAccount: (accountId) => local.setSharingActiveAccount(db, accountId),
         listBindings: (accountId) => local.listSharingBindings(db, accountId),
         stagePublication: (binding, timeZone, makeId) =>
@@ -143,15 +156,18 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
       confirmManualAppleDeletion,
       notifyDeletion,
       forgetAuthProfile: forgetSharingAuthProfile,
+      beforeInitialRefresh: startupPresentation.wait,
+      readInitialDisplay: startup?.take,
     };
     return createCalendarSharingRuntime(options);
     // Calendar range loading must not recreate an initialized sharing session.
-  }, [db, active]);
+  }, [db, active, startup]);
   const snapshot = useSyncExternalStore(
     runtime.subscribe,
     runtime.getSnapshot,
     runtime.getSnapshot,
   );
+  const previousInputRuntime = useRef<typeof runtime | null>(null);
   useEffect(() => {
     if (!active) return;
     let disposed = false;
@@ -187,15 +203,22 @@ export function SharingRuntimeProvider({ children }: PropsWithChildren) {
     };
   }, [active, runtime]);
   useEffect(() => {
+    const alreadyStarted = previousInputRuntime.current === runtime;
+    previousInputRuntime.current = runtime;
     runtime.updateInput({
       timeZone: profile?.timeZone ?? "Europe/Berlin",
       testLabActive: !active || testMonths.length > 0,
     });
-    if (active) void runtime.backgroundRefresh().catch(() => {});
+    // start() already restores and refreshes this input once.
+    if (active && alreadyStarted) void runtime.backgroundRefresh().catch(() => {});
   }, [active, entries, profile?.timeZone, runtime, testMonths]);
   return (
     <SharingUiProvider controller={snapshot.controller}>
-      <SharedCalendarsContext value={snapshot.visibleCalendars}>{children}</SharedCalendarsContext>
+      <SharedCalendarsContext value={snapshot.visibleCalendars}>
+        {(ready || initializedDatabase === db || error) && (!active || snapshot.localReady)
+          ? children
+          : null}
+      </SharedCalendarsContext>
     </SharingUiProvider>
   );
 }

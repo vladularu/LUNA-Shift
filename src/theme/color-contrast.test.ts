@@ -86,6 +86,17 @@ const CONTENT_BACKGROUNDS = [
   "primarySoft",
 ] as const satisfies readonly (keyof Palette)[];
 
+describe("shared action colors", () => {
+  it("uses the approved blue and red fills with white labels in both modes", () => {
+    for (const palette of [LIGHT_PALETTE, DARK_PALETTE]) {
+      expect(palette.primaryAction).toBe("#2F6FED");
+      expect(palette.dangerAction).toBe("#B91C1C");
+      expect(palette.onPrimaryAction).toBe("#FFFFFF");
+      expect(palette.onDanger).toBe("#FFFFFF");
+    }
+  });
+});
+
 describe.each([
   ["light", LIGHT_PALETTE],
   ["dark", DARK_PALETTE],
@@ -138,13 +149,13 @@ describe.each([
   });
 
   it("keeps primary actions readable", () => {
-    expect(colorContrastRatio(palette.onPrimary, palette.primary)).toBeGreaterThanOrEqual(
-      MINIMUM_TEXT_CONTRAST,
-    );
+    expect(
+      colorContrastRatio(palette.onPrimaryAction, palette.primaryAction),
+    ).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
   });
 
   it("keeps destructive actions readable", () => {
-    expect(colorContrastRatio(palette.onDanger, palette.danger)).toBeGreaterThanOrEqual(
+    expect(colorContrastRatio(palette.onDanger, palette.dangerAction)).toBeGreaterThanOrEqual(
       MINIMUM_TEXT_CONTRAST,
     );
   });

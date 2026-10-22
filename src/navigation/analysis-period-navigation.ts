@@ -1,10 +1,17 @@
 /** Analysis resets deliberately do not issue Calendar Today requests. */
 export function createAnalysisPeriodRequests() {
   let revision = 0;
+  let month: string | null = null;
   let period: "MONTH" | "YEAR" = "MONTH";
   const listeners = new Set<() => void>();
   return Object.freeze({
     getRevision: () => revision,
+    getMonth: () => month,
+    setMonth: (next: string) => {
+      if (month === next) return;
+      month = next;
+      for (const listener of listeners) listener();
+    },
     getPeriod: () => period,
     setPeriod: (next: "MONTH" | "YEAR") => {
       period = next;

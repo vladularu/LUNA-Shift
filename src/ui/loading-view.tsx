@@ -103,14 +103,14 @@ export function LoadFailureView({
           justifyContent: "center",
           borderRadius: RADII.control,
           borderCurve: CORNER_CURVE,
-          backgroundColor: palette.accent,
+          backgroundColor: palette.primaryAction,
           opacity: pressed ? 0.72 : 1,
           paddingHorizontal: 18,
         })}
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.onAccent, ...TYPOGRAPHY.button }}
+          style={{ color: palette.onPrimaryAction, ...TYPOGRAPHY.button }}
         >
           {actionLabel}
         </Text>

@@ -222,6 +222,10 @@ async function prepareSecureDatabaseInternal(): Promise<void> {
     );
   }
 
+  // SQLiteProvider opens and fully validates this database in onInit before
+  // exposing it to readers. Only recovery/cleanup needs a separate connection.
+  if (action === "open-secure") return;
+
   if (action === "validate-secure-and-clean") {
     if (key === null) {
       throw new DatabaseSecurityError("missing-key", "Der Datenbankschlüssel fehlt.");
@@ -302,12 +306,13 @@ export async function initializeSecureDatabase(database: SQLiteDatabase): Promis
       );
     }
     await applyAndVerifySqlCipher(database, key);
-    await migrateDatabase(database);
-    await purgeExpiredTombstones(database);
-    await assertDatabaseMigrationMarker(database);
-    await checkpointWal(database);
+    // Validate the existing encrypted file before any migration or retention write.
     await assertQuickCheck(database);
     await assertCipherIntegrity(database);
+    await assertDatabaseMigrationMarker(database);
+    await migrateDatabase(database);
+    await purgeExpiredTombstones(database);
+    await checkpointWal(database);
     await assertDatabaseMigrationMarker(database);
   } catch (error) {
     try {

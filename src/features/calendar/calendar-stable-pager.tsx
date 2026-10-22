@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
+import { scheduleIdleWork } from "@/ui/schedule-idle-work";
 import {
   calendarPageTarget,
   calendarPageWindow,
@@ -42,7 +44,9 @@ export function CalendarStablePager({
   const targetKey = calendarPageTarget(month, revision, months[0], height);
   const [storedWindow, setWindow] = useState(() => {
     const initial = calendarPageWindow(targetKey, month, months);
-    return enabled ? prepareCalendarPages(initial, months) : initial;
+    return enabled && startupPresentation.isReady()
+      ? prepareCalendarPages(initial, months)
+      : initial;
   });
   const window =
     storedWindow.target === targetKey
@@ -53,6 +57,18 @@ export function CalendarStablePager({
   const previewMonth = useRef(month);
   useEffect(() => {
     if (!enabled || transitioning || prepareCalendarPages(window, months) === window) return;
+    if (!startupPresentation.isReady()) {
+      let cancelIdle = () => {};
+      const cancelPresentation = startupPresentation.after(() => {
+        cancelIdle = scheduleIdleWork(() => {
+          setWindow((old) => (old.target === targetKey ? prepareCalendarPages(old, months) : old));
+        });
+      });
+      return () => {
+        cancelPresentation();
+        cancelIdle();
+      };
+    }
     // Keep prepared pages in year mode. New neighbours wait for the actual
     // animation completion; requestAnimationFrame alone is not an idle gate.
     const frame = requestAnimationFrame(() => {

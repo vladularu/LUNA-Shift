@@ -10,6 +10,12 @@ import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { PROTOTYPE_MONTH_NAMES } from "./calendar-prototype-layout";
 import { useCalendarController } from "./use-calendar-controller";
 import { calendarPageTarget } from "./calendar-page-window";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
+
+const mockIdleWork = jest.fn<(work: () => void) => () => void>(() => () => {});
+jest.mock("@/ui/schedule-idle-work", () => ({
+  scheduleIdleWork: (work: () => void) => mockIdleWork(work),
+}));
 
 const profile = {
   timeZone: "Europe/Berlin",
@@ -18,6 +24,50 @@ const profile = {
 } as UserProfile;
 const noop = () => {};
 const onDate = jest.fn();
+
+it.each([false, true])(
+  "renders only the first month until presentation; immediate swipe: %s",
+  async (swipe) => {
+    startupPresentation.begin();
+    mockIdleWork.mockClear();
+    const months = createMonthWindow("2026-09", 24, 36);
+    const screen = await render(
+      <CalendarStablePager
+        month="2026-09"
+        months={months}
+        height={700}
+        enabled
+        revision={0}
+        onBeginDrag={noop}
+        onSettled={noop}
+        renderMonth={(month) => <Text testID={`body-${month}`}>{month}</Text>}
+      />,
+    );
+    try {
+      const body = screen.getByTestId("body-2026-09");
+      const pager = screen.getByTestId("calendar-month-pager");
+      expect(screen.getAllByTestId(/body-/, { includeHiddenElements: true })).toHaveLength(1);
+      expect(pager.props.contentOffset).toEqual({ x: 0, y: 24 * 700 });
+      expect(mockIdleWork).not.toHaveBeenCalled();
+      await act(async () => {
+        startupPresentation.complete();
+      });
+      expect(mockIdleWork).toHaveBeenCalledTimes(1);
+      expect(screen.getAllByTestId(/body-/, { includeHiddenElements: true })).toHaveLength(1);
+      if (swipe) await fireEvent(pager, "scrollBeginDrag");
+      else
+        await act(async () => {
+          mockIdleWork.mock.calls[0][0]();
+        });
+      expect(screen.getAllByTestId(/body-/, { includeHiddenElements: true })).toHaveLength(5);
+      expect(screen.getByTestId("body-2026-09")).toBe(body);
+      expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+    } finally {
+      startupPresentation.complete();
+      await screen.unmount();
+    }
+  },
+);
 
 // Real scene + real bounded pager + real month glyphs: no MonthCard stub.
 function Harness() {

@@ -35,12 +35,17 @@ describe("active month coordinator", () => {
     expect(() => requireActiveMonth("2026-13")).toThrow();
   });
 
-  it("publishes exactly one Today request for each calendar tab press", () => {
+  it("preserves the calendar on entry and publishes Today only for an active-tab reselect", () => {
     const coordinator = createActiveMonthCoordinator("2026-08");
     const listener = vi.fn();
     const unsubscribe = coordinator.subscribeTodayRequests(listener);
 
-    requestCalendarTodayOnPress(coordinator);
+    requestCalendarTodayOnPress(coordinator, false);
+    expect(coordinator.getMonth()).toBe("2026-08");
+    expect(coordinator.getTodayRequestRevision()).toBe(0);
+    expect(listener).not.toHaveBeenCalled();
+
+    requestCalendarTodayOnPress(coordinator, true);
     expect(coordinator.getTodayRequestRevision()).toBe(1);
     expect(coordinator.hasPendingTodayRequest(1)).toBe(true);
     expect(listener).toHaveBeenCalledTimes(1);
@@ -63,7 +68,7 @@ describe("active month coordinator", () => {
     expect(analysis).toHaveBeenCalledTimes(1);
     expect(today).not.toHaveBeenCalled();
     expect(coordinator.getMonth()).toBe("2026-08");
-    requestCalendarTodayOnPress(coordinator);
+    requestCalendarTodayOnPress(coordinator, true);
     expect(today).toHaveBeenCalledTimes(1);
     expect(analysis).toHaveBeenCalledTimes(1);
     stop();

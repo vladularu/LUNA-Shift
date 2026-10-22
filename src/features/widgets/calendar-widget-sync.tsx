@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
@@ -142,15 +143,19 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
         Math.max(1000, nextWidgetMidnight(now, timeZone).getTime() - now.getTime() + 100),
       );
     }
-    void refresh();
-    schedule();
+    const cancelStartup = startupPresentation.after(() => {
+      void refresh();
+      schedule();
+    });
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
+        if (!startupPresentation.isReady()) return;
         void refresh();
         schedule();
       }
     });
     return () => {
+      cancelStartup();
       active = false;
       sequence.current += 1;
       if (timer !== undefined) clearTimeout(timer);

@@ -97,7 +97,8 @@ describe("ComplianceDetailsScreen", () => {
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByText("Über die Prüfung")).toBeNull();
     expect(screen.queryByText(/keine Rechtsberatung/)).toBeNull();
-    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Zurück zur Auswertung" })).toBeVisible();
   });
 
   it("does not announce a clear check before the calculation has completed", async () => {

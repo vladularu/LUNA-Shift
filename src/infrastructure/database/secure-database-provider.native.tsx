@@ -16,6 +16,7 @@ import {
   SECURE_DATABASE_NAME,
 } from "@/infrastructure/database/secure-database.native";
 import { databaseSecurityMessage } from "@/infrastructure/database/database-security-error";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 
 type BootstrapState =
   { status: "loading" } | { status: "ready" } | { status: "error"; message: string };
@@ -30,6 +31,9 @@ interface DatabaseFailureViewProps {
 }
 
 function DatabaseFailureView({ message, onRetry }: DatabaseFailureViewProps) {
+  useEffect(() => {
+    startupPresentation.complete();
+  }, []);
   return (
     <View accessibilityRole="alert" style={styles.centered}>
       <Text accessibilityRole="header" style={styles.title}>

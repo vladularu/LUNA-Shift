@@ -11,6 +11,7 @@ export type SharingAuthUser = {
 export type SharingAuthPort = {
   isConfigured: boolean;
   getSession(): Promise<SharingAuthUser | null>;
+  getCachedSession?(): Promise<SharingAuthUser | null>;
   subscribe(listener: (user: SharingAuthUser | null) => void): () => void;
   signInApple(): Promise<SharingAuthUser | null>;
   signInGoogle(): Promise<SharingAuthUser | null>;
@@ -26,7 +27,7 @@ export type SharingAuthPort = {
   resetPassword?(email: string, token: string, password: string): Promise<SharingAuthUser | null>;
   signOut(): Promise<void>;
 };
-type ProviderUser = {
+export type ProviderUser = {
   id: string;
   email?: string;
   email_confirmed_at?: string;
@@ -86,6 +87,7 @@ export type SharingAuthRuntime = {
   sha256(value: string): Promise<string>;
   openBrowser(url: string, callback: string): Promise<{ type: string; url?: string }>;
   nameStorage: AuthStorage;
+  readStoredUser?(): Promise<ProviderUser | null>;
   clearSessionStorage?(): Promise<void>;
   signOutRemote?(): Promise<void>;
   clearOAuthState?(): Promise<void>;
@@ -149,6 +151,11 @@ export function createSharingAuthController(
   let identityVersion = 0;
   let observedAccountId: string | null | undefined;
   let logoutWork: Promise<void> | null = null;
+  let sessionRestore: {
+    generation: number;
+    identity: number;
+    work: Promise<SharingAuthUser | null>;
+  } | null = null;
   const nameKey = (id: string) => `luna.sharing.apple-name.${id}`;
   function mapped(user: ProviderUser | null): SharingAuthUser | null {
     if (!user || signedOut) return null;
@@ -357,21 +364,52 @@ export function createSharingAuthController(
           throw new UserFacingError("Das Passwort konnte nicht geändert werden.");
         return acceptEmailUser(result.data.user, email, generation);
       }),
-    getSession: async () => {
-      if (!client || signedOut) return null;
-      const { data, error } = await client.auth.getSession();
-      if (error) throw new Error("Die Anmeldung konnte nicht wiederhergestellt werden.");
-      if (data.session) {
-        const name = cleanName(await runtime.nameStorage.getItem(nameKey(data.session.user.id)));
-        if (name) {
-          names.set(data.session.user.id, name);
-          if (!cleanName(data.session.user.user_metadata?.full_name)) {
-            const update = await client.auth.updateUser({ data: { full_name: name } });
-            if (!update.error && update.data.user) return mapped(update.data.user);
+    getCachedSession: async () => {
+      if (!client || signedOut || !runtime.readStoredUser) return null;
+      const generation = authGeneration;
+      const identity = identityVersion;
+      const stored = await runtime.readStoredUser();
+      if (signedOut || generation !== authGeneration || identity !== identityVersion) return null;
+      return mapped(stored);
+    },
+    getSession: () => {
+      if (!client || signedOut) return Promise.resolve(null);
+      const generation = authGeneration;
+      const identity = identityVersion;
+      if (sessionRestore?.generation === generation && sessionRestore.identity === identity)
+        return sessionRestore.work;
+      const current = () =>
+        !signedOut && generation === authGeneration && identity === identityVersion;
+      const work = (async () => {
+        const { data, error } = await client.auth.getSession();
+        if (!current()) return null;
+        if (error) {
+          // Supabase marks retryable fetch/transport failures explicitly. Unknown
+          // failures remain errors rather than being hidden behind offline mode.
+          if (error instanceof Error && error.name === "AuthRetryableFetchError")
+            throw new Error("SHARE_NETWORK_FAILED");
+          throw new Error("Die Anmeldung konnte nicht wiederhergestellt werden.");
+        }
+        if (data.session) {
+          const name = cleanName(await runtime.nameStorage.getItem(nameKey(data.session.user.id)));
+          if (!current()) return null;
+          if (name) {
+            names.set(data.session.user.id, name);
+            if (!cleanName(data.session.user.user_metadata?.full_name)) {
+              const update = await client.auth.updateUser({ data: { full_name: name } });
+              if (!current()) return null;
+              if (!update.error && update.data.user) return mapped(update.data.user);
+            }
           }
         }
-      }
-      return mapped(data.session?.user ?? null);
+        return mapped(data.session?.user ?? null);
+      })();
+      sessionRestore = { generation, identity, work };
+      const clear = () => {
+        if (sessionRestore?.work === work) sessionRestore = null;
+      };
+      void work.then(clear, clear);
+      return work;
     },
     subscribe: (listener) => {
       listeners.add(listener);

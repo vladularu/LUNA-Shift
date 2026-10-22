@@ -108,6 +108,9 @@ export function useActiveMonth(): string {
   );
 }
 
-export function requestCalendarTodayOnPress(coordinator: ActiveMonthCoordinator): void {
-  coordinator.requestToday();
+export function requestCalendarTodayOnPress(
+  coordinator: ActiveMonthCoordinator,
+  calendarIsFocused: boolean,
+): void {
+  if (calendarIsFocused) coordinator.requestToday();
 }

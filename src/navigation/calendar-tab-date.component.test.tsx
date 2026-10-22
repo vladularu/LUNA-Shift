@@ -71,14 +71,16 @@ afterEach(() => {
 
 describe("current calendar day in the tab bar", () => {
   it.each([NativeAppTabs, JavaScriptAppTabs])(
-    "issues Today on the first calendar tab press even when another tab is focused",
+    "forwards calendar focus so only an active-tab reselect can request Today",
     async (Tabs) => {
       const screen = await render(<Tabs />);
-      const listeners = screen
-        .getByTestId("tab-(calendar)")
-        .props.listeners({ navigation: { isFocused: () => false } });
-      listeners.tabPress();
-      expect(requestCalendarTodayOnPress).toHaveBeenCalledTimes(1);
+      for (const focused of [false, true]) {
+        screen
+          .getByTestId("tab-(calendar)")
+          .props.listeners({ navigation: { isFocused: () => focused } })
+          .tabPress();
+        expect(requestCalendarTodayOnPress).toHaveBeenLastCalledWith({}, focused);
+      }
       expect(requestAnalysisCurrentPeriodOnReselect).not.toHaveBeenCalled();
     },
   );

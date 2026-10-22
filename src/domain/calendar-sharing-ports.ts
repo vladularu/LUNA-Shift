@@ -13,6 +13,8 @@ export type SharingAuthUser = { id: string; displayName: string };
 export interface SharingAuthPort {
   isConfigured: boolean;
   getSession(): Promise<SharingAuthUser | null>;
+  /** Local presentation only; never authorizes a cloud operation. */
+  getCachedSession?(): Promise<SharingAuthUser | null>;
   subscribe(listener: (user: SharingAuthUser | null) => void): () => void;
   signInApple(): Promise<SharingAuthUser | null>;
   signInGoogle(): Promise<SharingAuthUser | null>;

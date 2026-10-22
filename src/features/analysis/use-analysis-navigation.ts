@@ -26,7 +26,9 @@ export function useAnalysisNavigation(timeZone?: string) {
   const routeMonth = parsedMonth.status === "valid" ? parsedMonth.value : null;
   const parsedPeriod = parseEnumRouteParam(params.period, ["MONTH", "YEAR"] as const);
   const routePeriod = parsedPeriod.status === "valid" ? parsedPeriod.value : null;
-  const [month, setMonth] = useState(() => routeMonth ?? coordinator.getMonth());
+  const [month, setMonth] = useState(
+    () => routeMonth ?? coordinator.analysisRequests.getMonth() ?? currentMonth(timeZone),
+  );
   const [period, setPeriod] = useState<Selection["period"]>(
     () => routePeriod ?? coordinator.analysisRequests.getPeriod(),
   );
@@ -38,13 +40,15 @@ export function useAnalysisNavigation(timeZone?: string) {
   );
   const handledRequest = useRef(revision);
   const returnTarget = useRef<Selection | null>(null);
+  const pendingRoute = useRef<Selection | null>(null);
   const current = useRef({ month, period, focused });
   useLayoutEffect(() => {
     current.current = { month, period, focused };
   }, [focused, month, period]);
   const apply = useCallback(
     (next: Selection) => {
-      coordinator.setMonth(next.month);
+      current.current = { ...current.current, month: next.month, period: next.period };
+      coordinator.analysisRequests.setMonth(next.month);
       coordinator.analysisRequests.setPeriod(next.period);
       setMonth(next.month);
       setPeriod(next.period);
@@ -52,18 +56,26 @@ export function useAnalysisNavigation(timeZone?: string) {
     [coordinator],
   );
   useEffect(() => {
-    if (!routeMonth || !current.current.focused || handledRequest.current !== revision) return;
-    apply({ month: routeMonth, period: routePeriod ?? current.current.period });
+    if (!routeMonth || handledRequest.current !== revision) return;
+    const next = { month: routeMonth, period: routePeriod ?? current.current.period };
+    if (!current.current.focused) {
+      pendingRoute.current = next;
+      return;
+    }
+    pendingRoute.current = null;
+    apply(next);
   }, [apply, revision, routeMonth, routePeriod]);
   useFocusEffect(
     useCallback(() => {
       // A reselect first pops the native stack. Its reset must win over old history.
       if (handledRequest.current !== coordinator.analysisRequests.getRevision()) return;
-      const next = returnTarget.current ?? {
-        month: coordinator.getMonth(),
-        period: current.current.period,
-      };
+      const next = returnTarget.current ??
+        pendingRoute.current ?? {
+          month: current.current.month,
+          period: current.current.period,
+        };
       returnTarget.current = null;
+      pendingRoute.current = null;
       apply(next);
     }, [apply, coordinator]),
   );
@@ -71,9 +83,10 @@ export function useAnalysisNavigation(timeZone?: string) {
     if (!focused || handledRequest.current === revision) return;
     handledRequest.current = revision;
     returnTarget.current = null;
+    pendingRoute.current = null;
     const present = currentMonth(timeZone);
     const mode = coordinator.analysisRequests.getPeriod();
-    const selectedMonth = coordinator.getMonth();
+    const selectedMonth = coordinator.analysisRequests.getMonth() ?? current.current.month;
     const next = {
       month: mode === "YEAR" ? `${present.slice(0, 4)}-${selectedMonth.slice(5, 7)}` : present,
       period: mode,

@@ -958,7 +958,7 @@ describe("integrated salary-to-net workflow", () => {
     await screen.rerender(<SalaryDetailsScreen />);
     expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(before);
     expect(mockCoordinator.getMonth()).toBe("2026-07");
-    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Gehalt" }));
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(mockSave).not.toHaveBeenCalled();
   });
@@ -971,7 +971,7 @@ describe("integrated salary-to-net workflow", () => {
       expect(screen.getByLabelText(/^Steuerbrutto:/)).toBeTruthy();
       expect(screen.getByLabelText(/^Brutto für Sozialversicherung:/)).toBeTruthy();
       expect(screen.getByText(/Samstagszuschläge, bezahlte Pausen/)).toBeTruthy();
-      await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Gehalt" }));
       const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
       expect(router.back).toHaveBeenCalledTimes(1);
       expect(router.push).not.toHaveBeenCalled();

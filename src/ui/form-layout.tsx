@@ -75,18 +75,25 @@ export function HeaderSaveAction({
       style={({ pressed }) => ({
         minWidth: 58,
         minHeight: 44,
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "center",
+        borderRadius: RADII.pill,
+        borderCurve: CORNER_CURVE,
+        backgroundColor: palette.primaryAction,
         opacity: busy ? 0.55 : pressed ? 0.65 : 1,
-        paddingHorizontal: 4,
+        paddingHorizontal: SPACING.md,
       })}
     >
       {busy ? (
-        <ActivityIndicator accessibilityElementsHidden color={palette.primary} size="small" />
+        <ActivityIndicator
+          accessibilityElementsHidden
+          color={palette.onPrimaryAction}
+          size="small"
+        />
       ) : (
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.primary, ...TYPOGRAPHY.button }}
+          style={{ color: palette.onPrimaryAction, ...TYPOGRAPHY.button }}
         >
           {label}
         </Text>
@@ -147,23 +154,23 @@ export function DestructiveFormAction({
     <Pressable
       hitSlop={2}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
         minHeight: CONTROL_HEIGHT.regular,
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 1,
-        borderColor: `${palette.danger}70`,
+        borderWidth: 0,
         borderRadius: RADII.control,
         borderCurve: CORNER_CURVE,
-        backgroundColor: pressed ? `${palette.danger}16` : "transparent",
-        opacity: disabled ? 0.45 : 1,
+        backgroundColor: palette.dangerAction,
+        opacity: disabled ? 0.45 : pressed ? 0.82 : 1,
       })}
     >
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ color: palette.danger, ...TYPOGRAPHY.button }}
+        style={{ color: palette.onDanger, ...TYPOGRAPHY.button }}
       >
         {label}
       </Text>

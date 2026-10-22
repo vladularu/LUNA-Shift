@@ -95,12 +95,14 @@ export function AnnualReportScreen({
 }
 
 export function AnnualReportDetails({
+  bottomPadding,
   report: sourceReport,
   pending = false,
   section,
   testMonths,
   onSelectMonth,
 }: {
+  readonly bottomPadding?: number;
   readonly report: AnnualReport;
   readonly pending?: boolean;
   readonly section: AnnualDetailSection;
@@ -159,7 +161,7 @@ export function AnnualReportDetails({
     );
 
   return (
-    <ReportScrollView>
+    <ReportScrollView bottomPadding={bottomPadding}>
       <ReportPeriodContent>
         {section === "CHECK" ? (
           <>

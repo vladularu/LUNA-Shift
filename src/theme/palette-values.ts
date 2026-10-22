@@ -22,6 +22,11 @@ export interface Palette {
   /** Action fill; use primary for readable standalone text. */
   readonly accent: string;
   readonly onAccent: string;
+  /** Filled primary actions; independent of neutral navigation and selections. */
+  readonly primaryAction: string;
+  readonly onPrimaryAction: string;
+  /** Filled destructive actions; danger remains the readable text color. */
+  readonly dangerAction: string;
   readonly primary: string;
   readonly primarySoft: string;
   readonly secondarySoft: string;
@@ -76,6 +81,9 @@ export const LIGHT_PALETTE: Palette = {
   cardSeparator: "#E4E4E7",
   accent: "#18181B",
   onAccent: "#FAFAFA",
+  primaryAction: "#2F6FED",
+  onPrimaryAction: "#FFFFFF",
+  dangerAction: "#B91C1C",
   primary: "#18181B",
   primarySoft: "#EDEDEF",
   secondarySoft: "#F4F4F5",
@@ -128,6 +136,9 @@ export const DARK_PALETTE: Palette = {
   cardSeparator: "#27272A",
   accent: "#FAFAFA",
   onAccent: "#18181B",
+  primaryAction: "#2F6FED",
+  onPrimaryAction: "#FFFFFF",
+  dangerAction: "#B91C1C",
   primary: "#FAFAFA",
   primarySoft: "#27272A",
   secondarySoft: "#202023",
@@ -137,7 +148,7 @@ export const DARK_PALETTE: Palette = {
   onPrimary: "#18181B",
   sortAction: "#FAFAFA",
   onSortAction: "#18181B",
-  onDanger: "#18181B",
+  onDanger: SHADCN_COLORS.white,
   info: "#D4D4D8",
   success: "#D4D4D8",
   positiveBalance: "#4ADE80",

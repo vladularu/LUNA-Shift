@@ -123,6 +123,27 @@ async function renderCompact(
 }
 
 describe("QuickEntryPopup", () => {
+  it.each([false, true])(
+    "keeps swipe and confirmation actions filled red against the inverse popup in dark=%s",
+    async (dark) => {
+      jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const palette = dark ? LIGHT_PALETTE : DARK_PALETTE;
+      const remove = jest.fn(async () => {});
+      const screen = await renderCompact([existingShift], { onDeleteEntry: remove });
+      await fireEvent(screen.getByTestId("swipe-entry-SHIFT:shift-night"), "swipeableWillOpen");
+      const swipeDelete = screen.getByRole("button", { name: "Nacht löschen" });
+      expect(swipeDelete).toHaveStyle({ backgroundColor: palette.dangerAction });
+      expect(within(swipeDelete).getByText("Löschen")).toHaveStyle({ color: palette.onDanger });
+      await fireEvent.press(swipeDelete);
+      const confirm = screen.getByRole("button", { name: "Nacht endgültig löschen" });
+      expect(confirm).toHaveStyle({ backgroundColor: palette.dangerAction });
+      expect(within(confirm).getByText("Löschen")).toHaveStyle({ color: palette.onDanger });
+      expect(remove).not.toHaveBeenCalled();
+    },
+  );
+
   it("replaces the fixed footer with accessible confirmation without moving the day card", async () => {
     const screen = await renderCompact([existingShift], {
       onDeleteEntry: jest.fn(async () => {}),

@@ -256,10 +256,10 @@ function CustomRecurrenceView({
           onPress={onDone}
           style={({ pressed }) => [
             styles.footerButton,
-            { backgroundColor: palette.accent, opacity: pressed ? 0.76 : 1 },
+            { backgroundColor: palette.primaryAction, opacity: pressed ? 0.76 : 1 },
           ]}
         >
-          <Text style={[styles.footerLabel, { color: palette.onAccent }]}>Fertig</Text>
+          <Text style={[styles.footerLabel, { color: palette.onPrimaryAction }]}>Fertig</Text>
         </Pressable>
       </View>
     </Animated.View>

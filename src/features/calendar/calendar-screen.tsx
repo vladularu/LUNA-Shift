@@ -23,6 +23,7 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import type { CalendarEntry } from "@/domain/types";
 import { addMonths, currentMonth, today } from "@/engine/calendar";
 import { calendarPerformance } from "@/application/calendar-performance";
+import { useCalendarStartup } from "./use-calendar-startup";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
 import { CalendarHeader } from "@/features/calendar/calendar-header";
 import { CalendarMonthBackground } from "./calendar-background";
@@ -110,14 +111,15 @@ export function CalendarScreen() {
   const [pageHeight, setPageHeight] = useState(0);
   const [pagerResetRevision, setPagerResetRevision] = useState(0);
   const [positionedTarget, setPositionedTarget] = useState<string | null>(null);
+  const monthPositioned =
+    pageHeight > 0 &&
+    positionedTarget ===
+      calendarPageTarget(visibleMonth, pagerResetRevision, months[0], pageHeight);
   const controller = useCalendarController({
     month: visibleMonth,
     mode: preferences.viewMode,
     active: isFocused,
-    ready:
-      pageHeight > 0 &&
-      positionedTarget ===
-        calendarPageTarget(visibleMonth, pagerResetRevision, months[0], pageHeight),
+    ready: monthPositioned,
     revision: pagerResetRevision,
   });
   const dataYear = controller.displayMonth.slice(0, 4);
@@ -130,6 +132,12 @@ export function CalendarScreen() {
     (preferences.viewMode === "MONTH"
       ? calendarRangeCoversMonth(calendarRange ?? null, visibleMonth)
       : calendarRangeCoversYear(calendarRange ?? null, Number(visibleMonth.slice(0, 4))));
+  useCalendarStartup({
+    active: isFocused,
+    ready: calendarReady && profile !== null && preferences.ready !== false,
+    failed: error !== null || !!preferences.error,
+    positioned: preferences.viewMode !== "MONTH" || monthPositioned,
+  });
   const [headerDirection, setHeaderDirection] = useState<"NEXT" | "PREVIOUS">("NEXT");
   const [headerTransition, setHeaderTransition] = useState<"SPATIAL" | "CROSSFADE">("SPATIAL");
   const [plannerMode, setPlannerMode] = useState(false);
