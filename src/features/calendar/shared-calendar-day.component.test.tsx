@@ -30,6 +30,7 @@ const cache: CachedSharedCalendar = {
       endsAt: "2026-10-12T05:30:00Z",
       timeZone: "Europe/Berlin",
       allDay: false,
+      breakMinutes: 60,
     },
   ],
 };
@@ -71,4 +72,89 @@ it("does not render a separate shared day sheet or editor touch target", async (
   expect(screen.getByText("Nacht")).toBeTruthy();
   expect(screen.getByText("21:00")).toBeTruthy();
   expect(screen.queryAllByRole("button")).toHaveLength(0);
+});
+it.each<[boolean, boolean, string | null]>([
+  [true, false, "21:00"],
+  [false, true, "9:30 h"],
+  [true, true, "21:00 · 9:30 h"],
+  [false, false, null],
+])(
+  "applies time=%s and duration=%s without a separate sharing setting",
+  async (showShiftTimes, showShiftDuration, detail) => {
+    const row = sharedCalendarDays([cache], "Europe/Berlin", null).get("2026-10-11")![0];
+    const screen = await render(
+      <SharedCalendarEntryContent
+        row={row}
+        display={{ labelMode: "FULL", showShiftTimes, showShiftDuration }}
+        lineHeight={15}
+      />,
+    );
+    if (detail) expect(screen.getByText(detail)).toBeTruthy();
+    else expect(screen.queryAllByText(/21:00|9:30/)).toHaveLength(0);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  },
+);
+
+function ProjectionProbe({
+  items,
+  onMap,
+}: {
+  items: readonly CachedSharedCalendar[];
+  onMap: (map: ReturnType<typeof sharedCalendarDays>) => void;
+}) {
+  return (
+    <SharedCalendarsContext value={items}>
+      <ProjectionBody onMap={onMap} />
+    </SharedCalendarsContext>
+  );
+}
+function ProjectionBody({
+  onMap,
+}: {
+  onMap: (map: ReturnType<typeof sharedCalendarDays>) => void;
+}) {
+  const { sharedEntriesByDate } = useSharedCalendarDays("Europe/Berlin", "2026-10");
+  onMap(sharedEntriesByDate);
+  return <Text>{[...sharedEntriesByDate.keys()].join(",")}</Text>;
+}
+it("prepares outer month pages and their adjacent days, retaining rows on freshness-only updates", async () => {
+  const dates = ["2026-07-31", "2026-08-01", "2026-12-01", "2027-01-01"];
+  const expanded = {
+    ...cache,
+    entries: dates.map((date, index) => ({
+      ...cache.entries[0],
+      id: String(index),
+      startsAt: date + "T06:00:00Z",
+      endsAt: date + "T14:00:00Z",
+    })),
+  };
+  let map: ReturnType<typeof sharedCalendarDays> = new Map();
+  const view = await render(
+    <ProjectionProbe
+      items={[expanded]}
+      onMap={(value) => {
+        map = value;
+      }}
+    />,
+  );
+  for (const date of dates) expect(map.has(date)).toBe(true);
+  const old = map;
+  await view.rerender(
+    <ProjectionProbe
+      items={[{ ...expanded, fetchedAt: "2026-10-12T11:00:00Z" }]}
+      onMap={(value) => {
+        map = value;
+      }}
+    />,
+  );
+  expect(map).toBe(old);
+  await view.rerender(
+    <ProjectionProbe
+      items={[]}
+      onMap={(value) => {
+        map = value;
+      }}
+    />,
+  );
+  expect(map.size).toBe(0);
 });

@@ -30,6 +30,7 @@ describe("publication confirmation projection", () => {
       { title: "Termin" },
       { color: "#654321" },
       { symbol: "calendar" },
+      { breakMinutes: 30 },
     ])
       expect(sharingProjectionSignature([{ ...entry, ...patch }])).not.toBe(
         sharingProjectionSignature([entry]),

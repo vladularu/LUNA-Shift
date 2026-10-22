@@ -121,6 +121,86 @@ const invalid = async (promise: Promise<unknown>) => {
   await expect(promise).rejects.toMatchObject({ code: "SHARE_INVALID_RESPONSE" });
 };
 
+describe("automatic shared pauses contract", () => {
+  const durations = { ...entry, kind: "SHIFT", note: null, breakMinutes: 60 } as const;
+  const snapshot = (entries: unknown[] = [durations]) => ({
+    calendar,
+    revision: 1,
+    unchanged: false,
+    reset: true,
+    entries,
+    fetchedAt: NOW,
+  });
+  it("publishes pauses with no extra consent and retains the original RPC for queued legacy snapshots", async () => {
+    const f = fixture({ contentVersion: 2, durationVersion: 1 });
+    await f.api.supportsContentRights();
+    f.rpc.mockResolvedValue({
+      data: { calendarId: ID, revision: 1, publishedAt: NOW },
+      error: null,
+    });
+    await f.api.publish(binding, { ...publication, entries: [durations] });
+    expect(f.rpc).toHaveBeenLastCalledWith(
+      "sharing_publish_calendar_v3",
+      expect.objectContaining({ p_entries: [durations] }),
+    );
+    await f.api.publish(binding, publication);
+    expect(f.rpc).toHaveBeenLastCalledWith(
+      "sharing_publish_calendar",
+      expect.objectContaining({ p_entries: [entry] }),
+    );
+    const typed = { ...entry, kind: "SHIFT", note: null } as const;
+    await f.api.publish(
+      { ...binding, content: { version: 2, shifts: true, allAppointments: false, notes: false } },
+      { ...publication, entries: [typed] },
+    );
+    expect(f.rpc).toHaveBeenLastCalledWith(
+      "sharing_publish_calendar_v2",
+      expect.objectContaining({ p_entries: [typed] }),
+    );
+  });
+  it("loads pauses once even when an old cache already has the current revision, then resumes cursor fetches", async () => {
+    const f = fixture({ contentVersion: 2, durationVersion: 1 });
+    await f.api.supportsContentRights();
+    f.rpc.mockResolvedValue({ data: snapshot(), error: null });
+    const full = await f.api.fetch(ID, 1);
+    expect(full.entries[0].breakMinutes).toBe(60);
+    expect(full.calendar.durationVersion).toBe(1);
+    expect(f.rpc).toHaveBeenLastCalledWith("sharing_fetch_calendar_v3", {
+      p_calendar_id: ID,
+      p_after_revision: null,
+    });
+    f.rpc.mockResolvedValue({
+      data: { ...snapshot([]), unchanged: true, reset: false },
+      error: null,
+    });
+    expect((await f.api.fetch(ID, 1, full.calendar.durationVersion)).unchanged).toBe(true);
+    expect(f.rpc).toHaveBeenLastCalledWith("sharing_fetch_calendar_v3", {
+      p_calendar_id: ID,
+      p_after_revision: 1,
+    });
+  });
+  it.each([-1, 2881, 1.5, "60", true, undefined])(
+    "rejects malformed server pause %s",
+    async (breakMinutes) => {
+      const f = fixture({ contentVersion: 2, durationVersion: 1 });
+      await f.api.supportsContentRights();
+      f.rpc.mockResolvedValue({ data: snapshot([{ ...durations, breakMinutes }]), error: null });
+      await invalid(f.api.fetch(ID, null));
+    },
+  );
+  it("uses legacy capability fallback while leaving new snapshots pending until the server upgrade", async () => {
+    const f = fixture({ contentVersion: 2 });
+    f.rpc.mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } });
+    await f.api.supportsContentRights();
+    expect(f.rpc).toHaveBeenLastCalledWith("sharing_capabilities", {});
+    f.rpc.mockClear();
+    await expect(
+      f.api.publish(binding, { ...publication, entries: [durations] }),
+    ).rejects.toMatchObject({ code: "SHARE_DURATION_UNAVAILABLE" });
+    expect(f.rpc).not.toHaveBeenCalled();
+  });
+});
+
 describe("typed sharing RPC adapter", () => {
   it("uses exact device-secret args and validates matching owner creation", async () => {
     const f = fixture();

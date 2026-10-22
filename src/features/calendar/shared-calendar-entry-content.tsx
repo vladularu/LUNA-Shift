@@ -6,6 +6,7 @@ import { sharedCalendarChipPalette } from "@/theme/color-contrast";
 import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { PrototypeDisplay } from "./prototype-entry-content";
+import { sharedShiftDetail } from "./shared-shift-detail";
 
 export function SharedCalendarEntryContent({
   row,
@@ -18,6 +19,7 @@ export function SharedCalendarEntryContent({
 }) {
   const palette = usePalette();
   const colors = sharedCalendarChipPalette(row.entry.color, palette.dark);
+  const detail = sharedShiftDetail(row.entry, row.when.split("–")[0], display);
   const textStyle = {
     height: lineHeight,
     lineHeight,
@@ -45,9 +47,9 @@ export function SharedCalendarEntryContent({
           {display.labelMode === "SHORT" ? row.entry.title.slice(0, 1) : row.entry.title}
         </Text>
       )}
-      {display.showShiftTimes || display.showShiftDuration ? (
+      {detail !== null ? (
         <Text numberOfLines={1} allowFontScaling={false} style={textStyle}>
-          {row.entry.allDay ? "GT" : row.when.split("–")[0]}
+          {detail}
         </Text>
       ) : null}
     </View>

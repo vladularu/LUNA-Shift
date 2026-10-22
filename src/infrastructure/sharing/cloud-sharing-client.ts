@@ -82,6 +82,7 @@ const ERRORS = new Set([
   "SHARE_RATE_LIMIT",
   "SHARE_PROVIDER_REVOKE_REQUIRED",
   "SHARE_ACCOUNT_MISMATCH",
+  "SHARE_DURATION_UNAVAILABLE",
 ]);
 export class SharingCloudError extends Error {
   constructor(readonly code: string) {
@@ -293,6 +294,42 @@ function parseEntryV2(value: unknown): SharedCalendarEntry {
     note: note as string | null,
   });
 }
+function parseEntryV3(value: unknown): SharedCalendarEntry {
+  const r = object(value, [
+    "id",
+    "startsAt",
+    "endsAt",
+    "timeZone",
+    "allDay",
+    "title",
+    "color",
+    "symbol",
+    "kind",
+    "note",
+    "breakMinutes",
+  ]);
+  const { breakMinutes, ...base } = r;
+  const entry = parseEntryV2(base);
+  if (
+    breakMinutes !== null &&
+    (typeof breakMinutes !== "number" ||
+      !Number.isInteger(breakMinutes) ||
+      breakMinutes < 0 ||
+      breakMinutes > 2880 ||
+      entry.allDay ||
+      entry.kind === "APPOINTMENT")
+  )
+    return fail();
+  return Object.freeze({ ...entry, breakMinutes: breakMinutes as number | null });
+}
+function missingRpc(error: unknown): boolean {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    ["PGRST202", "42883"].includes(String(error.code))
+  );
+}
 function parseMemberV2(value: unknown): SharingCloudMember {
   const r = object(value, [
     "userId",
@@ -310,6 +347,7 @@ function parseMemberV2(value: unknown): SharingCloudMember {
 }
 export function createCloudSharingClient(client: SharingCloudTransport) {
   let contentRights = false;
+  let shiftDuration = false;
   async function rpc<T>(
     name: string,
     args: Record<string, unknown>,
@@ -329,7 +367,8 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
   }
   return {
     async supportsContentRights() {
-      const result = await client.rpc("sharing_capabilities", {});
+      let result = await client.rpc("sharing_capabilities_v3", {});
+      if (missingRpc(result.error)) result = await client.rpc("sharing_capabilities", {});
       if (
         result.error &&
         typeof result.error === "object" &&
@@ -337,11 +376,15 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
         ["PGRST202", "42883"].includes(String(result.error.code))
       ) {
         contentRights = false;
+        shiftDuration = false;
         return false;
       }
       if (result.error) throw transportError(result.error);
-      const r = object(result.data, ["contentVersion"]);
+      const r = object(result.data, ["contentVersion", "durationVersion"], ["contentVersion"]);
       if (r.contentVersion !== 2) return fail();
+      if (r.durationVersion !== undefined && r.durationVersion !== 1) return fail();
+      const nextDuration = r.durationVersion === 1;
+      shiftDuration = nextDuration;
       contentRights = true;
       return true;
     },
@@ -416,6 +459,12 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
       });
     },
     async publish(binding: LocalSharingBinding, publication: SharingPublication) {
+      // Preserve the RPC and exact payload of already queued v1/v2 mutations.
+      const durationPayload =
+        Array.isArray(publication.entries) &&
+        publication.entries.some(
+          (entry) => entry && Object.prototype.hasOwnProperty.call(entry, "breakMinutes"),
+        );
       const args = input(() => {
         if (
           binding.calendarId !== publication.calendarId ||
@@ -425,14 +474,26 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
         )
           return fail();
         const entries = unique(
-          list(publication.entries, 10000, binding.content ? parseEntryV2 : parseEntry),
+          list(publication.entries, 10000, (value) => {
+            if (!durationPayload) return binding.content ? parseEntryV2(value) : parseEntry(value);
+            const e = value as SharedCalendarEntry;
+            return parseEntryV3({
+              ...e,
+              kind: e.kind ?? null,
+              note: e.note ?? null,
+              breakMinutes: e.breakMinutes ?? null,
+            });
+          }),
           (e) => e.id,
         );
         if (
           binding.visibility === "AVAILABILITY" &&
           entries.some(
             (e) =>
-              e.title !== "Nicht verfügbar" || e.color !== "#737373" || e.symbol !== "unavailable",
+              e.title !== "Nicht verfügbar" ||
+              e.color !== "#737373" ||
+              e.symbol !== "unavailable" ||
+              e.breakMinutes != null,
           )
         )
           return fail();
@@ -445,8 +506,15 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
           p_entries: entries,
         };
       });
+      // Do not acknowledge a snapshot while silently dropping its pauses.
+      if (durationPayload && !shiftDuration)
+        throw new SharingCloudError("SHARE_DURATION_UNAVAILABLE");
       return rpc(
-        binding.content ? "sharing_publish_calendar_v2" : "sharing_publish_calendar",
+        durationPayload
+          ? "sharing_publish_calendar_v3"
+          : binding.content
+            ? "sharing_publish_calendar_v2"
+            : "sharing_publish_calendar",
         args,
         (value) => {
           const r = object(value, ["calendarId", "revision", "publishedAt"]);
@@ -469,11 +537,20 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
         unique(list(value, 1000, parseCalendar), (c) => c.id),
       );
     },
-    async fetch(value: string, afterRevision: number | null): Promise<SharedCalendarSnapshot> {
+    async fetch(
+      value: string,
+      afterRevision: number | null,
+      cachedDurationVersion?: 1,
+    ): Promise<SharedCalendarSnapshot> {
       const requested = calendarId(value),
-        cursor = input(() => (afterRevision === null ? null : revision(afterRevision)));
+        requestedCursor = input(() => (afterRevision === null ? null : revision(afterRevision))),
+        cursor = shiftDuration && cachedDurationVersion !== 1 ? null : requestedCursor;
       return rpc(
-        contentRights ? "sharing_fetch_calendar_v2" : "sharing_fetch_calendar",
+        shiftDuration
+          ? "sharing_fetch_calendar_v3"
+          : contentRights
+            ? "sharing_fetch_calendar_v2"
+            : "sharing_fetch_calendar",
         { p_calendar_id: requested, p_after_revision: cursor },
         (value) => {
           const r = object(value, [
@@ -489,7 +566,11 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
             unchanged = boolean(r.unchanged),
             reset = boolean(r.reset),
             entries = unique(
-              list(r.entries, 10000, contentRights ? parseEntryV2 : parseEntry),
+              list(
+                r.entries,
+                10000,
+                shiftDuration ? parseEntryV3 : contentRights ? parseEntryV2 : parseEntry,
+              ),
               (e) => e.id,
             );
           if (
@@ -506,12 +587,19 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
               (e) =>
                 e.title !== "Nicht verfügbar" ||
                 e.color !== "#737373" ||
-                e.symbol !== "unavailable",
+                e.symbol !== "unavailable" ||
+                e.breakMinutes != null,
             )
           )
             return fail();
           return Object.freeze({
-            calendar: contentRights ? { ...calendar, contentVersion: 2 as const } : calendar,
+            calendar: contentRights
+              ? {
+                  ...calendar,
+                  contentVersion: 2 as const,
+                  ...(shiftDuration ? { durationVersion: 1 as const } : {}),
+                }
+              : calendar,
             revision: current,
             unchanged,
             reset,

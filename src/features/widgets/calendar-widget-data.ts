@@ -7,6 +7,7 @@ import {
 
 import type { CalendarEntry, CalendarPreferencesData, ShiftEntry } from "@/domain/types";
 import { calendarShiftDetail } from "@/features/calendar/calendar-display";
+import { sharedShiftDetail } from "@/features/calendar/shared-shift-detail";
 import { calendarImageOverlayOpacity, type CalendarImageStrength } from "@/theme/calendar-image";
 import type { AppearanceMode } from "@/domain/appearance";
 import { CALENDAR_METRICS } from "@/theme/tokens";
@@ -158,6 +159,7 @@ function widgetSymbol(value: string): string | null {
   const symbols: Record<string, string> = {
     coff: "cup.and.saucer",
     rise: "sunrise",
+    sunrise: "sunrise",
     sun: "sun.max",
     moon: "moon",
     home: "house",
@@ -167,6 +169,9 @@ function widgetSymbol(value: string): string | null {
     list: "checklist",
     team: "person.2",
     time: "clock",
+    clock: "clock",
+    calendar: "calendar",
+    unavailable: "xmark.circle",
     med: "cross.case",
     ambu: "cross.case",
     cash: "eurosign",
@@ -282,7 +287,12 @@ export function buildCalendarWidgetTimeline({
               id: `shared:${row.calendarId}:${entry.id}`,
               label: entry.title.slice(0, 1),
               title: entry.title,
-              displayLabel: display.labelMode === "SHORT" ? entry.title.slice(0, 1) : entry.title,
+              displayLabel:
+                display.labelMode === "SYMBOL"
+                  ? entry.symbol
+                  : display.labelMode === "SHORT"
+                    ? entry.title.slice(0, 1)
+                    : entry.title,
               start: startTime,
               end: endTime,
               nextDay: !from.toPlainDate().equals(to.toPlainDate()),
@@ -290,8 +300,8 @@ export function buildCalendarWidgetTimeline({
               textColor: readableTextColor(entry.color),
               light: sharedCalendarChipPalette(entry.color, false),
               dark: sharedCalendarChipPalette(entry.color, true),
-              symbol: null,
-              detail: display.showShiftTimes ? (entry.allDay ? "GT" : startTime) : null,
+              symbol: display.labelMode === "SYMBOL" ? widgetSymbol(entry.symbol) : null,
+              detail: sharedShiftDetail(entry, startTime, display),
               ownerName: row.calendarName,
               ownerColor: row.calendarColor,
             };

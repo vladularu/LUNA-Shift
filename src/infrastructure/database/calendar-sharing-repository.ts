@@ -81,14 +81,14 @@ export async function migrateCalendarSharing(
     const projection = await tx.getFirstAsync<{ version: number }>(
       "SELECT version FROM sharing_projection_version WHERE id=1",
     );
-    if (!projection || projection.version < 2) {
-      // Existing full shares must send the real service names once after upgrade.
+    if (!projection || projection.version < 3) {
+      // Existing full shares automatically publish pause data once after upgrade.
       // Paused and availability-only shares retain their explicit owner settings.
       await tx.runAsync(
         "UPDATE sharing_local_bindings SET generation=generation+1 WHERE enabled=1 AND visibility='DETAILS'",
       );
       await tx.runAsync(
-        "INSERT OR REPLACE INTO sharing_projection_version(id,version) VALUES(1,2)",
+        "INSERT OR REPLACE INTO sharing_projection_version(id,version) VALUES(1,3)",
       );
     }
     await tx.runAsync(

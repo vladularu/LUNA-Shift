@@ -1,6 +1,8 @@
 import type { SharingSourceContent } from "./sharing-content";
 export type CalendarSharingVisibility = "DETAILS" | "AVAILABILITY";
 export interface SharedCalendarEntry {
+  /** Missing/null means an older or availability-only share, never an assumed zero pause. */
+  readonly breakMinutes?: number | null;
   readonly kind?: "SHIFT" | "APPOINTMENT" | null;
   readonly note?: string | null;
   readonly id: string;
@@ -14,6 +16,7 @@ export interface SharedCalendarEntry {
 }
 export interface CloudSharedCalendar {
   readonly contentVersion?: 2;
+  readonly durationVersion?: 1;
   readonly id: string;
   readonly ownerId: string;
   readonly name: string;

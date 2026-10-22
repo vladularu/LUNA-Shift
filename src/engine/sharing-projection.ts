@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import type { CalendarEntry, ShiftType } from "@/domain/types";
 import type { CalendarSharingVisibility, SharedCalendarEntry } from "@/domain/calendar-sharing";
 import type { SharingSourceContent } from "@/domain/sharing-content";
+import { calculateTimedShiftBounds } from "./working-time";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const APPEARANCE: Readonly<Record<ShiftType, readonly [string, string]>> = {
   EARLY: ["Früh", "sunrise"],
@@ -49,6 +50,8 @@ export function projectSharingEntries(
     const endDay =
       allDay || Temporal.PlainTime.compare(end, start) <= 0 ? day.add({ days: 1 }) : day;
     const neutral = options.visibility === "AVAILABILITY";
+    const bounds =
+      entry.kind === "SHIFT" ? calculateTimedShiftBounds(entry, options.timeZone) : null;
     const appearance =
       entry.kind === "APPOINTMENT" ? ["Termin", "calendar"] : APPEARANCE[entry.type];
     const title = neutral
@@ -94,14 +97,19 @@ export function projectSharingEntries(
             }
           : {}),
         id,
-        startsAt: day
-          .toZonedDateTime({ timeZone: options.timeZone, plainTime: start })
-          .toInstant()
-          .toString(),
-        endsAt: endDay
-          .toZonedDateTime({ timeZone: options.timeZone, plainTime: end })
-          .toInstant()
-          .toString(),
+        breakMinutes: !neutral && bounds && entry.kind === "SHIFT" ? entry.breakMinutes : null,
+        startsAt: bounds
+          ? Temporal.Instant.fromEpochMilliseconds(bounds.startEpochMinutes * 60_000).toString()
+          : day
+              .toZonedDateTime({ timeZone: options.timeZone, plainTime: start })
+              .toInstant()
+              .toString(),
+        endsAt: bounds
+          ? Temporal.Instant.fromEpochMilliseconds(bounds.endEpochMinutes * 60_000).toString()
+          : endDay
+              .toZonedDateTime({ timeZone: options.timeZone, plainTime: end })
+              .toInstant()
+              .toString(),
         timeZone: options.timeZone,
         allDay,
         title,
