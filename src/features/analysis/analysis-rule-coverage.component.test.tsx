@@ -139,6 +139,7 @@ let mockAnnualRuleFailure: {
 
 let mockFocused = true;
 let mockAnalysisRequest = 0;
+let mockAnalysisMonth: string | null = null;
 jest.mock("@/features/salary/use-net-pay-profile", () => ({
   useNetPayProfile: () => ({
     status: "ready",
@@ -151,6 +152,10 @@ jest.mock("@/features/salary/use-net-pay-profile", () => ({
 const mockActiveMonthCoordinator = {
   analysisRequests: {
     getRevision: () => mockAnalysisRequest,
+    getMonth: () => mockAnalysisMonth,
+    setMonth: jest.fn((month: string) => {
+      mockAnalysisMonth = month;
+    }),
     getPeriod: () => mockActivePeriod,
     setPeriod: (period: "MONTH" | "YEAR") => {
       mockActivePeriod = period;
@@ -318,6 +323,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockEntries = [];
     mockFocused = true;
     mockAnalysisRequest = 0;
+    mockAnalysisMonth = null;
     mockRoutePeriod = undefined;
     mockActivePeriod = "MONTH";
     mockRuleResolver = GENERATION_ONE_REVIEWED_RESOLVER;
@@ -330,6 +336,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnnualRuleFailure = null;
     mockProfile = MOCK_TARIFF_PROFILE;
     mockActiveMonthCoordinator.setMonth.mockClear();
+    mockActiveMonthCoordinator.analysisRequests.setMonth.mockClear();
   });
 
   it("does not calculate a hidden month and uses the latest month when focused again", async () => {
@@ -355,7 +362,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnalysisRequest += 1;
     await screen.rerender(<AnalysisScreen />);
     const present = currentMonth(mockProfile.timeZone);
-    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(present);
+    expect(mockActiveMonthCoordinator.analysisRequests.setMonth).toHaveBeenLastCalledWith(present);
     expect(screen.getByTestId("analysis-month-toolbar")).toBeTruthy();
     expect(screen.queryByTestId("analysis-year-toolbar")).toBeNull();
   });
@@ -417,7 +424,9 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnalysisRequest += 1;
     await screen.rerender(<AnalysisScreen />);
     const presentYear = currentMonth(mockProfile.timeZone).slice(0, 4);
-    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(`${presentYear}-03`);
+    expect(mockActiveMonthCoordinator.analysisRequests.setMonth).toHaveBeenLastCalledWith(
+      `${presentYear}-03`,
+    );
     expect(screen.getByTestId("analysis-year-toolbar")).toBeTruthy();
     expect(screen.getByLabelText(`Vorheriges Jahr, aktuell ${presentYear}`)).toBeTruthy();
     expect(screen.queryByTestId("analysis-month-toolbar")).toBeNull();
@@ -430,14 +439,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     const screen = await render(<AnalysisScreen />);
     mockFocused = false;
     await screen.rerender(<AnalysisScreen />);
-    mockActiveMonthCoordinator.setMonth.mockClear();
+    mockActiveMonthCoordinator.analysisRequests.setMonth.mockClear();
     mockAnalysisRequest += 1;
     await screen.rerender(<AnalysisScreen />);
-    expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
+    expect(mockActiveMonthCoordinator.analysisRequests.setMonth).not.toHaveBeenCalled();
     mockFocused = true;
     await screen.rerender(<AnalysisScreen />);
     const present = currentMonth(mockProfile.timeZone);
-    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenLastCalledWith(present);
+    expect(mockActiveMonthCoordinator.analysisRequests.setMonth).toHaveBeenLastCalledWith(present);
     expect(screen.getByTestId(`analysis-month-page-${present}`)).toBeTruthy();
   });
 
@@ -805,7 +814,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     await fireEvent.press(screen.getByRole("button", { name: /Nächster Monat/ }));
 
     expect(router.setParams).toHaveBeenLastCalledWith({ month: "2027-02", period: "MONTH" });
-    expect(mockActiveMonthCoordinator.setMonth).toHaveBeenCalledWith("2027-02");
+    expect(mockActiveMonthCoordinator.analysisRequests.setMonth).toHaveBeenCalledWith("2027-02");
     expect(
       (await render(<WorktimeDetailsScreen />)).getByLabelText(
         "Noch keine Dienste. Trage Dienste ein, um den Monat auszuwerten.",
@@ -1054,10 +1063,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnnualSection = "CHECK";
     const screen = await render(<AnnualDetailsScreen />);
     expect(screen.getByText("Die Jahresprüfung wird berechnet …")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Zurück zur Auswertung" })).toBeVisible();
     expect(screen.queryByText(/keine Auffälligkeiten erkannt/)).toBeNull();
     mockAnnualSection = "PAY";
     await screen.rerender(<AnnualDetailsScreen />);
     expect(screen.getByText("Das Jahresgehalt wird berechnet …")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zur Auswertung" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
     expect(screen.queryByText("0,00 €")).toBeNull();
   });
 

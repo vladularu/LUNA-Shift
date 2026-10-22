@@ -23,6 +23,7 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { AnnualReportDetails } from "./annual-report-view";
 import { useAnnualReportInputs } from "./use-annual-report-inputs";
 import { useSimpleAnnualReport as useDeferredAnnualReport } from "./use-simple-annual-report";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 export function AnnualDetailsScreen() {
   const params = useLocalSearchParams<{ month?: RouteParam; section?: RouteParam }>();
@@ -71,54 +72,65 @@ export function AnnualDetailsScreen() {
         onRetry={() => router.back()}
       />
     );
-  if (ready && error) return <LoadFailureView message={error} onRetry={() => void reload()} />;
-  if (annual.fatalError) throw annual.fatalError;
+  if (!(ready && error) && annual.fatalError) throw annual.fatalError;
   const report = annual.report ?? annual.coreReport;
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title:
-            section === "SHIFTS"
-              ? "Schichten"
-              : section === "WORK"
-                ? "Stunden"
-                : section === "CHECK"
-                  ? "Prüfung"
-                  : section === "PREMIUM"
-                    ? "Zeitzuschläge"
-                    : "Gehalt",
-        }}
-      />
-      {annual.error || annual.ruleFailure ? (
-        <LoadFailureView
-          title="Jahresdetails nicht verfügbar"
-          message={annual.error ?? "Für diese Auswertung fehlen Berechnungsdaten."}
-          onRetry={annual.retry}
-        />
-      ) : !ready || !report ? (
-        <LoadingView label="Jahresauswertung wird berechnet …" />
-      ) : (
-        <AnnualReportDetails
-          report={report}
-          pending={annual.report === null}
-          section={section}
-          testMonths={testMonths}
-          onSelectMonth={(month) =>
-            router.push(
-              section === "SHIFTS"
-                ? shiftAnalysisRoute(month)
-                : section === "WORK"
-                  ? worktimeDetailsRoute(month)
-                  : section === "CHECK"
-                    ? complianceDetailsRoute(month)
-                    : section === "PREMIUM"
-                      ? premiumDetailsRoute(month)
-                      : salaryRoute(month),
-            )
-          }
-        />
+    <BackFooterLayout
+      footerTestID="annual-details-back-footer"
+      label="Zurück zur Auswertung"
+      onPress={() => router.back()}
+      showFooter={section === "CHECK" || section === "PAY"}
+    >
+      {(bottomPadding) => (
+        <>
+          <Stack.Screen
+            options={{
+              title:
+                section === "SHIFTS"
+                  ? "Schichten"
+                  : section === "WORK"
+                    ? "Stunden"
+                    : section === "CHECK"
+                      ? "Prüfung"
+                      : section === "PREMIUM"
+                        ? "Zeitzuschläge"
+                        : "Gehalt",
+            }}
+          />
+          {ready && error ? (
+            <LoadFailureView message={error} onRetry={() => void reload()} />
+          ) : annual.error || annual.ruleFailure ? (
+            <LoadFailureView
+              title="Jahresdetails nicht verfügbar"
+              message={annual.error ?? "Für diese Auswertung fehlen Berechnungsdaten."}
+              onRetry={annual.retry}
+            />
+          ) : !ready || !report ? (
+            <LoadingView label="Jahresauswertung wird berechnet …" />
+          ) : (
+            <AnnualReportDetails
+              bottomPadding={section === "CHECK" || section === "PAY" ? bottomPadding : undefined}
+              report={report}
+              pending={annual.report === null}
+              section={section}
+              testMonths={testMonths}
+              onSelectMonth={(month) =>
+                router.push(
+                  section === "SHIFTS"
+                    ? shiftAnalysisRoute(month)
+                    : section === "WORK"
+                      ? worktimeDetailsRoute(month)
+                      : section === "CHECK"
+                        ? complianceDetailsRoute(month)
+                        : section === "PREMIUM"
+                          ? premiumDetailsRoute(month)
+                          : salaryRoute(month),
+                )
+              }
+            />
+          )}
+        </>
       )}
-    </>
+    </BackFooterLayout>
   );
 }

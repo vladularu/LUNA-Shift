@@ -70,6 +70,48 @@ function setup() {
   return { port, client, runtime, authListener };
 }
 
+it("coalesces simultaneous session restoration and permits a fresh later read", async () => {
+  const { client, port } = setup();
+  const first = port.getSession();
+  const second = port.getSession();
+  expect(first).toBe(second);
+  await Promise.all([first, second]);
+  expect(client.auth.getSession).toHaveBeenCalledTimes(1);
+  await port.getSession();
+  expect(client.auth.getSession).toHaveBeenCalledTimes(2);
+});
+
+it("restores display identity locally without calling Supabase", async () => {
+  const f = setup();
+  const port = createSharingAuthController(
+    f.client,
+    "https://personal.supabase.co",
+    "lunashift-internal://auth/callback",
+    { ...f.runtime, readStoredUser: async () => user },
+  );
+  expect(await port.getCachedSession!()).toEqual({ id: user.id, displayName: "Luna Nutzer" });
+  expect(f.client.auth.getSession).not.toHaveBeenCalled();
+  expect(f.client.auth.updateUser).not.toHaveBeenCalled();
+});
+
+it("discards a pending local identity read after explicit sign-out", async () => {
+  const f = setup();
+  let resolve!: (value: typeof user) => void;
+  const stored = new Promise<typeof user>((done) => {
+    resolve = done;
+  });
+  const port = createSharingAuthController(
+    f.client,
+    "https://personal.supabase.co",
+    "lunashift-internal://auth/callback",
+    { ...f.runtime, readStoredUser: () => stored },
+  );
+  const reading = port.getCachedSession!();
+  await port.signOut();
+  resolve(user);
+  expect(await reading).toBeNull();
+});
+
 describe("sharing authentication", () => {
   it("uses a distinct callback for each app variant", () => {
     expect(getSharingCallbackUrl("internal")).toBe("lunashift-internal://auth/callback");
@@ -251,6 +293,14 @@ it("fails with a safe error when a restored session cannot be read", async () =>
     error: new Error("secret token"),
   });
   await expect(port.getSession()).rejects.toThrow("wiederhergestellt");
+});
+
+it("classifies a retryable auth transport failure without exposing provider text", async () => {
+  const { port, client } = setup();
+  const error = new Error("secret transport detail");
+  error.name = "AuthRetryableFetchError";
+  client.auth.getSession.mockResolvedValue({ data: { session: null }, error });
+  await expect(port.getSession()).rejects.toThrow("SHARE_NETWORK_FAILED");
 });
 
 it("reports Apple unavailable without sending native credentials", async () => {

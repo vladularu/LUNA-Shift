@@ -32,9 +32,9 @@ export function AppTabs() {
       }}
     >
       <Tabs.Screen
-        listeners={() => ({
+        listeners={({ navigation }) => ({
           tabPress: () => {
-            requestCalendarTodayOnPress(activeMonthCoordinator);
+            requestCalendarTodayOnPress(activeMonthCoordinator, navigation.isFocused());
           },
         })}
         name="(calendar)"

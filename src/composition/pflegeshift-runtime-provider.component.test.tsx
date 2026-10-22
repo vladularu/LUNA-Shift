@@ -12,6 +12,19 @@ import { PflegeShiftRuntimeProvider } from "./pflegeshift-runtime-provider";
 const mockDb = {};
 const mockLoadCatalog = jest.fn<LoadStoredRuleCatalog>();
 const mockLoadProfile = jest.fn<() => Promise<UserProfile | null>>();
+const mockCachedSession = jest.fn(async () => ({ id: "account", displayName: "Alex" }));
+const mockReadCaches = jest.fn(async () => []);
+jest.mock("@/infrastructure/auth/sharing-auth", () => ({
+  createSharingAuthPort: () => ({
+    isConfigured: true,
+    getCachedSession: mockCachedSession,
+    subscribe: () => () => {},
+  }),
+  getSharingSupabaseClient: () => null,
+}));
+jest.mock("@/infrastructure/database/calendar-sharing-repository", () => ({
+  listCachedSharingCalendars: () => mockReadCaches(),
+}));
 const mockPorts = {
   repository: {
     loadProfile: mockLoadProfile,
@@ -40,7 +53,7 @@ jest.mock("@/composition/create-pflegeshift-ports", () => ({
 jest.mock("@/composition/create-rule-catalog-runtime-port", () => ({
   createRuleCatalogRuntimePort: () => mockRules,
 }));
-jest.mock("@/navigation/active-month", () => ({ useActiveMonth: () => "2026-10" }));
+jest.mock("@/navigation/use-data-month", () => ({ useDataMonth: () => "2026-10" }));
 jest.mock("@/application/remuneration-provider", () => ({
   RemunerationProvider: ({ children }: PropsWithChildren) => children,
 }));
@@ -62,6 +75,8 @@ function Harness() {
 beforeEach(() => {
   mockLoadCatalog.mockReset();
   mockLoadProfile.mockReset();
+  mockCachedSession.mockClear();
+  mockReadCaches.mockClear();
 });
 describe("parallel local app startup", () => {
   it.each(["catalog", "data"] as const)(
@@ -78,6 +93,8 @@ describe("parallel local app startup", () => {
       );
       expect(mockLoadCatalog).toHaveBeenCalledTimes(1);
       expect(mockLoadProfile).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(mockReadCaches).toHaveBeenCalledTimes(1));
+      expect(mockCachedSession).toHaveBeenCalledTimes(1);
       expect(screen.queryByText("ready")).toBeNull();
       await act(async () => {
         if (first === "catalog") catalog.resolve(null);

@@ -6,6 +6,7 @@ import { SharedCalendarsContext } from "@/application/shared-calendars-context";
 import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import { CalendarWidgetSync } from "./calendar-widget-sync";
 import { calendarWidgetsAvailable, publishCalendarWidgetTimeline } from "./native-calendar-widget";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 
 let mockStatus = { ready: true, error: null as string | null };
 let mockProfile: { timeZone: string } | null = { timeZone: "Europe/Berlin" };
@@ -66,6 +67,7 @@ function ports(load = jest.fn<LoadEntries>().mockResolvedValue([])) {
 }
 
 beforeEach(() => {
+  startupPresentation.complete();
   jest.useFakeTimers();
   jest.setSystemTime(new Date("2026-12-31T12:00:00Z"));
   jest.clearAllMocks();
@@ -84,6 +86,21 @@ beforeEach(() => {
   mockAppearance = { ready: true, mode: "system" };
   mockPrepareBackground.mockResolvedValue(null);
   jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() });
+});
+it("defers the initial widget read until presentation and cancels superseded startup work", async () => {
+  startupPresentation.begin();
+  const first = ports();
+  const latest = ports();
+  const screen = await render(<CalendarWidgetSync ports={first.value} />);
+  expect(first.load).not.toHaveBeenCalled();
+  await screen.rerender(<CalendarWidgetSync ports={latest.value} />);
+  await act(async () => {
+    startupPresentation.complete();
+  });
+  expect(first.load).not.toHaveBeenCalled();
+  expect(latest.load).toHaveBeenCalledTimes(1);
+  expect(publish).toHaveBeenCalledTimes(1);
+  await screen.unmount();
 });
 afterEach(() => {
   jest.useRealTimers();

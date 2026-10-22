@@ -107,15 +107,16 @@ export function QuickEntryDeleteConfirmation({
             gap: 8,
             alignItems: "center",
             justifyContent: "center",
+            backgroundColor: palette.dangerAction,
             opacity: busy || pressed ? 0.5 : 1,
           })}
         >
-          <Ionicons accessible={false} color={palette.danger} name="trash-outline" size={18} />
+          <Ionicons accessible={false} color={palette.onDanger} name="trash-outline" size={18} />
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             style={{
               ...TYPOGRAPHY.small,
-              color: palette.danger,
+              color: palette.onDanger,
               textAlign: "center",
               flexShrink: 1,
             }}

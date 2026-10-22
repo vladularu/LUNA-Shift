@@ -141,15 +141,15 @@ export function EntryEditActionMenu({
             onClose();
             onDelete();
           }}
-          style={styles.deleteAction}
+          style={[styles.deleteAction, { backgroundColor: palette.dangerAction }]}
         >
           <Ionicons
             accessibilityElementsHidden
             name="trash-outline"
-            color={palette.danger}
+            color={palette.onDanger}
             size={20}
           />
-          <Text style={[TYPOGRAPHY.body, { color: palette.danger }]}>{label}</Text>
+          <Text style={[TYPOGRAPHY.body, { color: palette.onDanger }]}>{label}</Text>
         </Pressable>
       </SurfaceCard>
     </>
@@ -196,6 +196,8 @@ const styles = StyleSheet.create({
   },
   menu: { position: "absolute", right: SPACING.lg, maxWidth: "90%", zIndex: 6 },
   deleteAction: {
+    borderRadius: RADII.control,
+    borderCurve: CORNER_CURVE,
     minHeight: MINIMUM_TOUCH_TARGET,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,

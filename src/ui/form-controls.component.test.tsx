@@ -31,11 +31,11 @@ describe("form controls", () => {
       });
       expect(screen.getByLabelText("Notiz")).toHaveProp("placeholderTextColor", palette.textMuted);
       expect(screen.getByRole("button", { name: "Speichern" })).toHaveStyle({
-        backgroundColor: palette.accent,
+        backgroundColor: palette.primaryAction,
       });
-      expect(screen.getByText("Speichern")).toHaveStyle({ color: palette.onAccent });
+      expect(screen.getByText("Speichern")).toHaveStyle({ color: palette.onPrimaryAction });
       expect(screen.getByRole("button", { name: "Löschen" })).toHaveStyle({
-        backgroundColor: palette.danger,
+        backgroundColor: palette.dangerAction,
       });
       expect(screen.getByText("Löschen")).toHaveStyle({ color: palette.onDanger });
       await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
@@ -101,7 +101,7 @@ describe("form controls", () => {
       width: "100%",
       minHeight: 40,
       borderWidth: 0,
-      backgroundColor: LIGHT_PALETTE.accent,
+      backgroundColor: LIGHT_PALETTE.primaryAction,
       opacity: 1,
     });
     expect(screen.getByRole("button", { name: "Abbrechen" })).toHaveStyle({
@@ -111,7 +111,7 @@ describe("form controls", () => {
     });
     expect(screen.getByText("Abbrechen")).toHaveProp("dynamicTypeRamp", "headline");
     expect(screen.getByText("Abbrechen")).toHaveStyle({ color: LIGHT_PALETTE.primary });
-    expect(screen.getByText("Speichern")).toHaveStyle({ color: LIGHT_PALETTE.onAccent });
+    expect(screen.getByText("Speichern")).toHaveStyle({ color: LIGHT_PALETTE.onPrimaryAction });
   });
 
   it("announces a busy primary action and blocks repeated submission", async () => {

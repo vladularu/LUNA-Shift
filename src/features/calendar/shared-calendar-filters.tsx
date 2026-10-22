@@ -94,6 +94,17 @@ function Filters({
         ))}
       </ScrollView>
       <SharingStatus busy={false} failed={failed || controller.error} />
+      {controller.offline && !failed && !controller.error ? (
+        <Text
+          style={{ ...TYPOGRAPHY.caption, color: palette.textMuted, paddingHorizontal: SPACING.lg }}
+        >
+          {controller.calendars.some(
+            (calendar) => calendar.visible && calendar.syncState === "offline",
+          )
+            ? "Offline · Gespeicherter Stand"
+            : "Offline · Freigaben werden später aktualisiert"}
+        </Text>
+      ) : null}
     </View>
   );
 }

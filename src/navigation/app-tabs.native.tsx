@@ -36,9 +36,9 @@ export function AppTabs() {
     >
       <NativeTabs.Trigger
         disableScrollToTop
-        listeners={() => ({
+        listeners={({ navigation }) => ({
           tabPress: () => {
-            requestCalendarTodayOnPress(activeMonthCoordinator);
+            requestCalendarTodayOnPress(activeMonthCoordinator, navigation.isFocused());
           },
         })}
         name="(calendar)"

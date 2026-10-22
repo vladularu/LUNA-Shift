@@ -28,8 +28,17 @@ import { CalendarBackgroundProvider } from "@/features/settings/calendar-backgro
 import { INTER_FONTS } from "@/theme/shadcn";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
+import { StartupRoutePresentation } from "@/navigation/startup-route-presentation";
 
 SplashScreen.setOptions({ duration: 300, fade: true });
+if (Platform.OS !== "web") {
+  startupPresentation.begin();
+  void SplashScreen.preventAutoHideAsync().catch(() => startupPresentation.complete());
+  startupPresentation.after(() => {
+    void SplashScreen.hideAsync().catch(() => {});
+  });
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -40,7 +49,10 @@ export default function RootLayout() {
     [INTER_FONTS.extraBold]: require("../assets/fonts/inter/Inter-ExtraBold.ttf"),
     [INTER_FONTS.italic]: require("../assets/fonts/inter/Inter-Italic.ttf"),
   });
-  if (fontError) throw fontError;
+  if (fontError) {
+    startupPresentation.complete();
+    throw fontError;
+  }
   if (!fontsLoaded) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -94,6 +106,7 @@ function ThemedApp() {
                       <NotificationFeedbackBridge />
                       <PrivateCloudProvider>
                         <ProfileSelectionProvider>
+                          <StartupRoutePresentation />
                           <Stack
                             screenOptions={({ route }) => ({
                               ...horizontalBackGestureOptions(route.name),

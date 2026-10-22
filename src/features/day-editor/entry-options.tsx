@@ -286,12 +286,12 @@ export function RecurrenceSheet({
             alignItems: "center",
             justifyContent: "center",
             borderRadius: RADII.control,
-            backgroundColor: palette.accent,
+            backgroundColor: palette.primaryAction,
           }}
         >
           <Text
             style={{
-              color: palette.onAccent,
+              color: palette.onPrimaryAction,
               fontFamily: INTER_FONTS.bold,
               fontSize: TYPOGRAPHY.body.fontSize,
               fontWeight: "700",
@@ -427,12 +427,12 @@ export function NotificationSheet({
             alignItems: "center",
             justifyContent: "center",
             borderRadius: RADII.control,
-            backgroundColor: palette.accent,
+            backgroundColor: palette.primaryAction,
           }}
         >
           <Text
             style={{
-              color: palette.onAccent,
+              color: palette.onPrimaryAction,
               fontFamily: INTER_FONTS.bold,
               fontSize: TYPOGRAPHY.body.fontSize,
               fontWeight: "700",
@@ -499,12 +499,12 @@ export function PauseSheet({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: RADII.control,
-          backgroundColor: palette.accent,
+          backgroundColor: palette.primaryAction,
         }}
       >
         <Text
           style={{
-            color: palette.onAccent,
+            color: palette.onPrimaryAction,
             fontFamily: INTER_FONTS.bold,
             fontSize: TYPOGRAPHY.body.fontSize,
             fontWeight: "700",

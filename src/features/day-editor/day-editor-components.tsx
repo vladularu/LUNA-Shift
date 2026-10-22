@@ -163,7 +163,7 @@ export function InlineDeleteConfirmation({
             alignItems: "center",
             justifyContent: "center",
             borderRadius: RADII.control,
-            backgroundColor: palette.danger,
+            backgroundColor: palette.dangerAction,
           }}
         >
           <Text style={{ color: palette.onDanger, fontWeight: "700" }}>Löschen</Text>

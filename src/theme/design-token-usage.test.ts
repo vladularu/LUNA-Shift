@@ -65,7 +65,6 @@ const LEGACY_HORIZONTAL_PADDING_LITERAL_FILES = [
   "src/features/day-editor/shift-notification-overlay.tsx",
   "src/features/location/location-picker-screen.tsx",
   "src/features/settings/settings-info-details-screen.tsx",
-  "src/ui/form-layout.tsx",
   "src/ui/loading-view.tsx",
 ].sort();
 

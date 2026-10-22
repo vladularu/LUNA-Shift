@@ -3,6 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { NotificationSheet } from "@/features/day-editor/entry-options";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 
 async function renderNotificationSheet(
   overrides: Partial<React.ComponentProps<typeof NotificationSheet>> = {},
@@ -28,6 +29,18 @@ async function renderNotificationSheet(
 }
 
 describe("NotificationSheet", () => {
+  it.each([false, true])("keeps the confirmation action blue in dark=%s", async (dark) => {
+    jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue(dark ? "dark" : "light");
+    const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
+    const { screen } = await renderNotificationSheet();
+    expect(screen.getByRole("button", { name: "Erinnerung übernehmen" })).toHaveStyle({
+      backgroundColor: palette.primaryAction,
+    });
+    expect(screen.getByText("Fertig")).toHaveStyle({ color: palette.onPrimaryAction });
+  });
+
   it("keeps the reference choices local until the user confirms them", async () => {
     const { props, screen } = await renderNotificationSheet();
 

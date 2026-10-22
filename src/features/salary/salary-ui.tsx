@@ -9,6 +9,7 @@ import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { netPayEuro } from "./net-pay-format";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -43,12 +44,14 @@ export function SalaryPage({
   title,
   month,
   action,
+  backLabel = "Zurück zum Gehalt",
   largeTitle = false,
   children,
 }: PropsWithChildren<{
   readonly title: string;
   readonly month?: string;
   readonly action?: ReactNode;
+  readonly backLabel?: string;
   readonly largeTitle?: boolean;
 }>) {
   const palette = usePalette();
@@ -132,14 +135,23 @@ export function SalaryPage({
           <View style={{ width: MINIMUM_TOUCH_TARGET }}>{action}</View>
         ) : null}
       </View>
-      <ScreenScrollView
-        surface="groupedBackground"
-        contentInsetAdjustmentBehavior="never"
-        contentGap={SPACING.lg}
-        contentContainerStyle={{ paddingTop: 0 }}
+      <BackFooterLayout
+        footerTestID="salary-back-footer"
+        label={backLabel}
+        onPress={() => router.back()}
       >
-        {children}
-      </ScreenScrollView>
+        {(bottomPadding) => (
+          <ScreenScrollView
+            surface="groupedBackground"
+            contentInsetAdjustmentBehavior="never"
+            contentGap={SPACING.lg}
+            contentContainerStyle={{ paddingTop: 0 }}
+            bottomPadding={bottomPadding}
+          >
+            {children}
+          </ScreenScrollView>
+        )}
+      </BackFooterLayout>
     </SafeAreaView>
   );
 }

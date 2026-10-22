@@ -11,6 +11,7 @@ export type DatabaseBootstrapAction =
   | "create-key-and-migrate"
   | "migrate-legacy"
   | "block-missing-key"
+  | "open-secure"
   | "validate-secure-and-clean";
 
 export function createSingleFlight<T>(task: () => Promise<T>): () => Promise<T> {
@@ -33,7 +34,10 @@ export function databaseArtifactNames(databaseName: string): readonly string[] {
 
 export function decideDatabaseBootstrap(state: DatabaseBootstrapState): DatabaseBootstrapAction {
   if (state.secureExists) {
-    return state.keyExists ? "validate-secure-and-clean" : "block-missing-key";
+    if (!state.keyExists) return "block-missing-key";
+    return state.legacyExists || state.temporaryExists
+      ? "validate-secure-and-clean"
+      : "open-secure";
   }
   if (state.legacyExists) {
     return state.keyExists ? "migrate-legacy" : "create-key-and-migrate";

@@ -54,6 +54,8 @@ export interface SharingController {
   readonly busy: boolean;
   /** Boolean deliberately prevents raw backend errors reaching the UI. */
   readonly error: boolean;
+  /** Automatic refresh transport failure; explicit actions and storage errors stay errors. */
+  readonly offline?: boolean;
   readonly calendars: readonly SharingCalendarView[];
   readonly availableAppointments: readonly {
     readonly id: string;

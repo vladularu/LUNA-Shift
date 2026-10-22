@@ -1,4 +1,5 @@
 import { reloadAppAsync } from "expo";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 import * as Crypto from "expo-crypto";
 import { useSegments } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -122,29 +123,32 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
       runtime.setAccount(value?.id ?? null);
       setAccountReady(true);
     });
-    void migratePrivateCloud(db)
-      .then(async () => {
-        if (!active) return;
-        setInitialized(true);
-        const epoch = accountEpoch.current;
-        try {
-          const value = await auth.getSession();
-          if (!active || epoch !== accountEpoch.current) return;
-          setUser(value);
-          runtime.setAccount(value?.id ?? null);
-        } catch {
-          // An offline session restore does not prevent an explicit later sign-in.
-        } finally {
-          if (active) setAccountReady(true);
-        }
-      })
-      .catch(() => {
-        if (active)
-          setInitializationError(
-            "Dein Cloud-Konto konnte auf diesem Gerät nicht vorbereitet werden. Bitte starte LUNA Shift neu.",
-          );
-      });
+    const cancelInitialization = startupPresentation.after(() => {
+      void migratePrivateCloud(db)
+        .then(async () => {
+          if (!active) return;
+          setInitialized(true);
+          const epoch = accountEpoch.current;
+          try {
+            const value = await auth.getSession();
+            if (!active || epoch !== accountEpoch.current) return;
+            setUser(value);
+            runtime.setAccount(value?.id ?? null);
+          } catch {
+            // An offline session restore does not prevent an explicit later sign-in.
+          } finally {
+            if (active) setAccountReady(true);
+          }
+        })
+        .catch(() => {
+          if (active)
+            setInitializationError(
+              "Dein Cloud-Konto konnte auf diesem Gerät nicht vorbereitet werden. Bitte starte LUNA Shift neu.",
+            );
+        });
+    });
     return () => {
+      cancelInitialization();
       active = false;
       stop();
       runtime.setAccount(null);
@@ -152,14 +156,17 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
   }, [auth, db, runtime]);
   useEffect(() => {
     if (!initialized) return;
-    void runtime.synchronize();
-    const interval = setInterval(() => {
+    const cancelStartup = startupPresentation.after(() => {
       void runtime.synchronize();
+    });
+    const interval = setInterval(() => {
+      if (startupPresentation.isReady()) void runtime.synchronize();
     }, 30000);
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") void runtime.synchronize();
+      if (state === "active" && startupPresentation.isReady()) void runtime.synchronize();
     });
     return () => {
+      cancelStartup();
       clearInterval(interval);
       subscription.remove();
     };

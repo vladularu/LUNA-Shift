@@ -7,7 +7,7 @@ import { SharedCalendarFilters } from "./shared-calendar-filters";
 const mockSetVisible = jest.fn<SharingController["setVisible"]>().mockResolvedValue();
 let mockController: Pick<
   SharingController,
-  "status" | "calendars" | "busy" | "error" | "setVisible"
+  "status" | "calendars" | "busy" | "error" | "offline" | "setVisible"
 >;
 jest.mock("@/features/sharing/sharing-ui-provider", () => ({
   useSharingUiController: () => mockController,
@@ -111,7 +111,7 @@ it("keeps person controls responsive during cloud work and pending local saves",
 });
 
 it("shows a persistence error without locking the person controls", async () => {
-  mockController = { ...mockController, status: "signedIn", calendars: [foreign] };
+  mockController = { ...mockController, status: "signedIn", offline: true, calendars: [foreign] };
   mockSetVisible.mockRejectedValueOnce(new Error("disk full"));
   const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
   await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
@@ -121,6 +121,39 @@ it("shows a persistence error without locking the person controls", async () => 
     ).toBeTruthy(),
   );
   expect(screen.getByRole("button", { name: "Selena Müller anzeigen" })).toBeEnabled();
+});
+
+it("shows a quiet cached offline state and clears it after reconnection", async () => {
+  mockController = {
+    ...mockController,
+    offline: true,
+    calendars: [{ ...foreign, syncState: "offline" }],
+  };
+  const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  expect(screen.getByText("Offline · Gespeicherter Stand")).toBeTruthy();
+  expect(
+    screen.queryByText("Freigaben konnten nicht aktualisiert werden. Versuche es erneut."),
+  ).toBeNull();
+  expect(screen.getByRole("button", { name: "Selena Müller anzeigen" })).toBeEnabled();
+  mockController = { ...mockController, offline: false, calendars: [foreign] };
+  await screen.rerender(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  expect(screen.queryByText("Offline · Gespeicherter Stand")).toBeNull();
+});
+
+it("does not claim an expired or absent cache is displayed and keeps real errors visible", async () => {
+  mockController = {
+    ...mockController,
+    offline: true,
+    calendars: [{ ...foreign, syncState: "expired" }],
+  };
+  const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  expect(screen.getByText("Offline · Freigaben werden später aktualisiert")).toBeTruthy();
+  mockController = { ...mockController, error: true };
+  await screen.rerender(<SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />);
+  expect(
+    screen.getByText("Freigaben konnten nicht aktualisiert werden. Versuche es erneut."),
+  ).toBeTruthy();
+  expect(screen.queryByText("Offline · Freigaben werden später aktualisiert")).toBeNull();
 });
 
 it("reports a failed person save even when another person was toggled afterwards", async () => {
