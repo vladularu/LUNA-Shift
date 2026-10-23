@@ -56,7 +56,7 @@
     "postinstall": "node scripts/node-forge-hardening.mjs apply && node scripts/braces-hardening.mjs apply && node scripts/decode-uri-component-hardening.cjs apply",
     "test:tariff-inventory": "node --import tsx --test scripts/report-tariff-inventory.test.mjs",
     "rules:inventory": "node --import tsx scripts/report-tariff-inventory.mjs",
-    "test:sharing-security": "node --test supabase/tests/sharing-security.test.mjs supabase/tests/private-cloud-security.test.mjs",
+    "test:sharing-security": "node --test supabase/tests/sharing-security.test.mjs",
     "test:native-widget": "node --test scripts/native-calendar-widget.test.mjs",
     "test:decoder-hardening": "node --test scripts/decode-uri-component-hardening.test.mjs"
   },

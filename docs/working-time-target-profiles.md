@@ -34,7 +34,7 @@ Abnahme: keine impliziten Ansprüche bei fehlenden Daten; keine Rückdatierung a
 | Finale `verify:fast`                          | Exit 0, seriell mit `VITEST_MAX_WORKERS=1`                                                |
 | Unit-/Integrationstests                       | 9.195 Tests in 478 Dateien bestanden                                                      |
 | Komponententests                              | 1.392 Tests in 153 Suites bestanden                                                       |
-| Node-Skriptprüfungen                          | 218 bestanden; einschließlich der elf lokalen Cloud-Vertragstests                         |
+| Node-Skriptprüfungen                          | 219 einschließlich der elf isolierten Cloud-Vertragstests und ihres Gate-Aufrufs          |
 | Dezember 2026 nach Speicherung und Restore    | 8.778 Minuten = 146:18, explizite BT-K-/7-Tage-/Tagesvoraussetzungen                      |
 | iOS-JavaScript-/Hermes-Export                 | Exit 0, `APP_VARIANT=internal npm.cmd run export:ios`                                     |
 | Quellprüfsummen                               | 45 Quell-/Test-/Gate-Dateien gegen finales SHA-256-Manifest unverändert                   |
@@ -43,6 +43,8 @@ Abnahme: keine impliziten Ansprüche bei fehlenden Daten; keine Rückdatierung a
 | Git-/Release-Auslieferung                     | Nach Nutzerfreigabe eigener abhängiger PR und kompatible iOS-Preview-OTA; Nachweise im PR |
 
 Die gezielte Regression wurde zunächst rot (fehlendes Repository) und anschließend grün ausgeführt. Ein zusätzlicher Fall prüft, dass importierte ungeprüfte Tariffassungen auch im Editor keinen Geprüft-Hinweis erhalten. Auf diesem Stand wurde das gesamte Gate erneut erfolgreich ausgeführt. Der validierte Anwendungscode blieb bis nach dem Export unverändert; die neue lokale RPC-Regressionsprüfung ist über das vorhandene `test:sharing-security` dauerhaft im Gate eingebunden.
+
+Die anschließende Preview-Vorprüfung fand genau eine Fingerprint-Abweichung: die ergänzte Test-Skriptzeile in `package.json`. Die Zeile wurde wiederhergestellt; der bestehende Sharing-Testlauf startet die elf Cloud-Vertragstests stattdessen in einem isolierten Node-Prozess und schlägt bei deren Fehlschlag fehl. Testabdeckung und native Fingerprint-Prüfung bleiben erhalten. Der gesamte schnelle Testlauf wird für diese Gate-Anbindung erneut geprüft. Keine Runtime wird manuell überschrieben.
 
 Lokale Belege unter `$env:TEMP`: `luna-sollzeit-d1-verify-fast-final.log`, `luna-sollzeit-d1-export-ios.log`, `luna-sollzeit-d1-cloud-contract.log`, `luna-sollzeit-d1-source-final.json`. Geprüft wurde der lokale SQL-/Dokumentvertrag; keine Live-Supabase-Abnahme und keine iPhone-Abnahme.
 
@@ -73,11 +75,11 @@ Offen: Screenshot-/iPhone-Abnahme im passenden Preview-Build nach eigener Vertei
 
 ## Dateiscope gegen A/B
 
-46 Dateien: 17 Produktdateien, 27 Tests/Testhilfen, `package.json` (nur Einbindung der lokalen Cloud-Vertragstests in `test:sharing-security`) und diese Dokumentation. Die Vielzahl der bestehenden Testdateien folgt aus der expliziten Abwärtskompatibilität der Backup-Versionen. A/B-Dateien außer dem Validierungs-Reexport bleiben unverändert.
+46 Dateien: 17 Produktdateien, 28 Tests/Testhilfen und diese Dokumentation. Der bestehende Sharing-Testlauf bindet die isolierten Cloud-Vertragstests ein; `package.json` bleibt gegenüber A/B unverändert. Die Vielzahl der bestehenden Testdateien folgt aus der expliziten Abwärtskompatibilität der Backup-Versionen. A/B-Dateien außer dem Validierungs-Reexport bleiben unverändert.
 
 - `app/working-time-profile.tsx`
 - `docs/working-time-target-profiles.md`
-- `package.json`
+- `supabase/tests/sharing-security.test.mjs`
 - `src/domain/private-cloud.ts`
 - `src/domain/saved-working-time-target.test.ts`
 - `src/domain/saved-working-time-target.ts`
