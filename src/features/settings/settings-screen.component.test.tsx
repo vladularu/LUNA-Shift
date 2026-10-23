@@ -86,6 +86,14 @@ describe("SettingsScreen production gates", () => {
     expect(router.push).toHaveBeenCalledWith("/account");
     expect(screen.queryByText("Cloud-Konto")).toBeNull();
   });
+  it("opens working-time target settings directly from More without a salary tariff", async () => {
+    const screen = await render(<SettingsScreen />);
+    await fireEvent.press(screen.getByText("Sollzeitangaben"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/working-time-profile",
+      params: { origin: "settings" },
+    });
+  });
   it("opens employment editors directly from More and retains appearance selection", async () => {
     const screen = await render(<SettingsScreen />);
     expect(screen.queryByRole("button", { name: "Arbeitsprofil bearbeiten" })).toBeNull();

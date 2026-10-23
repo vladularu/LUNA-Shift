@@ -1,5 +1,6 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { router } from "expo-router";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import { work as mockWork } from "@/engine/remuneration-test-fixtures";
@@ -13,11 +14,13 @@ import { WorkingTimeProfileScreen } from "./working-time-profile-screen";
 const mockDb = {},
   mockPalette = LIGHT_PALETTE;
 const mockGuard = jest.fn();
+let mockOrigin: string | undefined;
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("@/theme/palette", () => ({ usePalette: () => mockPalette }));
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), push: jest.fn() },
   Stack: { Screen: () => null },
+  useLocalSearchParams: () => ({ origin: mockOrigin }),
 }));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftProfile: () => ({ profile: mockWork }),
@@ -50,6 +53,8 @@ const renderEditor = () =>
 
 describe("working time profile screen", () => {
   beforeEach(() => {
+    mockOrigin = undefined;
+    jest.mocked(router.back).mockClear();
     mockGuard.mockClear();
     load.mockReset().mockResolvedValue(empty);
     save.mockReset().mockImplementation(async (_db, input) => ({
@@ -62,6 +67,18 @@ describe("working time profile screen", () => {
         updatedAt: "2026-01-01T00:00:00Z",
       },
     }));
+  });
+  it("returns to More when opened from the visible settings menu", async () => {
+    mockOrigin = "settings";
+    const screen = await renderEditor();
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(save).not.toHaveBeenCalled();
+  });
+  it("keeps the legacy work-profile return path", async () => {
+    const screen = await renderEditor();
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Arbeitsprofil" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
   });
   it("saves a new dated period and refreshes history without enabling claims", async () => {
     const screen = await renderEditor();

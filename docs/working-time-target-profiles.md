@@ -33,7 +33,7 @@ Abnahme: keine impliziten Ansprüche bei fehlenden Daten; keine Rückdatierung a
 | Format / `git diff --check`                   | Grün                                                                                      |
 | Finale `verify:fast`                          | Exit 0, seriell mit `VITEST_MAX_WORKERS=1`                                                |
 | Unit-/Integrationstests                       | 9.195 Tests in 478 Dateien bestanden                                                      |
-| Komponententests                              | 1.392 Tests in 153 Suites bestanden                                                       |
+| Komponententests                              | 1.395 Tests in 153 Suites bestanden                                                       |
 | Node-Skriptprüfungen                          | 219 einschließlich der elf isolierten Cloud-Vertragstests und ihres Gate-Aufrufs          |
 | Dezember 2026 nach Speicherung und Restore    | 8.778 Minuten = 146:18, explizite BT-K-/7-Tage-/Tagesvoraussetzungen                      |
 | iOS-JavaScript-/Hermes-Export                 | Exit 0, `APP_VARIANT=internal npm.cmd run export:ios`                                     |
@@ -59,7 +59,13 @@ Lokale Belege unter `$env:TEMP`: `luna-sollzeit-d1-verify-fast-final.log`, `luna
 - Transaktionen verhindern Teilwrites. Konkurrenzprüfung vergleicht Revision, Zeitstempel und vollständigen Inhalt. Eine Dienstplanänderung während der Bearbeitung verlangt Neuladen. Offene Testlaborläufe blockieren das Speichern.
 - Backup 21 umfasst die neue Sammlung und prüft Schema, Elternprofil, Version, Singleton, Zeitfolge, JSON-Inhalt und Prüfsumme. Restore ist atomar. Backups 1 bis 20 erzeugen keine Sollzeitangaben. Ältere App-Versionen können neue Backups sicher ablehnen.
 - Der bestehende private Cloud-Dokumentvertrag umfasst dieselbe Sammlung. Version-20-Cloudstände bleiben lesbar; unbekannte Felder und künftige Versionen werden abgelehnt. Die Sammlung wird als zusammenhängender Datensatz behandelt: konkurrierende Änderungen werden als Konflikt sichtbar, nicht nach Gerätezeit entschieden. Der unveränderte versionierte RPC-Vertrag (Migration `20261017211850_private_cloud.sql`, Zeilen 117-135) akzeptiert die neue Backup-Metadatenversion; elf lokale PGlite-Vertragstests mit Auth-/Sitzungs-/Kontogrenzen sind grün. Der Live-Server wurde nicht abgefragt. Keine Servermigration oder Änderung von Zugriffsrechten wurde vorgenommen.
-- Der Einstieg liegt im Arbeitsprofil unter Sollzeitangaben. Bestehende Karten, Auswahlseiten, Eingabefelder und der Schutz ungespeicherter Änderungen werden verwendet. Wochenzeit/Arbeitsort sind sichtbare Eingabehilfen; Geltungsbeginn, Modell und Anspruchsbestätigungen werden nicht aus aktuellen Daten abgeleitet.
+- Der sichtbare Einstieg liegt unter Mehr > Arbeit > Sollzeitangaben. Der ältere Arbeitsprofil-Einstieg bleibt kompatibel erhalten. Bestehende Karten, Auswahlseiten, Eingabefelder und der Schutz ungespeicherter Änderungen werden verwendet. Wochenzeit/Arbeitsort sind sichtbare Eingabehilfen; Geltungsbeginn, Modell und Anspruchsbestätigungen werden nicht aus aktuellen Daten abgeleitet.
+
+## Navigationskorrektur nach Geräte-Rückmeldung
+
+Die erste D1-OTA enthielt den Zugang nur im älteren `WorkProfileScreen`. Der aktuelle Mehr-Tab rendert `SettingsScreen` und verlinkt diesen älteren Bildschirm nicht mehr. Die Nutzer-Rückmeldung, den Punkt trotz wiederholtem Öffnen der Internal-App nicht zu finden, wurde durch zwei gezielt rote Navigationstests bestätigt; das veröffentlichte Preview-Manifest lieferte bereits das erwartete D1-Update.
+
+Korrekturscope: `settings-screen.tsx`, dessen bestehender Komponententest, `working-time-profile-screen.tsx`, dessen bestehender Komponententest und dieses Protokoll. Der neue RowButton liegt direkt unter Arbeitszeit & Ort in der vorhandenen Arbeit-Karte und bleibt unabhängig von der Gehaltswahl sichtbar. Ein Herkunftsparameter erhält die passende Zurück-Beschriftung: Mehr beim neuen Zugang, Arbeitsprofil beim älteren Zugang. Drei Regressionen prüfen sichtbaren Einstieg, Zielroute und beide Rückwege. Keine Rechen-, Speicher- oder native Änderung. Vollständiges `verify:fast`, PR-CI und passende Preview-OTA werden erneut geprüft; die visuelle iPhone-Abnahme bleibt offen.
 
 ## Verbleibende Abnahme und D2
 
@@ -75,7 +81,7 @@ Offen: Screenshot-/iPhone-Abnahme im passenden Preview-Build nach eigener Vertei
 
 ## Dateiscope gegen A/B
 
-46 Dateien: 17 Produktdateien, 28 Tests/Testhilfen und diese Dokumentation. Der bestehende Sharing-Testlauf bindet die isolierten Cloud-Vertragstests ein; `package.json` bleibt gegenüber A/B unverändert. Die Vielzahl der bestehenden Testdateien folgt aus der expliziten Abwärtskompatibilität der Backup-Versionen. A/B-Dateien außer dem Validierungs-Reexport bleiben unverändert.
+48 Dateien: 18 Produktdateien, 29 Tests/Testhilfen und diese Dokumentation. Der bestehende Sharing-Testlauf bindet die isolierten Cloud-Vertragstests ein; `package.json` bleibt gegenüber A/B unverändert. Die Vielzahl der bestehenden Testdateien folgt aus der expliziten Abwärtskompatibilität der Backup-Versionen. A/B-Dateien außer dem Validierungs-Reexport bleiben unverändert.
 
 - `app/working-time-profile.tsx`
 - `docs/working-time-target-profiles.md`
@@ -88,6 +94,8 @@ Offen: Screenshot-/iPhone-Abnahme im passenden Preview-Build nach eigener Vertei
 - `src/engine/working-time-target-input.ts`
 - `src/features/settings/use-working-time-target-settings.component.test.tsx`
 - `src/features/settings/use-working-time-target-settings.ts`
+- `src/features/settings/settings-screen.tsx`
+- `src/features/settings/settings-screen.component.test.tsx`
 - `src/features/settings/work-profile-screen.component.test.tsx`
 - `src/features/settings/work-profile-screen.tsx`
 - `src/features/settings/working-time-profile-screen.component.test.tsx`

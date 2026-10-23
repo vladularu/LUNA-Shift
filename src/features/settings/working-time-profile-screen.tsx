@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
@@ -56,6 +56,7 @@ function WorkingTimeProfileEditor({
 }) {
   const { profile } = usePflegeShiftProfile();
   const palette = usePalette();
+  const { origin } = useLocalSearchParams<{ origin?: string }>();
   const context = snapshot.context ?? { periods: [], days: [] };
   // Keep evidence for other dates; only an explicit day action may rebind it.
   const persistedContext = snapshot.saved?.settings.context ?? context;
@@ -85,7 +86,7 @@ function WorkingTimeProfileEditor({
     <ProfileEditorBusyContext.Provider value={settings.busy}>
       <ProfilePage
         title="Sollzeitangaben"
-        backLabel="Zurück zum Arbeitsprofil"
+        backLabel={origin === "settings" ? "Zurück zu Mehr" : "Zurück zum Arbeitsprofil"}
         onBack={() => router.back()}
         backDisabled={settings.busy}
       >

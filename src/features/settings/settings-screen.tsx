@@ -108,6 +108,16 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
+              title="Sollzeitangaben"
+              subtitle="Arbeitszeitmodell & Gültigkeit"
+              subtitleBelow={subtitleBelow}
+              leading={<SettingsIcon name="calendar-outline" />}
+              onPress={() =>
+                router.push({ pathname: "/working-time-profile", params: { origin: "settings" } })
+              }
+            />
+            <CardSeparator />
+            <RowButton
               title="Tarif & Gehalt"
               subtitle={profileSalaryLabel(profile).split(" · ").slice(0, 3).join(" · ")}
               subtitleBelow={subtitleBelow}
