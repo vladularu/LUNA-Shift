@@ -42,6 +42,8 @@ describe("work profile overview", () => {
     expect(screen.getByText(/3.450/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Speichern/ })).toBeNull();
     expect(screen.queryByLabelText("Name")).toBeNull();
+    await fireEvent.press(screen.getByText("Sollzeitangaben"));
+    expect(router.push).toHaveBeenLastCalledWith("/working-time-profile");
     for (const [row, section] of [
       ["Name & Arbeitgeber", "PERSONAL"],
       ["Arbeitszeit & Arbeitsort", "WORK"],

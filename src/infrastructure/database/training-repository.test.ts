@@ -480,6 +480,7 @@ describe("persisted training profiles, school and actual pauses", () => {
       delete value.data.drkEmployeeMonthConfirmations;
       delete value.data.drkTrainingMonthConfirmations;
       delete value.data.netPayProfiles;
+      delete value.data.workingTimeTargetSettings;
       if (version < 5) delete value.data.paidAbsences;
       if (version < 4) delete value.data.overtimeAllocations;
       if (version < 3) delete value.data.allowanceDecisions;

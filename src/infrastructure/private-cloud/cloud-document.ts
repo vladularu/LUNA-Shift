@@ -7,7 +7,7 @@ import {
 } from "@/domain/private-cloud";
 import { normalizePrivateCloudDocument } from "@/domain/private-cloud-merge";
 import {
-  createLocalBackupDocument,
+  LOCAL_BACKUP_FORMAT,
   LOCAL_BACKUP_VERSION,
   type LocalBackupSnapshot,
 } from "@/infrastructure/database/local-backup";
@@ -39,14 +39,19 @@ export async function validatePrivateCloudDocument(
     if (
       document.format !== "lunashift-private-cloud" ||
       document.version !== 1 ||
-      document.backupVersion !== LOCAL_BACKUP_VERSION ||
+      (document.backupVersion !== 20 && document.backupVersion !== LOCAL_BACKUP_VERSION) ||
       !Number.isSafeInteger(document.databaseSchemaVersion) ||
       !document.data ||
       typeof document.data !== "object" ||
       Array.isArray(document.data)
     )
       throw new Error();
-    const keys = [...Object.keys(PRIVATE_CLOUD_ROW_KEYS), "profile"].sort();
+    const keys = [
+      ...Object.keys(PRIVATE_CLOUD_ROW_KEYS).filter(
+        (key) => document.backupVersion >= 21 || key !== "workingTimeTargetSettings",
+      ),
+      "profile",
+    ].sort();
     if (canonicalize(Object.keys(document.data).sort()) !== canonicalize(keys)) throw new Error();
     const { calendarImage, calendarImageStrength } = document.presentation;
     if (!["subtle", "medium", "strong"].includes(calendarImageStrength)) throw new Error();
@@ -60,16 +65,26 @@ export async function validatePrivateCloudDocument(
       throw new Error();
     const serialized = canonicalize(document);
     if (!serialized || serialized.length > PRIVATE_CLOUD_MAX_CHARACTERS) throw new Error();
-    const snapshot = {
-      ...document.data,
-      databaseSchemaVersion: document.databaseSchemaVersion,
-    } as unknown as LocalBackupSnapshot;
-    const backup = await createLocalBackupDocument(snapshot, {
+    // Preserve the source format for legacy cloud documents. The backup validator
+    // supplies an empty target collection when restoring v20; it invents no facts.
+    const unsigned = {
+      format: LOCAL_BACKUP_FORMAT,
+      version: document.backupVersion,
+      createdAt: new Date(0).toISOString(),
       appVersion: null,
-      createdAt: new Date(0),
-      sha256,
+      databaseSchemaVersion: document.databaseSchemaVersion,
+      data: document.data,
+    };
+    const backup = JSON.stringify({
+      ...unsigned,
+      integrity: {
+        algorithm: "SHA-256",
+        canonicalization: "RFC8785",
+        scope: "document-without-integrity",
+        value: await sha256(canonicalize(unsigned)!),
+      },
     });
-    const validated = await validateLocalBackup(backup.serialized, {
+    const validated = await validateLocalBackup(backup, {
       maxDatabaseSchemaVersion: maxSchemaVersion,
       sha256,
     });

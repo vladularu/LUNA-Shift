@@ -83,6 +83,7 @@ describe("Caritas annual confirmation backup v12", () => {
       delete root.data.drkEmployeeMonthConfirmations;
       delete root.data.drkTrainingMonthConfirmations;
       delete root.data.netPayProfiles;
+      delete root.data.workingTimeTargetSettings;
       if (version < 9) delete root.data.tvlShiftWork;
       if (version < 10) delete root.data.caritasWorkDays;
       if (version < 11) delete root.data.caritasMonthFacts;

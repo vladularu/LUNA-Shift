@@ -69,6 +69,7 @@ interface MutableBackup {
 export async function resignTvlBackup(serialized: string, change: (value: MutableBackup) => void) {
   const root = JSON.parse(serialized) as MutableBackup;
   change(root);
+  if (root.version < 21) delete root.data.workingTimeTargetSettings;
   if (root.version < 20) delete root.data.netPayProfiles;
   if (root.version < 17) delete root.data.tvoedAnnexAPremiumFacts;
   if (root.version < 18) delete root.data.drkEmployeeMonthConfirmations;

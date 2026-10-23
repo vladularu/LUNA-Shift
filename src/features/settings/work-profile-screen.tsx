@@ -72,6 +72,12 @@ function WorkProfileForm({ profile }: { readonly profile: UserProfile }) {
           />
           <CardSeparator />
           <RowButton
+            title="Sollzeitangaben"
+            subtitle="Arbeitszeitmodell und Gültigkeit vorbereiten"
+            onPress={() => router.push("/working-time-profile")}
+          />
+          <CardSeparator />
+          <RowButton
             title="Angaben zur Prüfung"
             subtitle="Angaben ansehen oder ergänzen"
             onPress={() => router.push("/check-profile")}

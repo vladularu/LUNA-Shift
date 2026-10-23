@@ -1,3 +1,4 @@
+import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TariffAnnualTestDatabase } from "./tariff-annual-test-database";
@@ -45,27 +46,34 @@ describe("atomic private cloud storage", () => {
     const port = local();
     await port.bind("a", () => true);
     const snapshot = await port.capture();
-    const { backup } = await validatePrivateCloudDocument(snapshot, 33, sha256);
+    const { backup } = await validatePrivateCloudDocument(
+      snapshot,
+      LATEST_DATABASE_SCHEMA_VERSION,
+      sha256,
+    );
     await restoreLocalBackup(memory.db, backup);
     expect(await port.state()).toBeNull();
   });
   it("covers every personal backup collection and rejects unknown private fields", async () => {
     const snapshot = await local().capture();
-    expect(Object.keys(snapshot.data)).toHaveLength(25);
+    expect(Object.keys(snapshot.data)).toHaveLength(26);
     expect(snapshot.data).not.toHaveProperty("sharing_calendar_cache");
     expect(snapshot.data).not.toHaveProperty("tokens");
-    expect((await validatePrivateCloudDocument(snapshot, 33, sha256)).document).toEqual(snapshot);
+    expect(
+      (await validatePrivateCloudDocument(snapshot, LATEST_DATABASE_SCHEMA_VERSION, sha256))
+        .document,
+    ).toEqual(snapshot);
     await expect(
       validatePrivateCloudDocument(
         { ...snapshot, data: { ...snapshot.data, tokens: [] } },
-        33,
+        LATEST_DATABASE_SCHEMA_VERSION,
         sha256,
       ),
     ).rejects.toThrow("Cloud-Stand");
     await expect(
       validatePrivateCloudDocument(
         { ...snapshot, presentation: { ...present, calendarImage: "file:///private.jpg" } },
-        33,
+        LATEST_DATABASE_SCHEMA_VERSION,
         sha256,
       ),
     ).rejects.toThrow("Cloud-Stand");

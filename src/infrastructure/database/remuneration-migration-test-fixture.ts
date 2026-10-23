@@ -6,6 +6,7 @@ export function rewindRemunerationMigrations(
   if (!Number.isInteger(firstVersion) || firstVersion < 14 || firstVersion > 32)
     throw new Error("Unsupported remuneration fixture migration.");
   const tables = [
+    [34, "working_time_target_settings"],
     [32, "net_pay_profiles"],
     [31, "drk_training_month_confirmations"],
     [30, "drk_employee_month_confirmations"],

@@ -1,5 +1,6 @@
 import { TVAL_PFLEGE_PREFERENCE_KEY, requireTvalPflegeTariff } from "@/domain/tval-pflege-tariff";
 import { TVH_KR_PREFERENCE_KEY, requireTvhKrTariff } from "@/domain/tvh-kr-tariff";
+import { mapWorkingTimeTargetRow } from "./working-time-target-repository";
 import { mapNetPayProfileRow } from "./net-pay-profile-repository";
 import {
   TVUK_NURSING_PREFERENCE_KEY,
@@ -892,6 +893,7 @@ export async function validateLocalBackup(
       root.version !== 17 &&
       root.version !== 18 &&
       root.version !== 19 &&
+      root.version !== 20 &&
       root.version !== LOCAL_BACKUP_VERSION
     ) {
       return invalid("Diese Backup-Version wird von LUNA Shift nicht unterstützt.");
@@ -928,9 +930,28 @@ export async function validateLocalBackup(
       ...(root.version >= 18 ? ["drkEmployeeMonthConfirmations"] : []),
       ...(root.version >= 19 ? ["drkTrainingMonthConfirmations"] : []),
       ...(root.version >= 20 ? ["netPayProfiles"] : []),
+      ...(root.version >= 21 ? ["workingTimeTargetSettings"] : []),
     ]);
     const rawProfile = data.profile;
     const profile = rawProfile === null ? null : validateProfileRow(rawProfile);
+    const workingTimeTargetSettings =
+      root.version >= 21
+        ? Object.freeze(
+            asArray(data.workingTimeTargetSettings).map((value) => {
+              mapWorkingTimeTargetRow(value);
+              return frozenBackupRow(asRecord(value));
+            }),
+          )
+        : Object.freeze([]);
+    if (root.version >= 21) {
+      if (
+        (databaseSchemaVersion as number) < 34 ||
+        workingTimeTargetSettings.length > 1 ||
+        (profile === null && workingTimeTargetSettings.length > 0)
+      )
+        return invalid();
+      uniqueValues(workingTimeTargetSettings, "id");
+    }
     const netPayProfiles =
       root.version >= 20
         ? Object.freeze(
@@ -1467,6 +1488,7 @@ export async function validateLocalBackup(
       appVersion: appVersion as string | null,
       databaseSchemaVersion: databaseSchemaVersion as number,
       data: Object.freeze({
+        workingTimeTargetSettings,
         netPayProfiles,
         profile,
         remunerationProfiles,
@@ -1529,7 +1551,8 @@ export async function validateLocalBackup(
             !(document.version < 17 && key === "tvoedAnnexAPremiumFacts") &&
             !(document.version < 18 && key === "drkEmployeeMonthConfirmations") &&
             !(document.version < 19 && key === "drkTrainingMonthConfirmations") &&
-            !(document.version < 20 && key === "netPayProfiles"),
+            !(document.version < 20 && key === "netPayProfiles") &&
+            !(document.version < 21 && key === "workingTimeTargetSettings"),
         ),
       ),
     });

@@ -76,6 +76,7 @@ export const PRIVATE_CLOUD_MAX_CHARACTERS = 16 * 1024 * 1024;
 
 /** This allowlist follows the personal backup contract, never arbitrary SQLite tables. */
 export const PRIVATE_CLOUD_ROW_KEYS: Readonly<Record<string, readonly string[]>> = {
+  workingTimeTargetSettings: ["id"],
   netPayProfiles: ["month"],
   remunerationProfiles: ["id"],
   allowanceDecisions: ["month"],
