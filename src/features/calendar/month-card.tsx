@@ -314,6 +314,7 @@ const DayCell = memo(
             minWidth: 0,
             marginHorizontal: 0,
             marginVertical: 0,
+            opacity: 1,
             overflow: "hidden",
             borderRadius: 0,
             backgroundColor: pressed ? palette.primarySoft : "transparent",
@@ -570,7 +571,6 @@ export const MonthCard = memo(function MonthCard({
   const weeks = Array.from({ length: grid.length / 7 }, (_, index) =>
     grid.slice(index * 7, index * 7 + 7),
   );
-
   return (
     <View
       accessibilityElementsHidden={!accessibilityVisible}
