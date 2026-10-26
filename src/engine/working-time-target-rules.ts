@@ -83,8 +83,9 @@ export interface TargetRuleSource {
 }
 
 export interface TargetTariffRules {
-  readonly part: "BT-K" | "BT-B" | "TV-L § 43";
+  readonly part: "BT-K" | "BT-B" | "TV-L § 43" | "TV-H § 43";
   readonly label: string;
+  readonly forecastQualifier?: string;
   readonly holidayWork:
     | { readonly kind: "TARGET_REDUCTION" }
     | { readonly kind: "SEPARATE_COMPENSATION"; readonly legalBasis: string };
@@ -99,7 +100,12 @@ type ReviewedTargetTariff = Extract<TargetTariff, { readonly version: string }>;
 export function isReviewedTargetTariff(
   tariff: TargetTariff | undefined,
 ): tariff is ReviewedTargetTariff {
-  return tariff?.kind === "TVOED_K" || tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR";
+  return (
+    tariff?.kind === "TVOED_K" ||
+    tariff?.kind === "TVOED_B" ||
+    tariff?.kind === "TVL_KR" ||
+    tariff?.kind === "TVH_KR"
+  );
 }
 
 export const TVL_KR_TARGET_REVIEW = {
@@ -111,6 +117,18 @@ export const TVL_KR_TARGET_REVIEW = {
 /** The existing KR/section-43 selection suggests a scope; it never confirms an entitlement. */
 export function tvlKrTargetTariff(): ReviewedTargetTariff {
   return { kind: "TVL_KR", version: TVL_KR_TARGET_REVIEW.version, scopeConfirmed: null };
+}
+
+/** Published 2024 wording plus the 2026 agreement; bounded review, not a tariff expiry. */
+export const TVH_KR_TARGET_REVIEW = {
+  version: "2026-03-27",
+  from: "2026-01-01",
+  to: "2027-12-31",
+} as const;
+
+/** The KR selection suggests § 43; neither the salary nor Sunday answer confirms its scope. */
+export function tvhKrTargetTariff(): ReviewedTargetTariff {
+  return { kind: "TVH_KR", version: TVH_KR_TARGET_REVIEW.version, scopeConfirmed: null };
 }
 
 /** Family selection is enough for a forecast, never for an individual confirmed claim. */
@@ -207,6 +225,43 @@ function tvlRules(year: 2026 | 2027): TargetTariffRules {
 }
 const TVL_2026 = tvlRules(2026),
   TVL_2027 = tvlRules(2027);
+
+/** TV-H § 43 is nursing in the prison service, not the TV-L hospital scope. */
+function tvhRules(year: 2026 | 2027): TargetTariffRules {
+  const sourceUrl =
+    "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf";
+  const holiday = {
+    ruleId: `tvh-kr-${year}-43-6-3-8`,
+    legalBasis: "§ 43 Nr. 1 und Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-H (Justizvollzug)",
+    sourceUrl,
+  };
+  const special = {
+    ruleId: `tvh-kr-${year}-43-6-3-1-3`,
+    legalBasis: "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-H",
+    sourceUrl,
+  };
+  const forecast = (rule: TargetRuleSource): TargetRuleSource => ({
+    ...rule,
+    ruleId: rule.ruleId + "-forecast",
+    legalBasis: "Planungsreferenz zu " + rule.legalBasis + "; kein bestätigter Tagesanspruch",
+  });
+  return {
+    part: "TV-H § 43",
+    label: "TV-H (Justizvollzug)",
+    forecastQualifier:
+      "Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich bleiben getrennt.",
+    holidayWork: {
+      kind: "SEPARATE_COMPENSATION",
+      legalBasis: "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-H",
+    },
+    holiday,
+    holidayForecast: forecast(holiday),
+    special,
+    specialForecast: forecast(special),
+  };
+}
+const TVH_2026 = tvhRules(2026),
+  TVH_2027 = tvhRules(2027);
 const TARGET_TARIFF_REVIEWS = {
   TVOED_K: [
     { ...TVOED_K_TARGET_REVIEW, versions: ["2026-01-01"], rules: K_2026 },
@@ -230,6 +285,20 @@ const TARGET_TARIFF_REVIEWS = {
       rules: TVL_2027,
     },
   ],
+  TVH_KR: [
+    {
+      from: TVH_KR_TARGET_REVIEW.from,
+      to: "2026-12-31",
+      versions: [TVH_KR_TARGET_REVIEW.version],
+      rules: TVH_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVH_KR_TARGET_REVIEW.to,
+      versions: [TVH_KR_TARGET_REVIEW.version],
+      rules: TVH_2027,
+    },
+  ],
 } as const;
 
 /** Bounded legal review; not a tariff expiry or salary-table validity. */
@@ -249,5 +318,5 @@ export function reviewedTargetTariffRules(
 
 /** Provenance for a pending zero-minute line outside review coverage; never grants a deduction. */
 export function knownTargetTariffRules(kind: ReviewedTargetTariff["kind"]): TargetTariffRules {
-  return { TVOED_K: K_2026, TVOED_B: B_2026, TVL_KR: TVL_2026 }[kind];
+  return { TVOED_K: K_2026, TVOED_B: B_2026, TVL_KR: TVL_2026, TVH_KR: TVH_2026 }[kind];
 }

@@ -357,12 +357,14 @@ export function calculateMonthlyWorkingTimeTarget(
         affectsTarget: true,
         message:
           reviewedRules.label +
-          ": Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich werden getrennt geprüft.",
+          ": " +
+          (reviewedRules.forecastQualifier ??
+            "Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich werden getrennt geprüft."),
       });
     // New family recognition must retain the old provisional reference outside review coverage.
     const legacyInferredForecast =
       forecast &&
-      (tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR") &&
+      (tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR" || tariff?.kind === "TVH_KR") &&
       tariff.scopeConfirmed === null &&
       !reviewedRules;
     if (period) tariffNotices(period, reviewedRules !== null, notice);

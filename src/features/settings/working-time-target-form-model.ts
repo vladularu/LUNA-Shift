@@ -1,7 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { UserProfile, CalendarEntry } from "@/domain/types";
 import { remunerationShiftDays } from "@/engine/remuneration-shift-days";
-import { targetTariffForSector, tvlKrTargetTariff } from "@/engine/working-time-target-rules";
+import {
+  targetTariffForSector,
+  tvlKrTargetTariff,
+  tvhKrTargetTariff,
+} from "@/engine/working-time-target-rules";
 import type {
   TargetTariff,
   TargetDayFact,
@@ -103,7 +107,18 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
   const unverified = (id: string): TargetTariff => ({ kind: "UNVERIFIED", id });
   if (profile.salaryBasisConflict) return unverified("SALARY_CONFLICT");
   if (profile.tvalPflegeTariff) return unverified("TVA_L");
-  if (profile.tvhKrTariff) return unverified("TV_H");
+  if (profile.tvhKrTariff) {
+    if (
+      profile.tariff ||
+      profile.tvlKrTariff ||
+      profile.tvUkNursingTariff ||
+      profile.vkaETariff ||
+      profile.nursingTrainingTariff ||
+      profile.tvalPflegeTariff
+    )
+      return unverified("SALARY_CONFLICT");
+    return tvhKrTargetTariff();
+  }
   if (profile.tvUkNursingTariff) return unverified("TV_UK");
   if (profile.tvlKrTariff) {
     if (profile.tariff || profile.vkaETariff || profile.nursingTrainingTariff)

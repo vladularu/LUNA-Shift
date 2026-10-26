@@ -176,6 +176,47 @@ describe("working-time target backup v21", () => {
     });
     expect(result.notices.filter((n) => n.code === "HOLIDAY_TIME_OFF_SEPARATE")).toHaveLength(2);
   });
+  it.each([
+    ["ROSTER_FREE", 8778],
+    ["WORK_REQUIRED", 9702],
+  ] as const)(
+    "roundtrips TV-H with %s holidays without changing its claim semantics",
+    async (disposition, expected) => {
+      const context = {
+        ...decemberTargetContext,
+        periods: decemberTargetContext.periods.map((period) => ({
+          ...period,
+          tariff: { kind: "TVH_KR" as const, version: "2026-03-27", scopeConfirmed: true },
+        })),
+        days: [24, 25, 26, 31].map((day) => ({
+          date: "2026-12-" + day,
+          rosterStatus: "FINAL" as const,
+          disposition: [25, 26].includes(day) ? disposition : ("RELEASED" as const),
+          lostMinutes: 462,
+          mustWorkElsewhere: true,
+        })),
+      };
+      await saveWorkingTimeTargetSettings(source.db, {
+        context,
+        confirmedDates: context.days.map((day) => day.date),
+        expected: await loadWorkingTimeTargetSettings(source.db),
+      });
+      const original = await loadWorkingTimeTargetSettings(source.db);
+      const backup = await exportTvlBackup(source);
+      expect(backup.document.version).toBe(21);
+      await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+      const restored = await loadWorkingTimeTargetSettings(target.db);
+      expect(restored).toEqual(original);
+      expect(
+        calculateMonthlyWorkingTimeTarget(
+          "2026-12",
+          { federalState: "HE", weeklyMinutes: 2310 },
+          undefined,
+          restored.context,
+        ),
+      ).toMatchObject({ targetMinutes: expected, status: "FINAL" });
+    },
+  );
   it.each([1, 12, 19, 20])("reads legacy v%i without creating claims", async (version) => {
     const backup = await exportTvlBackup(source);
     const introduced = [
