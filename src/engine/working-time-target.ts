@@ -12,7 +12,12 @@ import type {
   WorkingTimeTargetProfile,
 } from "@/domain/working-time-target";
 import { getPublicHolidays } from "@/engine/holidays";
-import { TARGET_RULES, TVOED_K_TARGET_REVIEW } from "@/engine/working-time-target-rules";
+import {
+  TARGET_RULES,
+  reviewedTvoedKTargetRules,
+  type TargetRuleSource,
+  type TvoedKTargetRules,
+} from "@/engine/working-time-target-rules";
 import { validateTargetInputs, WorkingTimeTargetError } from "@/engine/working-time-target-input";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
@@ -27,7 +32,6 @@ interface RawDay {
   readonly adjustments: readonly RawAdjustment[];
 }
 
-type TargetRule = (typeof TARGET_RULES)[keyof typeof TARGET_RULES];
 const LEGACY_CACHE = new WeakMap<RuleResolver, Map<string, MonthlyWorkingTimeTarget>>();
 
 function line(
@@ -35,7 +39,7 @@ function line(
   kind: TargetAdjustment["kind"],
   label: string,
   numerator: number,
-  rule: TargetRule,
+  rule: TargetRuleSource,
   condition: string,
   status: TargetAdjustment["status"] = "CONFIRMED",
 ): RawAdjustment {
@@ -49,6 +53,7 @@ function specialReduction(
   notice: (value: TargetNotice) => void,
   automaticReference?: number,
   eligibilityVerified = true,
+  rules: TvoedKTargetRules = TARGET_RULES,
 ): RawAdjustment | null {
   if (fact?.rosterStatus === "FINAL" && fact.disposition === "WORK_REQUIRED") {
     notice({
@@ -77,9 +82,7 @@ function specialReduction(
     "TARIFF_SPECIAL_DAY",
     label,
     eligible ? fact.lostMinutes! * 5 : (automaticReference ?? 0),
-    automaticReference !== undefined
-      ? TARGET_RULES.tvoedKSpecialForecast
-      : TARGET_RULES.tvoedKSpecial,
+    automaticReference !== undefined ? rules.tvoedKSpecialForecast : rules.tvoedKSpecial,
     eligible
       ? fact.disposition === "RELEASED"
         ? "Bestätigte Freistellung und ausgefallene Arbeitszeit"
@@ -98,6 +101,7 @@ function rotatingHoliday(
   fact: TargetDayFact | undefined,
   profileEstimate = false,
   eligibilityVerified = true,
+  rules: TvoedKTargetRules = TARGET_RULES,
 ): RawAdjustment | null {
   if (
     fact?.rosterStatus === "FINAL" &&
@@ -115,7 +119,7 @@ function rotatingHoliday(
     "STATUTORY_HOLIDAY",
     label,
     eligible || profileEstimate ? weeklyMinutes : 0,
-    profileEstimate ? TARGET_RULES.tvoedKHolidayForecast : TARGET_RULES.tvoedKHoliday,
+    profileEstimate ? rules.tvoedKHolidayForecast : rules.tvoedKHoliday,
     eligible
       ? fact.disposition === "WORK_REQUIRED"
         ? "Bestätigter 7-Tage-Schichtplan und Arbeitspflicht am Werktagsfeiertag"
@@ -310,11 +314,9 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
-    const reviewedTvoedK =
-      tariff?.kind === "TVOED_K" &&
-      tariff.version === TVOED_K_TARGET_REVIEW.version &&
-      date >= TVOED_K_TARGET_REVIEW.from &&
-      date <= TVOED_K_TARGET_REVIEW.to;
+    const reviewedRules =
+      tariff?.kind === "TVOED_K" ? reviewedTvoedKTargetRules(date, tariff.version) : null;
+    const reviewedTvoedK = reviewedRules !== null;
     const tvoedK = reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed === true;
     const forecastTvoedK =
       forecast && reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed !== false;
@@ -372,6 +374,7 @@ export function calculateMonthlyWorkingTimeTarget(
           fact,
           forecastTvoedK && period.model.sevenDayShiftPlanConfirmed !== false,
           verified,
+          reviewedRules ?? TARGET_RULES,
         );
         if (adjustment) adjustments.push(adjustment);
       } else if (!fixed && base > 0) {
@@ -411,6 +414,7 @@ export function calculateMonthlyWorkingTimeTarget(
             (fixed !== null ||
               (period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
                 period.model.sevenDayShiftPlanConfirmed === true)),
+          reviewedRules ?? TARGET_RULES,
         );
         if (adjustment) adjustments.push(adjustment);
       }
@@ -473,11 +477,7 @@ function tariffNotices(
         message: "Die Geltung des TVöD-K / BT-K ist nicht bestätigt.",
         affectsTarget: true,
       });
-    if (
-      tariff.version !== TVOED_K_TARGET_REVIEW.version ||
-      date < TVOED_K_TARGET_REVIEW.from ||
-      date > TVOED_K_TARGET_REVIEW.to
-    )
+    if (!reviewedTvoedKTargetRules(date, tariff.version))
       notice({
         date: at,
         code: "TARIFF_VERSION_UNREVIEWED",

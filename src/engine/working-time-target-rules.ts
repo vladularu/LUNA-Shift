@@ -48,3 +48,63 @@ export const TVOED_K_TARGET_REVIEW = {
   from: "2026-01-01",
   to: "2026-12-31",
 } as const;
+
+/** Rule identity and source snapshot follow the calculation date, not a profile rewrite. */
+const TVOED_K_2027_RULES = {
+  tvoedKHoliday: {
+    ...TARGET_RULES.tvoedKHoliday,
+    ruleId: "tvoed-k-2027-btk-49-2",
+  },
+  tvoedKHolidayForecast: {
+    ...TARGET_RULES.tvoedKHolidayForecast,
+    ruleId: "tvoed-k-2027-btk-49-2-forecast",
+  },
+  tvoedKSpecial: {
+    ...TARGET_RULES.tvoedKSpecial,
+    ruleId: "tvoed-k-2027-at-6-3",
+    sourceUrl:
+      "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf",
+  },
+  tvoedKSpecialForecast: {
+    ...TARGET_RULES.tvoedKSpecialForecast,
+    ruleId: "tvoed-k-2027-at-6-3-forecast",
+    sourceUrl:
+      "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf",
+  },
+} as const;
+
+export interface TargetRuleSource {
+  readonly ruleId: string;
+  readonly legalBasis: string;
+  readonly sourceUrl: string;
+}
+
+export interface TvoedKTargetRules {
+  readonly tvoedKHoliday: TargetRuleSource;
+  readonly tvoedKHolidayForecast: TargetRuleSource;
+  readonly tvoedKSpecial: TargetRuleSource;
+  readonly tvoedKSpecialForecast: TargetRuleSource;
+}
+
+/** Coverage is a bounded legal review, not a tariff expiry or salary-table validity. */
+const TVOED_K_TARGET_REVIEWS = [
+  { ...TVOED_K_TARGET_REVIEW, versions: ["2026-01-01"], rules: TARGET_RULES },
+  {
+    from: "2027-01-01",
+    to: "2027-12-31",
+    // The relevant clauses are unchanged: ongoing 2026 profiles need no migration.
+    versions: ["2026-01-01", "2027-01-01"],
+    rules: TVOED_K_2027_RULES,
+  },
+] as const;
+
+export function reviewedTvoedKTargetRules(date: string, version: string): TvoedKTargetRules | null {
+  return (
+    TVOED_K_TARGET_REVIEWS.find(
+      (review) =>
+        date >= review.from &&
+        date <= review.to &&
+        review.versions.some((accepted) => accepted === version),
+    )?.rules ?? null
+  );
+}

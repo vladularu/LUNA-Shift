@@ -307,9 +307,9 @@ describe("tariff-dependent target time (source references in docs/working-time-t
 
   it("does not carry an unreviewed tariff version across the year boundary", () => {
     const result = calculate(
-      "2027-01",
+      "2028-01",
       context({
-        days: [{ date: "2027-01-01", rosterStatus: "FINAL", disposition: "WORK_REQUIRED" }],
+        days: [{ date: "2028-01-01", rosterStatus: "FINAL", disposition: "WORK_REQUIRED" }],
       }),
     );
     expect(result.status).toBe("PROVISIONAL");
