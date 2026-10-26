@@ -23,7 +23,7 @@ Prüfdeckung: 01.01.2026–31.12.2027, Quellenversion 2026-02-14; keine Behauptu
 
 ## Prognose und Anspruch
 
-Die bestehende FORECAST-Rechnung bleibt unabhängig von eingetragenen Diensten. Für den TV-L-§-43-Bezug ist der Fünftel-Planwert ausdrücklich eine gleichmäßige Referenz für den hypothetischen Fall qualifiziert dienstplanmäßig freier Feiertage. Er ist kein behaupteter Anspruch bei Feiertagsarbeit; jede solche Zeile bleibt PROFILE_ESTIMATE und das Ergebnis PROVISIONAL. Die Bedingung wird in der vorhandenen Aufschlüsselung genannt. Keine zusätzlichen Fragen.
+Die bestehende FORECAST-Rechnung bleibt unabhängig von eingetragenen Diensten. Für den TV-L-§-43-Bezug ist der Fünftel-Planwert ausdrücklich eine gleichmäßige Referenz für den hypothetischen Fall qualifiziert dienstplanmäßig freier Feiertage. Er ist kein behaupteter Anspruch bei Feiertagsarbeit; jede solche Zeile bleibt PROFILE_ESTIMATE und das Ergebnis PROVISIONAL. Die Bedingung wird in der vorhandenen Aufschlüsselung genannt, wenn im Monat eine solche Feiertagsreferenz vorkommt. Normale Monate erhalten keinen zusätzlichen Vorbehalt. Keine zusätzlichen Fragen.
 
 Die getrennte ROSTER-Rechnung prüft dagegen die nachgewiesenen Umstände: Bei bestätigter Feiertagsarbeit kein Fünftelabzug und ein Hinweis auf getrennten Ausgleich. Bei bestätigtem planfrei mit anderweitiger Wochenerfüllung ein Fünftel. Unbekannt, bloß leerer Kalender oder Freistellung nur wegen des Feiertags bestätigen diesen Anspruch nicht. Arbeit am 24./31.12. erzeugt ebenfalls keinen fiktiven Sollabzug oder Iststunden.
 

@@ -127,6 +127,10 @@ describe("TV-L § 43 independent controls", () => {
         targetMinutes: target,
         status: "PROVISIONAL",
       });
+      if (statutory === 0)
+        expect(result.notices.some((n) => n.code === "CONDITIONAL_ROSTER_FREE_FORECAST")).toBe(
+          false,
+        );
       for (const adjustment of result.adjustments) {
         expect(adjustment.ruleId).toMatch(/^tvl-kr-202[67]-43-/);
         expect(adjustment.status).toBe("PROFILE_ESTIMATE");

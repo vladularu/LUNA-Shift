@@ -345,6 +345,8 @@ export function calculateMonthlyWorkingTimeTarget(
       forecast && reviewedRules !== null && supportedTariff && tariff.scopeConfirmed !== false;
     if (
       forecastTariff &&
+      holiday &&
+      plainDate.dayOfWeek <= 6 &&
       period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
       period.model.sevenDayShiftPlanConfirmed !== false &&
       reviewedRules.holidayWork.kind === "SEPARATE_COMPENSATION"
