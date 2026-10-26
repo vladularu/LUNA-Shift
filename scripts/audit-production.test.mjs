@@ -252,3 +252,83 @@ test("supports independent installed backports while still blocking unrelated fi
   assert.deepEqual(result.mitigated, [forgeAdvisory, bracesAdvisory]);
   assert.deepEqual(result.approved, []);
 });
+
+import { ZOD_ADVISORY_URL, verifyZodHardening } from "./zod-hardening.mjs";
+const zodAdvisory = {
+  source: 1243066,
+  name: "zod",
+  dependency: "zod",
+  severity: "high",
+  title: "Zod can exhaust memory while validating oversized constrained collections",
+  url: ZOD_ADVISORY_URL,
+  range: "<4.6.6",
+};
+const zodReport = (advisory = zodAdvisory, nodes = ["node_modules/zod"]) =>
+  report({ zod: { severity: "high", via: [advisory], nodes } });
+
+test("blocks Zod without genuine installed-hardening evidence", () => {
+  const proof = verifyZodHardening();
+  for (const fake of [undefined, true, { nodes: proof.nodes }, JSON.parse(JSON.stringify(proof))]) {
+    assert.deepEqual(evaluateAuditReport(zodReport(), undefined, undefined, fake).blocking, [
+      zodAdvisory,
+    ]);
+  }
+});
+
+test("accepts only the installed Zod mitigation and resolves its cyclic Expo meta chain", () => {
+  const input = zodReport();
+  input.vulnerabilities.cli = { severity: "high", via: ["zod", "expo"] };
+  input.vulnerabilities.expo = { severity: "high", via: ["cli"] };
+  const result = evaluateAuditReport(input, undefined, undefined, verifyZodHardening());
+  assert.deepEqual(result.blocking, []);
+  assert.deepEqual(result.approved, []);
+  assert.deepEqual(result.mitigated, [zodAdvisory]);
+});
+
+test("blocks changed Zod advisory identity, severity, range and title", () => {
+  const proof = verifyZodHardening();
+  for (const change of [
+    { source: 999 },
+    { name: "another-package" },
+    { dependency: "another-package" },
+    { severity: "critical" },
+    { range: "<=4.6.6" },
+    { title: "Another vulnerability" },
+    { url: "https://github.com/advisories/GHSA-xxxx-xxxx-xxxx" },
+  ]) {
+    const advisory = { ...zodAdvisory, ...change };
+    assert.deepEqual(
+      evaluateAuditReport(zodReport(advisory), undefined, undefined, proof).blocking,
+      [advisory],
+    );
+  }
+});
+
+test("blocks unexpected or malformed audited Zod locations", () => {
+  const proof = verifyZodHardening();
+  for (const nodes of [
+    [],
+    ["node_modules/other/node_modules/zod"],
+    ["node_modules/zod", "node_modules/other/node_modules/zod"],
+    undefined,
+    "node_modules/zod",
+  ]) {
+    const input = zodReport();
+    input.vulnerabilities.zod.nodes = nodes;
+    assert.deepEqual(evaluateAuditReport(input, undefined, undefined, proof).blocking, [
+      zodAdvisory,
+    ]);
+  }
+});
+
+test("a verified Zod fix cannot mask another high advisory in the same package", () => {
+  const another = { ...zodAdvisory, source: 999, title: "Unrelated high issue" };
+  const input = zodReport();
+  input.vulnerabilities.zod.via.push(another);
+  const result = evaluateAuditReport(input, undefined, undefined, verifyZodHardening());
+  assert.deepEqual(result.mitigated, [zodAdvisory]);
+  assert.deepEqual(result.blocking, [another]);
+});
+
+// Existing audit-policy command also runs the bounded-collection regressions.
+import "./zod-hardening.test.mjs";
