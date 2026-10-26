@@ -1,3 +1,4 @@
+import { calendarDayLabel } from "./calendar-special-days";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
@@ -497,7 +498,7 @@ function CombinedDayContent({
               fontSize: CALENDAR_METRICS.entryFontSize,
             }}
           >
-            {holiday ?? "◇ " + specialDay?.replace(" (tariflicher Sondertag)", "")}
+            {calendarDayLabel(holiday, specialDay)}
           </Text>
         ) : null}
       </View>

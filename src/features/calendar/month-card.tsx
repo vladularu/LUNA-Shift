@@ -33,7 +33,7 @@ import {
   calendarSelectionTouchesMonth,
 } from "@/features/calendar/calendar-rendering";
 import { useCalendarHolidayResolution } from "@/features/calendar/calendar-holidays";
-import { holidayShortLabel } from "@/features/calendar/holiday-label";
+import { calendarDayLabel } from "./calendar-special-days";
 import { stampDayAccessibilityHint } from "@/features/calendar/stamp-accessibility";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarChipPalette } from "@/theme/color-contrast";
@@ -314,7 +314,6 @@ const DayCell = memo(
             minWidth: 0,
             marginHorizontal: 0,
             marginVertical: 0,
-            opacity: 1,
             overflow: "hidden",
             borderRadius: 0,
             backgroundColor: pressed ? palette.primarySoft : "transparent",
@@ -389,9 +388,7 @@ const DayCell = memo(
                   textAlign: "center",
                 }}
               >
-                {holidayName
-                  ? holidayShortLabel(holidayName)
-                  : "◇ " + specialDayName?.replace(" (tariflicher Sondertag)", "")}
+                {calendarDayLabel(holidayName, specialDayName, true)}
               </Text>
             ) : null}
           </View>
@@ -454,6 +451,7 @@ const DayCell = memo(
     calendarEntryListsEqual(previous.entries, next.entries) &&
     previous.entryRowCapacity === next.entryRowCapacity &&
     previous.holidayName === next.holidayName &&
+    previous.specialDayName === next.specialDayName &&
     previous.isSelected === next.isSelected &&
     previous.isToday === next.isToday &&
     previous.onSelectDate === next.onSelectDate &&
@@ -557,11 +555,9 @@ export const MonthCard = memo(function MonthCard({
     showHolidays,
   );
   const currentDate = today(profile.timeZone);
-  const weekCount = grid.length / 7;
-  const contentWidth = Math.min(width, 760);
   const gridLayout = calculateCalendarGridLayout({
     pageHeight,
-    weekCount,
+    weekCount: grid.length / 7,
     bottomReserve,
     testData,
   });
@@ -571,7 +567,7 @@ export const MonthCard = memo(function MonthCard({
       (gridLayout.rowHeight - CALENDAR_METRICS.dayNumberHeight) / CALENDAR_METRICS.entryRowHeight,
     ),
   );
-  const weeks = Array.from({ length: weekCount }, (_, index) =>
+  const weeks = Array.from({ length: grid.length / 7 }, (_, index) =>
     grid.slice(index * 7, index * 7 + 7),
   );
 
@@ -585,9 +581,8 @@ export const MonthCard = memo(function MonthCard({
       <CalendarBackground />
       <View
         style={{
-          width: contentWidth,
+          width: Math.min(width, 760),
           overflow: "hidden",
-          marginTop: 0,
         }}
       >
         {testData ? (
