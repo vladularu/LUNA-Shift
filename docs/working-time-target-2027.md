@@ -35,4 +35,8 @@ Der 26.12.2027 ist Sonntag und erzeugt keinen zusätzlichen BT-K-Abzug. Der 25.1
 
 ## Umsetzung und Prüfung
 
-Wird nach den Prüfungen ergänzt.
+Die Engine wählt einen datierten Prüfstand und akzeptierte Profilkennungen gemeinsam aus. Die laufende Kennung 2026-01-01 wird 2027 ausdrücklich weiter unterstützt; eine explizite Kennung 2027-01-01 gilt nur im geprüften 2027-Fenster. Änderungen an Profilen, Backup-Schema oder Gehaltsformeln sind nicht erforderlich.
+
+Bestanden am 26.10.2026: 92 fokussierte Tests, davon 17 neue 2027-Regressionen; vollständiges verify:fast mit 9.343 Unit-/Integrationstests (482 Dateien), 1.386 Komponententests (153 Suiten) und 294 zusätzlichen Node-Skripttests, Typecheck, ESLint ohne Warnungen, Formatprüfung, Regelkatalogprüfung und Diff-Prüfung. Der erste Sandbox-Lauf bestand die Unit-/Integrationstests, konnte aber den Jest-Cache nicht schreiben und führte keine Komponententests aus. Der vollständige unveränderte Wiederholungslauf mit regulärem Windows-Cache bestand. Die temporäre serielle Vitest-Konfiguration wurde bytegenau wiederhergestellt.
+
+Lokaler iOS-JavaScript-/Asset-Export mit APP_VARIANT=internal erfolgreich. PR-CI und Lieferstand werden im zugehörigen Pull Request dokumentiert. Keine neue native Integration; der Export ersetzt keine Geräteabnahme der separat entwickelten Kalenderanzeige.
