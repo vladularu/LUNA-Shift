@@ -40,6 +40,11 @@ function kpis(view: View): string {
       ),
     ),
   ];
+  const targetNote = conditionalReferences.length
+    ? "Sollzeit vorläufig. " + conditionalReferences.join(" ")
+    : view.workingTimeTargets.some((item) => item.status !== "FINAL")
+      ? "Sollzeit vorläufig oder unvollständig. Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt."
+      : "";
   return `<div class="metrics">${[
     ["Sollzeit", reportMinutes(view.target)],
     ["Erfasste Kontozeit", reportMinutes(view.actual)],
@@ -49,9 +54,7 @@ function kpis(view: View): string {
       ([label, value]) =>
         `<div><small>${label}</small><strong class="${value === "Nicht verfügbar" ? "unavailable" : ""}">${html(value)}</strong></div>`,
     )
-    .join(
-      "",
-    )}</div>${view.workingTimeTargets.some((item) => item.status !== "FINAL") ? '<p class="muted">Sollzeit vorläufig oder unvollständig. Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt.</p>' : ""}${conditionalReferences.map((message) => `<p class="muted">${html(message)}</p>`).join("")}`;
+    .join("")}</div>${targetNote ? `<p class="muted">${html(targetNote)}</p>` : ""}`;
 }
 
 function salary(view: View, details: boolean): string {

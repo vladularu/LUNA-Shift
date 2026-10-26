@@ -531,6 +531,11 @@ describe("TV-L § 43 independent controls", () => {
     expect(reportToHtml(report)).toContain("146:18 h");
     expect(reportToHtml(report)).toContain("dienstplanmäßig freie");
     for (const layout of ["standard", "compact"] as const) {
+      const html = reportToHtml(report, { layout, includeSalary: true });
+      expect(html).toContain("Sollzeit vorläufig. TV-L/KR");
+      expect(html).not.toContain(
+        "Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt.",
+      );
       expect(
         reportToHtml(report, { layout, includeSalary: true }).match(/TV-L\/KR \/ § 43: Planwert/g),
       ).toHaveLength(1);
