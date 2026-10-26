@@ -29,7 +29,11 @@ export type TargetWorkModel =
   | { readonly kind: "UNKNOWN" };
 
 export type TargetTariff =
-  | { readonly kind: "TVOED_K"; readonly version: string; readonly scopeConfirmed: boolean | null }
+  | {
+      readonly kind: "TVOED_K" | "TVOED_B";
+      readonly version: string;
+      readonly scopeConfirmed: boolean | null;
+    }
   | { readonly kind: "CUSTOM" }
   | { readonly kind: "UNVERIFIED"; readonly id: string };
 

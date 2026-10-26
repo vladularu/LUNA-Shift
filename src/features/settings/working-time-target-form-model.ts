@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { UserProfile, CalendarEntry } from "@/domain/types";
 import { remunerationShiftDays } from "@/engine/remuneration-shift-days";
-import { TVOED_K_TARGET_REVIEW } from "@/engine/working-time-target-rules";
+import { targetTariffForSector } from "@/engine/working-time-target-rules";
 import type {
   TargetTariff,
   TargetDayFact,
@@ -108,8 +108,8 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
   if (profile.tvlKrTariff) return unverified("TV_L");
   if (profile.vkaETariff) return unverified("VKA_E");
   if (profile.nursingTrainingTariff) return unverified("TVAOED");
-  if (profile.tariff?.sector === "BT_K")
-    return { kind: "TVOED_K", version: TVOED_K_TARGET_REVIEW.version, scopeConfirmed: null };
+  const tariff = targetTariffForSector(profile.tariff?.sector);
+  if (tariff) return tariff;
   if (profile.tariff) return unverified("BT_B");
   return unverified(profile.manualMonthlyGrossCents != null ? "OWN_SALARY" : "UNCONFIRMED");
 }

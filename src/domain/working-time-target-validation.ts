@@ -83,7 +83,7 @@ export function validateTargetInputs(
       )
         throw new WorkingTimeTargetError();
     } else if (period.model.kind !== "UNKNOWN") throw new WorkingTimeTargetError();
-    if (period.tariff.kind === "TVOED_K") {
+    if (period.tariff.kind === "TVOED_K" || period.tariff.kind === "TVOED_B") {
       if (
         typeof period.tariff.version !== "string" ||
         ![true, false, null].includes(period.tariff.scopeConfirmed)

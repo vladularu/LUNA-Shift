@@ -106,6 +106,37 @@ describe("working-time target backup v21", () => {
       ).targetMinutes,
     ).toBe(8778);
   });
+  it("roundtrips explicit BT-B through the existing backup format without altering legacy data", async () => {
+    const context = {
+      ...decemberTargetContext,
+      periods: decemberTargetContext.periods.map((period) => ({
+        ...period,
+        weeklyMinutes: 2340,
+        tariff: { kind: "TVOED_B" as const, version: "2026-01-01", scopeConfirmed: true },
+      })),
+      days: decemberTargetContext.days.map((day) => ({ ...day, lostMinutes: 468 })),
+    };
+    await saveWorkingTimeTargetSettings(source.db, {
+      context,
+      confirmedDates: context.days.map((day) => day.date),
+      expected: await loadWorkingTimeTargetSettings(source.db),
+    });
+    const original = await loadWorkingTimeTargetSettings(source.db);
+    const backup = await exportTvlBackup(source);
+    expect(backup.document.version).toBe(LOCAL_BACKUP_VERSION);
+    await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+    const restored = await loadWorkingTimeTargetSettings(target.db);
+    expect(restored).toEqual(original);
+    expect(restored.context?.periods[0].tariff.kind).toBe("TVOED_B");
+    expect(
+      calculateMonthlyWorkingTimeTarget(
+        "2026-12",
+        { federalState: "HE", weeklyMinutes: 2340 },
+        undefined,
+        restored.context,
+      ).targetMinutes,
+    ).toBe(8892);
+  });
   it.each([1, 12, 19, 20])("reads legacy v%i without creating claims", async (version) => {
     const backup = await exportTvlBackup(source);
     const introduced = [

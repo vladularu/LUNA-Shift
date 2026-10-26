@@ -14,9 +14,11 @@ import type {
 import { getPublicHolidays } from "@/engine/holidays";
 import {
   TARGET_RULES,
-  reviewedTvoedKTargetRules,
+  isTvoedTargetTariff,
+  reviewedTvoedTargetRules,
+  knownTvoedTargetRules,
   type TargetRuleSource,
-  type TvoedKTargetRules,
+  type TvoedTargetRules,
 } from "@/engine/working-time-target-rules";
 import { validateTargetInputs, WorkingTimeTargetError } from "@/engine/working-time-target-input";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
@@ -51,9 +53,9 @@ function specialReduction(
   label: string,
   fact: TargetDayFact | undefined,
   notice: (value: TargetNotice) => void,
+  rules: TvoedTargetRules,
   automaticReference?: number,
   eligibilityVerified = true,
-  rules: TvoedKTargetRules = TARGET_RULES,
 ): RawAdjustment | null {
   if (fact?.rosterStatus === "FINAL" && fact.disposition === "WORK_REQUIRED") {
     notice({
@@ -82,7 +84,7 @@ function specialReduction(
     "TARIFF_SPECIAL_DAY",
     label,
     eligible ? fact.lostMinutes! * 5 : (automaticReference ?? 0),
-    automaticReference !== undefined ? rules.tvoedKSpecialForecast : rules.tvoedKSpecial,
+    automaticReference !== undefined ? rules.specialForecast : rules.special,
     eligible
       ? fact.disposition === "RELEASED"
         ? "Bestätigte Freistellung und ausgefallene Arbeitszeit"
@@ -99,9 +101,9 @@ function rotatingHoliday(
   label: string,
   weeklyMinutes: number,
   fact: TargetDayFact | undefined,
+  rules: TvoedTargetRules,
   profileEstimate = false,
   eligibilityVerified = true,
-  rules: TvoedKTargetRules = TARGET_RULES,
 ): RawAdjustment | null {
   if (
     fact?.rosterStatus === "FINAL" &&
@@ -119,14 +121,16 @@ function rotatingHoliday(
     "STATUTORY_HOLIDAY",
     label,
     eligible || profileEstimate ? weeklyMinutes : 0,
-    profileEstimate ? rules.tvoedKHolidayForecast : rules.tvoedKHoliday,
+    profileEstimate ? rules.holidayForecast : rules.holiday,
     eligible
       ? fact.disposition === "WORK_REQUIRED"
         ? "Bestätigter 7-Tage-Schichtplan und Arbeitspflicht am Werktagsfeiertag"
         : "Bestätigter 7-Tage-Schichtplan; dienstplanmäßig frei, nicht wegen des Feiertags; regelmäßige Arbeitszeit andernorts zu erbringen"
       : profileEstimate
         ? "Monatsprognose im 7-Tage-Modell: ein Fünftel der Wochenstunden je Werktagsfeiertag, unabhängig von eingetragenen Diensten."
-        : "Anspruch nach BT-K § 49 Abs. 2 nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
+        : "Anspruch nach " +
+          rules.part +
+          " § 49 Abs. 2 nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
     eligible ? "CONFIRMED" : profileEstimate ? "PROFILE_ESTIMATE" : "PENDING",
   );
 }
@@ -314,13 +318,17 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
-    const reviewedRules =
-      tariff?.kind === "TVOED_K" ? reviewedTvoedKTargetRules(date, tariff.version) : null;
-    const reviewedTvoedK = reviewedRules !== null;
-    const tvoedK = reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed === true;
-    const forecastTvoedK =
-      forecast && reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed !== false;
-    if (period) tariffNotices(period, date, notice);
+    const supportedTariff = isTvoedTargetTariff(tariff);
+    const reviewedRules = supportedTariff ? reviewedTvoedTargetRules(tariff, date) : null;
+    const verifiedTvoed =
+      reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
+    const forecastTvoed =
+      forecast && reviewedRules !== null && supportedTariff && tariff.scopeConfirmed !== false;
+    // Recognizing an old BT-B family marker must not change its unreviewed historical
+    // forecast. Keep the previous explicitly provisional reference outside coverage.
+    const legacyBForecast =
+      forecast && tariff?.kind === "TVOED_B" && tariff.scopeConfirmed === null && !reviewedRules;
+    if (period) tariffNotices(period, reviewedRules !== null, notice);
     if (holiday) {
       if (fixed && base > 0) {
         if (
@@ -363,18 +371,19 @@ export function calculateMonthlyWorkingTimeTarget(
         }
       } else if (
         period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
-        tariff?.kind === "TVOED_K" &&
+        supportedTariff &&
+        !legacyBForecast &&
         plainDate.dayOfWeek <= 6
       ) {
-        const verified = tvoedK && period.model.sevenDayShiftPlanConfirmed === true;
+        const verified = verifiedTvoed && period.model.sevenDayShiftPlanConfirmed === true;
         const adjustment = rotatingHoliday(
           date,
           holiday,
           settings.weeklyMinutes,
           fact,
-          forecastTvoedK && period.model.sevenDayShiftPlanConfirmed !== false,
+          reviewedRules ?? knownTvoedTargetRules(tariff.kind),
+          forecastTvoed && period.model.sevenDayShiftPlanConfirmed !== false,
           verified,
-          reviewedRules ?? TARGET_RULES,
         );
         if (adjustment) adjustments.push(adjustment);
       } else if (!fixed && base > 0) {
@@ -392,13 +401,13 @@ export function calculateMonthlyWorkingTimeTarget(
       }
     } else if (date.endsWith("-12-24") || date.endsWith("-12-31")) {
       if (
-        (tvoedK || forecastTvoedK) &&
+        (verifiedTvoed || forecastTvoed) &&
         plainDate.dayOfWeek <= 6 &&
         (fixed
           ? base > 0
           : period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
             (period.model.sevenDayShiftPlanConfirmed === true ||
-              (forecastTvoedK && period.model.sevenDayShiftPlanConfirmed !== false)))
+              (forecastTvoed && period.model.sevenDayShiftPlanConfirmed !== false)))
       ) {
         if (fixed && fact?.lostMinutes != null && fact.lostMinutes * 5 > base)
           throw new WorkingTimeTargetError();
@@ -409,12 +418,12 @@ export function calculateMonthlyWorkingTimeTarget(
             : "Silvester (tariflicher Sondertag)",
           fact,
           notice,
-          forecastTvoedK ? (fixed ? base : settings.weeklyMinutes) : undefined,
-          tvoedK &&
+          reviewedRules!,
+          forecastTvoed ? (fixed ? base : settings.weeklyMinutes) : undefined,
+          verifiedTvoed &&
             (fixed !== null ||
               (period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
                 period.model.sevenDayShiftPlanConfirmed === true)),
-          reviewedRules ?? TARGET_RULES,
         );
         if (adjustment) adjustments.push(adjustment);
       }
@@ -442,7 +451,7 @@ export function calculateMonthlyWorkingTimeTarget(
 
 function tariffNotices(
   period: TargetProfilePeriod,
-  date: string,
+  reviewed: boolean,
   notice: (value: TargetNotice) => void,
 ): void {
   const tariff = period.tariff;
@@ -469,15 +478,16 @@ function tariffNotices(
         "Eigene Vergütung im wechselnden Dienstplan: gesetzliche Ausfallzeiten und betriebliche Referenzberechnung prüfen; keine zusätzlichen Tarifansprüche angesetzt.",
       affectsTarget: true,
     });
-  if (tariff.kind === "TVOED_K") {
+  if (isTvoedTargetTariff(tariff)) {
+    const rules = knownTvoedTargetRules(tariff.kind);
     if (tariff.scopeConfirmed !== true)
       notice({
         date: at,
         code: "TARIFF_SCOPE_UNCONFIRMED",
-        message: "Die Geltung des TVöD-K / BT-K ist nicht bestätigt.",
+        message: "Die Geltung des " + rules.label + " ist nicht bestätigt.",
         affectsTarget: true,
       });
-    if (!reviewedTvoedKTargetRules(date, tariff.version))
+    if (!reviewed)
       notice({
         date: at,
         code: "TARIFF_VERSION_UNREVIEWED",

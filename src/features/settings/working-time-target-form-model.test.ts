@@ -134,7 +134,7 @@ describe("employment data reuse without inferred claims", () => {
   it("never imports the BT-K rule for BT-B or own salary", () => {
     expect(
       employmentTargetTariff({ ...work, tariff: { ...work.tariff!, sector: "BT_B" } }),
-    ).toEqual({ kind: "UNVERIFIED", id: "BT_B" });
+    ).toEqual({ kind: "TVOED_B", version: "2026-01-01", scopeConfirmed: null });
     expect(
       employmentTargetTariff({ ...work, tariff: null, manualMonthlyGrossCents: 400000 }),
     ).toEqual({ kind: "UNVERIFIED", id: "OWN_SALARY" });

@@ -14,17 +14,18 @@ import type {
   WorkingTimeTargetInput,
   WorkingTimeTargetProfile,
 } from "@/domain/working-time-target";
-import { TVOED_K_TARGET_REVIEW } from "./working-time-target-rules";
+import { isTvoedTargetTariff, targetTariffForSector } from "./working-time-target-rules";
 
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
 
 function selectedTariff(selection: RemunerationSelection): TargetTariff {
   if (
     selection.kind === "tariff" &&
-    ["tvoed-vka-bt-k", LEGACY_RULE_PACKAGE_IDS.tariff].includes(selection.packageId) &&
-    selection.variant === "BT_K"
-  )
-    return { kind: "TVOED_K", version: TVOED_K_TARGET_REVIEW.version, scopeConfirmed: null };
+    ["tvoed-vka-bt-k", LEGACY_RULE_PACKAGE_IDS.tariff].includes(selection.packageId)
+  ) {
+    const tariff = targetTariffForSector(selection.variant);
+    if (tariff) return tariff;
+  }
   // Salary selection identifies the family, not the individual's working-time scope.
   return {
     kind: "UNVERIFIED",
@@ -36,8 +37,9 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  const tariff = targetTariffForSector(profile.tariff?.sector);
   if (
-    profile.tariff?.sector === "BT_K" &&
+    tariff &&
     !profile.salaryBasisConflict &&
     !profile.tvlKrTariff &&
     !profile.tvUkNursingTariff &&
@@ -46,8 +48,18 @@ function currentTariff(profile: UserProfile): TargetTariff {
     !profile.nursingTrainingTariff &&
     !profile.tvalPflegeTariff
   )
-    return { kind: "TVOED_K", version: TVOED_K_TARGET_REVIEW.version, scopeConfirmed: null };
+    return tariff;
   return { kind: "UNVERIFIED", id: "CURRENT_SALARY_SELECTION" };
+}
+
+/** Old explicit family markers stay stored unchanged; only the projection gains reviewed rules. */
+function historicalTariff(tariff: TargetTariff): TargetTariff {
+  if (
+    tariff.kind === "UNVERIFIED" &&
+    ["BT_B", "tvoed-vka-bt-k/BT_B", LEGACY_RULE_PACKAGE_IDS.tariff + "/BT_B"].includes(tariff.id)
+  )
+    return targetTariffForSector("BT_B")!;
+  return tariff;
 }
 
 /** Planning defaults from the existing employment answer; never saved as roster evidence. */
@@ -164,19 +176,17 @@ export function createWorkingTimeCalculationProfile(
           : (dated?.data.weeklyMinutes ?? period.weeklyMinutes);
         const selected = dated?.data.selection;
         // A salary amount or missing salary setup is not a change of the confirmed working-time tariff.
-        let tariff = period.tariff;
+        let tariff = historicalTariff(period.tariff);
         if (
           employment &&
           (replacesPeriod ||
-            (baseline && currentTariff({ ...profile, ...baseline }).kind === period.tariff.kind))
+            (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
           const family = currentTariff(employment);
-          tariff =
-            family.kind === "TVOED_K" && period.tariff.kind === "TVOED_K" ? period.tariff : family;
+          tariff = isTvoedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
         } else if (selected?.kind === "tariff") {
           const family = selectedTariff(selected);
-          tariff =
-            family.kind === "TVOED_K" && period.tariff.kind === "TVOED_K" ? period.tariff : family;
+          tariff = isTvoedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
         } else if (selected && !original) tariff = selectedTariff(selected);
         const standardFixed =
           period.model.kind === "FIXED_WEEK" &&
