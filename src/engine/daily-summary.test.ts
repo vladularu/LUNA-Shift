@@ -46,6 +46,18 @@ function shift(
 }
 
 describe("daily work credit", () => {
+  it("preserves absence credit when target accounting distributes fractional reference minutes", () => {
+    const oddProfile = { ...profile, weeklyMinutes: 1001 };
+    for (const date of ["2026-07-01", "2026-07-02", "2026-07-03"]) {
+      const result = calculateDailyWorkCredit(
+        date,
+        [shift("sick", date, "SICK", null, null)],
+        oddProfile,
+      );
+      expect(result.sickMinutes).toBe(200);
+      expect(result.actualMinutes).toBe(200);
+    }
+  });
   it("uses sickness only to fill the remaining daily target", () => {
     const result = calculateDailyWorkCredit(
       "2026-07-01",

@@ -1,7 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { ShiftEntry, ShiftType, UserProfile } from "@/domain/types";
-import { getPublicHolidays } from "@/engine/holidays";
+import type { WorkingTimeTargetContext } from "@/domain/working-time-target";
+import {
+  calculateMonthlyWorkingTimeTarget,
+  requireTargetMinutes,
+} from "@/engine/working-time-target";
 import { calculateTimedShiftBounds } from "@/engine/working-time";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
@@ -35,48 +39,22 @@ export interface TimedDailyWorkCredit {
   readonly minutesByType: Readonly<Partial<Record<ShiftType, number>>>;
 }
 
-const HOLIDAY_DATE_CACHE = new WeakMap<RuleResolver, Map<string, ReadonlySet<string>>>();
-
-function holidayDates(
-  year: number,
-  federalState: UserProfile["federalState"],
-  holidayRegion: UserProfile["holidayRegion"],
-  ruleResolver: RuleResolver,
-): ReadonlySet<string> {
-  const key = `${federalState}-${holidayRegion}-${year}`;
-  const resolverCache = HOLIDAY_DATE_CACHE.get(ruleResolver);
-  const cached = resolverCache?.get(key);
-  if (cached) return cached;
-  const dates = new Set(
-    getPublicHolidays(year, federalState, ruleResolver, holidayRegion).map(
-      (holiday) => holiday.date,
-    ),
-  );
-  const nextCache = resolverCache ?? new Map<string, ReadonlySet<string>>();
-  nextCache.set(key, dates);
-  if (!resolverCache) HOLIDAY_DATE_CACHE.set(ruleResolver, nextCache);
-  return dates;
-}
-
 export function calculateDailyTargetMinutes(
   date: string,
   profile: Pick<UserProfile, "federalState" | "weeklyMinutes"> &
     Partial<Pick<UserProfile, "holidayRegion">>,
   ruleResolver: RuleResolver = bundledRuleResolver,
+  targetContext?: WorkingTimeTargetContext,
 ): number {
   const plainDate = Temporal.PlainDate.from(date);
-  if (
-    plainDate.dayOfWeek > 5 ||
-    holidayDates(
-      plainDate.year,
-      profile.federalState,
-      profile.holidayRegion ?? "NONE",
-      ruleResolver,
-    ).has(date)
-  ) {
-    return 0;
-  }
-  return Math.round(profile.weeklyMinutes / 5);
+  const result = calculateMonthlyWorkingTimeTarget(
+    plainDate.toPlainYearMonth().toString(),
+    profile,
+    ruleResolver,
+    targetContext,
+  );
+  requireTargetMinutes(result);
+  return result.days[plainDate.day - 1].targetMinutes!;
 }
 
 function mergeInterval(
@@ -170,8 +148,23 @@ export function calculateDailyWorkCredit(
   const active = entries.filter((entry) => entry.deletedAt === null && entry.date === date);
   const timed = calculateTimedDailyWorkCredit(date, active, profile);
   const targetMinutes = calculateDailyTargetMinutes(date, profile, ruleResolver);
+  // Preserve the established absence-credit rule. Target rounding or a tariff
+  // reduction is not a change to paid absence or to actually worked minutes.
+  const plainDate = Temporal.PlainDate.from(date);
+  const reference = calculateMonthlyWorkingTimeTarget(
+    plainDate.toPlainYearMonth().toString(),
+    profile,
+    ruleResolver,
+  );
+  const absenceReferenceMinutes =
+    plainDate.dayOfWeek <= 5 &&
+    !reference.adjustments.some(
+      (adjustment) => adjustment.date === date && adjustment.kind === "STATUTORY_HOLIDAY",
+    )
+      ? Math.round(profile.weeklyMinutes / 5)
+      : 0;
   const absenceMinutes = active.some((entry) => entry.type === "VACATION" || entry.type === "SICK")
-    ? Math.max(0, targetMinutes - timed.actualMinutes)
+    ? Math.max(0, absenceReferenceMinutes - timed.actualMinutes)
     : 0;
   const sickMinutes = active.some((entry) => entry.type === "SICK") ? absenceMinutes : 0;
   const vacationMinutes =

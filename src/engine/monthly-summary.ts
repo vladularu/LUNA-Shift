@@ -1,12 +1,17 @@
-import { Temporal } from "@js-temporal/polyfill";
-
 import type {
   MonthlySummary,
   MonthlySummaryCategory,
   ShiftEntry,
   UserProfile,
 } from "@/domain/types";
-import { getPublicHolidays } from "@/engine/holidays";
+import type {
+  MonthlyWorkingTimeTarget,
+  WorkingTimeTargetContext,
+} from "@/domain/working-time-target";
+import {
+  calculateMonthlyWorkingTimeTarget,
+  requireTargetMinutes,
+} from "@/engine/working-time-target";
 import { calculateDailyWorkCredit } from "@/engine/daily-summary";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
@@ -23,26 +28,11 @@ export function calculateMonthlyTargetMinutes(
   profile: Pick<UserProfile, "federalState" | "weeklyMinutes"> &
     Partial<Pick<UserProfile, "holidayRegion">>,
   ruleResolver: RuleResolver = bundledRuleResolver,
+  targetContext?: WorkingTimeTargetContext,
 ): number {
-  const yearMonth = Temporal.PlainYearMonth.from(month);
-  const holidayDates = new Set(
-    getPublicHolidays(
-      yearMonth.year,
-      profile.federalState,
-      ruleResolver,
-      profile.holidayRegion ?? "NONE",
-    ).map((holiday) => holiday.date),
+  return requireTargetMinutes(
+    calculateMonthlyWorkingTimeTarget(month, profile, ruleResolver, targetContext),
   );
-  let workingDays = 0;
-
-  for (let day = 1; day <= yearMonth.daysInMonth; day += 1) {
-    const date = yearMonth.toPlainDate({ day });
-    if (date.dayOfWeek <= 5 && !holidayDates.has(date.toString())) {
-      workingDays += 1;
-    }
-  }
-
-  return Math.round((profile.weeklyMinutes / 5) * workingDays);
 }
 
 export function calculateMonthlySummary(
@@ -51,7 +41,8 @@ export function calculateMonthlySummary(
   profile: Pick<UserProfile, "federalState" | "weeklyMinutes" | "timeZone"> &
     Partial<Pick<UserProfile, "holidayRegion">>,
   ruleResolver: RuleResolver = bundledRuleResolver,
-): MonthlySummary {
+  targetContext?: WorkingTimeTargetContext,
+): MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget } {
   const work = category();
   const training = category();
   const vacation = category();
@@ -85,11 +76,18 @@ export function calculateMonthlySummary(
   }
 
   const actualMinutes = work.minutes + training.minutes + vacation.minutes + sick.minutes;
-  const targetMinutes = calculateMonthlyTargetMinutes(month, profile, ruleResolver);
+  const targetCalculation = calculateMonthlyWorkingTimeTarget(
+    month,
+    profile,
+    ruleResolver,
+    targetContext,
+  );
+  const targetMinutes = requireTargetMinutes(targetCalculation);
 
   return Object.freeze({
     month,
     targetMinutes,
+    ...(targetContext === undefined ? {} : { targetCalculation }),
     actualMinutes,
     balanceMinutes: actualMinutes - targetMinutes,
     overlapMinutes,
