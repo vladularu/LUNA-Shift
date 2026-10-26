@@ -720,3 +720,11 @@ Nächster Schritt: den abgenommenen Feature-Stand nach gesonderter Git-Freigabe 
 ## BT-B-Anbindung
 
 Die vorhandene Auswahl Pflege / BT-B wird im aktuellen und datierten Berechnungsprofil wiederverwendet. Ein alter eindeutiger BT-B-Marker wird nur für die Berechnung erkannt; gespeicherte Kontexte bleiben unverändert. Mehrdeutige historische Marker bleiben offen. Für Hessen mit vertraglich 39 Stunden ergibt die Prognose Dezember 2026 148:12 und Dezember 2027 156:00 Stunden im passenden Siebentagemodell. TVöD-K mit 38,5 Stunden bleibt im Dezember 2026 bei 146:18. Eine eigene bestätigte Tagesberechnung benötigt weiter explizite Voraussetzungen. [Quellen, Bedingungen und Prüfplan](working-time-target-b.md).
+
+## TV-L/KR-Anbindung 2026–2027
+
+Der eigene §-43-Adapter nutzt dieselbe Engine und die vorhandene aktuelle bzw. datierte KR-/SECTION_43-Auswahl. Sein Feiertagstatbestand unterscheidet sich von BT-K/BT-B: Bestätigte Feiertagsarbeit erzeugt keinen pauschalen Fünftelabzug, sondern einen Hinweis auf getrennten Ausgleich. Qualifiziert planmäßig frei mit anderweitig zu erfüllender Wochenzeit kann die Fünftelminderung auslösen. Grundlage sind die TdL-Fassung vom 14.02.2026 und BAG 6 AZR 465/15, jeweils mit eigenen Regelkennungen.
+
+Die automatische FORECAST-Rechnung bleibt unabhängig von eingetragenen Diensten. Ihr TV-L-Planwert ist ausdrücklich eine bedingte Planfrei-Referenz; der kurze Vorbehalt ersetzt den bisherigen allgemeinen Erklärungstext innerhalb derselben aufklappbaren Aufschlüsselung und erscheint auch einmal im Monats-/Jahres-PDF. Neue Menüs, Tagesfragen oder Profilfelder entstehen nicht. Die konkrete iPhone-Abnahme dieses Textes ist ein eigener Nachweis vor Merge; ältere Rückmeldungen werden nicht übernommen.
+
+Keine Migration oder automatische Änderung individueller Vertragsstunden. Die 2027 geänderte Vollzeitbasis Universitätskliniken Ost wird nicht ungefragt als individuelle Stundenänderung interpretiert. Bekannte eindeutige historische SECTION_43-Marker werden nur zur Berechnung erkannt; mehrdeutige TV_L-Marker bleiben offen. Ein älterer aktiver Feiertagskatalog ohne Regionalvertrag bleibt in BY/SN/TH ausdrücklich unzureichend. [Quellen, unabhängige Referenzen, Tests und Grenzen](working-time-target-tvl.md).

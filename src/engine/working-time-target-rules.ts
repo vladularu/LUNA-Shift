@@ -82,23 +82,39 @@ export interface TargetRuleSource {
   readonly sourceUrl: string;
 }
 
-export interface TvoedTargetRules {
-  readonly part: "BT-K" | "BT-B";
+export interface TargetTariffRules {
+  readonly part: "BT-K" | "BT-B" | "TV-L § 43";
   readonly label: string;
+  readonly holidayWork:
+    | { readonly kind: "TARGET_REDUCTION" }
+    | { readonly kind: "SEPARATE_COMPENSATION"; readonly legalBasis: string };
   readonly holiday: TargetRuleSource;
   readonly holidayForecast: TargetRuleSource;
   readonly special: TargetRuleSource;
   readonly specialForecast: TargetRuleSource;
 }
 
-type TvoedTargetTariff = Extract<TargetTariff, { readonly version: string }>;
+type ReviewedTargetTariff = Extract<TargetTariff, { readonly version: string }>;
 
-export function isTvoedTargetTariff(tariff: TargetTariff | undefined): tariff is TvoedTargetTariff {
-  return tariff?.kind === "TVOED_K" || tariff?.kind === "TVOED_B";
+export function isReviewedTargetTariff(
+  tariff: TargetTariff | undefined,
+): tariff is ReviewedTargetTariff {
+  return tariff?.kind === "TVOED_K" || tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR";
+}
+
+export const TVL_KR_TARGET_REVIEW = {
+  version: "2026-02-14",
+  from: "2026-01-01",
+  to: "2027-12-31",
+} as const;
+
+/** The existing KR/section-43 selection suggests a scope; it never confirms an entitlement. */
+export function tvlKrTargetTariff(): ReviewedTargetTariff {
+  return { kind: "TVL_KR", version: TVL_KR_TARGET_REVIEW.version, scopeConfirmed: null };
 }
 
 /** Family selection is enough for a forecast, never for an individual confirmed claim. */
-export function targetTariffForSector(sector: string | undefined): TvoedTargetTariff | null {
+export function targetTariffForSector(sector: string | undefined): ReviewedTargetTariff | null {
   if (sector !== "BT_K" && sector !== "BT_B") return null;
   return {
     kind: sector === "BT_K" ? "TVOED_K" : "TVOED_B",
@@ -107,15 +123,16 @@ export function targetTariffForSector(sector: string | undefined): TvoedTargetTa
   };
 }
 
-const K_2026: TvoedTargetRules = {
+const K_2026: TargetTariffRules = {
   part: "BT-K",
   label: "TVöD-K / BT-K",
+  holidayWork: { kind: "TARGET_REDUCTION" },
   holiday: TARGET_RULES.tvoedKHoliday,
   holidayForecast: TARGET_RULES.tvoedKHolidayForecast,
   special: TARGET_RULES.tvoedKSpecial,
   specialForecast: TARGET_RULES.tvoedKSpecialForecast,
 };
-const K_2027: TvoedTargetRules = {
+const K_2027: TargetTariffRules = {
   ...K_2026,
   holiday: TVOED_K_2027_RULES.tvoedKHoliday,
   holidayForecast: TVOED_K_2027_RULES.tvoedKHolidayForecast,
@@ -124,7 +141,7 @@ const K_2027: TvoedTargetRules = {
 };
 
 /** Own BT-B sources and identities; no inheritance of BT-K entitlements. */
-function bRules(year: 2026 | 2027): TvoedTargetRules {
+function bRules(year: 2026 | 2027): TargetTariffRules {
   const prefix = "tvoed-b-" + year;
   const holiday = {
     ruleId: prefix + "-btb-49-2",
@@ -145,6 +162,7 @@ function bRules(year: 2026 | 2027): TvoedTargetRules {
   return {
     part: "BT-B",
     label: "TVöD-B / BT-B",
+    holidayWork: { kind: "TARGET_REDUCTION" },
     holiday,
     special,
     holidayForecast: forecast(holiday),
@@ -154,7 +172,42 @@ function bRules(year: 2026 | 2027): TvoedTargetRules {
 
 const B_2026 = bRules(2026),
   B_2027 = bRules(2027);
-const TVOED_TARGET_REVIEWS = {
+
+/** TV-L distinguishes worked holidays from roster-free fifth reductions (BAG 6 AZR 465/15). */
+function tvlRules(year: 2026 | 2027): TargetTariffRules {
+  const sourceUrl =
+    "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf";
+  const holiday = {
+    ruleId: `tvl-kr-${year}-43-6-3-8`,
+    legalBasis: "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; BAG 6 AZR 465/15",
+    sourceUrl,
+  };
+  const special = {
+    ruleId: `tvl-kr-${year}-43-6-3-1-3`,
+    legalBasis: "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L",
+    sourceUrl,
+  };
+  const forecast = (rule: TargetRuleSource): TargetRuleSource => ({
+    ...rule,
+    ruleId: rule.ruleId + "-forecast",
+    legalBasis: "Planungsreferenz zu " + rule.legalBasis + "; kein bestätigter Tagesanspruch",
+  });
+  return {
+    part: "TV-L § 43",
+    label: "TV-L/KR / § 43",
+    holidayWork: {
+      kind: "SEPARATE_COMPENSATION",
+      legalBasis: "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L; BAG 6 AZR 465/15",
+    },
+    holiday,
+    holidayForecast: forecast(holiday),
+    special,
+    specialForecast: forecast(special),
+  };
+}
+const TVL_2026 = tvlRules(2026),
+  TVL_2027 = tvlRules(2027);
+const TARGET_TARIFF_REVIEWS = {
   TVOED_K: [
     { ...TVOED_K_TARGET_REVIEW, versions: ["2026-01-01"], rules: K_2026 },
     { from: "2027-01-01", to: "2027-12-31", versions: ["2026-01-01", "2027-01-01"], rules: K_2027 },
@@ -163,15 +216,29 @@ const TVOED_TARGET_REVIEWS = {
     { from: "2026-01-01", to: "2026-12-31", versions: ["2026-01-01"], rules: B_2026 },
     { from: "2027-01-01", to: "2027-12-31", versions: ["2026-01-01", "2027-01-01"], rules: B_2027 },
   ],
+  TVL_KR: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVL_KR_TARGET_REVIEW.version],
+      rules: TVL_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: "2027-12-31",
+      versions: [TVL_KR_TARGET_REVIEW.version],
+      rules: TVL_2027,
+    },
+  ],
 } as const;
 
 /** Bounded legal review; not a tariff expiry or salary-table validity. */
-export function reviewedTvoedTargetRules(
-  tariff: TvoedTargetTariff,
+export function reviewedTargetTariffRules(
+  tariff: ReviewedTargetTariff,
   date: string,
-): TvoedTargetRules | null {
+): TargetTariffRules | null {
   return (
-    TVOED_TARGET_REVIEWS[tariff.kind].find(
+    TARGET_TARIFF_REVIEWS[tariff.kind].find(
       (review) =>
         date >= review.from &&
         date <= review.to &&
@@ -181,6 +248,6 @@ export function reviewedTvoedTargetRules(
 }
 
 /** Provenance for a pending zero-minute line outside review coverage; never grants a deduction. */
-export function knownTvoedTargetRules(kind: TvoedTargetTariff["kind"]): TvoedTargetRules {
-  return kind === "TVOED_K" ? K_2026 : B_2026;
+export function knownTargetTariffRules(kind: ReviewedTargetTariff["kind"]): TargetTariffRules {
+  return { TVOED_K: K_2026, TVOED_B: B_2026, TVL_KR: TVL_2026 }[kind];
 }

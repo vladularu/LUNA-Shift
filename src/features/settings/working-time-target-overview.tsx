@@ -166,8 +166,9 @@ export function WorkingTimeTargetOverview({
             ))}
             {projection ? (
               <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
-                Monatsprognose mit vertraglichen Referenzstunden. Eingetragene Dienste ändern diese
-                Prognose nicht.
+                {result.notices.find((notice) => notice.code === "CONDITIONAL_ROSTER_FREE_FORECAST")
+                  ?.message ??
+                  "Monatsprognose mit vertraglichen Referenzstunden. Eingetragene Dienste ändern diese Prognose nicht."}
               </Text>
             ) : null}
             {result.roundingMinutes ? (

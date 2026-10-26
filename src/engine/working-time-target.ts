@@ -14,11 +14,11 @@ import type {
 import { getPublicHolidays } from "@/engine/holidays";
 import {
   TARGET_RULES,
-  isTvoedTargetTariff,
-  reviewedTvoedTargetRules,
-  knownTvoedTargetRules,
+  isReviewedTargetTariff,
+  reviewedTargetTariffRules,
+  knownTargetTariffRules,
   type TargetRuleSource,
-  type TvoedTargetRules,
+  type TargetTariffRules,
 } from "@/engine/working-time-target-rules";
 import { validateTargetInputs, WorkingTimeTargetError } from "@/engine/working-time-target-input";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
@@ -53,7 +53,7 @@ function specialReduction(
   label: string,
   fact: TargetDayFact | undefined,
   notice: (value: TargetNotice) => void,
-  rules: TvoedTargetRules,
+  rules: TargetTariffRules,
   automaticReference?: number,
   eligibilityVerified = true,
 ): RawAdjustment | null {
@@ -101,10 +101,27 @@ function rotatingHoliday(
   label: string,
   weeklyMinutes: number,
   fact: TargetDayFact | undefined,
-  rules: TvoedTargetRules,
+  rules: TargetTariffRules,
+  notice: (value: TargetNotice) => void,
   profileEstimate = false,
   eligibilityVerified = true,
 ): RawAdjustment | null {
+  if (
+    rules.holidayWork.kind === "SEPARATE_COMPENSATION" &&
+    fact?.rosterStatus === "FINAL" &&
+    fact.disposition === "WORK_REQUIRED"
+  ) {
+    notice({
+      date,
+      code: "HOLIDAY_TIME_OFF_SEPARATE",
+      affectsTarget: false,
+      message:
+        "Feiertagsarbeit: Freizeitausgleich nach " +
+        rules.holidayWork.legalBasis +
+        " getrennt prüfen; kein pauschaler Fünftelabzug von der Sollzeit.",
+    });
+    return null;
+  }
   if (
     fact?.rosterStatus === "FINAL" &&
     fact.disposition === "ROSTER_FREE" &&
@@ -127,10 +144,12 @@ function rotatingHoliday(
         ? "Bestätigter 7-Tage-Schichtplan und Arbeitspflicht am Werktagsfeiertag"
         : "Bestätigter 7-Tage-Schichtplan; dienstplanmäßig frei, nicht wegen des Feiertags; regelmäßige Arbeitszeit andernorts zu erbringen"
       : profileEstimate
-        ? "Monatsprognose im 7-Tage-Modell: ein Fünftel der Wochenstunden je Werktagsfeiertag, unabhängig von eingetragenen Diensten."
+        ? rules.holidayWork.kind === "SEPARATE_COMPENSATION"
+          ? "Planungsreferenz für qualifiziert dienstplanmäßig freie Werktagsfeiertage: ein Fünftel der Wochenstunden. Kein bestätigter Tagesanspruch; Feiertagsarbeit und Freizeitausgleich werden getrennt behandelt."
+          : "Monatsprognose im 7-Tage-Modell: ein Fünftel der Wochenstunden je Werktagsfeiertag, unabhängig von eingetragenen Diensten."
         : "Anspruch nach " +
-          rules.part +
-          " § 49 Abs. 2 nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
+          rules.holiday.legalBasis +
+          " nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
     eligible ? "CONFIRMED" : profileEstimate ? "PROFILE_ESTIMATE" : "PENDING",
   );
 }
@@ -318,16 +337,34 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
-    const supportedTariff = isTvoedTargetTariff(tariff);
-    const reviewedRules = supportedTariff ? reviewedTvoedTargetRules(tariff, date) : null;
-    const verifiedTvoed =
+    const supportedTariff = isReviewedTargetTariff(tariff);
+    const reviewedRules = supportedTariff ? reviewedTargetTariffRules(tariff, date) : null;
+    const verifiedTariff =
       reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
-    const forecastTvoed =
+    const forecastTariff =
       forecast && reviewedRules !== null && supportedTariff && tariff.scopeConfirmed !== false;
-    // Recognizing an old BT-B family marker must not change its unreviewed historical
-    // forecast. Keep the previous explicitly provisional reference outside coverage.
-    const legacyBForecast =
-      forecast && tariff?.kind === "TVOED_B" && tariff.scopeConfirmed === null && !reviewedRules;
+    if (
+      forecastTariff &&
+      holiday &&
+      plainDate.dayOfWeek <= 6 &&
+      period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
+      period.model.sevenDayShiftPlanConfirmed !== false &&
+      reviewedRules.holidayWork.kind === "SEPARATE_COMPENSATION"
+    )
+      notice({
+        date: null,
+        code: "CONDITIONAL_ROSTER_FREE_FORECAST",
+        affectsTarget: true,
+        message:
+          reviewedRules.label +
+          ": Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich werden getrennt geprüft.",
+      });
+    // New family recognition must retain the old provisional reference outside review coverage.
+    const legacyInferredForecast =
+      forecast &&
+      (tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR") &&
+      tariff.scopeConfirmed === null &&
+      !reviewedRules;
     if (period) tariffNotices(period, reviewedRules !== null, notice);
     if (holiday) {
       if (fixed && base > 0) {
@@ -372,17 +409,18 @@ export function calculateMonthlyWorkingTimeTarget(
       } else if (
         period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
         supportedTariff &&
-        !legacyBForecast &&
+        !legacyInferredForecast &&
         plainDate.dayOfWeek <= 6
       ) {
-        const verified = verifiedTvoed && period.model.sevenDayShiftPlanConfirmed === true;
+        const verified = verifiedTariff && period.model.sevenDayShiftPlanConfirmed === true;
         const adjustment = rotatingHoliday(
           date,
           holiday,
           settings.weeklyMinutes,
           fact,
-          reviewedRules ?? knownTvoedTargetRules(tariff.kind),
-          forecastTvoed && period.model.sevenDayShiftPlanConfirmed !== false,
+          reviewedRules ?? knownTargetTariffRules(tariff.kind),
+          notice,
+          forecastTariff && period.model.sevenDayShiftPlanConfirmed !== false,
           verified,
         );
         if (adjustment) adjustments.push(adjustment);
@@ -401,13 +439,13 @@ export function calculateMonthlyWorkingTimeTarget(
       }
     } else if (date.endsWith("-12-24") || date.endsWith("-12-31")) {
       if (
-        (verifiedTvoed || forecastTvoed) &&
+        (verifiedTariff || forecastTariff) &&
         plainDate.dayOfWeek <= 6 &&
         (fixed
           ? base > 0
           : period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
             (period.model.sevenDayShiftPlanConfirmed === true ||
-              (forecastTvoed && period.model.sevenDayShiftPlanConfirmed !== false)))
+              (forecastTariff && period.model.sevenDayShiftPlanConfirmed !== false)))
       ) {
         if (fixed && fact?.lostMinutes != null && fact.lostMinutes * 5 > base)
           throw new WorkingTimeTargetError();
@@ -419,8 +457,8 @@ export function calculateMonthlyWorkingTimeTarget(
           fact,
           notice,
           reviewedRules!,
-          forecastTvoed ? (fixed ? base : settings.weeklyMinutes) : undefined,
-          verifiedTvoed &&
+          forecastTariff ? (fixed ? base : settings.weeklyMinutes) : undefined,
+          verifiedTariff &&
             (fixed !== null ||
               (period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
                 period.model.sevenDayShiftPlanConfirmed === true)),
@@ -478,8 +516,8 @@ function tariffNotices(
         "Eigene Vergütung im wechselnden Dienstplan: gesetzliche Ausfallzeiten und betriebliche Referenzberechnung prüfen; keine zusätzlichen Tarifansprüche angesetzt.",
       affectsTarget: true,
     });
-  if (isTvoedTargetTariff(tariff)) {
-    const rules = knownTvoedTargetRules(tariff.kind);
+  if (isReviewedTargetTariff(tariff)) {
+    const rules = knownTargetTariffRules(tariff.kind);
     if (tariff.scopeConfirmed !== true)
       notice({
         date: at,
