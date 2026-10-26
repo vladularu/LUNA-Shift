@@ -189,7 +189,7 @@ describe("contractual target forecast, independent of recorded duties", () => {
       false,
     );
     expect(
-      calculateMonthlyWorkingTimeTarget("2027-12", projected()).adjustments.some(
+      calculateMonthlyWorkingTimeTarget("2028-12", projected()).adjustments.some(
         (a) => a.status === "PROFILE_ESTIMATE",
       ),
     ).toBe(false);
