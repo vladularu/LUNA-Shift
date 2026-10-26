@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { UserProfile, CalendarEntry } from "@/domain/types";
 import { remunerationShiftDays } from "@/engine/remuneration-shift-days";
-import { targetTariffForSector } from "@/engine/working-time-target-rules";
+import { targetTariffForSector, tvlKrTargetTariff } from "@/engine/working-time-target-rules";
 import type {
   TargetTariff,
   TargetDayFact,
@@ -105,7 +105,11 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
   if (profile.tvalPflegeTariff) return unverified("TVA_L");
   if (profile.tvhKrTariff) return unverified("TV_H");
   if (profile.tvUkNursingTariff) return unverified("TV_UK");
-  if (profile.tvlKrTariff) return unverified("TV_L");
+  if (profile.tvlKrTariff) {
+    if (profile.tariff || profile.vkaETariff || profile.nursingTrainingTariff)
+      return unverified("SALARY_CONFLICT");
+    return tvlKrTargetTariff();
+  }
   if (profile.vkaETariff) return unverified("VKA_E");
   if (profile.nursingTrainingTariff) return unverified("TVAOED");
   const tariff = targetTariffForSector(profile.tariff?.sector);

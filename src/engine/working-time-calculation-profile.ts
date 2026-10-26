@@ -14,11 +14,21 @@ import type {
   WorkingTimeTargetInput,
   WorkingTimeTargetProfile,
 } from "@/domain/working-time-target";
-import { isTvoedTargetTariff, targetTariffForSector } from "./working-time-target-rules";
+import {
+  isReviewedTargetTariff,
+  targetTariffForSector,
+  tvlKrTargetTariff,
+} from "./working-time-target-rules";
 
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
 
 function selectedTariff(selection: RemunerationSelection): TargetTariff {
+  if (
+    selection.kind === "tariff" &&
+    selection.packageId === "tvl-kr-tdl" &&
+    selection.variant === "SECTION_43"
+  )
+    return tvlKrTargetTariff();
   if (
     selection.kind === "tariff" &&
     ["tvoed-vka-bt-k", LEGACY_RULE_PACKAGE_IDS.tariff].includes(selection.packageId)
@@ -37,6 +47,17 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  if (
+    profile.tvlKrTariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.tvUkNursingTariff &&
+    !profile.tvhKrTariff &&
+    !profile.vkaETariff &&
+    !profile.nursingTrainingTariff &&
+    !profile.tvalPflegeTariff
+  )
+    return tvlKrTargetTariff();
   const tariff = targetTariffForSector(profile.tariff?.sector);
   if (
     tariff &&
@@ -54,6 +75,8 @@ function currentTariff(profile: UserProfile): TargetTariff {
 
 /** Old explicit family markers stay stored unchanged; only the projection gains reviewed rules. */
 function historicalTariff(tariff: TargetTariff): TargetTariff {
+  if (tariff.kind === "UNVERIFIED" && tariff.id === "tvl-kr-tdl/SECTION_43")
+    return tvlKrTargetTariff();
   if (
     tariff.kind === "UNVERIFIED" &&
     ["BT_B", "tvoed-vka-bt-k/BT_B", LEGACY_RULE_PACKAGE_IDS.tariff + "/BT_B"].includes(tariff.id)
@@ -183,10 +206,10 @@ export function createWorkingTimeCalculationProfile(
             (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
           const family = currentTariff(employment);
-          tariff = isTvoedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
+          tariff = isReviewedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
         } else if (selected?.kind === "tariff") {
           const family = selectedTariff(selected);
-          tariff = isTvoedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
+          tariff = isReviewedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
         } else if (selected && !original) tariff = selectedTariff(selected);
         const standardFixed =
           period.model.kind === "FIXED_WEEK" &&

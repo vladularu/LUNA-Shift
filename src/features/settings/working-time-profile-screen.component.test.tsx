@@ -155,6 +155,27 @@ describe("automatic working time overview", () => {
     expect(screen.queryByLabelText("Ausgefallene Dienstplanstunden")).toBeNull();
     expect(save).not.toHaveBeenCalled();
   });
+  it("explains the conditional TV-L reference inside the existing collapsed breakdown", async () => {
+    const tvl = {
+      ...mockWork,
+      tariff: null,
+      tvlKrTariff: {
+        payGroup: "KR8" as const,
+        payLevel: 4 as const,
+        universityRegion: "WEST" as const,
+      },
+      sundayHolidayWorkEligible: true,
+    };
+    mockCalculationProfile = createWorkingTimeCalculationProfile(tvl, null, []);
+    const screen = await renderEditor();
+    expect(screen.getByText("146:18 h")).toBeTruthy();
+    expect(screen.queryByText(/Planwert für dienstplanmäßig freie/)).toBeNull();
+    await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+    expect(screen.getByText(/TV-L\/KR.*Planwert für dienstplanmäßig freie Feiertage/)).toBeTruthy();
+    expect(screen.queryByText("Dienstplanmäßig frei")).toBeNull();
+    expect(screen.queryByText("Tag ergänzen")).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+  });
   it("has only the breakdown and no employment editor or model question", async () => {
     const screen = await renderEditor();
     for (const label of [

@@ -31,6 +31,15 @@ function header(view: View, subtitle: string): string {
 }
 
 function kpis(view: View): string {
+  const conditionalReferences = [
+    ...new Set(
+      view.workingTimeTargets.flatMap((item) =>
+        item.notices
+          .filter((notice) => notice.code === "CONDITIONAL_ROSTER_FREE_FORECAST")
+          .map((notice) => notice.message),
+      ),
+    ),
+  ];
   return `<div class="metrics">${[
     ["Sollzeit", reportMinutes(view.target)],
     ["Erfasste Kontozeit", reportMinutes(view.actual)],
@@ -42,7 +51,7 @@ function kpis(view: View): string {
     )
     .join(
       "",
-    )}</div>${view.workingTimeTargets.some((item) => item.status !== "FINAL") ? '<p class="muted">Sollzeit vorläufig oder unvollständig. Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt.</p>' : ""}`;
+    )}</div>${view.workingTimeTargets.some((item) => item.status !== "FINAL") ? '<p class="muted">Sollzeit vorläufig oder unvollständig. Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt.</p>' : ""}${conditionalReferences.map((message) => `<p class="muted">${html(message)}</p>`).join("")}`;
 }
 
 function salary(view: View, details: boolean): string {
