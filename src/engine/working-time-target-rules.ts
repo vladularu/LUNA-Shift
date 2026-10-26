@@ -22,6 +22,24 @@ export const TARGET_RULES = {
     sourceUrl:
       "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf",
   },
+  fixedHolidayForecast: {
+    ruleId: "fixed-schedule-holiday-forecast-v1",
+    legalBasis: "Planungsreferenz zu § 2 Abs. 1 EFZG; kein bestätigter Tagesanspruch",
+    sourceUrl: "https://www.gesetze-im-internet.de/entgfg/__2.html",
+  },
+  tvoedKHolidayForecast: {
+    ruleId: "tvoed-k-2026-btk-49-2-forecast",
+    legalBasis: "Planungsreferenz zu § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+    sourceUrl:
+      "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf",
+  },
+  tvoedKSpecialForecast: {
+    ruleId: "tvoed-k-2026-at-6-3-forecast",
+    legalBasis:
+      "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-K; kein bestätigter Tagesanspruch",
+    sourceUrl:
+      "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf",
+  },
 } as const;
 
 /** Review coverage, not a claim that the tariff expires on 2026-12-31. */

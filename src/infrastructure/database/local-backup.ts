@@ -1,3 +1,7 @@
+import {
+  WORKING_TIME_TARGET_COLUMNS,
+  mapWorkingTimeTargetRow,
+} from "./working-time-target-repository";
 import { NET_PAY_PROFILE_COLUMNS, mapNetPayProfileRow } from "./net-pay-profile-repository";
 import {
   DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS,
@@ -34,13 +38,14 @@ import { withImmediateTransaction } from "@/infrastructure/database/transaction"
 import { REMUNERATION_PROFILE_COLUMNS } from "./remuneration-profile-repository";
 
 export const LOCAL_BACKUP_FORMAT = "lunashift-local-backup";
-export const LOCAL_BACKUP_VERSION = 20;
+export const LOCAL_BACKUP_VERSION = 21;
 
 type BackupScalar = string | number | null;
 type BackupRow = Readonly<Record<string, BackupScalar>>;
 
 export interface LocalBackupSnapshot {
   readonly databaseSchemaVersion: number;
+  readonly workingTimeTargetSettings: readonly BackupRow[];
   readonly netPayProfiles: readonly BackupRow[];
   readonly profile: BackupRow | null;
   readonly remunerationProfiles: readonly BackupRow[];
@@ -90,11 +95,13 @@ interface UnsignedLocalBackupDocument {
     | 17
     | 18
     | 19
+    | 20
     | typeof LOCAL_BACKUP_VERSION;
   readonly createdAt: string;
   readonly appVersion: string | null;
   readonly databaseSchemaVersion: number;
   readonly data: {
+    readonly workingTimeTargetSettings: readonly BackupRow[];
     readonly netPayProfiles: readonly BackupRow[];
     readonly profile: BackupRow | null;
     readonly remunerationProfiles: readonly BackupRow[];
@@ -177,6 +184,12 @@ export async function readLocalBackupSnapshotInTransaction(
          FROM user_profile
         WHERE id='singleton'`,
   );
+  const workingTimeTargetSettings = await transaction.getAllAsync<BackupRow>(
+    `SELECT ${WORKING_TIME_TARGET_COLUMNS.join(",")} FROM working_time_target_settings`,
+  );
+  workingTimeTargetSettings.forEach(mapWorkingTimeTargetRow);
+  if (profile === null && workingTimeTargetSettings.length > 0)
+    throw new Error("Das Arbeitsprofil zu den Sollzeitangaben fehlt.");
   const netPayProfiles = await transaction.getAllAsync<BackupRow>(
     `SELECT ${NET_PAY_PROFILE_COLUMNS.join(",")} FROM net_pay_profiles ORDER BY month`,
   );
@@ -290,6 +303,7 @@ export async function readLocalBackupSnapshotInTransaction(
 
   return Object.freeze({
     databaseSchemaVersion: schema.version,
+    workingTimeTargetSettings: Object.freeze(workingTimeTargetSettings.map(Object.freeze)),
     netPayProfiles: Object.freeze(netPayProfiles.map(Object.freeze)),
     profile: profile === null ? null : Object.freeze(profile),
     remunerationProfiles: Object.freeze(remunerationProfiles.map(Object.freeze)),
@@ -328,6 +342,12 @@ export async function createLocalBackupDocument(
     readonly sha256: (value: string) => Promise<string>;
   },
 ): Promise<CreatedLocalBackup> {
+  snapshot.workingTimeTargetSettings.forEach(mapWorkingTimeTargetRow);
+  if (
+    snapshot.workingTimeTargetSettings.length > 1 ||
+    (snapshot.profile === null && snapshot.workingTimeTargetSettings.length > 0)
+  )
+    throw new Error("Ungültige Sollzeitangaben im Backup.");
   snapshot.netPayProfiles.forEach(mapNetPayProfileRow);
   const createdAt = input.createdAt.toISOString();
   const unsigned: UnsignedLocalBackupDocument = Object.freeze({
@@ -337,6 +357,7 @@ export async function createLocalBackupDocument(
     appVersion: input.appVersion,
     databaseSchemaVersion: snapshot.databaseSchemaVersion,
     data: Object.freeze({
+      workingTimeTargetSettings: snapshot.workingTimeTargetSettings,
       netPayProfiles: snapshot.netPayProfiles,
       profile: snapshot.profile,
       remunerationProfiles: snapshot.remunerationProfiles,

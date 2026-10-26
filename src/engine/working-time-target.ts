@@ -47,6 +47,8 @@ function specialReduction(
   label: string,
   fact: TargetDayFact | undefined,
   notice: (value: TargetNotice) => void,
+  automaticReference?: number,
+  eligibilityVerified = true,
 ): RawAdjustment | null {
   if (fact?.rosterStatus === "FINAL" && fact.disposition === "WORK_REQUIRED") {
     notice({
@@ -65,6 +67,7 @@ function specialReduction(
   )
     return null;
   const eligible =
+    eligibilityVerified &&
     fact?.rosterStatus === "FINAL" &&
     fact.lostMinutes != null &&
     (fact.disposition === "RELEASED" ||
@@ -73,14 +76,18 @@ function specialReduction(
     date,
     "TARIFF_SPECIAL_DAY",
     label,
-    eligible ? fact.lostMinutes! * 5 : 0,
-    TARGET_RULES.tvoedKSpecial,
+    eligible ? fact.lostMinutes! * 5 : (automaticReference ?? 0),
+    automaticReference !== undefined
+      ? TARGET_RULES.tvoedKSpecialForecast
+      : TARGET_RULES.tvoedKSpecial,
     eligible
       ? fact.disposition === "RELEASED"
         ? "Bestätigte Freistellung und ausgefallene Arbeitszeit"
         : "Bestätigt dienstplanmäßig frei; ohne Verminderung nachzuarbeiten; ausgefallene Stunden bestätigt"
-      : "Abschließender Dienstplan und ausgefallene Stunden beziehungsweise Nacharbeitspflicht fehlen",
-    eligible ? "CONFIRMED" : "PENDING",
+      : automaticReference !== undefined
+        ? "Automatischer Planwert: Freistellung oder planmäßig frei mit Nacharbeit angenommen; gleichmäßige Referenzstunden. Individuelle Ausfallstunden können abweichen."
+        : "Abschließender Dienstplan und ausgefallene Stunden beziehungsweise Nacharbeitspflicht fehlen",
+    eligible ? "CONFIRMED" : automaticReference !== undefined ? "PROFILE_ESTIMATE" : "PENDING",
   );
 }
 
@@ -89,6 +96,8 @@ function rotatingHoliday(
   label: string,
   weeklyMinutes: number,
   fact: TargetDayFact | undefined,
+  profileEstimate = false,
+  eligibilityVerified = true,
 ): RawAdjustment | null {
   if (
     fact?.rosterStatus === "FINAL" &&
@@ -97,6 +106,7 @@ function rotatingHoliday(
   )
     return null;
   const eligible =
+    eligibilityVerified &&
     fact?.rosterStatus === "FINAL" &&
     (fact.disposition === "WORK_REQUIRED" ||
       (fact.disposition === "ROSTER_FREE" && fact.mustWorkElsewhere === true));
@@ -104,14 +114,16 @@ function rotatingHoliday(
     date,
     "STATUTORY_HOLIDAY",
     label,
-    eligible ? weeklyMinutes : 0,
-    TARGET_RULES.tvoedKHoliday,
+    eligible || profileEstimate ? weeklyMinutes : 0,
+    profileEstimate ? TARGET_RULES.tvoedKHolidayForecast : TARGET_RULES.tvoedKHoliday,
     eligible
       ? fact.disposition === "WORK_REQUIRED"
         ? "Bestätigter 7-Tage-Schichtplan und Arbeitspflicht am Werktagsfeiertag"
         : "Bestätigter 7-Tage-Schichtplan; dienstplanmäßig frei, nicht wegen des Feiertags; regelmäßige Arbeitszeit andernorts zu erbringen"
-      : "Anspruch nach BT-K § 49 Abs. 2 nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
-    eligible ? "CONFIRMED" : "PENDING",
+      : profileEstimate
+        ? "Monatsprognose im 7-Tage-Modell: ein Fünftel der Wochenstunden je Werktagsfeiertag, unabhängig von eingetragenen Diensten."
+        : "Anspruch nach BT-K § 49 Abs. 2 nicht abschließend bestätigt; Freistellung und Zeitgutschrift gegebenenfalls separat prüfen",
+    eligible ? "CONFIRMED" : profileEstimate ? "PROFILE_ESTIMATE" : "PENDING",
   );
 }
 
@@ -190,13 +202,23 @@ export function calculateMonthlyWorkingTimeTarget(
   resolver: RuleResolver = bundledRuleResolver,
   context?: WorkingTimeTargetContext,
 ): MonthlyWorkingTimeTarget {
+  const input = profile.workingTimeTarget;
+  if (input && input.status !== "ready")
+    throw new WorkingTimeTargetError(
+      input.status === "loading"
+        ? "Die Arbeitszeitangaben werden geladen."
+        : "Die Arbeitszeitangaben konnten nicht geladen werden. Bitte erneut versuchen.",
+    );
+  context ??= input?.context;
   validateTargetInputs(month, profile, context);
   const cacheKey = `${month}/${profile.federalState}/${profile.holidayRegion ?? "NONE"}/${profile.weeklyMinutes}`;
-  const cached = context === undefined ? LEGACY_CACHE.get(resolver)?.get(cacheKey) : undefined;
+  const cacheable = context === undefined && input === undefined;
+  const cached = cacheable ? LEGACY_CACHE.get(resolver)?.get(cacheKey) : undefined;
   if (cached) return cached;
   const first = Temporal.PlainYearMonth.from(month);
-  const facts = new Map(context?.days.map((day) => [day.date, day]));
-  const notices: TargetNotice[] = [];
+  const forecast = input?.mode === "FORECAST";
+  const facts = new Map(forecast ? [] : context?.days.map((day) => [day.date, day]));
+  const notices: TargetNotice[] = [...(input?.notices ?? [])];
   const noticeKeys = new Set<string>();
   const notice = (item: TargetNotice) => {
     const key = `${item.code}/${item.date}`;
@@ -205,6 +227,14 @@ export function calculateMonthlyWorkingTimeTarget(
       notices.push(item);
     }
   };
+  if (forecast)
+    notice({
+      date: null,
+      code: "CONTRACTUAL_TARGET_FORECAST",
+      message:
+        "Sollzeit-Prognose aus den Beschäftigungsangaben. Einzelne Dienste, Zeitgutschriften und Freizeitausgleich werden getrennt berechnet.",
+      affectsTarget: true,
+    });
   if (!context)
     notice({
       date: null,
@@ -280,12 +310,14 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
-    const tvoedK =
+    const reviewedTvoedK =
       tariff?.kind === "TVOED_K" &&
-      tariff.scopeConfirmed === true &&
       tariff.version === TVOED_K_TARGET_REVIEW.version &&
       date >= TVOED_K_TARGET_REVIEW.from &&
       date <= TVOED_K_TARGET_REVIEW.to;
+    const tvoedK = reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed === true;
+    const forecastTvoedK =
+      forecast && reviewedTvoedK && tariff?.kind === "TVOED_K" && tariff.scopeConfirmed !== false;
     if (period) tariffNotices(period, date, notice);
     if (holiday) {
       if (fixed && base > 0) {
@@ -337,7 +369,9 @@ export function calculateMonthlyWorkingTimeTarget(
           date,
           holiday,
           settings.weeklyMinutes,
-          verified ? fact : undefined,
+          fact,
+          forecastTvoedK && period.model.sevenDayShiftPlanConfirmed !== false,
+          verified,
         );
         if (adjustment) adjustments.push(adjustment);
       } else if (!fixed && base > 0) {
@@ -355,12 +389,13 @@ export function calculateMonthlyWorkingTimeTarget(
       }
     } else if (date.endsWith("-12-24") || date.endsWith("-12-31")) {
       if (
-        tvoedK &&
+        (tvoedK || forecastTvoedK) &&
         plainDate.dayOfWeek <= 6 &&
         (fixed
           ? base > 0
           : period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
-            period.model.sevenDayShiftPlanConfirmed === true)
+            (period.model.sevenDayShiftPlanConfirmed === true ||
+              (forecastTvoedK && period.model.sevenDayShiftPlanConfirmed !== false)))
       ) {
         if (fixed && fact?.lostMinutes != null && fact.lostMinutes * 5 > base)
           throw new WorkingTimeTargetError();
@@ -371,6 +406,11 @@ export function calculateMonthlyWorkingTimeTarget(
             : "Silvester (tariflicher Sondertag)",
           fact,
           notice,
+          forecastTvoedK ? (fixed ? base : settings.weeklyMinutes) : undefined,
+          tvoedK &&
+            (fixed !== null ||
+              (period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
+                period.model.sevenDayShiftPlanConfirmed === true)),
         );
         if (adjustment) adjustments.push(adjustment);
       }
@@ -388,7 +428,7 @@ export function calculateMonthlyWorkingTimeTarget(
     });
     return roundLedger(month, raw, notices);
   }
-  if (!context) {
+  if (cacheable) {
     const cache = LEGACY_CACHE.get(resolver) ?? new Map<string, MonthlyWorkingTimeTarget>();
     cache.set(cacheKey, result);
     LEGACY_CACHE.set(resolver, cache);

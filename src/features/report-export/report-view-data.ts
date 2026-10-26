@@ -100,6 +100,7 @@ export function reportView(report: ReportDocument) {
     });
   return {
     annual,
+    workingTimeTargets: report.workingTimeTargets ?? [],
     monthly,
     categories,
     text,

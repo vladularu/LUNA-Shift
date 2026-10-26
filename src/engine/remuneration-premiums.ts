@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import type { DatedRemunerationProfile } from "@/domain/remuneration-profile";
 import type {
   TimeRemunerationPosition,
@@ -102,6 +103,7 @@ export function calculateDatedShiftTimePremiums(
       netMinutes: minutes,
       estimatedPause,
     } = day;
+    workProfile = employmentProfileAt(workProfile, date);
     if ((includedMonth === undefined || date.startsWith(includedMonth + "-")) && minutes > 0) {
       netMinutes += minutes;
       const context = resolveRemunerationContext(date, history, resolver);

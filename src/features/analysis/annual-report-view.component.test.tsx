@@ -107,7 +107,8 @@ describe("annual report view", () => {
     expect(screen.getByLabelText("Soll: 1920:00 h")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: −120:00 h")).toBeTruthy();
     expect(screen.getByText("Brutto-Teilsumme · 7 von 12 Monaten")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /^Stunden,/ })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: /^Stunden,/ }));
+    expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "WORK"));
     await fireEvent.press(screen.getByRole("button", { name: "Prüfung, 3 Meldungen" }));
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "CHECK"));
     await fireEvent.press(screen.getByRole("button", { name: /^Gehalt,/ }));

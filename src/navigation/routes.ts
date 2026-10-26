@@ -244,7 +244,7 @@ export function localBackupRoute() {
 }
 
 export function settingsEditorRoute(
-  section: "WORK" | "TARIFF" | "PERSONAL" | "EMPLOYER",
+  section: "WORK" | "TARIFF" | "PERSONAL" | "EMPLOYER" | "EMPLOYMENT" | "MODEL",
   origin?: "settings",
 ) {
   return Object.freeze({

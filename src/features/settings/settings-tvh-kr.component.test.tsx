@@ -1,16 +1,18 @@
-import type { UserProfile } from "@/domain/types";
+import type { UserProfile, SaveProfileInput } from "@/domain/types";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
   SettingsEditorTestFlow,
+  saveSettingsChoice,
+  closeSettingsSave,
   chooseTariffGroup,
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<() => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -80,30 +82,21 @@ const h = {
 describe("TV-H in the existing simple salary form", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateProfile.mockResolvedValue(undefined);
+    mockUpdateProfile.mockImplementation(async (input) => ({ ...mockProfile, ...input }));
     mockSection = "TARIFF";
     mockProfile = { ...baseProfile, federalState: "HE", tvhKrTariff: h };
   });
-  it("reopens the exact entry step without unrelated fields or dates", async () => {
+  it("reopens the exact entry step with inline validity and no unrelated fields", async () => {
     const screen = await render(editor());
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(screen.getByRole("button", { name: "Tarifvertrag: TV-H Pflege · Hessen" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Entgeltgruppe: KR5" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Stufe: Stufe 1b" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Vollzeit laut Tarif: 38,5 Std." })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Einrichtung:|^Tarifregion:/ })).toBeNull();
-    expect(screen.queryByText(/Geburtsdatum|Gültig ab|Vergütungsstände/)).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tvhKrTariff: h,
-        tariff: null,
-        tvUkNursingTariff: null,
-        tvlKrTariff: null,
-        vkaETariff: null,
-        nursingTrainingTariff: null,
-        manualMonthlyGrossCents: null,
-      }),
-    );
+    expect(screen.queryByText(/Geburtsdatum|Vergütungsstände/)).toBeNull();
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
   it("requires a valid higher-group stage after leaving 1b", async () => {
     const screen = await render(editor());
@@ -111,14 +104,14 @@ describe("TV-H in the existing simple salary form", () => {
     expect(groups).toContain("KR16");
     expect(groups).not.toContain("KR17");
     expect(groups).not.toContain("PUK8");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText(/Bitte eine gültige Stufe/)).toBeTruthy();
     const levels = await select(screen, "Stufe", "Stufe 4");
     expect(levels).not.toContain("Stufe 1a");
     expect(levels).not.toContain("Stufe 1b");
     expect(levels).not.toContain("Stufe 1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvhKrTariff: { ...h, payGroup: "KR8", payLevel: 4 } }),
     );
@@ -131,7 +124,7 @@ describe("TV-H in the existing simple salary form", () => {
     expect(levels).not.toContain("Stufe 1");
     const hours = await select(screen, "Tarifliche Vollzeit pro Woche", "40");
     expect(hours).toEqual(["38,5", "40"]);
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tvhKrTariff: { payGroup: "KR6", payLevel: "1a", fullTimeWeeklyMinutes: 2400 },
@@ -148,7 +141,7 @@ describe("TV-H in the existing simple salary form", () => {
       const levels = await select(screen, "Stufe", "Stufe 4");
       expect(levels).not.toContain("Stufe 1a");
       expect(levels).not.toContain("Stufe 1b");
-      await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+      await saveSettingsChoice(screen);
       expect(mockUpdateProfile).toHaveBeenCalledWith(
         expect.objectContaining({ tvhKrTariff: null }),
       );
@@ -164,7 +157,7 @@ describe("TV-H in the existing simple salary form", () => {
     mockSection = "WORK";
     const screen = await render(editor());
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvhKrTariff: h, weeklyMinutes: 1800 }),
     );
@@ -173,7 +166,7 @@ describe("TV-H in the existing simple salary form", () => {
     const screen = await render(editor());
     await select(screen, "Berechnung", "Monatsbrutto selbst eintragen");
     await fireEvent.changeText(screen.getByLabelText("Monatliches Brutto in Euro"), "1800");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvhKrTariff: null, manualMonthlyGrossCents: 180000 }),
     );
@@ -182,7 +175,7 @@ describe("TV-H in the existing simple salary form", () => {
     const screen = await render(editor());
     await select(screen, "Berechnung", "TVAöD Pflege · Ausbildung");
     await select(screen, "Ausbildungsjahr", "2. Ausbildungsjahr");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tvhKrTariff: null,
@@ -191,13 +184,15 @@ describe("TV-H in the existing simple salary form", () => {
     );
   });
   it("requires hours within the selected contractual full-time basis", async () => {
-    mockProfile = { ...mockProfile, weeklyMinutes: 2400 };
+    mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText(/Wochenstunden liegen über der tariflichen Vollzeit/)).toBeTruthy();
+    await closeSettingsSave(screen);
     await select(screen, "Tarifliche Vollzeit pro Woche", "40");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvhKrTariff: { ...h, fullTimeWeeklyMinutes: 2400 } }),
     );

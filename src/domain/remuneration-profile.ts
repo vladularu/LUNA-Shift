@@ -41,6 +41,9 @@ export interface RemunerationProfileData {
 }
 
 export interface DatedRemunerationProfile {
+  /** Fields explicitly corrected for the whole period; supersede obsolete target setup values. */
+  readonly employmentOverrides?: Readonly<Record<string, string>>;
+  readonly employment?: import("./employment-history").EmploymentProfileData;
   readonly effectiveFrom: string | null;
   readonly data: RemunerationProfileData;
   readonly revision: number;

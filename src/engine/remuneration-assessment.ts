@@ -1,3 +1,4 @@
+import { employmentWorkPatternAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 import { validateScopedAllowanceDecisions } from "@/domain/allowance-decisions";
 import type {
@@ -135,6 +136,14 @@ function assessPeriod(
   resolver: RuleResolver,
 ): DatedAllowanceAssessment {
   const { context, from, through } = period;
+  input = {
+    ...input,
+    settings: employmentWorkPatternAt(
+      { ...input.workProfile, employmentTimeline: input.history },
+      input.settings,
+      from,
+    ),
+  };
   const base: DatedAllowanceAssessment = {
     tariff: null,
     nightSequence: null,

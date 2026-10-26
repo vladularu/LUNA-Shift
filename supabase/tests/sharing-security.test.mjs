@@ -1,9 +1,21 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { before, beforeEach, after, test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+
+test("private cloud security contract runs in an isolated process", async (context) => {
+  const { stdout } = await promisify(execFile)(process.execPath, [
+    "--test",
+    fileURLToPath(new URL("./private-cloud-security.test.mjs", import.meta.url)),
+  ]);
+  context.diagnostic(stdout.trim());
+});
+
 const OWNER = "11111111-1111-4111-8111-111111111111";
 const VIEWER = "22222222-2222-4222-8222-222222222222";
 const OTHER = "33333333-3333-4333-8333-333333333333";

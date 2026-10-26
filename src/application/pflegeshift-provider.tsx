@@ -1,3 +1,5 @@
+import { useDatedWorkPattern, useEmploymentProfileValue } from "./dated-work-pattern";
+import { WorkingTimeProvider, type PflegeShiftProfileValue } from "./working-time-provider";
 import { createEntryNotificationReconciler } from "./entry-notification-queue";
 import React, {
   createContext,
@@ -53,11 +55,6 @@ interface PflegeShiftStatusValue {
 export interface NotificationWarning {
   readonly id: number;
   readonly message: string;
-}
-
-interface PflegeShiftProfileValue {
-  readonly profile: UserProfile | null;
-  readonly updateProfile: (input: SaveProfileInput) => Promise<UserProfile>;
 }
 
 interface PflegeShiftTemplatesValue {
@@ -348,10 +345,7 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     }),
     [calendarRange, clearNotificationWarning, error, notificationWarning, reload, statusReady],
   );
-  const profileValue = useMemo<PflegeShiftProfileValue>(
-    () => ({ profile, updateProfile }),
-    [profile, updateProfile],
-  );
+  const profileValue = useEmploymentProfileValue(profile, updateProfile, workPatternSettings);
   const templatesValue = useMemo<PflegeShiftTemplatesValue>(
     () => ({
       templates,
@@ -402,7 +396,15 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
                     diagnostics={diagnostics}
                     reloadRevision={remunerationReloadRevision}
                   >
-                    {children}
+                    <WorkingTimeProvider
+                      ports={ports}
+                      base={profileValue}
+                      entries={entries}
+                      ready={statusReady}
+                      profileContext={PflegeShiftProfileContext}
+                    >
+                      {children}
+                    </WorkingTimeProvider>
                   </TrainingProvider>
                 </RemunerationProvider>
               </PflegeShiftTestDataContext>
@@ -431,7 +433,8 @@ export function usePflegeShiftEntries(): PflegeShiftEntriesValue {
 }
 
 export function usePflegeShiftTariff(): PflegeShiftTariffValue {
-  return useRequiredContext(PflegeShiftTariffContext, "usePflegeShiftTariff");
+  const value = useRequiredContext(PflegeShiftTariffContext, "usePflegeShiftTariff");
+  return useDatedWorkPattern(value, usePflegeShiftProfile().profile);
 }
 
 export function usePflegeShiftTestData(): PflegeShiftTestDataValue {

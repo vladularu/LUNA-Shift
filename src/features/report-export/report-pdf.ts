@@ -40,7 +40,9 @@ function kpis(view: View): string {
       ([label, value]) =>
         `<div><small>${label}</small><strong class="${value === "Nicht verfügbar" ? "unavailable" : ""}">${html(value)}</strong></div>`,
     )
-    .join("")}</div>`;
+    .join(
+      "",
+    )}</div>${view.workingTimeTargets.some((item) => item.status !== "FINAL") ? '<p class="muted">Sollzeit vorläufig oder unvollständig. Offene Voraussetzungen sind nicht als bestätigter Anspruch berücksichtigt.</p>' : ""}`;
 }
 
 function salary(view: View, details: boolean): string {

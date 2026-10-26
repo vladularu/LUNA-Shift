@@ -71,6 +71,31 @@ const componentCoverageThresholds = {
 /** @type {import('jest').Config} */
 module.exports = {
   preset: "jest-expo",
+  // Exercise this editor with the iOS production compiler: the default Jest
+  // transform missed a generated reference to an out-of-scope save callback.
+  transform: {
+    "[/\\\\]working-time-(?:profile-screen|target-editor|target-quick-edit|target-overview)\\.tsx$":
+      [
+        "babel-jest",
+        {
+          babelrc: false,
+          configFile: false,
+          presets: ["babel-preset-expo"],
+          caller: {
+            name: "metro",
+            bundler: "metro",
+            platform: "ios",
+            engine: "hermes",
+            isDev: false,
+            isServer: false,
+            isNodeModule: false,
+            supportsReactCompiler: true,
+            projectRoot: __dirname,
+            routerRoot: "app",
+          },
+        },
+      ],
+  },
   clearMocks: true,
   restoreMocks: true,
   collectCoverageFrom: Object.keys(componentCoverageThresholds),

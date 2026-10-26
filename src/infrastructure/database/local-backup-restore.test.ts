@@ -325,6 +325,7 @@ describe("local backup restore", () => {
         drkEmployeeMonthConfirmations?: unknown;
         drkTrainingMonthConfirmations?: unknown;
         netPayProfiles?: unknown;
+        workingTimeTargetSettings?: unknown;
       };
       delete data.remunerationProfiles;
       delete data.allowanceDecisions;
@@ -345,6 +346,7 @@ describe("local backup restore", () => {
       delete data.drkEmployeeMonthConfirmations;
       delete data.drkTrainingMonthConfirmations;
       delete data.netPayProfiles;
+      delete data.workingTimeTargetSettings;
       delete data.profile.display_name;
       delete data.profile.employer_name;
     });

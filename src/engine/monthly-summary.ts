@@ -7,6 +7,7 @@ import type {
 import type {
   MonthlyWorkingTimeTarget,
   WorkingTimeTargetContext,
+  WorkingTimeTargetProfile,
 } from "@/domain/working-time-target";
 import {
   calculateMonthlyWorkingTimeTarget,
@@ -25,8 +26,7 @@ function freezeCategory(value: MonthlySummaryCategory): MonthlySummaryCategory {
 
 export function calculateMonthlyTargetMinutes(
   month: string,
-  profile: Pick<UserProfile, "federalState" | "weeklyMinutes"> &
-    Partial<Pick<UserProfile, "holidayRegion">>,
+  profile: WorkingTimeTargetProfile,
   ruleResolver: RuleResolver = bundledRuleResolver,
   targetContext?: WorkingTimeTargetContext,
 ): number {
@@ -38,8 +38,7 @@ export function calculateMonthlyTargetMinutes(
 export function calculateMonthlySummary(
   month: string,
   entries: readonly ShiftEntry[],
-  profile: Pick<UserProfile, "federalState" | "weeklyMinutes" | "timeZone"> &
-    Partial<Pick<UserProfile, "holidayRegion">>,
+  profile: WorkingTimeTargetProfile & Pick<UserProfile, "timeZone">,
   ruleResolver: RuleResolver = bundledRuleResolver,
   targetContext?: WorkingTimeTargetContext,
 ): MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget } {
@@ -87,7 +86,7 @@ export function calculateMonthlySummary(
   return Object.freeze({
     month,
     targetMinutes,
-    ...(targetContext === undefined ? {} : { targetCalculation }),
+    ...(targetContext === undefined && !profile.workingTimeTarget ? {} : { targetCalculation }),
     actualMinutes,
     balanceMinutes: actualMinutes - targetMinutes,
     overlapMinutes,

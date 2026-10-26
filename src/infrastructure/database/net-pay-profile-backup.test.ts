@@ -60,7 +60,7 @@ describe("monthly net-pay profile backup compatibility", () => {
 
   it("exports v20 and restores all profile fields, revisions and timestamps", async () => {
     const exported = await exportTvlBackup(source);
-    expect(LOCAL_BACKUP_VERSION).toBe(20);
+    expect(LOCAL_BACKUP_VERSION).toBe(21);
     expect(exported.document.databaseSchemaVersion).toBe(LATEST_DATABASE_SCHEMA_VERSION);
     expect(exported.document.data.netPayProfiles).toHaveLength(2);
     const original = await loadMonthlyNetPaySettings(source.db, "2026-09");
@@ -78,6 +78,7 @@ describe("monthly net-pay profile backup compatibility", () => {
     async (version) => {
       const exported = await exportTvlBackup(source);
       const introduced: readonly (readonly [string, number])[] = [
+        ["workingTimeTargetSettings", 21],
         ["netPayProfiles", 20],
         ["drkTrainingMonthConfirmations", 19],
         ["drkEmployeeMonthConfirmations", 18],
@@ -135,7 +136,7 @@ describe("monthly net-pay profile backup compatibility", () => {
       if (mutation === "duplicate") rows.push(rows[0]);
       if (mutation === "binding") rows[0].month = "2026-08";
       if (mutation === "future-settings") data.version = 2;
-      if (mutation === "future-backup") root.version = 21;
+      if (mutation === "future-backup") root.version = LOCAL_BACKUP_VERSION + 1;
       if (mutation === "parent") root.data.profile = null;
       if (mutation === "schema") root.databaseSchemaVersion = 31;
       if (mutation === "revision") rows[0].revision = 0;

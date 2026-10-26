@@ -85,6 +85,8 @@ async function resign(serialized: string, mutate: (root: Record<string, unknown>
   mutate(root);
   if (typeof root.version === "number" && root.version < 20)
     delete (root.data as Record<string, unknown>).netPayProfiles;
+  if (typeof root.version === "number" && root.version < 21)
+    delete (root.data as Record<string, unknown>).workingTimeTargetSettings;
   if (typeof root.version === "number" && root.version < 17)
     delete (root.data as Record<string, unknown>).tvoedAnnexAPremiumFacts;
   if (typeof root.version === "number" && root.version < 18)

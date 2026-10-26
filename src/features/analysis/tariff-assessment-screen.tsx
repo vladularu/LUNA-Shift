@@ -1,3 +1,5 @@
+import { employmentProfileAt, employmentWorkPatternAt } from "@/domain/employment-history";
+import { settingsEditorRoute } from "@/navigation/routes";
 import { Text } from "@/ui/text";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
@@ -18,9 +20,7 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import {
   ALLOWANCE_STATUSES,
   type AllowanceStatus,
-  type TvoedAssignment,
   type TvoedWorkPatternSettings,
-  type TvoedWorkplaceCoverage,
 } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import { currentMonth, formatMonthTitle } from "@/engine/calendar";
@@ -35,16 +35,14 @@ import {
   captureRuleComputation,
   RuleComputationNotice,
 } from "@/features/analysis/rule-computation";
-import { TariffQuestion } from "@/features/analysis/tariff-question";
 import { NightSequenceExplanationCard } from "@/features/analysis/night-sequence-explanation-card";
 import { resolveEditorSession } from "@/features/editor-session";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { RADII, SPACING } from "@/theme/tokens";
-import { CardSeparator, SurfaceCard } from "@/ui/design-system";
+import { CardSeparator, SurfaceCard, RowButton } from "@/ui/design-system";
 import { FormStatus } from "@/ui/form-layout";
-import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
 import { ReportScrollView } from "@/ui/report-layout";
@@ -99,7 +97,11 @@ function TariffAssessmentContent() {
   if (ready && error) {
     return <LoadFailureView message={error} onRetry={() => void reload()} />;
   }
-  const session = resolveEditorSession(ready && profile !== null, month, () => workPatternSettings);
+  const session = resolveEditorSession(ready && profile !== null, month, () =>
+    profile
+      ? employmentWorkPatternAt(profile, workPatternSettings, month + "-01")
+      : workPatternSettings,
+  );
   if (session === null || profile === null) return <LoadingView />;
   return (
     <TariffAssessmentForm key={session.key} initialSettings={session.initialValue} month={month} />
@@ -117,12 +119,8 @@ function TariffAssessmentForm({
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const { entries } = usePflegeShiftEntries();
   const { profile } = usePflegeShiftProfile();
-  const { tariffDecisions, workPatternSettings, updateWorkPatternSettings, upsertTariffDecision } =
-    usePflegeShiftTariff();
-  const [coverage, setCoverage] = useState<TvoedWorkplaceCoverage>(
-    initialSettings.workplaceCoverage,
-  );
-  const [assignment, setAssignment] = useState<TvoedAssignment>(initialSettings.assignment);
+  const { tariffDecisions, workPatternSettings, upsertTariffDecision } = usePflegeShiftTariff();
+  const { workplaceCoverage: coverage, assignment } = initialSettings;
   const [showOverride, setShowOverride] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +146,13 @@ function TariffAssessmentForm({
         allowanceShifts,
         { workplaceCoverage: coverage, assignment, updatedAt: workPatternSettings.updatedAt },
         ruleResolver,
-        profile ?? undefined,
+        profile
+          ? {
+              ...employmentProfileAt(profile, month + "-01"),
+              employmentTimeline: undefined,
+              workPattern: { workplaceCoverage: coverage, assignment },
+            }
+          : undefined,
       );
     });
   }, [
@@ -211,20 +215,6 @@ function TariffAssessmentForm({
           : assessment.shiftWork === "DETECTED"
             ? "Schichtarbeit erkannt"
             : "Kein eindeutiges Schichtmuster";
-
-  async function saveSettings() {
-    try {
-      setSaving(true);
-      setError(null);
-      await updateWorkPatternSettings({ workplaceCoverage: coverage, assignment });
-      successFeedback();
-      router.back();
-    } catch (saveError) {
-      setError(userFacingErrorMessage(saveError, "Angaben konnten nicht gespeichert werden."));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function confirmOverride(status: AllowanceStatus) {
     try {
@@ -341,39 +331,14 @@ function TariffAssessmentForm({
             />
           ) : null}
 
-          <TariffQuestion
-            title="Wird dein Arbeitsbereich rund um die Uhr betrieben?"
-            caption="Zum Beispiel Station, Intensivbereich oder Notaufnahme mit 24/7-Besetzung."
-            options={[
-              { value: "AROUND_THE_CLOCK", label: "Ja" },
-              { value: "NOT_AROUND_THE_CLOCK", label: "Nein" },
-              { value: "UNKNOWN", label: "Unsicher" },
-            ]}
-            value={coverage}
-            onChange={(value) => setCoverage(value as TvoedWorkplaceCoverage)}
-          />
-
-          <TariffQuestion
-            title="Gehört das Schichtmodell dauerhaft zu deiner Stelle?"
-            caption="Nicht nur einzelne Vertretungen oder gelegentliche Zusatzdienste."
-            options={[
-              { value: "PERMANENT", label: "Dauerhaft" },
-              { value: "TEMPORARY", label: "Gelegentlich" },
-              { value: "UNKNOWN", label: "Unsicher" },
-            ]}
-            value={assignment}
-            onChange={(value) => setAssignment(value as TvoedAssignment)}
-          />
-
+          <SurfaceCard>
+            <RowButton
+              title="Arbeitsmodell bearbeiten"
+              subtitle="Deine gespeicherten Angaben und ihren Zeitraum ändern"
+              onPress={() => router.push(settingsEditorRoute("MODEL"))}
+            />
+          </SurfaceCard>
           <FormStatus error={error} />
-
-          <PrimaryButton
-            busy={saving}
-            busyLabel="Angaben werden gespeichert"
-            onPress={() => void saveSettings()}
-          >
-            Angaben speichern
-          </PrimaryButton>
 
           <Pressable
             accessibilityLabel="Schichtzulage selbst festlegen"

@@ -6,12 +6,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
   SettingsEditorTestFlow,
+  saveSettingsChoice,
   chooseTariffDetails,
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -86,32 +87,25 @@ describe("simple nursing training salary form", () => {
       nursingTrainingTariff: { ...trainee, tariffRegion: "KAV_BW" },
     };
     const screen = await render(editor());
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(screen.getAllByText("38,5 Std.").length).toBeGreaterThan(0);
   });
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateProfile.mockResolvedValue(undefined);
+    mockUpdateProfile.mockImplementation(async (input) => ({ ...mockProfile, ...input }));
     mockSection = "TARIFF";
     mockProfile = { ...baseProfile, nursingTrainingTariff: trainee };
   });
-  it("shows the saved year instead of employee group, step or dated history fields", async () => {
+  it("shows the saved year instead of employee group, step with inline validity and no history menu", async () => {
     const screen = await render(editor());
     expect(
       screen.getByRole("button", { name: "Ausbildungsjahr: 2. Ausbildungsjahr" }),
     ).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Entgeltgruppe:/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Stufe:/ })).toBeNull();
-    expect(
-      screen.queryByText(/Geburtsdatum|Gültig ab|Vergütungsstände|Frühere Angaben/),
-    ).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tariff: null,
-        manualMonthlyGrossCents: null,
-        nursingTrainingTariff: trainee,
-      }),
-    );
+    expect(screen.queryByText(/Geburtsdatum|Vergütungsstände|Frühere Angaben/)).toBeNull();
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
   it("lets an existing employee select nursing training and requires an explicit year", async () => {
     mockProfile = {
@@ -126,11 +120,11 @@ describe("simple nursing training salary form", () => {
     };
     const screen = await render(editor());
     await select(screen, "Berechnung", "TVAöD Pflege · Ausbildung");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText("Bitte das Ausbildungsjahr wählen.")).toBeTruthy();
     await select(screen, "Ausbildungsjahr", "3. Ausbildungsjahr");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tariff: null,
@@ -151,13 +145,9 @@ describe("simple nursing training salary form", () => {
       ).toBeTruthy();
       expect(screen.getAllByText("39 Std.").length).toBeGreaterThan(0);
       const firstBackCount = jest.mocked(router.back).mock.calls.length;
-      await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(firstBackCount + 1));
-      expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
-      expect(mockUpdateProfile).toHaveBeenLastCalledWith(
-        expect.objectContaining({ nursingTrainingTariff: saved }),
-      );
-      mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[0][0] };
+      await saveSettingsChoice(screen);
+      expect(router.back).toHaveBeenCalledTimes(firstBackCount);
+      expect(mockUpdateProfile).not.toHaveBeenCalled();
       await screen.unmount();
       screen = await render(editor());
       expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
@@ -165,20 +155,20 @@ describe("simple nursing training salary form", () => {
       expect(screen.getByRole("button", { name: /^Tarifregion:/ })).toBeTruthy();
       expect(screen.getAllByText("38,5 Std.").length).toBeGreaterThan(0);
       const secondBackCount = jest.mocked(router.back).mock.calls.length;
-      await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount + 1));
-      expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
+      await saveSettingsChoice(screen);
+      await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount));
+      expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
       expect(mockUpdateProfile).toHaveBeenLastCalledWith(
         expect.objectContaining({ nursingTrainingTariff: { ...saved, sector: "BT_K" } }),
       );
-      mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[1][0] };
+      mockProfile = { ...mockProfile, ...mockUpdateProfile.mock.calls[0][0] };
       await screen.unmount();
       screen = await render(editor());
       expect(screen.getByRole("button", { name: /^Tarifregion:/ })).toBeTruthy();
       const thirdBackCount = jest.mocked(router.back).mock.calls.length;
       await select(screen, "Tarifbereich", "Pflege · BT-B");
       expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
-      expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
+      expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
       expect(router.back).toHaveBeenCalledTimes(thirdBackCount + 1);
     },
   );
@@ -192,7 +182,7 @@ describe("simple nursing training salary form", () => {
     await select(screen, "Berechnung", "TVöD-P");
     await chooseTariffDetails(screen, "TVöD-P");
     expect(screen.getByRole("button", { name: /^Tarifregion:/ })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
         nursingTrainingTariff: null,
@@ -201,9 +191,7 @@ describe("simple nursing training salary form", () => {
     );
     await select(screen, "Berechnung", "TVAöD Pflege · Ausbildung");
     expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Ausbildungsjahr: 2. Ausbildungsjahr" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ausbildungsjahr: Bitte auswählen" })).toBeTruthy();
   });
   it("returns to the original employee fields and clears the training choice", async () => {
     const screen = await render(editor());
@@ -212,7 +200,7 @@ describe("simple nursing training salary form", () => {
     expect(screen.getByRole("button", { name: "Entgeltgruppe: P8" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Stufe: Stufe 4" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Ausbildungsjahr:/ })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         nursingTrainingTariff: null,
@@ -224,7 +212,7 @@ describe("simple nursing training salary form", () => {
     mockSection = "WORK";
     const screen = await render(editor());
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         weeklyMinutes: 1800,

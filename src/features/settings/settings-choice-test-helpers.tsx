@@ -1,3 +1,4 @@
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { expect } from "@jest/globals";
 import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { SettingsEditorScreen } from "./settings-editor-screen";
@@ -11,12 +12,19 @@ function SelectionTestPage() {
   const { request } = useProfileSelection();
   return request ? <ProfileSelectionScreen /> : null;
 }
-export function SettingsEditorTestFlow() {
+export function SettingsEditorTestFlow({ children }: { readonly children?: React.ReactNode } = {}) {
   return (
-    <ProfileSelectionProvider>
-      <SettingsEditorScreen />
-      <SelectionTestPage />
-    </ProfileSelectionProvider>
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        insets: { top: 47, right: 0, bottom: 34, left: 0 },
+      }}
+    >
+      <ProfileSelectionProvider>
+        {children ?? <SettingsEditorScreen />}
+        <SelectionTestPage />
+      </ProfileSelectionProvider>
+    </SafeAreaProvider>
   );
 }
 export async function selectSettingsChoice(screen: Screen, field: string, option: string) {
@@ -73,4 +81,17 @@ export async function chooseTariffDetails(screen: Screen, tariff: string) {
     await chooseTariffGroup(screen, tariff);
     await selectSettingsChoice(screen, "Stufe", "Stufe 4");
   }
+}
+
+export async function saveSettingsChoice(screen: Screen) {
+  await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+  if (screen.queryByText("Seit wann gelten diese Angaben?")) {
+    await fireEvent.press(screen.getByRole("radio", { name: "Für den gesamten Zeitraum" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Gesamten Zeitraum berichtigen" }));
+  }
+}
+
+export async function closeSettingsSave(screen: Screen) {
+  await fireEvent.press(screen.getByRole("button", { name: "Zurück zu deinen Angaben" }));
+  await waitFor(() => expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull());
 }

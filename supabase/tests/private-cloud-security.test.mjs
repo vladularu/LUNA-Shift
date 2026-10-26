@@ -73,6 +73,35 @@ test("personal snapshots are private and versioned", async () => {
   await assert.rejects(db.query("select * from luna_private_cloud.snapshots"), /permission denied/);
   await db.exec("reset role");
 });
+test("backup v21 target settings roundtrip in the unchanged v1 document envelope", async () => {
+  const value = {
+    ...document,
+    backupVersion: 21,
+    databaseSchemaVersion: 34,
+    data: {
+      ...document.data,
+      workingTimeTargetSettings: [
+        {
+          id: "singleton",
+          settings_json: JSON.stringify({
+            version: 1,
+            context: { periods: [], days: [] },
+            planBindings: [],
+          }),
+          revision: 1,
+          created_at: "2026-10-23T12:00:00Z",
+          updated_at: "2026-10-23T12:00:00Z",
+        },
+      ],
+    },
+  };
+  assert.equal(
+    (await rpc("private_cloud_write", write(0, crypto.randomUUID(), value))).revision,
+    1,
+  );
+  assert.deepEqual((await rpc("private_cloud_read")).document, value);
+});
+
 test("retries are idempotent even after another revision", async () => {
   const first = write();
   const receipt = await rpc("private_cloud_write", first);

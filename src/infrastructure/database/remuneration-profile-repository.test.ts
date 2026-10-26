@@ -79,6 +79,8 @@ async function resign(serialized: string, mutate: (root: Record<string, unknown>
   mutate(root);
   if (typeof root.version === "number" && root.version < 20)
     delete (root.data as Record<string, unknown>).netPayProfiles;
+  if (typeof root.version === "number" && root.version < 21)
+    delete (root.data as Record<string, unknown>).workingTimeTargetSettings;
   if (typeof root.version === "number" && root.version < 17)
     delete (root.data as Record<string, unknown>).tvoedAnnexAPremiumFacts;
   if (typeof root.version === "number" && root.version < 18)
@@ -636,7 +638,7 @@ describe("remuneration history persistence and backup", () => {
       reopened.database.close();
     }
     const exported = await backup(db);
-    expect(exported.document.version).toBe(20);
+    expect(exported.document.version).toBe(21);
     const verified = await validateLocalBackup(exported.serialized, {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       sha256,
@@ -728,7 +730,7 @@ describe("remuneration history persistence and backup", () => {
       });
       // Simulate the previous deployed schema, in this disposable in-memory DB only.
       adapter.database.exec(
-        "DROP TABLE net_pay_profiles; DROP TABLE drk_training_month_confirmations; DROP TABLE drk_employee_month_confirmations; DROP TABLE tvoed_annex_a_premium_facts; DROP TABLE tvoed_sue_allowance_confirmations; DROP TABLE tvoed_sue_month_confirmations; DROP TABLE tvoed_annex_a_month_confirmations; DROP TABLE caritas_overtime; DROP TABLE caritas_month_facts; DROP TABLE caritas_work_days; DROP TABLE tvl_shift_work; DROP TABLE tariff_annual_claims; DROP TABLE actual_annual_payments; DROP TABLE shift_training_details; DROP TABLE training_profiles; DROP TABLE paid_absences; DROP TABLE overtime_allocations; DROP TABLE scoped_allowance_decisions; DROP TABLE remuneration_profiles; DELETE FROM schema_migrations WHERE version>=14;",
+        "DROP TABLE working_time_target_settings; DROP TABLE net_pay_profiles; DROP TABLE drk_training_month_confirmations; DROP TABLE drk_employee_month_confirmations; DROP TABLE tvoed_annex_a_premium_facts; DROP TABLE tvoed_sue_allowance_confirmations; DROP TABLE tvoed_sue_month_confirmations; DROP TABLE tvoed_annex_a_month_confirmations; DROP TABLE caritas_overtime; DROP TABLE caritas_month_facts; DROP TABLE caritas_work_days; DROP TABLE tvl_shift_work; DROP TABLE tariff_annual_claims; DROP TABLE actual_annual_payments; DROP TABLE shift_training_details; DROP TABLE training_profiles; DROP TABLE paid_absences; DROP TABLE overtime_allocations; DROP TABLE scoped_allowance_decisions; DROP TABLE remuneration_profiles; DELETE FROM schema_migrations WHERE version>=14;",
       );
       await migrateDatabase(db);
       await migrateDatabase(db);
@@ -759,7 +761,7 @@ describe("remuneration history persistence and backup", () => {
   it("retries a failed data migration without a partial baseline or completion marker", async () => {
     await saveProfile(db, legacyInput);
     adapter.database.exec(
-      "DROP TABLE net_pay_profiles; DROP TABLE drk_training_month_confirmations; DROP TABLE drk_employee_month_confirmations; DROP TABLE tvoed_annex_a_premium_facts; DROP TABLE tvoed_sue_allowance_confirmations; DROP TABLE tvoed_sue_month_confirmations; DROP TABLE tvoed_annex_a_month_confirmations; DROP TABLE caritas_overtime; DROP TABLE caritas_month_facts; DROP TABLE caritas_work_days; DROP TABLE tvl_shift_work; DROP TABLE tariff_annual_claims; DROP TABLE actual_annual_payments; DROP TABLE shift_training_details; DROP TABLE training_profiles; DROP TABLE paid_absences; DROP TABLE overtime_allocations; DROP TABLE scoped_allowance_decisions; DROP TABLE remuneration_profiles; DELETE FROM schema_migrations WHERE version>=14;",
+      "DROP TABLE working_time_target_settings; DROP TABLE net_pay_profiles; DROP TABLE drk_training_month_confirmations; DROP TABLE drk_employee_month_confirmations; DROP TABLE tvoed_annex_a_premium_facts; DROP TABLE tvoed_sue_allowance_confirmations; DROP TABLE tvoed_sue_month_confirmations; DROP TABLE tvoed_annex_a_month_confirmations; DROP TABLE caritas_overtime; DROP TABLE caritas_month_facts; DROP TABLE caritas_work_days; DROP TABLE tvl_shift_work; DROP TABLE tariff_annual_claims; DROP TABLE actual_annual_payments; DROP TABLE shift_training_details; DROP TABLE training_profiles; DROP TABLE paid_absences; DROP TABLE overtime_allocations; DROP TABLE scoped_allowance_decisions; DROP TABLE remuneration_profiles; DELETE FROM schema_migrations WHERE version>=14;",
     );
     adapter.failSqlIncludes = "INSERT INTO remuneration_profiles";
     await expect(migrateDatabase(db)).rejects.toThrow("injected failure");
@@ -858,7 +860,7 @@ describe("remuneration history persistence and backup", () => {
     });
     const original = await listRemunerationProfiles(db);
     const exported = await backup(db);
-    expect(exported.document.version).toBe(20);
+    expect(exported.document.version).toBe(21);
     const validated = await validateLocalBackup(exported.serialized, {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       sha256,

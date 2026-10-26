@@ -53,6 +53,7 @@ export function AnnualOverview({
       cards={{
         WORK: (
           <WorkListCard
+            onPress={() => router.push(annualDetailsRoute(report.year, "WORK"))}
             actual={formatMinutes(report.actualMinutes) + " h"}
             target={
               pending
@@ -73,7 +74,9 @@ export function AnnualOverview({
                 ? "Erfasste Zeiten · Soll und Saldo werden berechnet."
                 : !report.worktimeCoverageComplete
                   ? "Erfasste Zeiten · Soll und Saldo nicht berechenbar"
-                  : undefined
+                  : report.targetStatus === "PROVISIONAL"
+                    ? "Sollzeit vorläufig · offene Angaben in einzelnen Monaten"
+                    : undefined
             }
           />
         ),

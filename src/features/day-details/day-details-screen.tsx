@@ -1,3 +1,8 @@
+import { employmentProfileAt } from "@/domain/employment-history";
+import {
+  captureRuleComputation,
+  RuleComputationNotice,
+} from "@/features/analysis/rule-computation";
 import { Text } from "@/ui/text";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
@@ -23,6 +28,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import {
   CardSeparator,
+  InlineNotice,
   ColorBadge,
   EmptyState,
   MetricCard,
@@ -50,7 +56,8 @@ export function DayDetailsScreen() {
   const { fontScale } = useWindowDimensions();
   const params = useLocalSearchParams<{ date?: RouteParam }>();
   const { entries } = usePflegeShiftEntries();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { error, ready, reload } = usePflegeShiftStatus();
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const parsedDate = parseLocalDateRouteParam(params.date);
@@ -66,18 +73,24 @@ export function DayDetailsScreen() {
     () => [...expandCalendarEntries(entries, date, date)].sort(compareCalendarEntries),
     [date, entries],
   );
-  const summary = useMemo(
-    () => (profile ? calculateDailySummary(date, dayEntries, profile, ruleResolver) : null),
+  const summaryCalculation = useMemo(
+    () =>
+      profile
+        ? captureRuleComputation(() =>
+            calculateDailySummary(date, dayEntries, profile, ruleResolver),
+          )
+        : null,
     [date, dayEntries, profile, ruleResolver],
   );
+  const summary = summaryCalculation?.ok ? summaryCalculation.value : null;
   const holiday = useMemo(
     () =>
       profile
         ? getPublicHolidays(
             Number(date.slice(0, 4)),
-            profile.federalState,
+            employmentProfileAt(profile, date).federalState,
             ruleResolver,
-            profile.holidayRegion,
+            employmentProfileAt(profile, date).holidayRegion,
           ).find((item) => item.date === date)
         : null,
     [date, profile, ruleResolver],
@@ -116,6 +129,16 @@ export function DayDetailsScreen() {
                 {holiday.name}
               </Text>
             </SurfaceCard>
+          ) : null}
+          {summaryCalculation && !summaryCalculation.ok ? (
+            <RuleComputationNotice
+              title="Sollzeit noch offen"
+              failure={summaryCalculation}
+              onRetry={() => void reload()}
+            />
+          ) : null}
+          {summary?.targetStatus === "PROVISIONAL" ? (
+            <InlineNotice message="Sollzeit vorläufig · aus deinen bisherigen Angaben berechnet." />
           ) : null}
           {summary ? (
             <View

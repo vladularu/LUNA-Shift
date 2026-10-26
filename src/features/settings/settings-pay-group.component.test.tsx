@@ -4,12 +4,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
   SettingsEditorTestFlow,
+  saveSettingsChoice,
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
-import type { SalaryBasisDrafts } from "@/domain/types";
+import type { SalaryBasisDrafts, SaveProfileInput, UserProfile } from "@/domain/types";
 
-const mockUpdateProfile = jest.fn<() => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockPalette = LIGHT_PALETTE;
 let mockPayGroup = "P5";
 let mockPayLevel = 1;
@@ -85,7 +86,14 @@ function editor() {
 describe("settings pay group selection", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateProfile.mockResolvedValue(undefined);
+    mockUpdateProfile.mockImplementation(
+      async (input) =>
+        ({
+          ...input,
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-01T00:00:00Z",
+        }) as UserProfile,
+    );
     mockPayGroup = "P5";
     mockPayLevel = 1;
     mockSalaryBasisConflict = undefined;
@@ -97,26 +105,22 @@ describe("settings pay group selection", () => {
     expect(screen.getByRole("button", { name: "Stufe: Stufe 1" })).toBeTruthy();
     const options = await select(screen, "Stufe", "Stufe 1");
     expect(options).toEqual(["Stufe 1", "Stufe 2", "Stufe 3", "Stufe 4", "Stufe 5", "Stufe 6"]);
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tariff: expect.objectContaining({ payGroup, payLevel: 1 }),
-      }),
-    );
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
 
   it("clears incompatible stage 1 and blocks saving until the user chooses a valid stage", async () => {
     const screen = await render(editor());
     await select(screen, "Entgeltgruppe", "P7");
     expect(screen.getByRole("button", { name: "Stufe: Bitte auswählen" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(
       screen.getByText("Bitte eine gültige Stufe für die gewählte Gruppe wählen."),
     ).toBeTruthy();
     const options = await select(screen, "Stufe", "Stufe 2");
     expect(options).not.toContain("Stufe 1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tariff: expect.objectContaining({ payGroup: "P7", payLevel: 2 }),
@@ -164,7 +168,7 @@ describe("settings pay group selection", () => {
       ),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Tarifvertrag: Bitte wählen" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText("Bitte eine Gehaltsgrundlage wählen.")).toBeTruthy();
     await select(screen, "Berechnung", "TVöD VKA · E-Tabelle");
@@ -172,7 +176,7 @@ describe("settings pay group selection", () => {
     await select(screen, "Berechnung", "TVöD-P");
     expect(screen.getByRole("button", { name: "Entgeltgruppe: P11" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Stufe: Stufe 5" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tariff: expect.objectContaining({ payGroup: "P11", payLevel: 5, sector: "BT_B" }),

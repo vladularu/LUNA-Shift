@@ -1,7 +1,18 @@
 import type { FederalState, HolidayRegion, UserProfile } from "@/domain/types";
 
 export type WorkingTimeTargetProfile = Pick<UserProfile, "federalState" | "weeklyMinutes"> &
-  Partial<Pick<UserProfile, "holidayRegion">>;
+  Partial<Pick<UserProfile, "holidayRegion">> & {
+    /** Calculation-only metadata; never persisted with the user profile. */
+    readonly workingTimeTarget?: WorkingTimeTargetInput;
+  };
+
+export interface WorkingTimeTargetInput {
+  readonly status: "loading" | "ready" | "error";
+  readonly context?: WorkingTimeTargetContext;
+  readonly notices: readonly TargetNotice[];
+  /** FORECAST uses contractual reference days, independently of recorded duties. */
+  readonly mode?: "FORECAST" | "ROSTER";
+}
 
 export type TargetWorkModel =
   | {
@@ -58,7 +69,8 @@ export interface TargetAdjustment {
   readonly legalBasis: string;
   readonly sourceUrl: string;
   readonly condition: string;
-  readonly status: "CONFIRMED" | "PENDING" | "LEGACY_ESTIMATE";
+  readonly status:
+    "CONFIRMED" | "PENDING" | "LEGACY_ESTIMATE" | "PLAN_ESTIMATE" | "PROFILE_ESTIMATE";
 }
 
 export interface TargetNotice {

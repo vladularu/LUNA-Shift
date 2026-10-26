@@ -1,13 +1,15 @@
+import type { WorkingTimeTargetProfile } from "@/domain/working-time-target";
+import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { CalendarEntry, ShiftEntry, ShiftType, UserProfile } from "@/domain/types";
 import { calculateDailyWorkCredit } from "@/engine/daily-summary";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
-type ProfileForTime = Pick<UserProfile, "federalState" | "weeklyMinutes" | "timeZone"> &
-  Partial<Pick<UserProfile, "holidayRegion">>;
+type ProfileForTime = WorkingTimeTargetProfile & Pick<UserProfile, "timeZone">;
 
 export interface DailySummary {
+  readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly date: string;
   readonly targetMinutes: number;
   readonly actualMinutes: number;
@@ -51,6 +53,12 @@ export function calculateDailySummary(
 
   return Object.freeze({
     date,
+    ...(profile.workingTimeTarget
+      ? {
+          targetStatus: calculateMonthlyWorkingTimeTarget(date.slice(0, 7), profile, ruleResolver)
+            .status,
+        }
+      : {}),
     targetMinutes: result.targetMinutes,
     actualMinutes: result.actualMinutes,
     balanceMinutes: result.balanceMinutes,

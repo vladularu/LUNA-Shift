@@ -40,7 +40,8 @@ export function AnnualDetailsScreen() {
   const section = parsedSection.status === "valid" ? parsedSection.value : "WORK";
   const focused = useIsFocused();
   const { ready, error, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();

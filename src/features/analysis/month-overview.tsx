@@ -63,6 +63,12 @@ export function MonthOverview({
       cards={{
         WORK: (
           <WorkListCard
+            onPress={() =>
+              router.push({
+                pathname: "/working-time-profile",
+                params: { origin: "analysis", month },
+              })
+            }
             actual={
               formatMinutes(
                 summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
@@ -78,8 +84,10 @@ export function MonthOverview({
             }
             caption={
               summary.ok
-                ? undefined
-                : "Feiertagsdaten fehlen. Angezeigt sind nur Arbeits- und Fortbildungszeiten."
+                ? summary.value.targetCalculation?.status === "PROVISIONAL"
+                  ? "Sollzeit vorläufig · Tippe für die Berechnung"
+                  : undefined
+                : "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen."
             }
           />
         ),

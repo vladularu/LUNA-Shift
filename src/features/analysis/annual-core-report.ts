@@ -1,3 +1,5 @@
+import { employmentProfileAt } from "@/domain/employment-history";
+import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
@@ -7,7 +9,6 @@ import type {
   CalendarEntry,
   MonthlyComplianceResult,
   MonthlyPayEstimate,
-  MonthlySummary,
   MonthlyTariffDecision,
   ShiftEntry,
   ShiftType,
@@ -59,7 +60,8 @@ function captureRuleValue<T>(calculate: () => T): T | null {
   try {
     return calculate();
   } catch (error) {
-    if (error instanceof RuleResolutionError) return null;
+    if (error instanceof RuleResolutionError || error instanceof WorkingTimeTargetError)
+      return null;
     throw error;
   }
 }
@@ -155,7 +157,7 @@ interface AvailableMonthCalculation {
   readonly shiftTypeAnalysis: MonthlyShiftTypeAnalysis | null;
   readonly compliance: MonthlyComplianceResult | null;
   readonly pay: MonthlyPayEstimate | null;
-  readonly summary: MonthlySummary | null;
+  readonly summary: ReturnType<typeof calculateMonthlySummary> | null;
 }
 
 interface CachedPart<T> {
@@ -166,7 +168,7 @@ interface CachedPart<T> {
 interface AvailableMonthCache {
   remuneration?: CachedPart<AnnualMonthlyRemuneration | null>;
   shiftTypeAnalysis?: CachedPart<MonthlyShiftTypeAnalysis | null>;
-  summary?: CachedPart<MonthlySummary | null>;
+  summary?: CachedPart<ReturnType<typeof calculateMonthlySummary> | null>;
   compliance?: CachedPart<MonthlyComplianceResult | null>;
   pay?: CachedPart<MonthlyPayEstimate | null>;
 }
@@ -210,6 +212,7 @@ function* calculateAvailableMonth(
   remuneration?: AnnualRemunerationInput,
   youthProtection = false,
 ): Generator<number, AvailableMonthCalculation, void> {
+  profile = employmentProfileAt(profile, month + "-01");
   const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
   const summaryKey = annualInputKey([monthlyEntries.monthShifts, profile]);
   const summary =
@@ -240,6 +243,7 @@ function* calculateAvailableMonth(
   } else if (complianceShifts !== null) {
     try {
       const steps = calculateMonthlyComplianceSteps(month, complianceShifts, profile.timeZone, {
+        employmentProfile: profile,
         federalState: profile.federalState,
         holidayRegion: profile.holidayRegion,
         referenceDate,
@@ -484,6 +488,7 @@ export function* buildAnnualAvailableReportSteps(
             ? available.pay!.timePremiumAmount
             : null,
         targetMinutes: available.summary?.targetMinutes ?? null,
+        targetStatus: available.summary?.targetCalculation?.status,
         actualMinutes: available.summary?.actualMinutes ?? coreMonth.actualMinutes,
         balanceMinutes: available.summary?.balanceMinutes ?? null,
         estimatedGrossAmount: payAvailable ? (available.pay?.estimatedGrossAmount ?? null) : null,
@@ -528,6 +533,13 @@ export function* buildAnnualAvailableReportSteps(
           : ("UNSET" as const),
     months: Object.freeze(months),
     targetMinutes: worktimeCoverageComplete ? targetMinutes : null,
+    targetStatus: !worktimeCoverageComplete
+      ? "UNAVAILABLE"
+      : months.some((item) => item.targetStatus === "PROVISIONAL")
+        ? "PROVISIONAL"
+        : profile && "workingTimeTarget" in profile
+          ? "FINAL"
+          : undefined,
     actualMinutes,
     balanceMinutes: worktimeCoverageComplete ? actualMinutes - targetMinutes : null,
     availablePayMonthCount,

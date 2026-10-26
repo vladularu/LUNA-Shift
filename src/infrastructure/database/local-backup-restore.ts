@@ -1,3 +1,4 @@
+import { WORKING_TIME_TARGET_COLUMNS } from "./working-time-target-repository";
 import { NET_PAY_PROFILE_COLUMNS } from "./net-pay-profile-repository";
 import { DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS } from "./drk-training-month-confirmation-repository";
 import { DRK_EMPLOYEE_MONTH_CONFIRMATION_COLUMNS } from "./drk-employee-month-confirmation-repository";
@@ -92,6 +93,7 @@ export async function restoreLocalBackupInTransaction(
   }
 
   await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
+  await transaction.runAsync("DELETE FROM working_time_target_settings");
   await transaction.runAsync("DELETE FROM net_pay_profiles");
   await transaction.runAsync("DELETE FROM tvl_shift_work");
   await transaction.runAsync("DELETE FROM caritas_work_days");
@@ -130,6 +132,12 @@ export async function restoreLocalBackupInTransaction(
     "net_pay_profiles",
     NET_PAY_PROFILE_COLUMNS,
     document.data.netPayProfiles,
+  );
+  await insertRows(
+    transaction,
+    "working_time_target_settings",
+    WORKING_TIME_TARGET_COLUMNS,
+    document.data.workingTimeTargetSettings,
   );
   if (document.version === 1) await initializeLegacyRemunerationProfile(transaction);
   else

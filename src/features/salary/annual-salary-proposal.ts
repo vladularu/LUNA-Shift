@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import type { UserProfile } from "@/domain/types";
 import { salaryMonthInput, type SalaryMonthContext } from "./salary-month-input";
 
@@ -18,6 +19,23 @@ export function annualSalaryProposal(
   profile: UserProfile,
   context: SalaryMonthContext,
 ): AnnualSalaryProposal | null {
+  const contexts = [
+    employmentProfileAt(profile, `${year}-01-01`),
+    ...(profile.employmentTimeline ?? [])
+      .filter((item) => item.employment && item.effectiveFrom?.startsWith(String(year)))
+      .map((item) => ({ ...profile, ...item.employment })),
+  ];
+  const basis = (p: UserProfile) => [
+    p.tariff?.payGroup,
+    p.vkaETariff?.payGroup,
+    p.tvlKrTariff?.payGroup,
+    p.tvhKrTariff?.payGroup,
+    p.tvUkNursingTariff?.payGroup,
+    !!p.nursingTrainingTariff,
+    !!p.tvalPflegeTariff,
+  ];
+  if (new Set(contexts.map((p) => JSON.stringify(basis(p)))).size > 1) return null;
+  profile = employmentProfileAt(profile, `${year}-12-01`);
   if (year !== 2026 || profile.salaryBasisConflict || context.testMonths?.length) return null;
   let rate: number;
   let months = [7, 8, 9];

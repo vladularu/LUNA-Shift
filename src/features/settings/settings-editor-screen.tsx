@@ -1,3 +1,14 @@
+import {
+  useEmploymentSaveFlow,
+  EmploymentSaveDialog,
+  EmploymentSaveFeedback,
+  type EmploymentSaveFlow,
+} from "./profile-validity";
+import {
+  EmploymentModelFields,
+  employmentModelDraft,
+  employmentModelInput,
+} from "./employment-model-fields";
 import { Text, TextInput } from "@/ui/text";
 import { SelectionGroup } from "@/ui/selection-group";
 import { getTvalPflegeFullTimeMinutes } from "@/engine/simple-tval-pflege-pay";
@@ -13,7 +24,6 @@ import {
   type TvUkNursingGroup,
   type TvUkPayLevel,
 } from "@/domain/tvuk-nursing-tariff";
-import { Temporal } from "@js-temporal/polyfill";
 import {
   TVL_KR_GROUPS,
   tvlKrLevelsForGroup,
@@ -43,6 +53,7 @@ import {
   type TariffRegion,
   type TariffSector,
   type UserProfile,
+  type SaveProfileInput,
   type VkaETariff,
 } from "@/domain/types";
 import {
@@ -64,14 +75,14 @@ import {
 import { parseEnumRouteParam, type RouteParam } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
 import { SALARY_BASIS_OPTIONS } from "@/features/settings/salary-basis-options";
-import { Field, PrimaryButton } from "@/ui/form-controls";
+import { Field, PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { FormStatus, HeaderSaveAction } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { focusInvalidField, weeklyHoursFieldError } from "@/ui/form-validation";
 import { ProfileChoice, ProfileEditorBusyContext, useProfileSelection } from "./profile-selection";
 import { useProfileLeaveGuard } from "./use-profile-leave-guard";
 import { ProfilePage } from "./profile-page";
-import { requireProfileText } from "@/domain/validation";
+import { requireProfileText, ValidationError } from "@/domain/validation";
 import {
   CardSeparator,
   SectionHeader,
@@ -83,16 +94,22 @@ import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY, TEXT_MAX_SCALE } from "@/theme/typography";
 import type { PropsWithChildren } from "react";
 
-type SettingsSection = "WORK" | "TARIFF" | "PERSONAL" | "EMPLOYER";
+type SettingsSection = "WORK" | "TARIFF" | "PERSONAL" | "EMPLOYER" | "EMPLOYMENT" | "MODEL";
 
-export function SettingsEditorScreen() {
+export function SettingsEditorScreen({
+  sectionOverride,
+}: { readonly sectionOverride?: SettingsSection } = {}) {
   const params = useLocalSearchParams<{ section?: RouteParam; origin?: RouteParam }>();
-  const parsedSection = parseEnumRouteParam(params.section, [
-    "WORK",
-    "TARIFF",
-    "PERSONAL",
-    "EMPLOYER",
-  ] as const);
+  const parsedSection = sectionOverride
+    ? { status: "valid" as const, value: sectionOverride }
+    : parseEnumRouteParam(params.section, [
+        "WORK",
+        "TARIFF",
+        "PERSONAL",
+        "EMPLOYER",
+        "EMPLOYMENT",
+        "MODEL",
+      ] as const);
   const section: SettingsSection = parsedSection.status === "valid" ? parsedSection.value : "WORK";
   const origin = parseEnumRouteParam(params.origin, ["settings"] as const);
   const { ready, error: dataError, reload } = usePflegeShiftStatus();
@@ -114,7 +131,7 @@ export function SettingsEditorScreen() {
   if (!ready || profile === null) return <LoadingView />;
 
   return (
-    <SettingsEditorForm
+    <SettingsEditorSession
       key={`${section}-${profile.createdAt}`}
       profile={profile}
       section={section}
@@ -123,7 +140,7 @@ export function SettingsEditorScreen() {
   );
 }
 
-function SettingsEditorForm({
+function SettingsEditorSession({
   profile,
   section,
   fromMore,
@@ -132,19 +149,53 @@ function SettingsEditorForm({
   readonly section: SettingsSection;
   readonly fromMore: boolean;
 }) {
+  const flow = useEmploymentSaveFlow(profile);
+  return (
+    <>
+      <SettingsEditorForm
+        key={flow.revision}
+        profile={flow.base}
+        section={section}
+        fromMore={fromMore}
+        flow={flow}
+      />
+      <EmploymentSaveDialog flow={flow} />
+    </>
+  );
+}
+
+function SettingsEditorForm({
+  profile,
+  section,
+  fromMore,
+  flow,
+}: {
+  readonly profile: UserProfile;
+  readonly section: SettingsSection;
+  readonly fromMore: boolean;
+  readonly flow: EmploymentSaveFlow;
+}) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const compactHeader = width < 390 || fontScale > 1.15;
+  const editWork = section === "WORK" || section === "EMPLOYMENT";
+  const editTariff = section === "TARIFF" || section === "EMPLOYMENT";
+  const editModel = section === "MODEL" || section === "WORK" || section === "EMPLOYMENT";
+  const employment = section !== "PERSONAL" && section !== "EMPLOYER";
   const pageTitle =
-    section === "WORK"
-      ? fromMore
-        ? "Arbeitszeit & Ort"
-        : "Arbeitszeit"
-      : section === "EMPLOYER"
-        ? "Arbeitgeber"
-        : section === "PERSONAL"
-          ? "Persönliche Angaben"
-          : "Tarif & Gehalt";
+    section === "EMPLOYMENT"
+      ? "Arbeit & Gehalt"
+      : section === "MODEL"
+        ? "Arbeitsmodell"
+        : section === "WORK"
+          ? fromMore
+            ? "Arbeitszeit & Ort"
+            : "Arbeitszeit"
+          : section === "EMPLOYER"
+            ? "Arbeitgeber"
+            : section === "PERSONAL"
+              ? "Persönliche Angaben"
+              : "Tarif & Gehalt";
   const { updateProfile } = usePflegeShiftProfile();
   const { clear: clearSelection } = useProfileSelection();
   useEffect(() => () => clearSelection(), [clearSelection]);
@@ -202,33 +253,31 @@ function SettingsEditorForm({
   const [manualMonthlyGrossError, setManualMonthlyGrossError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [identitySaving, setSaving] = useState(false);
+  const saving = identitySaving || flow.saving;
+  const [model, setModel] = useState(() => employmentModelDraft(profile));
   const weeklyHoursRef = useRef<TextInput>(null);
   const manualMonthlyGrossRef = useRef<TextInput>(null);
-  const derivedFullTimeWeeklyMinutes =
-    salaryMode === "TVAL_PFLEGE"
-      ? (getTvalPflegeFullTimeMinutes(
-          Temporal.Now.plainDateISO(profile.timeZone).toString(),
-          tvlUniversityRegion,
-        ) ?? 0)
-      : salaryMode === "TVH_KR"
-        ? tvhFullTimeWeeklyMinutes
-        : salaryMode === "TVUK_NURSING"
-          ? 2310
-          : salaryMode === "TVL_KR"
-            ? (getTvlKrUniversityFullTimeMinutes(
-                Temporal.Now.plainDateISO(profile.timeZone).toString(),
-                tvlUniversityRegion,
-              ) ?? 0)
-            : salaryMode === "TVAOED_PFLEGE"
-              ? sector === "BT_K"
-                ? 2310
-                : 2340
-              : tariffFullTimeWeeklyMinutes(sector, tariffRegion);
-  const fullTimeWeeklyMinutes =
-    salaryMode === "TVOED_P"
+  const fullTimeForDate = (referenceDate: string) => {
+    const derivedFullTimeWeeklyMinutes =
+      salaryMode === "TVAL_PFLEGE"
+        ? (getTvalPflegeFullTimeMinutes(referenceDate, tvlUniversityRegion) ?? 0)
+        : salaryMode === "TVH_KR"
+          ? tvhFullTimeWeeklyMinutes
+          : salaryMode === "TVUK_NURSING"
+            ? 2310
+            : salaryMode === "TVL_KR"
+              ? (getTvlKrUniversityFullTimeMinutes(referenceDate, tvlUniversityRegion) ?? 0)
+              : salaryMode === "TVAOED_PFLEGE"
+                ? sector === "BT_K"
+                  ? 2310
+                  : 2340
+                : tariffFullTimeWeeklyMinutes(sector, tariffRegion);
+    return salaryMode === "TVOED_P"
       ? (pFullTimeOverride ?? derivedFullTimeWeeklyMinutes)
       : derivedFullTimeWeeklyMinutes;
+  };
+  const fullTimeWeeklyMinutes = fullTimeForDate(flow.referenceDate);
   const fullTimeHours = String(fullTimeWeeklyMinutes / 60).replace(".", ",");
   const selectedLevels =
     salaryMode === "TVL_KR"
@@ -237,33 +286,38 @@ function SettingsEditorForm({
         ? ePayLevels(ePayGroup)
         : payLevelsForGroup(payGroup);
   const busyRef = useRef(false);
+  const tariffDraft = [
+    industry,
+    salaryMode,
+    trainingYear,
+    manualMonthlyGross,
+    tvhPayGroup,
+    tvhPayLevel,
+    tvhFullTimeWeeklyMinutes,
+    tvUkPayGroup,
+    tvUkPayLevel,
+    krPayGroup,
+    tvlUniversityRegion,
+    ePayGroup,
+    payGroup,
+    payLevel,
+    sector,
+    tariffRegion,
+    pFullTimeOverride,
+    confirmedGroups,
+  ];
+  const [tariffSnapshot] = useState(() => JSON.stringify(tariffDraft));
+  const tariffTouched = editTariff && JSON.stringify(tariffDraft) !== tariffSnapshot;
   const draft =
     section === "EMPLOYER"
       ? [employerName]
       : section === "PERSONAL"
         ? [displayName, employerName]
-        : section === "WORK"
-          ? [federalState, holidayRegion, weeklyHours]
-          : [
-              industry,
-              salaryMode,
-              trainingYear,
-              manualMonthlyGross,
-              tvhPayGroup,
-              tvhPayLevel,
-              tvhFullTimeWeeklyMinutes,
-              tvUkPayGroup,
-              tvUkPayLevel,
-              krPayGroup,
-              tvlUniversityRegion,
-              ePayGroup,
-              payGroup,
-              payLevel,
-              sector,
-              tariffRegion,
-              pFullTimeOverride,
-              confirmedGroups,
-            ];
+        : [
+            ...(editWork ? [federalState, holidayRegion, weeklyHours] : []),
+            ...(editTariff ? tariffDraft : []),
+            ...(editModel ? [model] : []),
+          ];
   const [snapshot] = useState(() => JSON.stringify(draft));
   const dirty = JSON.stringify(draft) !== snapshot;
   const leave = useProfileLeaveGuard(dirty, saving);
@@ -389,17 +443,6 @@ function SettingsEditorForm({
       setTrainingYear("UNSET");
   }
 
-  function openCheckProfile() {
-    if (busyRef.current) return;
-    const open = () => router.replace("/check-profile");
-    if (dirty) {
-      void submit(open);
-      return;
-    }
-    busyRef.current = true;
-    leave.saved(open);
-  }
-
   async function submit(onSaved?: () => void) {
     if (busyRef.current) return;
     if (section === "PERSONAL" || section === "EMPLOYER") {
@@ -423,7 +466,7 @@ function SettingsEditorForm({
       return;
     }
     if (
-      section === "TARIFF" &&
+      tariffTouched &&
       salaryMode !== "MANUAL" &&
       salaryMode !== "UNSET" &&
       !isTraining &&
@@ -435,7 +478,7 @@ function SettingsEditorForm({
       return;
     }
     if (
-      section === "TARIFF" &&
+      tariffTouched &&
       !isTraining &&
       salaryMode !== "MANUAL" &&
       salaryMode !== "UNSET" &&
@@ -445,11 +488,11 @@ function SettingsEditorForm({
       setError("Bitte eine gültige Stufe für die gewählte Gruppe wählen.");
       return;
     }
-    const fieldError = section === "WORK" ? weeklyHoursFieldError(weeklyHours) : null;
+    const fieldError = editWork ? weeklyHoursFieldError(weeklyHours) : null;
     const salaryModeError =
       section === "TARIFF" && salaryMode === "UNSET" ? "Bitte eine Gehaltsgrundlage wählen." : null;
     const salaryFieldError =
-      section === "TARIFF" && salaryMode === "MANUAL"
+      tariffTouched && salaryMode === "MANUAL"
         ? manualMonthlyGrossFieldError(manualMonthlyGross)
         : null;
     setWeeklyHoursError(fieldError);
@@ -472,7 +515,7 @@ function SettingsEditorForm({
       return;
     }
     if (
-      section === "TARIFF" &&
+      tariffTouched &&
       (salaryMode === "TVOED_P" || salaryMode === "TVOED_E" || salaryMode === "TVL_KR") &&
       payLevel === "UNSET"
     ) {
@@ -480,18 +523,18 @@ function SettingsEditorForm({
       setMessage(null);
       return;
     }
-    if (section === "TARIFF" && salaryMode === "TVH_KR" && tvhPayLevel === "UNSET") {
+    if (tariffTouched && salaryMode === "TVH_KR" && tvhPayLevel === "UNSET") {
       setError("Bitte eine gültige Stufe für die gewählte Gruppe wählen.");
       setMessage(null);
       return;
     }
-    if (section === "TARIFF" && salaryMode === "TVUK_NURSING" && tvUkPayLevel === "UNSET") {
+    if (tariffTouched && salaryMode === "TVUK_NURSING" && tvUkPayLevel === "UNSET") {
       setError("Bitte eine gültige Stufe für die gewählte Gruppe wählen.");
       setMessage(null);
       return;
     }
     if (
-      section === "TARIFF" &&
+      tariffTouched &&
       (salaryMode === "TVAOED_PFLEGE" || salaryMode === "TVAL_PFLEGE") &&
       trainingYear === "UNSET"
     ) {
@@ -499,61 +542,53 @@ function SettingsEditorForm({
       setMessage(null);
       return;
     }
-    if (
-      section === "TARIFF" &&
-      (salaryMode === "TVAOED_PFLEGE" ||
-        salaryMode === "TVAL_PFLEGE" ||
-        salaryMode === "TVL_KR" ||
-        salaryMode === "TVUK_NURSING" ||
-        salaryMode === "TVH_KR") &&
-      profile.weeklyMinutes > fullTimeWeeklyMinutes
-    ) {
-      setError(
-        salaryMode !== "TVAOED_PFLEGE" && salaryMode !== "TVAL_PFLEGE"
-          ? "Deine Wochenstunden liegen über der tariflichen Vollzeit. Bitte zuerst das Arbeitszeitmodell prüfen."
-          : "Deine Wochenstunden liegen über der tariflichen Ausbildungszeit. Bitte zuerst das Arbeitszeitmodell prüfen.",
-      );
-      setMessage(null);
-      return;
-    }
     try {
-      busyRef.current = true;
-      setSaving(true);
       setError(null);
       setMessage(null);
-      const salaryUpdate = resolveSalaryUpdate(
-        section,
-        profile.tariff,
-        profile.manualMonthlyGrossCents ?? null,
-        salaryMode,
-        {
-          payGroup,
-          payLevel: payLevel === "UNSET" ? initialValues.payLevel : payLevel,
-          sector,
-          tariffRegion,
-          fullTimeWeeklyMinutes,
-        },
-        parseManualMonthlyGrossCents(manualMonthlyGross),
-      );
-      await updateProfile({
-        federalState,
-        holidayRegion,
-        weeklyMinutes: parseWeeklyHours(weeklyHours),
-        timeZone: profile.timeZone,
-        industry: industry === "UNKNOWN" ? null : industry,
-        manualMonthlyGrossCents: salaryUpdate.manualMonthlyGrossCents,
-        regularRotatingNightWork: profile.regularRotatingNightWork,
-        sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
-        allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
-        tariff: salaryUpdate.tariff,
-        vkaETariff:
-          section === "WORK"
+      flow.request((referenceDate, final): SaveProfileInput => {
+        const fullTimeWeeklyMinutes = fullTimeForDate(referenceDate);
+        if (
+          final &&
+          (tariffTouched ||
+            (editWork && parseWeeklyHours(weeklyHours) !== profile.weeklyMinutes)) &&
+          ["TVAOED_PFLEGE", "TVAL_PFLEGE", "TVL_KR", "TVUK_NURSING", "TVH_KR"].includes(
+            salaryMode,
+          ) &&
+          parseWeeklyHours(weeklyHours) > fullTimeWeeklyMinutes
+        )
+          throw new ValidationError(
+            "Deine Wochenstunden liegen über der tariflichen Vollzeit. Bitte deine Angaben prüfen.",
+          );
+        const salaryUpdate = resolveSalaryUpdate(
+          tariffTouched ? "TARIFF" : "WORK",
+          profile.tariff,
+          profile.manualMonthlyGrossCents ?? null,
+          salaryMode,
+          {
+            payGroup,
+            payLevel: payLevel === "UNSET" ? initialValues.payLevel : payLevel,
+            sector,
+            tariffRegion,
+            fullTimeWeeklyMinutes,
+          },
+          parseManualMonthlyGrossCents(manualMonthlyGross),
+        );
+        return {
+          ...profile,
+          federalState,
+          holidayRegion,
+          weeklyMinutes: parseWeeklyHours(weeklyHours),
+          timeZone: profile.timeZone,
+          industry: industry === "UNKNOWN" ? null : industry,
+          manualMonthlyGrossCents: salaryUpdate.manualMonthlyGrossCents,
+          ...(editModel ? employmentModelInput(profile, model) : {}),
+          tariff: salaryUpdate.tariff,
+          vkaETariff: !tariffTouched
             ? (profile.vkaETariff ?? null)
             : salaryMode === "TVOED_E" && payLevel !== "UNSET"
               ? { payGroup: ePayGroup, payLevel, sector, tariffRegion }
               : null,
-        tvhKrTariff:
-          section === "WORK"
+          tvhKrTariff: !tariffTouched
             ? (profile.tvhKrTariff ?? null)
             : salaryMode === "TVH_KR" && tvhPayLevel !== "UNSET"
               ? {
@@ -562,37 +597,30 @@ function SettingsEditorForm({
                   fullTimeWeeklyMinutes: tvhFullTimeWeeklyMinutes,
                 }
               : null,
-        tvUkNursingTariff:
-          section === "WORK"
+          tvUkNursingTariff: !tariffTouched
             ? (profile.tvUkNursingTariff ?? null)
             : salaryMode === "TVUK_NURSING" && tvUkPayLevel !== "UNSET"
               ? { payGroup: tvUkPayGroup, payLevel: tvUkPayLevel }
               : null,
-        tvlKrTariff:
-          section === "WORK"
+          tvlKrTariff: !tariffTouched
             ? (profile.tvlKrTariff ?? null)
             : salaryMode === "TVL_KR" && payLevel !== "UNSET"
               ? { payGroup: krPayGroup, payLevel, universityRegion: tvlUniversityRegion }
               : null,
-        tvalPflegeTariff:
-          section === "WORK"
+          tvalPflegeTariff: !tariffTouched
             ? (profile.tvalPflegeTariff ?? null)
             : salaryMode === "TVAL_PFLEGE" && trainingYear !== "UNSET"
               ? { trainingYear, universityRegion: tvlUniversityRegion }
               : null,
-        nursingTrainingTariff:
-          section === "WORK"
+          nursingTrainingTariff: !tariffTouched
             ? (profile.nursingTrainingTariff ?? null)
             : salaryMode === "TVAOED_PFLEGE" && trainingYear !== "UNSET"
               ? { trainingYear, sector, tariffRegion }
               : null,
+        };
       });
-      leave.saved(onSaved);
     } catch (submitError) {
-      busyRef.current = false;
       setError(userFacingErrorMessage(submitError, "Speichern fehlgeschlagen."));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -738,7 +766,7 @@ function SettingsEditorForm({
     <ProfileEditorBusyContext.Provider value={saving}>
       <ProfilePage
         title={pageTitle}
-        backLabel={fromMore ? "Zurück zu Mehr" : "Zurück zum Arbeitsprofil"}
+        backLabel={fromMore ? "Zurück zu Mehr" : employment ? "Zurück" : "Zurück zum Arbeitsprofil"}
         onBack={() => {
           if (!busyRef.current) router.back();
         }}
@@ -755,7 +783,12 @@ function SettingsEditorForm({
             headerRight: fromMore
               ? undefined
               : () => (
-                  <HeaderSaveAction busy={saving} label="Speichern" onPress={() => void submit()} />
+                  <HeaderSaveAction
+                    closes={!employment}
+                    busy={saving}
+                    label="Speichern"
+                    onPress={() => void submit()}
+                  />
                 ),
             headerStyle: { backgroundColor: palette.background },
             headerTintColor: palette.text,
@@ -764,6 +797,11 @@ function SettingsEditorForm({
           }}
         />
         {compactHeader ? <SectionHeader title={pageTitle} /> : null}
+        {flow.editingFrom ? (
+          <SectionHeader
+            title={`Angaben ab ${flow.editingFrom.split("-").reverse().join(".")} berichtigen`}
+          />
+        ) : null}
         {section === "EMPLOYER" ? (
           <ProfileGroup title="Arbeitgeber">
             <InputInset>
@@ -801,7 +839,8 @@ function SettingsEditorForm({
               />
             </InputInset>
           </ProfileGroup>
-        ) : section === "WORK" ? (
+        ) : null}
+        {editWork ? (
           <>
             <ProfileGroup title="Vertrag">
               <InputInset>
@@ -835,7 +874,7 @@ function SettingsEditorForm({
                   if (value !== federalState) setHolidayRegion(defaultHolidayRegion(value));
                 }}
               />
-              {holidayRegionsForState(federalState).length > 1 ? (
+              {holidayRegionsForState(federalState).length > 1 || holidayRegion === "UNKNOWN" ? (
                 <ProfileChoice
                   label="Regionale Feiertage"
                   value={holidayRegion}
@@ -847,18 +886,9 @@ function SettingsEditorForm({
                 />
               ) : null}
             </ProfileGroup>
-            <ProfileGroup
-              title="Angaben zur Prüfung"
-              caption="Fehlende Angaben schränken die Prüfung ein."
-            >
-              <RowButton
-                title={dirty ? "Speichern & Angaben öffnen" : "Angaben zur Prüfung"}
-                disabled={saving}
-                onPress={openCheckProfile}
-              />
-            </ProfileGroup>
           </>
-        ) : (
+        ) : null}
+        {editTariff ? (
           <>
             {!fromMore || salaryMode === "MANUAL" || profile.salaryBasisConflict ? (
               <SelectionGroup title="Gehaltsgrundlage">
@@ -933,13 +963,20 @@ function SettingsEditorForm({
               </>
             )}
           </>
-        )}
-        {fromMore ? (
-          <PrimaryButton busy={saving} disabled={saving} onPress={() => void submit()}>
-            Fertig
+        ) : null}
+        {editModel ? <EmploymentModelFields value={model} onChange={setModel} /> : null}
+        {fromMore || employment ? (
+          <PrimaryButton busy={saving} disabled={saving || !dirty} onPress={() => void submit()}>
+            {employment ? "Änderungen speichern" : "Speichern"}
           </PrimaryButton>
         ) : null}
+        {employment && dirty ? (
+          <SecondaryButton disabled={saving} onPress={flow.discard}>
+            Änderungen verwerfen
+          </SecondaryButton>
+        ) : null}
         <FormStatus message={message} error={error} />
+        {employment ? <EmploymentSaveFeedback flow={flow} dirty={dirty} /> : null}
       </ProfilePage>
     </ProfileEditorBusyContext.Provider>
   );
