@@ -31,13 +31,13 @@ Sollzeitabzüge erzeugen keine Iststunden und ändern keine Gehaltszuschläge. E
 
 ## Tarifumfang und Grenzen
 
-Prognose im geprüften Umfang: feste Vertragsverteilung und TVöD-K / BT-K 2026–2027 mit tarifbezogener Monatsreferenz. TVöD-K, Hessen, Dezember 2026, 38,5 Stunden: 146:18 im Siebentagemodell, 154:00 bei fester Montag-bis-Freitag-Verteilung. Individuelle Tagesvoraussetzungen werden nur für die getrennte strikte Anspruchsrechnung benötigt.
+Prognose im geprüften Umfang: feste Vertragsverteilung und TVöD-K / BT-K und TVöD-B / BT-B 2026–2027 mit getrennten Regelkennungen und tarifbezogener Monatsreferenz. TVöD-K, Hessen, Dezember 2026, 38,5 Stunden: 146:18 im Siebentagemodell, 154:00 bei fester Montag-bis-Freitag-Verteilung. Individuelle Tagesvoraussetzungen werden nur für die getrennte strikte Anspruchsrechnung benötigt.
 
-TVöD-B, VKA E, TV-L/KR, TV-H, TV-UK, TVAöD, TVA-L, Caritas/AVR und DRK erhalten durch D2 **keine** unbestätigten TVöD-K-Sonderregeln. Ohne geprüfte Regeln bleibt eine vorhandene Referenzberechnung ausdrücklich vorläufig. Eigene Vergütung begründet keine erfundenen Tarifansprüche. Einzelheiten zum geprüften Unterstützungsstatus: [Tarifmatrix](working-time-target-analysis.md). Der Prüfzeitraum der spezifischen BT-K-Regeln umfasst 2026 und 2027; Quellen, unabhängige Kontrollwerte und Versionskompatibilität stehen in [der 2027-Prüfung](working-time-target-2027.md). Spätere Jahre und unbekannte Tarifversionen bleiben vorläufig.
+VKA E, TV-L/KR, TV-H, TV-UK, TVAöD, TVA-L, Caritas/AVR und DRK erhalten durch D2 **keine** unbestätigten TVöD-K-Sonderregeln. Ohne geprüfte Regeln bleibt eine vorhandene Referenzberechnung ausdrücklich vorläufig. Eigene Vergütung begründet keine erfundenen Tarifansprüche. Einzelheiten zum geprüften Unterstützungsstatus: [Tarifmatrix](working-time-target-analysis.md). Der Prüfzeitraum der spezifischen BT-K-Regeln umfasst 2026 und 2027; Quellen, unabhängige Kontrollwerte und Versionskompatibilität stehen in [der 2027-Prüfung](working-time-target-2027.md). Spätere Jahre und unbekannte Tarifversionen bleiben vorläufig.
 
 Keine Schemaänderung, keine Überschreibung bestehender Profile und keine neue Backup-Version. Unveränderte alte Tagesbindungen werden einmalig transaktional in ein präziseres Vergleichsformat übernommen. Nur tatsächlich unveränderte alte Bindungen werden übernommen; bereits veraltete Belege bleiben offen. Der Testlaborbetrieb schreibt diese Metadaten nicht um. Reine Notiz-/Zuschlagsänderungen entwerten anschließend keine Tagesbestätigung. Explizite historische Lücken werden nicht mit aktuellen Profilangaben gefüllt. Für Bestandsprofile ohne bestätigte Historie bleibt die Berechnung vorläufig; die neue automatische Planung bestätigt keine individuellen Ansprüche und schreibt keine Profile um.
 
-Die [Kalenderkennzeichnung tariflicher Sondertage](calendar-tariff-special-days.md) übernimmt nun die Positionen derselben Engine: offene Raute am Sondertagsnamen, vollständige Bezeichnung im Tagesfenster und für VoiceOver. Gesetzliche Feiertage bleiben davon getrennt. Die neue Darstellung liegt als eigenes Preview-Paket zur Geräteabnahme vor.
+Die [Kalenderkennzeichnung tariflicher Sondertage](calendar-tariff-special-days.md) übernimmt nun die Positionen derselben Engine: offene Raute am Sondertagsnamen, vollständige Bezeichnung im Tagesfenster und für VoiceOver. Gesetzliche Feiertage bleiben davon getrennt. Die Kalenderdarstellung wurde am 26.10.2026 vom Nutzer auf dem iPhone bestätigt und mit PR #313 gemergt. Der BT-B-Adapter nutzt diese vorhandene Darstellung ohne neue Oberfläche.
 
 ## Abnahme und Folgeschritte
 
@@ -716,3 +716,7 @@ Die Bestätigung wird dem zuletzt veröffentlichten D10-Update `01a17859-10a7-7e
 Diese Abnahme deckt den gemeinsamen D9-Beschäftigungsablauf im D10-Nachfolgebundle mit ab und aktualisiert die früheren offenen Gerätestatus für diesen Ablauf. Die technischen D9-Auslieferungsnachweise bleiben Nachweise ihrer damaligen Version.
 
 Nächster Schritt: den abgenommenen Feature-Stand nach gesonderter Git-Freigabe im bestehenden Draft-Pull-Request aktualisieren und dessen CI abwarten. Diese Geräteabnahme allein erteilt keine Commit-/Push-/Merge-, weitere OTA-, native Build- oder TestFlight-Freigabe.
+
+## BT-B-Anbindung
+
+Die vorhandene Auswahl Pflege / BT-B wird im aktuellen und datierten Berechnungsprofil wiederverwendet. Ein alter eindeutiger BT-B-Marker wird nur für die Berechnung erkannt; gespeicherte Kontexte bleiben unverändert. Mehrdeutige historische Marker bleiben offen. Für Hessen mit vertraglich 39 Stunden ergibt die Prognose Dezember 2026 148:12 und Dezember 2027 156:00 Stunden im passenden Siebentagemodell. TVöD-K mit 38,5 Stunden bleibt im Dezember 2026 bei 146:18. Eine eigene bestätigte Tagesberechnung benötigt weiter explizite Voraussetzungen. [Quellen, Bedingungen und Prüfplan](working-time-target-b.md).

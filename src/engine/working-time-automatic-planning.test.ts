@@ -179,12 +179,12 @@ describe("contractual target forecast, independent of recorded duties", () => {
         .targetMinutes,
     ).toBe(9702);
   });
-  it("does not transfer BT-K claims to other families or unreviewed years", () => {
+  it("uses BT-B's own rules and keeps unreviewed years provisional", () => {
     const other = {
       ...profile,
       tariff: profile.tariff ? { ...profile.tariff, sector: "BT_B" as const } : null,
     };
-    expect(result(projected(other)).targetMinutes).toBe(10164);
+    expect(result(projected(other)).targetMinutes).toBe(8778);
     expect(result(projected(other)).adjustments.some((a) => a.ruleId.startsWith("tvoed-k"))).toBe(
       false,
     );
