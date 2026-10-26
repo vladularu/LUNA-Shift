@@ -53,6 +53,7 @@ interface DayCellProps {
   readonly cell: CalendarCell;
   readonly entries: readonly CalendarEntry[];
   readonly holidayName?: string;
+  readonly specialDayName?: string;
   readonly isSelected: boolean;
   readonly isToday: boolean;
   readonly onSelectDate: (
@@ -232,6 +233,7 @@ const DayCell = memo(
     cell,
     entries,
     holidayName,
+    specialDayName,
     isSelected,
     isToday,
     onSelectDate,
@@ -295,7 +297,7 @@ const DayCell = memo(
       <Animated.View style={[{ flex: 1, minWidth: 0 }, pressMotion.animatedStyle]}>
         <Pressable
           ref={cellRef}
-          accessibilityLabel={`${formatDateTitle(cell.date)}, ${entries.length} Einträge${holidayName ? `, ${holidayName}` : ""}${isSelected ? ", ausgewählt" : ""}`}
+          accessibilityLabel={`${formatDateTitle(cell.date)}, ${entries.length} Einträge${holidayName ? `, ${holidayName}` : specialDayName ? `, ${specialDayName}` : ""}${isSelected ? ", ausgewählt" : ""}`}
           accessibilityHint={
             stampMode
               ? stampDayAccessibilityHint(stampToolLabel)
@@ -372,7 +374,7 @@ const DayCell = memo(
                 {cell.day}
               </Text>
             </Animated.View>
-            {holidayName ? (
+            {holidayName || specialDayName ? (
               <Text
                 maxFontSizeMultiplier={COMPACT_TEXT_MAX_SCALE}
                 numberOfLines={1}
@@ -387,7 +389,9 @@ const DayCell = memo(
                   textAlign: "center",
                 }}
               >
-                {holidayShortLabel(holidayName)}
+                {holidayName
+                  ? holidayShortLabel(holidayName)
+                  : "◇ " + specialDayName?.replace(" (tariflicher Sondertag)", "")}
               </Text>
             ) : null}
           </View>
@@ -546,12 +550,12 @@ export const MonthCard = memo(function MonthCard({
     });
   }, [internalStampProgress, stampMode, stampTransitionProgress]);
   const grid = useMemo(() => createMonthGrid(month), [month]);
-  const holidays = useCalendarHolidayResolution(
+  const { holidays, specialDays } = useCalendarHolidayResolution(
     month,
     profile,
     ruleResolver,
     showHolidays,
-  ).holidays;
+  );
   const currentDate = today(profile.timeZone);
   const weekCount = grid.length / 7;
   const contentWidth = Math.min(width, 760);
@@ -652,6 +656,7 @@ export const MonthCard = memo(function MonthCard({
                 entries={entriesByDate.get(cell.date) ?? EMPTY_ENTRIES}
                 entryRowCapacity={entryRowCapacity}
                 holidayName={holidays.get(cell.date)?.name}
+                specialDayName={specialDays.get(cell.date)?.label}
                 isSelected={selectedDate !== null && cell.date === selectedDate}
                 isToday={cell.date === currentDate}
                 onSelectDate={onSelectDate}

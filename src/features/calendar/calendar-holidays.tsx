@@ -2,6 +2,10 @@ import { employmentProfileAt } from "@/domain/employment-history";
 import { useMemo } from "react";
 import { View } from "react-native";
 
+import {
+  resolveCalendarSpecialDays,
+  type CalendarSpecialDayResolution,
+} from "./calendar-special-days";
 import type { UserProfile } from "@/domain/types";
 import {
   resolveHolidayMapForMonths,
@@ -12,10 +16,17 @@ import type { RuleResolver } from "@/rules/rule-resolver";
 import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { InlineNotice } from "@/ui/design-system";
 
-const HOLIDAYS_HIDDEN: HolidayMonthResolution = Object.freeze({
+type CalendarHolidayResolution = HolidayMonthResolution & {
+  readonly specialDays: CalendarSpecialDayResolution["days"];
+  readonly specialDaysUnavailable: boolean;
+};
+
+const HOLIDAYS_HIDDEN: CalendarHolidayResolution = Object.freeze({
   status: "AVAILABLE",
   holidays: new Map(),
   failure: null,
+  specialDays: new Map(),
+  specialDaysUnavailable: false,
 });
 
 export function useCalendarHolidayResolution(
@@ -23,10 +34,16 @@ export function useCalendarHolidayResolution(
   profile: UserProfile | null,
   ruleResolver: RuleResolver,
   showHolidays: boolean,
-): HolidayMonthResolution {
+): CalendarHolidayResolution {
   return useMemo(() => {
     if (profile === null || !showHolidays) return HOLIDAYS_HIDDEN;
-    return resolveProfileHolidayMapForMonth(month, profile, ruleResolver);
+    const holidays = resolveProfileHolidayMapForMonth(month, profile, ruleResolver);
+    const special = resolveCalendarSpecialDays(month, profile, ruleResolver);
+    return {
+      ...holidays,
+      specialDays: special.days,
+      specialDaysUnavailable: special.status === "UNAVAILABLE",
+    };
   }, [month, profile, ruleResolver, showHolidays]);
 }
 
@@ -44,12 +61,24 @@ export function holidayNameForDate(
   ).holidays.get(date)?.name;
 }
 
+/** Full day-window label; public-holiday lookup remains statutory-only. */
+export function calendarDayLabelForDate(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): string | undefined {
+  return (
+    holidayNameForDate(date, profile, resolver) ??
+    resolveCalendarSpecialDays(date.slice(0, 7), profile, resolver).days.get(date)?.label
+  );
+}
+
 export function CalendarHolidayCoverageNotice({
   resolution,
 }: {
-  readonly resolution: HolidayMonthResolution;
+  readonly resolution: HolidayMonthResolution & { readonly specialDaysUnavailable?: boolean };
 }) {
-  if (resolution.status === "AVAILABLE") return null;
+  if (resolution.status === "AVAILABLE" && !resolution.specialDaysUnavailable) return null;
   return (
     <View
       style={{
@@ -58,7 +87,11 @@ export function CalendarHolidayCoverageNotice({
       }}
     >
       <InlineNotice
-        message="Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
+        message={
+          resolution.status !== "AVAILABLE"
+            ? "Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
+            : "Tarifliche Sondertage können gerade nicht angezeigt werden. Prüfe die Arbeitszeitangaben."
+        }
         tone="warning"
       />
     </View>

@@ -252,6 +252,7 @@ export function SharedCalendarMonth({
       scene={monthScene}
       still={still}
       holidays={holidays.holidays}
+      specialDays={holidays.specialDays}
       separator={palette.textMuted}
       selectionFill={palette.primarySoft}
     />
@@ -273,6 +274,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   scene,
   still,
   holidays,
+  specialDays,
   separator,
   selectionFill,
   stampMode,
@@ -282,6 +284,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   scene: SceneValue;
   still: SharedValue<number>;
   holidays: ReadonlyMap<string, { name: string }>;
+  specialDays: ReadonlyMap<string, { readonly label: string }>;
   separator: string;
   selectionFill: string;
 }) {
@@ -305,6 +308,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
         entriesByDate={entriesByDate}
         sharedEntriesByDate={sharedEntriesByDate}
         holidays={holidays}
+        specialDays={specialDays}
         display={display}
         timeZone={profile.timeZone}
         visible={false}
@@ -330,7 +334,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
             accessibilityHint={
               stampMode ? stampDayAccessibilityHint(stampToolLabel ?? null) : "Tagesfenster öffnen"
             }
-            accessibilityLabel={`${day.date}, ${holidays.get(day.date)?.name ?? ""} ${[...(entriesByDate.get(day.date) ?? []).map((entry) => entry.title), ...(sharedEntriesByDate?.get(day.date) ?? []).map((row) => `${row.calendarName}: ${row.entry.title}`)].join(", ")}`}
+            accessibilityLabel={`${day.date}, ${holidays.get(day.date)?.name ?? specialDays.get(day.date)?.label ?? ""} ${[...(entriesByDate.get(day.date) ?? []).map((entry) => entry.title), ...(sharedEntriesByDate?.get(day.date) ?? []).map((row) => `${row.calendarName}: ${row.entry.title}`)].join(", ")}`}
             accessibilityState={{ selected: selectedDate === day.date }}
             onPress={(event) => {
               const { pageX, pageY, locationX, locationY } = event.nativeEvent;
