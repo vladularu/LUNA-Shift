@@ -37,7 +37,7 @@ TVöD-B, VKA E, TV-L/KR, TV-H, TV-UK, TVAöD, TVA-L, Caritas/AVR und DRK erhalte
 
 Keine Schemaänderung, keine Überschreibung bestehender Profile und keine neue Backup-Version. Unveränderte alte Tagesbindungen werden einmalig transaktional in ein präziseres Vergleichsformat übernommen. Nur tatsächlich unveränderte alte Bindungen werden übernommen; bereits veraltete Belege bleiben offen. Der Testlaborbetrieb schreibt diese Metadaten nicht um. Reine Notiz-/Zuschlagsänderungen entwerten anschließend keine Tagesbestätigung. Explizite historische Lücken werden nicht mit aktuellen Profilangaben gefüllt. Für Bestandsprofile ohne bestätigte Historie bleibt die Berechnung vorläufig; die neue automatische Planung bestätigt keine individuellen Ansprüche und schreibt keine Profile um.
 
-Eine eigenständige optische Sondertagsmarkierung im Kalender ist weiterhin Folgeumfang. Die Berechnungsdetails unterscheiden gesetzliche Feiertage und tarifliche Sondertage bereits ausdrücklich.
+Die [Kalenderkennzeichnung tariflicher Sondertage](calendar-tariff-special-days.md) übernimmt nun die Positionen derselben Engine: offene Raute am Sondertagsnamen, vollständige Bezeichnung im Tagesfenster und für VoiceOver. Gesetzliche Feiertage bleiben davon getrennt. Die neue Darstellung liegt als eigenes Preview-Paket zur Geräteabnahme vor.
 
 ## Abnahme und Folgeschritte
 

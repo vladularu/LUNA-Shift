@@ -1,3 +1,4 @@
+import { calendarDayLabel } from "./calendar-special-days";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
@@ -279,6 +280,7 @@ export function PrototypeMonthContent({
   entriesByDate,
   sharedEntriesByDate,
   holidays,
+  specialDays,
   display,
   timeZone,
   visible,
@@ -288,6 +290,7 @@ export function PrototypeMonthContent({
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
   sharedEntriesByDate?: ReadonlyMap<string, readonly SharedCalendarDayEntry[]>;
   holidays: ReadonlyMap<string, { readonly name: string }>;
+  specialDays?: ReadonlyMap<string, { readonly label: string }>;
   display: PrototypeDisplay;
   timeZone: string;
   visible: boolean;
@@ -332,6 +335,7 @@ export function PrototypeMonthContent({
           visible={visible}
           adjacent={day.date.slice(0, 7) !== layout.month}
           holiday={holidays.get(day.date)?.name}
+          specialDay={specialDays?.get(day.date)?.label}
         />
       ))}
     </Animated.View>
@@ -349,6 +353,7 @@ function CombinedDayContent({
   visible,
   adjacent = false,
   holiday,
+  specialDay,
 }: {
   readonly day: {
     readonly date: string;
@@ -366,6 +371,7 @@ function CombinedDayContent({
   readonly visible: boolean;
   readonly adjacent?: boolean;
   readonly holiday?: string;
+  readonly specialDay?: string;
 }) {
   const palette = usePalette();
   const preview = combinedCalendarPreview(
@@ -389,7 +395,7 @@ function CombinedDayContent({
           ...entries.map((e) => e.title),
           ...shared.map((r) => r.calendarName + ": " + r.entry.title),
         ].join(", ") || "Keine Einträge") +
-        (holiday ? ", " + holiday : "")
+        (holiday ? ", " + holiday : specialDay ? ", " + specialDay : "")
       }
       testID={"calendar-combined-day-" + day.date}
       style={{
@@ -482,7 +488,7 @@ function CombinedDayContent({
           </View>
         ))}
 
-        {holiday && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
+        {(holiday || specialDay) && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
           <Text
             allowFontScaling={false}
             numberOfLines={1}
@@ -492,7 +498,7 @@ function CombinedDayContent({
               fontSize: CALENDAR_METRICS.entryFontSize,
             }}
           >
-            {holiday}
+            {calendarDayLabel(holiday, specialDay)}
           </Text>
         ) : null}
       </View>

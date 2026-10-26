@@ -55,7 +55,8 @@ export function CalendarPrototypeScreen() {
   const insets = useSafeAreaInsets();
   const active = useIsFocused();
   const reduced = useReducedMotion();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { resolver } = useRuleCatalogRuntime();
   const preferences = useCalendarPreferences();
   const timeZone = profile?.timeZone ?? "Europe/Berlin";
@@ -215,6 +216,7 @@ export function CalendarPrototypeScreen() {
               progress={progress}
               entriesByDate={entryIndex.entriesByDate}
               holidays={holidays.holidays}
+              specialDays={holidays.specialDays}
               display={preferences}
               timeZone={timeZone}
               visible={target.mode === "MONTH" && !busy && !data.loading && !data.error}

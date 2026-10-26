@@ -206,7 +206,7 @@ export function CalendarScreen() {
   );
   const quickPopupHolidayName = useMemo(() => {
     if (profile === null || quickPopup === null) return undefined;
-    return CalendarHolidays.holidayNameForDate(quickPopup.date, profile, ruleResolver);
+    return CalendarHolidays.calendarDayLabelForDate(quickPopup.date, profile, ruleResolver);
   }, [profile, quickPopup, ruleResolver]);
 
   const stampDate = useCallback(

@@ -4,6 +4,8 @@ import { useSharedValue } from "react-native-reanimated";
 
 import type { Appointment, CalendarLabelMode, ShiftEntry, UserProfile } from "@/domain/types";
 import { createMonthGrid, formatDateTitle, today } from "@/engine/calendar";
+import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
+import { work } from "@/engine/remuneration-test-fixtures";
 import { MonthCard } from "@/features/calendar/month-card";
 import { CalendarMorphMotion } from "./calendar-morph-measurement";
 import {
@@ -613,4 +615,28 @@ describe("MonthCard", () => {
       backgroundColor: LIGHT_PALETTE.calendarSelection,
     });
   });
+});
+
+it("marks tariff days separately in the original month card", async () => {
+  const profile = createWorkingTimeCalculationProfile(
+    { ...work, federalState: "HE", sundayHolidayWorkEligible: true },
+    null,
+    [],
+  );
+  const props = {
+    month: "2026-12",
+    entriesByDate: new Map(),
+    profile,
+    onSelectDate: jest.fn(),
+    pageHeight: 700,
+    bottomReserve: 80,
+    selectedDate: null,
+  };
+  const screen = await render(<MonthCard {...props} showHolidays />);
+  expect(screen.getByText("◇ Heiligabend")).toBeVisible();
+  expect(screen.getByTestId("calendar-day-current-2026-12-24").props.accessibilityLabel).toContain(
+    "tariflicher Sondertag",
+  );
+  await screen.rerender(<MonthCard {...props} showHolidays={false} />);
+  expect(screen.queryByText("◇ Heiligabend")).toBeNull();
 });

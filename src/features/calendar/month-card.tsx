@@ -33,7 +33,7 @@ import {
   calendarSelectionTouchesMonth,
 } from "@/features/calendar/calendar-rendering";
 import { useCalendarHolidayResolution } from "@/features/calendar/calendar-holidays";
-import { holidayShortLabel } from "@/features/calendar/holiday-label";
+import { calendarDayLabel } from "./calendar-special-days";
 import { stampDayAccessibilityHint } from "@/features/calendar/stamp-accessibility";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarChipPalette } from "@/theme/color-contrast";
@@ -53,6 +53,7 @@ interface DayCellProps {
   readonly cell: CalendarCell;
   readonly entries: readonly CalendarEntry[];
   readonly holidayName?: string;
+  readonly specialDayName?: string;
   readonly isSelected: boolean;
   readonly isToday: boolean;
   readonly onSelectDate: (
@@ -232,6 +233,7 @@ const DayCell = memo(
     cell,
     entries,
     holidayName,
+    specialDayName,
     isSelected,
     isToday,
     onSelectDate,
@@ -295,7 +297,7 @@ const DayCell = memo(
       <Animated.View style={[{ flex: 1, minWidth: 0 }, pressMotion.animatedStyle]}>
         <Pressable
           ref={cellRef}
-          accessibilityLabel={`${formatDateTitle(cell.date)}, ${entries.length} Einträge${holidayName ? `, ${holidayName}` : ""}${isSelected ? ", ausgewählt" : ""}`}
+          accessibilityLabel={`${formatDateTitle(cell.date)}, ${entries.length} Einträge${holidayName ? `, ${holidayName}` : specialDayName ? `, ${specialDayName}` : ""}${isSelected ? ", ausgewählt" : ""}`}
           accessibilityHint={
             stampMode
               ? stampDayAccessibilityHint(stampToolLabel)
@@ -372,7 +374,7 @@ const DayCell = memo(
                 {cell.day}
               </Text>
             </Animated.View>
-            {holidayName ? (
+            {holidayName || specialDayName ? (
               <Text
                 maxFontSizeMultiplier={COMPACT_TEXT_MAX_SCALE}
                 numberOfLines={1}
@@ -387,7 +389,7 @@ const DayCell = memo(
                   textAlign: "center",
                 }}
               >
-                {holidayShortLabel(holidayName)}
+                {calendarDayLabel(holidayName, specialDayName, true)}
               </Text>
             ) : null}
           </View>
@@ -450,6 +452,7 @@ const DayCell = memo(
     calendarEntryListsEqual(previous.entries, next.entries) &&
     previous.entryRowCapacity === next.entryRowCapacity &&
     previous.holidayName === next.holidayName &&
+    previous.specialDayName === next.specialDayName &&
     previous.isSelected === next.isSelected &&
     previous.isToday === next.isToday &&
     previous.onSelectDate === next.onSelectDate &&
@@ -546,18 +549,16 @@ export const MonthCard = memo(function MonthCard({
     });
   }, [internalStampProgress, stampMode, stampTransitionProgress]);
   const grid = useMemo(() => createMonthGrid(month), [month]);
-  const holidays = useCalendarHolidayResolution(
+  const { holidays, specialDays } = useCalendarHolidayResolution(
     month,
     profile,
     ruleResolver,
     showHolidays,
-  ).holidays;
+  );
   const currentDate = today(profile.timeZone);
-  const weekCount = grid.length / 7;
-  const contentWidth = Math.min(width, 760);
   const gridLayout = calculateCalendarGridLayout({
     pageHeight,
-    weekCount,
+    weekCount: grid.length / 7,
     bottomReserve,
     testData,
   });
@@ -567,10 +568,9 @@ export const MonthCard = memo(function MonthCard({
       (gridLayout.rowHeight - CALENDAR_METRICS.dayNumberHeight) / CALENDAR_METRICS.entryRowHeight,
     ),
   );
-  const weeks = Array.from({ length: weekCount }, (_, index) =>
+  const weeks = Array.from({ length: grid.length / 7 }, (_, index) =>
     grid.slice(index * 7, index * 7 + 7),
   );
-
   return (
     <View
       accessibilityElementsHidden={!accessibilityVisible}
@@ -581,9 +581,8 @@ export const MonthCard = memo(function MonthCard({
       <CalendarBackground />
       <View
         style={{
-          width: contentWidth,
+          width: Math.min(width, 760),
           overflow: "hidden",
-          marginTop: 0,
         }}
       >
         {testData ? (
@@ -652,6 +651,7 @@ export const MonthCard = memo(function MonthCard({
                 entries={entriesByDate.get(cell.date) ?? EMPTY_ENTRIES}
                 entryRowCapacity={entryRowCapacity}
                 holidayName={holidays.get(cell.date)?.name}
+                specialDayName={specialDays.get(cell.date)?.label}
                 isSelected={selectedDate !== null && cell.date === selectedDate}
                 isToday={cell.date === currentDate}
                 onSelectDate={onSelectDate}

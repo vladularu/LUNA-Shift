@@ -4,6 +4,8 @@ import { AppState } from "react-native";
 import { getAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
+import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
+import { work } from "@/engine/remuneration-test-fixtures";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { SharedCalendarMonth, SharedCalendarScene } from "./calendar-shared-scene";
 
@@ -45,16 +47,22 @@ function Tree({
   active = true,
   stampMode = false,
   stampTransitionProgress,
+  month = "2026-01",
+  userProfile = profile,
+  showHolidays = true,
 }: {
   mode?: CalendarViewMode;
   entries?: CalendarEntry[];
   active?: boolean;
   stampMode?: boolean;
   stampTransitionProgress?: SharedValue<number>;
+  month?: string;
+  userProfile?: UserProfile;
+  showHolidays?: boolean;
 }) {
   return (
     <SharedCalendarScene
-      month="2026-01"
+      month={month}
       viewMode={mode}
       active={active}
       bottomReserve={55}
@@ -63,13 +71,13 @@ function Tree({
       onTransitionComplete={onComplete}
     >
       <SharedCalendarMonth
-        month="2026-01"
+        month={month}
         pageHeight={700}
         entriesByDate={new Map([["2026-01-08", entries]])}
         display={display}
-        profile={profile}
+        profile={userProfile}
         ruleResolver={bundledRuleResolver}
-        showHolidays
+        showHolidays={showHolidays}
         selectedDate="2026-01-08"
         onSelectDate={onSelectDate}
         accessibilityVisible={active}
@@ -319,4 +327,28 @@ it("makes the selected quick-stamp day distinct and gives empty days a readable 
     borderWidth: 1.5,
     borderColor: LIGHT_PALETTE.textMuted,
   });
+});
+
+it("uses the automatic target profile in the live shared month and hides both label types together", async () => {
+  const userProfile = createWorkingTimeCalculationProfile(
+    { ...work, federalState: "HE", sundayHolidayWorkEligible: true },
+    null,
+    [],
+  );
+  const screen = await render(<Tree month="2026-12" userProfile={userProfile} />);
+  await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+    nativeEvent: { layout: { width: 430, height: 700 } },
+  });
+  expect(screen.getByText("◇ Heiligabend", { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.getByTestId("calendar-day-2026-12-24").props.accessibilityLabel).toContain(
+    "tariflicher Sondertag",
+  );
+  expect(screen.getByTestId("calendar-day-2026-12-25").props.accessibilityLabel).toContain(
+    "1. Weihnachtstag",
+  );
+  await screen.rerender(<Tree month="2026-12" userProfile={userProfile} showHolidays={false} />);
+  expect(screen.queryByText("◇ Heiligabend", { includeHiddenElements: true })).toBeNull();
+  expect(screen.getByTestId("calendar-day-2026-12-24").props.accessibilityLabel).not.toContain(
+    "tariflicher Sondertag",
+  );
 });

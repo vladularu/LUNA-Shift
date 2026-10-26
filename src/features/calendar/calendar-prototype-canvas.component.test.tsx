@@ -35,11 +35,13 @@ function Month({
   height = 640,
   entriesByDate = new Map(),
   holidays = new Map(),
+  specialDays = new Map(),
 }: {
   month?: string;
   height?: number;
   entriesByDate?: ReadonlyMap<string, readonly CalendarEntry[]>;
   holidays?: ReadonlyMap<string, { name: string }>;
+  specialDays?: ReadonlyMap<string, { label: string }>;
 }) {
   const progress = useSharedValue(1);
   return (
@@ -48,6 +50,7 @@ function Month({
       progress={progress}
       entriesByDate={entriesByDate}
       holidays={holidays}
+      specialDays={specialDays}
       visible
       display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
       timeZone="Europe/Berlin"
@@ -284,4 +287,42 @@ it("keeps the twelve month areas and selected date nodes when moving years forwa
     await fireEvent.press(screen.getByRole("button", { name: "Januar " + year + " öffnen" }));
     expect(onSelect).toHaveBeenLastCalledWith(year + "-01");
   }
+});
+
+describe("tariff special-day labels", () => {
+  it("distinguishes special days from statutory holidays in the same month", async () => {
+    const screen = await render(
+      <Month
+        month="2026-12"
+        specialDays={new Map([["2026-12-24", { label: "Heiligabend (tariflicher Sondertag)" }]])}
+        holidays={new Map([["2026-12-25", { name: "1. Weihnachtstag" }]])}
+      />,
+    );
+    expect(screen.getByText("◇ Heiligabend")).toBeVisible();
+    expect(
+      screen.getByTestId("calendar-combined-day-2026-12-24").props.accessibilityLabel,
+    ).toContain("tariflicher Sondertag");
+    expect(screen.getByText("1. Weihnachtstag")).toBeVisible();
+    expect(screen.queryByText("◇ 1. Weihnachtstag")).toBeNull();
+  });
+  it("retains the full special-day label for a crowded cell", async () => {
+    const date = "2026-12-24";
+    const entries = Array.from({ length: 20 }, (_, i) => ({
+      ...holidayShift,
+      date,
+      id: String(i),
+    }));
+    const screen = await render(
+      <Month
+        month="2026-12"
+        height={540}
+        entriesByDate={new Map([[date, entries]])}
+        specialDays={new Map([[date, { label: "Heiligabend (tariflicher Sondertag)" }]])}
+      />,
+    );
+    expect(screen.getByTestId("calendar-combined-day-" + date).props.accessibilityLabel).toContain(
+      "Heiligabend (tariflicher Sondertag)",
+    );
+    expect(screen.getByText("+18")).toBeTruthy();
+  });
 });
