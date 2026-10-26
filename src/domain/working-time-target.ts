@@ -30,7 +30,7 @@ export type TargetWorkModel =
 
 export type TargetTariff =
   | {
-      readonly kind: "TVOED_K" | "TVOED_B" | "TVL_KR";
+      readonly kind: "TVOED_K" | "TVOED_B" | "TVL_KR" | "TVH_KR";
       readonly version: string;
       readonly scopeConfirmed: boolean | null;
     }

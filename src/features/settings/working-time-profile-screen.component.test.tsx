@@ -176,6 +176,42 @@ describe("automatic working time overview", () => {
     expect(screen.queryByText("Tag ergänzen")).toBeNull();
     expect(save).not.toHaveBeenCalled();
   });
+  it.each([
+    ["2026-10", "161:42 h", true],
+    ["2026-11", "161:42 h", false],
+    ["2026-12", "146:18 h", true],
+  ])(
+    "reuses the collapsed TV-H explanation without extra questions for %s",
+    async (month, target, conditional) => {
+      mockMonth = month;
+      const tvh = {
+        ...mockWork,
+        tariff: null,
+        federalState: "HE" as const,
+        tvhKrTariff: {
+          payGroup: "KR8" as const,
+          payLevel: 4 as const,
+          fullTimeWeeklyMinutes: 2310 as const,
+        },
+        sundayHolidayWorkEligible: true,
+      };
+      mockCalculationProfile = createWorkingTimeCalculationProfile(tvh, null, []);
+      const screen = await renderEditor();
+      expect(screen.getByText(target)).toBeTruthy();
+      expect(screen.queryByText(/TV-H.*Planwert/)).toBeNull();
+      await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+      if (conditional) expect(screen.getByText(/TV-H.*Justizvollzug.*Planwert/)).toBeTruthy();
+      else expect(screen.queryByText(/TV-H.*Justizvollzug.*Planwert/)).toBeNull();
+      for (const question of [
+        "Tag ergänzen",
+        "Dienstplanmäßig frei",
+        "Wie verteilen sich deine Arbeitstage?",
+      ])
+        expect(screen.queryByText(question)).toBeNull();
+      expect(router.push).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    },
+  );
   it("has only the breakdown and no employment editor or model question", async () => {
     const screen = await renderEditor();
     for (const label of [

@@ -70,7 +70,12 @@ export function validateWorkingTimeTargetContext(value: unknown): WorkingTimeTar
       exact(model, ["kind", "monthlyReference", "sevenDayShiftPlanConfirmed"]);
     else exact(model, ["kind"]);
     const tariff = exact(period.tariff, ["kind"], ["version", "scopeConfirmed", "id"]);
-    if (tariff.kind === "TVOED_K" || tariff.kind === "TVOED_B" || tariff.kind === "TVL_KR")
+    if (
+      tariff.kind === "TVOED_K" ||
+      tariff.kind === "TVOED_B" ||
+      tariff.kind === "TVL_KR" ||
+      tariff.kind === "TVH_KR"
+    )
       exact(tariff, ["kind", "version", "scopeConfirmed"]);
     else if (tariff.kind === "UNVERIFIED") {
       exact(tariff, ["kind", "id"]);

@@ -86,7 +86,8 @@ export function validateTargetInputs(
     if (
       period.tariff.kind === "TVOED_K" ||
       period.tariff.kind === "TVOED_B" ||
-      period.tariff.kind === "TVL_KR"
+      period.tariff.kind === "TVL_KR" ||
+      period.tariff.kind === "TVH_KR"
     ) {
       if (
         typeof period.tariff.version !== "string" ||

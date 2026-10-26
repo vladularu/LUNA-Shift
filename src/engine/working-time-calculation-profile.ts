@@ -18,6 +18,7 @@ import {
   isReviewedTargetTariff,
   targetTariffForSector,
   tvlKrTargetTariff,
+  tvhKrTargetTariff,
 } from "./working-time-target-rules";
 
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
@@ -47,6 +48,17 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  if (
+    profile.tvhKrTariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.tvlKrTariff &&
+    !profile.tvUkNursingTariff &&
+    !profile.vkaETariff &&
+    !profile.nursingTrainingTariff &&
+    !profile.tvalPflegeTariff
+  )
+    return tvhKrTargetTariff();
   if (
     profile.tvlKrTariff &&
     !profile.salaryBasisConflict &&
