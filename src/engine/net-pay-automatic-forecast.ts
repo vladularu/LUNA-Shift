@@ -1,3 +1,5 @@
+import { payrollEmploymentPeriods } from "./payroll-employment-periods";
+import { employmentProfileAt } from "@/domain/employment-history";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { validateMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { netPayPensionMaxOwnRate } from "@/domain/net-pay-pension-schemes";
@@ -56,7 +58,8 @@ export function calculateAutomaticNetPayForecast(
   },
   resolver: RuleResolver,
 ): AutomaticNetPayForecast {
-  const { month, profile, settings, pay } = input;
+  const { month, settings, pay } = input;
+  const profile = employmentProfileAt(input.profile, month + "-01");
   const sourceMonth = settings.month;
   const stop = (reason: string, recovery?: AutomaticNetPayRecovery): AutomaticNetPayForecast => ({
     sourceMonth,
@@ -64,6 +67,10 @@ export function calculateAutomaticNetPayForecast(
     ...(recovery ? { recovery } : {}),
   });
   try {
+    if (payrollEmploymentPeriods(input.profile, month, month + "-31").length > 1)
+      return stop(
+        "Für Beschäftigungsänderungen innerhalb eines Monats ist die Netto-Prognose noch nicht verfügbar.",
+      );
     validateMonthlyNetPaySettings(settings);
     if (settings.version !== 2 || !settings.automation)
       return stop("Richte deine Netto-Angaben ein.", { kind: "net-settings" });

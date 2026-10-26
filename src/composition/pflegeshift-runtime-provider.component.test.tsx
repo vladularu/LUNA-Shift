@@ -1,3 +1,5 @@
+import type { DatedRemunerationProfile } from "@/domain/remuneration-profile";
+import { employmentDataFromProfile } from "@/domain/employment-history";
 import { act, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Text } from "react-native";
@@ -5,10 +7,11 @@ import type { PropsWithChildren } from "react";
 import type { UserProfile } from "@/domain/types";
 import type { LoadStoredRuleCatalog } from "@/application/rule-catalog-runtime";
 import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
-import { usePflegeShiftStatus } from "@/application/pflegeshift-provider";
+import { usePflegeShiftStatus, usePflegeShiftTariff } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { PflegeShiftRuntimeProvider } from "./pflegeshift-runtime-provider";
 
+let mockEmploymentHistory: readonly DatedRemunerationProfile[] = [];
 const mockDb = {};
 const mockLoadCatalog = jest.fn<LoadStoredRuleCatalog>();
 const mockLoadProfile = jest.fn<() => Promise<UserProfile | null>>();
@@ -21,6 +24,7 @@ jest.mock("@/infrastructure/auth/sharing-auth", () => ({
     subscribe: () => () => {},
   }),
   getSharingSupabaseClient: () => null,
+  isSharingAppleSignInAvailable: async () => false,
 }));
 jest.mock("@/infrastructure/database/calendar-sharing-repository", () => ({
   listCachedSharingCalendars: () => mockReadCaches(),
@@ -56,6 +60,7 @@ jest.mock("@/composition/create-rule-catalog-runtime-port", () => ({
 jest.mock("@/navigation/use-data-month", () => ({ useDataMonth: () => "2026-10" }));
 jest.mock("@/application/remuneration-provider", () => ({
   RemunerationProvider: ({ children }: PropsWithChildren) => children,
+  useRemunerationData: () => ({ status: "ready", profiles: mockEmploymentHistory }),
 }));
 jest.mock("@/application/training-provider", () => ({
   TrainingProvider: ({ children }: PropsWithChildren) => children,
@@ -73,6 +78,7 @@ function Harness() {
   return <Text>{ready && resolver ? "ready" : "loading-data"}</Text>;
 }
 beforeEach(() => {
+  mockEmploymentHistory = [];
   mockLoadCatalog.mockReset();
   mockLoadProfile.mockReset();
   mockCachedSession.mockClear();
@@ -110,4 +116,52 @@ describe("parallel local app startup", () => {
       await screen.unmount();
     },
   );
+});
+
+function ShiftModelHarness() {
+  const { workPatternSettings } = usePflegeShiftTariff();
+  return (
+    <Text>{workPatternSettings.workplaceCoverage + " / " + workPatternSettings.assignment}</Text>
+  );
+}
+it("projects saved shift-model answers after startup even when the main profile and legacy preferences have none", async () => {
+  const profile: UserProfile = {
+    federalState: "HE",
+    holidayRegion: "NONE",
+    weeklyMinutes: 2310,
+    timeZone: "Europe/Berlin",
+    regularRotatingNightWork: null,
+    sundayHolidayWorkEligible: true,
+    allEmploymentWorkRecorded: true,
+    tariff: null,
+    manualMonthlyGrossCents: 300000,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  };
+  mockEmploymentHistory = [
+    {
+      effectiveFrom: "2026-07-01",
+      revision: 1,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+      data: {
+        version: 1,
+        weeklyMinutes: 2310,
+        selection: { kind: "own-monthly", monthlyGrossCents: 300000 },
+      },
+      employment: employmentDataFromProfile({
+        ...profile,
+        workPattern: { workplaceCoverage: "NOT_AROUND_THE_CLOCK", assignment: "TEMPORARY" },
+      }),
+    },
+  ];
+  mockLoadCatalog.mockResolvedValue(null);
+  mockLoadProfile.mockResolvedValue(profile);
+  const screen = await render(
+    <PflegeShiftRuntimeProvider>
+      <ShiftModelHarness />
+    </PflegeShiftRuntimeProvider>,
+  );
+  await waitFor(() => expect(screen.getByText("NOT_AROUND_THE_CLOCK / TEMPORARY")).toBeTruthy());
+  await screen.unmount();
 });

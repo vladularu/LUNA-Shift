@@ -192,6 +192,10 @@ export type SalaryBasisDrafts = Pick<
 >;
 
 export interface UserProfile {
+  /** Dated shift-model answers; legacy preferences remain the fallback. */
+  readonly workPattern?: SaveTvoedWorkPatternSettingsInput | null;
+  /** Read-only dated inputs, loaded from the existing remuneration history. */
+  readonly employmentTimeline?: readonly import("./remuneration-profile").DatedRemunerationProfile[];
   /** Read-only recovery drafts; no salary is active until an explicit selection is saved. */
   readonly salaryBasisConflict?: SalaryBasisDrafts;
   readonly displayName?: string | null;
@@ -398,6 +402,21 @@ export interface SaveMonthlyTariffDecisionInput {
 }
 
 export interface SaveProfileInput {
+  readonly workPattern?: SaveTvoedWorkPatternSettingsInput | null;
+  /** Present only for edits in existing profile forms; null explicitly corrects the baseline. */
+  readonly validity?: {
+    readonly effectiveFrom: string | null;
+    /** Explicit date selection may declare unchanged visible values for that date. */
+    readonly declarePeriod?: boolean;
+    /** Internal guarded undo of the last explicit save; never a new dated change. */
+    readonly restoreTimeline?: readonly import("./remuneration-profile").DatedRemunerationProfile[];
+    readonly expectedTimeline: string;
+    readonly expectedProfileUpdatedAt: string;
+    /** Explicit correction applies only to fields shown in the existing form. */
+    readonly correctionFields?: readonly string[];
+    readonly fields?: readonly string[];
+    readonly baseline?: import("./employment-history").EmploymentProfileData;
+  };
   readonly displayName?: string | null;
   readonly employerName?: string | null;
   readonly federalState: FederalState;

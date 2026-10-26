@@ -1,3 +1,4 @@
+import canonicalize from "canonicalize";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
 import { TariffAnnualTestDatabase } from "./tariff-annual-test-database";
@@ -19,6 +20,110 @@ describe("dated working time target persistence", () => {
     await adapter.setup();
   });
   afterEach(() => adapter.database.close());
+  it("keeps target confirmations through note and premium edits but invalidates changed duty hours", async () => {
+    let duty = await saveShift(adapter.db, {
+      ...shiftFixture({ date: "2026-12-25", startTime: "08:00", endTime: "16:00" }),
+      id: undefined,
+    });
+    await saveWorkingTimeTargetSettings(adapter.db, {
+      context: decemberTargetContext,
+      confirmedDates: decemberTargetContext.days.map((day) => day.date),
+      expected: await loadWorkingTimeTargetSettings(adapter.db),
+    });
+    duty = await saveShift(adapter.db, {
+      ...duty,
+      expectedRevision: duty.revision,
+      note: "Neue Notiz",
+      holidayPremiumMode: "WITHOUT_TIME_OFF",
+    });
+    let loaded = await loadWorkingTimeTargetSettings(adapter.db);
+    expect(loaded.staleDates).toEqual([]);
+    expect(
+      calculateMonthlyWorkingTimeTarget(
+        "2026-12",
+        { federalState: "HE", weeklyMinutes: 2310 },
+        undefined,
+        loaded.context,
+      ).targetMinutes,
+    ).toBe(8778);
+    await saveShift(adapter.db, { ...duty, expectedRevision: duty.revision, breakMinutes: 60 });
+    loaded = await loadWorkingTimeTargetSettings(adapter.db);
+    expect(loaded.staleDates).toEqual(["2026-12-25"]); // A daytime predecessor is irrelevant on 26 December.
+  });
+  it("upgrades unchanged legacy bindings once without losing historical confirmations", async () => {
+    const duty = await saveShift(adapter.db, {
+      ...shiftFixture({ date: "2026-12-25", startTime: "08:00", endTime: "16:00" }),
+      id: undefined,
+    });
+    const original = await saveWorkingTimeTargetSettings(adapter.db, {
+      context: decemberTargetContext,
+      confirmedDates: decemberTargetContext.days.map((day) => day.date),
+      expected: await loadWorkingTimeTargetSettings(adapter.db),
+    });
+    const shifts = await adapter.db.getAllAsync<{
+      id: string;
+      date: string;
+      revision: number;
+      updated_at: string;
+      start_time: string | null;
+      end_time: string | null;
+    }>(
+      "SELECT id,date,revision,updated_at,start_time,end_time FROM shift_entries WHERE deleted_at IS NULL ORDER BY date,id",
+    );
+    const profile = await loadProfile(adapter.db);
+    const bindings = decemberTargetContext.days.map((day) => {
+      const previous = new Date(day.date + "T12:00:00Z");
+      previous.setUTCDate(previous.getUTCDate() - 1);
+      return {
+        date: day.date,
+        signature: canonicalize({
+          timeZone: profile!.timeZone,
+          work: decemberTargetContext.periods.map(
+            ({ validFrom: _from, validTo: _to, ...work }) => work,
+          ),
+          employed: true,
+          shifts: shifts.filter(
+            (shift) =>
+              shift.date === previous.toISOString().slice(0, 10) || shift.date === day.date,
+          ),
+        })!,
+      };
+    });
+    await adapter.db.runAsync(
+      "UPDATE working_time_target_settings SET settings_json=? WHERE id='singleton'",
+      JSON.stringify({ ...original.saved!.settings, planBindings: bindings }),
+    );
+    adapter.database.exec(
+      "INSERT INTO dev_test_backups(month,payload,run_id,created_at) VALUES('2026-12','{}','target-binding-test','2026-01-01T00:00:00Z')",
+    );
+    expect((await loadWorkingTimeTargetSettings(adapter.db)).saved?.revision).toBe(
+      original.saved!.revision,
+    );
+    adapter.database.exec("DELETE FROM dev_test_backups");
+    const upgraded = await loadWorkingTimeTargetSettings(adapter.db);
+    expect(upgraded.staleDates).toEqual([]);
+    expect(upgraded.context).toEqual(decemberTargetContext);
+    expect(upgraded.saved?.revision).toBe(original.saved!.revision + 1);
+    expect((await loadWorkingTimeTargetSettings(adapter.db)).saved?.revision).toBe(
+      upgraded.saved?.revision,
+    );
+    await saveShift(adapter.db, {
+      ...duty,
+      expectedRevision: duty.revision,
+      holidayPremiumMode: "WITHOUT_TIME_OFF",
+    });
+    expect((await loadWorkingTimeTargetSettings(adapter.db)).staleDates).toEqual([]);
+    // A legacy binding already stale before the upgrade cannot be silently re-confirmed.
+    await adapter.db.runAsync(
+      "UPDATE working_time_target_settings SET settings_json=? WHERE id='singleton'",
+      JSON.stringify({ ...original.saved!.settings, planBindings: bindings }),
+    );
+    const staleLegacy = await loadWorkingTimeTargetSettings(adapter.db);
+    expect(staleLegacy.staleDates).toContain("2026-12-25");
+    expect(staleLegacy.context?.days.find((day) => day.date === "2026-12-25")?.rosterStatus).toBe(
+      "DRAFT",
+    );
+  });
   it("requires a day-specific action to confirm new final facts", async () => {
     const empty = await loadWorkingTimeTargetSettings(adapter.db);
     await expect(

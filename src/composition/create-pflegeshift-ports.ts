@@ -1,3 +1,4 @@
+import { loadWorkingTimeTargetSettings } from "@/infrastructure/database/working-time-target-repository";
 import { createSimpleProfilePorts } from "./create-simple-profile-ports";
 import { createTemplatePorts } from "./create-template-ports";
 import type { SQLiteDatabase } from "expo-sqlite";
@@ -28,6 +29,7 @@ export function createPflegeShiftPorts(db: SQLiteDatabase): PflegeShiftPorts {
     ...profilePorts,
     repository: {
       ...profilePorts.repository,
+      loadWorkingTimeTargetSettings: () => loadWorkingTimeTargetSettings(db),
       ...createTemplatePorts(db),
       listCalendarEntries: (startDate, endDate) => listCalendarEntries(db, startDate, endDate),
       saveShift: (input) => saveShift(db, input),

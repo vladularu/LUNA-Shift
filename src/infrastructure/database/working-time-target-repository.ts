@@ -52,6 +52,9 @@ interface PlanRow {
   readonly date: string;
   readonly revision: number;
   readonly updated_at: string;
+  readonly type: string;
+  readonly all_day: number;
+  readonly break_minutes: number;
   readonly start_time: string | null;
   readonly end_time: string | null;
 }
@@ -60,7 +63,7 @@ async function readPlan(db: SQLiteDatabase) {
     "SELECT time_zone FROM user_profile WHERE id='singleton'",
   );
   const shifts = await db.getAllAsync<PlanRow>(
-    "SELECT id,date,revision,updated_at,start_time,end_time FROM shift_entries WHERE deleted_at IS NULL ORDER BY date,id",
+    "SELECT id,date,revision,updated_at,start_time,end_time,type,all_day,break_minutes FROM shift_entries WHERE deleted_at IS NULL ORDER BY date,id",
   );
   const planRevision = canonicalize({ timeZone: profile?.time_zone ?? null, shifts })!;
   const byDate = new Map<string, PlanRow[]>();
@@ -75,9 +78,23 @@ function daySignature(
   plan: Awaited<ReturnType<typeof readPlan>>,
   date: string,
   context: WorkingTimeTargetContext,
+  legacy = false,
 ) {
   const previous = Temporal.PlainDate.from(date).subtract({ days: 1 }).toString();
+  const previousShifts = plan.byDate.get(previous) ?? [];
+  const shifts = [
+    ...previousShifts.filter(
+      (shift) =>
+        legacy ||
+        (shift.all_day === 0 &&
+          shift.start_time !== null &&
+          shift.end_time !== null &&
+          shift.end_time <= shift.start_time),
+    ),
+    ...(plan.byDate.get(date) ?? []),
+  ];
   return canonicalize({
+    ...(legacy ? {} : { bindingVersion: 2 }),
     timeZone: plan.profile?.time_zone ?? null,
     work: context.periods
       .filter(
@@ -88,20 +105,83 @@ function daySignature(
       !context.employment ||
       (context.employment.from <= date &&
         (context.employment.to === null || date <= context.employment.to)),
-    shifts: [...(plan.byDate.get(previous) ?? []), ...(plan.byDate.get(date) ?? [])],
+    shifts: shifts.map((shift) =>
+      legacy
+        ? {
+            id: shift.id,
+            date: shift.date,
+            revision: shift.revision,
+            updated_at: shift.updated_at,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+          }
+        : {
+            id: shift.id,
+            date: shift.date,
+            type: shift.type,
+            all_day: shift.all_day,
+            break_minutes: shift.break_minutes,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+          },
+    ),
   })!;
 }
+/** Upgrade only evidence proven unchanged under the old binding. Never re-confirm stale facts. */
+async function upgradeUnchangedBindings(
+  db: SQLiteDatabase,
+  saved: SavedWorkingTimeTargetSettings,
+  plan: Awaited<ReturnType<typeof readPlan>>,
+) {
+  let changed = false;
+  const planBindings = saved.settings.planBindings.map((binding) => {
+    const signature = daySignature(plan, binding.date, saved.settings.context);
+    if (
+      binding.signature !== signature &&
+      binding.signature === daySignature(plan, binding.date, saved.settings.context, true)
+    ) {
+      changed = true;
+      return { ...binding, signature };
+    }
+    return binding;
+  });
+  if (!changed || (await db.getFirstAsync("SELECT month FROM dev_test_backups LIMIT 1")))
+    return saved;
+  const settings = validateWorkingTimeTargetSettings({ ...saved.settings, planBindings });
+  const revision = saved.revision + 1;
+  if (!Number.isSafeInteger(revision)) throw new WorkingTimeTargetError();
+  const now = new Date().toISOString();
+  const updatedAt =
+    Temporal.Instant.compare(Temporal.Instant.from(now), Temporal.Instant.from(saved.updatedAt)) < 0
+      ? saved.updatedAt
+      : now;
+  const result = await db.runAsync(
+    "UPDATE working_time_target_settings SET settings_json=?,revision=?,updated_at=? WHERE id='singleton' AND revision=?",
+    JSON.stringify(settings),
+    revision,
+    updatedAt,
+    saved.revision,
+  );
+  if (result.changes !== 1)
+    throw new WorkingTimeTargetError(
+      "Die Sollzeitangaben wurden zwischenzeitlich geändert. Bitte erneut laden.",
+    );
+  return Object.freeze({ ...saved, settings, revision, updatedAt });
+}
+
 async function readSettings(db: SQLiteDatabase): Promise<WorkingTimeTargetSnapshot> {
   const row = await db.getFirstAsync(
     `SELECT ${WORKING_TIME_TARGET_COLUMNS.join(",")} FROM working_time_target_settings WHERE id='singleton'`,
   );
-  const saved = row === null ? null : mapWorkingTimeTargetRow(row);
+  let saved = row === null ? null : mapWorkingTimeTargetRow(row);
   const plan = await readPlan(db);
+  if (saved) saved = await upgradeUnchangedBindings(db, saved, plan);
   const staleDates =
     saved?.settings.planBindings
       .filter(
         (binding) =>
-          binding.signature !== daySignature(plan, binding.date, saved!.settings.context),
+          binding.signature !== daySignature(plan, binding.date, saved!.settings.context) &&
+          binding.signature !== daySignature(plan, binding.date, saved!.settings.context, true),
       )
       .map((binding) => binding.date) ?? [];
   const stale = new Set(staleDates);

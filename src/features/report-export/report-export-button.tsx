@@ -35,7 +35,8 @@ export function ReportExportButton({
   const db = useSQLiteContext();
   const { ready, error } = usePflegeShiftStatus();
   const { entries } = usePflegeShiftEntries();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
   const { resolver } = useRuleCatalogRuntime();

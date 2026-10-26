@@ -1,3 +1,5 @@
+import { captureEmploymentProfile } from "@/domain/employment-history";
+import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { describe, expect, it } from "vitest";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
@@ -513,5 +515,89 @@ describe("automatic payroll across every selectable salary model", () => {
     expect(
       calculate(forecastProfile, shift, automatedSettings("2026-08")).forecast.result.status,
     ).toBe("unavailable");
+  });
+});
+
+describe("dated payroll input equivalence", () => {
+  function dated(
+    profile: UserProfile,
+    changes: readonly [string | null, Partial<UserProfile>][] = [
+      [null, {}],
+      ["2026-07-16", {}],
+    ],
+  ) {
+    return {
+      ...profile,
+      employmentTimeline: changes.map(([effectiveFrom, patch], index) => {
+        const selected = { ...profile, ...patch };
+        return {
+          effectiveFrom,
+          data: remunerationDataFromLegacy(selected),
+          employment: captureEmploymentProfile(selected),
+          revision: index + 1,
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: `2026-07-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+        };
+      }),
+    };
+  }
+  it.each(models)(
+    "keeps %s available across an identical correction boundary",
+    (_label, profile) => {
+      const before = calculate(profile);
+      const after = calculate(dated(profile));
+      expect(before.forecast.result.status).toBe("available");
+      expect(after.forecast).toEqual(before.forecast);
+      expect(after.pay.personalBaseAmount).toEqual(before.pay.personalBaseAmount);
+      expect(after.pay.estimatedGrossAmount).toEqual(before.pay.estimatedGrossAmount);
+    },
+  );
+  it("does not mistake corrected metadata for a midmonth financial change", () => {
+    const profile = dated(forecastProfile);
+    const corrected = {
+      ...profile,
+      employmentTimeline: profile.employmentTimeline.map((p, i) => ({
+        ...p,
+        revision: 100 + i,
+        employmentOverrides: { weeklyMinutes: "2026-07-20" },
+        updatedAt: "2026-07-20T00:00:00Z",
+      })),
+    };
+    expect(calculate(corrected).forecast).toEqual(calculate(forecastProfile).forecast);
+  });
+  it("retains a real hours change even when the latest value is back to the original", () => {
+    const profile = dated(forecastProfile, [
+      [null, {}],
+      ["2026-07-10", { weeklyMinutes: 1800 }],
+      ["2026-07-20", {}],
+    ]);
+    expect(calculate(profile).forecast.result).toMatchObject({
+      status: "unavailable",
+      reason: expect.stringContaining("Beschäftigungsänderungen"),
+    });
+  });
+  it("retains changes to the actual salary selection", () => {
+    const profile = dated(forecastProfile, [
+      [null, {}],
+      ["2026-07-16", { tariff: { ...forecastProfile.tariff!, payLevel: 5 } }],
+    ]);
+    expect(calculate(profile).forecast.result).toMatchObject({
+      status: "unavailable",
+      reason: expect.stringContaining("Beschäftigungsänderungen"),
+    });
+  });
+  it("restores the October forecast for corrected identical employment periods", () => {
+    const shift = forecastShift({ date: "2026-10-04" });
+    const before = calculate(forecastProfile, shift, automatedSettings("2026-10"));
+    const after = calculate(
+      dated(forecastProfile, [
+        [null, {}],
+        ["2026-10-26", {}],
+      ]),
+      shift,
+      automatedSettings("2026-10"),
+    );
+    expect(before.forecast.result.status).toBe("available");
+    expect(after.forecast).toEqual(before.forecast);
   });
 });

@@ -1,3 +1,4 @@
+import type { WorkingTimeTargetSnapshot } from "@/domain/saved-working-time-target";
 import type {
   Appointment,
   CalendarEntry,
@@ -133,6 +134,7 @@ export interface RemunerationRepositoryPort {
 }
 
 export interface PflegeShiftRepositoryPort {
+  readonly loadWorkingTimeTargetSettings?: () => Promise<WorkingTimeTargetSnapshot>;
   readonly loadProfile: () => Promise<UserProfile | null>;
   readonly saveProfile: (input: SaveProfileInput) => Promise<UserProfile>;
   readonly listTemplates: () => Promise<readonly ShiftTemplate[]>;

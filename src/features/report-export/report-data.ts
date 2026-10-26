@@ -1,3 +1,9 @@
+import { employmentProfileAt, employmentMonthPeriods } from "@/domain/employment-history";
+import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
+import type {
+  WorkingTimeTargetProfile,
+  MonthlyWorkingTimeTarget,
+} from "@/domain/working-time-target";
 import { Temporal } from "@js-temporal/polyfill";
 import {
   collectAnnualSalaryPayments,
@@ -28,7 +34,7 @@ import { annualSalaryForecast } from "@/features/salary/annual-salary-forecast";
 export interface ReportInput {
   readonly period: string;
   readonly entries: readonly CalendarEntry[];
-  readonly profile: UserProfile;
+  readonly profile: UserProfile & WorkingTimeTargetProfile;
   readonly tariffDecisions: readonly MonthlyTariffDecision[];
   readonly workPatternSettings: TvoedWorkPatternSettings;
   readonly ruleResolver: RuleResolver;
@@ -68,6 +74,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
     collectAnnualSalaryPayments(input.netPayTimeline ?? []),
   ).payments;
   const rows: ReportRow[] = [];
+  const workingTimeTargets: MonthlyWorkingTimeTarget[] = [];
   const readableEntries: NonNullable<ReportDocument["entries"]>[number][] = [];
   let availableNetMonthCount = 0;
   let annualNetCents = 0;
@@ -81,8 +88,24 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
     reason:
       "Gehaltsprognose: unverbindliche Brutto-/Nettoschätzung, keine Lohnabrechnung. Pausen werden mangels Lageangabe mittig angesetzt. Automatische Prüfhinweise sind keine Rechtsberatung.",
   });
-  add("Profil", input.period, "Berechnungsgrundlagen", input.profile);
+  const {
+    workingTimeTarget: _calculationInput,
+    employmentTimeline: _history,
+    ...savedProfile
+  } = employmentProfileAt(input.profile, months[0] + "-01");
+  add("Profil", input.period, "Berechnungsgrundlagen", savedProfile);
   add("Profil", input.period, "Arbeitsmuster", input.workPatternSettings);
+  if (input.profile.employmentTimeline?.some((item) => item.employment))
+    for (const month of months) {
+      for (const period of employmentMonthPeriods(input.profile, month, month + "-31")) {
+        const {
+          employmentTimeline: _timeline,
+          workingTimeTarget: _target,
+          ...p
+        } = period.profile as typeof input.profile;
+        add("Profil", month, "Beschäftigung ab " + period.from, p);
+      }
+    }
   yield;
   if (months.length === 12) {
     const steps = buildAnnualAvailableReportSteps(
@@ -129,6 +152,10 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
     yield;
   }
   for (const month of months) {
+    if (input.profile.workingTimeTarget)
+      workingTimeTargets.push(
+        calculateMonthlyWorkingTimeTarget(month, input.profile, input.ruleResolver),
+      );
     const calculation = calculateMonthlyAnalysis(
       month,
       input.entries,
@@ -283,5 +310,11 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       availableNetMonthCount,
       reason: `Netto-Prognose für ${availableNetMonthCount} von 12 Monaten verfügbar; die Summe umfasst ausschließlich diese Monate.`,
     });
-  return { period: input.period, createdAt: input.createdAt, rows, entries: readableEntries };
+  return {
+    period: input.period,
+    createdAt: input.createdAt,
+    rows,
+    entries: readableEntries,
+    ...(workingTimeTargets.length ? { workingTimeTargets } : {}),
+  };
 }

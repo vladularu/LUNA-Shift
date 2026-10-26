@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
@@ -6,7 +7,6 @@ import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-t
 import type {
   CalendarEntry,
   MonthlyPayEstimate,
-  MonthlySummary,
   MonthlyTariffDecision,
   ShiftEntry,
   TvoedWorkPatternSettings,
@@ -35,7 +35,7 @@ export interface MonthlyAnalysisCalculation {
   readonly monthShifts: readonly ShiftEntry[];
   readonly pay: RuleComputationResult<MonthlyPayEstimate>;
   readonly shiftTypeAnalysis: MonthlyShiftTypeAnalysis;
-  readonly summary: RuleComputationResult<MonthlySummary>;
+  readonly summary: RuleComputationResult<ReturnType<typeof calculateMonthlySummary>>;
 }
 
 export function calculateMonthlyAnalysis(
@@ -46,6 +46,7 @@ export function calculateMonthlyAnalysis(
   workPatternSettings: TvoedWorkPatternSettings | undefined,
   ruleResolver: RuleResolver,
 ): MonthlyAnalysisCalculation {
+  profile = employmentProfileAt(profile, month + "-01");
   const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
   const complianceShifts = captureRuleComputation(() => {
     requireResolvedPackage(ruleResolver.resolveHoliday(`${month}-01`));

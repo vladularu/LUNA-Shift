@@ -7,7 +7,7 @@ import {
   saveWorkingTimeTargetSettings,
 } from "@/infrastructure/database/working-time-target-repository";
 
-export function useWorkingTimeTargetSettings(enabled: boolean) {
+export function useWorkingTimeTargetSettings(enabled: boolean, onSaved?: () => void) {
   const db = useSQLiteContext();
   const generation = useRef(0),
     writing = useRef(false);
@@ -48,6 +48,7 @@ export function useWorkingTimeTargetSettings(enabled: boolean) {
         confirmedDates,
       });
       if (current === generation.current) setState({ status: "ready", snapshot });
+      onSaved?.();
     } finally {
       writing.current = false;
       if (current === generation.current) setBusy(false);

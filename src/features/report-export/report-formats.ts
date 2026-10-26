@@ -45,5 +45,71 @@ export function reportToCsv(report: ReportDocument): string {
             : hours(entry.creditMinutes),
     ]),
   ];
+  const minutesText = (value: number | null) =>
+    value === null
+      ? "Nicht verfügbar"
+      : Math.trunc(Math.abs(value) / 60) + ":" + String(Math.abs(value) % 60).padStart(2, "0");
+  for (const target of report.workingTimeTargets ?? []) {
+    lines.push(["", "", "", "", "", "", "", "", "", ""]);
+    lines.push([
+      "Sollzeitberechnung",
+      target.month,
+      "Status",
+      target.status === "FINAL"
+        ? "Bestätigt"
+        : target.status === "PROVISIONAL"
+          ? "Vorläufig"
+          : "Nicht verfügbar",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+    lines.push([
+      "Monatsbasis",
+      target.month,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      minutesText(target.baseMinutes),
+      "",
+    ]);
+    for (const item of target.adjustments)
+      lines.push([
+        reportDate(item.date),
+        "",
+        item.kind === "TARIFF_SPECIAL_DAY" ? "Tariflicher Sondertag" : "Gesetzlicher Feiertag",
+        item.label,
+        item.legalBasis,
+        item.condition,
+        item.status === "CONFIRMED"
+          ? "Bestätigt"
+          : item.status === "PLAN_ESTIMATE"
+            ? "Laut Dienstplan (vorläufig)"
+            : item.status === "PROFILE_ESTIMATE"
+              ? "Planwert aus Arbeitsprofil"
+              : "Offen",
+        "",
+        item.status === "PENDING" ? "Offen" : "-" + minutesText(item.minutes),
+        "",
+      ]);
+    lines.push([
+      "Gesamt Sollzeit",
+      target.month,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      minutesText(target.targetMinutes),
+      "",
+    ]);
+  }
   return "\uFEFF" + lines.map((line) => line.map(csvCell).join(";")).join("\r\n") + "\r\n";
 }

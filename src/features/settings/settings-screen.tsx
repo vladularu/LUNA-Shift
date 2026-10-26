@@ -6,11 +6,7 @@ import { Alert, Platform, View, useWindowDimensions } from "react-native";
 
 import { AccountSummaryCard } from "@/features/account/account-summary-card";
 import { PRODUCT_NAME } from "@/brand";
-import {
-  usePflegeShiftProfile,
-  usePflegeShiftStatus,
-  usePflegeShiftTariff,
-} from "@/application/pflegeshift-provider";
+import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
 import {
   isDeveloperModeEnabled,
   setDeveloperMode,
@@ -18,16 +14,10 @@ import {
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { APP_RUNTIME_LABEL } from "@/infrastructure/app-version";
 import { CalendarPerformanceControls } from "@/features/calendar/calendar-performance-controls";
-import {
-  localBackupRoute,
-  settingsInfoRoute,
-  settingsEditorRoute,
-  tariffAssessmentRoute,
-} from "@/navigation/routes";
+import { localBackupRoute, settingsInfoRoute, settingsEditorRoute } from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { profileSalaryLabel, profileWorkLabel } from "./work-profile-summary";
-import { currentMonth } from "@/engine/calendar";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -44,7 +34,6 @@ export function SettingsScreen() {
   const db = useSQLiteContext();
   const { error, ready, reload } = usePflegeShiftStatus();
   const { profile } = usePflegeShiftProfile();
-  const { workPatternSettings } = usePflegeShiftTariff();
   const [developerMode, setDeveloperModeState] = useState(false);
 
   useEffect(() => {
@@ -100,48 +89,12 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
-              title="Arbeitszeit & Ort"
-              subtitle={profileWorkLabel(profile)}
+              title="Arbeit & Gehalt"
+              subtitle={`${profileWorkLabel(profile)} · ${profileSalaryLabel(profile).split(" · ").slice(0, 2).join(" · ")}`}
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="time-outline" />}
-              onPress={() => router.push(settingsEditorRoute("WORK", "settings"))}
+              onPress={() => router.push(settingsEditorRoute("EMPLOYMENT", "settings"))}
             />
-            <CardSeparator />
-            <RowButton
-              title="Sollzeitangaben"
-              subtitle="Arbeitszeitmodell & Gültigkeit"
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="calendar-outline" />}
-              onPress={() =>
-                router.push({ pathname: "/working-time-profile", params: { origin: "settings" } })
-              }
-            />
-            <CardSeparator />
-            <RowButton
-              title="Tarif & Gehalt"
-              subtitle={profileSalaryLabel(profile).split(" · ").slice(0, 3).join(" · ")}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="document-text-outline" />}
-              onPress={() => router.push(settingsEditorRoute("TARIFF", "settings"))}
-            />
-            {profile.tariff || profile.vkaETariff || profile.tvlKrTariff ? (
-              <>
-                <CardSeparator />
-                <RowButton
-                  title="Schichtmodell"
-                  subtitle={
-                    workPatternSettings.workplaceCoverage === "AROUND_THE_CLOCK"
-                      ? "Durchgehend 24/7"
-                      : workPatternSettings.workplaceCoverage === "NOT_AROUND_THE_CLOCK"
-                        ? "Nicht durchgehend 24/7"
-                        : "Noch nicht bestätigt"
-                  }
-                  subtitleBelow={subtitleBelow}
-                  leading={<SettingsIcon name="repeat-outline" />}
-                  onPress={() => router.push(tariffAssessmentRoute(currentMonth(profile.timeZone)))}
-                />
-              </>
-            ) : null}
           </SurfaceCard>
         </View>
         <View style={{ gap: SPACING.sm }}>

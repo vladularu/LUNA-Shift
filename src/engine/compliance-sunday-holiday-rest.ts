@@ -1,6 +1,8 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type {
+  UserProfile,
   ComplianceIssue,
   ComplianceSeverity,
   FederalState,
@@ -13,6 +15,7 @@ import type { RuleLegalRules } from "@/rules/contracts.generated";
 import { RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 
 interface SundayHolidayRestOptions {
+  readonly employmentProfile?: UserProfile;
   readonly federalState?: FederalState;
   readonly holidayRegion?: HolidayRegion;
   readonly sundayHolidayWorkEligible?: boolean | null;
@@ -155,15 +158,35 @@ function* knownHolidayDatesIncrementally(
   federalState: FederalState,
   holidayRegion: HolidayRegion,
   ruleResolver: RuleResolver,
+  employmentProfile?: UserProfile,
 ): Generator<number, HolidayCoverage, void> {
   const dates = new Set<string>();
   const missingYears = new Set<number>();
   let processed = 0;
   for (const year of years) {
     try {
-      for (const holiday of getPublicHolidays(year, federalState, ruleResolver, holidayRegion)) {
-        dates.add(holiday.date);
-      }
+      const contexts = [
+        { federalState, holidayRegion },
+        ...(employmentProfile?.employmentTimeline ?? []).flatMap((item) =>
+          item.employment ? [item.employment] : [],
+        ),
+      ];
+      for (const context of contexts)
+        for (const holiday of getPublicHolidays(
+          year,
+          context.federalState,
+          ruleResolver,
+          context.holidayRegion,
+        )) {
+          const atDate = employmentProfile
+            ? employmentProfileAt(employmentProfile, holiday.date)
+            : context;
+          if (
+            atDate.federalState === context.federalState &&
+            atDate.holidayRegion === context.holidayRegion
+          )
+            dates.add(holiday.date);
+        }
     } catch (error) {
       if (!(error instanceof RuleResolutionError)) throw error;
       missingYears.add(year);
@@ -424,6 +447,7 @@ export function* checkSundayHolidayRestIncrementally(
     options.federalState,
     options.holidayRegion ?? "NONE",
     ruleResolver,
+    options.employmentProfile,
   );
   let holidayCoverage: HolidayCoverage;
   while (true) {
@@ -490,18 +514,28 @@ export function* checkSundayHolidayRestIncrementally(
       ),
     );
   }
-  if (obligations.length > 0 && options.sundayHolidayWorkEligible !== true) {
-    const related = obligations[0]!.related;
+  const eligibilityDates = options.employmentProfile?.employmentTimeline?.some(
+    (item) => item.employment,
+  )
+    ? obligations
+    : obligations.slice(0, 1);
+  for (const obligation of eligibilityDates) {
+    const eligible = options.employmentProfile
+      ? employmentProfileAt(options.employmentProfile, obligation.date.toString())
+          .sundayHolidayWorkEligible
+      : options.sundayHolidayWorkEligible;
+    if (eligible === true) continue;
+    const related = obligation.related;
     issues.push(
       issue(
-        options.sundayHolidayWorkEligible === false ? "critical" : "warning",
+        eligible === false ? "critical" : "warning",
         "ARBZG_10_ELIGIBILITY",
-        options.sundayHolidayWorkEligible === false
+        eligible === false
           ? "Sonn- oder Feiertagsarbeit nicht als zulässig erfasst"
           : "Zulässigkeit der Sonn- oder Feiertagsarbeit offen",
         "Bitte prüfen und bestätigen, ob die erfasste Sonn- oder Feiertagsarbeit unter eine Ausnahme nach § 10 ArbZG oder eine andere wirksame Ausnahme fällt.",
         related,
-        obligations[0]!.date.toString(),
+        obligation.date.toString(),
       ),
     );
   }

@@ -1,17 +1,19 @@
 import { Temporal } from "@js-temporal/polyfill";
-import type { UserProfile } from "@/domain/types";
+import type { UserProfile, SaveProfileInput } from "@/domain/types";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
   SettingsEditorTestFlow,
+  saveSettingsChoice,
+  closeSettingsSave,
   chooseTariffDetails,
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<() => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -78,12 +80,32 @@ describe("TV-L in the familiar salary form", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Temporal.Now, "plainDateISO").mockReturnValue(Temporal.PlainDate.from("2026-10-05"));
-    mockUpdateProfile.mockResolvedValue(undefined);
+    mockUpdateProfile.mockImplementation(async (input) => ({ ...mockProfile, ...input }));
     mockSection = "TARIFF";
     mockProfile = { ...baseProfile, tvlKrTariff: tvl };
   });
-  it("reopens KR group, level and region without VKA controls or date/history menus", async () => {
+  it("selects a real calendar date in the existing tariff form", async () => {
     const screen = await render(editor());
+    expect(screen.queryByLabelText("Gültig ab")).toBeNull();
+    await select(screen, "Stufe", "Stufe 5");
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Ab einem Datum" }));
+    await fireEvent(
+      screen.getByLabelText("Gültig ab"),
+      "valueChange",
+      {},
+      new Date(2026, 6, 1, 12),
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Ab 01.07.2026 speichern" }));
+    expect(mockUpdateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        validity: expect.objectContaining({ effectiveFrom: "2026-07-01" }),
+      }),
+    );
+  });
+  it("reopens KR group, level and region with inline validity and no VKA or history menus", async () => {
+    const screen = await render(editor());
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(screen.getByRole("button", { name: "Tarifvertrag: TV-L Pflege" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Entgeltgruppe: KR8" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Stufe: Stufe 4" })).toBeTruthy();
@@ -91,18 +113,10 @@ describe("TV-L in the familiar salary form", () => {
     expect(screen.getAllByText("38,5 Std.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Einrichtung:/ })).toBeNull();
     expect(
-      screen.queryByText(/Geburtsdatum|Gültig ab|Vergütungsstände|Frühere Angaben|Übrige VKA/),
+      screen.queryByText(/Geburtsdatum|Vergütungsstände|Frühere Angaben|Übrige VKA/),
     ).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tvlKrTariff: tvl,
-        tariff: null,
-        vkaETariff: null,
-        nursingTrainingTariff: null,
-        manualMonthlyGrossCents: null,
-      }),
-    );
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
   it("offers only KR groups and their valid levels", async () => {
     const screen = await render(editor());
@@ -113,7 +127,7 @@ describe("TV-L in the familiar salary form", () => {
     expect(groups).not.toContain("E9b");
     const levels = await select(screen, "Stufe", "Stufe 6");
     expect(levels).not.toContain("Stufe 1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvlKrTariff: { ...tvl, payGroup: "KR12", payLevel: 6 } }),
     );
@@ -122,12 +136,12 @@ describe("TV-L in the familiar salary form", () => {
     mockProfile = { ...baseProfile, tvlKrTariff: { ...tvl, payGroup: "KR5", payLevel: 1 } };
     const screen = await render(editor());
     await select(screen, "Entgeltgruppe", "KR7");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText(/Bitte eine gültige Stufe/)).toBeTruthy();
     const levels = await select(screen, "Stufe", "Stufe 2");
     expect(levels).not.toContain("Stufe 1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvlKrTariff: { ...tvl, payGroup: "KR7", payLevel: 2 } }),
     );
@@ -136,17 +150,17 @@ describe("TV-L in the familiar salary form", () => {
     const screen = await render(editor());
     await select(screen, "Tarifgebiet", "Ost");
     expect(screen.getAllByText("40 Std.")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvlKrTariff: { ...tvl, universityRegion: "EAST" } }),
     );
   });
-  it("shows the automatic East full-time change in 2027 without date entry", async () => {
+  it("shows the automatic East full-time change in 2027 with the unchanged prefilled validity date", async () => {
     jest.spyOn(Temporal.Now, "plainDateISO").mockReturnValue(Temporal.PlainDate.from("2027-01-05"));
     mockProfile = { ...baseProfile, tvlKrTariff: { ...tvl, universityRegion: "EAST" } };
     const screen = await render(editor());
     expect(screen.getAllByText("39,5 Std.")).toBeTruthy();
-    expect(screen.queryByText(/Gültig ab/)).toBeNull();
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
   });
   it("switches to P and restores only the P-specific controls", async () => {
     const screen = await render(editor());
@@ -154,7 +168,7 @@ describe("TV-L in the familiar salary form", () => {
     await chooseTariffDetails(screen, "TVöD-P");
     expect(screen.getByRole("button", { name: /^Einrichtung:/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Entgeltgruppe: P8" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tvlKrTariff: null,
@@ -167,7 +181,7 @@ describe("TV-L in the familiar salary form", () => {
     await select(screen, "Berechnung", "TVAöD Pflege · Ausbildung");
     await select(screen, "Ausbildungsjahr", "2. Ausbildungsjahr");
     expect(screen.queryByRole("button", { name: /^Entgeltgruppe:/ })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         tvlKrTariff: null,
@@ -182,7 +196,7 @@ describe("TV-L in the familiar salary form", () => {
     expect(
       screen.queryByRole("button", { name: /^Entgeltgruppe:|^Tarifregion:|^Einrichtung:/ }),
     ).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvlKrTariff: null, manualMonthlyGrossCents: 180000 }),
     );
@@ -191,7 +205,7 @@ describe("TV-L in the familiar salary form", () => {
     mockSection = "WORK";
     const screen = await render(editor());
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ weeklyMinutes: 1800, tvlKrTariff: tvl, tariff: null }),
     );
@@ -204,15 +218,17 @@ describe("TV-L in the familiar salary form", () => {
     expect(screen.getByRole("button", { name: "Tarifregion: Ost" })).toBeTruthy();
   });
   it("requires a working-time correction above the selected full-time basis", async () => {
-    mockProfile = { ...mockProfile, weeklyMinutes: 2400 };
+    mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(
       screen.getByText(/Deine Wochenstunden liegen über der tariflichen Vollzeit/),
     ).toBeTruthy();
+    await closeSettingsSave(screen);
     await select(screen, "Tarifgebiet", "Ost");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalled();
   });
 });

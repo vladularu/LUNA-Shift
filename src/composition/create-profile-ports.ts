@@ -1,3 +1,4 @@
+import { saveEmploymentProfile } from "@/infrastructure/database/employment-profile-repository";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type {
   PflegeShiftRepositoryPort,
@@ -46,7 +47,8 @@ export function createProfilePorts(db: SQLiteDatabase): {
     },
     repository: {
       loadProfile: () => loadProfile(db),
-      saveProfile: (input) => saveProfile(db, input),
+      saveProfile: (input) =>
+        input.validity ? saveEmploymentProfile(db, input) : saveProfile(db, input),
     },
     remuneration: {
       saveDrkEmployeeMonthConfirmation: (input) => saveDrkEmployeeMonthConfirmation(db, input),

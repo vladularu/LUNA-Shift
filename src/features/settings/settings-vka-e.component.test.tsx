@@ -6,12 +6,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
   SettingsEditorTestFlow,
+  saveSettingsChoice,
   chooseTariffDetails,
   selectSettingsChoice as select,
 } from "./settings-choice-test-helpers";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 
-const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<void>>();
+const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockPalette = LIGHT_PALETTE;
 let mockSection = "TARIFF";
 let mockProfile: UserProfile;
@@ -87,27 +88,19 @@ const e = {
 describe("simple E table salary form", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateProfile.mockResolvedValue(undefined);
+    mockUpdateProfile.mockImplementation(async (input) => ({ ...mockProfile, ...input }));
     mockSection = "TARIFF";
     mockProfile = { ...baseProfile, vkaETariff: e };
   });
-  it("reopens the saved E choice in familiar group/step controls and saves no history/date", async () => {
+  it("reopens the saved E choice in familiar group/step controls and includes inline validity without a history menu", async () => {
     const screen = await render(editor());
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(screen.getByRole("button", { name: "Tarifvertrag: TVöD VKA · E-Tabelle" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Entgeltgruppe: E9b" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Stufe: Stufe 4" })).toBeTruthy();
-    expect(
-      screen.queryByText(/Geburtsdatum|Gültig ab|Vergütungsstände|Frühere Angaben/),
-    ).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        vkaETariff: e,
-        tariff: null,
-        nursingTrainingTariff: null,
-        manualMonthlyGrossCents: null,
-      }),
-    );
+    expect(screen.queryByText(/Geburtsdatum|Vergütungsstände|Frühere Angaben/)).toBeNull();
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
   it("lets a trainee explicitly choose E12 and step6", async () => {
     mockProfile = { ...baseProfile, nursingTrainingTariff: trainee };
@@ -118,7 +111,7 @@ describe("simple E table salary form", () => {
     expect(groups).toContain("E15");
     await select(screen, "Stufe", "Stufe 6");
     expect(screen.queryByRole("button", { name: /^Ausbildungsjahr:/ })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         vkaETariff: { ...e, payGroup: "E12", payLevel: 6 },
@@ -131,11 +124,11 @@ describe("simple E table salary form", () => {
     mockProfile = { ...baseProfile, vkaETariff: { ...e, payLevel: 1 } };
     const screen = await render(editor());
     await select(screen, "Entgeltgruppe", "E1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     const options = await select(screen, "Stufe", "Stufe 2");
     expect(options).not.toContain("Stufe 1");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ vkaETariff: { ...e, payGroup: "E1", payLevel: 2 } }),
     );
@@ -144,10 +137,10 @@ describe("simple E table salary form", () => {
     mockProfile = { ...baseProfile, vkaETariff: { ...e, payLevel: 1 } };
     const screen = await render(editor());
     await select(screen, "Berechnung", "TVöD-P");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     await chooseTariffDetails(screen, "TVöD-P");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         vkaETariff: null,
@@ -175,8 +168,8 @@ describe("simple E table salary form", () => {
     expect(screen.queryByRole("button", { name: /^Tarifregion:/ })).toBeNull();
     expect(screen.getAllByText("39 Std.").length).toBeGreaterThan(0);
     const firstBackCount = jest.mocked(router.back).mock.calls.length;
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(firstBackCount + 1));
+    await saveSettingsChoice(screen);
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(firstBackCount));
     expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
     expect(mockUpdateProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({ vkaETariff: { ...e, sector: "BT_B", tariffRegion: "KAV_BW" } }),
@@ -191,8 +184,8 @@ describe("simple E table salary form", () => {
       savedRegion,
     );
     const secondBackCount = jest.mocked(router.back).mock.calls.length;
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
-    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount + 1));
+    await saveSettingsChoice(screen);
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(secondBackCount));
     expect(mockUpdateProfile).toHaveBeenCalledTimes(2);
     expect(mockUpdateProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({ vkaETariff: { ...e, tariffRegion: "KAV_BW" } }),
@@ -239,7 +232,7 @@ describe("simple E table salary form", () => {
     mockSection = "WORK";
     const screen = await render(editor());
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
-    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ weeklyMinutes: 1800, vkaETariff: e, tariff: null }),
     );

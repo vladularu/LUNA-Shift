@@ -1,8 +1,13 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import type { UserProfile } from "@/domain/types";
-import { resolveHolidayMapForMonths, type HolidayMonthResolution } from "@/engine/holidays";
+import {
+  resolveHolidayMapForMonths,
+  resolveProfileHolidayMapForMonth,
+  type HolidayMonthResolution,
+} from "@/engine/holidays";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { InlineNotice } from "@/ui/design-system";
@@ -21,12 +26,7 @@ export function useCalendarHolidayResolution(
 ): HolidayMonthResolution {
   return useMemo(() => {
     if (profile === null || !showHolidays) return HOLIDAYS_HIDDEN;
-    return resolveHolidayMapForMonths(
-      [month],
-      profile.federalState,
-      ruleResolver,
-      profile.holidayRegion,
-    );
+    return resolveProfileHolidayMapForMonth(month, profile, ruleResolver);
   }, [month, profile, ruleResolver, showHolidays]);
 }
 
@@ -35,6 +35,7 @@ export function holidayNameForDate(
   profile: UserProfile,
   ruleResolver: RuleResolver,
 ): string | undefined {
+  profile = employmentProfileAt(profile, date);
   return resolveHolidayMapForMonths(
     [date.slice(0, 7)],
     profile.federalState,

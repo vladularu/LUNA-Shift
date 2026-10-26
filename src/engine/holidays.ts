@@ -1,6 +1,7 @@
+import { employmentMonthPeriods } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 
-import type { FederalState, HolidayRegion } from "@/domain/types";
+import type { UserProfile, FederalState, HolidayRegion } from "@/domain/types";
 import type { RuleHoliday, RuleHolidayPackage } from "@/rules/contracts.generated";
 import {
   bundledRuleResolver,
@@ -222,4 +223,30 @@ export function resolveHolidayMapForMonths(
   return failure === null
     ? { status: "AVAILABLE", holidays, failure: null }
     : { status: "UNAVAILABLE", holidays, failure };
+}
+
+/** Resolve existing holiday rules against the employment location valid on each date. */
+export function resolveProfileHolidayMapForMonth(
+  month: string,
+  profile: UserProfile,
+  ruleResolver: RuleResolver = bundledRuleResolver,
+): HolidayMonthResolution {
+  const holidays = new Map<string, PublicHoliday>();
+  let failure: RuleResolutionFailure | null = null;
+  for (const period of employmentMonthPeriods(profile, month, month + "-31")) {
+    const resolution = resolveHolidayMapForMonth(
+      month,
+      period.profile.federalState,
+      ruleResolver,
+      period.profile.holidayRegion,
+    );
+    for (const [date, holiday] of resolution.holidays) {
+      if (date >= period.from && (!period.until || date < period.until))
+        holidays.set(date, holiday);
+    }
+    if (resolution.status === "UNAVAILABLE" && failure === null) failure = resolution.failure;
+  }
+  return failure
+    ? { status: "UNAVAILABLE", holidays, failure }
+    : { status: "AVAILABLE", holidays, failure: null };
 }

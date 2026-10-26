@@ -1,3 +1,7 @@
+import { decemberTargetContext } from "@/domain/working-time-target-test-fixtures";
+import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
+import { work as targetWork } from "@/engine/remuneration-test-fixtures";
+import type { WorkingTimeTargetSnapshot } from "@/domain/saved-working-time-target";
 import { useState } from "react";
 import { DataLoadFailure } from "@/domain/data-load-failure";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
@@ -741,4 +745,139 @@ it("resolves a local save while native reminder scheduling is still pending", as
   await fireEvent.press(view.getByText("Direkt speichern"));
   await waitFor(() => expect(view.getByText("Lokal gespeichert")).toBeTruthy());
   await act(async () => pending.resolve());
+});
+
+function TargetCalculationHarness() {
+  const { profile, calculationProfile, refreshWorkingTimeTarget } = usePflegeShiftProfile();
+  const { upsertShift } = usePflegeShiftEntries();
+  const status = calculationProfile?.workingTimeTarget?.status;
+  const result =
+    calculationProfile && status === "ready"
+      ? calculateMonthlyWorkingTimeTarget("2026-12", calculationProfile)
+      : null;
+  return (
+    <>
+      <Text testID="target-status">{status ?? "legacy"}</Text>
+      <Text testID="target-minutes">{result?.targetMinutes ?? "unavailable"}</Text>
+      <Text testID="target-certainty">{result?.status ?? "unavailable"}</Text>
+      <Text testID="saved-profile-clean">
+        {profile && "workingTimeTarget" in profile ? "dirty" : "clean"}
+      </Text>
+      <Pressable onPress={() => void upsertShift(mockSavedShift)}>
+        <Text>Dienst ändern</Text>
+      </Pressable>
+      <Pressable onPress={refreshWorkingTimeTarget}>
+        <Text>Sollzeit neu laden</Text>
+      </Pressable>
+    </>
+  );
+}
+const targetSnapshot: WorkingTimeTargetSnapshot = {
+  saved: null,
+  context: decemberTargetContext,
+  staleDates: [],
+  planRevision: "plan",
+};
+function targetPorts(
+  loadWorkingTimeTargetSettings: () => Promise<WorkingTimeTargetSnapshot>,
+): PflegeShiftPorts {
+  return {
+    ...ports,
+    repository: {
+      ...repository,
+      loadProfile: async () => ({ ...targetWork, federalState: "HE" }),
+      listCalendarEntries: async () => [],
+      loadWorkingTimeTargetSettings,
+    },
+    remuneration: {
+      ...ports.remuneration,
+      loadSnapshot: async () => ({
+        drkEmployeeMonthConfirmations: [],
+        drkTrainingMonthConfirmations: [],
+        caritasMonthFacts: [],
+        tvoedAnnexAMonthConfirmations: [],
+        tvoedAnnexAPremiumFacts: [],
+        tvoedSueMonthConfirmations: [],
+        tvoedSueAllowanceConfirmations: [],
+        tvlShiftWork: [],
+        profiles: [],
+        allowanceDecisions: [],
+        overtimeAllocations: [],
+        paidAbsences: [],
+        actualAnnualPayments: [],
+        tariffAnnualClaims: [],
+      }),
+    },
+  };
+}
+describe("shared working-time provider data", () => {
+  it("loads saved target facts while keeping the persisted profile clean", async () => {
+    const load = jest.fn(async () => targetSnapshot);
+    const screen = await render(
+      <PflegeShiftProvider activeMonth="2026-12" ports={targetPorts(load)}>
+        <TargetCalculationHarness />
+      </PflegeShiftProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("target-minutes")).toHaveTextContent("8778"));
+    expect(screen.getByTestId("target-certainty")).toHaveTextContent("PROVISIONAL");
+    expect(screen.getByTestId("saved-profile-clean")).toHaveTextContent("clean");
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+  it("keeps the forecast available after a calendar write without reloading target settings", async () => {
+    const load = jest.fn(async () => targetSnapshot);
+    const screen = await render(
+      <PflegeShiftProvider activeMonth="2026-12" ports={targetPorts(load)}>
+        <TargetCalculationHarness />
+      </PflegeShiftProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("target-minutes")).toHaveTextContent("8778"));
+    await fireEvent.press(screen.getByText("Dienst ändern"));
+    expect(screen.getByTestId("target-status")).toHaveTextContent("ready");
+    expect(screen.getByTestId("target-minutes")).toHaveTextContent("8778");
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+  it("ignores a late superseded employment reload", async () => {
+    const late = deferred<WorkingTimeTargetSnapshot>();
+    const load = jest
+      .fn<() => Promise<WorkingTimeTargetSnapshot>>()
+      .mockResolvedValueOnce(targetSnapshot)
+      .mockReturnValueOnce(late.promise)
+      .mockResolvedValueOnce({
+        ...targetSnapshot,
+        context: {
+          ...decemberTargetContext,
+          periods: decemberTargetContext.periods.map((period) => ({
+            ...period,
+            weeklyMinutes: 1200,
+          })),
+        },
+      });
+    const screen = await render(
+      <PflegeShiftProvider activeMonth="2026-12" ports={targetPorts(load)}>
+        <TargetCalculationHarness />
+      </PflegeShiftProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("target-minutes")).toHaveTextContent("8778"));
+    await fireEvent.press(screen.getByText("Sollzeit neu laden"));
+    expect(screen.getByTestId("target-status")).toHaveTextContent("loading");
+    await fireEvent.press(screen.getByText("Sollzeit neu laden"));
+    await waitFor(() => expect(screen.getByTestId("target-minutes")).toHaveTextContent("4560"));
+    await act(async () => late.resolve(targetSnapshot));
+    expect(screen.getByTestId("target-minutes")).toHaveTextContent("4560");
+  });
+  it("keeps a source read error unavailable and retries explicitly", async () => {
+    const load = jest
+      .fn<() => Promise<WorkingTimeTargetSnapshot>>()
+      .mockRejectedValueOnce(new Error("read failed"))
+      .mockResolvedValueOnce(targetSnapshot);
+    const screen = await render(
+      <PflegeShiftProvider activeMonth="2026-12" ports={targetPorts(load)}>
+        <TargetCalculationHarness />
+      </PflegeShiftProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("target-status")).toHaveTextContent("error"));
+    expect(screen.getByTestId("target-minutes")).toHaveTextContent("unavailable");
+    await fireEvent.press(screen.getByText("Sollzeit neu laden"));
+    await waitFor(() => expect(screen.getByTestId("target-minutes")).toHaveTextContent("8778"));
+  });
 });

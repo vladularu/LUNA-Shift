@@ -45,9 +45,11 @@ jest.mock("@/ui/form-layout", () => ({
   HeaderSaveAction: () => null,
 }));
 jest.mock("@/ui/form-controls", () => {
-  const { TextInput } = jest.requireActual<typeof import("react-native")>("react-native");
+  const { TextInput, Text } = jest.requireActual<typeof import("react-native")>("react-native");
   return {
     DropdownField: () => null,
+    PrimaryButton: ({ children }: React.PropsWithChildren) => <Text>{children}</Text>,
+    SecondaryButton: ({ children }: React.PropsWithChildren) => <Text>{children}</Text>,
     Field: ({
       label,
       value,

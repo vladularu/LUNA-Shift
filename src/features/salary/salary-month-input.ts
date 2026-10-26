@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import type {
   CalendarEntry,
   MonthlyTariffDecision,
@@ -26,6 +27,7 @@ export interface SalaryMonthContext {
 
 /** Both ordinary net and annual-payment proposals use the same dated gross calculation. */
 export function salaryMonthInput(month: string, profile: UserProfile, context: SalaryMonthContext) {
+  profile = employmentProfileAt(profile, month + "-01");
   const { entries, tariffDecisions, workPatternSettings, resolver } = context;
   const shifts = selectMonthlyAnalysisEntries(entries, month).monthShifts;
   const assessment = profile.tvhKrTariff

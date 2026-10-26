@@ -1,6 +1,8 @@
+import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type {
+  UserProfile,
   ComplianceIssue,
   FederalState,
   HolidayRegion,
@@ -42,6 +44,8 @@ interface CachedInterval {
 const INTERVAL_CACHE = new WeakMap<ShiftEntry, Map<string, CachedInterval>>();
 
 export interface ComplianceOptions {
+  readonly employmentProfile?: UserProfile;
+  readonly employmentAssessmentPeriod?: { readonly from: string; readonly until: string | null };
   readonly federalState?: FederalState;
   readonly referenceDate?: string;
   readonly weeklyMinutes?: number;
@@ -588,7 +592,11 @@ function checkPlanningSeries(
   return issues;
 }
 
-export function* calculateMonthlyComplianceSteps(
+const datedCompliance = createDatedComplianceCalculator(calculateMonthlyComplianceCoreSteps);
+export const calculateMonthlyComplianceSteps = datedCompliance.steps;
+export const calculateMonthlyCompliance = datedCompliance.calculate;
+
+function* calculateMonthlyComplianceCoreSteps(
   month: string,
   shifts: readonly ShiftEntry[],
   timeZone: string,
@@ -676,7 +684,14 @@ export function* calculateMonthlyComplianceSteps(
   }
   yield 1;
   const issues: ComplianceIssue[] = [];
-  issues.push(...checkEvidenceCompleteness(month, assessmentIntervals, options, rules));
+  issues.push(
+    ...checkEvidenceCompleteness(
+      month,
+      employmentEvidenceIntervals(assessmentIntervals, options),
+      options,
+      rules,
+    ),
+  );
   issues.push(...checkDuplicates(assessmentIntervals));
   yield 2;
   issues.push(...checkOverlaps(assessmentIntervals));
@@ -781,17 +796,4 @@ export function* calculateMonthlyComplianceSteps(
     infoCount: monthIssues.filter((item) => item.severity === "info").length,
     affectedDates: [...new Set(monthIssues.map((item) => item.date))].sort(),
   };
-}
-
-export function calculateMonthlyCompliance(
-  month: string,
-  shifts: readonly ShiftEntry[],
-  timeZone: string,
-  options: ComplianceOptions = {},
-): MonthlyComplianceResult {
-  const steps = calculateMonthlyComplianceSteps(month, shifts, timeZone, options);
-  while (true) {
-    const step = steps.next();
-    if (step.done) return step.value;
-  }
 }

@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { resolveRemunerationProfile } from "@/domain/remuneration-profile";
@@ -18,6 +19,13 @@ export async function projectStoredSimpleProfile(
 ): Promise<UserProfile | null> {
   if (profile === null) return null;
   if (profile.salaryBasisConflict) return profile;
+  const history = await listRemunerationProfiles(db);
+  if (history.some((item) => item.employment)) {
+    return employmentProfileAt(
+      { ...profile, employmentTimeline: history },
+      date ?? Temporal.Now.plainDateISO(profile.timeZone).toString(),
+    );
+  }
   if (
     profile.nursingTrainingTariff ||
     profile.vkaETariff ||
@@ -28,7 +36,7 @@ export async function projectStoredSimpleProfile(
   )
     return profile;
   const selected = resolveRemunerationProfile(
-    await listRemunerationProfiles(db),
+    history,
     date ?? Temporal.Now.plainDateISO(profile.timeZone).toString(),
   ).profile;
   if (selected === null || Date.parse(selected.updatedAt) <= Date.parse(profile.updatedAt))

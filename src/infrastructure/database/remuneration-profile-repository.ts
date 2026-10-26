@@ -1,3 +1,8 @@
+import {
+  decodeEmploymentPayload,
+  encodeEmploymentPayload,
+  employmentWithRemuneration,
+} from "@/domain/employment-history";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { ConcurrencyError } from "@/domain/errors";
 import {
@@ -42,7 +47,7 @@ export function mapRemunerationProfileRow(row: RemunerationProfileRow): DatedRem
   if (Date.parse(updatedAt) < Date.parse(createdAt)) throw new RemunerationProfileError();
   return Object.freeze({
     effectiveFrom,
-    data: validateRemunerationProfileData(JSON.parse(row.data_json) as unknown),
+    ...decodeEmploymentPayload(JSON.parse(row.data_json) as unknown),
     revision: requirePositiveRevision(row.revision),
     createdAt,
     updatedAt,
@@ -107,6 +112,14 @@ export async function saveDatedRemunerationProfile(
     );
     if ((previous?.revision ?? 0) !== input.expectedRevision)
       throw new RemunerationProfileConflictError();
+    const inherited = (await listRemunerationProfiles(transaction))
+      .filter((item) => item.effectiveFrom === null || item.effectiveFrom <= date)
+      .at(-1);
+    const payload = encodeEmploymentPayload(
+      data,
+      inherited?.employment ? employmentWithRemuneration(inherited.employment, data) : undefined,
+      inherited?.employmentOverrides,
+    );
     const now = new Date().toISOString();
     if (previous === null) {
       await transaction.runAsync(
@@ -114,7 +127,7 @@ export async function saveDatedRemunerationProfile(
          VALUES(?,?,?,1,?,?)`,
         id,
         date,
-        JSON.stringify(data),
+        payload,
         now,
         now,
       );
@@ -123,7 +136,7 @@ export async function saveDatedRemunerationProfile(
       mapRemunerationProfileRow(previous);
       await transaction.runAsync(
         "UPDATE remuneration_profiles SET data_json=?,revision=revision+1,updated_at=? WHERE id=?",
-        JSON.stringify(data),
+        payload,
         new Date(Math.max(Date.now(), Date.parse(previous.updated_at))).toISOString(),
         id,
       );

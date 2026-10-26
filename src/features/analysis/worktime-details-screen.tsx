@@ -32,7 +32,8 @@ export function WorktimeDetailsScreen() {
   const parsed = parseMonthRouteParam(params.month);
   const parsedSection = parseEnumRouteParam(params.section, ["WORK", "SHIFTS"]);
   const shiftsOnly = parsedSection.status === "valid" && parsedSection.value === "SHIFTS";
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { ready, error, reload } = usePflegeShiftStatus();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
@@ -93,6 +94,11 @@ export function WorktimeDetailsScreen() {
       <Stack.Screen options={{ title: "Stunden" }} />
       <AnalysisDetailSummaryCard title="Deine Stunden" period={formatMonthTitle(month)} />
       <WorktimeCard
+        caption={
+          summary.ok && summary.value.targetCalculation?.status === "PROVISIONAL"
+            ? "Sollzeit vorläufig · aus deinen bisherigen Angaben berechnet."
+            : undefined
+        }
         actual={formatMinutes(
           summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
         )}
@@ -107,7 +113,7 @@ export function WorktimeDetailsScreen() {
         }
       />
       {!summary.ok ? (
-        <AnalysisCoverageNote message="Feiertagsdaten fehlen: Soll, Saldo und Zeitgutschriften sind nicht berechenbar." />
+        <AnalysisCoverageNote message="Für Soll, Saldo und Abwesenheitsgutschriften fehlen Berechnungsgrundlagen." />
       ) : null}
       {shiftTypeAnalysis.totalCount === 0 ? (
         <SurfaceCard>

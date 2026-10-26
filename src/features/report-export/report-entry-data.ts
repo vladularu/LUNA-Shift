@@ -1,3 +1,4 @@
+import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import {
   SHIFT_TYPE_LABELS,
   type CalendarEntry,
@@ -25,7 +26,8 @@ export function reportEntries(
         try {
           credits.set(entry.date, calculateDailyWorkCredit(entry.date, shifts, profile, resolver));
         } catch (error) {
-          if (!(error instanceof RuleResolutionError)) throw error;
+          if (!(error instanceof RuleResolutionError) && !(error instanceof WorkingTimeTargetError))
+            throw error;
           credits.set(entry.date, null);
         }
       }

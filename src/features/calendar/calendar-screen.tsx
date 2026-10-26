@@ -87,7 +87,8 @@ export function CalendarScreen() {
   const activeMonthCoordinator = useActiveMonthCoordinator();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const { ready, calendarRange, error, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { templates } = usePflegeShiftTemplates();
   const { entries, removeEntry, upsertShift } = usePflegeShiftEntries();
   const { testMonths } = usePflegeShiftTestData();

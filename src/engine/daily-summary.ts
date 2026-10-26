@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { ShiftEntry, ShiftType, UserProfile } from "@/domain/types";
@@ -10,7 +11,7 @@ import { calculateTimedShiftBounds } from "@/engine/working-time";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
 type ProfileForTime = Pick<UserProfile, "federalState" | "weeklyMinutes" | "timeZone"> &
-  Partial<Pick<UserProfile, "holidayRegion">>;
+  Partial<Pick<UserProfile, "holidayRegion" | "employmentTimeline">>;
 
 interface MinuteInterval {
   readonly start: number;
@@ -42,7 +43,7 @@ export interface TimedDailyWorkCredit {
 export function calculateDailyTargetMinutes(
   date: string,
   profile: Pick<UserProfile, "federalState" | "weeklyMinutes"> &
-    Partial<Pick<UserProfile, "holidayRegion">>,
+    Partial<Pick<UserProfile, "holidayRegion" | "employmentTimeline">>,
   ruleResolver: RuleResolver = bundledRuleResolver,
   targetContext?: WorkingTimeTargetContext,
 ): number {
@@ -145,6 +146,7 @@ export function calculateDailyWorkCredit(
   profile: ProfileForTime,
   ruleResolver: RuleResolver = bundledRuleResolver,
 ): DailyWorkCredit {
+  if (profile.employmentTimeline) profile = employmentProfileAt(profile as UserProfile, date);
   const active = entries.filter((entry) => entry.deletedAt === null && entry.date === date);
   const timed = calculateTimedDailyWorkCredit(date, active, profile);
   const targetMinutes = calculateDailyTargetMinutes(date, profile, ruleResolver);
@@ -153,7 +155,11 @@ export function calculateDailyWorkCredit(
   const plainDate = Temporal.PlainDate.from(date);
   const reference = calculateMonthlyWorkingTimeTarget(
     plainDate.toPlainYearMonth().toString(),
-    profile,
+    {
+      federalState: profile.federalState,
+      holidayRegion: profile.holidayRegion,
+      weeklyMinutes: profile.weeklyMinutes,
+    },
     ruleResolver,
   );
   const absenceReferenceMinutes =

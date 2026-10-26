@@ -1,3 +1,4 @@
+import { employmentProfileAt } from "@/domain/employment-history";
 import {
   buildMonthlyShiftTypeAnalysis,
   combineShiftTypeAnalyses,
@@ -28,6 +29,7 @@ import { classifyChecks, type ClassifiedCheckCounts } from "./check-visibility";
 import type { AnnualRemuneration } from "./annual-remuneration";
 
 export interface AnnualMonthReport {
+  readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;
   /** Missing on legacy reports; use the year coverage as the conservative fallback. */
@@ -49,6 +51,7 @@ export interface AnnualMonthReport {
 }
 
 export interface AnnualReport {
+  readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;
   /** Present only when the caller supplies a dated snapshot; legacy numbers are not a fallback. */
@@ -172,6 +175,7 @@ function* calculateAnnualMonthContribution(
   ruleResolver: RuleResolver,
   cached: CachedAnnualMonth,
 ): Generator<number, AnnualMonthContribution, void> {
+  profile = employmentProfileAt(profile, month + "-01");
   let summary =
     cached.summary &&
     cached.summary.profile === profile &&
@@ -197,6 +201,7 @@ function* calculateAnnualMonthContribution(
       window.complianceShifts,
       profile.timeZone,
       {
+        employmentProfile: profile,
         federalState: profile.federalState,
         holidayRegion: profile.holidayRegion,
         referenceDate,
@@ -284,6 +289,7 @@ function* calculateAnnualMonthContribution(
       month,
       entryCount: window.monthEntries.length,
       targetMinutes: summary.targetMinutes,
+      ...(summary.targetCalculation ? { targetStatus: summary.targetCalculation.status } : {}),
       actualMinutes: summary.actualMinutes,
       balanceMinutes: summary.balanceMinutes,
       timePremiumAmount: profile.tariff !== null && pay.available ? pay.timePremiumAmount : null,
@@ -413,6 +419,13 @@ export function* buildAnnualReportSteps(
           : ("UNSET" as const),
     months: Object.freeze(months),
     targetMinutes,
+    ...(months.some((month) => month.targetStatus)
+      ? {
+          targetStatus: months.some((month) => month.targetStatus === "PROVISIONAL")
+            ? ("PROVISIONAL" as const)
+            : ("FINAL" as const),
+        }
+      : {}),
     actualMinutes,
     balanceMinutes: actualMinutes - targetMinutes,
     workMinutes,

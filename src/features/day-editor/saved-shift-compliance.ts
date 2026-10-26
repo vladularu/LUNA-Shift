@@ -14,6 +14,7 @@ export function criticalIssueForSavedShift(
   return (
     calculateMonthlyCompliance(saved.date.slice(0, 7), shifts, profile.timeZone, {
       allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
+      employmentProfile: profile,
       federalState: profile.federalState,
       holidayRegion: profile.holidayRegion,
       regularRotatingNightWork: profile.regularRotatingNightWork,

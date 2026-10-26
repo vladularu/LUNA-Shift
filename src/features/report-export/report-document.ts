@@ -1,3 +1,4 @@
+import type { MonthlyWorkingTimeTarget } from "@/domain/working-time-target";
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 
 export const REPORT_CHECK_SCOPE =
@@ -13,6 +14,7 @@ export interface ReportRow {
   readonly unit: string;
 }
 export interface ReportDocument {
+  readonly workingTimeTargets?: readonly MonthlyWorkingTimeTarget[];
   readonly period: string;
   readonly createdAt: string;
   readonly rows: readonly ReportRow[];

@@ -1,3 +1,4 @@
+import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import { Text } from "@/ui/text";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
@@ -12,8 +13,14 @@ import { LoadFailureView } from "@/ui/loading-view";
 
 export interface RuleComputationFailure {
   readonly ok: false;
-  readonly error: RuleResolutionError;
-  readonly failure: RuleResolutionFailure;
+  readonly error: RuleResolutionError | WorkingTimeTargetError;
+  readonly failure:
+    | RuleResolutionFailure
+    | {
+        readonly code: "WORKING_TIME_TARGET_UNAVAILABLE";
+        readonly kind: "WORKING_TIME";
+        readonly message: string;
+      };
 }
 
 export type RuleComputationResult<T> =
@@ -23,12 +30,23 @@ export function captureRuleComputation<T>(compute: () => T): RuleComputationResu
   try {
     return { ok: true, value: compute() };
   } catch (error) {
+    if (error instanceof WorkingTimeTargetError)
+      return {
+        ok: false,
+        error,
+        failure: {
+          code: "WORKING_TIME_TARGET_UNAVAILABLE",
+          kind: "WORKING_TIME",
+          message: error.message,
+        },
+      };
     if (!(error instanceof RuleResolutionError)) throw error;
     return { ok: false, error, failure: error.failure };
   }
 }
 
-function ruleFailureMessage(failure: RuleResolutionFailure): string {
+function ruleFailureMessage(failure: RuleComputationFailure["failure"]): string {
+  if (failure.kind === "WORKING_TIME") return failure.message;
   if (failure.code === "INVALID_EFFECTIVE_DATE") {
     return "Der gewählte Zeitraum ist ungültig.";
   }
@@ -60,7 +78,7 @@ export function RuleComputationFailureView({
 
   return (
     <LoadFailureView
-      diagnosticCode={code}
+      diagnosticCode={code === "WORKING_TIME_TARGET_UNAVAILABLE" ? undefined : code}
       message={ruleFailureMessage(failure.failure)}
       onRetry={onRetry}
       title={title}

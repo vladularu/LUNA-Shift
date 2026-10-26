@@ -86,21 +86,17 @@ describe("SettingsScreen production gates", () => {
     expect(router.push).toHaveBeenCalledWith("/account");
     expect(screen.queryByText("Cloud-Konto")).toBeNull();
   });
-  it("opens working-time target settings directly from More without a salary tariff", async () => {
+  it("keeps the Sollzeit explanation in analysis instead of a second settings entry", async () => {
     const screen = await render(<SettingsScreen />);
-    await fireEvent.press(screen.getByText("Sollzeitangaben"));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/working-time-profile",
-      params: { origin: "settings" },
-    });
+    expect(screen.queryByText("Sollzeitberechnung")).toBeNull();
+    expect(screen.queryByText("Arbeitszeitmodell & Gültigkeit")).toBeNull();
   });
   it("opens employment editors directly from More and retains appearance selection", async () => {
     const screen = await render(<SettingsScreen />);
     expect(screen.queryByRole("button", { name: "Arbeitsprofil bearbeiten" })).toBeNull();
     for (const [label, section] of [
       ["Arbeitgeber", "EMPLOYER"],
-      ["Arbeitszeit & Ort", "WORK"],
-      ["Tarif & Gehalt", "TARIFF"],
+      ["Arbeit & Gehalt", "EMPLOYMENT"],
     ]) {
       await fireEvent.press(screen.getByText(label));
       expect(router.push).toHaveBeenLastCalledWith({
@@ -182,7 +178,7 @@ describe("SettingsScreen production gates", () => {
     expect(screen.queryByText("Schichtmodell")).toBeNull();
   });
 
-  it("keeps the supported shift-model assessment directly reachable", async () => {
+  it("keeps work and shift-model inputs in one shared employment entry", async () => {
     mockProfile = {
       ...mockBaseProfile,
       tariff: {
@@ -194,10 +190,11 @@ describe("SettingsScreen production gates", () => {
       },
     };
     const screen = await render(<SettingsScreen />);
-    await fireEvent.press(screen.getByText("Schichtmodell"));
+    expect(screen.queryByText("Schichtmodell")).toBeNull();
+    await fireEvent.press(screen.getByText("Arbeit & Gehalt"));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/tariff-assessment",
-      params: { month: expect.stringMatching(/^\d{4}-\d{2}$/u) },
+      pathname: "/settings-editor",
+      params: { section: "EMPLOYMENT", origin: "settings" },
     });
   });
 

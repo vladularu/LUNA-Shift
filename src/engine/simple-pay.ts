@@ -1,3 +1,5 @@
+import { payrollEmploymentPeriods } from "./payroll-employment-periods";
+import { employmentWorkPatternAt, employmentProfileAt } from "@/domain/employment-history";
 import {
   calculateTvalPflegeAssessment,
   calculateTvalPflegeProfileMonth,
@@ -545,6 +547,7 @@ export function calculateShiftPremiumBreakdown(
   ruleResolver: RuleResolver = bundledRuleResolver,
   tvlSaturdayShiftWork = false,
 ): ShiftPremiumBreakdown {
+  profile = employmentProfileAt(profile, shift.date);
   if (profile.tvalPflegeTariff)
     return calculateTvalPflegeProfileShift(shift, profile, ruleResolver, tvlSaturdayShiftWork);
   if (profile.tvhKrTariff)
@@ -585,6 +588,95 @@ export function calculateMonthlyPayEstimate(
   workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
   ruleResolver: RuleResolver = bundledRuleResolver,
 ): MonthlyPayEstimate {
+  const first = Temporal.PlainDate.from(month + "-01");
+  const last = first.with({ day: first.daysInMonth }).toString();
+  const periods = payrollEmploymentPeriods(profile, month, last);
+  if (periods.length > 1) {
+    const parts = periods.map((period) => {
+      const selected = { ...period.profile, employmentTimeline: undefined };
+      const days = Temporal.PlainDate.from(
+        period.until ?? first.add({ months: 1 }).toString(),
+      ).since(Temporal.PlainDate.from(period.from)).days;
+      const inPeriod = shifts.filter(
+        (shift) => shift.date >= period.from && (!period.until || shift.date < period.until),
+      );
+      const estimate = calculateMonthlyPayEstimateUncached(
+        month,
+        inPeriod,
+        selected,
+        decision,
+        assessmentShifts,
+        employmentWorkPatternAt(period.profile, workPatternSettings, period.from),
+        ruleResolver,
+      );
+      const fixed = calculateMonthlyPayEstimateUncached(
+        month,
+        [],
+        selected,
+        decision,
+        assessmentShifts,
+        employmentWorkPatternAt(period.profile, workPatternSettings, period.from),
+        ruleResolver,
+      );
+      return { estimate, fixed, days };
+    });
+    const anchor = parts[0].estimate;
+    const available = parts.every((p) => p.estimate.available && p.fixed.available);
+    const fixedAmount = (
+      key:
+        "personalBaseAmount" | "allowanceAmount" | "tvoedAllowanceAmount" | "careAllowanceAmount",
+    ) => {
+      const groups = new Map<number, number>();
+      let variable = 0;
+      for (const p of parts) {
+        const cents = Math.round((p.fixed[key] ?? 0) * 100);
+        groups.set(cents, (groups.get(cents) ?? 0) + p.days);
+        if (key !== "personalBaseAmount") variable += (p.estimate[key] ?? 0) - (p.fixed[key] ?? 0);
+      }
+      return roundMoney(
+        [...groups].reduce(
+          (sum, [cents, days]) => sum + Math.round((cents * days) / first.daysInMonth) / 100,
+          variable,
+        ),
+      );
+    };
+    const personalBaseAmount = available ? fixedAmount("personalBaseAmount") : null;
+    const allowanceAmount = fixedAmount("allowanceAmount"),
+      tvoedAllowanceAmount = fixedAmount("tvoedAllowanceAmount"),
+      careAllowanceAmount = fixedAmount("careAllowanceAmount");
+    const timePremiumAmount = roundMoney(
+      parts.reduce((sum, p) => sum + p.estimate.timePremiumAmount, 0),
+    );
+    const overtimeAmount = roundMoney(parts.reduce((sum, p) => sum + p.estimate.overtimeAmount, 0));
+    return {
+      ...anchor,
+      available,
+      fullTimeTableAmount: null,
+      personalBaseAmount,
+      tariffLabel: [...new Set(parts.map((p) => p.estimate.tariffLabel))]
+        .filter(Boolean)
+        .join(" / "),
+      shiftBreakdowns: parts.flatMap((p) => p.estimate.shiftBreakdowns),
+      timePremiumAmount,
+      overtimeAmount,
+      allowanceAmount,
+      tvoedAllowanceAmount,
+      careAllowanceAmount,
+      estimatedGrossAmount:
+        personalBaseAmount === null
+          ? null
+          : roundMoney(
+              personalBaseAmount +
+                timePremiumAmount +
+                overtimeAmount +
+                allowanceAmount +
+                tvoedAllowanceAmount +
+                careAllowanceAmount,
+            ),
+    };
+  }
+  profile = periods[0].profile;
+  workPatternSettings = employmentWorkPatternAt(profile, workPatternSettings, first.toString());
   return cachedMonthlyPay(
     { month, shifts, profile, decision, assessmentShifts, workPatternSettings, ruleResolver },
     () =>
@@ -786,8 +878,12 @@ export function calculateMonthlyTvoedAssessment(
     | "tvUkNursingTariff"
     | "tvhKrTariff"
     | "tvalPflegeTariff"
+    | "employmentTimeline"
+    | "workPattern"
   >,
 ): MonthlyTvoedAssessmentResult {
+  if (profile)
+    workPatternSettings = employmentWorkPatternAt(profile, workPatternSettings, month + "-01");
   if (profile?.tvalPflegeTariff)
     return calculateTvalPflegeAssessment(
       month,

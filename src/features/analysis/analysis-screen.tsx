@@ -53,7 +53,8 @@ export function AnalysisScreen({
 }: {
   readonly initialExpandedCard?: AnalysisExpandedCard | null;
 }) {
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const isFocused = useIsFocused();
   const activeMonthCoordinator = useActiveMonthCoordinator();
   const navigation = useAnalysisNavigation(profile?.timeZone);
@@ -111,7 +112,8 @@ function AnalysisPage({
   const isFocused = useIsFocused();
   const checkPreferences = useCheckPreferences();
   const { error, ready, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();

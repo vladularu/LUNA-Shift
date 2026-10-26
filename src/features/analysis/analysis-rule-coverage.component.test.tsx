@@ -28,6 +28,7 @@ import type {
 import { createRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { currentMonth } from "@/engine/calendar";
+const mockSaveEmployment = jest.fn();
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
@@ -188,7 +189,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftEntries: () => ({ entries: mockEntries }),
-  usePflegeShiftProfile: () => ({ profile: mockProfile }),
+  usePflegeShiftProfile: () => ({ profile: mockProfile, updateProfile: mockSaveEmployment }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTariff: () => ({
     tariffDecisions: [],
@@ -877,7 +878,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.queryByLabelText("Stunden pro Schicht, Gesamt 0:00 h")).toBeNull();
     expect(
       screen.getByText(
-        "Feiertagsdaten fehlen. Angezeigt sind nur Arbeits- und Fortbildungszeiten.",
+        "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen.",
       ),
     ).toBeTruthy();
   });
@@ -916,12 +917,25 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     await expectRuleCoverageDiagnostic(<PremiumDetailsScreen />);
   });
 
+  it("opens the shared model editor without a second validity form or partial save", async () => {
+    mockSaveEmployment.mockClear();
+    const screen = await render(<TariffAssessmentScreen />);
+    expect(mockSaveEmployment).not.toHaveBeenCalled();
+    expect(screen.queryByText("Änderung gilt für")).toBeNull();
+    await fireEvent.press(screen.getByText("Arbeitsmodell bearbeiten"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/settings-editor",
+      params: { section: "MODEL" },
+    });
+    expect(mockSaveEmployment).not.toHaveBeenCalled();
+  });
+
   it("keeps tariff assessment independent from missing holiday rules", async () => {
     mockEntries = [januaryShift()];
     const screen = await render(<TariffAssessmentScreen />);
 
     expect(screen.queryByText("Diagnosecode: RULE_PACKAGE_NOT_FOUND")).toBeNull();
-    expect(screen.getByText("Wird dein Arbeitsbereich rund um die Uhr betrieben?")).toBeTruthy();
+    expect(screen.getByText("Arbeitsmodell bearbeiten")).toBeTruthy();
   });
 
   it("explains real entries on demand and closes details for a new month", async () => {
@@ -1014,12 +1028,23 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     },
   );
 
+  it("opens employment from worktime for the selected month without moving the analysis period", async () => {
+    mockRouteMonth = "2026-12";
+    const screen = await render(<AnalysisScreen />);
+    await fireEvent.press(screen.getByRole("button", { name: /^Stunden,/ }));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/working-time-profile",
+      params: { origin: "analysis", month: "2026-12" },
+    });
+    expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
+  });
+
   it("keeps shift counts and hours on the overview and supports existing deep links", async () => {
     mockRouteMonth = "2026-09";
     mockEntries = [{ ...januaryShift(), date: "2026-09-03" }];
     const overview = await render(<AnalysisScreen />);
     expect(overview.queryByRole("button", { name: "Schichten: Details öffnen" })).toBeNull();
-    expect(overview.queryByRole("button", { name: /^Stunden,/ })).toBeNull();
+    expect(overview.getByRole("button", { name: /^Stunden,/ })).toBeTruthy();
     expect(overview.getByLabelText("Gesamt: 7:30 h")).toBeTruthy();
     expect(overview.getByText("D")).toBeTruthy();
     expect(overview.getByLabelText("Sonntagsdienst: 7:30 h")).toBeTruthy();
