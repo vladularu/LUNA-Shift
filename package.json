@@ -140,7 +140,8 @@
     "postcss@<=8.5.22": "8.5.25",
     "node-forge": "1.4.0",
     "braces": "3.0.3",
-    "shell-quote": "1.11.0"
+    "shell-quote": "1.11.0",
+    "zod": "3.25.76"
   },
   "private": true
 }

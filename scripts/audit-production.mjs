@@ -1,3 +1,4 @@
+import { ZOD_ADVISORY_URL, isVerifiedZodHardening, verifyZodHardening } from "./zod-hardening.mjs";
 import {
   BRACES_ADVISORY_URL,
   isVerifiedBracesHardening,
@@ -85,7 +86,22 @@ function findingKey(finding) {
   return `${finding.source ?? "unknown"}:${finding.name}:${finding.url ?? ""}`;
 }
 
-function hasVerifiedMitigation(finding, vulnerabilities, proof, bracesProof) {
+function hasVerifiedMitigation(finding, vulnerabilities, proof, bracesProof, zodProof) {
+  const zodNodes = vulnerabilities.zod?.nodes;
+  if (
+    finding.name === "zod" &&
+    finding.dependency === "zod" &&
+    finding.source === 1243066 &&
+    finding.severity === "high" &&
+    finding.url === ZOD_ADVISORY_URL &&
+    finding.range === "<4.6.6" &&
+    finding.title === "Zod can exhaust memory while validating oversized constrained collections" &&
+    isVerifiedZodHardening(zodProof) &&
+    Array.isArray(zodNodes) &&
+    zodNodes.length === zodProof.nodes.length &&
+    zodNodes.every((node, index) => node === zodProof.nodes[index])
+  )
+    return true;
   const bracesNodes = vulnerabilities.braces?.nodes;
   if (
     isVerifiedBracesHardening(bracesProof) &&
@@ -119,7 +135,7 @@ function hasVerifiedMitigation(finding, vulnerabilities, proof, bracesProof) {
   );
 }
 
-export function evaluateAuditReport(report, hardeningProof, bracesProof) {
+export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProof) {
   const vulnerabilities = report?.vulnerabilities;
   if (!vulnerabilities || typeof vulnerabilities !== "object") {
     throw new Error("npm audit lieferte keinen auswertbaren Vulnerability-Report.");
@@ -145,7 +161,13 @@ export function evaluateAuditReport(report, hardeningProof, bracesProof) {
     }
 
     for (const finding of findings) {
-      const target = hasVerifiedMitigation(finding, vulnerabilities, hardeningProof, bracesProof)
+      const target = hasVerifiedMitigation(
+        finding,
+        vulnerabilities,
+        hardeningProof,
+        bracesProof,
+        zodProof,
+      )
         ? mitigated
         : blocking;
       target.set(findingKey(finding), finding);
@@ -209,7 +231,12 @@ export function runProductionAudit() {
 
   let evaluation;
   try {
-    evaluation = evaluateAuditReport(report, verifyNodeForgeHardening(), verifyBracesHardening());
+    evaluation = evaluateAuditReport(
+      report,
+      verifyNodeForgeHardening(),
+      verifyBracesHardening(),
+      verifyZodHardening(),
+    );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     return 1;
