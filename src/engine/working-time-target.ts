@@ -324,6 +324,10 @@ export function calculateMonthlyWorkingTimeTarget(
       reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
     const forecastTvoed =
       forecast && reviewedRules !== null && supportedTariff && tariff.scopeConfirmed !== false;
+    // Recognizing an old BT-B family marker must not change its unreviewed historical
+    // forecast. Keep the previous explicitly provisional reference outside coverage.
+    const legacyBForecast =
+      forecast && tariff?.kind === "TVOED_B" && tariff.scopeConfirmed === null && !reviewedRules;
     if (period) tariffNotices(period, reviewedRules !== null, notice);
     if (holiday) {
       if (fixed && base > 0) {
@@ -368,6 +372,7 @@ export function calculateMonthlyWorkingTimeTarget(
       } else if (
         period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
         supportedTariff &&
+        !legacyBForecast &&
         plainDate.dayOfWeek <= 6
       ) {
         const verified = verifiedTvoed && period.model.sevenDayShiftPlanConfirmed === true;

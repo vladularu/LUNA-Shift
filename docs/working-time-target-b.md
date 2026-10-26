@@ -40,12 +40,14 @@ In der strikten Dienstplanrechnung setzen diese Abzüge explizite Voraussetzunge
 
 ## Daten- und Backup-Kompatibilität
 
+Außerhalb der geprüften Jahre behält eine nur aus der Familie abgeleitete BT-B-Prognose die bisherige ausdrücklich vorläufige Referenz. Beispiel Dezember 2025 mit 39 Vertragsstunden: 23 Montag-bis-Freitag-Tage minus die beiden gesetzlichen Feiertage 25./26.12. ergeben 21 × 468 = 9.828 Minuten / 163:48. Daraus wird kein bestätigter BT-B-Anspruch abgeleitet. Ein expliziter individueller Anspruch bleibt ohne geprüfte Version offen.
+
 Bestehende K-/Custom-/unbekannte Profile bleiben lesbar. Gespeicherte bekannte alte BT-B-Familienmarker werden ausschließlich im Berechnungsprofil erkannt, ohne Rückschreiben oder Anspruchsbestätigung. Ein mehrdeutiger Marker wird nicht aus dem heutigen Gehaltstarif rückwirkend als BT-B ausgelegt. Bestätigte historische Angaben und datierte Wechsel behalten Vorrang.
 
 Der neue explizite BT-B-Tariftyp wird am gemeinsamen JSON-/Engine-Eingang validiert. Keine Datenbankmigration und keine Überschreibung von Bestandsprofilen. Ein Backup mit dem neuen Tariftyp benötigt eine App, die diesen Typ unterstützt; ältere Leser dürfen ihn nicht als BT-K oder eigenen Tarif umdeuten. Legacy-Backups bleiben in der neuen App lesbar. Der tatsächliche Export-/Restore-Rundlauf wird getestet.
 
 ## Umsetzung und Ergebnisse
 
-Typecheck und 230 gezielte Tests in neun Dateien bestanden. Enthalten sind eigene BT-B-Referenzen, unveränderte K-Referenzen, Datenhistorie, Anspruchs-/Prognosetrennung, echte Backup-Wiederherstellung, gemeinsame Monats-/Jahreswerte sowie HTML/PDF- und CSV-Berichtsdaten. Die vorhandenen Architekturgrenzen bleiben unverändert.
+Typecheck und 231 gezielte Tests in neun Dateien bestanden. Enthalten sind eigene BT-B-Referenzen, unveränderte K-Referenzen, Datenhistorie, Anspruchs-/Prognosetrennung, echte Backup-Wiederherstellung, gemeinsame Monats-/Jahreswerte sowie HTML/PDF- und CSV-Berichtsdaten. Die vorhandenen Architekturgrenzen bleiben unverändert.
 
 Vollständiges verify:fast, endgültige Testzahlen, CI und der Preview-Lieferstand werden im zugehörigen Pull Request und Abschlussbericht dokumentiert. Es gibt keine neue Oberfläche und keine native Änderung. Die frühere iPhone-Abnahme der Kalenderanzeige wird ausdrücklich nicht als bereits erfolgte Geräteprüfung dieses neuen Tarifadapters dargestellt.

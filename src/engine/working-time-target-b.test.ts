@@ -257,6 +257,25 @@ describe("TVöD-B / BT-B, independent controls in docs/working-time-target-b.md"
 });
 
 describe("BT-B reuse of existing employment data", () => {
+  it("preserves the previous provisional reference before the reviewed years", () => {
+    // December 2025: 23 weekdays minus Thu/Fri 25/26 December = 21 * 468.
+    const saved = snapshot([
+      { ...period, validFrom: "2025-01-01", tariff: { kind: "UNVERIFIED", id: "BT_B" } },
+    ]);
+    for (const state of [null, saved]) {
+      const result = calculateMonthlyWorkingTimeTarget(
+        "2025-12",
+        createWorkingTimeCalculationProfile(profile, state, []),
+      );
+      expect(result).toMatchObject({
+        targetMinutes: 9828,
+        status: "PROVISIONAL",
+        tariffReductionMinutes: 0,
+      });
+      expect(result.adjustments.every((a) => a.status === "LEGACY_ESTIMATE")).toBe(true);
+      expect(result.notices.some((n) => n.code === "TARIFF_VERSION_UNREVIEWED")).toBe(true);
+    }
+  });
   it("uses one result in monthly, yearly, CSV and PDF report data", () => {
     const p = createWorkingTimeCalculationProfile(profile, null, []);
     const pattern = {
