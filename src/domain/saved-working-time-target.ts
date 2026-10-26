@@ -69,8 +69,14 @@ export function validateWorkingTimeTargetContext(value: unknown): WorkingTimeTar
     } else if (model.kind === "ROTATING_FIVE_IN_SEVEN")
       exact(model, ["kind", "monthlyReference", "sevenDayShiftPlanConfirmed"]);
     else exact(model, ["kind"]);
-    const tariff = exact(period.tariff, ["kind"], ["version", "scopeConfirmed", "id"]);
-    if (
+    const tariff = exact(
+      period.tariff,
+      ["kind"],
+      ["version", "scopeConfirmed", "id", "accountRuleConfirmed"],
+    );
+    if (tariff.kind === "TVUK_NURSING")
+      exact(tariff, ["kind", "version", "scopeConfirmed", "accountRuleConfirmed"]);
+    else if (
       tariff.kind === "TVOED_K" ||
       tariff.kind === "TVOED_B" ||
       tariff.kind === "TVL_KR" ||

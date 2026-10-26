@@ -5,6 +5,7 @@ import {
   targetTariffForSector,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
+  tvUkTargetTariff,
 } from "@/engine/working-time-target-rules";
 import type {
   TargetTariff,
@@ -119,7 +120,17 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
       return unverified("SALARY_CONFLICT");
     return tvhKrTargetTariff();
   }
-  if (profile.tvUkNursingTariff) return unverified("TV_UK");
+  if (profile.tvUkNursingTariff) {
+    if (
+      profile.tariff ||
+      profile.tvlKrTariff ||
+      profile.tvhKrTariff ||
+      profile.vkaETariff ||
+      profile.nursingTrainingTariff
+    )
+      return unverified("SALARY_CONFLICT");
+    return tvUkTargetTariff();
+  }
   if (profile.tvlKrTariff) {
     if (profile.tariff || profile.vkaETariff || profile.nursingTrainingTariff)
       return unverified("SALARY_CONFLICT");

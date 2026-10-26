@@ -77,6 +77,15 @@ export function WorkingTimeTargetOverview({
   })();
   const result = calculation.value;
   const projection = result?.adjustments.some((line) => line.status === "PROFILE_ESTIMATE");
+  const forecastExplanation = [
+    ...new Set(
+      result?.notices
+        .filter((notice) =>
+          ["CONDITIONAL_ROSTER_FREE_FORECAST", "TARGET_RULE_FORECAST"].includes(notice.code),
+        )
+        .map((notice) => notice.message),
+    ),
+  ].join(" ");
   const unsupported = result?.notices.some((notice) =>
     ["TARIFF_UNSUPPORTED", "TARIFF_VERSION_UNREVIEWED"].includes(notice.code),
   );
@@ -164,10 +173,9 @@ export function WorkingTimeTargetOverview({
                 </Text>
               </View>
             ))}
-            {projection ? (
+            {projection || forecastExplanation ? (
               <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
-                {result.notices.find((notice) => notice.code === "CONDITIONAL_ROSTER_FREE_FORECAST")
-                  ?.message ??
+                {forecastExplanation ||
                   "Monatsprognose mit vertraglichen Referenzstunden. Eingetragene Dienste ändern diese Prognose nicht."}
               </Text>
             ) : null}

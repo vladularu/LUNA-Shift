@@ -217,6 +217,43 @@ describe("working-time target backup v21", () => {
       ).toMatchObject({ targetMinutes: expected, status: "FINAL" });
     },
   );
+  it.each([true, null])(
+    "roundtrips TV-UK account evidence %s in backup v21",
+    async (accountRuleConfirmed) => {
+      const context = {
+        periods: decemberTargetContext.periods.map((p) => ({
+          ...p,
+          federalState: "BW" as const,
+          tariff: {
+            kind: "TVUK_NURSING" as const,
+            version: "2025-01-01",
+            scopeConfirmed: true,
+            accountRuleConfirmed,
+          },
+        })),
+        days: decemberTargetContext.days,
+      };
+      await saveWorkingTimeTargetSettings(source.db, {
+        context,
+        confirmedDates: context.days.map((d) => d.date),
+        expected: await loadWorkingTimeTargetSettings(source.db),
+      });
+      const original = await loadWorkingTimeTargetSettings(source.db);
+      const backup = await exportTvlBackup(source);
+      expect(backup.document.version).toBe(21);
+      await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+      const restored = await loadWorkingTimeTargetSettings(target.db);
+      expect(restored).toEqual(original);
+      expect(
+        calculateMonthlyWorkingTimeTarget(
+          "2026-12",
+          { federalState: "BW", weeklyMinutes: 2310 },
+          undefined,
+          restored.context,
+        ),
+      ).toMatchObject({ targetMinutes: 9240, status: "FINAL" });
+    },
+  );
   it.each([1, 12, 19, 20])("reads legacy v%i without creating claims", async (version) => {
     const backup = await exportTvlBackup(source);
     const introduced = [

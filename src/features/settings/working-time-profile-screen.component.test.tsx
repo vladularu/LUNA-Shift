@@ -212,6 +212,40 @@ describe("automatic working time overview", () => {
       expect(save).not.toHaveBeenCalled();
     },
   );
+  it.each([
+    ["2026-07", "177:06 h", false],
+    ["2026-10", "169:24 h", true],
+    ["2026-11", "161:42 h", true],
+    ["2026-12", "154:00 h", true],
+  ])("explains TV-UK weekday limits only when expanded for %s", async (month, target, note) => {
+    mockMonth = month;
+    mockCalculationProfile = createWorkingTimeCalculationProfile(
+      {
+        ...mockWork,
+        tariff: null,
+        federalState: "BW",
+        tvUkNursingTariff: { payGroup: "PUK8", payLevel: 4 },
+        sundayHolidayWorkEligible: true,
+      },
+      null,
+      [],
+    );
+    const screen = await renderEditor();
+    expect(screen.getByText(target)).toBeTruthy();
+    expect(screen.queryByText(/TV-UK Pflege BW: Planwert/)).toBeNull();
+    await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+    if (note)
+      expect(screen.getByText(/TV-UK Pflege BW: Planwert.*nur Montag bis Freitag/)).toBeTruthy();
+    else expect(screen.queryByText(/TV-UK Pflege BW: Planwert/)).toBeNull();
+    if (month === "2026-12") {
+      expect(screen.getAllByText("−7:42 h")).toHaveLength(3);
+      expect(screen.queryByText(/26.12.2026/)).toBeNull();
+    }
+    expect(screen.queryByText("Tag ergänzen")).toBeNull();
+    expect(screen.queryByText("Dienstplanmäßig frei")).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
   it("has only the breakdown and no employment editor or model question", async () => {
     const screen = await renderEditor();
     for (const label of [
