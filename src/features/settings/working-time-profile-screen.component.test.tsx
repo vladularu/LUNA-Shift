@@ -188,6 +188,53 @@ describe("automatic working time overview", () => {
       expect(save).not.toHaveBeenCalled();
     },
   );
+  it.each(["BT_K", "BT_B"] as const)(
+    "explains TVAöD/%s inside the existing collapsed breakdown",
+    async (sector) => {
+      mockCalculationProfile = createWorkingTimeCalculationProfile(
+        {
+          ...mockWork,
+          tariff: null,
+          federalState: "HE",
+          nursingTrainingTariff: { trainingYear: 2, sector, tariffRegion: "OTHER" },
+        },
+        null,
+        [],
+      );
+      const screen = await renderEditor();
+      expect(screen.getByText("146:18 h")).toBeTruthy();
+      expect(screen.queryByText(/TVAöD Pflege.*Referenz nach § 7/)).toBeNull();
+      await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+      expect(screen.getByText(/TVAöD Pflege.*Referenz nach § 7/)).toBeTruthy();
+      expect(screen.getAllByText("−7:42 h")).toHaveLength(4);
+      expect(screen.queryByText("Tag ergänzen")).toBeNull();
+      expect(screen.queryByRole("button", { name: /26.12.2026/ })).toBeNull();
+      expect(save).not.toHaveBeenCalled();
+    },
+  );
+  it("shows the youth scope limit directly without a false adult number or dead-end profile action", async () => {
+    mockCalculationProfile = createWorkingTimeCalculationProfile(
+      {
+        ...mockWork,
+        tariff: null,
+        federalState: "HE",
+        nursingTrainingTariff: { trainingYear: 2, sector: "BT_K", tariffRegion: "OTHER" },
+      },
+      null,
+      [],
+      "ready",
+      [],
+      true,
+    );
+    const screen = await renderEditor();
+    expect(screen.getByText("Nicht verfügbar")).toBeTruthy();
+    expect(screen.getByText(/Für Auszubildende mit aktivem Jugendschutz/)).toBeTruthy();
+    expect(screen.queryByText("146:18 h")).toBeNull();
+    await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+    expect(screen.queryByText("Arbeitsprofil öffnen")).toBeNull();
+    expect(screen.queryByText("Tag ergänzen")).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+  });
   it("explains the conditional TV-L reference inside the existing collapsed breakdown", async () => {
     const tvl = {
       ...mockWork,

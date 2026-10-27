@@ -10,6 +10,7 @@ import { employmentTargetTariff } from "@/features/settings/working-time-target-
 import { buildAnnualAvailableReportSteps } from "@/features/analysis/annual-core-report";
 import { buildReportSteps } from "@/features/report-export/report-data";
 import { reportToCsv, reportToHtml } from "@/features/report-export/report-formats";
+import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
 import { resolveCalendarSpecialDays } from "@/features/calendar/calendar-special-days";
 import { bundledRuleResolver, RuleResolutionError } from "@/rules/rule-resolver";
 import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
@@ -464,6 +465,18 @@ describe("training scope boundaries", () => {
       expect(calculateMonthlyTargetMinutes("2026-12", employee)).toBe(8778);
     },
   );
+  it("keeps actually timed work visible through the existing analysis fallback when youth target is unavailable", () => {
+    const own = profile("BT_K"),
+      entries = [
+        shift({ date: "2026-12-24", startTime: "08:00", endTime: "16:00", breakMinutes: 0 }),
+      ];
+    const adult = createWorkingTimeCalculationProfile(own, null, []),
+      youth = createWorkingTimeCalculationProfile(own, null, [], "ready", [], true);
+    const a = calculateMonthlyAnalysis("2026-12", entries, adult, [], pattern, bundledRuleResolver),
+      b = calculateMonthlyAnalysis("2026-12", entries, youth, [], pattern, bundledRuleResolver);
+    expect(b.summary.ok).toBe(false);
+    expect(b.shiftTypeAnalysis).toEqual(a.shiftTypeAnalysis);
+  });
   it("leaves non-training target hours unchanged by the youth preference", () => {
     const p = createWorkingTimeCalculationProfile(work, null, [], "ready", [], true);
     expect(calculateMonthlyTargetMinutes("2026-12", p)).toBe(8778);

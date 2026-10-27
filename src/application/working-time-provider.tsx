@@ -1,6 +1,8 @@
 import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 import {
+  createContext,
+  useContext,
   useCallback,
   useEffect,
   useMemo,
@@ -24,6 +26,15 @@ export interface PflegeShiftProfileValue {
   readonly updateProfile: (input: SaveProfileInput) => Promise<UserProfile>;
 }
 
+/** Current check preference gates training references without becoming dated age evidence. */
+export const WorkingTimeYouthProtectionContext = createContext<
+  | {
+      readonly youthEnabled: boolean | null;
+      readonly error: string | null;
+    }
+  | undefined
+>(undefined);
+
 export function WorkingTimeProvider({
   ports,
   children,
@@ -38,6 +49,9 @@ export function WorkingTimeProvider({
   readonly profileContext: Context<PflegeShiftProfileValue | null>;
 }>) {
   const history = useRemunerationData();
+  const protection = useContext(WorkingTimeYouthProtectionContext);
+  const youthEnabled = protection?.youthEnabled;
+  const youthError = protection?.error;
   const [revision, setRevision] = useState(0);
   const refreshWorkingTimeTarget = useCallback(() => setRevision((value) => value + 1), []);
   const [loaded, setLoaded] = useState<{
@@ -89,6 +103,9 @@ export function WorkingTimeProvider({
               loaded?.snapshot ?? null,
               history.profiles,
               status,
+              [],
+              youthEnabled ?? null,
+              youthEnabled === null ? (youthError ? "error" : "loading") : "ready",
             )
           : base.profile,
     };
@@ -101,6 +118,8 @@ export function WorkingTimeProvider({
     ready,
     refreshWorkingTimeTarget,
     revision,
+    youthEnabled,
+    youthError,
   ]);
   return <ProfileContext value={value}>{children}</ProfileContext>;
 }
