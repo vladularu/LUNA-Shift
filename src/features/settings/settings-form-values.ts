@@ -1,3 +1,4 @@
+import { tvalWorkplaceChoice, type TvalWorkplaceChoice } from "./tval-workplace-choice";
 import { EMPTY_SALARY_BASES } from "@/domain/salary-basis-conflict";
 import { getTvalPflegeFullTimeMinutes } from "@/engine/simple-tval-pflege-pay";
 import type { TvhKrGroup, TvhKrPayLevel } from "@/domain/tvh-kr-tariff";
@@ -43,6 +44,7 @@ export interface SettingsFormValues {
   readonly sundayHolidayWorkEligible: EvidenceFormValue;
   readonly allEmploymentWorkRecorded: EvidenceFormValue;
   readonly trainingYear: 1 | 2 | 3 | "UNSET";
+  readonly tvalWorkplace: TvalWorkplaceChoice;
   readonly payGroup: PayGroup;
   readonly tvhPayGroup: TvhKrGroup;
   readonly tvhPayLevel: TvhKrPayLevel;
@@ -88,8 +90,12 @@ export function manualMonthlyGrossFieldError(value: string): string | null {
     : null;
 }
 
-export function settingsFormValues(profile: UserProfile): SettingsFormValues {
-  if (profile.salaryBasisConflict) return settingsFormValuesForSalaryMode(profile, "UNSET");
+export function settingsFormValues(
+  profile: UserProfile,
+  referenceDate?: string,
+): SettingsFormValues {
+  if (profile.salaryBasisConflict)
+    return settingsFormValuesForSalaryMode(profile, "UNSET", referenceDate);
   return Object.freeze({
     federalState: profile.federalState,
     holidayRegion: profile.holidayRegion,
@@ -120,6 +126,7 @@ export function settingsFormValues(profile: UserProfile): SettingsFormValues {
       profile.tvalPflegeTariff?.trainingYear ??
       profile.nursingTrainingTariff?.trainingYear ??
       "UNSET",
+    tvalWorkplace: tvalWorkplaceChoice(profile, referenceDate),
     payGroup: profile.tariff?.payGroup ?? "P8",
     tvhPayGroup: profile.tvhKrTariff?.payGroup ?? "KR8",
     tvhPayLevel: profile.tvhKrTariff?.payLevel ?? 4,
@@ -184,6 +191,7 @@ const salaryModeField = {
 export function settingsFormValuesForSalaryMode(
   profile: UserProfile,
   mode: SalaryMode,
+  referenceDate?: string,
 ): SettingsFormValues {
   const { salaryBasisConflict, ...workProfile } = profile;
   const field = mode === "UNSET" ? null : salaryModeField[mode];
@@ -194,5 +202,5 @@ export function settingsFormValuesForSalaryMode(
         ...(field ? { [field]: salaryBasisConflict[field] ?? null } : {}),
       }
     : workProfile;
-  return { ...settingsFormValues(selectedProfile), salaryMode: mode };
+  return { ...settingsFormValues(selectedProfile, referenceDate), salaryMode: mode };
 }

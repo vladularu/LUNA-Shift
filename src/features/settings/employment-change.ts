@@ -1,3 +1,4 @@
+import { tvalWorkplaceChoice, tvalWorkplaceLabel } from "./tval-workplace-choice";
 import type { SaveProfileInput, UserProfile } from "@/domain/types";
 import { FEDERAL_STATE_LABELS, HOLIDAY_REGION_LABELS, INDUSTRY_LABELS } from "@/domain/types";
 import {
@@ -52,9 +53,25 @@ export function employmentChangedFields(before: SaveProfileInput, after: SavePro
 export function employmentChangeLines(before: UserProfile, after: SaveProfileInput) {
   const fields = employmentChangedFields(before, after);
   const result: string[] = [];
-  if (fields.some((key) => salaryFields.includes(key)))
+  const workplaceChanged =
+    !!before.tvalPflegeTariff &&
+    !!after.tvalPflegeTariff &&
+    tvalWorkplaceChoice(before) !== tvalWorkplaceChoice({ ...before, ...after });
+  const onlyWorkplace =
+    workplaceChanged &&
+    before.tvalPflegeTariff?.trainingYear === after.tvalPflegeTariff?.trainingYear &&
+    before.tvalPflegeTariff?.universityRegion === after.tvalPflegeTariff?.universityRegion;
+  if (
+    fields.some(
+      (key) => salaryFields.includes(key) && !(onlyWorkplace && key === "tvalPflegeTariff"),
+    )
+  )
     result.push(
       `Tarif & Gehalt: ${profileSalaryLabel(before)} → ${profileSalaryLabel({ ...before, ...after })}`,
+    );
+  if (workplaceChanged)
+    result.push(
+      `Arbeitsbereich: ${tvalWorkplaceLabel(tvalWorkplaceChoice(before))} → ${tvalWorkplaceLabel(tvalWorkplaceChoice({ ...before, ...after }))}`,
     );
   const format = (p: SaveProfileInput, key: keyof EmploymentProfileData): string => {
     const data = captureEmploymentProfile(p),

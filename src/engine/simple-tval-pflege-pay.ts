@@ -107,7 +107,8 @@ function context(
     overtimeBasisPoints: overtime.percentageBasisPoints,
     policy: {
       ...policy,
-      saturdaySalariedShiftHourlyCents: policy.hospitalSalariedShiftHourlyCents,
+      saturdaySalariedShiftHourlyCents:
+        selected.employerScope === "GENERAL" ? 0 : policy.hospitalSalariedShiftHourlyCents,
     },
   };
 }
@@ -155,7 +156,7 @@ export function calculateTvalPflegeMonth(
   const empty = { ...createManualMonthlyPayEstimate(month, 0), tariffLabel: "TVA-L Pflege" };
   const allowancePolicy = ctx?.pkg.rules.tvalShiftAllowancePolicy;
   const periods = allowancePolicy?.scopes
-    .find((s) => s.id === "SECTION_43")
+    .find((s) => s.id === (selection.employerScope ?? "SECTION_43"))
     ?.rates.periods.filter((p) => active(date, p));
   if (!ctx || !allowancePolicy || periods?.length !== 1)
     return {

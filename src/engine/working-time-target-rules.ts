@@ -83,9 +83,10 @@ export interface TargetRuleSource {
 }
 
 export interface TargetTariffRules {
-  readonly part: "BT-K" | "BT-B" | "TV-L § 43" | "TV-H § 43" | "TV-UK";
+  readonly part: "BT-K" | "BT-B" | "TV-L § 43" | "TV-L § 6" | "TV-H § 43" | "TV-UK";
   readonly label: string;
   readonly forecastQualifier?: string;
+  readonly trainingQualifier?: string;
   readonly holidayWork:
     | { readonly kind: "TARGET_REDUCTION" }
     | { readonly kind: "SEPARATE_COMPENSATION"; readonly legalBasis: string };
@@ -108,6 +109,9 @@ export function isReviewedTargetTariff(
     tariff?.kind === "TVH_KR" ||
     tariff?.kind === "TVAOED_K" ||
     tariff?.kind === "TVAOED_B" ||
+    tariff?.kind === "TVAL_COMMON" ||
+    tariff?.kind === "TVAL_GENERAL" ||
+    tariff?.kind === "TVAL_KR" ||
     tariff?.kind === "TVUK_NURSING"
   );
 }
@@ -175,6 +179,83 @@ export function tvaoedTargetTariff(sector: string | undefined): ReviewedTargetTa
     scopeConfirmed: null,
   };
 }
+
+/** Source snapshot, not a blanket effective date or a claim of adulthood. */
+export const TVAL_TARGET_REVIEW = {
+  version: "2026-02-14",
+  from: "2026-01-01",
+  to: "2027-12-31",
+} as const;
+export function tvalTargetTariff(scope?: "GENERAL" | "SECTION_43" | null): ReviewedTargetTariff {
+  return {
+    kind: scope === "SECTION_43" ? "TVAL_KR" : scope === "GENERAL" ? "TVAL_GENERAL" : "TVAL_COMMON",
+    version: TVAL_TARGET_REVIEW.version,
+    scopeConfirmed: null,
+  };
+}
+
+/** The adult referral keeps general loss-hours and hospital fifths separate. */
+function tvalRules(
+  scope: "COMMON" | "GENERAL" | "SECTION_43",
+  year: 2026 | 2027,
+): TargetTariffRules {
+  const hospital = scope === "SECTION_43";
+  const sourceUrl =
+    "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf";
+  const prefix = "tval-pflege-" + scope.toLowerCase() + "-" + year;
+  const holiday = {
+    ruleId: prefix + (hospital ? "-7-1-43-6-3-8" : "-7-1-6-3-loss"),
+    legalBasis:
+      "§ 7 Abs. 1 TVA-L Pflege i.V.m. " +
+      (hospital
+        ? "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L"
+        : "§ 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch"),
+    sourceUrl,
+  };
+  const special = {
+    ruleId: prefix + (hospital ? "-7-1-43-6-3-1-3" : "-7-1-6-3-1-3"),
+    legalBasis:
+      "§ 7 Abs. 1 TVA-L Pflege i.V.m. " +
+      (hospital ? "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L" : "§ 6 Abs. 3 Sätze 1–3 TV-L"),
+    sourceUrl,
+  };
+  const forecast = (rule: TargetRuleSource): TargetRuleSource => ({
+    ...rule,
+    ruleId: rule.ruleId + "-forecast",
+    legalBasis: "Planungsreferenz zu " + rule.legalBasis + "; kein bestätigter Tagesanspruch",
+  });
+  return {
+    part: hospital ? "TV-L § 43" : "TV-L § 6",
+    label: "TVA-L Pflege" + (hospital ? " / § 43" : scope === "GENERAL" ? " / TV-L § 6" : ""),
+    ...(hospital
+      ? {
+          trainingQualifier:
+            "Planwert f\u00fcr planfreie Feiertage ohne Jugendschutz. Unterricht und Ausgleich separat.",
+        }
+      : scope === "COMMON"
+        ? {
+            trainingQualifier:
+              "Arbeitgeberregel offen; Referenz ohne Jugendschutz und pauschalen Fünftelabzug.",
+          }
+        : {}),
+    holidayWork: {
+      kind: "SEPARATE_COMPENSATION",
+      legalBasis: hospital
+        ? "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L"
+        : "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 TV-L und § 8 TV-L",
+    },
+    holiday,
+    special,
+    holidayForecast: forecast(holiday),
+    specialForecast: forecast(special),
+  };
+}
+const TVAL_COMMON_2026 = tvalRules("COMMON", 2026),
+  TVAL_COMMON_2027 = tvalRules("COMMON", 2027),
+  TVAL_GENERAL_2026 = tvalRules("GENERAL", 2026),
+  TVAL_GENERAL_2027 = tvalRules("GENERAL", 2027),
+  TVAL_KR_2026 = tvalRules("SECTION_43", 2026),
+  TVAL_KR_2027 = tvalRules("SECTION_43", 2027);
 
 const K_2026: TargetTariffRules = {
   part: "BT-K",
@@ -367,6 +448,48 @@ const TRAINING_K_2026 = trainingRules("BT-K", 2026),
   TRAINING_B_2026 = trainingRules("BT-B", 2026),
   TRAINING_B_2027 = trainingRules("BT-B", 2027);
 const TARGET_TARIFF_REVIEWS = {
+  TVAL_COMMON: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_COMMON_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVAL_TARGET_REVIEW.to,
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_COMMON_2027,
+    },
+  ],
+  TVAL_GENERAL: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_GENERAL_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVAL_TARGET_REVIEW.to,
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_GENERAL_2027,
+    },
+  ],
+  TVAL_KR: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_KR_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVAL_TARGET_REVIEW.to,
+      versions: [TVAL_TARGET_REVIEW.version],
+      rules: TVAL_KR_2027,
+    },
+  ],
   TVAOED_K: [
     {
       from: "2026-01-01",
@@ -465,6 +588,9 @@ export function reviewedTargetTariffRules(
 /** Provenance for a pending zero-minute line outside review coverage; never grants a deduction. */
 export function knownTargetTariffRules(kind: ReviewedTargetTariff["kind"]): TargetTariffRules {
   return {
+    TVAL_COMMON: TVAL_COMMON_2026,
+    TVAL_GENERAL: TVAL_GENERAL_2026,
+    TVAL_KR: TVAL_KR_2026,
     TVAOED_K: TRAINING_K_2026,
     TVAOED_B: TRAINING_B_2026,
     TVOED_K: K_2026,

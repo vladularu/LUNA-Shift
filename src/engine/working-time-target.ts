@@ -13,6 +13,7 @@ import type {
 } from "@/domain/working-time-target";
 import { getPublicHolidays } from "@/engine/holidays";
 import { tvUkDayAdjustment } from "./working-time-target-tvuk-day";
+import { tvalLossDayAdjustment } from "./working-time-target-tval-day";
 import {
   TARGET_RULES,
   isReviewedTargetTariff,
@@ -338,7 +339,13 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
-    const training = tariff?.kind === "TVAOED_K" || tariff?.kind === "TVAOED_B";
+    const training =
+      tariff?.kind === "TVAOED_K" ||
+      tariff?.kind === "TVAOED_B" ||
+      tariff?.kind === "TVAL_COMMON" ||
+      tariff?.kind === "TVAL_GENERAL" ||
+      tariff?.kind === "TVAL_KR" ||
+      (tariff?.kind === "UNVERIFIED" && tariff.id.startsWith("TVA_L"));
     if (training && input?.youthProtectionStatus && input.youthProtectionStatus !== "ready") {
       notice({
         date: null,
@@ -365,14 +372,16 @@ export function calculateMonthlyWorkingTimeTarget(
     }
     const supportedTariff = isReviewedTargetTariff(tariff);
     const reviewedRules = supportedTariff ? reviewedTargetTariffRules(tariff, date) : null;
-    if (training && forecast && reviewedRules && tariff.scopeConfirmed !== false)
+    if (training && forecast && reviewedRules && supportedTariff && tariff.scopeConfirmed !== false)
       notice({
         date: null,
         code: "TARGET_RULE_FORECAST",
         affectsTarget: true,
         message:
           reviewedRules.label +
-          ": Referenz nach § 7 ohne Jugendarbeitsschutz. Unterricht und Ausgleich separat.",
+          ": " +
+          (reviewedRules.trainingQualifier ??
+            "Referenz nach § 7 ohne Jugendarbeitsschutz. Unterricht und Ausgleich separat."),
       });
     const verifiedTariff =
       reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
@@ -384,7 +393,10 @@ export function calculateMonthlyWorkingTimeTarget(
       plainDate.dayOfWeek <= 6 &&
       period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
       period.model.sevenDayShiftPlanConfirmed !== false &&
-      reviewedRules.holidayWork.kind === "SEPARATE_COMPENSATION"
+      reviewedRules.holidayWork.kind === "SEPARATE_COMPENSATION" &&
+      tariff.kind !== "TVAL_COMMON" &&
+      tariff.kind !== "TVAL_GENERAL" &&
+      tariff.kind !== "TVAL_KR"
     )
       notice({
         date: null,
@@ -404,6 +416,9 @@ export function calculateMonthlyWorkingTimeTarget(
         tariff?.kind === "TVH_KR" ||
         tariff?.kind === "TVAOED_K" ||
         tariff?.kind === "TVAOED_B" ||
+        tariff?.kind === "TVAL_COMMON" ||
+        tariff?.kind === "TVAL_GENERAL" ||
+        tariff?.kind === "TVAL_KR" ||
         tariff?.kind === "TVUK_NURSING") &&
       tariff.scopeConfirmed === null &&
       !reviewedRules;
@@ -424,6 +439,26 @@ export function calculateMonthlyWorkingTimeTarget(
         rules: reviewedRules ?? knownTargetTariffRules(tariff.kind),
         reviewed: reviewedRules !== null,
         forecast,
+        notice,
+      });
+      if (adjustment) adjustments.push(adjustment);
+      raw.push({ date, base, adjustments, unavailable: false });
+      continue;
+    }
+    if (
+      period?.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
+      (tariff?.kind === "TVAL_COMMON" || tariff?.kind === "TVAL_GENERAL") &&
+      reviewedRules
+    ) {
+      const adjustment = tvalLossDayAdjustment({
+        date,
+        weekday: plainDate.dayOfWeek,
+        holiday,
+        base,
+        fact,
+        rules: reviewedRules,
+        forecast: forecastTariff,
+        eligibilityVerified: verifiedTariff && tariff.kind === "TVAL_GENERAL",
         notice,
       });
       if (adjustment) adjustments.push(adjustment);
@@ -599,6 +634,8 @@ function tariffNotices(
       });
     if (
       tariff.kind !== "TVUK_NURSING" &&
+      tariff.kind !== "TVAL_COMMON" &&
+      tariff.kind !== "TVAL_GENERAL" &&
       period.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
       period.model.sevenDayShiftPlanConfirmed !== true
     )

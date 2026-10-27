@@ -1,3 +1,5 @@
+import { tvalWorkplaceChoice, tvalWorkplaceFields } from "./tval-workplace-choice";
+import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { describe, expect, it } from "vitest";
 
 import { profileSalaryLabel } from "./work-profile-summary";
@@ -48,6 +50,7 @@ describe("settings form values", () => {
       sundayHolidayWorkEligible: "YES",
       allEmploymentWorkRecorded: "YES",
       trainingYear: "UNSET",
+      tvalWorkplace: "UNKNOWN",
       krPayGroup: "KR8",
       tvhPayGroup: "KR8",
       tvhPayLevel: 4,
@@ -161,5 +164,63 @@ describe("conflicting salary drafts", () => {
     });
     expect(settingsFormValuesForSalaryMode(profile, "UNSET").salaryMode).toBe("UNSET");
     expect(profile.salaryBasisConflict?.tariff?.payLevel).toBe(5);
+  });
+});
+
+describe("TVA-L workplace projection", () => {
+  const tval = { trainingYear: 2 as const, universityRegion: "WEST" as const };
+  it("keeps unknown scope despite healthcare and Sunday work, without rewriting legacy objects", () => {
+    expect(
+      settingsFormValues({ ...baseProfile, industry: "HEALTHCARE", tvalPflegeTariff: tval })
+        .tvalWorkplace,
+    ).toBe("UNKNOWN");
+    expect(tvalWorkplaceFields("UNKNOWN", tval)).toEqual({});
+    expect(tvalWorkplaceFields("UNKNOWN", tval, true)).toEqual({ employerScope: null });
+  });
+  it.each(["GENERAL", "SECTION_43", null] as const)(
+    "restores explicit workplace %s",
+    (employerScope) => {
+      const profile = { ...baseProfile, tvalPflegeTariff: { ...tval, employerScope } };
+      expect(settingsFormValues(profile).tvalWorkplace).toBe(employerScope ?? "UNKNOWN");
+      expect(tvalWorkplaceFields(employerScope ?? "UNKNOWN", profile.tvalPflegeTariff)).toEqual({
+        employerScope,
+      });
+    },
+  );
+  it("reuses only applicable existing financial scope and allows an explicit clear", () => {
+    const profile = { ...baseProfile, tvalPflegeTariff: tval };
+    const data = remunerationDataFromLegacy(baseProfile);
+    const scoped = {
+      ...profile,
+      employmentTimeline: [
+        {
+          effectiveFrom: "2026-12-01",
+          revision: 1,
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt,
+          data: {
+            ...data,
+            selection: {
+              kind: "tariff" as const,
+              packageId: "tval-pflege-tdl",
+              variant: "CARE",
+              region: "WEST_38_5",
+              group: "regular",
+              level: "2",
+              fullTimeWeeklyMinutes: 2310,
+              tvalEmployerScope: "SECTION_43" as const,
+            },
+          },
+        },
+      ],
+    };
+    expect(tvalWorkplaceChoice(scoped, "2026-11-30")).toBe("UNKNOWN");
+    expect(tvalWorkplaceChoice(scoped, "2026-12-01")).toBe("SECTION_43");
+    expect(
+      tvalWorkplaceChoice(
+        { ...scoped, tvalPflegeTariff: { ...tval, employerScope: null } },
+        "2026-12-01",
+      ),
+    ).toBe("UNKNOWN");
   });
 });

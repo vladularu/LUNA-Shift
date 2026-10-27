@@ -84,3 +84,24 @@ describe("onboarding tariff contracts", () => {
     ).toHaveProperty("hours");
   });
 });
+
+it.each(["SECTION_43", "GENERAL", null] as const)(
+  "keeps optional TVA-L workplace %s in the existing onboarding contract",
+  (tvalEmployerScope) => {
+    const salary = onboardingTariffProfile(
+      {
+        ...EMPTY_TARIFF_SELECTION,
+        mode: "TVAL_PFLEGE",
+        trainingYear: 2,
+        universityRegion: "WEST",
+        tvalEmployerScope,
+      },
+      2310,
+    );
+    expect(salary.tvalPflegeTariff).toEqual({
+      trainingYear: 2,
+      universityRegion: "WEST",
+      ...(tvalEmployerScope ? { employerScope: tvalEmployerScope } : {}),
+    });
+  },
+);

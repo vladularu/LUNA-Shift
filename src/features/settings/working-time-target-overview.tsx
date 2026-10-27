@@ -199,6 +199,12 @@ export function WorkingTimeTargetOverview({
                   "Monatsprognose mit vertraglichen Referenzstunden. Eingetragene Dienste ändern diese Prognose nicht."}
               </Text>
             ) : null}
+            {!trainingGuard && periods.some((period) => period.tariff.kind === "TVAL_COMMON") ? (
+              <RowButton
+                title="Arbeitsbereich auswählen"
+                onPress={() => router.push(settingsEditorRoute("TARIFF"))}
+              />
+            ) : null}
             {result.roundingMinutes ? (
               <Text style={{ color: palette.textMuted }}>
                 Minutenausgleich: {result.roundingMinutes}

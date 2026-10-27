@@ -223,4 +223,65 @@ describe("TVA-L in the familiar salary form", () => {
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalled();
   });
+  it("offers workplace only for TVA-L and saves it through the shared period dialog", async () => {
+    const screen = await render(editor());
+    expect(screen.getByRole("button", { name: "Arbeitsbereich: Noch nicht geklärt" })).toBeTruthy();
+    expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
+    await select(screen, "Arbeitsbereich", "Krankenhaus / ärztliche Behandlung");
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    expect(
+      screen.getByText("Arbeitsbereich: Noch nicht geklärt → Krankenhaus / ärztliche Behandlung"),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "Für den gesamten Zeitraum" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Gesamten Zeitraum berichtigen" }));
+    expect(mockUpdateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tvalPflegeTariff: { ...tval, employerScope: "SECTION_43" },
+        validity: expect.objectContaining({ effectiveFrom: null }),
+      }),
+    );
+    await select(screen, "Berechnung", "TV-L Pflege");
+    expect(screen.queryByRole("button", { name: /^Arbeitsbereich:/ })).toBeNull();
+  });
+  it("keeps a workplace draft when switching tariff and back", async () => {
+    const screen = await render(editor());
+    await select(screen, "Arbeitsbereich", "Anderer Arbeitsbereich");
+    await select(screen, "Berechnung", "TVöD VKA · E-Tabelle");
+    await select(screen, "Berechnung", "TVA-L Pflege · Ausbildung");
+    expect(
+      screen.getByRole("button", { name: "Arbeitsbereich: Anderer Arbeitsbereich" }),
+    ).toBeTruthy();
+  });
+  it("clears explicit workplace rather than resurrecting older scope", async () => {
+    mockProfile = { ...mockProfile, tvalPflegeTariff: { ...tval, employerScope: "SECTION_43" } };
+    const screen = await render(editor());
+    await select(screen, "Arbeitsbereich", "Noch nicht geklärt");
+    await saveSettingsChoice(screen);
+    expect(mockUpdateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ tvalPflegeTariff: { ...tval, employerScope: null } }),
+    );
+  });
+  it("dates workplace changes only after editing, without leaving the form", async () => {
+    const screen = await render(editor());
+    await select(screen, "Arbeitsbereich", "Anderer Arbeitsbereich");
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Ab einem Datum" }));
+    await fireEvent(
+      screen.getByLabelText("Gültig ab"),
+      "valueChange",
+      {},
+      new Date(2026, 11, 1, 12),
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Ab 01.12.2026 speichern" }));
+    expect(mockUpdateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tvalPflegeTariff: { ...tval, employerScope: "GENERAL" },
+        validity: expect.objectContaining({ effectiveFrom: "2026-12-01" }),
+      }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Arbeitsbereich: Anderer Arbeitsbereich" }),
+    ).toBeTruthy();
+  });
 });

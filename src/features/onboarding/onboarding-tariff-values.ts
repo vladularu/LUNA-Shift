@@ -1,3 +1,5 @@
+import { tvalWorkplaceFields } from "@/features/settings/tval-workplace-choice";
+import type { TvalEmployerScope } from "@/domain/remuneration-profile";
 import { Temporal } from "@js-temporal/polyfill";
 import { tariffFullTimeWeeklyMinutes } from "@/domain/employment-profile";
 import { UserFacingError } from "@/domain/errors";
@@ -45,6 +47,7 @@ export interface OnboardingTariffSelection {
   readonly universityRegion: TvlKrUniversityRegion | null;
   readonly trainingYear: 1 | 2 | 3 | null;
   readonly fullTime: 2310 | 2400 | null;
+  readonly tvalEmployerScope?: TvalEmployerScope | null;
 }
 export const EMPTY_TARIFF_SELECTION: OnboardingTariffSelection = {
   mode: null,
@@ -257,6 +260,7 @@ export function onboardingTariffProfile(
         tvalPflegeTariff: {
           trainingYear: selection.trainingYear!,
           universityRegion: selection.universityRegion!,
+          ...tvalWorkplaceFields(selection.tvalEmployerScope ?? "UNKNOWN"),
         },
       };
     default:
