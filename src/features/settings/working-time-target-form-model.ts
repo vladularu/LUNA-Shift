@@ -119,7 +119,7 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
       profile.nursingTrainingTariff
     )
       return unverified("SALARY_CONFLICT");
-    return tvalTargetTariff();
+    return tvalTargetTariff(profile.tvalPflegeTariff.employerScope);
   }
   if (profile.tvhKrTariff) {
     if (

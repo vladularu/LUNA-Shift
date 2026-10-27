@@ -75,7 +75,7 @@ function currentTariff(profile: UserProfile): TargetTariff {
     !profile.tvhKrTariff &&
     !profile.nursingTrainingTariff
   )
-    return tvalTargetTariff();
+    return tvalTargetTariff(profile.tvalPflegeTariff.employerScope);
   if (
     profile.nursingTrainingTariff &&
     !profile.salaryBasisConflict &&
@@ -331,6 +331,7 @@ export function createWorkingTimeCalculationProfile(
         ) {
           const family =
             employment.tvalPflegeTariff &&
+            !Object.hasOwn(employment.tvalPflegeTariff, "employerScope") &&
             selected?.kind === "tariff" &&
             selected.packageId === "tval-pflege-tdl"
               ? selectedTariff(selected)

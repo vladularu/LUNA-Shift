@@ -631,6 +631,93 @@ describe("working-time target backup v21", () => {
     await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
     await check(target);
   });
+  it("preserves an explicit TVA-L workplace change, hours and year through SQL and backup", async () => {
+    const context = {
+      ...decemberTargetContext,
+      days: [],
+      periods: [
+        {
+          ...decemberTargetContext.periods[0],
+          validFrom: "2026-01-01",
+          tariff: { kind: "UNVERIFIED" as const, id: "TVA_L" },
+        },
+      ],
+    };
+    await saveWorkingTimeTargetSettings(source.db, {
+      context,
+      confirmedDates: [],
+      expected: await loadWorkingTimeTargetSettings(source.db),
+    });
+    const before = (await projectStoredSimpleProfile(source.db, await loadProfile(source.db)))!;
+    const own = {
+      ...before,
+      tariff: null,
+      tvlKrTariff: null,
+      nursingTrainingTariff: null,
+      vkaETariff: null,
+      tvUkNursingTariff: null,
+      tvhKrTariff: null,
+      tvalPflegeTariff: {
+        trainingYear: 2 as const,
+        universityRegion: "WEST" as const,
+        employerScope: "SECTION_43" as const,
+      },
+      weeklyMinutes: 2310,
+      federalState: "HE" as const,
+      sundayHolidayWorkEligible: true,
+    };
+    const fields = employmentChangedFields(before, own);
+    await saveEmploymentProfile(source.db, {
+      ...own,
+      validity: {
+        effectiveFrom: null,
+        fields,
+        correctionFields: fields,
+        expectedProfileUpdatedAt: before.updatedAt,
+        expectedTimeline: employmentTimelineKey(await listRemunerationProfiles(source.db)),
+        baseline: employmentDataFromProfile(before),
+      },
+    });
+    const current = (await projectStoredSimpleProfile(source.db, await loadProfile(source.db)))!;
+    const next = {
+      ...current,
+      weeklyMinutes: 1800,
+      tvalPflegeTariff: {
+        ...current.tvalPflegeTariff!,
+        trainingYear: 3 as const,
+        employerScope: "GENERAL" as const,
+      },
+    };
+    await saveEmploymentProfile(source.db, {
+      ...next,
+      validity: {
+        effectiveFrom: "2026-12-16",
+        fields: employmentChangedFields(current, next),
+        expectedProfileUpdatedAt: current.updatedAt,
+        expectedTimeline: employmentTimelineKey(await listRemunerationProfiles(source.db)),
+        baseline: employmentDataFromProfile(current),
+      },
+    });
+    const check = async (fixture: TvlShiftWorkFixture) => {
+      const p = (await projectStoredSimpleProfile(fixture.db, await loadProfile(fixture.db)))!;
+      const history = await listRemunerationProfiles(fixture.db);
+      const snapshot = await loadWorkingTimeTargetSettings(fixture.db);
+      expect(snapshot.context).toEqual(context);
+      expect(history.some((row) => row.employmentOverrides?.tvalPflegeTariff)).toBe(true);
+      expect(
+        history.find((row) => row.effectiveFrom === "2026-12-16")?.employment?.tvalPflegeTariff
+          ?.trainingYear,
+      ).toBe(3);
+      const calculation = createWorkingTimeCalculationProfile(p, snapshot, history);
+      expect(calculateMonthlyWorkingTimeTarget("2026-10", calculation).targetMinutes).toBe(9702);
+      expect(calculateMonthlyWorkingTimeTarget("2026-11", calculation).targetMinutes).toBe(9702);
+      expect(calculateMonthlyWorkingTimeTarget("2026-12", calculation).targetMinutes).toBe(8322);
+    };
+    await check(source);
+    const backup = await exportTvlBackup(source);
+    await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+    await check(target);
+  });
   it.each([
     "future-backup",
     "future-settings",

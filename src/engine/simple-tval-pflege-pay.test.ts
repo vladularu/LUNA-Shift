@@ -269,4 +269,53 @@ describe("simple TVA-L Pflege at university hospitals", () => {
       }),
     ).toThrow();
   });
+  it.each(["SECTION_43", "GENERAL", null] as const)(
+    "validates optional workplace %s",
+    (employerScope) => {
+      expect(requireTvalPflegeTariff({ ...selection, employerScope })).toEqual({
+        ...selection,
+        employerScope,
+      });
+    },
+  );
+  it.each(["YES", 1, true, {}, "TVOED"] as const)(
+    "rejects invalid workplace %j",
+    (employerScope) => {
+      expect(() => requireTvalPflegeTariff({ ...selection, employerScope })).toThrow();
+    },
+  );
+  it("preserves the original two-field representation without adding a confirmation", () => {
+    expect(requireTvalPflegeTariff(selection)).toEqual(selection);
+    expect(requireTvalPflegeTariff(selection)).not.toHaveProperty("employerScope");
+  });
+  it.each([
+    ["SECTION_43", 0.64],
+    ["GENERAL", 0],
+    [null, 0.64],
+  ] as const)(
+    "uses the existing Saturday rule for explicit workplace %s",
+    (employerScope, amount) => {
+      const value = calculateTvalPflegeShift(
+        day("2026-10-10", "14:00", "15:00"),
+        work,
+        { ...selection, employerScope },
+        true,
+      );
+      expect(value.premiumLines.find((line) => line.key === "saturday")?.amount ?? 0).toBe(amount);
+    },
+  );
+
+  it.each([
+    ["GENERAL", 150],
+    ["SECTION_43", 187.5],
+  ] as const)("uses existing monthly allowance scope %s", (employerScope, amount) => {
+    const value = calculateTvalPflegeMonth(
+      "2026-10",
+      [],
+      work,
+      { ...selection, employerScope },
+      { ...options, allowanceStatus: "ALTERNATING_MONTHLY" },
+    );
+    expect(value.allowanceAmount).toBe(amount);
+  });
 });

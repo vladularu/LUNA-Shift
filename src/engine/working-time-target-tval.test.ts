@@ -528,3 +528,40 @@ it.each(["variant", "region", "level"] as const)(
     expect(p.workingTimeTarget?.context?.periods[0].tariff.kind).toBe("UNVERIFIED");
   },
 );
+
+it.each([
+  ["SECTION_43", "TVAL_KR", 9702, 8778],
+  ["GENERAL", "TVAL_GENERAL", 10164, 9240],
+  [null, "TVAL_COMMON", 10164, 9240],
+] as const)(
+  "uses saved simple workplace %s without a financial setup",
+  (employerScope, kind, october, december) => {
+    const p = own({
+      tvalPflegeTariff: { trainingYear: 2, universityRegion: "WEST", employerScope },
+    });
+    const calculation = createWorkingTimeCalculationProfile(p, null, []);
+    expect(calculation.workingTimeTarget?.context?.periods[0].tariff).toMatchObject({
+      kind,
+      scopeConfirmed: null,
+    });
+    expect(employmentTargetTariff(p)).toMatchObject({ kind });
+    expect(calculateMonthlyTargetMinutes("2026-10", calculation)).toBe(october);
+    expect(calculateMonthlyTargetMinutes("2026-12", calculation)).toBe(december);
+  },
+);
+it.each(["SECTION_43", "GENERAL", null] as const)(
+  "lets explicit simple workplace %s supersede older financial metadata",
+  (employerScope) => {
+    const p = own({
+      tvalPflegeTariff: { trainingYear: 2, universityRegion: "WEST", employerScope },
+    });
+    const row = {
+      ...dated(employerScope === "SECTION_43" ? "GENERAL" : "SECTION_43"),
+      employment: employmentDataFromProfile(p),
+    };
+    const calculation = createWorkingTimeCalculationProfile(p, null, [row]);
+    expect(calculateMonthlyTargetMinutes("2026-12", calculation)).toBe(
+      employerScope === "SECTION_43" ? 8778 : 9240,
+    );
+  },
+);

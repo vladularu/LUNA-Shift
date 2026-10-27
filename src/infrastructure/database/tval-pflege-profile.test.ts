@@ -213,4 +213,19 @@ describe("simple TVA-L Pflege persistence", () => {
     await expect(loadProfile(memory.db)).rejects.toThrow();
     await expect(restore((await backup()).serialized)).rejects.toThrow();
   });
+  it.each(["SECTION_43", "GENERAL", null] as const)(
+    "roundtrips workplace %s through SQL and the existing verified backup",
+    async (employerScope) => {
+      const scoped = { ...selected, employerScope };
+      await saveProfile(memory.db, { ...work, tvalPflegeTariff: scoped });
+      expect((await loadProfile(memory.db))?.tvalPflegeTariff).toEqual(scoped);
+      const file = await backup();
+      await saveProfile(memory.db, { ...work, tariff: p });
+      await restore(file.serialized);
+      expect(
+        (await projectStoredSimpleProfile(memory.db, await loadProfile(memory.db)))
+          ?.tvalPflegeTariff,
+      ).toEqual(scoped);
+    },
+  );
 });
