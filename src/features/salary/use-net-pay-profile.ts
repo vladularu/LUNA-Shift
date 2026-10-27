@@ -6,6 +6,7 @@ import { collectAnnualSalaryPayments, requireNetPaySettingsMonth } from "@/domai
 import {
   loadApplicableNetPaySettings,
   saveContinuousNetPaySettings,
+  resetAnnualSalaryPayments,
 } from "@/infrastructure/database/net-pay-profile-repository";
 
 interface State {
@@ -87,11 +88,31 @@ export function useNetPayProfile(month: string, enabled: boolean) {
       setBusy(false);
     }
   }
+  async function resetAnnualPayments() {
+    if (writing.current || visible.status !== "ready")
+      throw new Error("Bitte die Netto-Angaben erneut laden.");
+    const current = ++generation.current;
+    writing.current = true;
+    setBusy(true);
+    try {
+      await resetAnnualSalaryPayments(db, {
+        year: Number(month.slice(0, 4)),
+        expectedTimeline: visible.timeline,
+      });
+      const next = await loadApplicableNetPaySettings(db, month);
+      if (current === generation.current)
+        setState({ month, status: "ready", ...next, error: null });
+    } finally {
+      writing.current = false;
+      setBusy(false);
+    }
+  }
   return {
     ...visible,
     annualPayments: collectAnnualSalaryPayments(visible.timeline),
     busy,
     save,
+    resetAnnualPayments,
     reload,
   };
 }

@@ -7,6 +7,8 @@ import { generateTestRun, restoreTestBackup, setDeveloperMode } from "./dev-tool
 import { migrateDatabase } from "./migrations";
 import {
   deleteMonthlyNetPaySettings,
+  resetAnnualSalaryPayments,
+  loadNetPayProfileTimeline,
   loadMonthlyNetPaySettings,
   mapNetPayProfileRow,
   NetPayProfileConflictError,
@@ -208,5 +210,99 @@ describe("local monthly net-pay profile storage", () => {
       (await saveMonthlyNetPaySettings(f.db, { settings: saved.settings, expected: saved }))
         .revision,
     ).toBe(2);
+  });
+  const bonus = {
+    revision: 1,
+    payoutMonth: "2026-11",
+    grossCents: 381816,
+    netBasis: { kind: "CONSTANT_PAY" as const },
+  };
+  async function withAnnualCopies() {
+    for (const month of ["2026-01", "2026-12"]) {
+      const initial = automatedSettings(month);
+      await saveMonthlyNetPaySettings(f.db, {
+        settings: {
+          ...initial,
+          automation: {
+            ...initial.automation!,
+            annualPayments: [bonus, { ...bonus, payoutMonth: "2027-11", grossCents: 100000 }],
+          },
+        },
+        expected: null,
+      });
+    }
+    return loadNetPayProfileTimeline(f.db);
+  }
+  it("returns one cash year to automation without older copies resurrecting or changing taxes and other years", async () => {
+    const before = await withAnnualCopies();
+    await resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: before });
+    const after = await loadNetPayProfileTimeline(f.db);
+    for (const [i, row] of after.entries()) {
+      expect(row.settings).toEqual({
+        ...before[i].settings,
+        automation: {
+          ...before[i].settings.automation!,
+          annualPayments: [{ ...bonus, payoutMonth: "2027-11", grossCents: 100000 }],
+        },
+      });
+      expect(row.revision).toBe(before[i].revision + 1);
+      expect(row.createdAt).toBe(before[i].createdAt);
+    }
+    await resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: after });
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(after);
+  });
+  it("rejects stale reset snapshots and leaves the newer own payment intact", async () => {
+    const before = await withAnnualCopies();
+    await saveMonthlyNetPaySettings(f.db, { settings: before[0].settings, expected: before[0] });
+    const changed = await loadNetPayProfileTimeline(f.db);
+    await expect(
+      resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: before }),
+    ).rejects.toBeInstanceOf(NetPayProfileConflictError);
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(changed);
+  });
+  it("rolls every affected row back if clearing a later copy fails", async () => {
+    const before = await withAnnualCopies();
+    f.adapter.database.exec(
+      "CREATE TRIGGER reject_annual_reset BEFORE INSERT ON net_pay_profiles WHEN NEW.month='2026-12' BEGIN SELECT RAISE(ABORT, 'reset failure'); END;",
+    );
+    await expect(
+      resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: before }),
+    ).rejects.toThrow("reset failure");
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(before);
+  });
+  it("blocks the reset while a developer test run may restore a stale copy", async () => {
+    await withAnnualCopies();
+    await setDeveloperMode(f.db, true);
+    await generateTestRun(
+      f.db,
+      { startMonth: "2026-09", scenario: "NORMAL_ROTATION", range: 1 },
+      (await loadProfile(f.db))!,
+    );
+    const before = await loadNetPayProfileTimeline(f.db);
+    await expect(
+      resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: before }),
+    ).rejects.toThrow("Testlabor");
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(before);
+  });
+  it.each([2026.5, 1899, 4100, NaN])("rejects an invalid reset year %s", async (year) => {
+    const before = await withAnnualCopies();
+    await expect(
+      resetAnnualSalaryPayments(f.db, { year, expectedTimeline: before }),
+    ).rejects.toThrow();
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(before);
+  });
+  it("blocks a different-year test snapshot from resurrecting an old annual-payment copy", async () => {
+    await withAnnualCopies();
+    await setDeveloperMode(f.db, true);
+    await generateTestRun(
+      f.db,
+      { startMonth: "2027-01", scenario: "NORMAL_ROTATION", range: 1 },
+      (await loadProfile(f.db))!,
+    );
+    const before = await loadNetPayProfileTimeline(f.db);
+    await expect(
+      resetAnnualSalaryPayments(f.db, { year: 2026, expectedTimeline: before }),
+    ).rejects.toThrow("Testlabor");
+    expect(await loadNetPayProfileTimeline(f.db)).toEqual(before);
   });
 });

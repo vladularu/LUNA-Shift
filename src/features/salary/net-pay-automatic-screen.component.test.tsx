@@ -1,3 +1,4 @@
+import type { UserProfile } from "@/domain/types";
 import * as MockReact from "react";
 import { Temporal } from "@js-temporal/polyfill";
 import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
@@ -41,6 +42,7 @@ const mockSetMonth = jest.fn<(month: string) => void>((month) => {
 const mockCoordinator = { getMonth: () => mockMonth, setMonth: mockSetMonth };
 let mockEntries = [forecastShift()];
 let mockTestMonths: string[] = [];
+const mockResetAnnual = jest.fn<() => Promise<void>>();
 const mockSave =
   jest.fn<(value: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>>();
 // The native modal measures its own safe area on-device; the JS renderer has no layout events.
@@ -94,6 +96,24 @@ jest.mock("./use-net-pay-profile", () => ({
       error: null,
       busy: false,
       reload: jest.fn(),
+      resetAnnualPayments: async () => {
+        await mockResetAnnual();
+        if (value?.automation) {
+          const year = mockParams.month.slice(0, 4);
+          const next = {
+            ...value,
+            automation: {
+              ...value.automation,
+              annualPayments: value.automation.annualPayments?.filter(
+                (payment) => !payment.payoutMonth.startsWith(`${year}-`),
+              ),
+            },
+          };
+          mockSettings = next;
+          mockAnnualPayments = undefined;
+          setValue(next);
+        }
+      },
       save: async (next: MonthlyNetPaySettings, effectiveMonth?: string) => {
         if (effectiveMonth) await mockSave(next, effectiveMonth);
         else await mockSave(next);
@@ -114,6 +134,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [forecastShift()];
     mockTestMonths = [];
     mockSave.mockReset().mockResolvedValue(undefined);
+    mockResetAnnual.mockReset().mockResolvedValue(undefined);
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     jest.mocked(router.push).mockClear();
     jest.mocked(router.back).mockClear();
@@ -1042,5 +1063,100 @@ describe("integrated salary-to-net workflow", () => {
     expect(Native.StyleSheet.flatten(metricStyle).flexBasis).toBe("100%");
     expect(summary.getByLabelText(/^Voraussichtliches Netto:/).props.numberOfLines).toBeUndefined();
     expect(mockSave).not.toHaveBeenCalled();
+  });
+  it.each<[string, Pick<UserProfile, "tvalPflegeTariff" | "nursingTrainingTariff">, string]>([
+    [
+      "TVA-L",
+      {
+        tvalPflegeTariff: {
+          trainingYear: 3 as const,
+          universityRegion: "WEST" as const,
+          employerScope: "SECTION_43" as const,
+        },
+      },
+      "1.532,35 €",
+    ],
+    [
+      "TVAöD",
+      {
+        nursingTrainingTariff: {
+          trainingYear: 3 as const,
+          sector: "BT_K" as const,
+          tariffRegion: "OTHER" as const,
+        },
+      },
+      "1.488,04 €",
+    ],
+  ])(
+    "returns %s from the stale own amount to a live tariff estimate in one action",
+    async (_, training, expected) => {
+      mockParams = { month: "2026-11" };
+      mockProfile = { ...forecastProfile, tariff: null, ...training };
+      mockEntries = [];
+      const initial = automatedSettings("2026-01");
+      mockSettings = {
+        ...initial,
+        automation: {
+          ...initial.automation!,
+          annualPayments: [
+            {
+              revision: 1,
+              payoutMonth: "2026-11",
+              grossCents: 381816,
+              netBasis: { kind: "CONSTANT_PAY" },
+            },
+          ],
+        },
+      };
+      const screen = await render(
+        <NetPayAutomaticEntryCard month="2026-11" proposedGrossCents={null} blocked={false} />,
+      );
+      expect(screen.getByText("3.818,16 €")).toBeTruthy();
+      expect(screen.getByText("Eigener Betrag · November 2026")).toBeTruthy();
+      await fireEvent.press(
+        screen.getByRole("button", { name: /^Automatisch nach Tarif berechnen,/ }),
+      );
+      expect(mockResetAnnual).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(expected)).toBeTruthy();
+      expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
+      expect(screen.queryByText("3.818,16 €")).toBeNull();
+      expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+      expect(mockSave).not.toHaveBeenCalled();
+      await screen.unmount();
+      const basis = await details("basis", "2026-11");
+      expect(basis.getByText("Weihnachtsgeld-Prognose")).toBeTruthy();
+      expect(
+        basis.queryByText(/Für die Berechnung gilt dein gespeicherter eigener Betrag/),
+      ).toBeNull();
+    },
+  );
+  it("explains the own amount instead of presenting the current training percentage as its basis", async () => {
+    mockEntries = [];
+    mockProfile = {
+      ...forecastProfile,
+      tariff: null,
+      tvalPflegeTariff: { trainingYear: 3, universityRegion: "WEST", employerScope: "SECTION_43" },
+    };
+    const initial = automatedSettings("2026-01");
+    mockSettings = {
+      ...initial,
+      automation: {
+        ...initial.automation!,
+        annualPayments: [
+          {
+            revision: 1,
+            payoutMonth: "2026-11",
+            grossCents: 381816,
+            netBasis: { kind: "CONSTANT_PAY" },
+          },
+        ],
+      },
+    };
+    const screen = await details("basis", "2026-11");
+    expect(screen.getByText("Gespeichertes Weihnachtsgeld")).toBeTruthy();
+    expect(
+      screen.getByText(/Für die Berechnung gilt dein gespeicherter eigener Betrag.*1.532,35/),
+    ).toBeTruthy();
+    expect(screen.queryByText(/^95 % aus/)).toBeNull();
   });
 });

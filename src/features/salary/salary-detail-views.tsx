@@ -175,6 +175,7 @@ export function SalaryBasisView({
   nightMinutes,
   annualPayment,
   annualProposal,
+  annualAutomatic = false,
 }: {
   readonly net: AvailablePay | null;
   readonly classification: SalaryClassification | null;
@@ -182,17 +183,21 @@ export function SalaryBasisView({
   readonly nightMinutes: number;
   readonly annualPayment?: AnnualPaymentForecast;
   readonly annualProposal?: import("./annual-salary-proposal").AnnualSalaryProposal | null;
+  readonly annualAutomatic?: boolean;
 }) {
   const palette = usePalette();
   return (
     <>
       {annualProposal || annualPayment ? (
-        <SalarySectionCard title="Weihnachtsgeld-Prognose">
+        <SalarySectionCard
+          title={annualAutomatic ? "Weihnachtsgeld-Prognose" : "Gespeichertes Weihnachtsgeld"}
+        >
           <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
             {annualProposal ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
-                {annualProposal.rateBasisPoints / 100} % aus{" "}
-                {annualProposal.referenceMonths.join(", ")}. {annualProposal.note}
+                {annualAutomatic
+                  ? `${annualProposal.rateBasisPoints / 100} % aus ${annualProposal.referenceMonths.join(", ")}. ${annualProposal.note}`
+                  : `Für die Berechnung gilt dein gespeicherter eigener Betrag. Die aktuelle automatische Tarifprognose beträgt ${netPayEuro(annualProposal.grossCents)}.`}
               </Text>
             ) : null}
             {annualPayment ? (

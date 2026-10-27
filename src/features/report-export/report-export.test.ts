@@ -118,6 +118,50 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(reportToHtml(monthly)).toContain("Jahressonderzahlung");
     expect(value(yearly, "Gehaltsprognose", "annualPaymentAmount", "2026-12")).toBeUndefined();
   });
+
+  it.each<readonly [string, UserProfile, number]>([
+    [
+      "TVAöD",
+      {
+        ...forecastProfile,
+        tariff: null,
+        nursingTrainingTariff: { trainingYear: 3, sector: "BT_K", tariffRegion: "OTHER" },
+      },
+      148804,
+    ],
+    [
+      "TVA-L",
+      {
+        ...forecastProfile,
+        tariff: null,
+        tvalPflegeTariff: {
+          trainingYear: 3,
+          universityRegion: "WEST",
+          employerScope: "SECTION_43",
+        },
+      },
+      153235,
+    ],
+  ])(
+    "uses the corrected automatic %s amount in monthly and annual exports after clearing own pay",
+    (_, selected, expected) => {
+      const initial = automatedSettings("2026-01");
+      const base = input({
+        profile: selected,
+        entries: [],
+        period: "2026-11",
+        netPayTimeline: [savedNet(initial)],
+      });
+      const monthly = build(base),
+        yearly = build({ ...base, period: "2026" });
+      const valueText = String(expected / 100).replace(".", ",");
+      expect(value(monthly, "Gehaltsprognose", "annualPaymentAmount", "2026-11")).toBe(valueText);
+      expect(value(yearly, "Jahresauswertung", "annualPaymentAmount", "2026")).toBe(valueText);
+      expect(value(monthly, "Netto-Prognose", "annualPayment.netIncluded", "2026-11")).toBe("Ja");
+      expect(reportToHtml(monthly)).not.toContain("3.818,16");
+      expect(reportToHtml(yearly)).not.toContain("3.818,16");
+    },
+  );
   const period = "2026-07";
   const netInput = {
     period,

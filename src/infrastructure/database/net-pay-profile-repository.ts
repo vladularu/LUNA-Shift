@@ -189,3 +189,45 @@ export async function deleteMonthlyNetPaySettings(
     await tx.runAsync("DELETE FROM net_pay_profiles WHERE month=?", month);
   });
 }
+
+/** Explicitly return one cash year to tariff forecasting; remove every dated copy atomically. */
+export async function resetAnnualSalaryPayments(
+  db: SQLiteDatabase,
+  input: {
+    readonly year: number;
+    readonly expectedTimeline: readonly SavedMonthlyNetPaySettings[];
+  },
+): Promise<void> {
+  if (!Number.isInteger(input.year)) throw new Error("Ungültiges Auszahlungsjahr.");
+  const first = `${input.year}-01`;
+  requireNetPaySettingsMonth(first);
+  return withImmediateTransaction(db, async (tx) => {
+    const timeline = await loadNetPayProfileTimeline(tx);
+    if (canonicalize(timeline) !== canonicalize(input.expectedTimeline))
+      throw new NetPayProfileConflictError();
+    // A test snapshot can contain a dated copy from another cash year.
+    if (await tx.getFirstAsync("SELECT month FROM dev_test_backups LIMIT 1"))
+      throw new Error("Im Testlabor ist für einen betroffenen Monat noch ein Testlauf offen.");
+    if (!(await tx.getFirstAsync("SELECT id FROM user_profile WHERE id='singleton'")))
+      throw new Error("Das Arbeitsprofil fehlt.");
+    for (const row of timeline) {
+      const automation = row.settings.automation;
+      const payments = automation?.annualPayments;
+      if (
+        !automation ||
+        !payments?.some((payment) => payment.payoutMonth.startsWith(`${input.year}-`))
+      )
+        continue;
+      const next = validateMonthlyNetPaySettings({
+        ...row.settings,
+        automation: {
+          ...automation,
+          annualPayments: payments.filter(
+            (payment) => !payment.payoutMonth.startsWith(`${input.year}-`),
+          ),
+        },
+      });
+      await writeNetPaySettings(tx, next, row);
+    }
+  });
+}

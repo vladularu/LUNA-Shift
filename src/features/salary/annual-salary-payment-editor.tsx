@@ -45,6 +45,7 @@ export function AnnualSalaryPaymentEditor({
   forecastPayments = [],
   proposal,
   automatic = false,
+  onResetAutomatic,
 }: {
   readonly month: string;
   readonly profile: UserProfile;
@@ -54,6 +55,7 @@ export function AnnualSalaryPaymentEditor({
   readonly forecastPayments?: readonly AnnualSalaryPayment[];
   readonly proposal?: AnnualSalaryProposal | null;
   readonly automatic?: boolean;
+  readonly onResetAutomatic?: () => Promise<void>;
 }) {
   const year = month.slice(0, 4);
   const payments = settings.automation?.annualPayments ?? [];
@@ -93,6 +95,18 @@ export function AnnualSalaryPaymentEditor({
         throw new Error("Bitte einen Bruttobetrag eintragen. Keine Zahlung? Trage 0 ein.");
       if (payroll && Object.values(yearValues).some((value) => !value.trim()))
         throw new Error("Bitte die Jahreswerte vollständig eintragen. Nullwerte als 0 eingeben.");
+      const grossCents = parseNetPayDecimal(gross, 100, "die Sonderzahlung");
+      if (
+        automatic &&
+        initial &&
+        payout === initial.payoutMonth &&
+        grossCents === initial.grossCents &&
+        !payroll &&
+        forecast
+      ) {
+        setOpen(false);
+        return;
+      }
       const previous = payments.find((p) => p.payoutMonth === payout);
       const moved = payments.find(
         (p) => p.payoutMonth === initialPayout && payout !== initialPayout,
@@ -103,7 +117,7 @@ export function AnnualSalaryPaymentEditor({
         {
           revision: (previous?.revision ?? 0) + 1,
           payoutMonth: payout,
-          grossCents: parseNetPayDecimal(gross, 100, "die Sonderzahlung"),
+          grossCents,
           netBasis: payroll
             ? {
                 kind: "PAYROLL",
@@ -148,6 +162,21 @@ export function AnnualSalaryPaymentEditor({
       setSaving(false);
     }
   }
+  async function resetAutomatic() {
+    if (locked || !onResetAutomatic || !proposal) return;
+    setError(null);
+    setSaving(true);
+    try {
+      await onResetAutomatic();
+      setOpen(false);
+    } catch {
+      setError(
+        "Die automatische Berechnung konnte nicht übernommen werden. Bitte erneut versuchen.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
   const movedAway =
     initial?.grossCents === 0 &&
     visible.some((payment) => payment.payoutMonth.startsWith(`${year}-`) && payment.grossCents > 0);
@@ -168,6 +197,18 @@ export function AnnualSalaryPaymentEditor({
             onPress={edit}
             disabled={locked}
           />
+          {!automatic &&
+          proposal &&
+          onResetAutomatic &&
+          payments.some((payment) => payment.payoutMonth.startsWith(`${year}-`)) ? (
+            <SalaryNavigationRow
+              title="Automatisch nach Tarif berechnen"
+              subtitle={`${netPayEuro(proposal.grossCents)} · eigener Betrag wird ersetzt`}
+              onPress={() => void resetAutomatic()}
+              disabled={locked}
+            />
+          ) : null}
+          {error && !open ? <FormStatus error={error} /> : null}
         </SalarySectionCard>
       </View>
       <NetPaySheet
