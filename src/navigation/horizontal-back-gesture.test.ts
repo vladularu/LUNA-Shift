@@ -5,7 +5,7 @@ import { horizontalBackGestureOptions } from "./horizontal-back-gesture";
 const layout = readFileSync(new URL("../../app/_layout.tsx", import.meta.url), "utf8");
 
 describe("horizontal card back gestures", () => {
-  it("preserves native back while reserving report surfaces for chronological paging", () => {
+  it("enables full-screen native back on every card submenu", () => {
     const cards = Array.from(layout.matchAll(/<Stack\.Screen\b([\s\S]*?)\/>/g))
       .map((match) => match[1])
       .filter((screen) => screen.includes('presentation: "card"'));
@@ -16,7 +16,7 @@ describe("horizontal card back gestures", () => {
       if (name === "quick-add") continue;
       expect(horizontalBackGestureOptions(name!), name).toMatchObject({
         gestureEnabled: true,
-        fullScreenGestureEnabled: name !== "salary" && name !== "salary-details",
+        fullScreenGestureEnabled: true,
       });
     }
     expect(layout).toContain("...horizontalBackGestureOptions(route.name)");

@@ -14,11 +14,6 @@ const separatePresentations = new Set([
 ]);
 
 const options = Object.freeze({ gestureEnabled: true, fullScreenGestureEnabled: true });
-const periodOptions = Object.freeze({
-  ...options,
-  fullScreenGestureEnabled: false,
-  freezeOnBlur: true,
-});
 const reportOptions = Object.freeze({ ...options, freezeOnBlur: true });
 const reports = new Set([
   "salary",
@@ -33,9 +28,7 @@ const reports = new Set([
 export function horizontalBackGestureOptions(routeName: string) {
   return separatePresentations.has(routeName)
     ? undefined
-    : routeName === "salary" || routeName === "salary-details"
-      ? periodOptions
-      : reports.has(routeName)
-        ? reportOptions
-        : options;
+    : reports.has(routeName)
+      ? reportOptions
+      : options;
 }
