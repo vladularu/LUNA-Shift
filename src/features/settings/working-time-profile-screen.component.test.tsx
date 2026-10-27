@@ -285,7 +285,13 @@ describe("automatic working time overview", () => {
       "Arbeitsprofil \u00f6ffnen",
     ])
       expect(screen.queryByText(label)).toBeNull();
-    expect(router.push).not.toHaveBeenCalled();
+    if (scope === "COMMON") {
+      await fireEvent.press(screen.getByText("Arbeitsbereich auswählen"));
+      expect(router.push).toHaveBeenCalledWith({
+        pathname: "/settings-editor",
+        params: { section: "TARIFF" },
+      });
+    } else expect(screen.queryByText("Arbeitsbereich auswählen")).toBeNull();
     expect(save).not.toHaveBeenCalled();
   });
   it("reuses the existing youth guard for TVA-L without a new form", async () => {

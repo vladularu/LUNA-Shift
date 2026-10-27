@@ -1,3 +1,4 @@
+import { TVAL_WORKPLACE_OPTIONS, tvalWorkplaceFields } from "./tval-workplace-choice";
 import {
   useEmploymentSaveFlow,
   EmploymentSaveDialog,
@@ -199,7 +200,7 @@ function SettingsEditorForm({
   const { updateProfile } = usePflegeShiftProfile();
   const { clear: clearSelection } = useProfileSelection();
   useEffect(() => () => clearSelection(), [clearSelection]);
-  const [initialValues] = useState(() => settingsFormValues(profile));
+  const [initialValues] = useState(() => settingsFormValues(profile, flow.referenceDate));
   const [displayName, setDisplayName] = useState(profile.displayName ?? "");
   const [employerName, setEmployerName] = useState(profile.employerName ?? "");
   const [confirmedGroups, setConfirmedGroups] = useState<readonly SalaryMode[]>(() => {
@@ -228,6 +229,7 @@ function SettingsEditorForm({
   const [industry, setIndustry] = useState<IndustryFormValue>(initialValues.industry);
   const [salaryMode, setSalaryMode] = useState<SalaryMode>(initialValues.salaryMode);
   const [trainingYear, setTrainingYear] = useState<1 | 2 | 3 | "UNSET">(initialValues.trainingYear);
+  const [tvalWorkplace, setTvalWorkplace] = useState(initialValues.tvalWorkplace);
   const [manualMonthlyGross, setManualMonthlyGross] = useState(initialValues.manualMonthlyGross);
   const [tvhPayGroup, setTvhPayGroup] = useState<TvhKrGroup>(initialValues.tvhPayGroup);
   const [tvhPayLevel, setTvhPayLevel] = useState<TvhKrPayLevel | "UNSET">(
@@ -298,6 +300,7 @@ function SettingsEditorForm({
     tvUkPayLevel,
     krPayGroup,
     tvlUniversityRegion,
+    tvalWorkplace,
     ePayGroup,
     payGroup,
     payLevel,
@@ -388,6 +391,7 @@ function SettingsEditorForm({
     ePayGroup,
     krPayGroup,
     tvlUniversityRegion,
+    tvalWorkplace,
     tvhPayGroup,
     tvhPayLevel,
     tvhFullTimeWeeklyMinutes,
@@ -403,9 +407,9 @@ function SettingsEditorForm({
     const restored =
       cached ??
       (profile.salaryBasisConflict
-        ? settingsFormValuesForSalaryMode(profile, value)
+        ? settingsFormValuesForSalaryMode(profile, value, flow.referenceDate)
         : {
-            ...settingsFormValuesForSalaryMode(profile, value),
+            ...settingsFormValuesForSalaryMode(profile, value, flow.referenceDate),
             sector,
             tariffRegion,
             tvlUniversityRegion,
@@ -421,6 +425,7 @@ function SettingsEditorForm({
     setEPayGroup(restored.ePayGroup);
     setKrPayGroup(restored.krPayGroup);
     setTvlUniversityRegion(restored.tvlUniversityRegion);
+    setTvalWorkplace(restored.tvalWorkplace);
     setTvhPayGroup(restored.tvhPayGroup);
     setTvhPayLevel(restored.tvhPayLevel);
     setTvhFullTimeWeeklyMinutes(restored.tvhFullTimeWeeklyMinutes);
@@ -610,7 +615,15 @@ function SettingsEditorForm({
           tvalPflegeTariff: !tariffTouched
             ? (profile.tvalPflegeTariff ?? null)
             : salaryMode === "TVAL_PFLEGE" && trainingYear !== "UNSET"
-              ? { trainingYear, universityRegion: tvlUniversityRegion }
+              ? {
+                  trainingYear,
+                  universityRegion: tvlUniversityRegion,
+                  ...tvalWorkplaceFields(
+                    tvalWorkplace,
+                    profile.tvalPflegeTariff,
+                    tvalWorkplace !== initialValues.tvalWorkplace,
+                  ),
+                }
               : null,
           nursingTrainingTariff: !tariffTouched
             ? (profile.nursingTrainingTariff ?? null)
@@ -661,6 +674,14 @@ function SettingsEditorForm({
             { value: "EAST", label: "Ost" },
           ]}
           onChange={setTvlUniversityRegion}
+        />
+      ) : null}
+      {salaryMode === "TVAL_PFLEGE" ? (
+        <ProfileChoice
+          label="Arbeitsbereich"
+          value={tvalWorkplace}
+          options={TVAL_WORKPLACE_OPTIONS}
+          onChange={setTvalWorkplace}
         />
       ) : null}
       {salaryMode === "TVOED_P" || salaryMode === "TVOED_E" || salaryMode === "TVAOED_PFLEGE" ? (

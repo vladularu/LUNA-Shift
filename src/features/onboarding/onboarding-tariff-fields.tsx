@@ -1,3 +1,4 @@
+import { TVAL_WORKPLACE_OPTIONS } from "@/features/settings/tval-workplace-choice";
 import { Text, View } from "react-native";
 import { TARIFF_REGION_LABELS, type FederalState } from "@/domain/types";
 import { SALARY_BASIS_OPTIONS } from "@/features/settings/salary-basis-options";
@@ -136,6 +137,14 @@ export function OnboardingTariffFields({
               }
               error={errors.region}
               onChange={(value) => set("universityRegion", value)}
+            />
+          ) : null}
+          {selection.mode === "TVAL_PFLEGE" ? (
+            <SelectField
+              label="Arbeitsbereich"
+              value={selection.tvalEmployerScope ?? "UNKNOWN"}
+              options={TVAL_WORKPLACE_OPTIONS}
+              onChange={(value) => set("tvalEmployerScope", value === "UNKNOWN" ? null : value)}
             />
           ) : null}
           {selection.mode === "TVH_KR" ? (

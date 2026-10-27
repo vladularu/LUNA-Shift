@@ -608,4 +608,24 @@ describe("short onboarding with contextual salary", () => {
     expect(parseWeeklyHours("38.5")).toBe(2310);
     expect(normalizeOnboardingGross("3.450,50")).toBe("3450,50");
   });
+  it("saves TVA-L workplace in the existing tariff step without another question page", async () => {
+    const screen = await render(onboarding());
+    await salary(screen, "30");
+    await method(screen, "TARIFF");
+    await select(screen, "Tarifvertrag", "TVA-L Pflege · Ausbildung");
+    await select(screen, "Ausbildungsjahr", "2. Ausbildungsjahr");
+    await select(screen, "Tarifgebiet", "West");
+    await select(screen, "Arbeitsbereich", "Krankenhaus / ärztliche Behandlung");
+    await summary(screen);
+    await press(screen, "Zum Kalender");
+    expect(mockUpdateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tvalPflegeTariff: {
+          trainingYear: 2,
+          universityRegion: "WEST",
+          employerScope: "SECTION_43",
+        },
+      }),
+    );
+  });
 });
