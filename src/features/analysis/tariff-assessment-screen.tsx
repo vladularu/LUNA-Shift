@@ -1,5 +1,4 @@
 import { employmentProfileAt, employmentWorkPatternAt } from "@/domain/employment-history";
-import { settingsEditorRoute } from "@/navigation/routes";
 import { Text } from "@/ui/text";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
@@ -41,7 +40,7 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { RADII, SPACING } from "@/theme/tokens";
-import { CardSeparator, SurfaceCard, RowButton } from "@/ui/design-system";
+import { CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { FormStatus } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
@@ -331,13 +330,6 @@ function TariffAssessmentForm({
             />
           ) : null}
 
-          <SurfaceCard>
-            <RowButton
-              title="Arbeitsmodell bearbeiten"
-              subtitle="Deine gespeicherten Angaben und ihren Zeitraum ändern"
-              onPress={() => router.push(settingsEditorRoute("MODEL"))}
-            />
-          </SurfaceCard>
           <FormStatus error={error} />
 
           <Pressable

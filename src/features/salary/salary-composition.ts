@@ -1,16 +1,28 @@
-import { router } from "expo-router";
-import type { MonthlyPayEstimate, UserProfile } from "@/domain/types";
-import { salaryDetailsRoute, settingsInfoRoute, tariffAssessmentRoute } from "@/navigation/routes";
+import type { AllowanceStatus, MonthlyPayEstimate, UserProfile } from "@/domain/types";
+
+const ALLOWANCE_LABELS: Readonly<Record<AllowanceStatus, string>> = {
+  NONE: "Schichtzulage",
+  SHIFT_MONTHLY: "Ständige Schichtzulage",
+  SHIFT_HOURLY: "Nichtständige Schichtzulage",
+  ALTERNATING_MONTHLY: "Ständige Wechselschichtzulage",
+  ALTERNATING_HOURLY: "Nichtständige Wechselschichtzulage",
+};
+
+type SalaryCompositionRow = {
+  readonly label: string;
+  readonly value: string;
+  readonly subtitle?: string;
+};
 
 function euro(value: number | null): string {
   return value === null
     ? "–"
     : new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(value);
 }
-export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate, month: string) {
+export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate) {
   const manualSalary = profile.tariff === null && profile.manualMonthlyGrossCents != null;
   const caption = salaryProfileCaption(profile);
-  const compositionRows = manualSalary
+  const compositionRows: readonly SalaryCompositionRow[] = manualSalary
     ? [{ label: "Monatsbrutto", value: euro(pay.personalBaseAmount) }]
     : [
         {
@@ -23,7 +35,6 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate,
         {
           label: "Zeitzuschläge",
           value: euro(pay.timePremiumAmount),
-          onPress: () => router.push(salaryDetailsRoute(month, "premiums")),
         },
         ...(pay.overtimeAmount > 0
           ? [{ label: "Überstunden", value: euro(pay.overtimeAmount) }]
@@ -31,11 +42,10 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate,
         ...(pay.allowanceAmount > 0
           ? [
               {
-                label: pay.confirmedAllowance
-                  ? "Schichtzulage"
-                  : "Schichtzulage · Muster & Angaben",
+                label:
+                  ALLOWANCE_LABELS[pay.confirmedAllowance ?? pay.assessment.suggestedAllowance],
+                subtitle: pay.confirmedAllowance === null ? "Geschätzt" : undefined,
                 value: euro(pay.allowanceAmount),
-                onPress: () => router.push(tariffAssessmentRoute(month)),
               },
             ]
           : []),
@@ -44,7 +54,6 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate,
               {
                 label: "TVöD-Zulage",
                 value: euro(pay.tvoedAllowanceAmount),
-                onPress: () => router.push(settingsInfoRoute("TVOED_ALLOWANCE")),
               },
             ]
           : []),
@@ -59,19 +68,6 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate,
                       ? "Pflegezulage TV-L"
                       : "Pflegezulage TVöD-P",
                 value: euro(pay.careAllowanceAmount),
-                onPress: () =>
-                  router.push(
-                    settingsInfoRoute(
-                      "CARE_ALLOWANCE",
-                      profile.tvhKrTariff
-                        ? "TVH"
-                        : profile.tvUkNursingTariff
-                          ? "TVUK"
-                          : profile.tvlKrTariff
-                            ? "TVL"
-                            : undefined,
-                    ),
-                  ),
               },
             ]
           : []),

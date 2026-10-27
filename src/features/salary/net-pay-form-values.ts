@@ -11,7 +11,7 @@ export const NET_PAY_SPECIAL_CASE_OPTIONS: readonly { value: NetPaySpecialCase; 
     { value: "MINIJOB", label: "Minijob" },
     { value: "MIDIJOB", label: "Midijob" },
     { value: "MULTIPLE_EMPLOYMENTS", label: "Mehrere Beschäftigungen" },
-    { value: "ONE_OFF_PAYMENT", label: "Einmalzahlung, z. B. Weihnachtsgeld" },
+    { value: "ONE_OFF_PAYMENT", label: "Einmalzahlung, z. B. Jahressonderzahlung" },
     { value: "ADDITIONAL_DEDUCTIONS", label: "Zusatzversorgung oder weitere Abzüge" },
     { value: "PARTIAL_MONTH", label: "Unvollständiger Abrechnungsmonat" },
     { value: "PENSIONER", label: "Renten- oder Versorgungsbezug" },

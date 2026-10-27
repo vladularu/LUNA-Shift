@@ -192,7 +192,11 @@ export function PayListCard({
   readonly annualPayments?: number;
 }) {
   const annualRow = !!annualPayments ? (
-    <AnalysisValueRow reserveDisclosure label="Weihnachtsgeld" value={formatEuro(annualPayments)} />
+    <AnalysisValueRow
+      reserveDisclosure
+      label="Jahressonderzahlung"
+      value={formatEuro(annualPayments)}
+    />
   ) : null;
   return (
     <AnalysisListCard
