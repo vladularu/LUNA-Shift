@@ -82,6 +82,22 @@ function currentTariff(profile: UserProfile): TargetTariff {
     !profile.tvalPflegeTariff
   )
     return tvlKrTargetTariff();
+  if (
+    profile.vkaETariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.tvlKrTariff &&
+    !profile.tvUkNursingTariff &&
+    !profile.tvhKrTariff &&
+    !profile.nursingTrainingTariff &&
+    !profile.tvalPflegeTariff
+  )
+    return (
+      targetTariffForSector(profile.vkaETariff.sector) ?? {
+        kind: "UNVERIFIED",
+        id: "VKA_E",
+      }
+    );
   const tariff = targetTariffForSector(profile.tariff?.sector);
   if (
     tariff &&
@@ -254,6 +270,8 @@ export function createWorkingTimeCalculationProfile(
           employment &&
           (replacesPeriod ||
             corrected("tariff") ||
+            // The old E marker has no special part; applicable employment supplies it.
+            (tariff.kind === "UNVERIFIED" && tariff.id === "VKA_E" && employment.vkaETariff) ||
             (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
           const family = currentTariff(employment);

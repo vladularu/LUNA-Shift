@@ -136,7 +136,10 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
       return unverified("SALARY_CONFLICT");
     return tvlKrTargetTariff();
   }
-  if (profile.vkaETariff) return unverified("VKA_E");
+  if (profile.vkaETariff) {
+    if (profile.tariff || profile.nursingTrainingTariff) return unverified("SALARY_CONFLICT");
+    return targetTariffForSector(profile.vkaETariff.sector) ?? unverified("VKA_E");
+  }
   if (profile.nursingTrainingTariff) return unverified("TVAOED");
   const tariff = targetTariffForSector(profile.tariff?.sector);
   if (tariff) return tariff;

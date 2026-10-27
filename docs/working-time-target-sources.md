@@ -75,3 +75,7 @@ Seit Paket C1 unterstützt die gemeinsame Engine den ausdrücklich erfassten BT-
 ## Eigenständiger TV-UK-Pflegeadapter
 
 Das TV-UK-Paket ergänzt die geprüften Berechnungsjahre 2026–2027. Maßgeblich sind die eigene Kontenregel nach § 13 Abs. 1/Abs. 4 Buchst. b und die abweichende Ausfallregel nach § 8 Abs. 3, jeweils Mantel ÄTV 9 ab 01.01.2025. Der frühere Inventarstatus oben bleibt die Bestandsaufnahme von Paket A/B. Aktueller Umfang, Grenzen, Quellen und kalenderbasierte Kontrollwerte stehen in [der TV-UK-Dokumentation](working-time-target-tvuk.md); keine Übernahme von BT-K- oder TV-L-Samstagsregeln.
+
+## VKA E mit vorhandenem BT-K-/BT-B-Bezug
+
+Die einfache E-Auswahl speichert bereits den Besonderen Teil. Seit dem [VKA-E-Paket](working-time-target-vka-e.md) verwendet die Sollzeitprognose diese Zuordnung mit den jeweils eigenen, geprüften BT-K-/BT-B-Regeln für 2026–2027. Persönliche Vertragsstunden und datierte Beschäftigungsänderungen bleiben maßgeblich. E-Tabelle allein begründet keinen anderen Besonderen Teil oder individuellen Anspruch. Der frühere Inventarstatus oben ist weiterhin die Bestandsaufnahme von A/B.

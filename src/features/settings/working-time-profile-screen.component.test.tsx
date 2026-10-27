@@ -157,6 +157,37 @@ describe("automatic working time overview", () => {
     expect(screen.queryByLabelText("Ausgefallene Dienstplanstunden")).toBeNull();
     expect(save).not.toHaveBeenCalled();
   });
+  it.each(["BT_K", "BT_B"] as const)(
+    "uses existing E/%s employment without adding questions or save actions",
+    async (sector) => {
+      mockCalculationProfile = createWorkingTimeCalculationProfile(
+        {
+          ...mockWork,
+          tariff: null,
+          federalState: "HE",
+          vkaETariff: { payGroup: "E9b", payLevel: 4, sector, tariffRegion: "OTHER" },
+        },
+        null,
+        [],
+      );
+      const screen = await renderEditor();
+      expect(screen.getByText("146:18 h")).toBeTruthy();
+      expect(screen.queryByText(/Monatsbasis:/)).toBeNull();
+      await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+      expect(screen.getByText("Monatsbasis: 177:06 h")).toBeTruthy();
+      expect(screen.getAllByText("−7:42 h")).toHaveLength(4);
+      for (const text of [
+        "Tag ergänzen",
+        "Dienstplanmäßig frei",
+        "Wie verteilen sich deine Arbeitstage?",
+        "Änderung eintragen",
+      ])
+        expect(screen.queryByText(text)).toBeNull();
+      expect(screen.queryByRole("button", { name: /26.12.2026/ })).toBeNull();
+      expect(router.push).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    },
+  );
   it("explains the conditional TV-L reference inside the existing collapsed breakdown", async () => {
     const tvl = {
       ...mockWork,
