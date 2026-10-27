@@ -106,6 +106,8 @@ export function isReviewedTargetTariff(
     tariff?.kind === "TVOED_B" ||
     tariff?.kind === "TVL_KR" ||
     tariff?.kind === "TVH_KR" ||
+    tariff?.kind === "TVAOED_K" ||
+    tariff?.kind === "TVAOED_B" ||
     tariff?.kind === "TVUK_NURSING"
   );
 }
@@ -155,6 +157,21 @@ export function targetTariffForSector(sector: string | undefined): ReviewedTarge
   return {
     kind: sector === "BT_K" ? "TVOED_K" : "TVOED_B",
     version: "2026-01-01",
+    scopeConfirmed: null,
+  };
+}
+
+/** The source edition identifies a referral rule, never a proven adult/individual scope. */
+export const TVAOED_TARGET_REVIEW = {
+  version: "2025-07-01",
+  from: "2026-01-01",
+  to: "2027-12-31",
+} as const;
+export function tvaoedTargetTariff(sector: string | undefined): ReviewedTargetTariff | null {
+  if (sector !== "BT_K" && sector !== "BT_B") return null;
+  return {
+    kind: sector === "BT_K" ? "TVAOED_K" : "TVAOED_B",
+    version: TVAOED_TARGET_REVIEW.version,
     scopeConfirmed: null,
   };
 }
@@ -312,7 +329,72 @@ function tvUkRules(year: 2026 | 2027): TargetTariffRules {
 }
 const TVUK_2026 = tvUkRules(2026),
   TVUK_2027 = tvUkRules(2027);
+/** Own training provenance for the adult referral; shared fifth/loss arithmetic stays central. */
+function trainingRules(part: "BT-K" | "BT-B", year: 2026 | 2027): TargetTariffRules {
+  const prefix = `tvaoed-pflege-${part === "BT-K" ? "btk" : "btb"}-${year}`;
+  const sourceUrl =
+    "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf";
+  const holiday = {
+    ruleId: prefix + "-7-1-49-2",
+    legalBasis: "§ 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 " + part,
+    sourceUrl,
+  };
+  const special = {
+    ruleId: prefix + "-7-1-12a-6-3",
+    legalBasis:
+      "§ 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (" +
+      part +
+      ")",
+    sourceUrl,
+  };
+  const forecast = (rule: TargetRuleSource): TargetRuleSource => ({
+    ...rule,
+    ruleId: rule.ruleId + "-forecast",
+    legalBasis: "Planungsreferenz zu " + rule.legalBasis + "; kein bestätigter Tagesanspruch",
+  });
+  return {
+    part,
+    label: "TVAöD Pflege / " + part,
+    holidayWork: { kind: "TARGET_REDUCTION" },
+    holiday,
+    special,
+    holidayForecast: forecast(holiday),
+    specialForecast: forecast(special),
+  };
+}
+const TRAINING_K_2026 = trainingRules("BT-K", 2026),
+  TRAINING_K_2027 = trainingRules("BT-K", 2027),
+  TRAINING_B_2026 = trainingRules("BT-B", 2026),
+  TRAINING_B_2027 = trainingRules("BT-B", 2027);
 const TARGET_TARIFF_REVIEWS = {
+  TVAOED_K: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVAOED_TARGET_REVIEW.version],
+      rules: TRAINING_K_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVAOED_TARGET_REVIEW.to,
+      versions: [TVAOED_TARGET_REVIEW.version],
+      rules: TRAINING_K_2027,
+    },
+  ],
+  TVAOED_B: [
+    {
+      from: "2026-01-01",
+      to: "2026-12-31",
+      versions: [TVAOED_TARGET_REVIEW.version],
+      rules: TRAINING_B_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVAOED_TARGET_REVIEW.to,
+      versions: [TVAOED_TARGET_REVIEW.version],
+      rules: TRAINING_B_2027,
+    },
+  ],
   TVUK_NURSING: [
     {
       from: TVUK_TARGET_REVIEW.from,
@@ -383,6 +465,8 @@ export function reviewedTargetTariffRules(
 /** Provenance for a pending zero-minute line outside review coverage; never grants a deduction. */
 export function knownTargetTariffRules(kind: ReviewedTargetTariff["kind"]): TargetTariffRules {
   return {
+    TVAOED_K: TRAINING_K_2026,
+    TVAOED_B: TRAINING_B_2026,
     TVOED_K: K_2026,
     TVOED_B: B_2026,
     TVL_KR: TVL_2026,

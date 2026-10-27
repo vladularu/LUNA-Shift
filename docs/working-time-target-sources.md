@@ -79,3 +79,7 @@ Das TV-UK-Paket ergänzt die geprüften Berechnungsjahre 2026–2027. Maßgeblic
 ## VKA E mit vorhandenem BT-K-/BT-B-Bezug
 
 Die einfache E-Auswahl speichert bereits den Besonderen Teil. Seit dem [VKA-E-Paket](working-time-target-vka-e.md) verwendet die Sollzeitprognose diese Zuordnung mit den jeweils eigenen, geprüften BT-K-/BT-B-Regeln für 2026–2027. Persönliche Vertragsstunden und datierte Beschäftigungsänderungen bleiben maßgeblich. E-Tabelle allein begründet keinen anderen Besonderen Teil oder individuellen Anspruch. Der frühere Inventarstatus oben ist weiterhin die Bestandsaufnahme von A/B.
+
+## TVAöD Pflege: eigene Verweisprognose
+
+Die vorhandene Ausbildungs-Auswahl mit BT-K/BT-B kann seit dem [TVAöD-Pflege-Paket](working-time-target-tvaoed.md) eine eigene, bedingte Erwachsenen-Referenz nach § 7 BT Pflege und § 12a Abs. 3 AT liefern. Persönliche Vertragsminuten und Beschäftigungshistorie führen; ein fehlender/deaktivierter Jugendschutzschalter bestätigt keine Volljährigkeit. Aktiver Jugendschutz oder eine noch nicht lesbare Einstellung sperrt den Erwachsenenwert für Ausbildungsperioden. Minderjährigen- und Unterrichts-Istzeitbewertungen bleiben getrennte Folgeaufgaben.

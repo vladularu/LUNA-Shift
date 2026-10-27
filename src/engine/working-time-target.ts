@@ -338,8 +338,42 @@ export function calculateMonthlyWorkingTimeTarget(
       fact = facts.get(date);
     const adjustments: RawAdjustment[] = [];
     const tariff = period?.tariff;
+    const training = tariff?.kind === "TVAOED_K" || tariff?.kind === "TVAOED_B";
+    if (training && input?.youthProtectionStatus && input.youthProtectionStatus !== "ready") {
+      notice({
+        date: null,
+        code: "TRAINING_YOUTH_PREFERENCE_" + input.youthProtectionStatus.toUpperCase(),
+        affectsTarget: true,
+        message:
+          input.youthProtectionStatus === "loading"
+            ? "Die Jugendschutz-Einstellung wird geladen."
+            : "Die Jugendschutz-Einstellung konnte nicht geladen werden. Bitte erneut versuchen.",
+      });
+      raw.push({ date, base, adjustments: [], unavailable: true });
+      continue;
+    }
+    if (training && input?.youthProtection === true) {
+      notice({
+        date: null,
+        code: "TRAINING_YOUTH_TARGET_UNSUPPORTED",
+        affectsTarget: true,
+        message:
+          "Für Auszubildende mit aktivem Jugendschutz ist die Sollzeitprognose noch nicht verfügbar.",
+      });
+      raw.push({ date, base, adjustments: [], unavailable: true });
+      continue;
+    }
     const supportedTariff = isReviewedTargetTariff(tariff);
     const reviewedRules = supportedTariff ? reviewedTargetTariffRules(tariff, date) : null;
+    if (training && forecast && reviewedRules && tariff.scopeConfirmed !== false)
+      notice({
+        date: null,
+        code: "TARGET_RULE_FORECAST",
+        affectsTarget: true,
+        message:
+          reviewedRules.label +
+          ": Referenz nach § 7 ohne Jugendarbeitsschutz. Unterricht und Ausgleich separat.",
+      });
     const verifiedTariff =
       reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
     const forecastTariff =
@@ -368,6 +402,8 @@ export function calculateMonthlyWorkingTimeTarget(
       (tariff?.kind === "TVOED_B" ||
         tariff?.kind === "TVL_KR" ||
         tariff?.kind === "TVH_KR" ||
+        tariff?.kind === "TVAOED_K" ||
+        tariff?.kind === "TVAOED_B" ||
         tariff?.kind === "TVUK_NURSING") &&
       tariff.scopeConfirmed === null &&
       !reviewedRules;

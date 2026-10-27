@@ -3,6 +3,7 @@ import type { UserProfile, CalendarEntry } from "@/domain/types";
 import { remunerationShiftDays } from "@/engine/remuneration-shift-days";
 import {
   targetTariffForSector,
+  tvaoedTargetTariff,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
   tvUkTargetTariff,
@@ -140,7 +141,10 @@ export function employmentTargetTariff(profile: UserProfile): TargetTariff {
     if (profile.tariff || profile.nursingTrainingTariff) return unverified("SALARY_CONFLICT");
     return targetTariffForSector(profile.vkaETariff.sector) ?? unverified("VKA_E");
   }
-  if (profile.nursingTrainingTariff) return unverified("TVAOED");
+  if (profile.nursingTrainingTariff) {
+    if (profile.tariff) return unverified("SALARY_CONFLICT");
+    return tvaoedTargetTariff(profile.nursingTrainingTariff.sector) ?? unverified("TVAOED");
+  }
   const tariff = targetTariffForSector(profile.tariff?.sector);
   if (tariff) return tariff;
   if (profile.tariff) return unverified("BT_B");

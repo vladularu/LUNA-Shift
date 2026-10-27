@@ -5,6 +5,7 @@ import { Text } from "@/ui/text";
 import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
+import { useCheckPreferences } from "./check-preferences";
 import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
 import { formatMinutes } from "@/engine/working-time";
 import { formatMonthTitle } from "@/engine/calendar";
@@ -32,10 +33,20 @@ export function WorkingTimeTargetOverview({
   const { profile, calculationProfile, refreshWorkingTimeTarget } = usePflegeShiftProfile();
   const { resolver } = useRuleCatalogRuntime();
   const palette = usePalette();
+  const { retry: retryProtection, youthEnabled, error: youthError } = useCheckPreferences();
   const [expanded, setExpanded] = useState(false);
   if (!profile) return null;
   const inputProfile =
-    calculationProfile ?? createWorkingTimeCalculationProfile(profile, snapshot, []);
+    calculationProfile ??
+    createWorkingTimeCalculationProfile(
+      profile,
+      snapshot,
+      [],
+      "ready",
+      [],
+      youthEnabled ?? null,
+      youthEnabled === null ? (youthError ? "error" : "loading") : "ready",
+    );
   const periods =
     inputProfile.workingTimeTarget?.context?.periods.filter(
       (period) =>
@@ -76,6 +87,7 @@ export function WorkingTimeTargetOverview({
     }
   })();
   const result = calculation.value;
+  const trainingGuard = result?.notices.find((notice) => notice.code.startsWith("TRAINING_YOUTH_"));
   const projection = result?.adjustments.some((line) => line.status === "PROFILE_ESTIMATE");
   const forecastExplanation = [
     ...new Set(
@@ -124,6 +136,14 @@ export function WorkingTimeTargetOverview({
             ? "Nicht verfügbar"
             : formatMinutes(result.targetMinutes) + " h"}
         </Text>
+        {trainingGuard ? (
+          <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
+            {trainingGuard.message}
+          </Text>
+        ) : null}
+        {trainingGuard?.code === "TRAINING_YOUTH_PREFERENCE_ERROR" ? (
+          <RowButton title="Erneut versuchen" onPress={retryProtection} />
+        ) : null}
         {result?.status === "PROVISIONAL" ? (
           <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
             {unsupported
@@ -199,7 +219,7 @@ export function WorkingTimeTargetOverview({
                 Änderungen hinterlegst du in deinen vorhandenen Profileinstellungen mit „Gültig ab“.
               </Text>
             ) : null}
-            {result.status === "UNAVAILABLE" ? (
+            {result.status === "UNAVAILABLE" && !trainingGuard ? (
               <RowButton
                 title="Arbeitsprofil öffnen"
                 onPress={() => router.push("/work-profile")}

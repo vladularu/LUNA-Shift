@@ -78,8 +78,8 @@ function ThemedApp() {
     <AppErrorBoundary>
       <ActiveMonthProvider>
         <CalendarPreferencesProvider>
-          <PflegeShiftRuntimeProvider>
-            <CheckPreferencesProvider>
+          <CheckPreferencesProvider>
+            <PflegeShiftRuntimeProvider>
               <AnalysisViewProvider>
                 <AppErrorBoundary title="Ansicht konnte nicht angezeigt werden">
                   <ThemeProvider
@@ -340,8 +340,8 @@ function ThemedApp() {
                   </ThemeProvider>
                 </AppErrorBoundary>
               </AnalysisViewProvider>
-            </CheckPreferencesProvider>
-          </PflegeShiftRuntimeProvider>
+            </PflegeShiftRuntimeProvider>
+          </CheckPreferencesProvider>
         </CalendarPreferencesProvider>
       </ActiveMonthProvider>
     </AppErrorBoundary>

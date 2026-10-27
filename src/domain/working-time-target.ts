@@ -12,6 +12,9 @@ export interface WorkingTimeTargetInput {
   readonly notices: readonly TargetNotice[];
   /** FORECAST uses contractual reference days, independently of recorded duties. */
   readonly mode?: "FORECAST" | "ROSTER";
+  /** Current undated preference is a guard, never proof of adulthood or an age history. */
+  readonly youthProtection?: boolean | null;
+  readonly youthProtectionStatus?: "loading" | "ready" | "error";
 }
 
 export type TargetWorkModel =
@@ -37,7 +40,7 @@ export type TargetTariff =
       readonly accountRuleConfirmed: boolean | null;
     }
   | {
-      readonly kind: "TVOED_K" | "TVOED_B" | "TVL_KR" | "TVH_KR";
+      readonly kind: "TVOED_K" | "TVOED_B" | "TVL_KR" | "TVH_KR" | "TVAOED_K" | "TVAOED_B";
       readonly version: string;
       readonly scopeConfirmed: boolean | null;
     }

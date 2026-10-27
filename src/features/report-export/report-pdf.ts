@@ -36,7 +36,13 @@ function kpis(view: View): string {
       view.workingTimeTargets.flatMap((item) =>
         item.notices
           .filter((notice) =>
-            ["CONDITIONAL_ROSTER_FREE_FORECAST", "TARGET_RULE_FORECAST"].includes(notice.code),
+            [
+              "CONDITIONAL_ROSTER_FREE_FORECAST",
+              "TARGET_RULE_FORECAST",
+              "TRAINING_YOUTH_TARGET_UNSUPPORTED",
+              "TRAINING_YOUTH_PREFERENCE_LOADING",
+              "TRAINING_YOUTH_PREFERENCE_ERROR",
+            ].includes(notice.code),
           )
           .map((notice) => notice.message),
       ),
