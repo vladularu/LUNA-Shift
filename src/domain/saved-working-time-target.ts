@@ -82,7 +82,10 @@ export function validateWorkingTimeTargetContext(value: unknown): WorkingTimeTar
       tariff.kind === "TVL_KR" ||
       tariff.kind === "TVH_KR" ||
       tariff.kind === "TVAOED_K" ||
-      tariff.kind === "TVAOED_B"
+      tariff.kind === "TVAOED_B" ||
+      tariff.kind === "TVAL_COMMON" ||
+      tariff.kind === "TVAL_GENERAL" ||
+      tariff.kind === "TVAL_KR"
     )
       exact(tariff, ["kind", "version", "scopeConfirmed"]);
     else if (tariff.kind === "UNVERIFIED") {

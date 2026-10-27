@@ -40,7 +40,16 @@ export type TargetTariff =
       readonly accountRuleConfirmed: boolean | null;
     }
   | {
-      readonly kind: "TVOED_K" | "TVOED_B" | "TVL_KR" | "TVH_KR" | "TVAOED_K" | "TVAOED_B";
+      readonly kind:
+        | "TVOED_K"
+        | "TVOED_B"
+        | "TVL_KR"
+        | "TVH_KR"
+        | "TVAOED_K"
+        | "TVAOED_B"
+        | "TVAL_COMMON"
+        | "TVAL_GENERAL"
+        | "TVAL_KR";
       readonly version: string;
       readonly scopeConfirmed: boolean | null;
     }

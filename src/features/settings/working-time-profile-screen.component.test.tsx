@@ -235,6 +235,81 @@ describe("automatic working time overview", () => {
     expect(screen.queryByText("Tag ergänzen")).toBeNull();
     expect(save).not.toHaveBeenCalled();
   });
+  it.each<["COMMON" | "GENERAL" | "SECTION_43", string, RegExp]>([
+    ["COMMON", "154:00 h", /Arbeitgeberregel offen/],
+    ["GENERAL", "154:00 h", /TVA-L Pflege.*TV-L/],
+    ["SECTION_43", "146:18 h", /TVA-L Pflege.*43/],
+  ])("shows TVA-L %s only in the existing explanation", async (scope, expected, hint) => {
+    const profile = {
+      ...mockWork,
+      tariff: null,
+      federalState: "HE" as const,
+      sundayHolidayWorkEligible: true,
+      tvalPflegeTariff: { trainingYear: 2 as const, universityRegion: "WEST" as const },
+    };
+    const history =
+      scope === "COMMON"
+        ? []
+        : [
+            {
+              effectiveFrom: null,
+              revision: 1,
+              createdAt: profile.createdAt,
+              updatedAt: profile.updatedAt,
+              data: {
+                version: 6 as const,
+                weeklyMinutes: 2310,
+                selection: {
+                  kind: "tariff" as const,
+                  packageId: "tval-pflege-tdl",
+                  variant: "CARE",
+                  region: "WEST_38_5",
+                  group: "regular",
+                  level: "2",
+                  fullTimeWeeklyMinutes: 2310,
+                  tvalEmployerScope: scope,
+                },
+              },
+            },
+          ];
+    mockCalculationProfile = createWorkingTimeCalculationProfile(profile, null, history);
+    const screen = await renderEditor();
+    expect(screen.getByText(expected)).toBeTruthy();
+    expect(screen.queryByText(hint)).toBeNull();
+    await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+    expect(screen.getByText(hint)).toBeTruthy();
+    for (const label of [
+      "Tag erg\u00e4nzen",
+      "Dienstplanm\u00e4\u00dfig frei",
+      "Wie verteilen sich deine Arbeitstage?",
+      "Arbeitsprofil \u00f6ffnen",
+    ])
+      expect(screen.queryByText(label)).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+  it("reuses the existing youth guard for TVA-L without a new form", async () => {
+    mockCalculationProfile = createWorkingTimeCalculationProfile(
+      {
+        ...mockWork,
+        tariff: null,
+        federalState: "HE",
+        tvalPflegeTariff: { trainingYear: 2, universityRegion: "WEST" },
+      },
+      null,
+      [],
+      "ready",
+      [],
+      true,
+    );
+    const screen = await renderEditor();
+    expect(screen.getByText("Nicht verf\u00fcgbar")).toBeTruthy();
+    expect(screen.getByText(/F\u00fcr Auszubildende mit aktivem Jugendschutz/)).toBeTruthy();
+    expect(screen.queryByText("154:00 h")).toBeNull();
+    await fireEvent.press(screen.getByText("So wird die Sollzeit berechnet"));
+    expect(screen.queryByText("Arbeitsprofil \u00f6ffnen")).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+  });
   it("explains the conditional TV-L reference inside the existing collapsed breakdown", async () => {
     const tvl = {
       ...mockWork,

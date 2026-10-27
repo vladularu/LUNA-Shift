@@ -90,6 +90,9 @@ export function validateTargetInputs(
       period.tariff.kind === "TVH_KR" ||
       period.tariff.kind === "TVAOED_K" ||
       period.tariff.kind === "TVAOED_B" ||
+      period.tariff.kind === "TVAL_COMMON" ||
+      period.tariff.kind === "TVAL_GENERAL" ||
+      period.tariff.kind === "TVAL_KR" ||
       period.tariff.kind === "TVUK_NURSING"
     ) {
       if (

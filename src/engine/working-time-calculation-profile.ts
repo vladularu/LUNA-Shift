@@ -18,6 +18,7 @@ import {
   isReviewedTargetTariff,
   targetTariffForSector,
   tvaoedTargetTariff,
+  tvalTargetTariff,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
   tvUkTargetTariff,
@@ -26,6 +27,16 @@ import {
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
 
 function selectedTariff(selection: RemunerationSelection): TargetTariff {
+  if (selection.kind === "tariff" && selection.packageId === "tval-pflege-tdl") {
+    if (
+      selection.variant === "CARE" &&
+      selection.group === "regular" &&
+      ["WEST_38_5", "EAST", "EAST_UNIVERSITY_HOSPITAL"].includes(selection.region) &&
+      ["1", "2", "3"].includes(selection.level)
+    )
+      return tvalTargetTariff(selection.tvalEmployerScope);
+    return { kind: "UNVERIFIED", id: "TVA_L/UNREVIEWED_SELECTION" };
+  }
   if (selection.kind === "tariff" && selection.packageId === "tvaoed-pflege-vka") {
     const tariff = tvaoedTargetTariff(selection.variant);
     if (tariff) return tariff;
@@ -54,6 +65,17 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  if (
+    profile.tvalPflegeTariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.vkaETariff &&
+    !profile.tvlKrTariff &&
+    !profile.tvUkNursingTariff &&
+    !profile.tvhKrTariff &&
+    !profile.nursingTrainingTariff
+  )
+    return tvalTargetTariff();
   if (
     profile.nursingTrainingTariff &&
     !profile.salaryBasisConflict &&
@@ -189,7 +211,7 @@ export function createWorkingTimeCalculationProfile(
         code: "EMPLOYMENT_REFERENCE_UNCONFIRMED",
         affectsTarget: true,
         message:
-          "Wochenstunden, Arbeitsort und Tarif wurden übernommen. Für nicht dokumentierte frühere Zeiträume dient dein aktuelles Profil als Planungsgrundlage.",
+          "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage.",
       });
     const sources: readonly TargetProfilePeriod[] = original?.periods ?? [
       {
@@ -226,6 +248,10 @@ export function createWorkingTimeCalculationProfile(
         const dated =
           resolved.profile &&
           (resolved.profile.employment ||
+            (!original &&
+              resolved.status === "unknown-effective-date" &&
+              resolved.profile.data.selection.kind === "tariff" &&
+              resolved.profile.data.selection.packageId === "tval-pflege-tdl") ||
             (resolved.status === "dated" &&
               (!original || resolved.profile.effectiveFrom! >= period.validFrom)))
             ? resolved.profile
@@ -298,11 +324,29 @@ export function createWorkingTimeCalculationProfile(
             (tariff.kind === "UNVERIFIED" &&
               tariff.id === "TVAOED" &&
               employment.nursingTrainingTariff) ||
+            (tariff.kind === "UNVERIFIED" &&
+              tariff.id === "TVA_L" &&
+              employment.tvalPflegeTariff) ||
             (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
-          const family = currentTariff(employment);
+          const family =
+            employment.tvalPflegeTariff &&
+            selected?.kind === "tariff" &&
+            selected.packageId === "tval-pflege-tdl"
+              ? selectedTariff(selected)
+              : currentTariff(employment);
           tariff = isReviewedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
-        } else if (selected?.kind === "tariff") {
+        } else if (
+          selected?.kind === "tariff" &&
+          !(
+            employment &&
+            selected.packageId === "tval-pflege-tdl" &&
+            !replacesPeriod &&
+            !corrected("tariff") &&
+            ["TVAL_COMMON", "TVAL_GENERAL", "TVAL_KR"].includes(tariff.kind) &&
+            tariff.kind !== selectedTariff(selected).kind
+          )
+        ) {
           const family = selectedTariff(selected);
           tariff = isReviewedTargetTariff(family) && tariff.kind === family.kind ? tariff : family;
         } else if (selected && !original) tariff = selectedTariff(selected);
@@ -346,7 +390,7 @@ export function createWorkingTimeCalculationProfile(
             code: "FIXED_DISTRIBUTION_CHANGED",
             affectsTarget: true,
             message:
-              "Die Wochenstunden haben sich geändert. Die feste Verteilung auf Wochentage ist noch offen.",
+              "Die Wochenstunden haben sich geÃ¤ndert. Die feste Verteilung auf Wochentage ist noch offen.",
           });
         periods.push({
           ...period,

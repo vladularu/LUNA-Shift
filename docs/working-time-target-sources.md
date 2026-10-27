@@ -83,3 +83,7 @@ Die einfache E-Auswahl speichert bereits den Besonderen Teil. Seit dem [VKA-E-Pa
 ## TVAöD Pflege: eigene Verweisprognose
 
 Die vorhandene Ausbildungs-Auswahl mit BT-K/BT-B kann seit dem [TVAöD-Pflege-Paket](working-time-target-tvaoed.md) eine eigene, bedingte Erwachsenen-Referenz nach § 7 BT Pflege und § 12a Abs. 3 AT liefern. Persönliche Vertragsminuten und Beschäftigungshistorie führen; ein fehlender/deaktivierter Jugendschutzschalter bestätigt keine Volljährigkeit. Aktiver Jugendschutz oder eine noch nicht lesbare Einstellung sperrt den Erwachsenenwert für Ausbildungsperioden. Minderjährigen- und Unterrichts-Istzeitbewertungen bleiben getrennte Folgeaufgaben.
+
+## TVA-L Pflege
+
+Die eigenständige bedingte Erwachsenenreferenz nach § 7 TVA-L Pflege ist in [working-time-target-tval.md](working-time-target-tval.md) mit den offiziellen TdL-Fassungen dokumentiert. Die Prüfdeckung 2026–2027 trennt gespeichertes GENERAL, SECTION_43 und offenen Arbeitgeberbezug. Ohne Arbeitgeberbezug keine unbestätigte Samstags-Fünftelregel. Bestehende Eingaben und Jugendschutz werden wiederverwendet; Minderjährigen-, Unterrichts- und zusätzliche Ausbildungsfälle bleiben begrenzt beziehungsweise offen.

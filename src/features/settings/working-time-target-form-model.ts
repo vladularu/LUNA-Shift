@@ -4,6 +4,7 @@ import { remunerationShiftDays } from "@/engine/remuneration-shift-days";
 import {
   targetTariffForSector,
   tvaoedTargetTariff,
+  tvalTargetTariff,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
   tvUkTargetTariff,
@@ -108,7 +109,18 @@ export function putTargetPeriod(
 export function employmentTargetTariff(profile: UserProfile): TargetTariff {
   const unverified = (id: string): TargetTariff => ({ kind: "UNVERIFIED", id });
   if (profile.salaryBasisConflict) return unverified("SALARY_CONFLICT");
-  if (profile.tvalPflegeTariff) return unverified("TVA_L");
+  if (profile.tvalPflegeTariff) {
+    if (
+      profile.tariff ||
+      profile.vkaETariff ||
+      profile.tvlKrTariff ||
+      profile.tvhKrTariff ||
+      profile.tvUkNursingTariff ||
+      profile.nursingTrainingTariff
+    )
+      return unverified("SALARY_CONFLICT");
+    return tvalTargetTariff();
+  }
   if (profile.tvhKrTariff) {
     if (
       profile.tariff ||
