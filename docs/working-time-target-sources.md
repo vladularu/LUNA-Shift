@@ -71,3 +71,7 @@ Der Quellenabgleich vom 26.10.2026 erweitert ausschließlich den TVöD-K-/BT-K-P
 ## Eigenständiger BT-B-Adapter
 
 Seit Paket C1 unterstützt die gemeinsame Engine den ausdrücklich erfassten BT-B-Bezug für 2026–2027. Die Prüfung verwendet § 49 BT-B und § 6 Abs. 3 AT, eigene Quellen und eigene Regelkennungen; keine Umdeklaration des BT-K-Adapters. Bestehende Beschäftigungsdaten liefern das Prognosemodell. Bedingungen, Versionen, unabhängige Kontrollwerte und Backup-Verträglichkeit stehen in [der BT-B-Dokumentation](working-time-target-b.md).
+
+## Eigenständiger TV-UK-Pflegeadapter
+
+Das TV-UK-Paket ergänzt die geprüften Berechnungsjahre 2026–2027. Maßgeblich sind die eigene Kontenregel nach § 13 Abs. 1/Abs. 4 Buchst. b und die abweichende Ausfallregel nach § 8 Abs. 3, jeweils Mantel ÄTV 9 ab 01.01.2025. Der frühere Inventarstatus oben bleibt die Bestandsaufnahme von Paket A/B. Aktueller Umfang, Grenzen, Quellen und kalenderbasierte Kontrollwerte stehen in [der TV-UK-Dokumentation](working-time-target-tvuk.md); keine Übernahme von BT-K- oder TV-L-Samstagsregeln.

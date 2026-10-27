@@ -19,6 +19,7 @@ import {
   targetTariffForSector,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
+  tvUkTargetTariff,
 } from "./working-time-target-rules";
 
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
@@ -48,6 +49,17 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  if (
+    profile.tvUkNursingTariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.tvlKrTariff &&
+    !profile.tvhKrTariff &&
+    !profile.vkaETariff &&
+    !profile.nursingTrainingTariff &&
+    !profile.tvalPflegeTariff
+  )
+    return tvUkTargetTariff();
   if (
     profile.tvhKrTariff &&
     !profile.salaryBasisConflict &&
@@ -182,8 +194,25 @@ export function createWorkingTimeCalculationProfile(
         const employment = dated?.employment
           ? employmentProfileAt({ ...profile, employmentTimeline: history }, validFrom)
           : null;
-        const corrected = (field: "weeklyMinutes" | "sundayHolidayWorkEligible") => {
-          const on = dated?.employmentOverrides?.[field];
+        const corrected = (field: "weeklyMinutes" | "sundayHolidayWorkEligible" | "tariff") => {
+          const on =
+            field === "tariff"
+              ? Object.entries(dated?.employmentOverrides ?? {})
+                  .filter(([key]) =>
+                    [
+                      "tariff",
+                      "nursingTrainingTariff",
+                      "vkaETariff",
+                      "tvlKrTariff",
+                      "tvUkNursingTariff",
+                      "tvhKrTariff",
+                      "tvalPflegeTariff",
+                    ].includes(key),
+                  )
+                  .map(([, date]) => date)
+                  .sort()
+                  .at(-1)
+              : dated?.employmentOverrides?.[field];
           if (!on) return false;
           if (period.validFrom <= on) return true;
           // The first legacy entry is its setup baseline, even when entered for a future month.
@@ -191,6 +220,15 @@ export function createWorkingTimeCalculationProfile(
             sources.find((p) => p.validFrom <= on && (p.validTo === null || p.validTo >= on)) ??
             sources[0];
           if (!before) return false;
+          if (field === "tariff") {
+            // Only redundant legacy setup follows a correction past its recorded date.
+            // A different later tariff/version/eligibility remains an explicit future change.
+            const a = historicalTariff(period.tariff),
+              b = historicalTariff(before.tariff);
+            return (
+              JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort())
+            );
+          }
           return field === "weeklyMinutes"
             ? period.weeklyMinutes === before.weeklyMinutes
             : JSON.stringify(period.model) === JSON.stringify(before.model);
@@ -215,6 +253,7 @@ export function createWorkingTimeCalculationProfile(
         if (
           employment &&
           (replacesPeriod ||
+            corrected("tariff") ||
             (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
           const family = currentTariff(employment);

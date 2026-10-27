@@ -12,6 +12,7 @@ import type {
   WorkingTimeTargetProfile,
 } from "@/domain/working-time-target";
 import { getPublicHolidays } from "@/engine/holidays";
+import { tvUkDayAdjustment } from "./working-time-target-tvuk-day";
 import {
   TARGET_RULES,
   isReviewedTargetTariff,
@@ -364,10 +365,35 @@ export function calculateMonthlyWorkingTimeTarget(
     // New family recognition must retain the old provisional reference outside review coverage.
     const legacyInferredForecast =
       forecast &&
-      (tariff?.kind === "TVOED_B" || tariff?.kind === "TVL_KR" || tariff?.kind === "TVH_KR") &&
+      (tariff?.kind === "TVOED_B" ||
+        tariff?.kind === "TVL_KR" ||
+        tariff?.kind === "TVH_KR" ||
+        tariff?.kind === "TVUK_NURSING") &&
       tariff.scopeConfirmed === null &&
       !reviewedRules;
     if (period) tariffNotices(period, reviewedRules !== null, notice);
+    if (
+      period &&
+      tariff?.kind === "TVUK_NURSING" &&
+      !legacyInferredForecast &&
+      (period.model.kind !== "UNKNOWN" || tariff.accountRuleConfirmed === true)
+    ) {
+      const adjustment = tvUkDayAdjustment({
+        date,
+        weekday: plainDate.dayOfWeek,
+        holiday,
+        period,
+        tariff,
+        fact,
+        rules: reviewedRules ?? knownTargetTariffRules(tariff.kind),
+        reviewed: reviewedRules !== null,
+        forecast,
+        notice,
+      });
+      if (adjustment) adjustments.push(adjustment);
+      raw.push({ date, base, adjustments, unavailable: false });
+      continue;
+    }
     if (holiday) {
       if (fixed && base > 0) {
         if (
@@ -536,6 +562,7 @@ function tariffNotices(
         affectsTarget: true,
       });
     if (
+      tariff.kind !== "TVUK_NURSING" &&
       period.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
       period.model.sevenDayShiftPlanConfirmed !== true
     )

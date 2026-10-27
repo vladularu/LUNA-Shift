@@ -83,7 +83,7 @@ export interface TargetRuleSource {
 }
 
 export interface TargetTariffRules {
-  readonly part: "BT-K" | "BT-B" | "TV-L § 43" | "TV-H § 43";
+  readonly part: "BT-K" | "BT-B" | "TV-L § 43" | "TV-H § 43" | "TV-UK";
   readonly label: string;
   readonly forecastQualifier?: string;
   readonly holidayWork:
@@ -93,6 +93,7 @@ export interface TargetTariffRules {
   readonly holidayForecast: TargetRuleSource;
   readonly special: TargetRuleSource;
   readonly specialForecast: TargetRuleSource;
+  readonly tvUkLoss?: { readonly actual: TargetRuleSource; readonly forecast: TargetRuleSource };
 }
 
 type ReviewedTargetTariff = Extract<TargetTariff, { readonly version: string }>;
@@ -104,7 +105,8 @@ export function isReviewedTargetTariff(
     tariff?.kind === "TVOED_K" ||
     tariff?.kind === "TVOED_B" ||
     tariff?.kind === "TVL_KR" ||
-    tariff?.kind === "TVH_KR"
+    tariff?.kind === "TVH_KR" ||
+    tariff?.kind === "TVUK_NURSING"
   );
 }
 
@@ -129,6 +131,22 @@ export const TVH_KR_TARGET_REVIEW = {
 /** The KR selection suggests § 43; neither the salary nor Sunday answer confirms its scope. */
 export function tvhKrTargetTariff(): ReviewedTargetTariff {
   return { kind: "TVH_KR", version: TVH_KR_TARGET_REVIEW.version, scopeConfirmed: null };
+}
+
+export const TVUK_TARGET_REVIEW = {
+  version: "2025-01-01",
+  from: "2026-01-01",
+  to: "2027-12-31",
+} as const;
+
+/** Salary and Sunday-work settings suggest a forecast, never confirmed account coverage. */
+export function tvUkTargetTariff(): Extract<TargetTariff, { kind: "TVUK_NURSING" }> {
+  return {
+    kind: "TVUK_NURSING",
+    version: TVUK_TARGET_REVIEW.version,
+    scopeConfirmed: null,
+    accountRuleConfirmed: null,
+  };
 }
 
 /** Family selection is enough for a forecast, never for an individual confirmed claim. */
@@ -262,7 +280,53 @@ function tvhRules(year: 2026 | 2027): TargetTariffRules {
 }
 const TVH_2026 = tvhRules(2026),
   TVH_2027 = tvhRules(2027);
+
+function tvUkRules(year: 2026 | 2027): TargetTariffRules {
+  const sourceUrl =
+    "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf";
+  const account = {
+    ruleId: `tvuk-${year}-13-4-b`,
+    legalBasis: "§ 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag)",
+    sourceUrl,
+  };
+  const loss = {
+    ruleId: `tvuk-${year}-8-3`,
+    legalBasis: "§ 8 Abs. 3 Sätze 1–2 TV-UK (ausgefallene Stunden außerhalb des Kontenbereichs)",
+    sourceUrl,
+  };
+  const forecast = (rule: TargetRuleSource): TargetRuleSource => ({
+    ...rule,
+    ruleId: rule.ruleId + "-forecast",
+    legalBasis: "Planungsreferenz zu " + rule.legalBasis + "; kein bestätigter Tagesanspruch",
+  });
+  return {
+    part: "TV-UK",
+    label: "TV-UK Pflege BW",
+    holidayWork: { kind: "TARGET_REDUCTION" },
+    holiday: account,
+    special: account,
+    holidayForecast: forecast(account),
+    specialForecast: forecast(account),
+    tvUkLoss: { actual: loss, forecast: forecast(loss) },
+  };
+}
+const TVUK_2026 = tvUkRules(2026),
+  TVUK_2027 = tvUkRules(2027);
 const TARGET_TARIFF_REVIEWS = {
+  TVUK_NURSING: [
+    {
+      from: TVUK_TARGET_REVIEW.from,
+      to: "2026-12-31",
+      versions: [TVUK_TARGET_REVIEW.version],
+      rules: TVUK_2026,
+    },
+    {
+      from: "2027-01-01",
+      to: TVUK_TARGET_REVIEW.to,
+      versions: [TVUK_TARGET_REVIEW.version],
+      rules: TVUK_2027,
+    },
+  ],
   TVOED_K: [
     { ...TVOED_K_TARGET_REVIEW, versions: ["2026-01-01"], rules: K_2026 },
     { from: "2027-01-01", to: "2027-12-31", versions: ["2026-01-01", "2027-01-01"], rules: K_2027 },
@@ -318,5 +382,11 @@ export function reviewedTargetTariffRules(
 
 /** Provenance for a pending zero-minute line outside review coverage; never grants a deduction. */
 export function knownTargetTariffRules(kind: ReviewedTargetTariff["kind"]): TargetTariffRules {
-  return { TVOED_K: K_2026, TVOED_B: B_2026, TVL_KR: TVL_2026, TVH_KR: TVH_2026 }[kind];
+  return {
+    TVOED_K: K_2026,
+    TVOED_B: B_2026,
+    TVL_KR: TVL_2026,
+    TVH_KR: TVH_2026,
+    TVUK_NURSING: TVUK_2026,
+  }[kind];
 }

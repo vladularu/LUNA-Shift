@@ -87,13 +87,27 @@ export function validateTargetInputs(
       period.tariff.kind === "TVOED_K" ||
       period.tariff.kind === "TVOED_B" ||
       period.tariff.kind === "TVL_KR" ||
-      period.tariff.kind === "TVH_KR"
+      period.tariff.kind === "TVH_KR" ||
+      period.tariff.kind === "TVUK_NURSING"
     ) {
       if (
         typeof period.tariff.version !== "string" ||
         ![true, false, null].includes(period.tariff.scopeConfirmed)
       )
         throw new WorkingTimeTargetError();
+      if (period.tariff.kind === "TVUK_NURSING") {
+        if (![true, false, null].includes(period.tariff.accountRuleConfirmed))
+          throw new WorkingTimeTargetError();
+        if (
+          period.tariff.scopeConfirmed === true &&
+          period.tariff.accountRuleConfirmed === false &&
+          period.model.kind === "ROTATING_FIVE_IN_SEVEN" &&
+          period.model.sevenDayShiftPlanConfirmed === true
+        )
+          throw new WorkingTimeTargetError(
+            "TV-UK: Bestätigte Schichtarbeit erfordert die Kontenregel nach § 13 Abs. 1.",
+          );
+      }
     } else if (period.tariff.kind === "UNVERIFIED") {
       if (!period.tariff.id) throw new WorkingTimeTargetError();
     } else if (period.tariff.kind !== "CUSTOM") throw new WorkingTimeTargetError();
