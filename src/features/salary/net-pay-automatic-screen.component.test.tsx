@@ -1,3 +1,4 @@
+import type { UserProfile } from "@/domain/types";
 import * as MockReact from "react";
 import { Temporal } from "@js-temporal/polyfill";
 import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
@@ -1063,7 +1064,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(summary.getByLabelText(/^Voraussichtliches Netto:/).props.numberOfLines).toBeUndefined();
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it.each([
+  it.each<[string, Pick<UserProfile, "tvalPflegeTariff" | "nursingTrainingTariff">, string]>([
     [
       "TVA-L",
       {
@@ -1086,7 +1087,7 @@ describe("integrated salary-to-net workflow", () => {
       },
       "1.488,04 €",
     ],
-  ] as const)(
+  ])(
     "returns %s from the stale own amount to a live tariff estimate in one action",
     async (_, training, expected) => {
       mockParams = { month: "2026-11" };
