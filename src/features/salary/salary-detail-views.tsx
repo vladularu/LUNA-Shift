@@ -11,9 +11,9 @@ import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { salaryDetailsRoute, settingsInfoRoute } from "@/navigation/routes";
+import { settingsInfoRoute } from "@/navigation/routes";
 import { salaryComposition } from "./salary-composition";
-import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salary-ui";
+import { SalaryAmountRow, SalarySectionCard } from "./salary-ui";
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
 import { NetPayPremiumExplanation } from "./net-pay-premium-details";
 import type { SalaryClassification } from "./salary-service-presentation";
@@ -41,7 +41,7 @@ export function SalaryComponentsView({
 }) {
   const palette = usePalette();
   const { width } = useWindowDimensions();
-  const { caption, compositionRows } = salaryComposition(profile, pay, month);
+  const { caption, compositionRows } = salaryComposition(profile, pay);
   const extra = settings?.automation?.additionalRecurringGrossCents ?? 0;
   const annualGross = annualSalaryGrossCents(
     month,
@@ -77,7 +77,7 @@ export function SalaryComponentsView({
           compositionRows.map((row, index) => (
             <View key={row.label}>
               {index ? <CardSeparator /> : null}
-              <SalaryAmountRow label={row.label} value={row.value} onPress={row.onPress} quiet />
+              <SalaryAmountRow label={row.label} value={row.value} subtitle={row.subtitle} quiet />
             </View>
           ))
         ) : (
@@ -98,11 +98,7 @@ export function SalaryComponentsView({
         {annualGross > 0 ? (
           <>
             <CardSeparator />
-            <SalaryAmountRow
-              label="Jahressonderzahlung / Einmalzahlung"
-              value={netPayEuro(annualGross)}
-              quiet
-            />
+            <SalaryAmountRow label="Jahressonderzahlung" value={netPayEuro(annualGross)} quiet />
           </>
         ) : null}
       </SalarySectionCard>
@@ -119,7 +115,6 @@ export function SalaryComponentsView({
         <SalaryAmountRow
           label="Abzüge"
           value={net ? netPayEuro(-(net.amounts.grossCents - net.netCents)) : "Nicht verfügbar"}
-          onPress={() => router.push(salaryDetailsRoute(month, "deductions"))}
           quiet
         />
         {net ? (
@@ -142,7 +137,7 @@ export function SalaryComponentsView({
             {annualPayment ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, padding: SPACING.lg }}>
                 {annualPayment.netIncluded
-                  ? "Weihnachtsgeld enthalten"
+                  ? "Jahressonderzahlung enthalten"
                   : "Sonderzahlung nur im Brutto"}
               </Text>
             ) : null}
@@ -158,11 +153,6 @@ export function SalaryComponentsView({
             ) : null}
           </>
         ) : null}
-        <CardSeparator />
-        <SalaryNavigationRow
-          title="Berechnungsgrundlagen"
-          onPress={() => router.push(salaryDetailsRoute(month, "basis"))}
-        />
       </SalarySectionCard>
     </>
   );
@@ -189,9 +179,7 @@ export function SalaryBasisView({
   return (
     <>
       {annualProposal || annualPayment ? (
-        <SalarySectionCard
-          title={annualAutomatic ? "Weihnachtsgeld-Prognose" : "Gespeichertes Weihnachtsgeld"}
-        >
+        <SalarySectionCard title="Jahressonderzahlung">
           <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
             {annualProposal ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>

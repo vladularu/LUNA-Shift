@@ -1,4 +1,4 @@
-import type { UserProfile } from "@/domain/types";
+import type { AllowanceStatus, UserProfile } from "@/domain/types";
 import * as MockReact from "react";
 import { Temporal } from "@js-temporal/polyfill";
 import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
@@ -181,24 +181,24 @@ describe("integrated salary-to-net workflow", () => {
       },
     };
     const screen = await overview("2026-10");
-    expect(screen.queryByText(/Weihnachtsgeld/)).toBeNull();
+    expect(screen.queryByText(/Jahressonderzahlung/)).toBeNull();
     expect(screen.queryByRole("button", { name: /^Anpassen,/ })).toBeNull();
     expect(screen.getByRole("header", { name: "Netto-Prognose" })).toBeTruthy();
     await screen.unmount();
     const basis = await details("basis", "2026-10");
-    expect(basis.queryByText(/Weihnachtsgeld/)).toBeNull();
+    expect(basis.queryByText(/Jahressonderzahlung/)).toBeNull();
     expect(basis.queryByText(/vollem Jahresanspruch/)).toBeNull();
     await basis.unmount();
     const november = await overview("2026-11");
-    expect(november.getByRole("header", { name: "Weihnachtsgeld" })).toBeTruthy();
+    expect(november.getByRole("header", { name: "Jahressonderzahlung" })).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
   });
   it("includes tariff Christmas pay and net automatically without opening or saving a form", async () => {
     mockEntries = [];
     const screen = await overview("2026-11");
-    expect(screen.getByText("Weihnachtsgeld enthalten")).toBeTruthy();
+    expect(screen.getByText("Jahressonderzahlung enthalten")).toBeTruthy();
     expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
-    expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+    expect(screen.queryByLabelText("Jahressonderzahlung brutto (€)")).toBeNull();
     expect(screen.queryByText(/Jahresprognose mit gleichbleibendem/)).toBeNull();
     expect(screen.getByRole("button", { name: /^Anpassen,/ })).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
@@ -221,7 +221,7 @@ describe("integrated salary-to-net workflow", () => {
       "Grundgehalt",
       "Zeitzuschläge",
       "Weitere Zulagen",
-      "Weihnachtsgeld",
+      "Jahressonderzahlung",
       "Brutto geschätzt",
       "Voraussichtliches Netto",
     ];
@@ -430,14 +430,16 @@ describe("integrated salary-to-net workflow", () => {
     });
     expect(screen.queryByRole("button", { name: "Gehaltsbestandteile" })).toBeNull();
     expect(screen.queryByTestId("net-pay-gross-composition")).toBeNull();
-    const detail = await details("components");
-    expect(detail.getByLabelText(/^Grundentgelt:/)).toBeTruthy();
-    await fireEvent.press(detail.getByRole("button", { name: "Berechnungsgrundlagen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Berechnungsgrundlagen" }));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/salary-details",
       params: { month: "2026-07", section: "basis" },
     });
-    expect(detail.getByRole("button", { name: /^Abzüge:/ })).toBeTruthy();
+    const detail = await details("components");
+    expect(detail.getByLabelText(/^Grundentgelt:/)).toBeTruthy();
+    expect(detail.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
+    expect(detail.queryByRole("button", { name: /^Abzüge:/ })).toBeNull();
+    expect(detail.getByLabelText(/^Abzüge:/)).toBeTruthy();
   });
   it("retains a component fallback when there is no gross amount to press", async () => {
     mockSettings = null;
@@ -589,41 +591,71 @@ describe("integrated salary-to-net workflow", () => {
     expect(list.getByRole("button", { name: /^So\. 05\.07\.:/ })).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it("restores real salary composition routes for services, shift and fixed allowances", async () => {
+  it.each<[AllowanceStatus | null, AllowanceStatus, string]>([
+    ["SHIFT_MONTHLY", "ALTERNATING_MONTHLY", "Ständige Schichtzulage"],
+    ["SHIFT_HOURLY", "ALTERNATING_MONTHLY", "Nichtständige Schichtzulage"],
+    ["ALTERNATING_MONTHLY", "SHIFT_MONTHLY", "Ständige Wechselschichtzulage"],
+    ["ALTERNATING_HOURLY", "SHIFT_MONTHLY", "Nichtständige Wechselschichtzulage"],
+    [null, "ALTERNATING_MONTHLY", "Ständige Wechselschichtzulage"],
+    [null, "SHIFT_MONTHLY", "Ständige Schichtzulage"],
+  ])("keeps gross read-only with allowance %s / %s", async (confirmed, suggested, label) => {
     mockSettings = null;
     const calculate = payEngine.calculateMonthlyPayEstimate;
     const spy = jest
       .spyOn(payEngine, "calculateMonthlyPayEstimate")
-      .mockImplementation((...args) => ({
-        ...calculate(...args),
-        allowanceAmount: 250,
-        tvoedAllowanceAmount: 25,
-        careAllowanceAmount: 141.82,
-      }));
+      .mockImplementation((...args) => {
+        const pay = calculate(...args);
+        return {
+          ...pay,
+          allowanceAmount: 250,
+          tvoedAllowanceAmount: 25,
+          careAllowanceAmount: 141.82,
+          confirmedAllowance: confirmed,
+          assessment: { ...pay.assessment, suggestedAllowance: suggested },
+        };
+      });
     try {
       const screen = await details("components");
       const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-      for (const [label, route] of [
-        [
-          /^Zeitzuschläge:/,
-          { pathname: "/salary-details", params: { month: "2026-07", section: "premiums" } },
-        ],
-        [/^Schichtzulage/, { pathname: "/tariff-assessment", params: { month: "2026-07" } }],
-        [/^TVöD-Zulage:/, { pathname: "/info-details", params: { section: "TVOED_ALLOWANCE" } }],
-        [
-          /^Pflegezulage TVöD-P:/,
-          { pathname: "/info-details", params: { section: "CARE_ALLOWANCE" } },
-        ],
-      ] as const) {
-        await fireEvent.press(screen.getByRole("button", { name: label }));
-        expect(router.push).toHaveBeenLastCalledWith(route);
+      for (const name of [
+        /^Zeitzuschläge:/,
+        new RegExp(`^${label}:`),
+        /^TVöD-Zulage:/,
+        /^Pflegezulage TVöD-P:/,
+        /^Abzüge:/,
+      ]) {
+        expect(screen.getByLabelText(name).props.onPress).toBeUndefined();
+        expect(screen.queryByRole("button", { name })).toBeNull();
       }
+      expect(screen.getByLabelText(new RegExp(`^${label}: 250,00`))).toBeTruthy();
+      expect(screen.queryByText("Geschätzt") !== null).toBe(confirmed === null);
+      if (confirmed === null)
+        expect(screen.getByLabelText(new RegExp(`^${label}:.*Geschätzt`))).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Zulage prüfen" })).toBeNull();
+      expect(router.push).not.toHaveBeenCalled();
       expect(screen.queryByTestId("dropdown-modal-content")).toBeNull();
       expect(mockSave).not.toHaveBeenCalled();
     } finally {
       spy.mockRestore();
     }
   });
+  it.each([false, true])(
+    "opens one allowance review directly from salary (net setup: %s)",
+    async (configured) => {
+      if (!configured) mockSettings = null;
+      mockParams = { month: "2026-08" };
+      const screen = await render(<SalaryScreen />);
+      const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+      expect(screen.getAllByRole("button", { name: "Zulage prüfen" })).toHaveLength(1);
+      await fireEvent.press(screen.getByRole("button", { name: "Zulage prüfen" }));
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(router.push).toHaveBeenLastCalledWith({
+        pathname: "/tariff-assessment",
+        params: { month: "2026-08" },
+      });
+      expect(mockSave).not.toHaveBeenCalled();
+    },
+  );
   it("opens the service breakdown before net setup without expanding gross", async () => {
     mockSettings = null;
     const screen = await render(
@@ -941,7 +973,7 @@ describe("integrated salary-to-net workflow", () => {
       before,
     );
   });
-  it("changes the component month without pushing a new route and updates all linked details", async () => {
+  it("changes the read-only component month without pushing a new route", async () => {
     const screen = await details("components");
     const before = screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
@@ -955,16 +987,10 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).not.toBe(before);
     expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Netto-Berechnung" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: /^Abzüge:/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/salary-details",
-      params: { month: "2026-08", section: "deductions" },
-    });
-    await fireEvent.press(screen.getByRole("button", { name: "Berechnungsgrundlagen" }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/salary-details",
-      params: { month: "2026-08", section: "basis" },
-    });
+    expect(screen.getByLabelText(/^Abzüge:/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Abzüge:/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: /^Vorheriger Monat/ }));
     expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
     mockParams = { month: "2026-07", section: "components" };
@@ -1013,6 +1039,7 @@ describe("integrated salary-to-net workflow", () => {
     mockProfile = { ...forecastProfile, tariff: null, manualMonthlyGrossCents: 450000 };
     const screen = await render(<SalaryScreen />);
     expect(screen.getByLabelText(/^Gesamtbrutto: 4.500,00/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Zulage prüfen" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Zuschläge je Dienst" })).toBeNull();
     const detail = await details("components");
     expect(detail.getByLabelText(/^Monatsbrutto: 4.500,00/)).toBeTruthy();
@@ -1029,7 +1056,8 @@ describe("integrated salary-to-net workflow", () => {
     await screen.unmount();
     const detail = await details("components");
     expect(detail.getByLabelText(/^Gesamtbrutto: 4.600,00/)).toBeTruthy();
-    expect(detail.getByLabelText(/^Jahressonderzahlung \/ Einmalzahlung: 100,00/)).toBeTruthy();
+    expect(detail.getByLabelText(/^Jahressonderzahlung: 100,00/)).toBeTruthy();
+    expect(detail.queryByRole("button", { name: /^Jahressonderzahlung:/ })).toBeNull();
     expect(detail.queryByText("Voraussichtliches Netto")).toBeNull();
   });
   it("keeps full labels and money at small widths, larger type and in dark mode", async () => {
@@ -1112,11 +1140,11 @@ describe("integrated salary-to-net workflow", () => {
       expect(screen.getByText(expected)).toBeTruthy();
       expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
       expect(screen.queryByText("3.818,16 €")).toBeNull();
-      expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+      expect(screen.queryByLabelText("Jahressonderzahlung brutto (€)")).toBeNull();
       expect(mockSave).not.toHaveBeenCalled();
       await screen.unmount();
       const basis = await details("basis", "2026-11");
-      expect(basis.getByText("Weihnachtsgeld-Prognose")).toBeTruthy();
+      expect(basis.getByText("Jahressonderzahlung")).toBeTruthy();
       expect(
         basis.queryByText(/Für die Berechnung gilt dein gespeicherter eigener Betrag/),
       ).toBeNull();
@@ -1145,7 +1173,7 @@ describe("integrated salary-to-net workflow", () => {
       },
     };
     const screen = await details("basis", "2026-11");
-    expect(screen.getByText("Gespeichertes Weihnachtsgeld")).toBeTruthy();
+    expect(screen.getByText("Jahressonderzahlung")).toBeTruthy();
     expect(
       screen.getByText(/Für die Berechnung gilt dein gespeicherter eigener Betrag.*1.532,35/),
     ).toBeTruthy();

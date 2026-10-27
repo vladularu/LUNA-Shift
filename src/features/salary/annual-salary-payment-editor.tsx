@@ -188,7 +188,7 @@ export function AnnualSalaryPaymentEditor({
         importantForAccessibility={open ? "no-hide-descendants" : "auto"}
       >
         <SalarySectionCard
-          title="Weihnachtsgeld"
+          title="Jahressonderzahlung"
           amount={initial ? netPayEuro(initial.grossCents) : undefined}
         >
           <SalaryNavigationRow
@@ -212,7 +212,7 @@ export function AnnualSalaryPaymentEditor({
         </SalarySectionCard>
       </View>
       <NetPaySheet
-        title="Weihnachtsgeld anpassen"
+        title="Jahressonderzahlung anpassen"
         visible={open}
         busy={locked}
         onClose={() => {
@@ -225,7 +225,7 @@ export function AnnualSalaryPaymentEditor({
         }
       >
         <Field
-          label="Weihnachtsgeld brutto (€)"
+          label="Jahressonderzahlung brutto (€)"
           value={gross}
           onChangeText={setGross}
           keyboardType="decimal-pad"

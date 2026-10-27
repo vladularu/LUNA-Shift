@@ -367,7 +367,11 @@ export function SalaryAmountRow({
       {content}
     </Pressable>
   ) : (
-    <View accessible accessibilityLabel={`${label}: ${value}`} style={style}>
+    <View
+      accessible
+      accessibilityLabel={`${label}: ${value}${subtitle ? `. ${subtitle}` : ""}`}
+      style={style}
+    >
       {content}
     </View>
   );
@@ -482,7 +486,6 @@ export function SalaryPremiumCard({
             gap: SPACING.md,
           }}
         >
-          <SalaryIcon name="moon-outline" accent />
           <Text
             accessible
             accessibilityLabel={`Zeitzuschläge: ${netPayEuro(totalCents)}`}

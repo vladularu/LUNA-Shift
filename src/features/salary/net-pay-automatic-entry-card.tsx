@@ -4,7 +4,12 @@ import { Text } from "@/ui/text";
 import { View } from "react-native";
 import { usePflegeShiftProfile, usePflegeShiftTestData } from "@/application/pflegeshift-provider";
 import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
-import { dayEditorRoute, salaryDetailsRoute, settingsEditorRoute } from "@/navigation/routes";
+import {
+  dayEditorRoute,
+  salaryDetailsRoute,
+  settingsEditorRoute,
+  tariffAssessmentRoute,
+} from "@/navigation/routes";
 import { SPACING } from "@/theme/tokens";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
@@ -76,6 +81,18 @@ export function NetPayAutomaticEntryCard({
   const showComponentsLink = available === null && proposedGrossCents === null;
   const showPremiumsLink = available === null && showServices && premiumCents === undefined;
   const showSettingsLink = configured && !blocked && data.status === "ready";
+  const showAllowanceLink =
+    !blocked &&
+    !!(
+      profile?.tariff ||
+      profile?.vkaETariff ||
+      profile?.tvlKrTariff ||
+      profile?.tvUkNursingTariff ||
+      profile?.tvhKrTariff ||
+      profile?.tvalPflegeTariff ||
+      profile?.nursingTrainingTariff
+    );
+  const showBasisLink = !blocked && (available !== null || proposedGrossCents !== null);
   const recovery =
     forecast?.recovery ??
     (forecast?.result.status === "unavailable" && forecast.result.stage === "net-pay"
@@ -190,7 +207,11 @@ export function NetPayAutomaticEntryCard({
             onResetAutomatic={data.resetAnnualPayments}
           />
         ) : null}
-        {showComponentsLink || showPremiumsLink || showSettingsLink ? (
+        {showComponentsLink ||
+        showPremiumsLink ||
+        showSettingsLink ||
+        showAllowanceLink ||
+        showBasisLink ? (
           <SalarySectionCard title="Details">
             {showComponentsLink ? (
               <SalaryNavigationRow title="Gehaltsbestandteile" onPress={components} />
@@ -209,6 +230,28 @@ export function NetPayAutomaticEntryCard({
                   subtitle={summary}
                   onPress={() => open("settings")}
                   disabled={data.busy}
+                />
+              </>
+            ) : null}
+            {showAllowanceLink ? (
+              <>
+                {showComponentsLink || showPremiumsLink || showSettingsLink ? (
+                  <CardSeparator />
+                ) : null}
+                <SalaryNavigationRow
+                  title="Zulage prüfen"
+                  onPress={() => router.push(tariffAssessmentRoute(month))}
+                />
+              </>
+            ) : null}
+            {showBasisLink ? (
+              <>
+                {showComponentsLink || showPremiumsLink || showSettingsLink || showAllowanceLink ? (
+                  <CardSeparator />
+                ) : null}
+                <SalaryNavigationRow
+                  title="Berechnungsgrundlagen"
+                  onPress={() => router.push(salaryDetailsRoute(month, "basis"))}
                 />
               </>
             ) : null}

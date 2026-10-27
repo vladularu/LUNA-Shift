@@ -59,7 +59,7 @@ export function AnalysisNetPayRow({ month }: { readonly month: string }) {
       {forecast?.annualPayment ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.md }}>
           {forecast.annualPayment.netIncluded
-            ? "Weihnachtsgeld enthalten"
+            ? "Jahressonderzahlung enthalten"
             : "Sonderzahlung nur im Brutto"}
         </Text>
       ) : null}

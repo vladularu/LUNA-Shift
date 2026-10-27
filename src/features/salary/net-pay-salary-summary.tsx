@@ -81,8 +81,8 @@ export function NetPaySalarySummary({
               {!annualPayment.netIncluded
                 ? "Sonderzahlung nur im Brutto"
                 : annualPayment.pensionOmitted
-                  ? "Mit Weihnachtsgeld · vor Zusatzversorgung"
-                  : "Weihnachtsgeld enthalten"}
+                  ? "Mit Jahressonderzahlung · vor Zusatzversorgung"
+                  : "Jahressonderzahlung enthalten"}
             </NetPayText>
           ) : null}
           {pensionOmitted ? <NetPayText>Zusatzversorgung nicht berücksichtigt</NetPayText> : null}
