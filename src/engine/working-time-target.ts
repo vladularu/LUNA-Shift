@@ -372,7 +372,7 @@ export function calculateMonthlyWorkingTimeTarget(
         affectsTarget: true,
         message:
           reviewedRules.label +
-          ": Referenz nach § 7 für Auszubildende ohne Jugendarbeitsschutz. Unterrichtszeiten und Ausgleich werden getrennt bewertet.",
+          ": Referenz nach § 7 ohne Jugendarbeitsschutz. Unterricht und Ausgleich separat.",
       });
     const verifiedTariff =
       reviewedRules !== null && supportedTariff && tariff.scopeConfirmed === true;
