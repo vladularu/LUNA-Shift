@@ -17,6 +17,7 @@ import type {
 import {
   isReviewedTargetTariff,
   targetTariffForSector,
+  tvaoedTargetTariff,
   tvlKrTargetTariff,
   tvhKrTargetTariff,
   tvUkTargetTariff,
@@ -25,6 +26,10 @@ import {
 export type WorkingTimeCalculationProfile = UserProfile & WorkingTimeTargetProfile;
 
 function selectedTariff(selection: RemunerationSelection): TargetTariff {
+  if (selection.kind === "tariff" && selection.packageId === "tvaoed-pflege-vka") {
+    const tariff = tvaoedTargetTariff(selection.variant);
+    if (tariff) return tariff;
+  }
   if (
     selection.kind === "tariff" &&
     selection.packageId === "tvl-kr-tdl" &&
@@ -49,6 +54,22 @@ function selectedTariff(selection: RemunerationSelection): TargetTariff {
 }
 
 function currentTariff(profile: UserProfile): TargetTariff {
+  if (
+    profile.nursingTrainingTariff &&
+    !profile.salaryBasisConflict &&
+    !profile.tariff &&
+    !profile.vkaETariff &&
+    !profile.tvlKrTariff &&
+    !profile.tvUkNursingTariff &&
+    !profile.tvhKrTariff &&
+    !profile.tvalPflegeTariff
+  )
+    return (
+      tvaoedTargetTariff(profile.nursingTrainingTariff.sector) ?? {
+        kind: "UNVERIFIED",
+        id: "TVAOED",
+      }
+    );
   if (
     profile.tvUkNursingTariff &&
     !profile.salaryBasisConflict &&
@@ -154,6 +175,8 @@ export function createWorkingTimeCalculationProfile(
   status: WorkingTimeTargetInput["status"] = "ready",
   // Retained for callers; calendar entries never determine a contractual forecast.
   _entries: readonly CalendarEntry[] = [],
+  youthProtection: boolean | null = null,
+  youthProtectionStatus: "loading" | "ready" | "error" = "ready",
 ): WorkingTimeCalculationProfile {
   if (status !== "ready") return { ...profile, workingTimeTarget: { status, notices: [] } };
   try {
@@ -272,6 +295,9 @@ export function createWorkingTimeCalculationProfile(
             corrected("tariff") ||
             // The old E marker has no special part; applicable employment supplies it.
             (tariff.kind === "UNVERIFIED" && tariff.id === "VKA_E" && employment.vkaETariff) ||
+            (tariff.kind === "UNVERIFIED" &&
+              tariff.id === "TVAOED" &&
+              employment.nursingTrainingTariff) ||
             (baseline && currentTariff({ ...profile, ...baseline }).kind === tariff.kind))
         ) {
           const family = currentTariff(employment);
@@ -361,6 +387,9 @@ export function createWorkingTimeCalculationProfile(
         status,
         notices,
         mode: "FORECAST",
+        ...(youthProtection !== null || youthProtectionStatus !== "ready"
+          ? { youthProtection, youthProtectionStatus }
+          : {}),
         context: { ...original, periods, days },
       },
     };

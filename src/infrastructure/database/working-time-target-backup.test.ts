@@ -430,6 +430,92 @@ describe("working-time target backup v21", () => {
       await check(target);
     },
   );
+  it.each(["BT_K", "BT_B"] as const)(
+    "preserves TVAöD/%s correction and a later part-time/training-year change through reload and backup",
+    async (sector) => {
+      const old = decemberTargetContext.periods[0];
+      const context = {
+        ...decemberTargetContext,
+        periods: [
+          { ...old, validFrom: "2026-01-01", validTo: "2026-11-30" },
+          { ...old, validFrom: "2026-12-01", validTo: null },
+        ],
+      };
+      await saveWorkingTimeTargetSettings(source.db, {
+        context,
+        confirmedDates: context.days.map((d) => d.date),
+        expected: await loadWorkingTimeTargetSettings(source.db),
+      });
+      const before = (await projectStoredSimpleProfile(source.db, await loadProfile(source.db)))!;
+      const own = {
+        ...before,
+        tariff: null,
+        tvlKrTariff: null,
+        nursingTrainingTariff: {
+          trainingYear: 2 as const,
+          sector,
+          tariffRegion: "OTHER" as const,
+        },
+        federalState: "HE" as const,
+        weeklyMinutes: 2310,
+        sundayHolidayWorkEligible: true,
+      };
+      const fields = employmentChangedFields(before, own);
+      await saveEmploymentProfile(source.db, {
+        ...own,
+        validity: {
+          effectiveFrom: null,
+          fields,
+          correctionFields: fields,
+          expectedProfileUpdatedAt: before.updatedAt,
+          expectedTimeline: employmentTimelineKey(await listRemunerationProfiles(source.db)),
+          baseline: employmentDataFromProfile(before),
+        },
+      });
+      const current = (await projectStoredSimpleProfile(source.db, await loadProfile(source.db)))!;
+      const next = {
+        ...current,
+        weeklyMinutes: 1800,
+        nursingTrainingTariff: { ...current.nursingTrainingTariff!, trainingYear: 3 as const },
+      };
+      await saveEmploymentProfile(source.db, {
+        ...next,
+        validity: {
+          effectiveFrom: "2026-12-16",
+          fields: employmentChangedFields(current, next),
+          expectedProfileUpdatedAt: current.updatedAt,
+          expectedTimeline: employmentTimelineKey(await listRemunerationProfiles(source.db)),
+          baseline: employmentDataFromProfile(current),
+        },
+      });
+      const check = async (fixture: TvlShiftWorkFixture) => {
+        const p = (await projectStoredSimpleProfile(fixture.db, await loadProfile(fixture.db)))!;
+        const history = await listRemunerationProfiles(fixture.db);
+        const snapshot = await loadWorkingTimeTargetSettings(fixture.db);
+        expect(snapshot.context).toEqual(context);
+        expect(history.some((row) => row.employmentOverrides?.nursingTrainingTariff)).toBe(true);
+        expect(
+          history.find((row) => row.effectiveFrom === "2026-12-16")?.employment
+            ?.nursingTrainingTariff?.trainingYear,
+        ).toBe(3);
+        const calculation = createWorkingTimeCalculationProfile(p, snapshot, history);
+        expect(calculateMonthlyWorkingTimeTarget("2026-10", calculation).targetMinutes).toBe(9702);
+        expect(calculateMonthlyWorkingTimeTarget("2026-11", calculation).targetMinutes).toBe(9702);
+        const december = calculateMonthlyWorkingTimeTarget("2026-12", calculation);
+        expect(december.targetMinutes).toBe(7962);
+        expect(
+          december.adjustments.every((a) =>
+            a.ruleId.startsWith(sector === "BT_K" ? "tvaoed-pflege-btk-" : "tvaoed-pflege-btb-"),
+          ),
+        ).toBe(true);
+      };
+      await check(source);
+      const backup = await exportTvlBackup(source);
+      expect(backup.document.version).toBe(21);
+      await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+      await check(target);
+    },
+  );
   it.each([
     "future-backup",
     "future-settings",
