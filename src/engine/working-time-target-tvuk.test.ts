@@ -6,6 +6,8 @@ import type {
 } from "@/domain/working-time-target";
 import type { UserProfile } from "@/domain/types";
 import { employmentDataFromProfile, employmentProfileAt } from "@/domain/employment-history";
+import { decemberTargetContext } from "@/domain/working-time-target-test-fixtures";
+import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { validateWorkingTimeTargetContext } from "@/domain/saved-working-time-target";
 import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import { RuleResolutionError, bundledRuleResolver } from "@/rules/rule-resolver";
@@ -319,6 +321,214 @@ describe("TV-UK own account rule: independent calendar and § 13 controls", () =
       p.workingTimeTarget?.context?.periods.every((p) => p.tariff.kind === "TVUK_NURSING"),
     ).toBe(true);
     expect(JSON.stringify(timeline)).toBe(before);
+  });
+  it.each(["2026-10-27T00:00:00Z", "2027-02-01T12:00:00Z"])(
+    "applies a saved whole-period TV-UK correction to redundant December setup at viewing date %s",
+    (now) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(now));
+      try {
+        const old = decemberTargetContext.periods[0];
+        const snapshot = {
+          saved: null,
+          staleDates: [],
+          planRevision: "plan",
+          context: {
+            periods: [
+              { ...old, validFrom: "2026-01-01", validTo: "2026-11-30" },
+              { ...old, validFrom: "2026-12-01", validTo: null },
+            ],
+            days: decemberTargetContext.days,
+          },
+        };
+        const base = {
+          ...history(),
+          data: remunerationDataFromLegacy(profile),
+          effectiveFrom: null,
+          employment: employmentDataFromProfile(profile),
+          employmentOverrides: { tariff: "2026-10-27", tvUkNursingTariff: "2026-10-27" },
+        };
+        const before = JSON.stringify({ snapshot, base });
+        const p = createWorkingTimeCalculationProfile(profile, snapshot, [base]);
+        expect(
+          p.workingTimeTarget?.context?.periods.every((p) => p.tariff.kind === "TVUK_NURSING"),
+        ).toBe(true);
+        expect(calculateMonthlyTargetMinutes("2026-10", p)).toBe(10164);
+        expect(calculateMonthlyTargetMinutes("2026-11", p)).toBe(9702);
+        expect(calculateMonthlyTargetMinutes("2026-12", p)).toBe(9240);
+        expect(calculateMonthlySummary("2026-12", [], p).targetMinutes).toBe(9240);
+        const pattern = {
+          assignment: "UNKNOWN" as const,
+          workplaceCoverage: "UNKNOWN" as const,
+          updatedAt: null,
+        };
+        expect(
+          finish(
+            buildAnnualAvailableReportSteps(
+              2026,
+              [],
+              p,
+              [],
+              pattern,
+              "2026-12-31",
+              bundledRuleResolver,
+            ),
+          ).months[11].targetMinutes,
+        ).toBe(9240);
+        const report = finish(
+          buildReportSteps({
+            period: "2026-12",
+            profile: p,
+            entries: [],
+            tariffDecisions: [],
+            workPatternSettings: pattern,
+            ruleResolver: bundledRuleResolver,
+            createdAt: "2026-12-31T12:00:00Z",
+            referenceDate: "2026-12-31",
+            youthProtection: false,
+            testMonths: [],
+          }),
+        );
+        expect(report.workingTimeTargets?.[0].targetMinutes).toBe(9240);
+        expect(reportToCsv(report)).toContain('"154:00"');
+        expect(reportToHtml(report, { layout: "compact", includeSalary: true })).toContain(
+          "TV-UK Pflege BW: Planwert",
+        );
+        expect(JSON.stringify({ snapshot, base })).toBe(before);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+  it("corrects the sole old future-dated setup without inventing an earlier historical period", () => {
+    const snapshot = {
+      saved: null,
+      staleDates: [],
+      planRevision: "plan",
+      context: decemberTargetContext,
+    };
+    const base = {
+      ...history(),
+      data: remunerationDataFromLegacy(profile),
+      effectiveFrom: null,
+      employment: employmentDataFromProfile(profile),
+      employmentOverrides: { tariff: "2026-10-27", tvUkNursingTariff: "2026-10-27" },
+    };
+    const p = createWorkingTimeCalculationProfile(profile, snapshot, [base]);
+    expect(calculateMonthlyTargetMinutes("2026-12", p)).toBe(9240);
+    expect(calculateMonthlyWorkingTimeTarget("2026-11", p).targetMinutes).toBeNull();
+  });
+  it("does not infer a whole-period correction from the current TV-UK salary alone", () => {
+    const base = {
+      ...history(),
+      data: remunerationDataFromLegacy(profile),
+      effectiveFrom: null,
+      employment: employmentDataFromProfile(profile),
+    };
+    const p = createWorkingTimeCalculationProfile(
+      profile,
+      { saved: null, staleDates: [], planRevision: "plan", context: decemberTargetContext },
+      [base],
+    );
+    expect(calculateMonthlyTargetMinutes("2026-12", p)).toBe(8778);
+    expect(p.workingTimeTarget?.context?.periods[0].tariff.kind).toBe("TVOED_K");
+  });
+  it.each([
+    {
+      field: "tvhKrTariff",
+      kind: "TVH_KR",
+      change: { tvhKrTariff: { payGroup: "KR8", payLevel: 4, fullTimeWeeklyMinutes: 2310 } },
+    },
+    {
+      field: "tvlKrTariff",
+      kind: "TVL_KR",
+      change: { tvlKrTariff: { payGroup: "KR8", payLevel: 4, universityRegion: "WEST" } },
+    },
+  ] as const)("uses the same explicit correction priority for $kind", ({ field, kind, change }) => {
+    const p: UserProfile = { ...profile, tvUkNursingTariff: null, ...change };
+    const baseline = {
+      ...history(),
+      effectiveFrom: null,
+      data: remunerationDataFromLegacy(p),
+      employment: employmentDataFromProfile(p),
+      employmentOverrides: { tariff: "2026-10-27", [field]: "2026-10-27" },
+    };
+    const calculation = createWorkingTimeCalculationProfile(
+      p,
+      { saved: null, staleDates: [], planRevision: "plan", context: decemberTargetContext },
+      [baseline],
+    );
+    expect(calculation.workingTimeTarget?.context?.periods[0].tariff).toMatchObject({
+      kind,
+      scopeConfirmed: null,
+    });
+  });
+  it.each([
+    { kind: "TVOED_B", version: "2026-01-01", scopeConfirmed: true } as const,
+    { kind: "TVOED_K", version: "2027-01-01", scopeConfirmed: true } as const,
+    { kind: "TVOED_K", version: "2026-01-01", scopeConfirmed: false } as const,
+  ])(
+    "preserves a genuinely different later target tariff after a baseline correction: $kind/$version/$scopeConfirmed",
+    (tariff) => {
+      const old = decemberTargetContext.periods[0];
+      const context = {
+        periods: [
+          { ...old, validFrom: "2026-01-01", validTo: "2026-11-30" },
+          { ...old, validFrom: "2026-12-01", tariff },
+        ],
+        days: [],
+      };
+      const base = {
+        ...history(),
+        data: remunerationDataFromLegacy(profile),
+        effectiveFrom: null,
+        employment: employmentDataFromProfile(profile),
+        employmentOverrides: { tariff: "2026-10-27", tvUkNursingTariff: "2026-10-27" },
+      };
+      const p = createWorkingTimeCalculationProfile(
+        profile,
+        { saved: null, staleDates: [], planRevision: "plan", context },
+        [base],
+      );
+      expect(p.workingTimeTarget?.context?.periods.map((p) => p.tariff)).toEqual([
+        employmentTargetTariff(profile),
+        tariff,
+      ]);
+    },
+  );
+  it("respects a later dated employment tariff switch after correcting the baseline", () => {
+    const old = decemberTargetContext.periods[0];
+    const base = {
+      ...history(),
+      data: remunerationDataFromLegacy(profile),
+      effectiveFrom: null,
+      employment: employmentDataFromProfile(profile),
+      employmentOverrides: { tariff: "2026-10-27", tvUkNursingTariff: "2026-10-27" },
+    };
+    const b: UserProfile = {
+      ...work,
+      federalState: "BW",
+      tariff: { ...work.tariff!, sector: "BT_B", fullTimeWeeklyMinutes: 2340 },
+    };
+    const next = {
+      ...history("2026-12-01"),
+      data: remunerationDataFromLegacy(b),
+      employment: employmentDataFromProfile(b),
+      employmentOverrides: base.employmentOverrides,
+    };
+    const p = createWorkingTimeCalculationProfile(
+      profile,
+      {
+        saved: null,
+        staleDates: [],
+        planRevision: "plan",
+        context: { periods: [{ ...old, validFrom: "2026-01-01" }], days: [] },
+      },
+      [base, next],
+    );
+    expect(calculateMonthlyTargetMinutes("2026-10", p)).toBe(10164);
+    expect(calculateMonthlyTargetMinutes("2026-12", p)).toBe(8778);
+    expect(p.workingTimeTarget?.context?.periods[1].tariff.kind).toBe("TVOED_B");
   });
   it("handles tariff and regional switches per date without double deductions", () => {
     const result = forecast("2026-12", [

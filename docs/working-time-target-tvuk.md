@@ -60,3 +60,11 @@ Eine gezielte Suche nach einschlägiger BAG-Rechtsprechung zur TV-UK-Kontenfeier
 ## Qualität und Geräteabnahme
 
 Fokussierte Fach-/Integrationstests und Komponentenprüfungen sind vor der Veröffentlichung durchzuführen. Danach folgen `verify:fast`, PR-CI und iOS-Export. Tatsächliche PDF-Seiten und die interne iPhone-Preview werden getrennt geprüft. Geräteabnahme für TV-UK ist noch offen; bisherige TV-H-Bilder sind dafür kein Nachweis.
+
+### Korrektur nach dem Gerätetest vom 27.10.2026
+
+Oktober/November zeigen TV-UK korrekt. Im Dezember zeigen die Gerätebilder hingegen 146:18 h und den BT-K-Samstagsabzug. Der Nutzer bestätigt ausdrücklich, TV-UK für „Gesamter Zeitraum“ gespeichert zu haben. Die Abnahme ist daher nicht bestanden.
+
+Abgegrenzte Korrektur innerhalb dieses Pakets: Die bereits gespeicherte feldbezogene Tarifkorrektur muss bei der Projektion dieselbe Priorität erhalten wie Stunden-/Sonn-/Feiertagskorrekturen. Redundante alte Sollzeit-Tarifzeiträume dürfen den ausdrücklich korrigierten Beschäftigungstarif nicht zurücksetzen. Tatsächlich abweichende spätere Tarifzuordnungen bleiben erhalten. Scope: vorhandenes Berechnungsprofil, TV-UK-Regressionen, Backup-/Speicherflussprüfung, bestehende Auswertungs-Komponentenprüfung und dieses Dokument; keine neue Einstellung, keine Datenmigration, kein Löschen historischer Datensätze.
+
+Abnahme: nach Speichern und Neuladen auch mit alter Dezember-BT-K-Konfiguration 154:00 h; derselbe Wert nach Backup-Restore und in Monats-/Jahresauswertung sowie Export. Bestandsdaten ohne ausdrückliche Korrektur und echte spätere Tarifwechsel bleiben geschützt. Erneut vollständige lokale Gates, CI und interne Preview vor der erneuten iPhone-Abnahme.

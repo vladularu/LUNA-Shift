@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { decemberTargetContext } from "@/domain/working-time-target-test-fixtures";
 import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
+import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
+import { employmentDataFromProfile, employmentTimelineKey } from "@/domain/employment-history";
+import { employmentChangedFields } from "@/features/settings/employment-change";
+import { listRemunerationProfiles } from "./remuneration-profile-repository";
+import { saveEmploymentProfile } from "./employment-profile-repository";
+import { projectStoredSimpleProfile } from "./simple-app-profile";
 import {
   loadWorkingTimeTargetSettings,
   saveWorkingTimeTargetSettings,
@@ -284,6 +290,58 @@ describe("working-time target backup v21", () => {
     });
     await restoreLocalBackup(target.db, await validateTvlBackup(old));
     expect((await loadWorkingTimeTargetSettings(target.db)).context).toBeUndefined();
+  });
+  it("keeps a whole-period TV-UK correction effective after reload and backup without rewriting old target facts", async () => {
+    const old = decemberTargetContext.periods[0];
+    const context = {
+      ...decemberTargetContext,
+      periods: [
+        { ...old, validFrom: "2026-01-01", validTo: "2026-11-30" },
+        { ...old, validFrom: "2026-12-01", validTo: null },
+      ],
+    };
+    await saveWorkingTimeTargetSettings(source.db, {
+      context,
+      confirmedDates: context.days.map((d) => d.date),
+      expected: await loadWorkingTimeTargetSettings(source.db),
+    });
+    const before = (await projectStoredSimpleProfile(source.db, await loadProfile(source.db)))!;
+    const timeline = await listRemunerationProfiles(source.db);
+    const next = {
+      ...before,
+      tariff: null,
+      tvlKrTariff: null,
+      tvUkNursingTariff: { payGroup: "PUK8" as const, payLevel: 4 as const },
+      federalState: "BW" as const,
+      sundayHolidayWorkEligible: true,
+    };
+    const fields = employmentChangedFields(before, next);
+    await saveEmploymentProfile(source.db, {
+      ...next,
+      validity: {
+        effectiveFrom: null,
+        fields,
+        correctionFields: fields,
+        expectedProfileUpdatedAt: before.updatedAt,
+        expectedTimeline: employmentTimelineKey(timeline),
+        baseline: employmentDataFromProfile(before),
+      },
+    });
+    const check = async (fixture: TvlShiftWorkFixture) => {
+      const p = (await projectStoredSimpleProfile(fixture.db, await loadProfile(fixture.db)))!;
+      const history = await listRemunerationProfiles(fixture.db);
+      expect(history.some((p) => p.employmentOverrides?.tvUkNursingTariff)).toBe(true);
+      const snapshot = await loadWorkingTimeTargetSettings(fixture.db);
+      expect(snapshot.context).toEqual(context);
+      const calculation = createWorkingTimeCalculationProfile(p, snapshot, history);
+      expect(calculateMonthlyWorkingTimeTarget("2026-10", calculation).targetMinutes).toBe(10164);
+      expect(calculateMonthlyWorkingTimeTarget("2026-11", calculation).targetMinutes).toBe(9702);
+      expect(calculateMonthlyWorkingTimeTarget("2026-12", calculation).targetMinutes).toBe(9240);
+    };
+    await check(source);
+    const backup = await exportTvlBackup(source);
+    await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
+    await check(target);
   });
   it.each([
     "future-backup",
