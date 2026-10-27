@@ -893,29 +893,21 @@ describe("integrated salary-to-net workflow", () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
   it.each(["salary", "components", "deductions", "premiums", "services", "basis"] as const)(
-    "natively pages %s in both directions, preserves its section and publishes only the settled month",
+    "reserves %s for native back navigation without changing the selected month",
     async (section) => {
       const screen = section === "salary" ? await render(<SalaryScreen />) : await details(section);
       const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-      await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
-        nativeEvent: { layout: { width: 390, height: 700 } },
-      });
+      expect(screen.queryByTestId("report-period-pager")).toBeNull();
+      expect(screen.queryByTestId("report-period-scroll")).toBeNull();
       expect(mockCoordinator.getMonth()).toBe("2026-07");
-      const settle = (index: number) =>
-        fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
-          nativeEvent: { contentOffset: { x: index * 390, y: 0 } },
-        });
-      await settle(13);
-      expect(screen.getByText("August 2026")).toBeTruthy();
-      expect(mockCoordinator.getMonth()).toBe("2026-08");
-      if (section === "salary")
-        expect(screen.getByTestId("salary-export-current").props.children).toBe("2026-08");
-      else expect(mockParams.section).toBe(section);
-      await settle(11);
-      expect(screen.getByText("Juni 2026")).toBeTruthy();
-      expect(mockCoordinator.getMonth()).toBe("2026-06");
-      await settle(12);
       expect(screen.getByText("Juli 2026")).toBeTruthy();
+      await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+      expect(router.back).toHaveBeenCalledTimes(1);
+      expect(router.setParams).not.toHaveBeenCalled();
+      expect(mockParams).toEqual(
+        section === "salary" ? { month: "2026-07" } : { month: "2026-07", section },
+      );
+      expect(mockCoordinator.getMonth()).toBe("2026-07");
       expect(router.push).not.toHaveBeenCalled();
       expect(mockSave).not.toHaveBeenCalled();
     },

@@ -1,10 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
-import { formatMonthTitle } from "@/engine/calendar";
+import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
-import { ReportPeriodPager } from "@/ui/report-period-pager";
 import { salaryDetailsRoute, type SalaryDetailSection } from "@/navigation/routes";
 import { CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -48,9 +47,7 @@ export function SalaryDetailsScreen() {
     typeof params.section === "string" && Object.hasOwn(SALARY_DETAIL_TITLES, params.section)
       ? (params.section as SalaryDetailSection)
       : null;
-  const { month, selectMonth, focused } = useReportMonth(
-    parsed.status === "valid" ? parsed.value : null,
-  );
+  const { month, selectMonth } = useReportMonth(parsed.status === "valid" ? parsed.value : null);
   if (parsed.status !== "valid" || !section)
     return (
       <SalaryPage title="Gehalt">
@@ -63,13 +60,10 @@ export function SalaryDetailsScreen() {
       </SalaryPage>
     );
   return (
-    <ReportPeriodPager
-      value={month}
-      enabled={focused}
-      onChange={selectMonth}
-      renderPage={(pageMonth, moveMonth) => (
-        <SalaryDetailsMonthPage month={pageMonth} section={section} moveMonth={moveMonth} />
-      )}
+    <SalaryDetailsMonthPage
+      month={month}
+      section={section}
+      moveMonth={(delta) => selectMonth(addMonths(month, delta))}
     />
   );
 }

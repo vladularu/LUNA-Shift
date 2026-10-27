@@ -2,12 +2,11 @@ import { Text } from "@/ui/text";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { router, useLocalSearchParams } from "expo-router";
 import { Pressable } from "react-native";
-import { formatMonthTitle } from "@/engine/calendar";
+import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
 import { settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
-import { ReportPeriodPager } from "@/ui/report-period-pager";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
@@ -23,7 +22,7 @@ export function SalaryScreen() {
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const parsed = parseMonthRouteParam(params.month);
   const routeMonth = parsed.status === "valid" ? parsed.value : null;
-  const { month, selectMonth, focused } = useReportMonth(routeMonth);
+  const { month, selectMonth } = useReportMonth(routeMonth);
   if (parsed.status === "invalid")
     return (
       <SalaryPage title="Gehalt" backLabel="Zurück zur Auswertung">
@@ -36,14 +35,7 @@ export function SalaryScreen() {
       </SalaryPage>
     );
   return (
-    <ReportPeriodPager
-      value={month}
-      enabled={focused}
-      onChange={selectMonth}
-      renderPage={(pageMonth, moveMonth) => (
-        <SalaryMonthPage month={pageMonth} moveMonth={moveMonth} />
-      )}
-    />
+    <SalaryMonthPage month={month} moveMonth={(delta) => selectMonth(addMonths(month, delta))} />
   );
 }
 
