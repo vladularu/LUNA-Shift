@@ -50,4 +50,27 @@
 - Vor dem Commit: alle Quell-/Testdateien mit dem Preview-Quellmanifest vergleichen; genau die 14 freigegebenen Dateien aufnehmen.
 - Vor dem Merge: vollständige PR-Dateiliste, Head/Base und alle sieben CI-Prüfungen einschließlich quality-gates kontrollieren. Danach den Merge mit dem geprüften Quellstand vergleichen.
 - Das TestFlight-OTA wird erst danach für APP_VARIANT=production, iOS und Kanal/Branch/Environment production vorbereitet. Runtime und aktueller Production-Ausgangsstand werden separat geprüft. Native Builds sind nicht beauftragt.
-- Die Geräteabnahme gilt für die genannte Preview-Version. Die Übernahme in TestFlight wird technisch separat nachgewiesen; die tatsächliche Aktivierung auf einem TestFlight-Gerät ist anschließend zu prüfen.
+- Die Preview-Abnahme und die anschließende TestFlight-Abnahme sind getrennt dokumentiert. Beide bestätigen die Gehaltsansichten des unten festgehaltenen Referenzstands.
+
+## Erfolgreiche TestFlight-Abnahme und Referenzstand
+
+Der Nutzer hat die Gehaltsansichten am 27.10.2026 auch in der über TestFlight installierten LUNA-App auf dem iPhone erfolgreich getestet und ausdrücklich abgenommen:
+
+> Hab es jetzt auch in TestFlight auf dem iPhone getestet, passt so. Bitte diesen Stand beibehalten.
+
+Die direkte Rückmeldung in dieser Aufgabe bestätigt die Aktivierung und die Darstellung der Gehaltsansichten. Modell und iOS-Version wurden nicht genannt; ein zusätzlicher Screenshot wurde nicht bereitgestellt. Die Abnahme bezieht sich auf die Gehaltsansichten dieses Updates.
+
+| Referenz                       | Abgenommener Stand                                                                                                                            |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pull Request                   | [PR #324](https://github.com/vladularu/LUNA-Shift/pull/324), nach sieben erfolgreichen CI-Prüfungen gemergt                                   |
+| Quellstand                     | `f255b94b490325f18f7fdd617052bb910945df70`                                                                                                    |
+| TestFlight-Build               | iOS Build 8, Build-ID `2c6c8695-d965-4c0d-804c-7bc65fd91ec2`                                                                                  |
+| App und Umgebung               | `com.lunashift.app`, `APP_VARIANT=production`, Kanal/Branch/Environment `production`                                                          |
+| Runtime                        | `ab053760e06bdf85a83f64fc65cfee0aab41fe12`                                                                                                    |
+| OTA-Gruppe                     | [d7289818-49a5-41d9-b8f1-657e1eccb94d](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/d7289818-49a5-41d9-b8f1-657e1eccb94d) |
+| OTA-Update                     | `01a17ef4-d394-773d-bfbd-d06b3756a12a`                                                                                                        |
+| Ausgeliefertes Bundle, SHA-256 | `60d9388c3017e763b2769b8dd82c002ed3cc5e3ac43e338677e1126b2344bfb5`                                                                            |
+
+Manifest und Bundle wurden bei der Veröffentlichung mit HTTP 200 und übereinstimmenden lokalen/CDN-Prüfsummen technisch geprüft. Die anschließende Nutzerabnahme ergänzt diesen Nachweis um die Prüfung auf dem iPhone; die TestFlight-Abnahme ist damit abgeschlossen.
+
+Die oben beschriebenen Gehaltsansichten sind sowohl in Preview als auch in TestFlight abgenommen. Die ursprünglichen Karten, Brutto als reine Auflistung, die konkrete Zulagenart, der einmalige direkte Zugang „Zulage prüfen“, die Bezeichnung „Jahressonderzahlung“ und die Ansicht ohne dekorativen Mond bilden den verbindlichen Referenzstand für weitere Änderungen. Diese Abnahmedokumentation ändert weder die Oberfläche noch Berechnungen oder das veröffentlichte OTA.
