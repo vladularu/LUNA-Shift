@@ -1,6 +1,5 @@
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { collectAnnualSalaryPayments } from "@/domain/net-pay-profile";
-import { resetAnnualSalaryPayments, loadNetPayProfileTimeline } from "./net-pay-profile-repository";
 import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import canonicalize from "canonicalize";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -12,7 +11,12 @@ import {
   createLocalBackupDocument,
   loadLocalBackupSnapshot,
 } from "./local-backup";
-import { loadMonthlyNetPaySettings, saveMonthlyNetPaySettings } from "./net-pay-profile-repository";
+import {
+  loadMonthlyNetPaySettings,
+  saveMonthlyNetPaySettings,
+  resetAnnualSalaryPayments,
+  loadNetPayProfileTimeline,
+} from "./net-pay-profile-repository";
 import {
   exportTvlBackup,
   setupTvlShiftWork,
