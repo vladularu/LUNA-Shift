@@ -1,3 +1,6 @@
+import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
+import { collectAnnualSalaryPayments } from "@/domain/net-pay-profile";
+import { resetAnnualSalaryPayments, loadNetPayProfileTimeline } from "./net-pay-profile-repository";
 import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import canonicalize from "canonicalize";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -190,5 +193,40 @@ describe("monthly net-pay profile backup compatibility", () => {
       .prepare("UPDATE net_pay_profiles SET updated_at='invalid' WHERE month='2026-07'")
       .run();
     await expect(loadLocalBackupSnapshot(source.db)).rejects.toThrow();
+  });
+  it("keeps the explicit return to automatic pay after reload and backup restore", async () => {
+    const initial = automatedSettings("2026-10");
+    for (const month of ["2026-10", "2026-12"])
+      await saveMonthlyNetPaySettings(source.db, {
+        settings: {
+          ...initial,
+          month,
+          automation: {
+            ...initial.automation!,
+            annualPayments: [
+              {
+                revision: 1,
+                payoutMonth: "2026-11",
+                grossCents: 381816,
+                netBasis: { kind: "CONSTANT_PAY" },
+              },
+              { revision: 1, payoutMonth: "2027-11", grossCents: 123456, netBasis: null },
+            ],
+          },
+        },
+        expected: null,
+      });
+    await resetAnnualSalaryPayments(source.db, {
+      year: 2026,
+      expectedTimeline: await loadNetPayProfileTimeline(source.db),
+    });
+    const before = await loadNetPayProfileTimeline(source.db);
+    const exported = await exportTvlBackup(source);
+    await restoreLocalBackup(target.db, await validateTvlBackup(exported.serialized));
+    const restored = await loadNetPayProfileTimeline(target.db);
+    expect(restored).toEqual(before);
+    expect(collectAnnualSalaryPayments(restored)).toEqual([
+      { revision: 1, payoutMonth: "2027-11", grossCents: 123456, netBasis: null },
+    ]);
   });
 });

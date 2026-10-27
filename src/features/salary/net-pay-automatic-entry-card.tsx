@@ -187,6 +187,7 @@ export function NetPayAutomaticEntryCard({
             forecastPayments={annual.payments}
             proposal={annual.proposal}
             automatic={annual.automatic}
+            onResetAutomatic={data.resetAnnualPayments}
           />
         ) : null}
         {showComponentsLink || showPremiumsLink || showSettingsLink ? (

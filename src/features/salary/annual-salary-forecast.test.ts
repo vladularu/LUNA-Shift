@@ -1,3 +1,4 @@
+import type { UserProfile } from "@/domain/types";
 import { describe, expect, it } from "vitest";
 import { forecastProfile } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS } from "@/engine/simple-pay";
@@ -97,4 +98,74 @@ describe("automatic tariff annual payment", () => {
       annual.proposal!.grossCents,
     );
   });
+  it.each<readonly [string, UserProfile, number, number]>([
+    [
+      "TVAöD",
+      {
+        ...forecastProfile,
+        tariff: null,
+        nursingTrainingTariff: { trainingYear: 3, sector: "BT_K", tariffRegion: "OTHER" },
+      },
+      148804,
+      9000,
+    ],
+    [
+      "TVA-L",
+      {
+        ...forecastProfile,
+        tariff: null,
+        tvalPflegeTariff: {
+          trainingYear: 3,
+          universityRegion: "WEST",
+          employerScope: "SECTION_43",
+        },
+      },
+      153235,
+      9500,
+    ],
+  ])(
+    "recalculates %s from its training basis after explicitly clearing the old P8 cash-year override",
+    (_, profile, expected, rate) => {
+      const saved = [
+        {
+          revision: 1,
+          payoutMonth: "2026-11",
+          grossCents: 381816,
+          netBasis: { kind: "CONSTANT_PAY" as const },
+        },
+      ];
+      const before = annualSalaryForecast(2026, profile, context, saved);
+      expect(before.automatic).toBe(false);
+      expect(before.payments).toEqual(saved);
+      expect(before.proposal).toMatchObject({ grossCents: expected, rateBasisPoints: rate });
+      const after = annualSalaryForecast(2026, profile, context, []);
+      expect(after.automatic).toBe(true);
+      expect(annualSalaryGrossCents("2026-11", after.payments)).toBe(expected);
+      expect(annualSalaryGrossCents("2026-12", after.payments)).toBe(0);
+      const initial = automatedSettings("2026-01");
+      const calculate = (payments: typeof after.payments) =>
+        calculateAutomaticNetPayForecast(
+          {
+            month: "2026-11",
+            profile,
+            ...salaryMonthInput("2026-11", profile, context),
+            settings: {
+              ...initial,
+              automation: { ...initial.automation!, annualPayments: payments },
+            },
+          },
+          bundledRuleResolver,
+        );
+      const oldNet = calculate(before.payments),
+        newNet = calculate(after.payments);
+      expect(newNet.annualPayment?.netIncluded).toBe(true);
+      if (oldNet.result.status !== "available" || newNet.result.status !== "available")
+        throw Error("Missing net forecast");
+      expect(oldNet.result.pay.amounts.grossCents - newNet.result.pay.amounts.grossCents).toBe(
+        381816 - expected,
+      );
+      expect(newNet.result.pay.netCents).toBeLessThan(oldNet.result.pay.netCents);
+      expect(saved[0].grossCents).toBe(381816);
+    },
+  );
 });

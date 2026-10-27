@@ -6,6 +6,7 @@ import type { SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import {
   loadApplicableNetPaySettings,
   saveContinuousNetPaySettings,
+  resetAnnualSalaryPayments,
 } from "@/infrastructure/database/net-pay-profile-repository";
 import { useNetPayProfile } from "./use-net-pay-profile";
 const mockDb = {};
@@ -18,9 +19,11 @@ jest.mock("expo-router", () => ({
 jest.mock("@/infrastructure/database/net-pay-profile-repository", () => ({
   loadApplicableNetPaySettings: jest.fn(),
   saveContinuousNetPaySettings: jest.fn(),
+  resetAnnualSalaryPayments: jest.fn(),
 }));
 const load = jest.mocked(loadApplicableNetPaySettings),
-  save = jest.mocked(saveContinuousNetPaySettings);
+  save = jest.mocked(saveContinuousNetPaySettings),
+  resetAnnual = jest.mocked(resetAnnualSalaryPayments);
 function snapshot(month = "2026-06", revision = 1) {
   const saved: SavedMonthlyNetPaySettings = {
     settings: automatedSettings(month),
@@ -42,6 +45,7 @@ function deferred<T>() {
 describe("effective-dated net profile lifecycle", () => {
   beforeEach(() => {
     mockFocused = true;
+    resetAnnual.mockReset().mockResolvedValue(undefined);
     load.mockReset().mockResolvedValue(snapshot());
     save.mockReset().mockResolvedValue(snapshot().saved);
   });
@@ -226,5 +230,48 @@ describe("effective-dated net profile lifecycle", () => {
     await act(async () => pending.resolve(snapshot("2026-06", 2)));
     expect(hook.result.current.status).toBe("ready");
     expect(hook.result.current.saved!.revision).toBe(3);
+  });
+  it("uses the complete snapshot when resetting the visible cash year and reloads the result", async () => {
+    const before = snapshot();
+    load.mockResolvedValueOnce(before).mockResolvedValueOnce(snapshot("2026-06", 2));
+    const hook = await renderHook(() => useNetPayProfile("2026-11", true));
+    await act(async () => hook.result.current.resetAnnualPayments());
+    expect(resetAnnual).toHaveBeenCalledWith(mockDb, {
+      year: 2026,
+      expectedTimeline: before.timeline,
+    });
+    expect(hook.result.current.saved!.revision).toBe(2);
+    expect(hook.result.current.busy).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+  });
+  it("retains own payment data on reset failure and permits retry", async () => {
+    resetAnnual.mockRejectedValueOnce(new Error("conflict"));
+    const hook = await renderHook(() => useNetPayProfile("2026-11", true));
+    const before = hook.result.current.saved;
+    await act(async () => {
+      await expect(hook.result.current.resetAnnualPayments()).rejects.toThrow("conflict");
+    });
+    expect(hook.result.current.saved).toBe(before);
+    expect(hook.result.current.busy).toBe(false);
+    await act(async () => hook.result.current.resetAnnualPayments());
+    expect(resetAnnual).toHaveBeenCalledTimes(2);
+  });
+  it("prevents a second reset during an in-flight mutation", async () => {
+    const pending = deferred<void>();
+    resetAnnual.mockReturnValueOnce(pending.promise);
+    const hook = await renderHook(() => useNetPayProfile("2026-11", true));
+    let writing!: Promise<void>;
+    await act(async () => {
+      writing = hook.result.current.resetAnnualPayments();
+    });
+    await act(async () => {
+      await expect(hook.result.current.resetAnnualPayments()).rejects.toThrow("erneut laden");
+    });
+    await act(async () => {
+      pending.resolve();
+      await writing;
+    });
+    expect(resetAnnual).toHaveBeenCalledTimes(1);
+    expect(hook.result.current.busy).toBe(false);
   });
 });

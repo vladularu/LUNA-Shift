@@ -78,6 +78,10 @@ export function annualSalaryProposal(
     basisCents: Math.round(sum / months.length),
     rateBasisPoints: rate,
     referenceMonths,
-    note: "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen.",
+    note: profile.tvalPflegeTariff
+      ? "Prognose bei vollem Jahresanspruch aus dem November-Ausbildungsentgelt. Zulagen und Zeitzuschläge erhöhen diese Grundlage nicht. Anspruch am Stichtag und mögliche Kürzungen sind nicht bestätigt."
+      : profile.nursingTrainingTariff
+        ? "Prognose bei vollem Jahresanspruch aus dem durchschnittlichen Entgelt von August bis Oktober einschließlich berücksichtigungsfähiger Zulagen. Zusätzliche Überstundenvergütung bleibt ausgenommen. Anspruch am Stichtag und mögliche Kürzungen sind nicht bestätigt."
+        : "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen.",
   };
 }

@@ -207,4 +207,97 @@ describe("compact automatic annual payment", () => {
     expect(screen.getByLabelText("Weihnachtsgeld brutto (€)").props.value).toBe("3600");
     expect(onSave).not.toHaveBeenCalled();
   });
+  it("keeps an unchanged automatic amount dynamic instead of freezing it as own pay", async () => {
+    const onSave = save();
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={automatedSettings("2026-11")}
+        busy={false}
+        onSave={onSave}
+        forecastPayments={[payment]}
+        automatic
+      />,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: /^Anpassen,/ }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+  });
+
+  const proposal = {
+    grossCents: 153235,
+    basisCents: 161300,
+    rateBasisPoints: 9500,
+    referenceMonths: ["2026-11"],
+    note: "Prognose",
+  };
+  it("offers a direct explicit return to tariff for own pay without another form", async () => {
+    const initial = automatedSettings("2026-11"),
+      onSave = save();
+    const reset = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={{ ...initial, automation: { ...initial.automation!, annualPayments: [payment] } }}
+        busy={false}
+        onSave={onSave}
+        proposal={proposal}
+        onResetAutomatic={reset}
+      />,
+    );
+    expect(onSave).not.toHaveBeenCalled();
+    expect(reset).not.toHaveBeenCalled();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^Automatisch nach Tarif berechnen,/ }),
+    );
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Weihnachtsgeld brutto (€)")).toBeNull();
+  });
+  it("keeps the own amount on reset errors and offers retry", async () => {
+    const initial = automatedSettings("2026-11");
+    const reset = jest
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error("conflict"))
+      .mockResolvedValue(undefined);
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={{ ...initial, automation: { ...initial.automation!, annualPayments: [payment] } }}
+        busy={false}
+        onSave={save()}
+        proposal={proposal}
+        onResetAutomatic={reset}
+      />,
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^Automatisch nach Tarif berechnen,/ }),
+    );
+    expect(
+      screen.getByText(/Die automatische Berechnung konnte nicht übernommen werden/),
+    ).toBeTruthy();
+    expect(screen.getByText("3.600,00 €")).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^Automatisch nach Tarif berechnen,/ }),
+    );
+    expect(reset).toHaveBeenCalledTimes(2);
+  });
+  it("does not offer a reset without a reviewed tariff proposal", async () => {
+    const initial = automatedSettings("2026-11");
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={{ ...initial, automation: { ...initial.automation!, annualPayments: [payment] } }}
+        busy={false}
+        onSave={save()}
+        onResetAutomatic={jest.fn<() => Promise<void>>()}
+      />,
+    );
+    expect(screen.queryByText("Automatisch nach Tarif berechnen")).toBeNull();
+  });
 });

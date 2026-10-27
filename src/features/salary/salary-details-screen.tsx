@@ -197,6 +197,7 @@ function SalaryDetailsMonthPage({
         pensionOmitted={forecast?.pensionOmitted ?? false}
         nightMinutes={pay.nightCompensatoryMinutes ?? 0}
         annualPayment={forecast?.annualPayment}
+        annualAutomatic={annual.automatic}
         annualProposal={
           annual.payments.some((payment) => payment.payoutMonth === month) ? annual.proposal : null
         }
