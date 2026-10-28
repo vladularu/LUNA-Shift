@@ -12,6 +12,8 @@ Abnahme: Tagesrahmen vor Foto in Hell/Dunkel erkennbar, keine zusätzliche decke
 
 Die Korrektur besteht `npm.cmd run verify:fast` vollständig: 9.838 Unit-Tests in 508 Dateien, 1.499 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Die fokussierten Tests prüfen zusätzlich die neue Abwahl, vollständige Tages-Tippflächen, unveränderte Eintragsgeometrie, dieselbe visuelle Instanz nach dem Ersetzen einer vorläufigen ID und Übergänge ohne räumliche Bewegung bei aktivierter Bewegungsreduktion. Der iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b`; native Konfiguration und Abhängigkeiten sind unverändert. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-correction-20261028/`. Die Geräteabnahme der Korrektur ist noch offen.
 
+Die [korrigierte iOS-Preview](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/9e115a62-b82a-4ddc-be7e-4730df5f05f4) wurde am 28.10.2026 veröffentlicht, Code-Commit `709e6b5ce25e89939a44fe44a6141dfe92765793`, Update-ID `01a183e2-f096-74de-ade8-d7e4fb35467f`. Der echte Preview-Kanal liefert das neue Update zur Runtime von Build 44. Manifest und CDN-Bundle antworten mit HTTP 200. Das Bundle stimmt bytegenau mit dem lokalen Export und mit dem Manifest-Hash überein: SHA-256 `f04fff8f5f04746d4a2faa3ef1069d72d924e1d190870273024456e18b1db219`. Die technische Veröffentlichung ersetzt keine visuelle Abnahme auf dem iPhone.
+
 Reanimated 4.x: [LayoutAnimationConfig](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/), [Custom animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations/).
 
 Die folgenden Abschnitte dokumentieren die erste Preview-Iteration als historischen Ausgangspunkt.
