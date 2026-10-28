@@ -10,6 +10,8 @@ Scope: bestehender iOS-Preview-Build 44, zwei UI-Dateien, deren zwei Komponenten
 
 Prüfung: `npm.cmd run verify:fast` vollständig bestanden: 9.838 Unit-Tests in 508 Dateien, 1.504 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Vier fokussierte Kalender-/Planungssuiten bestehen mit 87 Tests. Regressionen prüfen den identischen dünnen Rahmen samt Füllung vor/nach dem Tageswechsel sowie die Auswahlbewegung ohne Skalierung und ohne skalierende Druck-Handler. Der neu berechnete interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b` und passt zu Build 44. Protokolle und Videoausschnitte: `C:/Users/veron/.codex/tmp/quick-entry-polish-20261028/`. Die erneute Sichtprüfung auf dem iPhone bleibt offen.
 
+Die [iOS-Preview mit Feinschliff](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/6e3e4ed4-3e28-47e7-b2dd-cd6e8a1a2b78) wurde am 28.10.2026 um 21:29 Uhr veröffentlicht, Code-Commit `98d5e88fa0f32ddeb0b3468eabd2e961aefdfe2d`, Update-ID `01a18433-c98d-713e-a8e1-3af057073697`. Der echte Preview-Kanal liefert dieses Update als interne Variante zur passenden Runtime. Manifest und CDN-Bundle antworten mit HTTP 200; der ausgelieferte Bundle-Hash stimmt mit lokalem Export und Manifest überein: SHA-256 `7ccc1c853bd61970b1566c163d69758827011bb11afc90b84b8519767c768b1f`. Geräteabnahme dieser Iteration offen.
+
 Die nachfolgenden Abschnitte dokumentieren frühere Iterationen.
 
 ## Zweite Korrektur nach iPhone-Foto vom 28.10., 20:05 Uhr
