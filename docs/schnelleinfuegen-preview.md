@@ -1,4 +1,10 @@
-# Schnelleinfügen: Preview
+# Schnelleinfügen: abgenommener Stand
+
+## iPhone-Abnahme und Lieferfreigabe
+
+Der Nutzer hat die finale Preview am 28.10.2026 mit „Ja perfekt“ bestätigt und anschließend Commit, PR/Merge und OTA für TestFlight freigegeben. Abgenommene Preview-Gruppe: `a3fb2270-c1a8-4889-97b8-fb901793bc19`, Quellstand `2b03dcee79a0d6b2f0580840e0bd1e2c82992f4b`. Damit sind kompakte transparente Felder, einheitlich dünne Konturen, Zeiten und sanfte Wahl/Abwahl ohne Icon-Skalierung, die Einfüge-/Entfernen-Animation und der Neustart ohne alte Tagesmarkierung auf dem iPhone bestätigt.
+
+Die Lieferung umfasst genau 15 Dateien relativ zu `master`: Kalender-UI, zugehörige Tests, zwei JavaScript-neutrale TypeScript-Korrekturen in Routen-/Icon-Typen und diese Dokumentation. Ziel ist PR-CI, Merge nach `master` und anschließend ein iOS-OTA auf `production` mit `APP_VARIANT=production` für TestFlight Build 8. Der aktuelle Build-Fingerprint und der neu berechnete Production-Fingerprint stimmen überein: `ab053760e06bdf85a83f64fc65cfee0aab41fe12`. Die TestFlight-Geräteabnahme bleibt ein eigener Schritt nach der Veröffentlichung. Der abgenommene Preview-Stand bleibt die visuelle Referenz für diesen Nutzerfluss.
 
 ## Tagesmarkierung beim erneuten Start zurücksetzen
 
@@ -6,7 +12,7 @@ Ziel: Die schwarze Datumsmarkierung des zuletzt angetippten Tages wird beim erne
 
 Scope: Kalenderbildschirm, dessen Komponententest und diese Dokumentation; drei Dateien. Zielplattform: bestehender iOS-Preview-Build 44. Vorlagen, Speichern, Datumswert für Editoren, Kalendergestaltung, Animationen und native Konfiguration bleiben erhalten. Fortgeltende Freigabe für Umsetzung und Preview-OTA. Abnahme: Tag antippen, Planung beenden und erneut starten zeigt keine alte Auswahl; der nächste Tagestipp wird wieder markiert. Beide Fälle mit und ohne gewählte Vorlage sowie die weiterhin sichtbare heutige Datumsmarkierung prüfen. Die aktuelle Gestaltung wurde vom Nutzer mit „Super“ bestätigt; diese Korrektur betrifft nur das Wiederauftauchen der alten Markierung.
 
-Prüfung: 58 fokussierte Komponententests bestanden. `npm.cmd run verify:fast` vollständig bestanden: 9.838 Unit-Tests in 508 Dateien, 1.506 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Im ersten Gesamtlauf lief der unveränderte Worklet-Serialisierungstest des Diensteditors in sein Zeitlimit; die Einzelprüfung und die vollständige Wiederholung bestehen ohne Änderung von Quellcode oder Zeitlimits. Der interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b`. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-selection-reset-20261028/`. Sichtprüfung der Korrektur auf dem iPhone offen.
+Prüfung: 58 fokussierte Komponententests bestanden. `npm.cmd run verify:fast` vollständig bestanden: 9.838 Unit-Tests in 508 Dateien, 1.506 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Im ersten Gesamtlauf lief der unveränderte Worklet-Serialisierungstest des Diensteditors in sein Zeitlimit; die Einzelprüfung und die vollständige Wiederholung bestehen ohne Änderung von Quellcode oder Zeitlimits. Der interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b`. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-selection-reset-20261028/`. Die Sichtprüfung dieser Korrektur auf dem iPhone wurde anschließend durch den Nutzer bestätigt.
 
 Die [iOS-Preview mit zurückgesetzter Tagesmarkierung](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/a3fb2270-c1a8-4889-97b8-fb901793bc19) wurde am 28.10.2026 um 21:47 Uhr veröffentlicht, Code-Commit `2b03dcee79a0d6b2f0580840e0bd1e2c82992f4b`, Update-ID `01a18444-2734-76cc-9b5a-1ea57bf150ac`. Preview liefert die interne Variante zur passenden Runtime. Manifest und CDN-Bundle antworten mit HTTP 200; das ausgelieferte Bundle stimmt mit lokalem Export und Manifest-Hash überein: SHA-256 `b903d660b12fa87d1bb31fad442ac65e96b889ad00586347d9817a10d8a15a38`. Geräteprüfung: nach Update einen Tag antippen, Schnelleinfügen beenden und erneut öffnen; nur die heutige Datumsmarkierung bleibt vor dem nächsten Tagestipp sichtbar.
 
