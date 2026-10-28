@@ -1,5 +1,5 @@
 import { render, renderHook, within } from "@testing-library/react-native";
-import { expect, it } from "@jest/globals";
+import { expect, it, jest } from "@jest/globals";
 import { View, StyleSheet } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { sharedCalendarChipPalette } from "@/theme/color-contrast";
@@ -9,6 +9,14 @@ import type { ShiftEntry } from "@/domain/types";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import { PrototypeMonthContent, PrototypeDates } from "./calendar-prototype-canvas";
+import { quickStampEntering, quickStampExiting } from "./quick-stamp-motion";
+
+let mockReducedMotion = false;
+jest.mock("react-native-reanimated", () => ({
+  __esModule: true,
+  ...jest.requireActual<typeof import("react-native-reanimated")>("react-native-reanimated"),
+  useReducedMotion: () => mockReducedMotion,
+}));
 
 it("renders both actual services in the same short six-week day cell", async () => {
   const own: ShiftEntry = {
@@ -17,7 +25,7 @@ it("renders both actual services in the same short six-week day cell", async () 
     date: "2026-03-13",
     title: "Spät",
     type: "LATE",
-    templateId: null,
+    templateId: "late",
     allDay: false,
     startTime: "13:18",
     endTime: "21:30",
@@ -51,12 +59,17 @@ it("renders both actual services in the same short six-week day cell", async () 
   };
   const { result } = await renderHook(() => useSharedValue(1));
   const layout = calendarPrototypeLayout("2026-03", 390, 500);
-  const content = (rows: readonly SharedCalendarDayEntry[]) => (
+  const content = (
+    rows: readonly SharedCalendarDayEntry[],
+    ownEntry = own,
+    animateChanges = false,
+  ) => (
     <View>
       <PrototypeMonthContent
+        animateChanges={animateChanges}
         layout={layout}
         progress={result.current}
-        entriesByDate={new Map([[own.date, [own]]])}
+        entriesByDate={new Map([[own.date, [ownEntry]]])}
         sharedEntriesByDate={new Map([[own.date, rows]])}
         holidays={new Map()}
         display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
@@ -84,7 +97,7 @@ it("renders both actual services in the same short six-week day cell", async () 
   });
   const day = screen.getByTestId("calendar-combined-day-2026-03-13"),
     slot = screen.getByTestId("calendar-entry-slot-2026-03-13-0");
-  const slotHeight = slot.props.style.height,
+  const slotHeight = StyleSheet.flatten(slot.props.style).height,
     titleHeight = screen.getByText("Spät").props.style;
   const marker = screen.getByTestId("calendar-date-marker-2026-03-13", {
     includeHiddenElements: true,
@@ -94,13 +107,28 @@ it("renders both actual services in the same short six-week day cell", async () 
     await screen.rerender(content(rows));
     expect(screen.getByTestId("calendar-combined-day-2026-03-13")).toBe(day);
     expect(screen.getByTestId("calendar-entry-slot-2026-03-13-0")).toBe(slot);
-    expect(slot.props.style.height).toBe(slotHeight);
+    expect(StyleSheet.flatten(slot.props.style).height).toBe(slotHeight);
     expect(screen.getByText("Spät").props.style).toEqual(titleHeight);
     expect(
       getAnimatedStyle(
         screen.getByTestId("calendar-date-marker-2026-03-13", { includeHiddenElements: true }),
       ),
     ).toEqual(pose);
+  }
+  expect(slot.props.entering).toBeUndefined();
+  await screen.rerender(content([], own, true));
+  expect(screen.getByTestId("calendar-entry-slot-2026-03-13-0")).toBe(slot);
+  expect(slot.props.entering).toBe(quickStampEntering);
+  expect(slot.props.exiting).toBe(quickStampExiting);
+  await screen.rerender(content([], { ...own, id: "persisted-after-optimistic-save" }, true));
+  expect(screen.getByTestId("calendar-entry-slot-2026-03-13-0")).toBe(slot);
+  mockReducedMotion = true;
+  try {
+    await screen.rerender(content([], own, true));
+    expect(slot.props.entering.build()({}).initialValues.transform).toBeUndefined();
+    expect(slot.props.exiting.build()({}).initialValues.transform).toBeUndefined();
+  } finally {
+    mockReducedMotion = false;
   }
 });
 

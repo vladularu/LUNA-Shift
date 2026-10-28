@@ -28,6 +28,7 @@ import {
 } from "./quick-planner-control-motion";
 
 import { calendarMonthRows } from "./calendar-render-data";
+import { combinedCalendarPreview } from "./combined-calendar-preview";
 
 interface SceneValue {
   progress: SharedValue<number>;
@@ -254,7 +255,7 @@ export function SharedCalendarMonth({
       holidays={holidays.holidays}
       specialDays={holidays.specialDays}
       separator={palette.textMuted}
-      selectionFill={palette.primarySoft}
+      slotFill={palette.surface}
     />
   );
 }
@@ -276,7 +277,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays,
   specialDays,
   separator,
-  selectionFill,
+  slotFill,
   stampMode,
   stampTransitionProgress,
   stampToolLabel,
@@ -286,7 +287,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays: ReadonlyMap<string, { name: string }>;
   specialDays: ReadonlyMap<string, { readonly label: string }>;
   separator: string;
-  selectionFill: string;
+  slotFill: string;
 }) {
   const layout = useMemo(
     () => calendarPrototypeLayout(month, scene.width, scene.height),
@@ -294,6 +295,8 @@ const SharedMonthBody = memo(function SharedMonthBody({
   );
   const selected = month === scene.month;
   const currentDate = today(profile.timeZone);
+  const detailed = display.showShiftTimes || display.showShiftDuration;
+  const slot = combinedCalendarPreview([], [], layout.weekHeight, detailed);
   const progress = selected ? scene.progress : still;
   const visible = accessibilityVisible && scene.mode === "MONTH" && !scene.busy;
   const opacity = useAnimatedStyle(() => ({ opacity: selected ? 1 : scene.progress.value }));
@@ -303,6 +306,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
       style={[{ height: pageHeight, width: scene.width }, opacity]}
     >
       <PrototypeMonthContent
+        animateChanges={stampMode && visible}
         layout={layout}
         progress={progress}
         entriesByDate={entriesByDate}
@@ -353,20 +357,19 @@ const SharedMonthBody = memo(function SharedMonthBody({
               width: layout.cellWidth,
               height: layout.weekHeight,
               borderRadius: RADII.small,
-              borderWidth: stampMode && selectedDate === day.date ? 2 : 0,
-              borderColor: separator,
-              backgroundColor:
-                stampMode && selectedDate === day.date ? selectionFill + "20" : "transparent",
             }}
           >
             {!entriesByDate.get(day.date)?.length &&
-            selectedDate !== day.date &&
+            !sharedEntriesByDate?.get(day.date)?.length &&
             day.date !== currentDate &&
             stampTransitionProgress ? (
               <StampDayOutline
                 date={day.date}
                 progress={stampTransitionProgress}
                 color={separator}
+                fill={slotFill}
+                top={slot.headerHeight}
+                height={slot.lineHeight * (detailed ? 2 : 1)}
               />
             ) : null}
           </Pressable>
@@ -381,21 +384,34 @@ function StampDayOutline({
   date,
   progress,
   color,
+  fill,
+  top,
+  height,
 }: {
   date: string;
   progress: SharedValue<number>;
   color: string;
+  fill: string;
+  top: number;
+  height: number;
 }) {
-  const motionStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const motionStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+  }));
   return (
     <Animated.View
       pointerEvents="none"
       testID={`quick-stamp-outline-${date}`}
       style={[
-        StyleSheet.absoluteFill,
         {
-          borderWidth: 1.5,
+          position: "absolute",
+          top,
+          height,
+          left: 1,
+          right: 1,
+          borderWidth: 1,
           borderColor: color,
+          backgroundColor: fill + "40",
           borderRadius: RADII.small,
           borderCurve: CORNER_CURVE,
         },

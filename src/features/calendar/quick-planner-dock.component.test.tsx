@@ -89,6 +89,7 @@ async function renderDock({
   busy = false,
   activeKey = "template:early",
   bottomInset = 34,
+  template = TEMPLATE,
 }: {
   onClose?: jest.Mock;
   onOpen?: jest.Mock;
@@ -96,7 +97,9 @@ async function renderDock({
   busy?: boolean;
   activeKey?: string | null;
   bottomInset?: number;
+  template?: ShiftTemplate;
 } = {}) {
+  let selectedKey = activeKey;
   const tree = (nextOpen: boolean, active = true) => (
     <SafeAreaProvider
       initialMetrics={{
@@ -106,8 +109,8 @@ async function renderDock({
     >
       <QuickPlannerDock
         active={active}
-        actions={buildQuickEntryActions([TEMPLATE]).slice(0, 1)}
-        activeKey={activeKey}
+        actions={buildQuickEntryActions([template]).slice(0, 1)}
+        activeKey={selectedKey}
         busy={busy}
         onOpen={onOpen}
         onClose={onClose}
@@ -121,10 +124,102 @@ async function renderDock({
     ...screen,
     setOpen: (nextOpen: boolean) => screen.rerender(tree(nextOpen)),
     setActive: (active: boolean) => screen.rerender(tree(open, active)),
+    setActiveKey: (key: string | null) => {
+      selectedKey = key;
+      return screen.rerender(tree(open));
+    },
   };
 }
 
 describe("QuickPlannerDock", () => {
+  it("reverses selection smoothly while keeping the time column mounted for the return", async () => {
+    const screen = await renderDock({ activeKey: null });
+    const options = { includeHiddenElements: true };
+    const detail = screen.getByTestId("quick-planner-detail-template:early", options);
+    expect(screen.queryByText("06:00")).toBeNull();
+    mockTiming.mockClear();
+    await screen.setActiveKey("template:early");
+    expect(mockTiming).toHaveBeenLastCalledWith(
+      1,
+      expect.objectContaining({ duration: MOTION.duration.normal }),
+      undefined,
+    );
+    expect(screen.getByText("06:00")).toBeTruthy();
+    expect(screen.getByTestId("quick-planner-detail-template:early")).toBe(detail);
+    await screen.setActiveKey(null);
+    expect(mockTiming).toHaveBeenLastCalledWith(
+      0,
+      expect.objectContaining({ duration: MOTION.duration.normal }),
+      undefined,
+    );
+    expect(screen.getByTestId("quick-planner-detail-template:early", options)).toBe(detail);
+    expect(screen.queryByText("06:00")).toBeNull();
+    expect(screen.getByRole("button", { name: "Früh auswählen" })).toHaveProp(
+      "accessibilityState",
+      { disabled: false, selected: false },
+    );
+    await screen.setActiveKey("template:early");
+    expect(screen.getByTestId("quick-planner-detail-template:early")).toBe(detail);
+  });
+
+  it.each([false, true])(
+    "respects reduced motion for the selected template (reduced=%s)",
+    async (reduced) => {
+      mockReducedMotion = reduced;
+      const screen = await renderDock();
+      expect(screen.getByTestId("quick-planner-template-template:early")).toHaveStyle({
+        transform: [{ translateY: reduced ? 0 : -4 }],
+      });
+      const tile = screen.getByRole("button", { name: "Früh auswählen" });
+      expect(StyleSheet.flatten(tile.props.style).transform).toBeUndefined();
+      expect(tile.props.onPressIn).toBeUndefined();
+      expect(tile.props.onPressOut).toBeUndefined();
+      mockTiming.mockClear();
+      await screen.setActiveKey(null);
+      if (reduced) expect(mockTiming).not.toHaveBeenCalled();
+    },
+  );
+
+  it("shows the actual start and end only for the active template", async () => {
+    const screen = await renderDock();
+    expect(screen.getByText("06:00")).toBeTruthy();
+    expect(screen.getByText("14:12")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Früh auswählen" })).toHaveProp(
+      "accessibilityValue",
+      { text: "06:00 bis 14:12" },
+    );
+    await screen.unmount();
+    const inactive = await renderDock({ activeKey: null });
+    expect(inactive.queryByText("06:00")).toBeNull();
+    expect(inactive.queryByText("14:12")).toBeNull();
+  });
+
+  it.each([
+    [{ ...TEMPLATE, allDay: true, startTime: null, endTime: null }, "Ganztägig"],
+    [{ ...TEMPLATE, allDay: false, startTime: null, endTime: null }, "Ohne Zeit"],
+  ])("does not invent times for a template without a time range", async (template, label) => {
+    const screen = await renderDock({ template });
+    expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText("06:00")).toBeNull();
+  });
+
+  it("keeps the saved end time when a night shift crosses midnight", async () => {
+    const screen = await renderDock({
+      template: { ...TEMPLATE, startTime: "21:00", endTime: "06:00" },
+    });
+    expect(screen.getByText("21:00")).toBeTruthy();
+    expect(screen.getByText("06:00")).toBeTruthy();
+  });
+
+  it.each([false, true])("does not add an opaque safe-area cover (open=%s)", async (open) => {
+    const screen = await renderDock({ open });
+    expect(
+      screen.queryByTestId("quick-planner-navigation-cover", {
+        includeHiddenElements: true,
+      }),
+    ).toBeNull();
+  });
+
   it("keeps Plus mounted beneath the editor and reveals it immediately without another enter animation", async () => {
     const screen = await renderDock({ open: false });
     const reveal = screen.getByTestId("quick-planner-mount-reveal");

@@ -14,7 +14,7 @@ import {
   DEFAULT_CALENDAR_IMAGE_STRENGTH,
   type CalendarImageStrength,
 } from "@/theme/calendar-image";
-import { LIGHT_PALETTE } from "@/theme/palette";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette";
 
 const profile = {
   federalState: "HE",
@@ -50,6 +50,8 @@ function Tree({
   month = "2026-01",
   userProfile = profile,
   showHolidays = true,
+  dayDisplay = display,
+  selectedDate = "2026-01-08",
 }: {
   mode?: CalendarViewMode;
   entries?: CalendarEntry[];
@@ -59,6 +61,8 @@ function Tree({
   month?: string;
   userProfile?: UserProfile;
   showHolidays?: boolean;
+  dayDisplay?: typeof display;
+  selectedDate?: string;
 }) {
   return (
     <SharedCalendarScene
@@ -74,11 +78,11 @@ function Tree({
         month={month}
         pageHeight={700}
         entriesByDate={new Map([["2026-01-08", entries]])}
-        display={display}
+        display={dayDisplay}
         profile={userProfile}
         ruleResolver={bundledRuleResolver}
         showHolidays={showHolidays}
-        selectedDate="2026-01-08"
+        selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         accessibilityVisible={active}
         testData={false}
@@ -152,14 +156,48 @@ describe("shared live calendar scene", () => {
       await act(() => {
         progress.value = value;
       });
-      expect(getAnimatedStyle(outline)).toMatchObject({ opacity: value });
+      expect(getAnimatedStyle(outline)).toMatchObject({
+        opacity: value,
+      });
       expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toBe(outline);
     }
   });
 
+  it("uses compact entry-height placeholders and keeps the entire day tappable", async () => {
+    const screen = await render(<Tree stampMode />);
+    await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+      nativeEvent: { layout: { width: 430, height: 700 } },
+    });
+    const day = screen.getByTestId("calendar-day-2026-01-09");
+    const slot = screen.getByTestId("quick-stamp-outline-2026-01-09");
+    expect(slot).toHaveStyle({ top: 30, height: 34, left: 1, right: 1, borderWidth: 1 });
+    expect(day).toHaveStyle({ width: 430 / 7, height: (645 - 32) / 6 });
+    await fireEvent.press(day, {
+      nativeEvent: { pageX: 100, pageY: 200, locationX: 10, locationY: 80 },
+    });
+    expect(onSelectDate).toHaveBeenCalledWith("2026-01-09", {
+      x: 90,
+      y: 120,
+      width: 430 / 7,
+      height: (645 - 32) / 6,
+    });
+    await screen.rerender(<Tree stampMode entries={[appointment]} />);
+    expect(screen.queryByTestId("quick-stamp-outline-2026-01-08")).toBeNull();
+  });
+
+  it("keeps placeholders to a single entry line when times and durations are hidden", async () => {
+    const screen = await render(
+      <Tree stampMode dayDisplay={{ ...display, showShiftTimes: false }} />,
+    );
+    expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
+      top: 30,
+      height: 17,
+    });
+  });
+
   it("keeps selected day accessible but removes its full-cell outline", async () => {
     const screen = await render(<Tree />);
-    expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({ borderWidth: 0 });
+    expect(screen.getByTestId("calendar-day-2026-01-08")).not.toHaveStyle({ borderWidth: 2 });
     expect(screen.getByTestId("calendar-day-2026-01-08").props.accessibilityState).toEqual({
       selected: true,
     });
@@ -317,17 +355,36 @@ describe("shared live calendar scene", () => {
   });
 });
 
-it("makes the selected quick-stamp day distinct and gives empty days a readable light-mode outline", async () => {
-  const screen = await render(<Tree stampMode />);
-  expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({
-    borderWidth: 2,
-    borderColor: LIGHT_PALETTE.textMuted,
-  });
-  expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
-    borderWidth: 1.5,
-    borderColor: LIGHT_PALETTE.textMuted,
-  });
-});
+it.each([false, true])(
+  "keeps compact placeholders readable in both themes (dark=%s)",
+  async (dark) => {
+    jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue(dark ? "dark" : "light");
+    const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
+    const screen = await render(<Tree stampMode />);
+    expect(screen.getByTestId("quick-stamp-outline-2026-01-08")).toHaveStyle({
+      borderWidth: 1,
+      borderColor: palette.textMuted,
+      backgroundColor: palette.surface + "40",
+    });
+    expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveProp("accessibilityState", {
+      selected: true,
+    });
+    expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
+      borderWidth: 1,
+      borderColor: palette.textMuted,
+      backgroundColor: palette.surface + "40",
+    });
+    await screen.rerender(<Tree stampMode selectedDate="2026-01-09" />);
+    for (const date of ["2026-01-08", "2026-01-09"]) {
+      expect(screen.getByTestId(`quick-stamp-outline-${date}`)).toHaveStyle({
+        borderWidth: 1,
+        backgroundColor: palette.surface + "40",
+      });
+    }
+  },
+);
 
 it("uses the automatic target profile in the live shared month and hides both label types together", async () => {
   const userProfile = createWorkingTimeCalculationProfile(

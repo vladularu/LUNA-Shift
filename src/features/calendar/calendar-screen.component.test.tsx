@@ -217,22 +217,26 @@ jest.mock("@/features/calendar/calendar-shared-scene", () => ({
 jest.mock("@/features/calendar/quick-planner-dock", () => ({
   QuickPlannerDock: ({
     active,
+    activeKey,
     open,
     onOpen,
     onSelectAction,
+    onClose,
     transitionProgress,
   }: {
     active: boolean;
+    activeKey: string | null;
     open: boolean;
     onOpen: () => void;
     onSelectAction: (action: QuickEntryAction) => void;
+    onClose: () => void;
     transitionProgress: object;
   }) =>
     MockReact.createElement(
       MockView,
       {
         testID: "quick-planner-dock",
-        ...{ transitionProgress },
+        ...{ transitionProgress, activeKey },
         accessibilityElementsHidden: !active,
         importantForAccessibility: active ? "auto" : "no-hide-descendants",
         style: { opacity: active ? 1 : 0 },
@@ -248,6 +252,13 @@ jest.mock("@/features/calendar/quick-planner-dock", () => ({
             accessibilityRole: "button",
             accessibilityLabel: "Früh auswählen",
             onPress: () => onSelectAction(mockService),
+          })
+        : null,
+      open
+        ? MockReact.createElement(MockPressable, {
+            accessibilityRole: "button",
+            accessibilityLabel: "Planung beenden",
+            onPress: onClose,
           })
         : null,
     ),
@@ -403,6 +414,49 @@ describe("CalendarScreen quick-entry navigation", () => {
     );
     expect(mockSelectionFeedback).toHaveBeenCalledTimes(2);
   });
+
+  it("deselects the active template on a second tap and requires a new selection before stamping", async () => {
+    const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+    const template = screen.getByRole("button", { name: "Früh auswählen" });
+    await fireEvent.press(template);
+    expect(screen.getByTestId("quick-planner-dock")).toHaveProp("activeKey", "template:early");
+    await fireEvent.press(template);
+    expect(screen.getByTestId("quick-planner-dock")).toHaveProp("activeKey", null);
+    await fireEvent.press(screen.getByTestId("calendar-day"));
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+    await fireEvent.press(template);
+    await fireEvent.press(screen.getByTestId("calendar-day"));
+    expect(mockUpsertShift).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([false, true])(
+    "forgets the previous planner day highlight on reopening (with template=%s)",
+    async (withTemplate) => {
+      const screen = await render(<CalendarScreen />);
+      await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+        nativeEvent: { layout: { height: 700 } },
+      });
+      const selection = () => screen.getByTestId("month-card-selection-2026-08").props.children;
+      const pager = screen.getByTestId("calendar-month-pager");
+      await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+      if (withTemplate) {
+        await fireEvent.press(screen.getByRole("button", { name: "Früh auswählen" }));
+      }
+      await fireEvent.press(screen.getByTestId("calendar-day"));
+      expect(selection()).toBe("2026-08-14");
+      await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
+      expect(selection()).toBe("none");
+      await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+      expect(selection()).toBe("none");
+      expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+      await fireEvent.press(screen.getByTestId("calendar-day"));
+      expect(selection()).toBe("2026-08-14");
+    },
+  );
 
   it("covers the header and month with one non-interactive fixed photo layer", async () => {
     const uri = "file:///calendar-photo.jpg";
