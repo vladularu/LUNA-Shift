@@ -20,7 +20,7 @@ import {
 import { APPOINTMENT_COLOR, useInversePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
-import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
+import { AnimatedPressable } from "@/ui/press-motion";
 
 export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   action,
@@ -42,7 +42,6 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   const editorIcon = action.kind === "APPOINTMENT" ? "calendar-outline" : "add";
   const editorColor =
     action.kind === "APPOINTMENT" ? APPOINTMENT_COLOR : QUICK_PLANNER_COLORS.active;
-  const pressMotion = usePressMotion(1, MOTION.scale.press);
   const reduceMotion = useReducedMotion();
   const showDetail = active && isStampAction;
   const selection = useSharedValue(showDetail ? 1 : 0);
@@ -65,10 +64,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
     width: labelWidth + detailWidth * selection.value,
   }));
   const templateMotion = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: reduceMotion ? 0 : -MOTION.distance.subtle * selection.value },
-      { scale: reduceMotion ? 1 : 1 + (1 - MOTION.scale.emphasis) * selection.value },
-    ],
+    transform: [{ translateY: reduceMotion ? 0 : -MOTION.distance.subtle * selection.value }],
   }));
   const detailMotion = useAnimatedStyle(() => ({
     width: detailWidth * selection.value,
@@ -92,9 +88,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
       accessibilityValue={showDetail && detail ? { text: detail.join(" bis ") } : undefined}
       disabled={disabled}
       onPress={() => onPress(action)}
-      onPressIn={pressMotion.onPressIn}
-      onPressOut={pressMotion.onPressOut}
-      style={[styles.tile, tileMotion, pressMotion.animatedStyle]}
+      style={[styles.tile, tileMotion]}
     >
       <Animated.View
         style={[styles.template, { width: labelWidth }, templateMotion]}

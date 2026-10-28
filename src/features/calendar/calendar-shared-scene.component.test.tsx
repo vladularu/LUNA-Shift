@@ -51,6 +51,7 @@ function Tree({
   userProfile = profile,
   showHolidays = true,
   dayDisplay = display,
+  selectedDate = "2026-01-08",
 }: {
   mode?: CalendarViewMode;
   entries?: CalendarEntry[];
@@ -61,6 +62,7 @@ function Tree({
   userProfile?: UserProfile;
   showHolidays?: boolean;
   dayDisplay?: typeof display;
+  selectedDate?: string;
 }) {
   return (
     <SharedCalendarScene
@@ -80,7 +82,7 @@ function Tree({
         profile={userProfile}
         ruleResolver={bundledRuleResolver}
         showHolidays={showHolidays}
-        selectedDate="2026-01-08"
+        selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         accessibilityVisible={active}
         testData={false}
@@ -362,9 +364,9 @@ it.each([false, true])(
     const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
     const screen = await render(<Tree stampMode />);
     expect(screen.getByTestId("quick-stamp-outline-2026-01-08")).toHaveStyle({
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: palette.textMuted,
-      backgroundColor: palette.primarySoft + "99",
+      backgroundColor: palette.surface + "40",
     });
     expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveProp("accessibilityState", {
       selected: true,
@@ -372,8 +374,15 @@ it.each([false, true])(
     expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
       borderWidth: 1,
       borderColor: palette.textMuted,
-      backgroundColor: palette.surface + "99",
+      backgroundColor: palette.surface + "40",
     });
+    await screen.rerender(<Tree stampMode selectedDate="2026-01-09" />);
+    for (const date of ["2026-01-08", "2026-01-09"]) {
+      expect(screen.getByTestId(`quick-stamp-outline-${date}`)).toHaveStyle({
+        borderWidth: 1,
+        backgroundColor: palette.surface + "40",
+      });
+    }
   },
 );
 

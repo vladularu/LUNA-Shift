@@ -255,7 +255,6 @@ export function SharedCalendarMonth({
       holidays={holidays.holidays}
       specialDays={holidays.specialDays}
       separator={palette.textMuted}
-      selectionFill={palette.primarySoft}
       slotFill={palette.surface}
     />
   );
@@ -278,7 +277,6 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays,
   specialDays,
   separator,
-  selectionFill,
   slotFill,
   stampMode,
   stampTransitionProgress,
@@ -289,7 +287,6 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays: ReadonlyMap<string, { name: string }>;
   specialDays: ReadonlyMap<string, { readonly label: string }>;
   separator: string;
-  selectionFill: string;
   slotFill: string;
 }) {
   const layout = useMemo(
@@ -370,8 +367,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
                 date={day.date}
                 progress={stampTransitionProgress}
                 color={separator}
-                fill={selectedDate === day.date ? selectionFill : slotFill}
-                selected={selectedDate === day.date}
+                fill={slotFill}
                 top={slot.headerHeight}
                 height={slot.lineHeight * (detailed ? 2 : 1)}
               />
@@ -389,7 +385,6 @@ function StampDayOutline({
   progress,
   color,
   fill,
-  selected,
   top,
   height,
 }: {
@@ -397,7 +392,6 @@ function StampDayOutline({
   progress: SharedValue<number>;
   color: string;
   fill: string;
-  selected: boolean;
   top: number;
   height: number;
 }) {
@@ -415,9 +409,9 @@ function StampDayOutline({
           height,
           left: 1,
           right: 1,
-          borderWidth: selected ? 2 : 1,
+          borderWidth: 1,
           borderColor: color,
-          backgroundColor: fill + "99",
+          backgroundColor: fill + "40",
           borderRadius: RADII.small,
           borderCurve: CORNER_CURVE,
         },

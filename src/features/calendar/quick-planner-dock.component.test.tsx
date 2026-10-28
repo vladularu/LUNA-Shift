@@ -168,8 +168,12 @@ describe("QuickPlannerDock", () => {
       mockReducedMotion = reduced;
       const screen = await renderDock();
       expect(screen.getByTestId("quick-planner-template-template:early")).toHaveStyle({
-        transform: [{ translateY: reduced ? 0 : -4 }, { scale: reduced ? 1 : 1.03 }],
+        transform: [{ translateY: reduced ? 0 : -4 }],
       });
+      const tile = screen.getByRole("button", { name: "Früh auswählen" });
+      expect(StyleSheet.flatten(tile.props.style).transform).toBeUndefined();
+      expect(tile.props.onPressIn).toBeUndefined();
+      expect(tile.props.onPressOut).toBeUndefined();
       mockTiming.mockClear();
       await screen.setActiveKey(null);
       if (reduced) expect(mockTiming).not.toHaveBeenCalled();

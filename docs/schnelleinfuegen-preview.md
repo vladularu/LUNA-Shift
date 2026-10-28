@@ -1,5 +1,17 @@
 # Schnelleinfügen: Preview
 
+## Feinschliff nach iPhone-Video vom 28.10., 20:35 Uhr
+
+Ziel: Der zuletzt angetippte Tag erhält keinen dauerhaft dickeren Platzhalterrahmen oder abweichende Füllung mehr. Alle leeren Felder bleiben bei einem Punkt Rahmenbreite und derselben Themenfläche. Deren Deckkraft sinkt von 60 auf 25 Prozent; die Kontur bleibt unverändert erkennbar.
+
+Das Video zeigt eine kurz unscharfe Kontur am unteren Dienst-Icon. Die Kachel hatte zwei überlagerte Skalierungen: beim Drücken und bei der Auswahl. Beide entfallen lokal für diese Kachel. Icon und Beschriftung behalten ihre Größe; sanftes Anheben, Zurückgleiten und Öffnen/Schließen der Zeiten bleiben erhalten. Kein Austausch von Symbolen, keine globale Änderung an Icons oder Druckanimationen.
+
+Scope: bestehender iOS-Preview-Build 44, zwei UI-Dateien, deren zwei Komponententests und diese Dokumentation. Daten, Speichern, Kalender-Einfügeanimation und native Konfiguration bleiben erhalten. Umsetzung und Preview-OTA sind durch die fortgeltende Freigabe gedeckt. Abnahme: nach Tippen/Entfernen/Wechsel des Tages keine zurückbleibende dicke Kontur; transparentere Füllung in Hell/Dunkel; ruhiges Icon bei Wahl/Abwahl mit weiterhin sanftem Hub. Die erneute Sichtprüfung auf dem iPhone folgt nach der Veröffentlichung.
+
+Prüfung: `npm.cmd run verify:fast` vollständig bestanden: 9.838 Unit-Tests in 508 Dateien, 1.504 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Vier fokussierte Kalender-/Planungssuiten bestehen mit 87 Tests. Regressionen prüfen den identischen dünnen Rahmen samt Füllung vor/nach dem Tageswechsel sowie die Auswahlbewegung ohne Skalierung und ohne skalierende Druck-Handler. Der neu berechnete interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b` und passt zu Build 44. Protokolle und Videoausschnitte: `C:/Users/veron/.codex/tmp/quick-entry-polish-20261028/`. Die erneute Sichtprüfung auf dem iPhone bleibt offen.
+
+Die nachfolgenden Abschnitte dokumentieren frühere Iterationen.
+
 ## Zweite Korrektur nach iPhone-Foto vom 28.10., 20:05 Uhr
 
 Ziel: Große Tagesrahmen durch gut erkennbare Platzhalter direkt auf Diensthöhe ersetzen. Ein voll deckender Rahmen und eine zu 60 Prozent deckende Themenfläche halten die kompakten Felder auch vor dem Kalenderfoto sichtbar. Die gesamte Tageszelle bleibt als Tippfläche erhalten; die Datumsmarkierung bleibt unverändert. Keine zusätzliche Safe-Area-Abdeckung.
