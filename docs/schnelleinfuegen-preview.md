@@ -27,3 +27,12 @@ Expo SDK 57: [Reanimated](https://docs.expo.dev/versions/v57.0.0/sdk/reanimated/
 - Interner iOS-Fingerprint stimmt mit Preview Build 44 überein: `b99c3cf0dd56e6b1bb126d195f21c665de57760b`.
 - Vollständige lokale Protokolle und Auslieferungsnachweis: `C:/Users/veron/.codex/tmp/quick-entry-audit-20261028/`.
 - Die visuelle Abnahme der finalen OTA auf dem iPhone bleibt offen.
+
+## Preview-OTA vom 28.10.2026
+
+- [Veröffentlichte Preview](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/6cb951e8-f8cd-498e-92fd-e744284c3901), iOS, Environment und Kanal `preview`, `APP_VARIANT=internal`.
+- Code-Commit: `8399a3f3533231d7caa86401b004afefe41164c4`. Der ausgelieferte Quellstand stimmt mit dem gesicherten Manifest überein.
+- Update-ID: `01a183bc-2a2b-7676-b881-5cc8b4e203dd`; Runtime passt zu Build 44.
+- Der echte Preview-Kanal liefert dieses Update. Manifest und CDN-Bundle antworten mit HTTP 200; das ausgelieferte Bundle ist bytegleich zum lokalen Export und entspricht dem Manifest-Hash.
+- Bundle SHA-256: `5f7982b8cfc9929e669d8b910753867d3f5ce46929aab0e0f4f168d4e8da44ab`.
+- Geräteabnahme: Preview vollständig schließen, öffnen und rund 15 Sekunden warten, erneut schließen und öffnen. Anschließend Vorlagenauswahl, Uhrzeiten, mehrere Einträge, erneutes Antippen zum Entfernen und den Leistenwechsel prüfen.
