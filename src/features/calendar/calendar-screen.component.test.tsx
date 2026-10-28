@@ -221,6 +221,7 @@ jest.mock("@/features/calendar/quick-planner-dock", () => ({
     open,
     onOpen,
     onSelectAction,
+    onClose,
     transitionProgress,
   }: {
     active: boolean;
@@ -228,6 +229,7 @@ jest.mock("@/features/calendar/quick-planner-dock", () => ({
     open: boolean;
     onOpen: () => void;
     onSelectAction: (action: QuickEntryAction) => void;
+    onClose: () => void;
     transitionProgress: object;
   }) =>
     MockReact.createElement(
@@ -250,6 +252,13 @@ jest.mock("@/features/calendar/quick-planner-dock", () => ({
             accessibilityRole: "button",
             accessibilityLabel: "Früh auswählen",
             onPress: () => onSelectAction(mockService),
+          })
+        : null,
+      open
+        ? MockReact.createElement(MockPressable, {
+            accessibilityRole: "button",
+            accessibilityLabel: "Planung beenden",
+            onPress: onClose,
           })
         : null,
     ),
@@ -423,6 +432,31 @@ describe("CalendarScreen quick-entry navigation", () => {
     await fireEvent.press(screen.getByTestId("calendar-day"));
     expect(mockUpsertShift).toHaveBeenCalledTimes(1);
   });
+
+  it.each([false, true])(
+    "forgets the previous planner day highlight on reopening (with template=%s)",
+    async (withTemplate) => {
+      const screen = await render(<CalendarScreen />);
+      await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+        nativeEvent: { layout: { height: 700 } },
+      });
+      const selection = () => screen.getByTestId("month-card-selection-2026-08").props.children;
+      const pager = screen.getByTestId("calendar-month-pager");
+      await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+      if (withTemplate) {
+        await fireEvent.press(screen.getByRole("button", { name: "Früh auswählen" }));
+      }
+      await fireEvent.press(screen.getByTestId("calendar-day"));
+      expect(selection()).toBe("2026-08-14");
+      await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
+      expect(selection()).toBe("none");
+      await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+      expect(selection()).toBe("none");
+      expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+      await fireEvent.press(screen.getByTestId("calendar-day"));
+      expect(selection()).toBe("2026-08-14");
+    },
+  );
 
   it("covers the header and month with one non-interactive fixed photo layer", async () => {
     const uri = "file:///calendar-photo.jpg";

@@ -1,5 +1,15 @@
 # Schnelleinfügen: Preview
 
+## Tagesmarkierung beim erneuten Start zurücksetzen
+
+Ziel: Die schwarze Datumsmarkierung des zuletzt angetippten Tages wird beim erneuten Öffnen von Schnelleinfügen nicht wieder eingeblendet. Beim Start wird die Sichtbarkeit der vorigen Auswahl zurückgesetzt. Ein neuer Tipp im laufenden Modus darf den Tag weiterhin markieren. Die unabhängige heutige Datumsmarkierung bleibt erhalten.
+
+Scope: Kalenderbildschirm, dessen Komponententest und diese Dokumentation; drei Dateien. Zielplattform: bestehender iOS-Preview-Build 44. Vorlagen, Speichern, Datumswert für Editoren, Kalendergestaltung, Animationen und native Konfiguration bleiben erhalten. Fortgeltende Freigabe für Umsetzung und Preview-OTA. Abnahme: Tag antippen, Planung beenden und erneut starten zeigt keine alte Auswahl; der nächste Tagestipp wird wieder markiert. Beide Fälle mit und ohne gewählte Vorlage sowie die weiterhin sichtbare heutige Datumsmarkierung prüfen. Die aktuelle Gestaltung wurde vom Nutzer mit „Super“ bestätigt; diese Korrektur betrifft nur das Wiederauftauchen der alten Markierung.
+
+Prüfung: 58 fokussierte Komponententests bestanden. `npm.cmd run verify:fast` vollständig bestanden: 9.838 Unit-Tests in 508 Dateien, 1.506 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Im ersten Gesamtlauf lief der unveränderte Worklet-Serialisierungstest des Diensteditors in sein Zeitlimit; die Einzelprüfung und die vollständige Wiederholung bestehen ohne Änderung von Quellcode oder Zeitlimits. Der interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b`. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-selection-reset-20261028/`. Sichtprüfung der Korrektur auf dem iPhone offen.
+
+Die nachfolgenden Abschnitte dokumentieren frühere Iterationen.
+
 ## Feinschliff nach iPhone-Video vom 28.10., 20:35 Uhr
 
 Ziel: Der zuletzt angetippte Tag erhält keinen dauerhaft dickeren Platzhalterrahmen oder abweichende Füllung mehr. Alle leeren Felder bleiben bei einem Punkt Rahmenbreite und derselben Themenfläche. Deren Deckkraft sinkt von 60 auf 25 Prozent; die Kontur bleibt unverändert erkennbar.

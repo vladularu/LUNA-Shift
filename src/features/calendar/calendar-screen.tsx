@@ -407,6 +407,7 @@ export function CalendarScreen() {
 
   const beginPlanning = useCallback(() => {
     setQuickPopup(null);
+    setSelectionVisible(false);
     setPlannerError(null);
     setPlannerMode(true);
     setStampTool(null);
