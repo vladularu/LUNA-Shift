@@ -1,6 +1,8 @@
 import type { MonthlyComplianceResult } from "@/domain/types";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import type { PreparedAnalysisSalary } from "./analysis-salary";
+import type { AnnualReport } from "./annual-report";
+import { SHIFT_TYPES } from "@/domain/types";
 
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -8,6 +10,75 @@ const numbers = (value: Record<string, unknown>, keys: readonly string[]) =>
   keys.every((key) => typeof value[key] === "number" && Number.isFinite(value[key]));
 const success = (value: unknown): value is { ok: true; value: Record<string, unknown> } =>
   record(value) && value.ok === true && record(value.value);
+
+/** Persist finished time/check reports even when the tariff supports fewer salary months. */
+export function persistentAnnualValue(value: unknown): value is AnnualReport {
+  if (
+    !record(value) ||
+    !numbers(value, [
+      "year",
+      "actualMinutes",
+      "targetMinutes",
+      "balanceMinutes",
+      "workMinutes",
+      "trainingMinutes",
+      "vacationDays",
+      "sickDays",
+      "freeDays",
+      "entryCount",
+      "activeMonthCount",
+      "availablePayMonthCount",
+      "estimatedGrossAmount",
+      "premiumAmount",
+      "overtimeAmount",
+      "allowanceAmount",
+      "criticalCount",
+      "warningCount",
+    ]) ||
+    !Number.isInteger(value.year) ||
+    Number(value.year) < 1900 ||
+    Number(value.year) > 4099 ||
+    value.worktimeCoverageComplete !== true ||
+    value.complianceCoverageComplete !== true ||
+    !Number.isInteger(value.availablePayMonthCount) ||
+    Number(value.availablePayMonthCount) < 0 ||
+    Number(value.availablePayMonthCount) > 12 ||
+    !(value.distribution instanceof Map) ||
+    ![...value.distribution].every(
+      ([type, count]) =>
+        SHIFT_TYPES.includes(type) &&
+        typeof count === "number" &&
+        Number.isFinite(count) &&
+        count >= 0,
+    ) ||
+    !Array.isArray(value.months) ||
+    value.months.length !== 12
+  )
+    return false;
+  return (
+    value.months.every(
+      (month: unknown, index: number) =>
+        record(month) &&
+        month.month === value.year + "-" + String(index + 1).padStart(2, "0") &&
+        month.complianceComplete === true &&
+        (month.estimatedGrossAmount === null ||
+          (typeof month.estimatedGrossAmount === "number" &&
+            Number.isFinite(month.estimatedGrossAmount))) &&
+        numbers(month, [
+          "entryCount",
+          "targetMinutes",
+          "actualMinutes",
+          "balanceMinutes",
+          "premiumAmount",
+          "criticalCount",
+          "warningCount",
+        ]),
+    ) &&
+    value.months.filter(
+      (month: unknown) => record(month) && typeof month.estimatedGrossAmount === "number",
+    ).length === value.availablePayMonthCount
+  );
+}
 
 /** Checksums and bundle/catalog versions protect the producer-owned JSON; these guard its shape. */
 export function persistentMonthValue(value: unknown): value is MonthlyAnalysisCalculation {

@@ -163,9 +163,15 @@ describe("available annual report", () => {
         },
       },
     );
-    expect(steps.next()).toEqual({ done: false, value: 0 });
+    let boundary = steps.next();
+    while (!boundary.done && boundary.value !== 0) boundary = steps.next();
+    expect(boundary).toEqual({ done: false, value: 0 });
     expect(core).toMatchObject({ actualMinutes: 450, entryCount: 1 });
-    expect(() => steps.next()).toThrow("not yet");
+    expect(() => {
+      while (!steps.next().done) {
+        // Cooperative summary steps may yield before reaching the first rule lookup.
+      }
+    }).toThrow("not yet");
   });
 
   it("reuses unchanged entries and invalidates dependency windows after same-revision edits", () => {

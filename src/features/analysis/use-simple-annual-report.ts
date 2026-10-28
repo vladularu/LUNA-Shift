@@ -1,33 +1,31 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   CalendarEntry,
   MonthlyTariffDecision,
   TvoedWorkPatternSettings,
   UserProfile,
 } from "@/domain/types";
-import {
-  annualInputKey,
-  buildAnnualAvailableReportSteps,
-  createAnnualAvailableReportCache,
-} from "@/features/analysis/annual-core-report";
-import type { AnnualReport } from "@/features/analysis/annual-report";
-import type { RuleComputationFailure } from "@/features/analysis/rule-computation";
-import { useLocalReferenceDate } from "@/features/analysis/use-local-reference-date";
+import type { AnnualReport } from "./annual-report";
+import type { RuleComputationFailure } from "./rule-computation";
+import { useLocalReferenceDate } from "./use-local-reference-date";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
-import { scheduleIdleWork } from "@/ui/schedule-idle-work";
-
+import { useAnalysisPersistentResults } from "./analysis-persistent-results";
+import {
+  annualAnalysisKey,
+  readAnnualAnalysis,
+  requestAnnualAnalysis,
+  type AnnualAnalysisRequest,
+} from "./annual-analysis";
+import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 interface AnnualReportState {
-  readonly inputKey: string;
-  readonly error: string | null;
-  readonly fatalError: Error | null;
+  readonly key: string;
+  readonly resolver: RuleResolver;
+  readonly persistent: PersistentAnalysisCache | null;
+  readonly revision: number;
   readonly report: AnnualReport | null;
-  readonly ruleFailure: RuleComputationFailure | null;
-  readonly ruleResolver: RuleResolver;
-  readonly year: number;
+  readonly fatalError: Error | null;
 }
-
 interface DeferredAnnualReportResult {
   readonly coreReport: AnnualReport | null;
   readonly error: string | null;
@@ -36,7 +34,7 @@ interface DeferredAnnualReportResult {
   readonly ruleFailure: RuleComputationFailure | null;
   readonly retry: () => void;
 }
-
+const NO_TEST_MONTHS: readonly string[] = [];
 export function useSimpleAnnualReport({
   enabled,
   entries,
@@ -45,6 +43,7 @@ export function useSimpleAnnualReport({
   tariffDecisions,
   workPatternSettings,
   year,
+  testMonths = NO_TEST_MONTHS,
 }: {
   readonly enabled: boolean;
   readonly entries: readonly CalendarEntry[];
@@ -53,170 +52,103 @@ export function useSimpleAnnualReport({
   readonly tariffDecisions: readonly MonthlyTariffDecision[];
   readonly workPatternSettings: TvoedWorkPatternSettings;
   readonly year: number;
+  readonly testMonths?: readonly string[];
 }): DeferredAnnualReportResult {
   const {
     youthEnabled = false,
     error: preferenceError,
     retry: retryPreferences,
   } = useCheckPreferences();
+  const stored = useAnalysisPersistentResults();
+  const persistent = testMonths.length === 0 ? stored : null;
   const [retryRevision, setRetryRevision] = useState(0);
-  const [states, setStates] = useState<readonly AnnualReportState[]>([]);
+  const [state, setState] = useState<AnnualReportState | null>(null);
   const [coreState, setCoreState] = useState<AnnualReportState | null>(null);
-  const [computationCache] = useState(createAnnualAvailableReportCache);
-  const requestRevision = useRef(0);
   const retry = useCallback(() => {
     if (youthEnabled === null) retryPreferences();
     setRetryRevision((value) => value + 1);
   }, [youthEnabled, retryPreferences]);
   const referenceDate = useLocalReferenceDate(profile?.timeZone ?? "Europe/Berlin");
-  // Database reloads create new objects. Compare complete values, not identity or
-  // revision alone: template joins and restores can change values at the same revision.
-  // Keep this key in memory only; no diagnostic log or persistent cache.
-  const inputKey = useMemo(
+  const request = useMemo<AnnualAnalysisRequest | null>(
     () =>
-      enabled && youthEnabled !== null
-        ? annualInputKey({
+      enabled && profile !== null && youthEnabled !== null
+        ? {
+            year,
             entries,
             profile,
+            ruleResolver,
             tariffDecisions,
             workPatternSettings,
-            year,
             referenceDate,
-            youthEnabled,
-          })
+            youthProtection: youthEnabled,
+          }
         : null,
     [
       enabled,
-      entries,
       profile,
+      youthEnabled,
+      year,
+      entries,
+      ruleResolver,
       tariffDecisions,
       workPatternSettings,
-      year,
       referenceDate,
-      youthEnabled,
     ],
   );
-
-  const state = states.find(
-    (item) =>
-      profile !== null &&
-      item.inputKey === inputKey &&
-      item.ruleResolver === ruleResolver &&
-      item.year === year,
-  );
-  const completedRequest = state !== undefined && state.report !== null && state.error === null;
-
+  const input = useRef(request);
+  useLayoutEffect(() => {
+    input.current = request;
+  }, [request]);
+  const key = useMemo(() => (request === null ? null : annualAnalysisKey(request)), [request]);
+  const resolver = request?.ruleResolver ?? null;
+  const cached =
+    request !== null && key !== null ? readAnnualAnalysis(request, key, persistent) : null;
+  const matches = (candidate: AnnualReportState | null) =>
+    key !== null &&
+    candidate?.key === key &&
+    candidate.resolver === resolver &&
+    candidate.persistent === persistent &&
+    candidate.revision === retryRevision;
+  const matching = matches(state) ? state : null;
+  const core = matches(coreState) ? coreState : null;
+  const settled = cached !== null || matching !== null;
   useEffect(() => {
-    if (!enabled || profile === null || inputKey === null || completedRequest) return;
+    const current = input.current;
+    if (current === null || key === null || settled) return;
     let active = true;
-    let cancelScheduledWork = () => {};
-    requestRevision.current += 1;
-    const currentRequest = requestRevision.current;
-    const steps = buildAnnualAvailableReportSteps(
-      year,
-      entries,
-      profile,
-      tariffDecisions,
-      workPatternSettings,
-      referenceDate,
-      ruleResolver,
-      {
-        cache: computationCache,
-        youthProtection: youthEnabled ?? false,
-        onCore: (report) => {
-          if (!active || requestRevision.current !== currentRequest) return;
-          setCoreState({
-            inputKey,
-            report,
-            year,
-            ruleResolver,
-            error: null,
-            fatalError: null,
-            ruleFailure: null,
+    const snapshot = { key, resolver: current.ruleResolver, persistent, revision: retryRevision };
+    const lease = requestAnnualAnalysis(
+      current,
+      key,
+      persistent,
+      -1,
+      (report) => {
+        if (active) setState({ ...snapshot, report, fatalError: null });
+      },
+      (error) => {
+        if (active)
+          setState({
+            ...snapshot,
+            report: null,
+            fatalError:
+              error instanceof Error ? error : new Error("Annual report computation failed."),
           });
-        },
+      },
+      (report) => {
+        if (active) setCoreState({ ...snapshot, report, fatalError: null });
       },
     );
-    const advance = () => {
-      try {
-        if (!active || requestRevision.current !== currentRequest) return;
-        // Amortize idle callbacks, but yield back to input/rendering after a small slice.
-        // The step cap also bounds work with coarse/fake clocks.
-        const deadline = performance.now() + 4;
-        let step = steps.next();
-        let count = 1;
-        while (!step.done && step.value !== 0 && count < 32 && performance.now() < deadline) {
-          step = steps.next();
-          count += 1;
-        }
-        if (!active || requestRevision.current !== currentRequest) return;
-        if (step.done) {
-          const next: AnnualReportState = {
-            inputKey,
-            error: null,
-            fatalError: null,
-            report: step.value,
-            ruleFailure: null,
-            ruleResolver,
-            year,
-          };
-          setStates((previous) =>
-            [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
-          );
-        } else {
-          cancelScheduledWork = scheduleIdleWork(advance);
-        }
-      } catch (reportError) {
-        const fatalError =
-          reportError instanceof Error
-            ? reportError
-            : new Error("Annual report computation failed.");
-        if (active) {
-          const next: AnnualReportState = {
-            inputKey,
-            error: null,
-            fatalError,
-            report: null,
-            ruleFailure: null,
-            ruleResolver,
-            year,
-          };
-          setStates((previous) =>
-            [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
-          );
-        }
-      }
-    };
-    cancelScheduledWork = scheduleIdleWork(advance);
     return () => {
       active = false;
-      cancelScheduledWork();
+      lease.cancel();
     };
-  }, [
-    computationCache,
-    completedRequest,
-    enabled,
-    entries,
-    inputKey,
-    profile,
-    referenceDate,
-    retryRevision,
-    ruleResolver,
-    tariffDecisions,
-    workPatternSettings,
-    year,
-    youthEnabled,
-  ]);
-
+  }, [key, resolver, persistent, settled, retryRevision]);
   return {
-    coreReport:
-      coreState?.inputKey === inputKey && coreState?.ruleResolver === ruleResolver
-        ? coreState.report
-        : null,
-    error: youthEnabled === null ? preferenceError : (state?.error ?? null),
-    fatalError: state?.fatalError ?? null,
-    report: state?.report ?? null,
-    ruleFailure: state?.ruleFailure ?? null,
+    coreReport: core?.report ?? null,
+    error: youthEnabled === null ? preferenceError : null,
+    fatalError: matching?.fatalError ?? null,
+    report: cached ?? matching?.report ?? null,
+    ruleFailure: null,
     retry,
   };
 }

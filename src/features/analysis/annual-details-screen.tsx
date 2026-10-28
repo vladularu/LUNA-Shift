@@ -63,6 +63,7 @@ export function AnnualDetailsScreen() {
     workPatternSettings,
     ruleResolver: resolver,
     year,
+    testMonths,
   });
   if (!valid)
     return (

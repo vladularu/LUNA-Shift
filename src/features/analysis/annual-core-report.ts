@@ -16,7 +16,8 @@ import type {
   UserProfile,
 } from "@/domain/types";
 import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
-import { calculateMonthlySummary } from "@/engine/monthly-summary";
+import { calculateMonthlySummary, calculateMonthlySummarySteps } from "@/engine/monthly-summary";
+import { prepareMonthlyPaySteps } from "@/engine/prepare-monthly-pay";
 import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
 import { calculateAssessedMonthlyRemuneration } from "@/engine/remuneration-month";
 import {
@@ -31,10 +32,10 @@ import {
   selectMonthlyAnalysisEntries,
 } from "@/features/analysis/analysis-data";
 import {
-  buildMonthlyShiftTypeAnalysis,
+  buildMonthlyShiftTypeAnalysisSteps,
   combineShiftTypeAnalyses,
   type MonthlyShiftTypeAnalysis,
-  buildMonthlyTimedShiftTypeAnalysis,
+  buildMonthlyTimedShiftTypeAnalysisSteps,
 } from "@/features/analysis/analysis-metrics";
 import type { AnnualMonthReport, AnnualReport } from "@/features/analysis/annual-report";
 import { classifyChecks } from "./check-visibility";
@@ -66,11 +67,35 @@ function captureRuleValue<T>(calculate: () => T): T | null {
   }
 }
 
+function* captureRuleSteps<T>(
+  calculate: () => Generator<number, T, void>,
+): Generator<number, T | null, void> {
+  try {
+    return yield* calculate();
+  } catch (error) {
+    if (error instanceof RuleResolutionError || error instanceof WorkingTimeTargetError)
+      return null;
+    throw error;
+  }
+}
+
 export function buildAnnualCoreReport(
   year: number,
   entries: readonly CalendarEntry[],
   profile: Pick<UserProfile, "timeZone">,
 ): AnnualReport {
+  const steps = buildAnnualCoreReportSteps(year, entries, profile);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* buildAnnualCoreReportSteps(
+  year: number,
+  entries: readonly CalendarEntry[],
+  profile: Pick<UserProfile, "timeZone">,
+): Generator<number, AnnualReport, void> {
   const shiftAnalyses: MonthlyShiftTypeAnalysis[] = [];
   const distribution = new Map<ShiftType, number>();
   const months: AnnualMonthReport[] = [];
@@ -89,7 +114,7 @@ export function buildAnnualCoreReport(
       (entry) => entry.deletedAt === null && entry.date.startsWith(`${month}-`),
     );
     const shifts = monthEntries.filter((entry): entry is ShiftEntry => entry.kind === "SHIFT");
-    const timed = buildMonthlyTimedShiftTypeAnalysis(month, monthEntries, profile);
+    const timed = yield* buildMonthlyTimedShiftTypeAnalysisSteps(month, monthEntries, profile);
     shiftAnalyses.push(timed);
     const monthDistribution = buildShiftTypeDistribution(month, monthEntries);
     for (const [type, count] of monthDistribution) {
@@ -218,8 +243,8 @@ function* calculateAvailableMonth(
   const summary =
     cached.summary?.key === summaryKey
       ? cached.summary.value
-      : captureRuleValue(() =>
-          calculateMonthlySummary(month, monthlyEntries.monthShifts, profile, ruleResolver),
+      : yield* captureRuleSteps(() =>
+          calculateMonthlySummarySteps(month, monthlyEntries.monthShifts, profile, ruleResolver),
         );
   cached.summary = { key: summaryKey, value: summary };
   const shiftTypeAnalysis =
@@ -227,7 +252,12 @@ function* calculateAvailableMonth(
       ? cached.shiftTypeAnalysis.value
       : summary === null
         ? null
-        : buildMonthlyShiftTypeAnalysis(month, monthlyEntries.monthEntries, profile, ruleResolver);
+        : yield* buildMonthlyShiftTypeAnalysisSteps(
+            month,
+            monthlyEntries.monthEntries,
+            profile,
+            ruleResolver,
+          );
   cached.shiftTypeAnalysis = { key: summaryKey, value: shiftTypeAnalysis };
   yield 1;
 
@@ -351,6 +381,16 @@ function* calculateAvailableMonth(
     decision,
     workPatternSettings,
   ]);
+  if (cached.pay?.key !== payKey && allowanceShifts !== null)
+    yield* prepareMonthlyPaySteps(
+      month,
+      monthlyEntries.monthShifts,
+      profile,
+      decision,
+      allowanceShifts,
+      workPatternSettings,
+      ruleResolver,
+    );
   const pay =
     cached.pay?.key === payKey
       ? cached.pay.value
@@ -385,7 +425,7 @@ export function* buildAnnualAvailableReportSteps(
   if (!Number.isInteger(year) || year < 1900 || year > 4099) {
     throw new Error("Ungültiges Berichtsjahr.");
   }
-  const core = buildAnnualCoreReport(year, entries, profile);
+  const core = yield* buildAnnualCoreReportSteps(year, entries, profile);
   options.onCore?.(core);
   // Explicit paint boundary: do not start legal work in the core's scheduler slice.
   yield 0;

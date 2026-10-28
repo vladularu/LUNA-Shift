@@ -27,10 +27,12 @@ import {
 import { validateLocalBackup } from "@/infrastructure/database/local-backup-validation";
 import { restoreLocalBackup } from "@/infrastructure/database/local-backup-restore";
 import { createPersistentAnalysisCache } from "./persistent-analysis-cache";
+import { annualAnalysisKey, prepareAnnualAnalysisSteps } from "./annual-analysis";
 import {
   persistentMonthValue,
   persistentCheckValue,
   persistentSalaryValue,
+  persistentAnnualValue,
 } from "./persistent-analysis-values";
 import {
   calculateMonthlyAnalysisSteps,
@@ -107,6 +109,109 @@ const salaryInput = (month: MonthlyAnalysisRequest): AnalysisSalaryRequest => ({
 });
 
 describe("persistent complete analysis", () => {
+  it("persists an entirely computed year with eight supported salary months across a cold cache restart", async () => {
+    const rules = () =>
+      createRuleResolver({
+        ...BUNDLED_RULE_CATALOG,
+        tariff: BUNDLED_RULE_CATALOG.tariff.filter((item) => item.validFrom >= "2026-05-01"),
+      });
+    const month = input();
+    const request = {
+      year: 2026,
+      entries: month.entries,
+      profile: month.profile,
+      tariffDecisions: [],
+      workPatternSettings: DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+      referenceDate: "2026-10-28",
+      youthProtection: false,
+      ruleResolver: rules(),
+    };
+    const key = annualAnalysisKey(request),
+      value = drain(prepareAnnualAnalysisSteps(request, key, null));
+    expect(value.availablePayMonthCount).toBe(8);
+    expect(value.worktimeCoverageComplete).toBe(true);
+    expect(value.complianceCoverageComplete).toBe(true);
+    expect(value.months.filter((item) => item.estimatedGrossAmount === null)).toHaveLength(4);
+    expect(persistentAnnualValue(value)).toBe(true);
+    await cache().write(
+      "annual",
+      "2026-01",
+      key,
+      request.ruleResolver,
+      value,
+      persistentAnnualValue,
+    );
+    const restored = await cache().read("annual", "2026-01", key, rules(), persistentAnnualValue);
+    expect(restored).toEqual(value);
+    expect(restored?.availablePayMonthCount).toBe(8);
+    expect(restored?.months.slice(0, 4).every((item) => item.estimatedGrossAmount === null)).toBe(
+      true,
+    );
+    expect(persistentAnnualValue({ ...value, availablePayMonthCount: 12 })).toBe(false);
+    expect(persistentAnnualValue({ ...value, availablePayMonthCount: -1 })).toBe(false);
+    expect(persistentAnnualValue({ ...value, months: value.months.slice(0, 11) })).toBe(false);
+  });
+  it("restores a complete year and its Map after a new cache/catalog instance, preserving exact output", async () => {
+    const month = input();
+    const request = {
+      year: 2026,
+      entries: month.entries,
+      profile: month.profile,
+      tariffDecisions: [],
+      workPatternSettings: DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+      referenceDate: "2026-10-28",
+      youthProtection: false,
+      ruleResolver: month.ruleResolver,
+    };
+    const key = annualAnalysisKey(request),
+      value = drain(prepareAnnualAnalysisSteps(request, key, null));
+    expect(persistentAnnualValue(value)).toBe(true);
+    await cache().write("annual", "2026-01", key, month.ruleResolver, value, persistentAnnualValue);
+    const restored = await cache().read(
+      "annual",
+      "2026-01",
+      key,
+      createRuleResolver(),
+      persistentAnnualValue,
+    );
+    expect(restored).toEqual(value);
+    expect(restored?.distribution).toBeInstanceOf(Map);
+    expect(restored?.distribution.get("NIGHT")).toBe(value.distribution.get("NIGHT"));
+    expect(persistentAnnualValue({ ...value, complianceCoverageComplete: false })).toBe(false);
+    expect(persistentAnnualValue({ ...value, availablePayMonthCount: 11 })).toBe(false);
+    expect(persistentAnnualValue({ ...value, distribution: {} })).toBe(false);
+    expect(
+      await cache("different-bundle").read(
+        "annual",
+        "2026-01",
+        key,
+        month.ruleResolver,
+        persistentAnnualValue,
+      ),
+    ).toBeNull();
+    expect(
+      await cache().read(
+        "annual",
+        "2026-01",
+        key + "edit",
+        month.ruleResolver,
+        persistentAnnualValue,
+      ),
+    ).toBeNull();
+  });
+  it("replaces only the disposable v1 cache and protects the current annual result when other years churn", async () => {
+    adapter.raw.exec("CREATE TABLE analysis_result_cache_v1 (unused TEXT)");
+    const repo = repository();
+    await repo.write("annual", "2026-01", "key", { payload: "{}", digest: "hash" });
+    for (let year = 2030; year < 2110; year++)
+      await repo.write("annual", year + "-01", "key", { payload: "{}", digest: "hash" });
+    expect(await repo.read("annual", "2026-01", "key")).not.toBeNull();
+    expect(
+      adapter.raw
+        .prepare("SELECT name FROM sqlite_master WHERE name='analysis_result_cache_v1'")
+        .get(),
+    ).toBeUndefined();
+  });
   it("keeps a newer result when an older payload hash finishes last, including another cache instance", async () => {
     for (const separateInstance of [false, true]) {
       let release!: () => void, entered!: () => void;
@@ -339,7 +444,7 @@ describe("persistent complete analysis", () => {
     );
     for (const payload of ["{", "[]", '{"summary":{"ok":false}}']) {
       adapter.raw
-        .prepare("UPDATE analysis_result_cache_v1 SET value_json=?,value_hash=?")
+        .prepare("UPDATE analysis_result_cache_v2 SET value_json=?,value_hash=?")
         .run(payload, await sha256(payload));
       expect(
         await store.read("month", request.month, key, request.ruleResolver, persistentMonthValue),
@@ -353,7 +458,7 @@ describe("persistent complete analysis", () => {
       result,
       persistentMonthValue,
     );
-    adapter.raw.prepare("UPDATE analysis_result_cache_v1 SET value_hash='broken'").run();
+    adapter.raw.prepare("UPDATE analysis_result_cache_v2 SET value_hash='broken'").run();
     expect(
       await store.read("month", request.month, key, request.ruleResolver, persistentMonthValue),
     ).toBeNull();
@@ -444,7 +549,7 @@ describe("persistent complete analysis", () => {
       await repo.write("month", `future-${i}`, "key", { payload: "{}", digest: "hash" });
     expect(
       adapter.raw
-        .prepare("SELECT COUNT(*) AS n FROM analysis_result_cache_v1 WHERE kind<>'epoch'")
+        .prepare("SELECT COUNT(*) AS n FROM analysis_result_cache_v2 WHERE kind<>'epoch'")
         .get(),
     ).toEqual({ n: MAX_ANALYSIS_RESULT_ROWS });
     expect(await repo.read("checks", "2026-10", "key")).not.toBeNull();
@@ -454,7 +559,7 @@ describe("persistent complete analysis", () => {
         digest: "hash",
       });
     const bytes = adapter.raw
-      .prepare("SELECT SUM(length(CAST(value_json AS BLOB))) AS n FROM analysis_result_cache_v1")
+      .prepare("SELECT SUM(length(CAST(value_json AS BLOB))) AS n FROM analysis_result_cache_v2")
       .get() as { n: number };
     expect(bytes.n).toBeLessThanOrEqual(MAX_ANALYSIS_RESULT_BYTES);
     expect(await repo.read("checks", "2026-10", "key")).not.toBeNull();
