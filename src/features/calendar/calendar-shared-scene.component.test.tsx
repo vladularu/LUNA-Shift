@@ -1,6 +1,6 @@
 import { act, fireEvent, render, renderHook, within } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import { AppState, StyleSheet } from "react-native";
+import { AppState } from "react-native";
 import { getAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
@@ -8,7 +8,6 @@ import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calcu
 import { work } from "@/engine/remuneration-test-fixtures";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { SharedCalendarMonth, SharedCalendarScene } from "./calendar-shared-scene";
-import { quickPlannerDockMotion } from "./quick-planner-control-motion";
 
 import {
   CALENDAR_IMAGE_STRENGTH_OPTIONS,
@@ -154,20 +153,20 @@ describe("shared live calendar scene", () => {
         progress.value = value;
       });
       expect(getAnimatedStyle(outline)).toMatchObject({
-        opacity: quickPlannerDockMotion(value, true).opacity,
+        opacity: value,
       });
       expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toBe(outline);
     }
   });
 
-  it("marks only an entry-sized slot and keeps the entire empty day tappable", async () => {
+  it("restores full-day frames and keeps the entire day tappable", async () => {
     const screen = await render(<Tree stampMode />);
     await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
       nativeEvent: { layout: { width: 430, height: 700 } },
     });
     const day = screen.getByTestId("calendar-day-2026-01-09");
     const slot = screen.getByTestId("quick-stamp-outline-2026-01-09");
-    expect(slot).toHaveStyle({ top: 30, height: 34, left: 1, right: 1 });
+    expect(slot).toHaveStyle({ top: 0, bottom: 0, left: 0, right: 0, borderWidth: 1.5 });
     expect(day).toHaveStyle({ width: 430 / 7, height: (645 - 32) / 6, borderWidth: 0 });
     await fireEvent.press(day, {
       nativeEvent: { pageX: 100, pageY: 200, locationX: 10, locationY: 80 },
@@ -179,7 +178,7 @@ describe("shared live calendar scene", () => {
       height: (645 - 32) / 6,
     });
     await screen.rerender(<Tree stampMode entries={[appointment]} />);
-    expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({ borderWidth: 0 });
+    expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({ borderWidth: 2 });
   });
 
   it("keeps selected day accessible but removes its full-cell outline", async () => {
@@ -342,17 +341,18 @@ describe("shared live calendar scene", () => {
   });
 });
 
-it("retains selected-date accessibility without outlining an entire day", async () => {
+it("restores readable full-day outlines and selected-date accessibility", async () => {
   const screen = await render(<Tree stampMode />);
   expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveStyle({
-    borderWidth: 0,
+    borderWidth: 2,
+    borderColor: LIGHT_PALETTE.textMuted,
   });
   expect(screen.getByTestId("calendar-day-2026-01-08")).toHaveProp("accessibilityState", {
     selected: true,
   });
   expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: LIGHT_PALETTE.separator,
+    borderWidth: 1.5,
+    borderColor: LIGHT_PALETTE.textMuted,
   });
 });
 

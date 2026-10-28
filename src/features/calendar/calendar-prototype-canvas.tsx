@@ -5,7 +5,11 @@ import { memo } from "react";
 import { today } from "@/engine/calendar";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
@@ -19,6 +23,8 @@ import type { CalendarEntry } from "@/domain/types";
 import { combinedCalendarPreview } from "./combined-calendar-preview";
 import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
+import { quickStampEntering, quickStampExiting } from "./quick-stamp-motion";
+import { MOTION } from "@/theme/motion";
 import {
   PROTOTYPE_MONTH_NAMES,
   type PrototypeDay,
@@ -275,6 +281,7 @@ export const PrototypeYear = memo(function PrototypeYear({
 });
 
 export function PrototypeMonthContent({
+  animateChanges = false,
   layout,
   progress,
   entriesByDate,
@@ -285,6 +292,7 @@ export function PrototypeMonthContent({
   timeZone,
   visible,
 }: {
+  animateChanges?: boolean;
   layout: PrototypeMonth;
   progress: SharedValue<number>;
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
@@ -324,6 +332,7 @@ export function PrototypeMonthContent({
       </View>
       {[...layout.adjacentDays, ...layout.days].map((day) => (
         <CombinedDayContent
+          animateChanges={animateChanges}
           key={day.date}
           day={day}
           layout={layout}
@@ -343,6 +352,7 @@ export function PrototypeMonthContent({
 }
 
 function CombinedDayContent({
+  animateChanges,
   day,
   layout,
   entries,
@@ -355,6 +365,7 @@ function CombinedDayContent({
   holiday,
   specialDay,
 }: {
+  readonly animateChanges: boolean;
   readonly day: {
     readonly date: string;
     readonly day: number;
@@ -374,6 +385,7 @@ function CombinedDayContent({
   readonly specialDay?: string;
 }) {
   const palette = usePalette();
+  const reduceMotion = useReducedMotion();
   const preview = combinedCalendarPreview(
     entries,
     shared,
@@ -385,6 +397,21 @@ function CombinedDayContent({
       preview.lineHeight *
       (display.showShiftTimes || display.showShiftDuration ? 2 : 1) +
     Math.max(0, preview.rows.length - 1);
+  const occurrences = new Map<string, number>();
+  const motionRows = preview.rows.map((item) => {
+    // Optimistic and persisted shifts share a template key. Saving must not
+    // replay the pop when the temporary database id is replaced.
+    const base =
+      item.kind === "own"
+        ? "own:" +
+          (item.entry.kind === "SHIFT" && item.entry.templateId
+            ? "template:" + item.entry.templateId
+            : item.entry.id)
+        : item.row.calendarId + ":" + item.row.entry.id;
+    const occurrence = occurrences.get(base) ?? 0;
+    occurrences.set(base, occurrence + 1);
+    return { item, key: base + ":" + occurrence };
+  });
   return (
     <View
       accessible={visible}
@@ -447,61 +474,74 @@ function CombinedDayContent({
           {"+" + preview.overflowCount}
         </Text>
       ) : null}
-      <View
-        testID={
-          (adjacent ? "calendar-adjacent-entry-layer-" : "calendar-combined-entries-") + day.date
-        }
-        style={{
-          marginTop: adjacent ? 0 : preview.headerHeight,
-          marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
-          gap: CALENDAR_METRICS.chipGap,
-          opacity: adjacent ? 0.3 : 1,
-        }}
-      >
-        {preview.rows.map((item, index) => (
-          <View
-            key={
-              item.kind === "own"
-                ? "own:" + item.entry.id
-                : item.row.calendarId + ":" + item.row.entry.id
-            }
-            testID={"calendar-entry-slot-" + day.date + "-" + index}
-            style={{
-              height:
-                preview.lineHeight * (display.showShiftTimes || display.showShiftDuration ? 2 : 1),
-            }}
-          >
-            {item.kind === "own" ? (
-              <PrototypeEntryContent
-                entry={item.entry}
-                display={display}
-                timeZone={timeZone}
-                lineHeight={preview.lineHeight}
-              />
-            ) : (
-              <SharedCalendarEntryContent
-                row={item.row}
-                display={display}
-                lineHeight={preview.lineHeight}
-              />
-            )}
-          </View>
-        ))}
+      <LayoutAnimationConfig skipEntering skipExiting>
+        <View
+          testID={
+            (adjacent ? "calendar-adjacent-entry-layer-" : "calendar-combined-entries-") + day.date
+          }
+          style={{
+            marginTop: adjacent ? 0 : preview.headerHeight,
+            marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
+            gap: CALENDAR_METRICS.chipGap,
+            opacity: adjacent ? 0.3 : 1,
+          }}
+        >
+          {motionRows.map(({ item, key }, index) => (
+            <Animated.View
+              key={key}
+              entering={
+                animateChanges && !adjacent && item.kind === "own" && item.entry.kind === "SHIFT"
+                  ? reduceMotion
+                    ? FadeIn.duration(MOTION.duration.instant)
+                    : quickStampEntering
+                  : undefined
+              }
+              exiting={
+                animateChanges && !adjacent && item.kind === "own" && item.entry.kind === "SHIFT"
+                  ? reduceMotion
+                    ? FadeOut.duration(MOTION.duration.instant)
+                    : quickStampExiting
+                  : undefined
+              }
+              testID={"calendar-entry-slot-" + day.date + "-" + index}
+              style={{
+                height:
+                  preview.lineHeight *
+                  (display.showShiftTimes || display.showShiftDuration ? 2 : 1),
+              }}
+            >
+              {item.kind === "own" ? (
+                <PrototypeEntryContent
+                  entry={item.entry}
+                  display={display}
+                  timeZone={timeZone}
+                  lineHeight={preview.lineHeight}
+                />
+              ) : (
+                <SharedCalendarEntryContent
+                  row={item.row}
+                  display={display}
+                  lineHeight={preview.lineHeight}
+                />
+              )}
+            </Animated.View>
+          ))}
 
-        {(holiday || specialDay) && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
-          <Text
-            allowFontScaling={false}
-            numberOfLines={1}
-            style={{
-              height: CALENDAR_METRICS.entryRowHeight,
-              color: labelColor,
-              fontSize: CALENDAR_METRICS.entryFontSize,
-            }}
-          >
-            {calendarDayLabel(holiday, specialDay)}
-          </Text>
-        ) : null}
-      </View>
+          {(holiday || specialDay) && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
+            <Text
+              allowFontScaling={false}
+              numberOfLines={1}
+              style={{
+                height: CALENDAR_METRICS.entryRowHeight,
+                color: labelColor,
+                fontSize: CALENDAR_METRICS.entryFontSize,
+              }}
+            >
+              {calendarDayLabel(holiday, specialDay)}
+            </Text>
+          ) : null}
+        </View>
+      </LayoutAnimationConfig>
     </View>
   );
 }

@@ -1,8 +1,17 @@
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { MOTION } from "@/theme/motion";
 
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import {
@@ -35,6 +44,24 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   const editorColor =
     action.kind === "APPOINTMENT" ? APPOINTMENT_COLOR : QUICK_PLANNER_COLORS.active;
   const pressMotion = usePressMotion(1, 0.95);
+  const reduceMotion = useReducedMotion();
+  const badgeScale = useSharedValue(1);
+  const previousActive = useRef(active);
+  useEffect(() => {
+    if (previousActive.current === active) return;
+    previousActive.current = active;
+    cancelAnimation(badgeScale);
+    badgeScale.value = reduceMotion
+      ? 1
+      : withSequence(
+          withTiming(active ? 2 - MOTION.scale.emphasis : MOTION.scale.emphasis, {
+            duration: MOTION.duration.instant,
+          }),
+          withTiming(1, { duration: MOTION.duration.fast, easing: MOTION.easing.standard }),
+        );
+  }, [active, badgeScale, reduceMotion]);
+  useEffect(() => () => cancelAnimation(badgeScale), [badgeScale]);
+  const badgeMotion = useAnimatedStyle(() => ({ transform: [{ scale: badgeScale.value }] }));
   const detail =
     active && isStampAction
       ? action.template.allDay
@@ -48,6 +75,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   return (
     <AnimatedPressable
       accessibilityLabel={`${action.label} auswählen`}
+      accessibilityHint={active ? "Erneut antippen, um die Vorlage abzuwählen." : undefined}
       accessibilityRole="button"
       accessibilityState={{ disabled, selected: active }}
       accessibilityValue={detail ? { text: detail.join(" bis ") } : undefined}
@@ -58,8 +86,8 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
       style={[styles.tile, { width }, pressMotion.animatedStyle]}
     >
       <View style={[styles.template, { width: labelWidth }]}>
-        <View
-          style={[styles.badgeRing, active && { borderColor: palette.primary }]}
+        <Animated.View
+          style={[styles.badgeRing, active && { borderColor: palette.primary }, badgeMotion]}
           testID={`quick-planner-badge-${action.key}`}
         >
           {isStampAction ? (
@@ -78,7 +106,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
               />
             </View>
           )}
-        </View>
+        </Animated.View>
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={[

@@ -158,20 +158,14 @@ describe("QuickPlannerDock", () => {
     expect(screen.getByText("06:00")).toBeTruthy();
   });
 
-  it.each([false, true])(
-    "covers navigation only while planning is open (open=%s)",
-    async (open) => {
-      const screen = await renderDock({ open });
-      const cover = screen.getByTestId("quick-planner-navigation-cover", {
+  it.each([false, true])("does not add an opaque safe-area cover (open=%s)", async (open) => {
+    const screen = await renderDock({ open });
+    expect(
+      screen.queryByTestId("quick-planner-navigation-cover", {
         includeHiddenElements: true,
-      });
-      expect(cover).toHaveStyle({
-        opacity: open ? 1 : 0,
-        backgroundColor: LIGHT_PALETTE.background,
-      });
-      expect(cover).toHaveProp("pointerEvents", open ? "auto" : "none");
-    },
-  );
+      }),
+    ).toBeNull();
+  });
 
   it("keeps Plus mounted beneath the editor and reveals it immediately without another enter animation", async () => {
     const screen = await renderDock({ open: false });

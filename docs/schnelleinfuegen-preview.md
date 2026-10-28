@@ -1,5 +1,21 @@
 # Schnelleinfügen: Preview
 
+## Korrektur nach iPhone-Feedback
+
+Ziel: Die ursprünglichen, gut sichtbaren Tagesrahmen und den Bereich hinter der unteren Leiste wiederherstellen. Die hinzugefügte und als störend gemeldete Safe-Area-Abdeckung entfällt. Beginn/Ende an der aktiven Vorlage bleiben erhalten. Ein zweiter Tipp auf dieselbe Vorlage wählt sie wieder ab.
+
+Eine kurze Pop-Bewegung bestätigt die Auswahl einer Vorlage und das Einfügen eines eigenen Dienstes; beim Entfernen blendet der Dienst kurz aus. Diese Bewegung folgt den vorhandenen Motion-Tokens und entfällt bei reduzierter Bewegung zugunsten einer kurzen Überblendung. Initiales Laden und Monatswechsel spielen keine Reihe von Ein-/Ausblendungen ab. Optimistische und gespeicherte IDs derselben Vorlage behalten denselben visuellen Eintrag, damit Speichern die Animation nicht wiederholt.
+
+Nicht-Ziele: Änderungen an Datenbank, Speicherwarteschlange, Berechnungen, globalem Design oder nativen Modulen. Plattform: bestehender iOS-Preview-Build 44. Dateiscope: zwölf Dateien in Kalender-UI, zugehörigen Komponententests und dieser Dokumentation. Umsetzung und erneutes Preview-OTA sind durch die fortgeltende Freigabe des Nutzers gedeckt.
+
+Abnahme: Tagesrahmen vor Foto in Hell/Dunkel erkennbar, keine zusätzliche deckende Safe-Area-Fläche, Vorlage an-/ab-/erneut anwählbar, ohne aktive Vorlage kein Eintragen, kleine Rückmeldung beim Setzen/Entfernen, keine doppelte Animation durch Speichern und Rücksicht auf reduzierte Bewegung. Die finale Sichtprüfung erfolgt auf dem iPhone.
+
+Die Korrektur besteht `npm.cmd run verify:fast` vollständig: 9.838 Unit-Tests in 508 Dateien, 1.499 Komponententests in 163 Dateien und alle zusätzlichen Projektchecks. Die fokussierten Tests prüfen zusätzlich die neue Abwahl, vollständige Tages-Tippflächen, unveränderte Eintragsgeometrie, dieselbe visuelle Instanz nach dem Ersetzen einer vorläufigen ID und Übergänge ohne räumliche Bewegung bei aktivierter Bewegungsreduktion. Der iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b`; native Konfiguration und Abhängigkeiten sind unverändert. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-correction-20261028/`. Die Geräteabnahme der Korrektur ist noch offen.
+
+Reanimated 4.x: [LayoutAnimationConfig](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/), [Custom animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations/).
+
+Die folgenden Abschnitte dokumentieren die erste Preview-Iteration als historischen Ausgangspunkt.
+
 ## Task-Vertrag
 
 - Ziel: Ruhige Platzhalter auf Diensthöhe, Zeiten an der aktiven Vorlage und ein abgestimmter Wechsel von Navigation zu Einfügeleiste.

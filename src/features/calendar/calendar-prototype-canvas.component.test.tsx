@@ -1,6 +1,7 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { useSharedValue } from "react-native-reanimated";
+import { StyleSheet } from "react-native";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 import { PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
@@ -247,7 +248,8 @@ describe("holiday entry alignment", () => {
       expect(content.getByText("+18")).toBeTruthy();
       expect(day.props.accessibilityLabel).toContain("Testfeiertag");
       const slots = content.getAllByTestId(/calendar-entry-slot-/);
-      const heightUsed = 30 + slots.reduce((sum, slot) => sum + slot.props.style.height, 0) + 1;
+      const heightUsed =
+        30 + slots.reduce((sum, slot) => sum + StyleSheet.flatten(slot.props.style).height, 0) + 1;
       expect(heightUsed).toBeLessThanOrEqual(
         calendarPrototypeLayout("2026-08", 430, height).weekHeight,
       );

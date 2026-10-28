@@ -13,8 +13,7 @@ import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/type
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { today } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, RADII, CALENDAR_METRICS } from "@/theme/tokens";
-import { combinedCalendarPreview } from "./combined-calendar-preview";
+import { CORNER_CURVE, RADII } from "@/theme/tokens";
 import type { CalendarAnchorRect } from "./calendar-layout";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import { PrototypeDates, PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
@@ -25,7 +24,6 @@ import { useCalendarController, type CalendarController } from "./use-calendar-c
 import { CalendarMonthBackground } from "./calendar-background";
 import {
   QUICK_PLANNER_EASING,
-  quickPlannerDockMotion,
   quickPlannerTransitionDuration,
 } from "./quick-planner-control-motion";
 
@@ -255,7 +253,8 @@ export function SharedCalendarMonth({
       still={still}
       holidays={holidays.holidays}
       specialDays={holidays.specialDays}
-      separator={palette.separator}
+      separator={palette.textMuted}
+      selectionFill={palette.primarySoft}
     />
   );
 }
@@ -277,6 +276,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays,
   specialDays,
   separator,
+  selectionFill,
   stampMode,
   stampTransitionProgress,
   stampToolLabel,
@@ -286,6 +286,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   holidays: ReadonlyMap<string, { name: string }>;
   specialDays: ReadonlyMap<string, { readonly label: string }>;
   separator: string;
+  selectionFill: string;
 }) {
   const layout = useMemo(
     () => calendarPrototypeLayout(month, scene.width, scene.height),
@@ -296,18 +297,13 @@ const SharedMonthBody = memo(function SharedMonthBody({
   const progress = selected ? scene.progress : still;
   const visible = accessibilityVisible && scene.mode === "MONTH" && !scene.busy;
   const opacity = useAnimatedStyle(() => ({ opacity: selected ? 1 : scene.progress.value }));
-  const detailed = display.showShiftTimes || display.showShiftDuration;
-  const emptyPreview = combinedCalendarPreview([], [], layout.weekHeight, detailed);
-  const slotHeight = Math.min(
-    emptyPreview.lineHeight * (detailed ? 2 : 1),
-    Math.max(0, layout.weekHeight - emptyPreview.headerHeight - 2),
-  );
   return (
     <Animated.View
       testID={`shared-month-${month}`}
       style={[{ height: pageHeight, width: scene.width }, opacity]}
     >
       <PrototypeMonthContent
+        animateChanges={stampMode && visible}
         layout={layout}
         progress={progress}
         entriesByDate={entriesByDate}
@@ -357,7 +353,11 @@ const SharedMonthBody = memo(function SharedMonthBody({
               top: day.toY - 20,
               width: layout.cellWidth,
               height: layout.weekHeight,
-              borderWidth: 0,
+              borderRadius: RADII.small,
+              borderWidth: stampMode && selectedDate === day.date ? 2 : 0,
+              borderColor: separator,
+              backgroundColor:
+                stampMode && selectedDate === day.date ? selectionFill + "20" : "transparent",
             }}
           >
             {!entriesByDate.get(day.date)?.length &&
@@ -369,8 +369,6 @@ const SharedMonthBody = memo(function SharedMonthBody({
                 date={day.date}
                 progress={stampTransitionProgress}
                 color={separator}
-                top={emptyPreview.headerHeight}
-                height={slotHeight}
               />
             ) : null}
           </Pressable>
@@ -385,30 +383,22 @@ function StampDayOutline({
   date,
   progress,
   color,
-  top,
-  height,
 }: {
   date: string;
   progress: SharedValue<number>;
   color: string;
-  top: number;
-  height: number;
 }) {
   const motionStyle = useAnimatedStyle(() => ({
-    opacity: quickPlannerDockMotion(progress.value, true).opacity,
+    opacity: progress.value,
   }));
   return (
     <Animated.View
       pointerEvents="none"
       testID={`quick-stamp-outline-${date}`}
       style={[
+        StyleSheet.absoluteFill,
         {
-          position: "absolute",
-          top,
-          height,
-          left: CALENDAR_METRICS.chipHorizontalInset,
-          right: CALENDAR_METRICS.chipHorizontalInset,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: 1.5,
           borderColor: color,
           borderRadius: RADII.small,
           borderCurve: CORNER_CURVE,

@@ -439,14 +439,19 @@ export function CalendarScreen() {
   const selectPlannerAction = useCallback(
     (action: QuickEntryAction) => {
       if (isQuickEntryStampAction(action)) {
-        setStampTool(action);
-        AccessibilityInfo.announceForAccessibility(stampToolSelectedAnnouncement(action.label));
+        const deselect = stampTool?.key === action.key;
+        setStampTool(deselect ? null : action);
+        AccessibilityInfo.announceForAccessibility(
+          deselect
+            ? `${action.label} abgewählt. Wähle unten eine Vorlage aus.`
+            : stampToolSelectedAnnouncement(action.label),
+        );
         selectionFeedback();
         return;
       }
       openQuickEditor(action, selectedDate);
     },
-    [openQuickEditor, selectedDate],
+    [openQuickEditor, selectedDate, stampTool],
   );
 
   const openShiftPicker = useOpenShiftSelection({ setPlannerMode, setStampTool });
