@@ -203,8 +203,13 @@ async function main() {
   assert.ok(pay);
   const elapsedMs = clock.now() - begin;
   const digest = hash(JSON.stringify({ overview, checks, pay }));
+  const cacheTable = database
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE name IN ('analysis_result_cache_v1','analysis_result_cache_v2') ORDER BY name DESC LIMIT 1",
+    )
+    .get().name;
   const bytes = database
-    .prepare("SELECT SUM(length(CAST(value_json AS BLOB))) AS bytes FROM analysis_result_cache_v1")
+    .prepare(`SELECT SUM(length(CAST(value_json AS BLOB))) AS bytes FROM ${cacheTable}`)
     .get().bytes;
   database.close();
   console.log(

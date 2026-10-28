@@ -72,6 +72,16 @@ export function* buildMonthlyShiftTypeAnalysisSteps(
   );
 }
 
+export function* buildMonthlyTimedShiftTypeAnalysisSteps(
+  month: string,
+  entries: readonly CalendarEntry[],
+  profile: Pick<ProfileForTime, "timeZone">,
+): Generator<number, MonthlyShiftTypeAnalysis, void> {
+  return yield* buildMonthlyShiftTypeAnalysisWithCreditSteps(month, entries, (date, shifts) =>
+    calculateTimedDailyWorkCredit(date, shifts, profile),
+  );
+}
+
 function* buildMonthlyShiftTypeAnalysisWithCreditSteps(
   month: string,
   entries: readonly CalendarEntry[],

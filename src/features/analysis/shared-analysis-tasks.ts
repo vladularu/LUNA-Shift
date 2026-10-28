@@ -133,7 +133,7 @@ export function requestSharedAnalysis<T, P = never>({
       (value) => finished(value, false),
       failed,
       Math.min(...[...entry.listeners].map((item) => item.priority)),
-      { month, stage: kind === "month" ? 1 : kind === "checks" ? 2 : 3 },
+      { month, stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3 },
     );
   };
   if (existing) {

@@ -92,10 +92,13 @@ export async function restoreLocalBackupInTransaction(
     if (cloudTable) await transaction.runAsync("DELETE FROM private_cloud_device");
   }
 
-  const analysisCache = await transaction.getFirstAsync<{ name: string }>(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='analysis_result_cache_v1'",
-  );
-  if (analysisCache !== null) await transaction.runAsync("DELETE FROM analysis_result_cache_v1");
+  for (const table of ["analysis_result_cache_v1", "analysis_result_cache_v2"]) {
+    const analysisCache = await transaction.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+      table,
+    );
+    if (analysisCache !== null) await transaction.runAsync(`DELETE FROM ${table}`);
+  }
   await transaction.runAsync("DELETE FROM scheduled_entry_notifications");
   await transaction.runAsync("DELETE FROM working_time_target_settings");
   await transaction.runAsync("DELETE FROM net_pay_profiles");

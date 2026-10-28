@@ -169,6 +169,7 @@ function AnalysisPage({
     tariffDecisions: annualInputs?.ok ? annualInputs.value.tariffDecisions : tariffDecisions,
     workPatternSettings,
     year,
+    testMonths,
   });
 
   function retainScene(content: ReactNode) {

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import type { UserProfile, ShiftEntry } from "@/domain/types";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS } from "@/engine/simple-pay";
 import { useSimpleAnnualReport } from "./use-simple-annual-report";
+jest.mock("./analysis-persistent-results", () => ({ useAnalysisPersistentResults: () => null }));
 
 jest.mock("@/application/remuneration-provider", () => ({
   useRemunerationData: () => {

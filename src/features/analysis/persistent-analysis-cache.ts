@@ -88,7 +88,7 @@ export function createPersistentAnalysisCache({
       let state = 0;
       const finish = calendarPerformance.span("analysis-cache", {
         month: Number(month.replace("-", "")),
-        stage: kind === "month" ? 1 : kind === "checks" ? 2 : 3,
+        stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
       });
       try {
         return await Promise.race([
@@ -110,7 +110,25 @@ export function createPersistentAnalysisCache({
               state = 4;
               return null;
             }
-            const value: unknown = JSON.parse(saved.payload);
+            const value: unknown = JSON.parse(saved.payload, (_key, child: unknown) => {
+              if (
+                child !== null &&
+                typeof child === "object" &&
+                !Array.isArray(child) &&
+                "$lunaAnalysisMapV1" in child &&
+                Object.keys(child).length === 1 &&
+                Array.isArray(child.$lunaAnalysisMapV1)
+              ) {
+                if (
+                  !child.$lunaAnalysisMapV1.every(
+                    (item: unknown) => Array.isArray(item) && item.length === 2,
+                  )
+                )
+                  throw new Error("Invalid cached map");
+                return new Map(child.$lunaAnalysisMapV1);
+              }
+              return child;
+            });
             const accepted = accept(value);
             state = accepted ? 1 : 5;
             return accepted ? value : null;
@@ -142,7 +160,7 @@ export function createPersistentAnalysisCache({
       let state = 8;
       const finish = calendarPerformance.span("analysis-cache", {
         month: Number(month.replace("-", "")),
-        stage: kind === "month" ? 1 : kind === "checks" ? 2 : 3,
+        stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
       });
       try {
         if (!current() || !accept(value)) return;
@@ -151,6 +169,7 @@ export function createPersistentAnalysisCache({
         const payload = JSON.stringify(value, (_key, child: unknown) => {
           if (typeof child === "number" && !Number.isFinite(child))
             throw new Error("Non-finite cache value");
+          if (child instanceof Map) return { $lunaAnalysisMapV1: [...child] };
           return child;
         });
         if (payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) return;

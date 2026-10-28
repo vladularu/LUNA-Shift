@@ -5,6 +5,7 @@ import { AnalysisPersistentResultsProvider } from "./analysis-persistent-results
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
 
 const Preparation = lazy(() => import("./analysis-background-preparation"));
+const AnnualPreparation = lazy(() => import("./annual-analysis-background-preparation"));
 /** Optional preparation must never replace the calendar with an app-wide error screen. */
 export class AnalysisPreparationBoundary extends Component<PropsWithChildren, { failed: boolean }> {
   state = { failed: false };
@@ -32,6 +33,9 @@ export function AnalysisWarmupProvider({ children }: PropsWithChildren) {
     >
       <AnalysisPreparationBoundary>
         <Suspense fallback={null}>{started ? <Preparation /> : null}</Suspense>
+      </AnalysisPreparationBoundary>
+      <AnalysisPreparationBoundary>
+        <Suspense fallback={null}>{started ? <AnnualPreparation /> : null}</Suspense>
       </AnalysisPreparationBoundary>
       {children}
     </AnalysisPersistentResultsProvider>

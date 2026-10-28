@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 import { withImmediateTransaction } from "./transaction";
 
-export type AnalysisResultKind = "month" | "checks" | "salary";
+export type AnalysisResultKind = "month" | "checks" | "salary" | "annual";
 export interface StoredAnalysisResult {
   readonly payload: string;
   readonly digest: string;
@@ -32,8 +32,8 @@ export function createAnalysisResultRepository(
   const initialize = () =>
     (ready ??= withImmediateTransaction(db, async (transaction) => {
       await transaction.execAsync(`
-        CREATE TABLE IF NOT EXISTS analysis_result_cache_v1 (
-          kind TEXT NOT NULL CHECK(kind IN ('month','checks','salary','epoch')),
+        CREATE TABLE IF NOT EXISTS analysis_result_cache_v2 (
+          kind TEXT NOT NULL CHECK(kind IN ('month','checks','salary','annual','epoch')),
           month TEXT NOT NULL,
           request_hash TEXT NOT NULL,
           value_json TEXT NOT NULL CHECK(length(value_json) <= ${MAX_ANALYSIS_RESULT_CHARACTERS}),
@@ -41,13 +41,14 @@ export function createAnalysisResultRepository(
           saved_at INTEGER NOT NULL,
           PRIMARY KEY(kind,month)
         );
+        DROP TABLE IF EXISTS analysis_result_cache_v1;
       `);
       await transaction.runAsync(
-        `INSERT OR IGNORE INTO analysis_result_cache_v1(kind,month,request_hash,value_json,value_hash,saved_at)
+        `INSERT OR IGNORE INTO analysis_result_cache_v2(kind,month,request_hash,value_json,value_hash,saved_at)
          VALUES('epoch','',lower(hex(randomblob(16))),'{}','',0)`,
       );
       const epoch = await transaction.getFirstAsync<{ token: string }>(
-        "SELECT request_hash AS token FROM analysis_result_cache_v1 WHERE kind='epoch' AND month=''",
+        "SELECT request_hash AS token FROM analysis_result_cache_v2 WHERE kind='epoch' AND month=''",
       );
       if (!epoch) throw new Error("Missing cache epoch");
       return epoch.token;
@@ -75,9 +76,9 @@ export function createAnalysisResultRepository(
     async read(kind, month, key) {
       const epoch = await initialize();
       return db.getFirstAsync<StoredAnalysisResult>(
-        `SELECT value_json AS payload,value_hash AS digest FROM analysis_result_cache_v1
+        `SELECT value_json AS payload,value_hash AS digest FROM analysis_result_cache_v2
          WHERE kind=? AND month=? AND request_hash=? AND
-         ?=(SELECT request_hash FROM analysis_result_cache_v1 WHERE kind='epoch' AND month='')`,
+         ?=(SELECT request_hash FROM analysis_result_cache_v2 WHERE kind='epoch' AND month='')`,
         kind,
         month,
         key,
@@ -90,9 +91,9 @@ export function createAnalysisResultRepository(
       await withImmediateTransaction(db, async (transaction) => {
         if (!current()) return;
         const inserted = await transaction.runAsync(
-          `INSERT INTO analysis_result_cache_v1(kind,month,request_hash,value_json,value_hash,saved_at)
+          `INSERT INTO analysis_result_cache_v2(kind,month,request_hash,value_json,value_hash,saved_at)
            SELECT ?,?,?,?,?,? WHERE
-           ?=(SELECT request_hash FROM analysis_result_cache_v1 WHERE kind='epoch' AND month='')
+           ?=(SELECT request_hash FROM analysis_result_cache_v2 WHERE kind='epoch' AND month='')
            ON CONFLICT(kind,month) DO UPDATE SET
            request_hash=excluded.request_hash,value_json=excluded.value_json,
            value_hash=excluded.value_hash,saved_at=excluded.saved_at`,
@@ -105,17 +106,19 @@ export function createAnalysisResultRepository(
           epoch,
         );
         if (inserted.changes === 0) return;
+        const present = currentMonth();
         await transaction.runAsync(
           `WITH ranked AS (
              SELECT rowid,ROW_NUMBER() OVER priority AS position,
                SUM(length(CAST(value_json AS BLOB))) OVER priority AS bytes
-             FROM analysis_result_cache_v1 WHERE kind<>'epoch'
-             WINDOW priority AS (ORDER BY (month=?) DESC,saved_at DESC,rowid DESC
+             FROM analysis_result_cache_v2 WHERE kind<>'epoch'
+             WINDOW priority AS (ORDER BY (month=? OR (kind='annual' AND substr(month,1,4)=?)) DESC,saved_at DESC,rowid DESC
                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-           ) DELETE FROM analysis_result_cache_v1 WHERE rowid IN (
+           ) DELETE FROM analysis_result_cache_v2 WHERE rowid IN (
              SELECT rowid FROM ranked WHERE position>? OR bytes>?
            )`,
-          currentMonth(),
+          present,
+          present.slice(0, 4),
           MAX_ANALYSIS_RESULT_ROWS,
           MAX_ANALYSIS_RESULT_BYTES,
         );
