@@ -115,6 +115,8 @@ export function AnalysisListCard({
   caption,
   captionBelowFooter = false,
   headerAccessory,
+  busy = false,
+  bodyMinHeight,
 }: PropsWithChildren<{
   readonly title: string;
   readonly label?: string;
@@ -122,6 +124,8 @@ export function AnalysisListCard({
   readonly caption?: string;
   readonly captionBelowFooter?: boolean;
   readonly headerAccessory?: ReactNode;
+  readonly busy?: boolean;
+  readonly bodyMinHeight?: number;
 }>) {
   const p = usePalette();
   const secondaryText = p.dark ? p.text : p.textMuted;
@@ -146,7 +150,13 @@ export function AnalysisListCard({
         onPress={onPress}
         accessory={headerAccessory}
       />
-      <View style={{ paddingHorizontal: SPACING.lg }}>{children}</View>
+      <View
+        testID={`analysis-card-body-${title}`}
+        accessibilityState={{ busy }}
+        style={{ paddingHorizontal: SPACING.lg, minHeight: bodyMinHeight }}
+      >
+        {children}
+      </View>
       {captionBelowFooter ? null : captionContent}
       <CardFooterLine />
       {captionBelowFooter ? captionContent : null}
@@ -164,6 +174,7 @@ export function AnalysisValueRow({
   leading,
   dot,
   reserveDisclosure = false,
+  minimumHeight = 47,
 }: {
   readonly label: string;
   readonly value: string;
@@ -175,13 +186,14 @@ export function AnalysisValueRow({
   readonly leading?: ReactNode;
   readonly dot?: string;
   readonly reserveDisclosure?: boolean;
+  readonly minimumHeight?: number;
 }) {
   const p = usePalette();
   const secondaryText = p.dark ? p.text : p.textMuted;
   const { fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3;
   const style = {
-    minHeight: 47,
+    minHeight: minimumHeight,
     paddingVertical: SPACING.sm + SPACING.xxs,
     gap: SPACING.sm,
     borderTopWidth: first ? 0 : 1,

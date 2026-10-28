@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { AnnualDetailsScreen } from "./annual-details-screen";
@@ -13,6 +13,7 @@ import legalPackageValue from "../../../rules/packages/reviewed/de-arbzg-care/20
 import tariffPackageValue from "../../../rules/packages/reviewed/tvoed-vka-bt-k/2026-05.json";
 import type { MonthlyComplianceResult, ShiftEntry, UserProfile } from "@/domain/types";
 import * as monthlyAnalysis from "./monthly-analysis";
+import { useDeferredMonthlyCompliance } from "./use-monthly-compliance";
 import { AnalysisScreen } from "@/features/analysis/analysis-screen";
 import { buildAnnualCoreReport } from "@/features/analysis/annual-core-report";
 import type { AnnualReport } from "@/features/analysis/annual-report";
@@ -29,6 +30,39 @@ import { createRuleResolver, RuleResolutionError, type RuleResolver } from "@/ru
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { currentMonth } from "@/engine/calendar";
 const mockSaveEmployment = jest.fn();
+// These assertions exercise real rule results; cooperative scheduling has dedicated lifecycle tests.
+jest.mock("@/features/analysis/use-prepared-monthly-analysis", () => ({
+  usePreparedMonthlyAnalysis: (
+    request: import("./monthly-analysis").MonthlyAnalysisRequest | null,
+    active: boolean,
+  ) => {
+    const actual = jest.requireActual<typeof import("./monthly-analysis")>("./monthly-analysis");
+    return MockReact.useMemo(
+      () =>
+        request === null
+          ? null
+          : active
+            ? actual.calculateMonthlyAnalysis(
+                request.month,
+                request.entries,
+                request.profile,
+                request.tariffDecisions,
+                request.workPatternSettings,
+                request.ruleResolver,
+              )
+            : (() => {
+                const cached = actual.getCachedMonthlyAnalysis(request);
+                if (cached !== null) return cached;
+                const steps = actual.calculateMonthlyAnalysisSteps(request);
+                while (true) {
+                  const next = steps.next();
+                  if (next.done) return next.value;
+                }
+              })(),
+      [request, active],
+    );
+  },
+}));
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
@@ -139,6 +173,12 @@ let mockAnnualRuleFailure: {
 } | null = null;
 
 let mockFocused = true;
+const mockTariffDecisions = Object.freeze([]);
+const mockWorkPatternSettings = {
+  workplaceCoverage: "UNKNOWN",
+  assignment: "UNKNOWN",
+  updatedAt: null,
+};
 let mockAnalysisRequest = 0;
 let mockAnalysisMonth: string | null = null;
 jest.mock("@/features/salary/use-net-pay-profile", () => ({
@@ -147,6 +187,20 @@ jest.mock("@/features/salary/use-net-pay-profile", () => ({
     saved: null,
     timeline: [],
     busy: false,
+    error: null,
+  }),
+}));
+// Input freshness and cross-month sharing are exercised with the real provider in its lifecycle tests.
+jest.mock("./analysis-persistent-results", () => ({
+  AnalysisPersistentResultsProvider: ({ children }: MockReact.PropsWithChildren) => children,
+  useAnalysisPersistentResults: () => null,
+}));
+jest.mock("./analysis-salary-inputs", () => ({
+  AnalysisSalaryInputsProvider: ({ children }: MockReact.PropsWithChildren) => children,
+  useAnalysisSalaryInputs: () => ({
+    status: "ready",
+    saved: null,
+    annualPayments: [],
     error: null,
   }),
 }));
@@ -192,12 +246,8 @@ jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftProfile: () => ({ profile: mockProfile, updateProfile: mockSaveEmployment }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTariff: () => ({
-    tariffDecisions: [],
-    workPatternSettings: {
-      workplaceCoverage: "UNKNOWN",
-      assignment: "UNKNOWN",
-      updatedAt: null,
-    },
+    tariffDecisions: mockTariffDecisions,
+    workPatternSettings: mockWorkPatternSettings,
     updateWorkPatternSettings: jest.fn(),
     upsertTariffDecision: jest.fn(),
   }),
@@ -209,10 +259,35 @@ jest.mock("@/application/rule-catalog-runtime-provider", () => ({
 }));
 
 jest.mock("@/features/analysis/use-monthly-compliance", () => ({
-  useDeferredMonthlyCompliance: () => ({
+  useDeferredMonthlyCompliance: jest.fn(() => ({
     error: mockCheckError,
     result: mockComplianceResult,
     retry: jest.fn(),
+  })),
+}));
+
+// Queue lifecycle is tested separately; keep rule-coverage assertions deterministic and real.
+jest.mock("@/features/analysis/use-prepared-analysis-salary", () => ({
+  usePreparedAnalysisSalary: (
+    request: import("./analysis-salary").AnalysisSalaryRequest | null,
+  ) => ({
+    result: request
+      ? {
+          annual: jest
+            .requireActual<typeof import("@/features/salary/annual-salary-forecast")>(
+              "@/features/salary/annual-salary-forecast",
+            )
+            .annualSalaryForecast(
+              Number(request.month.slice(0, 4)),
+              request.profile,
+              request.context,
+              request.annualPayments,
+            ),
+          forecast: null,
+        }
+      : null,
+    pending: false,
+    error: null,
   }),
 }));
 
@@ -357,6 +432,52 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     await screen.unmount();
   });
 
+  it("prioritizes changed visible data while retaining both prepared native swipe pages", async () => {
+    mockRouteMonth = "2026-09";
+    const calculate = jest.spyOn(monthlyAnalysis, "calculateMonthlyAnalysis");
+    const screen = await render(<AnalysisScreen />);
+    await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+      nativeEvent: { layout: { width: 390, height: 700 } },
+    });
+    for (const month of ["2026-08", "2026-10"]) {
+      expect(
+        screen.getByTestId(`analysis-month-page-${month}`, { includeHiddenElements: true }),
+      ).toBeTruthy();
+    }
+    calculate.mockClear();
+    mockEntries = [{ ...januaryShift(), date: "2026-09-03" }];
+    await screen.rerender(<AnalysisScreen />);
+    expect(calculate.mock.calls[0]?.[0]).toBe("2026-09");
+    expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
+    const checks = jest.mocked(useDeferredMonthlyCompliance);
+    expect(
+      checks.mock.calls
+        .filter(([request]) => request.enabled && (request.priority ?? 0) < 0)
+        .every(([request]) => request.month === "2026-09"),
+    ).toBe(true);
+    await waitFor(() =>
+      expect(
+        checks.mock.calls.some(
+          ([request]) => request.month === "2026-08" && request.enabled && request.priority === 0,
+        ),
+      ).toBe(true),
+    );
+    checks.mockClear();
+    await fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { x: 13 * 390, y: 0 } },
+    });
+    expect(screen.getByTestId("analysis-month-page-2026-10")).toBeTruthy();
+    expect(screen.getByLabelText("Ist: 0:00 h")).toBeTruthy();
+    expect(
+      checks.mock.calls.some(([request]) => request.enabled && request.month === "2026-10"),
+    ).toBe(true);
+    expect(
+      checks.mock.calls
+        .filter(([request]) => request.enabled && (request.priority ?? 0) < 0)
+        .every(([request]) => request.month === "2026-10"),
+    ).toBe(true);
+  });
+
   it("returns a reselected monthly analysis to the current month while retaining monthly mode", async () => {
     mockRouteMonth = "2030-01";
     const screen = await render(<AnalysisScreen />);
@@ -471,6 +592,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
 
   it("shows pending and failed checks without hiding hours or inventing a clear result", async () => {
     mockRouteMonth = "2026-09";
+    mockEntries = [{ ...januaryShift(), id: "pending-shift", date: "2026-09-03" }];
     mockComplianceResult = null;
     const screen = await render(<AnalysisScreen />);
     expect(screen.getByRole("button", { name: "Prüfung, Wird geprüft …" })).toBeTruthy();

@@ -52,13 +52,34 @@ export function buildMonthlyTimedShiftTypeAnalysis(
 }
 
 function buildMonthlyShiftTypeAnalysisWithCredit(
+  ...args: Parameters<typeof buildMonthlyShiftTypeAnalysisWithCreditSteps>
+): MonthlyShiftTypeAnalysis {
+  const steps = buildMonthlyShiftTypeAnalysisWithCreditSteps(...args);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* buildMonthlyShiftTypeAnalysisSteps(
+  month: string,
+  entries: readonly CalendarEntry[],
+  profile: ProfileForTime,
+  ruleResolver: RuleResolver,
+): Generator<number, MonthlyShiftTypeAnalysis, void> {
+  return yield* buildMonthlyShiftTypeAnalysisWithCreditSteps(month, entries, (date, shifts) =>
+    calculateDailyWorkCredit(date, shifts, profile, ruleResolver),
+  );
+}
+
+function* buildMonthlyShiftTypeAnalysisWithCreditSteps(
   month: string,
   entries: readonly CalendarEntry[],
   calculateCredit: (
     date: string,
     shifts: readonly ShiftEntry[],
   ) => { readonly minutesByType: Readonly<Partial<Record<ShiftType, number>>> },
-): MonthlyShiftTypeAnalysis {
+): Generator<number, MonthlyShiftTypeAnalysis, void> {
   const counts: Partial<Record<ShiftType, number>> = {};
   const minutes: Partial<Record<ShiftType, number>> = {};
   const appearances: Partial<Record<ShiftType, ShiftAppearance[]>> = {};
@@ -92,6 +113,7 @@ function buildMonthlyShiftTypeAnalysisWithCredit(
       const creditedMinutes = daily.minutesByType[type] ?? 0;
       if (creditedMinutes > 0) minutes[type] = (minutes[type] ?? 0) + creditedMinutes;
     }
+    yield 1;
   }
 
   const items = Object.freeze(

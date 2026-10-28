@@ -11,7 +11,7 @@ import type {
 import type { RuleHolidayPackage } from "@/rules/contracts.generated";
 import { bundledRuleResolver, createRuleResolver } from "@/rules/rule-resolver";
 
-import { classifySfnPayroll2026 } from "./net-pay-sfn";
+import { classifySfnPayroll2026, classifySfnPayroll2026Steps } from "./net-pay-sfn";
 
 const resolver = createRuleResolver(
   {
@@ -86,6 +86,29 @@ function expectFree(
 }
 
 describe("explicit SFN payroll attribution 2026", () => {
+  it.each([
+    ["2026-07", "2026-07-09T20:00+02:00", "2026-07-10T06:00+02:00"],
+    ["2026-03", "2026-03-28T20:00+01:00", "2026-03-29T06:00+02:00"],
+    ["2026-10", "2026-10-24T20:00+02:00", "2026-10-25T06:00+01:00"],
+  ])(
+    "cooperatively preserves exact complete SFN results in %s, including offset changes",
+    (month, start, end) => {
+      const value = input([shift(start, end)], { month, monthAttribution: "SHIFT_START" });
+      const expected = classifySfnPayroll2026(value, resolver, "FORECAST");
+      const steps = classifySfnPayroll2026Steps(value, resolver, "FORECAST");
+      let count = 0;
+      while (true) {
+        const step = steps.next();
+        if (step.done) {
+          expect(step.value).toEqual(expected);
+          expect(step.value.status).toBe("available");
+          break;
+        }
+        count++;
+      }
+      expect(count).toBeGreaterThan(month === "2026-07" ? 0 : 10);
+    },
+  );
   it("keeps full cash gross and passes separate taxable and SV bases", () => {
     const result = available();
     expect(result.amounts).toEqual({

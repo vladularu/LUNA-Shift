@@ -25,6 +25,7 @@ import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTvlFamilyShift } from "./simple-tvl-family-shift";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 
 // Reviewed table amounts overlay the dated local nursing policy template.
 const packages = [kr2025, kr2026, kr2027, kr2028].map((raw) => {
@@ -136,7 +137,34 @@ export interface TvlKrCalculationOptions {
   readonly confirmedAllowance?: AllowanceStatus | null;
 }
 
+const cachedShift = createSimpleShiftPayCache<ShiftPremiumBreakdown>();
+
 export function calculateTvlKrShift(
+  shift: ShiftEntry,
+  work: UserProfile,
+  selection: TvlKrTariff,
+  region: TvlKrUniversityRegion,
+  saturdayShiftWork: boolean,
+  resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
+): ShiftPremiumBreakdown {
+  return cachedShift(
+    resolver,
+    [shift, work, selection, region, saturdayShiftWork, capturePayrollTrace],
+    () =>
+      calculateTvlKrShiftUncached(
+        shift,
+        work,
+        selection,
+        region,
+        saturdayShiftWork,
+        resolver,
+        capturePayrollTrace,
+      ),
+  );
+}
+
+function calculateTvlKrShiftUncached(
   shift: ShiftEntry,
   work: UserProfile,
   selection: TvlKrTariff,

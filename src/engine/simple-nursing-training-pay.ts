@@ -23,6 +23,7 @@ import { assessTvoedKCalendarMonth } from "./tvoed-k-calendar-assessment";
 import { assessTvoedPattern, isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds, calculateTimedShiftMinutes } from "./working-time";
 import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 
 // Nursing category b uses reviewed table updates with the existing local policy template.
 const packages = [training2025, training2026].map((value) => {
@@ -143,7 +144,20 @@ export function calculateNursingTrainingAssessment(
   return { ...assessed, available: true, tariffLabel: "TVAöD Pflege" };
 }
 
+const cachedShift = createSimpleShiftPayCache<ShiftPremiumBreakdown>();
+
 export function calculateNursingTrainingShift(
+  shift: ShiftEntry,
+  profile: UserProfile,
+  source: RuleResolver,
+  capturePayrollTrace = false,
+): ShiftPremiumBreakdown {
+  return cachedShift(source, [shift, profile, capturePayrollTrace], () =>
+    calculateNursingTrainingShiftUncached(shift, profile, source, capturePayrollTrace),
+  );
+}
+
+function calculateNursingTrainingShiftUncached(
   shift: ShiftEntry,
   profile: UserProfile,
   source: RuleResolver,

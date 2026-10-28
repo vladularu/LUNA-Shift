@@ -21,7 +21,7 @@ describe("calendar diagnostic controls", () => {
   it("does not expose recording controls in a production build", async () => {
     mockAvailable = false;
     const screen = await render(<CalendarPerformanceControls />);
-    expect(screen.queryByText("Kalenderdiagnose starten")).toBeNull();
+    expect(screen.queryByText("Performancediagnose starten")).toBeNull();
     expect(calendarPerformance.getSnapshot()).toBe(0);
   });
   it("does not delete a pre-existing file if creation fails", async () => {
@@ -41,12 +41,12 @@ describe("calendar diagnostic controls", () => {
     jest.replaceProperty(Platform, "OS", "ios");
     const screen = await render(<CalendarPerformanceControls />);
     expect(calendarPerformance.getSnapshot()).toBe(0);
-    await fireEvent.press(screen.getByText("Kalenderdiagnose starten"));
+    await fireEvent.press(screen.getByText("Performancediagnose starten"));
     expect(calendarPerformance.getSnapshot()).toBeGreaterThan(0);
     await act(async () => {
       calendarPerformance.record("commit");
     });
-    await fireEvent.press(screen.getByText("Kalenderdiagnose läuft – stoppen"));
+    await fireEvent.press(screen.getByText("Performancediagnose läuft – stoppen"));
     expect(calendarPerformance.getSnapshot()).toBe(0);
     await fireEvent.press(screen.getByText("Diagnosebericht verwerfen"));
     expect(calendarPerformance.report().events).toEqual([]);

@@ -1,11 +1,11 @@
 import { Text } from "@/ui/text";
 import { WorktimeCard } from "./analysis-report-cards";
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import type { AnalysisCardId } from "@/domain/analysis-view";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { REPORT_CARD_GAP } from "@/theme/tokens";
+import { REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { useAnalysisView } from "./analysis-view-preferences";
 import { type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
@@ -85,15 +85,18 @@ function CheckRow({
   label,
   counts,
   first,
+  minimumHeight,
 }: {
   readonly label: string;
   readonly counts: CheckCounts;
   readonly first?: boolean;
+  readonly minimumHeight?: number;
 }) {
   const p = usePalette();
   const total = counts.criticalCount + counts.warningCount + counts.infoCount;
   return (
     <AnalysisValueRow
+      minimumHeight={minimumHeight}
       label={label}
       first={first}
       value={checkCountLabel(counts)}
@@ -123,6 +126,8 @@ export function CheckListCard({
   onPress,
   status,
   caption,
+  loading = false,
+  reserveLoadingSpace = false,
 }: {
   readonly counts: CheckCounts;
   readonly categories?: ClassifiedCheckCounts;
@@ -130,7 +135,16 @@ export function CheckListCard({
   readonly onPress: () => void;
   readonly status?: string;
   readonly caption?: string;
+  readonly loading?: boolean;
+  readonly reserveLoadingSpace?: boolean;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const rowHeight = reserveLoadingSpace
+    ? (fontScale >= 1.3 ? 4 : 2) * (TYPOGRAPHY.body.lineHeight ?? 22) * fontScale +
+      2 * (SPACING.sm + SPACING.xxs) +
+      1 +
+      (fontScale >= 1.3 ? SPACING.sm : 0)
+    : undefined;
   const total = counts.criticalCount + counts.warningCount + counts.infoCount;
   const label =
     status ??
@@ -145,12 +159,34 @@ export function CheckListCard({
       label={"Prüfung, " + label}
       onPress={onPress}
       caption={caption}
+      busy={loading}
     >
-      {status ? (
+      {loading ? (
+        <>
+          <AnalysisValueRow
+            minimumHeight={rowHeight}
+            first
+            label="Gesetzliche Prüfung"
+            value="Wird geprüft …"
+          />
+          {showPlanning ? (
+            <AnalysisValueRow
+              minimumHeight={rowHeight}
+              label="Planungshinweise"
+              value="Wird geprüft …"
+            />
+          ) : null}
+        </>
+      ) : status ? (
         <AnalysisValueRow first label="Status" value={status} />
       ) : categories ? (
         <>
-          <CheckRow first label="Gesetzliche Prüfung" counts={categories.legal} />
+          <CheckRow
+            minimumHeight={rowHeight}
+            first
+            label="Gesetzliche Prüfung"
+            counts={categories.legal}
+          />
           {categories.legal.prerequisiteCount ? (
             <AnalysisValueRow
               label="Prüfgrundlage"
@@ -158,7 +194,13 @@ export function CheckListCard({
               icon="information-circle-outline"
             />
           ) : null}
-          {showPlanning ? <CheckRow label="Planungshinweise" counts={categories.planning} /> : null}
+          {showPlanning ? (
+            <CheckRow
+              minimumHeight={rowHeight}
+              label="Planungshinweise"
+              counts={categories.planning}
+            />
+          ) : null}
         </>
       ) : (
         <CheckRow first label="Meldungen" counts={counts} />
@@ -178,6 +220,10 @@ export function PayListCard({
   caption,
   netRow,
   annualPayments,
+  annualPaymentPresent = false,
+  annualPaymentExpected = false,
+  loading = false,
+  reserveLoadingSpace = false,
 }: {
   readonly onPress: () => void;
   readonly base?: number | null;
@@ -190,27 +236,57 @@ export function PayListCard({
   readonly caption: string;
   readonly netRow?: ReactNode;
   readonly annualPayments?: number;
+  readonly annualPaymentPresent?: boolean;
+  readonly annualPaymentExpected?: boolean;
+  readonly loading?: boolean;
+  readonly reserveLoadingSpace?: boolean;
 }) {
-  const annualRow = !!annualPayments ? (
+  const { fontScale } = useWindowDimensions();
+  const hasAnnualRow = !!annualPayments || annualPaymentPresent || annualPaymentExpected;
+  const annualRow = hasAnnualRow ? (
     <AnalysisValueRow
       reserveDisclosure
       label="Jahressonderzahlung"
-      value={formatEuro(annualPayments)}
+      value={
+        annualPaymentPresent || !!annualPayments
+          ? formatEuro(annualPayments ?? 0)
+          : loading
+            ? "—"
+            : "Nicht hinterlegt"
+      }
     />
   ) : null;
+  const rows =
+    1 +
+    (netRow ? 1 : 0) +
+    (hasAnnualRow ? 1 : 0) +
+    (manual
+      ? hasAnnualRow && base != null
+        ? 1
+        : 0
+      : (base != null ? 1 : 0) +
+        (premiums != null ? 1 : 0) +
+        (overtime ? 1 : 0) +
+        (allowances ? 1 : 0));
   return (
     <AnalysisListCard
       title="Gehalt"
-      label={"Gehalt, " + (status ?? formatEuro(gross ?? null))}
+      label={"Gehalt, " + (status ?? (loading ? "Wird berechnet …" : formatEuro(gross ?? null)))}
       onPress={onPress}
       caption={caption}
       captionBelowFooter
+      busy={loading}
+      bodyMinHeight={
+        !reserveLoadingSpace || status || fontScale > 1.2
+          ? undefined
+          : rows * 47 + (hasAnnualRow && netRow ? 32 : 0)
+      }
     >
       {status ? (
         <AnalysisValueRow reserveDisclosure first label="Status" value={status} />
       ) : manual ? (
         <>
-          {annualPayments && base != null ? (
+          {hasAnnualRow && base != null ? (
             <AnalysisValueRow
               reserveDisclosure
               first
@@ -224,7 +300,7 @@ export function PayListCard({
             first
             total
             label="Brutto geschätzt"
-            value={formatEuro(gross ?? null)}
+            value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>
       ) : (
@@ -265,7 +341,7 @@ export function PayListCard({
             first={base == null && premiums == null}
             total
             label="Brutto geschätzt"
-            value={formatEuro(gross ?? null)}
+            value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>
       )}

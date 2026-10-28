@@ -5,6 +5,12 @@ import { useReducedMotion } from "react-native-reanimated";
 
 type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 type PageRenderer = (month: string, onMove: (delta: number) => void, active: boolean) => ReactNode;
+type PagePreparer = (
+  month: string,
+  active: boolean,
+  distance: number,
+  content: ReactNode,
+) => ReactNode;
 const RADIUS = 12;
 
 export function reportPeriodOffset(month: string, delta: number, unit: "MONTH" | "YEAR") {
@@ -20,12 +26,16 @@ export function ReportPeriodPager({
   enabled = true,
   onChange,
   renderPage,
+  preparePage,
+  preparationRadius = 1,
 }: {
   readonly value: string;
   readonly unit?: "MONTH" | "YEAR";
   readonly enabled?: boolean;
   readonly onChange: (month: string) => void;
   readonly renderPage: PageRenderer;
+  readonly preparePage?: PagePreparer;
+  readonly preparationRadius?: number;
 }) {
   const reduced = useReducedMotion();
   const ref = useRef<ScrollView>(null);
@@ -112,6 +122,7 @@ export function ReportPeriodPager({
     [enabled, onChange, pages, reduced, unit, width],
   );
   const destinationIndex = destination ? pages.indexOf(destination) : index;
+  const radius = preparePage ? Math.max(1, Math.min(3, preparationRadius)) : 1;
   return (
     <View
       style={{ flex: 1 }}
@@ -126,7 +137,15 @@ export function ReportPeriodPager({
       }}
     >
       {width <= 0 || index < 0 ? (
-        <PeriodPageContent month={value} onMove={move} active renderPage={renderPage} />
+        <PeriodPageContent
+          month={value}
+          onMove={move}
+          active
+          distance={0}
+          visible
+          renderPage={renderPage}
+          preparePage={preparePage}
+        />
       ) : (
         <ScrollView
           key={`${anchor}-${unit}`}
@@ -161,12 +180,18 @@ export function ReportPeriodPager({
               importantForAccessibility={month === value ? "auto" : "no-hide-descendants"}
               pointerEvents={month === value ? "auto" : "none"}
             >
-              {Math.abs(pageIndex - index) <= 1 || Math.abs(pageIndex - destinationIndex) <= 1 ? (
+              {Math.abs(pageIndex - index) <= radius ||
+              Math.abs(pageIndex - destinationIndex) <= radius ? (
                 <PeriodPageContent
                   month={month}
                   onMove={move}
                   active={month === value}
+                  distance={pageIndex - index}
+                  visible={
+                    Math.abs(pageIndex - index) <= 1 || Math.abs(pageIndex - destinationIndex) <= 1
+                  }
                   renderPage={renderPage}
+                  preparePage={preparePage}
                 />
               ) : null}
             </View>
@@ -182,11 +207,18 @@ function PeriodPageContent({
   onMove,
   active,
   renderPage,
+  preparePage,
+  distance,
+  visible,
 }: {
   readonly month: string;
   readonly onMove: (delta: number) => void;
   readonly active: boolean;
   readonly renderPage: PageRenderer;
+  readonly preparePage?: PagePreparer;
+  readonly distance: number;
+  readonly visible: boolean;
 }) {
-  return renderPage(month, onMove, active);
+  const content = visible ? renderPage(month, onMove, active) : null;
+  return preparePage ? preparePage(month, active, distance, content) : content;
 }

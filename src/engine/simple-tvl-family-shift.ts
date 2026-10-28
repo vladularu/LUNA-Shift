@@ -120,6 +120,8 @@ export function calculateTvlFamilyShift(
     if (holidays.status !== "AVAILABLE") throw new RuleResolutionError(holidays.failure);
     const transition =
       sectionStart.offsetNanoseconds !== start.add({ minutes: until - 1 }).offsetNanoseconds;
+    const sectionMinute = sectionStart.hour * 60 + sectionStart.minute;
+    const dayOfWeek = sectionStart.dayOfWeek;
     const percentage = (key: string, label: string, basisPoints: number): PremiumCandidate => ({
       key,
       label,
@@ -141,13 +143,11 @@ export function calculateTvlFamilyShift(
     for (let offset = from; offset < until; offset++) {
       if (offset >= pauseFrom && offset < pauseFrom + pause) continue;
       const cursor = transition ? start.add({ minutes: offset }) : null;
-      const minute = cursor
-        ? cursor.hour * 60 + cursor.minute
-        : sectionStart.hour * 60 + sectionStart.minute + offset - from;
+      const minute = cursor ? cursor.hour * 60 + cursor.minute : sectionMinute + offset - from;
       if (inWindow(minute, ctx.policy.nightWindow))
         count(percentage("night", "Nacht", ctx.policy.nightBasisPoints), offset);
       const competing: PremiumCandidate[] = [];
-      if (sectionStart.dayOfWeek === 7)
+      if (dayOfWeek === 7)
         competing.push(percentage("sunday", "Sonntag", ctx.policy.sundayBasisPoints));
       if (holidays.holidays.has(date))
         competing.push(
@@ -168,7 +168,7 @@ export function calculateTvlFamilyShift(
         competing.push(
           percentage("preholiday", "24./31. Dezember", ctx.policy.preHolidayBasisPoints),
         );
-      if (sectionStart.dayOfWeek === 6 && inWindow(minute, ctx.policy.saturdayWindow))
+      if (dayOfWeek === 6 && inWindow(minute, ctx.policy.saturdayWindow))
         competing.push(
           saturdayShiftWork
             ? {

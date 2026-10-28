@@ -24,6 +24,7 @@ import {
 } from "@/engine/working-time-target-rules";
 import { validateTargetInputs, WorkingTimeTargetError } from "@/engine/working-time-target-input";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
+import { createWorkingTimeTargetCache } from "./working-time-target-cache";
 
 interface RawAdjustment extends Omit<TargetAdjustment, "minutes"> {
   /** Integer numerator of minutes / 5; never accumulate floating point hours. */
@@ -36,7 +37,7 @@ interface RawDay {
   readonly adjustments: readonly RawAdjustment[];
 }
 
-const LEGACY_CACHE = new WeakMap<RuleResolver, Map<string, MonthlyWorkingTimeTarget>>();
+const targetCache = createWorkingTimeTargetCache();
 
 function line(
   date: string,
@@ -231,6 +232,20 @@ export function calculateMonthlyWorkingTimeTarget(
   resolver: RuleResolver = bundledRuleResolver,
   context?: WorkingTimeTargetContext,
 ): MonthlyWorkingTimeTarget {
+  const steps = calculateMonthlyWorkingTimeTargetSteps(month, profile, resolver, context);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+/** Same day ledger and rounding, with a cooperative boundary before every calendar day. */
+export function* calculateMonthlyWorkingTimeTargetSteps(
+  month: string,
+  profile: WorkingTimeTargetProfile,
+  resolver: RuleResolver = bundledRuleResolver,
+  context?: WorkingTimeTargetContext,
+): Generator<number, MonthlyWorkingTimeTarget, void> {
   const input = profile.workingTimeTarget;
   if (input && input.status !== "ready")
     throw new WorkingTimeTargetError(
@@ -240,9 +255,17 @@ export function calculateMonthlyWorkingTimeTarget(
     );
   context ??= input?.context;
   validateTargetInputs(month, profile, context);
-  const cacheKey = `${month}/${profile.federalState}/${profile.holidayRegion ?? "NONE"}/${profile.weeklyMinutes}`;
-  const cacheable = context === undefined && input === undefined;
-  const cached = cacheable ? LEGACY_CACHE.get(resolver)?.get(cacheKey) : undefined;
+  // Value keys also detect changed roster facts on a reused context object.
+  // Keep input validation and loading/error guards before cache reads.
+  const cacheKey = JSON.stringify([
+    month,
+    profile.federalState,
+    profile.holidayRegion,
+    profile.weeklyMinutes,
+    input,
+    context,
+  ]);
+  const cached = targetCache.get(resolver, cacheKey);
   if (cached) return cached;
   const first = Temporal.PlainYearMonth.from(month);
   const forecast = input?.mode === "FORECAST";
@@ -275,6 +298,7 @@ export function calculateMonthlyWorkingTimeTarget(
   const holidayMaps = new Map<string, ReadonlyMap<string, string>>();
   const raw: RawDay[] = [];
   for (let day = 1; day <= first.daysInMonth; day++) {
+    yield day;
     const plainDate = first.toPlainDate({ day }),
       date = plainDate.toString();
     const empty: RawDay = { date, base: 0, unavailable: false, adjustments: [] };
@@ -578,11 +602,7 @@ export function calculateMonthlyWorkingTimeTarget(
     });
     return roundLedger(month, raw, notices);
   }
-  if (cacheable) {
-    const cache = LEGACY_CACHE.get(resolver) ?? new Map<string, MonthlyWorkingTimeTarget>();
-    cache.set(cacheKey, result);
-    LEGACY_CACHE.set(resolver, cache);
-  }
+  targetCache.set(resolver, cacheKey, result);
   return result;
 }
 

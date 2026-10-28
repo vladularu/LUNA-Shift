@@ -35,3 +35,21 @@ export function conditionsMatch(
     (conditions.monthDays === null || conditions.monthDays.includes(date.slice(5)))
   );
 }
+
+/** One synchronous traversal of immutable inputs; evaluate only on the first applicable minute. */
+export function createPayConditionMatcher(
+  profile: UserProfile,
+  shift: ShiftEntry,
+  allowanceStatus: AllowanceStatus | null = null,
+) {
+  const dates = new Map<string, Map<RuleConditions, boolean>>();
+  return (conditions: RuleConditions, date: string) => {
+    const cache = dates.get(date) ?? new Map<RuleConditions, boolean>();
+    const existing = cache.get(conditions);
+    if (existing !== undefined) return existing;
+    const result = conditionsMatch(conditions, profile, date, shift, allowanceStatus);
+    cache.set(conditions, result);
+    dates.set(date, cache);
+    return result;
+  };
+}

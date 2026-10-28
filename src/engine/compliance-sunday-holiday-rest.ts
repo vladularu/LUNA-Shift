@@ -148,7 +148,7 @@ function* workByCalendarDateIncrementally(
       result.set(date, entries);
     }
     processed += 1;
-    if (processed % 24 === 0) yield processed;
+    if (processed % 8 === 0) yield processed;
   }
   return result;
 }
@@ -268,12 +268,13 @@ function replacementCandidate(
   };
 }
 
-function replacementCandidateDates(
+function* replacementCandidateDates(
   obligations: readonly RestObligation[],
   coverageStart: Temporal.PlainDate,
   coverageEnd: Temporal.PlainDate,
-): readonly Temporal.PlainDate[] {
+): Generator<number, readonly Temporal.PlainDate[], void> {
   const dates = new Map<string, Temporal.PlainDate>();
+  let processed = 0;
   for (const obligation of obligations) {
     let date =
       Temporal.PlainDate.compare(obligation.windowStart, coverageStart) < 0
@@ -285,6 +286,8 @@ function replacementCandidateDates(
         : obligation.windowEnd;
     for (; Temporal.PlainDate.compare(date, end) <= 0; date = date.add({ days: 1 })) {
       if (date.dayOfWeek !== 7) dates.set(date.toString(), date);
+      processed += 1;
+      if (processed % 16 === 0) yield processed;
     }
   }
   return [...dates.values()].sort(Temporal.PlainDate.compare);
@@ -459,6 +462,29 @@ export function* checkSundayHolidayRestIncrementally(
     yield step.value;
   }
   const holidayDates = holidayCoverage.dates;
+  if (intervals.length === 0 && shifts.length === 0) {
+    const issues: ComplianceIssue[] = [];
+    if (holidayCoverage.missingYears.size > 0)
+      issues.push(
+        issue(
+          "warning",
+          "HOLIDAY_CATALOG_COVERAGE",
+          "Feiertagskatalog unvollständig",
+          `Für ${[...holidayCoverage.missingYears].sort().join(", ")} fehlt ein gültiges Feiertagspaket. Sonntage werden weiter geprüft; Feiertagsprüfungen sind unvollständig.`,
+          [],
+          `${month}-01`,
+        ),
+      );
+    issues.push(
+      ...freeSundayIssues(
+        Number(month.slice(0, 4)),
+        workDates,
+        referenceDate,
+        restRules.minimumFreeSundaysPerCalendarYear,
+      ),
+    );
+    return issues;
+  }
   const requiredRestMinutes = restRules.replacementDayMinutes + restRules.connectedRestMinutes;
   const entriesByDate = new Map<string, ShiftEntry[]>();
   for (const shift of shifts) {
@@ -473,7 +499,7 @@ export function* checkSundayHolidayRestIncrementally(
     restRules.sundayCompensationPeriodDays,
     restRules.weekdayHolidayCompensationPeriodDays,
   );
-  const candidateDates = replacementCandidateDates(
+  const candidateDates = yield* replacementCandidateDates(
     obligations,
     Temporal.PlainDate.from(coverageStartValue),
     Temporal.PlainDate.from(coverageEndValue),

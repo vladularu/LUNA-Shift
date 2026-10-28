@@ -45,6 +45,25 @@ function shift(
 }
 
 describe("ArbZG compliance", () => {
+  it("preserves catalog-coverage warnings on the empty-horizon fast path", () => {
+    const result = calculateMonthlyCompliance("2026-11", [], "Europe/Berlin", {
+      federalState: "NW",
+      ruleResolver: legalV6Resolver,
+      referenceDate: "2026-10-28",
+    });
+    expect(result.issues.some((item) => item.rule === "HOLIDAY_CATALOG_COVERAGE")).toBe(true);
+    expect(result.warningCount).toBeGreaterThan(0);
+    expect(result.assessmentRange?.from).toBeTruthy();
+  });
+  it("does not skip surrounding shifts when the target month itself has no entries", () => {
+    const invalidBoundary = shift("boundary", "2026-10-31", "25:00", "08:00");
+    expect(() =>
+      calculateMonthlyCompliance("2026-11", [invalidBoundary], "Europe/Berlin", {
+        ruleResolver: legalV6Resolver,
+        referenceDate: "2026-10-28",
+      }),
+    ).toThrow();
+  });
   it("reports every unresolved profile evidence boundary without hiding the calculation", () => {
     const result = calculateMonthlyCompliance(
       "2026-07",

@@ -24,6 +24,7 @@ import { assessTvoedKCalendarMonth } from "./tvoed-k-calendar-assessment";
 import { assessTvoedPattern, isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds, calculateTimedShiftMinutes } from "./working-time";
 import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 
 // Explicit local E-table adapter. Raw Annex-A source packages remain DRAFT.
 // Shared nursing shift rules use the same VKA AT/BT-K/BT-B source provisions;
@@ -194,7 +195,20 @@ export function calculateVkaEAssessment(
   return { ...assessed, available: true, tariffLabel: "TVöD VKA · E-Tabelle" };
 }
 
+const cachedShift = createSimpleShiftPayCache<ShiftPremiumBreakdown>();
+
 export function calculateVkaEShift(
+  shift: ShiftEntry,
+  profile: UserProfile,
+  source: RuleResolver,
+  capturePayrollTrace = false,
+): ShiftPremiumBreakdown {
+  return cachedShift(source, [shift, profile, capturePayrollTrace], () =>
+    calculateVkaEShiftUncached(shift, profile, source, capturePayrollTrace),
+  );
+}
+
+function calculateVkaEShiftUncached(
   shift: ShiftEntry,
   profile: UserProfile,
   source: RuleResolver,

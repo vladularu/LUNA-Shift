@@ -92,6 +92,35 @@ function nightBounds(shift: ShiftEntry, timeZone: string) {
 }
 
 /** Same monthly selection for pay and explanation; no future-month follow-up reuse. */
+export function* prepareNightSequenceSteps(
+  entries: readonly CalendarEntry[],
+  month: string,
+  timeZone: string,
+): Generator<number, void, void> {
+  const first = Temporal.PlainDate.from(`${month}-01`),
+    from = first.subtract({ months: 1 }).toString(),
+    until = first.add({ months: 1 }).toString();
+  let count = 0;
+  for (const entry of entries) {
+    if (
+      entry.kind !== "SHIFT" ||
+      entry.deletedAt !== null ||
+      entry.date < from ||
+      entry.date >= until ||
+      !isPayWorkShift(entry)
+    )
+      continue;
+    try {
+      nightBounds(entry, timeZone);
+    } catch {
+      /* The complete explanation retains its invalid/uncertain policy. */
+    }
+    if (++count % 4 === 0) yield 1;
+  }
+  if (count % 4 !== 0) yield 1;
+}
+
+/** Same monthly selection for pay and explanation; no future-month follow-up reuse. */
 export function explainNightSequence(
   entries: readonly CalendarEntry[],
   month: string,

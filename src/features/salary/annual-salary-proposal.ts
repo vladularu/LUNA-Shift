@@ -1,6 +1,7 @@
 import { employmentProfileAt } from "@/domain/employment-history";
 import type { UserProfile } from "@/domain/types";
-import { salaryMonthInput, type SalaryMonthContext } from "./salary-month-input";
+import { salaryMonthInputSteps, type SalaryMonthContext } from "./salary-month-input";
+import { createAnnualSalaryProposalCache } from "./annual-salary-proposal-cache";
 
 export interface AnnualSalaryProposal {
   readonly grossCents: number;
@@ -9,6 +10,8 @@ export interface AnnualSalaryProposal {
   readonly referenceMonths: readonly string[];
   readonly note: string;
 }
+
+const cachedProposal = createAnnualSalaryProposalCache();
 
 /** Dated 2026 source-backed proposal, never a confirmation of the employee's entitlement.
  * High TV-H KR groups absent from the published JSZ mapping and other years stay manual.
@@ -19,6 +22,18 @@ export function annualSalaryProposal(
   profile: UserProfile,
   context: SalaryMonthContext,
 ): AnnualSalaryProposal | null {
+  const steps = annualSalaryProposalSteps(year, profile, context);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* annualSalaryProposalSteps(
+  year: number,
+  profile: UserProfile,
+  context: SalaryMonthContext,
+): Generator<number, AnnualSalaryProposal | null, void> {
   const contexts = [
     employmentProfileAt(profile, `${year}-01-01`),
     ...(profile.employmentTimeline ?? [])
@@ -58,10 +73,12 @@ export function annualSalaryProposal(
     rate = value <= 6 ? 8743 : value <= 8 ? 8814 : value <= 15 ? 7435 : 4647;
   } else return null;
   const referenceMonths = months.map((m) => `${year}-${String(m).padStart(2, "0")}`);
+  const cached = cachedProposal.read(year, profile, context);
+  if (cached !== null) return cached;
   let sum = 0;
   try {
     for (const month of referenceMonths) {
-      const { pay } = salaryMonthInput(month, profile, context);
+      const { pay } = yield* salaryMonthInputSteps(month, profile, context);
       if (!pay.available || pay.estimatedGrossAmount === null || pay.personalBaseAmount === null)
         return null;
       sum += Math.round(
@@ -73,7 +90,7 @@ export function annualSalaryProposal(
   } catch {
     return null;
   }
-  return {
+  return cachedProposal.write(year, profile, context, {
     grossCents: Math.round((sum * rate) / (months.length * 10_000)),
     basisCents: Math.round(sum / months.length),
     rateBasisPoints: rate,
@@ -83,5 +100,5 @@ export function annualSalaryProposal(
       : profile.nursingTrainingTariff
         ? "Prognose bei vollem Jahresanspruch aus dem durchschnittlichen Entgelt von August bis Oktober einschließlich berücksichtigungsfähiger Zulagen. Zusätzliche Überstundenvergütung bleibt ausgenommen. Anspruch am Stichtag und mögliche Kürzungen sind nicht bestätigt."
         : "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen.",
-  };
+  });
 }

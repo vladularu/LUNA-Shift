@@ -16,6 +16,7 @@ import {
   type RouteParam,
 } from "@/navigation/route-params";
 import { analysisPeriodRoute } from "@/navigation/routes";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 type Selection = { readonly month: string; readonly period: "MONTH" | "YEAR" };
 
@@ -103,6 +104,7 @@ export function useAnalysisNavigation(timeZone?: string) {
   }
   function selectMonth(next: string) {
     if (!current.current.focused) return;
+    calendarPerformance.begin("analysis-request", next);
     const selection = { month: next, period };
     apply(selection);
     router.setParams(selection);

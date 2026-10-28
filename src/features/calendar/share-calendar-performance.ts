@@ -14,7 +14,7 @@ export async function shareCalendarPerformanceFile(
     file.create();
     created = true;
     file.write(serialized);
-    return await Share.share({ url: file.uri }, { subject: "LUNA Shift Kalenderdiagnose" });
+    return await Share.share({ url: file.uri }, { subject: "LUNA Shift Performancediagnose" });
   } finally {
     if (created && file.exists) file.delete();
   }

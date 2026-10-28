@@ -18,8 +18,8 @@ function freeze<T>(value: T, visited = new WeakSet<object>()): T {
 /** In-memory only. Content keys handle fresh SQL objects and edits without a revision change. */
 export function createAutomaticNetPayCache() {
   const catalogs = new WeakMap<RuleResolver, Map<string, AutomaticNetPayForecast>>();
-  return (input: Input, resolver: RuleResolver, calculate: () => AutomaticNetPayForecast) => {
-    const key = JSON.stringify([
+  const keyFor = (input: Input) =>
+    JSON.stringify([
       input.month,
       resolveNetPayCalculationBasis(input.month, "FORECAST"),
       input.profile,
@@ -27,20 +27,31 @@ export function createAutomaticNetPayCache() {
       input.shifts,
       input.pay,
     ]);
-    const entries = catalogs.get(resolver) ?? new Map<string, AutomaticNetPayForecast>();
-    const cached = entries.get(key);
+  const read = (input: Input, resolver: RuleResolver) => {
+    const key = keyFor(input);
+    const entries = catalogs.get(resolver);
+    const cached = entries?.get(key);
     if (cached) {
-      entries.delete(key);
-      entries.set(key, cached);
+      entries!.delete(key);
+      entries!.set(key, cached);
       return cached;
     }
-    const forecast = calculate();
+    return null;
+  };
+  const write = (input: Input, resolver: RuleResolver, forecast: AutomaticNetPayForecast) => {
     // Failed or incomplete calculations must be retried when underlying data becomes available.
     if (forecast.result.status !== "available") return forecast;
+    const key = keyFor(input);
+    const entries = catalogs.get(resolver) ?? new Map<string, AutomaticNetPayForecast>();
     const snapshot = freeze(forecast);
     entries.set(key, snapshot);
     if (entries.size > LIMIT) entries.delete(entries.keys().next().value!);
     if (!catalogs.has(resolver)) catalogs.set(resolver, entries);
     return snapshot;
   };
+  return Object.assign(
+    (input: Input, resolver: RuleResolver, calculate: () => AutomaticNetPayForecast) =>
+      read(input, resolver) ?? write(input, resolver, calculate()),
+    { read, write },
+  );
 }

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { subscribeNetPayProfiles } from "./net-pay-profile-events";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
 import { NET_PAY_PENSION_OPTIONS } from "@/domain/net-pay-pension-schemes";
@@ -7,6 +8,8 @@ import {
   loadNetPayProfileTimeline,
   saveContinuousNetPaySettings,
   saveMonthlyNetPaySettings,
+  deleteMonthlyNetPaySettings,
+  resetAnnualSalaryPayments,
 } from "./net-pay-profile-repository";
 import { restoreLocalBackup } from "./local-backup-restore";
 import {
@@ -28,6 +31,31 @@ describe("continuous net-pay persistence", () => {
   afterEach(() => {
     source.adapter.database.close();
     target.adapter.database.close();
+  });
+  it("publishes timeline invalidation after commits, never after a rolled-back conflict", async () => {
+    const transactions: boolean[] = [];
+    const unsubscribe = subscribeNetPayProfiles(source.db, () => {
+      transactions.push(source.adapter.database.inTransaction);
+    });
+    const first = await saveContinuousNetPaySettings(source.db, {
+      settings: automatedSettings("2026-10"),
+      expectedTimeline: [],
+    });
+    await expect(
+      saveContinuousNetPaySettings(source.db, {
+        settings: automatedSettings("2026-11"),
+        expectedTimeline: [],
+      }),
+    ).rejects.toThrow("zwischenzeitlich");
+    expect(transactions).toEqual([false]);
+    const monthly = await saveMonthlyNetPaySettings(source.db, {
+      settings: { ...settings(), month: "2027-01" },
+      expected: null,
+    });
+    await deleteMonthlyNetPaySettings(source.db, "2027-01", monthly);
+    await resetAnnualSalaryPayments(source.db, { year: 2026, expectedTimeline: [first] });
+    expect(transactions).toEqual([false, false, false, false]);
+    unsubscribe();
   });
   it.each(["2026-01", "2026-10", "2027-06"])(
     "applies the first setup in %s from January with a single dated row",

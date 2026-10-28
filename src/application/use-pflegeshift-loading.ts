@@ -12,6 +12,7 @@ import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
 import {
   calendarRangeCoversYear,
   reconcileCalendarRange,
+  retainCalendarRanges,
 } from "@/application/calendar-entry-loading";
 import { reconcileLoadedEntryNotifications } from "@/application/pflegeshift-notifications";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@/domain/data-load-failure";
 import type { CalendarEntry } from "@/domain/types";
 import { calendarPerformance } from "./calendar-performance";
+import { currentMonth } from "@/engine/calendar";
 
 export function usePflegeShiftLoading(
   activeMonth: string,
@@ -42,6 +44,8 @@ export function usePflegeShiftLoading(
   const rangeKey = `${range.startDate}:${range.endDate}`;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [calendarRange, setCalendarRange] = useState<CalendarEntryRange | null>(null);
+  const [retainedRanges, setRetainedRanges] = useState<readonly CalendarEntryRange[]>([]);
+  const retained = useRef<readonly CalendarEntryRange[]>([]);
   const [error, setError] = useState<string | null>(null);
   const initialized = useRef(false);
   const sequence = useRef(0);
@@ -57,6 +61,19 @@ export function usePflegeShiftLoading(
   const load = useCallback(
     async (full: boolean) => {
       const revision = ++sequence.current;
+      const presentYear = Number(currentMonth().slice(0, 4));
+      const cached = retained.current.find(
+        (known) => known.startDate <= range.startDate && known.endDate >= range.endDate,
+      );
+      if (!full && initialized.current && cached) {
+        const recent = retainCalendarRanges(retained.current, cached, presentYear);
+        retained.current = recent;
+        setRetainedRanges(recent);
+        setCalendarRange(range);
+        setLoadedKey(rangeKey);
+        setError(null);
+        return;
+      }
       const finishTiming = calendarPerformance.span("load-end", {
         load: revision,
         full: full ? 1 : 0,
@@ -72,6 +89,8 @@ export function usePflegeShiftLoading(
         initialized.current = false;
         setLoadedKey(null);
         setCalendarRange(null);
+        retained.current = [];
+        setRetainedRanges([]);
       }
       setError(null);
       try {
@@ -104,8 +123,14 @@ export function usePflegeShiftLoading(
             calendarPerformance.record("load-discard", { load: revision });
             return;
           }
-          setEntries((current) => reconcileCalendarRange(loaded, before, current, range, deleted));
+          const keep = retainCalendarRanges(retained.current, range, presentYear);
+          setEntries((current) =>
+            reconcileCalendarRange(loaded, before, current, range, deleted, keep),
+          );
         }
+        const keep = retainCalendarRanges(retained.current, range, presentYear);
+        retained.current = keep;
+        setRetainedRanges(keep);
         setCalendarRange(range);
       } catch (loadError) {
         calendarPerformance.record("load-error", { load: revision });
@@ -141,8 +166,14 @@ export function usePflegeShiftLoading(
   }, [load]);
   const reload = useCallback(() => load(true), [load]);
   return {
-    ready: loadedKey === rangeKey || calendarRangeCoversYear(calendarRange, activeYear),
-    calendarRange,
+    ready:
+      loadedKey === rangeKey ||
+      retainedRanges.some((known) => calendarRangeCoversYear(known, activeYear)),
+    calendarRange: retainedRanges.some(
+      (known) => known.startDate <= range.startDate && known.endDate >= range.endDate,
+    )
+      ? range
+      : calendarRange,
     error,
     reload,
     recordDeletion,

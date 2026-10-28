@@ -12,6 +12,7 @@ import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { calculateTvhKrMonth, calculateTvhKrShift, getTvhKrTable } from "./simple-tvh-kr-pay";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS, isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
+import { createSimplePayCache } from "./simple-shift-pay-cache";
 
 export function selectTvhKrAssessmentShifts(
   entries: readonly CalendarEntry[],
@@ -22,7 +23,24 @@ export function selectTvhKrAssessmentShifts(
       e.kind === "SHIFT" && e.deletedAt === null && e.date.startsWith(month + "-"),
   );
 }
+const cachedAssessment =
+  createSimplePayCache<ReturnType<typeof calculateTvhKrAssessmentUncached>>(24);
+
 export function calculateTvhKrAssessment(
+  month: string,
+  shifts: readonly ShiftEntry[],
+  settings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+  timeZone = "Europe/Berlin",
+) {
+  const date = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 }).toString();
+  if (!getTvhKrTable(date))
+    return { available: false, assessment: null, tariffLabel: "TV-H Pflege" };
+  return cachedAssessment(bundledRuleResolver, [month, shifts, settings, timeZone], () =>
+    calculateTvhKrAssessmentUncached(month, shifts, settings, timeZone),
+  );
+}
+
+function calculateTvhKrAssessmentUncached(
   month: string,
   shifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
