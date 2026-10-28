@@ -11,6 +11,7 @@ import type {
 } from "@/domain/working-time-target";
 import {
   calculateMonthlyWorkingTimeTarget,
+  calculateMonthlyWorkingTimeTargetSteps,
   requireTargetMinutes,
 } from "@/engine/working-time-target";
 import { calculateDailyWorkCredit } from "@/engine/daily-summary";
@@ -42,6 +43,24 @@ export function calculateMonthlySummary(
   ruleResolver: RuleResolver = bundledRuleResolver,
   targetContext?: WorkingTimeTargetContext,
 ): MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget } {
+  const steps = calculateMonthlySummarySteps(month, entries, profile, ruleResolver, targetContext);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* calculateMonthlySummarySteps(
+  month: string,
+  entries: readonly ShiftEntry[],
+  profile: WorkingTimeTargetProfile & Pick<UserProfile, "timeZone">,
+  ruleResolver: RuleResolver = bundledRuleResolver,
+  targetContext?: WorkingTimeTargetContext,
+): Generator<
+  number,
+  MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget },
+  void
+> {
   const work = category();
   const training = category();
   const vacation = category();
@@ -72,10 +91,11 @@ export function calculateMonthlySummary(
     vacation.minutes += day.vacationMinutes;
     sick.minutes += day.sickMinutes;
     overlapMinutes += day.overlapMinutes;
+    yield 1;
   }
 
   const actualMinutes = work.minutes + training.minutes + vacation.minutes + sick.minutes;
-  const targetCalculation = calculateMonthlyWorkingTimeTarget(
+  const targetCalculation = yield* calculateMonthlyWorkingTimeTargetSteps(
     month,
     profile,
     ruleResolver,

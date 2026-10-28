@@ -10,6 +10,7 @@ import {
   type PflegeShiftSnapshot,
 } from "./pflegeshift-snapshot";
 import { usePflegeShiftLoading } from "./use-pflegeshift-loading";
+import { forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 
 jest.mock("./pflegeshift-notifications", () => ({
   reconcileLoadedEntryNotifications: jest.fn(async () => false),
@@ -26,6 +27,8 @@ const ports = {
   notifications: {},
 } as unknown as PflegeShiftPorts;
 let state: ReturnType<typeof usePflegeShiftLoading>;
+let visibleEntries: readonly CalendarEntry[] = [];
+let editEntries: (next: readonly CalendarEntry[]) => void;
 const snapshot: PflegeShiftSnapshot = {
   profile: null,
   templates: [],
@@ -39,7 +42,9 @@ function Page({ month }: { month: string }) {
   const value = usePflegeShiftLoading(month, ports, entries, setEntries, apply, record);
   useLayoutEffect(() => {
     state = value;
-  }, [value]);
+    visibleEntries = entries;
+    editEntries = setEntries;
+  }, [value, entries]);
   return <Text>{value.ready ? "ready" : "loading"}</Text>;
 }
 beforeEach(() => {
@@ -48,6 +53,52 @@ beforeEach(() => {
   jest.mocked(loadPflegeShiftSnapshot).mockReset().mockResolvedValue(snapshot);
 });
 describe("report readiness while extending the cached year range", () => {
+  it("returns across a year boundary immediately without querying again or dropping the previous lookback", async () => {
+    const lookback = forecastShift({ id: "lookback", date: "2025-06-01" });
+    const october = forecastShift({ id: "october", date: "2026-10-01" });
+    const future = forecastShift({ id: "future", date: "2027-06-01" });
+    jest
+      .mocked(loadPflegeShiftSnapshot)
+      .mockResolvedValue({ ...snapshot, entries: [lookback, october] });
+    list.mockResolvedValue([october, future]);
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    await screen.rerender(<Page month="2027-06" />);
+    await waitFor(() => expect(visibleEntries).toContainEqual(future));
+    expect(visibleEntries).toContainEqual(lookback);
+    await screen.rerender(<Page month="2026-10" />);
+    expect(screen.getByText("ready")).toBeTruthy();
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(loadPflegeShiftSnapshot)).toHaveBeenCalledTimes(1);
+    expect(visibleEntries).toContainEqual(october);
+  });
+  it("retains local edits/deletions and invalidates all remembered windows on a full reload", async () => {
+    const original = forecastShift({ id: "old", date: "2025-06-01" });
+    const october = forecastShift({ id: "october", date: "2026-10-01" });
+    jest
+      .mocked(loadPflegeShiftSnapshot)
+      .mockResolvedValue({ ...snapshot, entries: [original, october] });
+    list.mockResolvedValue([october]);
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    const edited = { ...october, title: "Edited", revision: 2 };
+    await act(async () => {
+      editEntries([edited]);
+      state.recordDeletion(original);
+    });
+    list.mockResolvedValue([edited]);
+    await screen.rerender(<Page month="2027-06" />);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    await screen.rerender(<Page month="2026-10" />);
+    expect(visibleEntries).toEqual([edited]);
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValue({ ...snapshot, entries: [edited] });
+    await act(async () => {
+      await state.reload();
+    });
+    await screen.rerender(<Page month="2027-06" />);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    expect(visibleEntries).not.toContainEqual(original);
+  });
   it("keeps a cached adjacent year ready while its surrounding range loads", async () => {
     const screen = await render(<Page month="2026-10" />);
     await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());

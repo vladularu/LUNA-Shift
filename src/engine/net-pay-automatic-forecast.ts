@@ -8,7 +8,7 @@ import type { MonthlyPayEstimate, ShiftEntry, UserProfile } from "@/domain/types
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { calculateMonthlyNetPay } from "./net-pay";
 import { addAnnualSalaryPayment, type AnnualPaymentForecast } from "./net-pay-annual-payment";
-import { classifySfnPayroll2026 } from "./net-pay-sfn";
+import { classifySfnPayroll2026Steps } from "./net-pay-sfn";
 import { premiumCategory, premiumKind } from "./net-pay-premium-trace";
 import { calculateTvoedShiftPremiumTrace } from "./simple-pay";
 import { calculateVkaEShift } from "./simple-vka-e-pay";
@@ -48,16 +48,29 @@ function cents(euros: number): number {
 }
 
 /** Uses the same dated cash calculation as the salary screen; does not duplicate tariff tables. */
+export interface AutomaticNetPayInput {
+  readonly month: string;
+  readonly profile: UserProfile;
+  readonly settings: MonthlyNetPaySettings;
+  readonly shifts: readonly ShiftEntry[];
+  readonly pay: MonthlyPayEstimate;
+}
+
 export function calculateAutomaticNetPayForecast(
-  input: {
-    readonly month: string;
-    readonly profile: UserProfile;
-    readonly settings: MonthlyNetPaySettings;
-    readonly shifts: readonly ShiftEntry[];
-    readonly pay: MonthlyPayEstimate;
-  },
+  input: AutomaticNetPayInput,
   resolver: RuleResolver,
 ): AutomaticNetPayForecast {
+  const steps = calculateAutomaticNetPayForecastSteps(input, resolver);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* calculateAutomaticNetPayForecastSteps(
+  input: AutomaticNetPayInput,
+  resolver: RuleResolver,
+): Generator<number, AutomaticNetPayForecast, void> {
   const { month, settings, pay } = input;
   const profile = employmentProfileAt(input.profile, month + "-01");
   const sourceMonth = settings.month;
@@ -135,6 +148,7 @@ export function calculateAutomaticNetPayForecast(
     if (!manual && workShifts.length !== pay.shiftBreakdowns.length)
       return stop("Die Dienstzeiten passen nicht zur Gehaltsprognose.");
     const traces: SfnShift[] = [];
+    yield 0;
     for (const shift of manual ? [] : workShifts) {
       const bounds = calculateTimedShiftBounds(shift, profile.timeZone);
       if (
@@ -215,6 +229,7 @@ export function calculateAutomaticNetPayForecast(
       trace = payrollTrace ?? trace!;
       if (!trace) return stop("Die Zuschläge konnten nicht vollständig berechnet werden.");
       traces.push(trace);
+      yield 1;
     }
     if (
       traces.reduce(
@@ -223,7 +238,8 @@ export function calculateAutomaticNetPayForecast(
       ) !== cents(pay.timePremiumAmount)
     )
       return stop("Die Zuschlagssummen passen nicht zum Brutto.");
-    const classification = classifySfnPayroll2026(
+    yield 0;
+    const classification = yield* classifySfnPayroll2026Steps(
       {
         month,
         completeGross: true,
@@ -239,6 +255,7 @@ export function calculateAutomaticNetPayForecast(
       "FORECAST",
     );
     if (classification.status !== "available") return stop(classification.reason);
+    yield 0;
     const pensionOmitted =
       ["UNKNOWN", "OTHER"].includes(automation.pensionScheme) ||
       (netPayPensionMaxOwnRate(automation.pensionScheme) !== null &&
@@ -274,6 +291,7 @@ export function calculateAutomaticNetPayForecast(
       },
       "FORECAST",
     );
+    yield 0;
     const annual =
       result.status === "available"
         ? addAnnualSalaryPayment(

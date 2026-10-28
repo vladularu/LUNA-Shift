@@ -17,6 +17,7 @@ import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
 import { NetPayPremiumTrace, premiumCategory, premiumKind } from "./net-pay-premium-trace";
 import sourceTables from "./simple-tvuk-nursing-tables.json";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 
 export const TVUK_FULL_TIME_MINUTES = 2310;
 interface TvUkTable {
@@ -92,7 +93,40 @@ function requireOptions(options: TvUkCalculationOptions) {
 }
 const isNight = (minute: number) => minute < 360 || minute >= 1200;
 
+const cachedShift = createSimpleShiftPayCache<TvUkShiftBreakdown>();
+
 export function calculateTvUkNursingShift(
+  shift: ShiftEntry,
+  work: UserProfile,
+  selection: TvUkNursingTariff,
+  options: TvUkCalculationOptions,
+  resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
+): TvUkShiftBreakdown {
+  requireOptions(options);
+  return cachedShift(
+    resolver,
+    [
+      shift,
+      work,
+      selection,
+      options.regularShiftWork,
+      options.paidNightBreaks,
+      capturePayrollTrace,
+    ],
+    () =>
+      calculateTvUkNursingShiftUncached(
+        shift,
+        work,
+        selection,
+        options,
+        resolver,
+        capturePayrollTrace,
+      ),
+  );
+}
+
+function calculateTvUkNursingShiftUncached(
   shift: ShiftEntry,
   work: UserProfile,
   selection: TvUkNursingTariff,
@@ -173,6 +207,8 @@ export function calculateTvUkNursingShift(
     if (holidays.status !== "AVAILABLE") throw new RuleResolutionError(holidays.failure);
     const transition =
       sectionStart.offsetNanoseconds !== start.add({ minutes: until - 1 }).offsetNanoseconds;
+    const sectionMinute = sectionStart.hour * 60 + sectionStart.minute;
+    const dayOfWeek = sectionStart.dayOfWeek;
     const count = (key: string, label: string, percentage: number, offset: number) => {
       const id = JSON.stringify([key, percentage, ctx.hourlyCents]);
       const previous = buckets.get(id);
@@ -182,9 +218,7 @@ export function calculateTvUkNursingShift(
     };
     for (let offset = from; offset < until; offset++) {
       const cursor = transition ? start.add({ minutes: offset }) : null;
-      const minute = cursor
-        ? cursor.hour * 60 + cursor.minute
-        : sectionStart.hour * 60 + sectionStart.minute + offset - from;
+      const minute = cursor ? cursor.hour * 60 + cursor.minute : sectionMinute + offset - from;
       if (
         offset >= pauseFrom &&
         offset < pauseFrom + pause &&
@@ -197,7 +231,7 @@ export function calculateTvUkNursingShift(
         count("night", "Nacht", minute < 240 ? coreNightCashRate : 2000, offset);
       } else if (options.regularShiftWork) count("shift", "Schichtdienst (6–20 Uhr)", 280, offset);
       // §11(1)c/d/e: one calendar premium, choosing the greatest applicable rate.
-      if (sectionStart.dayOfWeek === 7) count("sunday", "Sonntag", sundayRate, offset);
+      if (dayOfWeek === 7) count("sunday", "Sonntag", sundayRate, offset);
       else if (holidays.holidays.has(date)) count("holiday", "Feiertag", 2500, offset);
       else if (date.slice(5) === "12-24" || date.slice(5) === "12-31")
         count("preholiday", "24./31. Dezember", 2500, offset);

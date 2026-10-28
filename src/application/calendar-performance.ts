@@ -25,6 +25,15 @@ const kinds = [
   "fallback",
   "effect-cleanup",
   "ui-frames",
+  "analysis-request",
+  "analysis-view",
+  "analysis-commit",
+  "analysis-cache",
+  "analysis-prepare",
+  "analysis-work",
+  "analysis-lag",
+  "salary-settings-start",
+  "salary-settings-end",
 ] as const;
 export type CalendarPerformanceKind = (typeof kinds)[number];
 const fields = [
@@ -47,6 +56,12 @@ const fields = [
   "over17",
   "over34",
   "over50",
+  "stage",
+  "cpu",
+  "wait",
+  "state",
+  "priority",
+  "cache",
 ] as const;
 export type CalendarPerformanceValues = Partial<Record<(typeof fields)[number], number>>;
 export function createCalendarPerformanceRecorder(now: () => number = () => performance.now()) {
@@ -136,13 +151,20 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       };
     },
     report: () => ({
-      schema: 1,
-      baseline: "e3d89d7",
+      schema: 2,
+      baseline: "monthly-salary-v3",
+      analysis: {
+        stages: "1 overview, 2 compliance, 3 annual salary and full net, 5 salary settings",
+        workState:
+          "1 completed, 2 cancelled, 3 failed; wait is enqueue to first step; cpu is sum of step times; maximum is longest step; duration includes queue waiting",
+        commitFlags:
+          "1 data ready, 2 overview, 4 compliance settled, 8 settings settled, 16 salary settled, 32 check preferences settled; mode 1 is the selected page",
+      },
       sessionSerial: serial,
       dropped,
       events: events.map((event) => ({ ...event, values: { ...event.values } })),
       limits:
-        "Local numeric data only; JS handler time is not physical touch time. Commit marks are not React render duration. UI callback intervals are not GPU FPS; partial final frame windows are omitted. Instrumentation adds overhead. Maximum 2000 events / 10 minutes; no persistence across restart.",
+        "Local numeric data only; JS handler time is not physical touch time. Commit marks are not React render duration. JS timer lag and UI callback intervals are not GPU FPS; partial final frame windows are omitted. Instrumentation adds overhead. Maximum 2000 events / 10 minutes; no persistence across restart.",
     }),
   };
 }

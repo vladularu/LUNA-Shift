@@ -11,6 +11,7 @@ import {
 } from "@/domain/net-pay-profile";
 
 import { withImmediateTransaction } from "./transaction";
+import { netPayProfilesChanged } from "./net-pay-profile-events";
 
 export const NET_PAY_PROFILE_COLUMNS = [
   "month",
@@ -97,7 +98,7 @@ export async function saveMonthlyNetPaySettings(
   },
 ): Promise<SavedMonthlyNetPaySettings> {
   const settings = validateMonthlyNetPaySettings(input.settings);
-  return withImmediateTransaction(db, async (tx) => {
+  const result = await withImmediateTransaction(db, async (tx) => {
     await assertNoTestRun(tx, settings.month);
     if (!(await tx.getFirstAsync("SELECT id FROM user_profile WHERE id='singleton'")))
       throw new Error("Das Arbeitsprofil fehlt.");
@@ -105,6 +106,8 @@ export async function saveMonthlyNetPaySettings(
     requireExpectedSnapshot(previous, input.expected);
     return writeNetPaySettings(tx, settings, previous);
   });
+  netPayProfilesChanged(db);
+  return result;
 }
 
 async function writeNetPaySettings(
@@ -158,7 +161,7 @@ export async function saveContinuousNetPaySettings(
 ): Promise<SavedMonthlyNetPaySettings> {
   const settings = validateMonthlyNetPaySettings(input.settings);
   if (settings.version !== 2) throw new Error("Das fortgeltende Netto-Profil fehlt.");
-  return withImmediateTransaction(db, async (tx) => {
+  const result = await withImmediateTransaction(db, async (tx) => {
     const timeline = await loadNetPayProfileTimeline(tx);
     if (canonicalize(timeline) !== canonicalize(input.expectedTimeline))
       throw new NetPayProfileConflictError();
@@ -174,6 +177,8 @@ export async function saveContinuousNetPaySettings(
     const previous = timeline.find((row) => row.settings.month === effective.month) ?? null;
     return writeNetPaySettings(tx, effective, previous);
   });
+  netPayProfilesChanged(db);
+  return result;
 }
 
 export async function deleteMonthlyNetPaySettings(
@@ -188,6 +193,7 @@ export async function deleteMonthlyNetPaySettings(
     requireExpectedSnapshot(previous, expected);
     await tx.runAsync("DELETE FROM net_pay_profiles WHERE month=?", month);
   });
+  netPayProfilesChanged(db);
 }
 
 /** Explicitly return one cash year to tariff forecasting; remove every dated copy atomically. */
@@ -201,7 +207,7 @@ export async function resetAnnualSalaryPayments(
   if (!Number.isInteger(input.year)) throw new Error("Ungültiges Auszahlungsjahr.");
   const first = `${input.year}-01`;
   requireNetPaySettingsMonth(first);
-  return withImmediateTransaction(db, async (tx) => {
+  await withImmediateTransaction(db, async (tx) => {
     const timeline = await loadNetPayProfileTimeline(tx);
     if (canonicalize(timeline) !== canonicalize(input.expectedTimeline))
       throw new NetPayProfileConflictError();
@@ -230,4 +236,5 @@ export async function resetAnnualSalaryPayments(
       await writeNetPaySettings(tx, next, row);
     }
   });
+  netPayProfilesChanged(db);
 }

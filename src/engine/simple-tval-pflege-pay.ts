@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 import old from "../../rules/packages/reviewed/tval-pflege-tdl/2025-11.json";
 import current from "../../rules/packages/reviewed/tval-pflege-tdl/2026-04.json";
 import january from "../../rules/packages/reviewed/tval-pflege-tdl/2027-01.json";
@@ -112,7 +113,33 @@ function context(
     },
   };
 }
+const cachedShift =
+  createSimpleShiftPayCache<ReturnType<typeof calculateTvalPflegeShiftUncached>>();
+
 export function calculateTvalPflegeShift(
+  shift: ShiftEntry,
+  work: UserProfile,
+  selection: TvalPflegeTariff,
+  saturdayShiftWork: boolean,
+  resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
+) {
+  return cachedShift(
+    resolver,
+    [shift, work, selection, saturdayShiftWork, capturePayrollTrace],
+    () =>
+      calculateTvalPflegeShiftUncached(
+        shift,
+        work,
+        selection,
+        saturdayShiftWork,
+        resolver,
+        capturePayrollTrace,
+      ),
+  );
+}
+
+function calculateTvalPflegeShiftUncached(
   shift: ShiftEntry,
   work: UserProfile,
   selection: TvalPflegeTariff,

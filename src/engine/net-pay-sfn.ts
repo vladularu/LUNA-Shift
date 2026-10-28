@@ -130,7 +130,10 @@ interface ClockDay {
 }
 
 /** Arithmetic on ordinary days; retain absolute-minute traversal at an offset transition. */
-function localClocks(start: Temporal.ZonedDateTime, minutes: number) {
+function* localClocksSteps(
+  start: Temporal.ZonedDateTime,
+  minutes: number,
+): Generator<number, { day: ClockDay; minute: number }[], void> {
   const days = new Map<string, ClockDay>();
   const day = (date: Temporal.PlainDate) => {
     const key = date.toString();
@@ -141,11 +144,15 @@ function localClocks(start: Temporal.ZonedDateTime, minutes: number) {
     days.set(key, result);
     return result;
   };
-  if (start.offsetNanoseconds !== start.add({ minutes: minutes - 1 }).offsetNanoseconds)
-    return Array.from({ length: minutes }, (_, i) => {
+  if (start.offsetNanoseconds !== start.add({ minutes: minutes - 1 }).offsetNanoseconds) {
+    const result: { day: ClockDay; minute: number }[] = [];
+    for (let i = 0; i < minutes; i++) {
       const time = start.add({ minutes: i });
-      return { day: day(time.toPlainDate()), minute: time.hour * 60 + time.minute };
-    });
+      result.push({ day: day(time.toPlainDate()), minute: time.hour * 60 + time.minute });
+      if (i % 32 === 31) yield 1;
+    }
+    return result;
+  }
   const first = start.toPlainDate();
   const firstMinute = start.hour * 60 + start.minute;
   let offset = -1;
@@ -167,19 +174,31 @@ export function classifySfnPayroll2026(
   ruleResolver: RuleResolver,
   mode: NetPayCalculationMode = "VERIFIED",
 ): SfnClassificationResult {
+  const steps = classifySfnPayroll2026Steps(input, ruleResolver, mode);
+  while (true) {
+    const step = steps.next();
+    if (step.done) return step.value;
+  }
+}
+
+export function* classifySfnPayroll2026Steps(
+  input: SfnPayrollInput,
+  ruleResolver: RuleResolver,
+  mode: NetPayCalculationMode = "VERIFIED",
+): Generator<number, SfnClassificationResult, void> {
   try {
-    return classify(input, ruleResolver, mode);
+    return yield* classifySteps(input, ruleResolver, mode);
   } catch (error) {
     if (!(error instanceof SfnInputError)) throw error;
     return Object.freeze({ status: error.status, reason: error.message });
   }
 }
 
-function classify(
+function* classifySteps(
   input: SfnPayrollInput,
   ruleResolver: RuleResolver,
   mode: NetPayCalculationMode,
-): SfnClassificationResult {
+): Generator<number, SfnClassificationResult, void> {
   if (!/^\d{4}-\d{2}$/.test(input.month))
     return fail("invalid-input", "Ungültiger Abrechnungsmonat.");
   let first: Temporal.PlainDate;
@@ -280,7 +299,7 @@ function classify(
     )
       return fail("invalid-input", "Schichten überschneiden sich.");
     occupied.push([start.epochNanoseconds, end.epochNanoseconds]);
-    const times = localClocks(start, minutes);
+    const times = yield* localClocksSteps(start, minutes);
     const months = new Set(times.map((time) => time.day.key.slice(0, 7)));
     const holidayResolution = resolveHolidayMapForMonths(
       [...months],
@@ -470,6 +489,7 @@ function classify(
         premiumBreakdown,
       }),
     );
+    yield 1;
   }
   const paidPremiumCents = results.reduce((sum, shift) => sum + shift.paidPremiumCents, 0);
   if (paidPremiumCents > input.grossCents)

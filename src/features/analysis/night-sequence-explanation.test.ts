@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ShiftEntry } from "@/domain/types";
 import { explainNightSequence } from "./night-sequence-explanation";
+import { prepareNightSequenceSteps } from "@/engine/tvoed-k-calendar-nights";
 
 function shift(date: string, overrides: Partial<ShiftEntry> = {}): ShiftEntry {
   return {
@@ -30,6 +31,30 @@ const explain = (entries: readonly ShiftEntry[] = sequence, month = "2026-07") =
   explainNightSequence(entries, month, "Europe/Berlin");
 
 describe("simple calendar-based night explanation", () => {
+  it("prepares the same night bounds in bounded batches and still detects changed contents", () => {
+    const entries = sequence.map((entry) => ({ ...entry }));
+    const expected = explain(entries.map((entry) => ({ ...entry })));
+    let count = 0;
+    for (const step of prepareNightSequenceSteps(entries, "2026-07", "Europe/Berlin")) {
+      expect(step).toBe(1);
+      count++;
+    }
+    expect(count).toBe(1);
+    expect(explain(entries)).toEqual(expected);
+    expect(Object.isFrozen(entries[0])).toBe(false);
+    entries[0].breakMinutes = 540;
+    expect(explain(entries)).toEqual(explain(entries.map((entry) => ({ ...entry }))));
+    expect(explain(entries).dates).toHaveLength(0);
+  });
+  it("keeps rejection of ambiguous DST times after optional prewarming", () => {
+    const entries = [
+      shift("2026-10-25", { startTime: "02:30", endTime: "06:00", breakMinutes: 0 }),
+    ];
+    expect(() => {
+      for (const step of prepareNightSequenceSteps(entries, "2026-10", "Europe/Berlin")) void step;
+    }).not.toThrow();
+    expect(explain(entries, "2026-10").uncertain).toBe(true);
+  });
   it("recognizes normal hospital nights without asking for pause times", () => {
     expect(explain()).toMatchObject({
       dates: sequence.map((item) => item.date),

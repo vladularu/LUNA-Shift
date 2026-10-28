@@ -19,6 +19,24 @@ describe("calendar performance recorder", () => {
     expect(json).not.toContain("private");
     expect(json).not.toContain("9999");
     expect(r.report().events[0].values).toEqual({ duration: 2 });
+    r.record("analysis-work", {
+      stage: 3,
+      month: 202609,
+      cpu: 25,
+      wait: 30,
+      state: 1,
+      salary: 123456,
+      title: "private",
+    } as never);
+    expect(r.report().schema).toBe(2);
+    expect(r.report().events.at(-1)?.values).toEqual({
+      stage: 3,
+      month: 202609,
+      cpu: 25,
+      wait: 30,
+      state: 1,
+    });
+    expect(JSON.stringify(r.report())).not.toContain("123456");
   });
   it("bounds memory and expires at ten minutes", () => {
     let t = 0;

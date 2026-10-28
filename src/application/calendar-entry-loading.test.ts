@@ -3,6 +3,7 @@ import {
   calendarRangeCoversMonth,
   calendarRangeCoversYear,
   reconcileCalendarRange,
+  retainCalendarRanges,
 } from "@/application/calendar-entry-loading";
 import type { Appointment } from "@/domain/types";
 
@@ -24,6 +25,49 @@ const entry: Appointment = {
 };
 
 describe("calendar range loading", () => {
+  it("bounds completed windows while protecting the already loaded current year", () => {
+    const current = { startDate: "2025-01-01", endDate: "2027-12-31" };
+    let ranges = [current];
+    for (const year of [2030, 2034, 2038, 2042])
+      ranges = retainCalendarRanges(
+        ranges,
+        { startDate: `${year - 1}-01-01`, endDate: `${year + 1}-12-31` },
+        2026,
+      );
+    expect(ranges).toHaveLength(3);
+    expect(ranges).toContainEqual(current);
+    expect(ranges.map((item) => item.startDate)).toEqual([
+      "2025-01-01",
+      "2037-01-01",
+      "2041-01-01",
+    ]);
+  });
+  it("retains other completed windows but keeps fresh query rows authoritative and local deletions gone", () => {
+    const old = { ...entry, id: "old", date: "2025-06-01" };
+    const recent = { ...entry, id: "recent" };
+    const fresh = { ...recent, title: "Fresh SQL", revision: 2 };
+    const keep = [{ startDate: "2025-01-01", endDate: "2027-12-31" }];
+    expect(
+      reconcileCalendarRange([fresh], [old, recent], [old, recent], range, new Set(), keep),
+    ).toEqual([old, fresh]);
+    expect(
+      reconcileCalendarRange(
+        [fresh],
+        [old, recent],
+        [recent],
+        range,
+        new Set(["APPOINTMENT:old"]),
+        keep,
+      ),
+    ).toEqual([fresh]);
+    const changed = { ...old, title: "Edited outside active range" };
+    expect(
+      reconcileCalendarRange([fresh], [old, recent], [changed, recent], range, new Set(), keep),
+    ).toEqual([changed, fresh]);
+    expect(reconcileCalendarRange([fresh], [old, recent], [changed, recent], range)).toEqual([
+      fresh,
+    ]);
+  });
   it("requires coverage of adjacent grid days, not only the month itself", () => {
     expect(calendarRangeCoversMonth(null, "2027-01")).toBe(false);
     expect(calendarRangeCoversMonth(range, "2027-01")).toBe(true);

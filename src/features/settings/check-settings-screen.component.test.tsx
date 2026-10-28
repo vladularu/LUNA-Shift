@@ -11,6 +11,15 @@ import { classifyChecks } from "@/features/analysis/check-visibility";
 import type { MonthlyComplianceResult } from "@/domain/types";
 // These cases exercise check preferences; salary data is covered by the net-pay workflow suite.
 jest.mock("@/features/analysis/analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
+jest.mock("@/features/analysis/analysis-salary-inputs", () => ({
+  AnalysisSalaryInputsProvider: ({ children }: import("react").PropsWithChildren) => children,
+  useAnalysisSalaryInputs: () => ({
+    status: "ready",
+    saved: null,
+    annualPayments: [],
+    error: null,
+  }),
+}));
 jest.mock("@/features/salary/use-annual-salary-forecast", () => ({
   useAnnualSalaryForecast: () => ({ payments: [], proposal: null, automatic: false }),
 }));

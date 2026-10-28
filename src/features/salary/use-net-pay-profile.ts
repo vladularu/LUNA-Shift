@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
+import { calendarPerformance } from "@/application/calendar-performance";
 import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { collectAnnualSalaryPayments, requireNetPaySettingsMonth } from "@/domain/net-pay-profile";
 import {
@@ -41,12 +42,20 @@ export function useNetPayProfile(month: string, enabled: boolean) {
           ? previous
           : { month, status: "loading", saved: null, timeline: [], error: null },
       );
+      calendarPerformance.record("salary-settings-start", {
+        month: Number(month.replace("-", "")),
+      });
+      const measured = calendarPerformance.span("salary-settings-end", {
+        month: Number(month.replace("-", "")),
+      });
       void loadApplicableNetPaySettings(db, month).then(
         (value) => {
+          measured({ state: current === generation.current ? 1 : 2 });
           if (current === generation.current)
             setState({ month, status: "ready", ...value, error: null });
         },
         () => {
+          measured({ state: current === generation.current ? 3 : 2 });
           if (current === generation.current)
             setState({
               month,
@@ -107,9 +116,13 @@ export function useNetPayProfile(month: string, enabled: boolean) {
       setBusy(false);
     }
   }
+  const annualPayments = useMemo(
+    () => collectAnnualSalaryPayments(visible.timeline),
+    [visible.timeline],
+  );
   return {
     ...visible,
-    annualPayments: collectAnnualSalaryPayments(visible.timeline),
+    annualPayments,
     busy,
     save,
     resetAnnualPayments,

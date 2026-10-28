@@ -160,6 +160,13 @@ function resolvePackage<T extends RulePackage>(
   };
 }
 
+const cacheSources = new WeakMap<RuleResolver, () => string>();
+
+/** Only factory-owned resolvers have a reproducible identity across app processes. */
+export function serializeRuleResolverForCache(resolver: RuleResolver): string | null {
+  return cacheSources.get(resolver)?.() ?? null;
+}
+
 export function createRuleResolver(
   catalog: RuleResolverCatalog = BUNDLED_RULE_CATALOG,
   packageIds: RuleResolverPackageIds = LEGACY_RULE_PACKAGE_IDS,
@@ -168,7 +175,7 @@ export function createRuleResolver(
   const carrier = catalog.tariff
     .filter((item) => item.engineContractVersion === 19 && item.rules.simpleTariffTables)
     .sort((a, b) => b.validFrom.localeCompare(a.validFrom))[0];
-  return Object.freeze({
+  const resolver: RuleResolver = Object.freeze({
     ...(carrier
       ? {
           simpleTariffData: Object.freeze({
@@ -196,6 +203,9 @@ export function createRuleResolver(
     resolveHoliday: (effectiveDate: string) =>
       resolvePackage(catalog.holiday, "HOLIDAY", packageIds.holiday, effectiveDate),
   });
+  let serialized: string | null = null;
+  cacheSources.set(resolver, () => (serialized ??= JSON.stringify([packageIds, catalog])));
+  return resolver;
 }
 
 export function createRuleResolverFromCatalog(catalog: ValidatedRuleCatalog): RuleResolver {

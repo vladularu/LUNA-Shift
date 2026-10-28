@@ -137,7 +137,7 @@ describe("SettingsScreen production gates", () => {
     }
     expect(descriptionsChecked).toBeGreaterThanOrEqual(9);
     expect(screen.getByText("Testlabor")).toBeTruthy();
-    expect(screen.getByText("Kalenderdiagnose starten")).toBeTruthy();
+    expect(screen.getByText("Performancediagnose starten")).toBeTruthy();
   });
 
   it("reacts to font size changes while More stays open", async () => {

@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import { getPublicHolidays } from "@/engine/holidays";
-import { conditionsMatch } from "@/engine/pay-conditions";
+import { createPayConditionMatcher } from "@/engine/pay-conditions";
 import type {
   RulePremiumRule,
   RuleTariffPackage,
@@ -137,17 +137,16 @@ function countPremiumMinute(
   day: PremiumDayContext,
   date: string,
   minuteOfDay: number,
-  shift: ShiftEntry,
-  profile: UserProfile,
   rulePackage: RuleTariffPackage,
   epochMinute: number,
   onCount: PremiumMinuteInterval["onCount"],
+  matches: ReturnType<typeof createPayConditionMatcher>,
 ): void {
   const candidates = rulePackage.rules.premiumRules.filter(
     (rule) =>
       premiumAppliesOnDay(rule, day) &&
       timeWindowContains(rule.timeWindow, minuteOfDay) &&
-      conditionsMatch(rule.conditions, profile, date, shift, null),
+      matches(rule.conditions, date),
   );
   for (const rule of applyCombinationRules(candidates, rulePackage)) {
     buckets.byRuleId.set(rule.id, (buckets.byRuleId.get(rule.id) ?? 0) + 1);
@@ -179,6 +178,8 @@ export function countPremiumMinutes(
   if (gross <= 0 || interval.from === interval.until) return buckets;
 
   const start = zonedStart(shift, profile.timeZone);
+  const startEpochMinute = Number(start.epochMilliseconds) / 60000;
+  const matches = createPayConditionMatcher(profile, shift);
   const lastMinute = start.add({ minutes: gross - 1 });
   const crossesOffsetTransition = start.offsetNanoseconds !== lastMinute.offsetNanoseconds;
 
@@ -199,11 +200,10 @@ export function countPremiumMinutes(
         day,
         dateKey,
         cursor.hour * 60 + cursor.minute,
-        shift,
-        profile,
         rulePackage,
-        Number(start.epochMilliseconds) / 60000 + index,
+        startEpochMinute + index,
         interval.onCount,
+        matches,
       );
     }
     return buckets;
@@ -213,6 +213,7 @@ export function countPremiumMinutes(
   const startMinuteOfDay = start.hour * 60 + start.minute;
   let cachedDayOffset = Math.floor((startMinuteOfDay + interval.from) / (24 * 60));
   let cachedDate = startDate.add({ days: cachedDayOffset });
+  let cachedDateKey = cachedDate.toString();
   let cachedDay = premiumDayContext(
     cachedDate,
     profile.federalState,
@@ -227,6 +228,7 @@ export function countPremiumMinutes(
     if (dayOffset !== cachedDayOffset) {
       cachedDayOffset = dayOffset;
       cachedDate = dayOffset === 0 ? startDate : startDate.add({ days: dayOffset });
+      cachedDateKey = cachedDate.toString();
       cachedDay = premiumDayContext(
         cachedDate,
         profile.federalState,
@@ -237,13 +239,12 @@ export function countPremiumMinutes(
     countPremiumMinute(
       buckets,
       cachedDay,
-      cachedDate.toString(),
+      cachedDateKey,
       localMinute % (24 * 60),
-      shift,
-      profile,
       rulePackage,
-      Number(start.epochMilliseconds) / 60000 + index,
+      startEpochMinute + index,
       interval.onCount,
+      matches,
     );
   }
   return buckets;

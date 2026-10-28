@@ -8,6 +8,7 @@ import { createRuleCatalogRuntimePort } from "@/composition/create-rule-catalog-
 import { useDataMonth } from "@/navigation/use-data-month";
 import { CalendarWidgetSync } from "@/features/widgets/calendar-widget-sync";
 import { useSharingStartup } from "./use-sharing-startup";
+import { AnalysisWarmupProvider } from "@/features/analysis/analysis-warmup-provider";
 export function PflegeShiftRuntimeProvider({ children }: PropsWithChildren) {
   const db = useSQLiteContext();
   const sharingStartup = useSharingStartup(db);
@@ -19,7 +20,7 @@ export function PflegeShiftRuntimeProvider({ children }: PropsWithChildren) {
       <RuleCatalogRuntimeProvider {...ruleCatalog}>
         <SharingRuntimeProvider startup={sharingStartup}>
           <CalendarWidgetSync ports={ports} />
-          {children}
+          <AnalysisWarmupProvider>{children}</AnalysisWarmupProvider>
         </SharingRuntimeProvider>
       </RuleCatalogRuntimeProvider>
     </PflegeShiftProvider>

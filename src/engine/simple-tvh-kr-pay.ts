@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { createSimpleShiftPayCache } from "./simple-shift-pay-cache";
 import tables from "./simple-tvh-kr-tables.json";
 import { requireTvhKrTariff, tvhKrLevelsForGroup, type TvhKrTariff } from "@/domain/tvh-kr-tariff";
 import { ALLOWANCE_STATUSES } from "@/domain/types";
@@ -158,7 +159,34 @@ export interface TvhKrCalculationOptions {
   readonly confirmedAllowance?: AllowanceStatus | null;
 }
 
+const cachedShift = createSimpleShiftPayCache<
+  ShiftPremiumBreakdown & { hourlyAllowanceAmount: number }
+>();
+
 export function calculateTvhKrShift(
+  shift: ShiftEntry,
+  work: UserProfile,
+  selection: TvhKrTariff,
+  options: TvhKrCalculationOptions,
+  resolver: RuleResolver = bundledRuleResolver,
+  capturePayrollTrace = false,
+): ShiftPremiumBreakdown & { hourlyAllowanceAmount: number } {
+  return cachedShift(
+    resolver,
+    [
+      shift,
+      work,
+      selection,
+      options?.allowanceStatus,
+      options?.saturdayShiftWork,
+      capturePayrollTrace,
+    ],
+    () =>
+      calculateTvhKrShiftUncached(shift, work, selection, options, resolver, capturePayrollTrace),
+  );
+}
+
+function calculateTvhKrShiftUncached(
   shift: ShiftEntry,
   work: UserProfile,
   selection: TvhKrTariff,

@@ -1,5 +1,6 @@
 import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
 import { Temporal } from "@js-temporal/polyfill";
+import { finishMonthlyCompliance } from "./compliance-result";
 
 import type {
   UserProfile,
@@ -140,7 +141,7 @@ function toInterval(shift: ShiftEntry, timeZone: string): Interval {
 export function* prepareComplianceIntervalsIncrementally(
   shifts: readonly ShiftEntry[],
   timeZone: string,
-  batchSize = 24,
+  batchSize = 4,
 ): Generator<number, void, void> {
   const safeBatchSize = Math.max(1, Math.floor(batchSize));
   let prepared = 0;
@@ -153,9 +154,7 @@ export function* prepareComplianceIntervalsIncrementally(
   if (prepared % safeBatchSize !== 0) yield prepared;
 }
 
-function hours(minutes: number): string {
-  return `${Math.round((minutes / 60) * 100) / 100} h`;
-}
+const hours = (minutes: number): string => `${Math.round((minutes / 60) * 100) / 100} h`;
 
 function germanQuantity(value: number, capitalize = false): string {
   const words: Readonly<Record<number, string>> = {
@@ -294,12 +293,12 @@ function requiredBreakMinutes(netMinutes: number, rules: RuleLegalRules): number
   );
 }
 
-function checkWorkingTime(
+function* checkWorkingTime(
   intervals: readonly Interval[],
   rules: RuleLegalRules,
   engineContractVersion: number,
   nightWorkerQualified: boolean,
-): ComplianceIssue[] {
+): Generator<number, ComplianceIssue[], void> {
   const issues: ComplianceIssue[] = [];
   for (const items of workGroupsByRecordedDate(intervals)) {
     const shifts = items.map((item) => item.shift);
@@ -429,6 +428,7 @@ function checkWorkingTime(
         );
       }
     }
+    yield 1;
   }
   return issues;
 }
@@ -666,6 +666,27 @@ function* calculateMonthlyComplianceCoreSteps(
       ...checkPlanningSeries(assessmentIntervals, rules),
     ]);
   }
+  if (shifts.length === 0) {
+    // No duty-dependent finding is possible without any entry in the entire loaded horizon.
+    // Catalog coverage and calendar-year notices still use the authoritative helper.
+    const issues = checkEvidenceCompleteness(month, [], options, rules);
+    issues.push(
+      ...(yield* checkSundayHolidayRestIncrementally(
+        month,
+        [],
+        [],
+        options,
+        referenceDate,
+        rules,
+        ruleResolver,
+        legalPackage.engineContractVersion,
+        timeZone,
+        start,
+        end,
+      )),
+    );
+    return finishMonthlyCompliance(month, issues, start, end);
+  }
   const nightWorkerQualification = qualifyAsNightWorkerIncrementally(
     intervals,
     rules,
@@ -697,12 +718,12 @@ function* calculateMonthlyComplianceCoreSteps(
   issues.push(...checkOverlaps(assessmentIntervals));
   yield 3;
   issues.push(
-    ...checkWorkingTime(
+    ...(yield* checkWorkingTime(
       assessmentIntervals,
       rules,
       legalPackage.engineContractVersion,
       nightWorkerQualified,
-    ),
+    )),
   );
   yield 4;
   const workingTimeAverage = checkWorkingTimeAverageIncrementally(
@@ -768,32 +789,5 @@ function* calculateMonthlyComplianceCoreSteps(
   // Include the end day of overnight services. Shared replacement-day assignment,
   // night-worker qualification and even checks without findings depend on this
   // entire loaded horizon, not just on each finding's display date.
-  const assessmentRange = {
-    from: start,
-    through: Temporal.PlainDate.from(end).add({ days: 1 }).toString(),
-  };
-  const monthIssues = issues
-    .filter((item) => item.date.startsWith(`${month}-`))
-    .map((finding) =>
-      finding.kind === "LEGAL" &&
-      finding.assessmentRanges === undefined &&
-      [
-        "ARBZG_5_REST_11H",
-        "ARBZG_11_SUNDAY_REST",
-        "ARBZG_11_HOLIDAY_REST",
-        "ARBZG_11_REST_CONNECTION",
-        "HOLIDAY_CATALOG_COVERAGE",
-      ].includes(finding.rule)
-        ? { ...finding, assessmentRanges: [assessmentRange] }
-        : finding,
-    );
-  return {
-    month,
-    assessmentRange,
-    issues: monthIssues,
-    criticalCount: monthIssues.filter((item) => item.severity === "critical").length,
-    warningCount: monthIssues.filter((item) => item.severity === "warning").length,
-    infoCount: monthIssues.filter((item) => item.severity === "info").length,
-    affectedDates: [...new Set(monthIssues.map((item) => item.date))].sort(),
-  };
+  return finishMonthlyCompliance(month, issues, start, end);
 }

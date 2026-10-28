@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ReportPeriodPager, reportPeriodOffset } from "./report-period-pager";
 
@@ -59,6 +59,46 @@ beforeEach(() => {
 });
 
 describe("native chronological report paging", () => {
+  it("retains headless preparation when it becomes a visible and active page", async () => {
+    const tokens = new Map<string, number>();
+    const Prepared = createContext(0);
+    function Preparation({ month, children }: { month: string; children: ReactNode }) {
+      const [token] = useState(() => {
+        const next = (tokens.get(month) ?? 0) + 1;
+        tokens.set(month, next);
+        return next;
+      });
+      return <Prepared.Provider value={token}>{children}</Prepared.Provider>;
+    }
+    function Content({ month }: { month: string }) {
+      return <Text testID={`token-${month}`}>{useContext(Prepared)}</Text>;
+    }
+    function Reports() {
+      const [month, setMonth] = useState("2030-12");
+      return (
+        <ReportPeriodPager
+          value={month}
+          onChange={setMonth}
+          preparationRadius={2}
+          preparePage={(value, _active, _distance, content) => (
+            <Preparation month={value}>{content}</Preparation>
+          )}
+          renderPage={(value) => <Content month={value} />}
+        />
+      );
+    }
+    const screen = await render(<Reports />);
+    await measure(screen);
+    expect(tokens.get("2031-02")).toBe(1);
+    expect(screen.queryByTestId("token-2031-02", { includeHiddenElements: true })).toBeNull();
+    await settle(screen, 13);
+    expect(
+      screen.getByTestId("token-2031-02", { includeHiddenElements: true }).props.children,
+    ).toBe(1);
+    await settle(screen, 14);
+    expect(screen.getByTestId("token-2031-02").props.children).toBe(1);
+    expect(tokens.get("2031-02")).toBe(1);
+  });
   it("prepares previous and next reports before a gesture without selecting them", async () => {
     const screen = await render(<Pager />);
     await measure(screen);

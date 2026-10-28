@@ -10,6 +10,9 @@ import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
 import { usePflegeShiftStatus, usePflegeShiftTariff } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { PflegeShiftRuntimeProvider } from "./pflegeshift-runtime-provider";
+jest.mock("@/features/analysis/analysis-warmup-provider", () => ({
+  AnalysisWarmupProvider: ({ children }: PropsWithChildren) => children,
+}));
 
 let mockEmploymentHistory: readonly DatedRemunerationProfile[] = [];
 const mockDb = {};

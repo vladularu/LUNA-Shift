@@ -45,7 +45,7 @@ export function CalendarPerformanceControls({
         null,
         2,
       );
-      const file = new File(Paths.cache, `LUNA-Kalender-Diagnose-${Date.now()}.json`);
+      const file = new File(Paths.cache, `LUNA-Performance-Diagnose-${Date.now()}.json`);
       await shareCalendarPerformanceFile(report, file);
     } catch {
       Alert.alert(
@@ -67,8 +67,8 @@ export function CalendarPerformanceControls({
       />
       <RowButton
         subtitleBelow={subtitleBelow}
-        title={session ? "Kalenderdiagnose läuft – stoppen" : "Kalenderdiagnose starten"}
-        subtitle="Nur lokale Zeiten und Anzahlen, keine Titel oder Gehälter. Maximal 10 Minuten; Neustart löscht den Bericht. Ein neuer Start ersetzt die vorige Messung."
+        title={session ? "Performancediagnose läuft – stoppen" : "Performancediagnose starten"}
+        subtitle="Misst Kalender, Auswertung und Gehaltsberechnung: nur lokale Zeiten und Anzahlen, keine Titel oder Gehälter. Maximal 10 Minuten. Ein neuer Start ersetzt die vorige Messung."
         onPress={() =>
           session ? calendarPerformance.stop() : calendarPerformance.start(DEV_TOOLS_AVAILABLE)
         }
