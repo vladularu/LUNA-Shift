@@ -142,6 +142,11 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
     () => quickPlannerControlMotion(progress.get(), "add", reduceMotion),
     [reduceMotion],
   );
+  // Cover the navigation completely before the drawer starts rising. Reverse
+  // the same clock so navigation returns only after the drawer has left.
+  const navigationCoverStyle = useAnimatedStyle(() => ({
+    opacity: 1 - quickPlannerControlMotion(progress.get(), "add", true).opacity,
+  }));
 
   const closeMorphStyle = useAnimatedStyle(
     () => quickPlannerControlMotion(progress.get(), "close", reduceMotion),
@@ -156,6 +161,23 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
       style={[StyleSheet.absoluteFill, { zIndex: 10_002, elevation: 26, opacity: active ? 1 : 0 }]}
       testID="quick-planner-mount-reveal"
     >
+      <Animated.View
+        testID="quick-planner-navigation-cover"
+        pointerEvents={open || closing ? "auto" : "none"}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[
+          {
+            position: "absolute",
+            bottom: Math.min(openBottom, 0),
+            left: 0,
+            right: 0,
+            height: QUICK_PLANNER_METRICS.dockHeight + Math.max(0, openBottom),
+            backgroundColor: palette.background,
+          },
+          navigationCoverStyle,
+        ]}
+      />
       <View
         pointerEvents="box-none"
         style={[styles.stack, { bottom: openBottom, height: CONTROL_HEIGHT }]}

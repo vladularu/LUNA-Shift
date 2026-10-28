@@ -7,7 +7,7 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 
 /** Load the visible report's data without changing the calendar's selection. */
 export function useDataMonth(): string {
-  const segments = useSegments();
+  const segments: readonly string[] = useSegments();
   const params = useGlobalSearchParams<{ month?: RouteParam }>();
   const calendarMonth = useActiveMonth();
   const { analysisRequests } = useActiveMonthCoordinator();

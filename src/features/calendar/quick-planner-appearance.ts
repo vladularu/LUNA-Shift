@@ -14,4 +14,5 @@ export const QUICK_PLANNER_METRICS = Object.freeze({
   badgeSize: 30,
   badgeRingSize: 36,
   tileHeight: 72,
+  activeDetailWidth: 60,
 });

@@ -20,12 +20,14 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   disabled = false,
   onPress,
   width = 72,
+  detailWidth = QUICK_PLANNER_METRICS.activeDetailWidth,
 }: {
   readonly action: QuickEntryAction;
   readonly active?: boolean;
   readonly disabled?: boolean;
   readonly onPress: (action: QuickEntryAction) => void;
   readonly width?: number;
+  readonly detailWidth?: number;
 }) {
   const palette = useInversePalette();
   const isStampAction = action.kind === "TEMPLATE";
@@ -33,52 +35,80 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   const editorColor =
     action.kind === "APPOINTMENT" ? APPOINTMENT_COLOR : QUICK_PLANNER_COLORS.active;
   const pressMotion = usePressMotion(1, 0.95);
+  const detail =
+    active && isStampAction
+      ? action.template.allDay
+        ? ["Ganztägig"]
+        : action.template.startTime && action.template.endTime
+          ? [action.template.startTime, action.template.endTime]
+          : ["Ohne Zeit"]
+      : null;
+  const labelWidth = width - (detail ? detailWidth : 0);
 
   return (
     <AnimatedPressable
       accessibilityLabel={`${action.label} auswählen`}
       accessibilityRole="button"
       accessibilityState={{ disabled, selected: active }}
+      accessibilityValue={detail ? { text: detail.join(" bis ") } : undefined}
       disabled={disabled}
       onPress={() => onPress(action)}
       onPressIn={pressMotion.onPressIn}
       onPressOut={pressMotion.onPressOut}
       style={[styles.tile, { width }, pressMotion.animatedStyle]}
     >
-      <View
-        style={[styles.badgeRing, active && { borderColor: palette.primary }]}
-        testID={`quick-planner-badge-${action.key}`}
-      >
-        {isStampAction ? (
-          <ColorBadge
-            color={action.color}
-            label={action.symbol}
-            size={QUICK_PLANNER_METRICS.badgeSize}
-          />
-        ) : (
-          <View style={[styles.editorBadge, { backgroundColor: editorColor }]}>
-            <Ionicons
-              accessible={false}
-              color={QUICK_PLANNER_COLORS.onColor}
-              name={editorIcon}
-              size={16}
+      <View style={[styles.template, { width: labelWidth }]}>
+        <View
+          style={[styles.badgeRing, active && { borderColor: palette.primary }]}
+          testID={`quick-planner-badge-${action.key}`}
+        >
+          {isStampAction ? (
+            <ColorBadge
+              color={action.color}
+              label={action.symbol}
+              size={QUICK_PLANNER_METRICS.badgeSize}
             />
-          </View>
-        )}
+          ) : (
+            <View style={[styles.editorBadge, { backgroundColor: editorColor }]}>
+              <Ionicons
+                accessible={false}
+                color={QUICK_PLANNER_COLORS.onColor}
+                name={editorIcon}
+                size={16}
+              />
+            </View>
+          )}
+        </View>
+        <Text
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          style={[
+            styles.label,
+            {
+              color: active ? palette.primary : palette.text,
+              maxWidth: labelWidth - 6,
+            },
+            active && styles.labelActive,
+          ]}
+        >
+          {action.label}
+        </Text>
       </View>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[
-          styles.label,
-          {
-            color: active ? palette.primary : palette.text,
-            maxWidth: width - 6,
-          },
-          active && styles.labelActive,
-        ]}
-      >
-        {action.label}
-      </Text>
+      {detail ? (
+        <View
+          style={[styles.details, { width: detailWidth }]}
+          testID={`quick-planner-detail-${action.key}`}
+        >
+          {detail.map((line, index) => (
+            <Text
+              key={index}
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              style={[styles.time, { color: palette.text }]}
+            >
+              {line}
+            </Text>
+          ))}
+        </View>
+      ) : null}
     </AnimatedPressable>
   );
 });
@@ -86,9 +116,26 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
 const styles = StyleSheet.create({
   tile: {
     minHeight: QUICK_PLANNER_METRICS.tileHeight,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  template: {
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
+  },
+  details: {
+    paddingRight: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  time: {
+    fontFamily: INTER_FONTS.medium,
+    fontSize: TYPOGRAPHY.overline.fontSize,
+    lineHeight: TYPOGRAPHY.micro.lineHeight,
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
   },
   badgeRing: {
     width: QUICK_PLANNER_METRICS.badgeRingSize,

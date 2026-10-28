@@ -89,6 +89,7 @@ async function renderDock({
   busy = false,
   activeKey = "template:early",
   bottomInset = 34,
+  template = TEMPLATE,
 }: {
   onClose?: jest.Mock;
   onOpen?: jest.Mock;
@@ -96,6 +97,7 @@ async function renderDock({
   busy?: boolean;
   activeKey?: string | null;
   bottomInset?: number;
+  template?: ShiftTemplate;
 } = {}) {
   const tree = (nextOpen: boolean, active = true) => (
     <SafeAreaProvider
@@ -106,7 +108,7 @@ async function renderDock({
     >
       <QuickPlannerDock
         active={active}
-        actions={buildQuickEntryActions([TEMPLATE]).slice(0, 1)}
+        actions={buildQuickEntryActions([template]).slice(0, 1)}
         activeKey={activeKey}
         busy={busy}
         onOpen={onOpen}
@@ -125,6 +127,52 @@ async function renderDock({
 }
 
 describe("QuickPlannerDock", () => {
+  it("shows the actual start and end only for the active template", async () => {
+    const screen = await renderDock();
+    expect(screen.getByText("06:00")).toBeTruthy();
+    expect(screen.getByText("14:12")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Früh auswählen" })).toHaveProp(
+      "accessibilityValue",
+      { text: "06:00 bis 14:12" },
+    );
+    await screen.unmount();
+    const inactive = await renderDock({ activeKey: null });
+    expect(inactive.queryByText("06:00")).toBeNull();
+    expect(inactive.queryByText("14:12")).toBeNull();
+  });
+
+  it.each([
+    [{ ...TEMPLATE, allDay: true, startTime: null, endTime: null }, "Ganztägig"],
+    [{ ...TEMPLATE, allDay: false, startTime: null, endTime: null }, "Ohne Zeit"],
+  ])("does not invent times for a template without a time range", async (template, label) => {
+    const screen = await renderDock({ template });
+    expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText("06:00")).toBeNull();
+  });
+
+  it("keeps the saved end time when a night shift crosses midnight", async () => {
+    const screen = await renderDock({
+      template: { ...TEMPLATE, startTime: "21:00", endTime: "06:00" },
+    });
+    expect(screen.getByText("21:00")).toBeTruthy();
+    expect(screen.getByText("06:00")).toBeTruthy();
+  });
+
+  it.each([false, true])(
+    "covers navigation only while planning is open (open=%s)",
+    async (open) => {
+      const screen = await renderDock({ open });
+      const cover = screen.getByTestId("quick-planner-navigation-cover", {
+        includeHiddenElements: true,
+      });
+      expect(cover).toHaveStyle({
+        opacity: open ? 1 : 0,
+        backgroundColor: LIGHT_PALETTE.background,
+      });
+      expect(cover).toHaveProp("pointerEvents", open ? "auto" : "none");
+    },
+  );
+
   it("keeps Plus mounted beneath the editor and reveals it immediately without another enter animation", async () => {
     const screen = await renderDock({ open: false });
     const reveal = screen.getByTestId("quick-planner-mount-reveal");

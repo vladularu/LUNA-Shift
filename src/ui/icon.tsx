@@ -1,5 +1,6 @@
 import type NativeIonicons from "@expo/vector-icons/Ionicons";
 import type { ComponentProps } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 import { usePalette } from "@/theme/palette";
 import {
   Accessibility,
@@ -198,7 +199,7 @@ function DesignIcon({
       size={size}
       color={typeof color === "string" ? color : palette.text}
       strokeWidth={2}
-      style={style}
+      style={style as StyleProp<ViewStyle>}
       accessible={accessible}
       accessibilityElementsHidden={accessibilityElementsHidden}
       importantForAccessibility={importantForAccessibility}
