@@ -1,10 +1,12 @@
 import { Fragment, memo, useCallback, useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { QuickEntryActionTile } from "@/features/calendar/quick-entry-action-tile";
 import { QUICK_PLANNER_METRICS } from "@/features/calendar/quick-planner-appearance";
 import { usePalette } from "@/theme/palette";
+import { MOTION } from "@/theme/motion";
 
 export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   actions,
@@ -20,6 +22,7 @@ export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   readonly tileWidth: number;
 }) {
   const palette = usePalette();
+  const reduceMotion = useReducedMotion();
   const { fontScale } = useWindowDimensions();
   const detailWidth = QUICK_PLANNER_METRICS.activeDetailWidth * Math.max(1, fontScale);
   const scrollRef = useRef<ScrollView>(null);
@@ -33,10 +36,17 @@ export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
     const activeWidth = tileWidth + detailWidth;
     scrollRef.current?.scrollTo({
       x: Math.max(0, left - (viewportWidth.current - activeWidth) / 2),
-      animated: true,
+      animated: !reduceMotion,
     });
-  }, [activeIndex, tileWidth, detailWidth]);
-  useEffect(revealActive, [revealActive]);
+  }, [activeIndex, tileWidth, detailWidth, reduceMotion]);
+  useEffect(() => {
+    if (activeIndex < 0) return;
+    revealActive();
+    // Animated tile widths emit many content-size events. Recenter once after
+    // expansion so the final template is visible without restarting the scroll each frame.
+    const timeout = setTimeout(revealActive, reduceMotion ? 0 : MOTION.duration.normal);
+    return () => clearTimeout(timeout);
+  }, [activeIndex, reduceMotion, revealActive]);
   const offsets = actions.map(
     (_, index) =>
       index * (tileWidth + StyleSheet.hairlineWidth) +
@@ -61,7 +71,6 @@ export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
         viewportWidth.current = event.nativeEvent.layout.width;
         revealActive();
       }}
-      onContentSizeChange={revealActive}
       style={styles.scroll}
       testID="quick-planner-strip"
     >

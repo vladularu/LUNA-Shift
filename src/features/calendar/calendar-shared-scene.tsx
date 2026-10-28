@@ -28,6 +28,7 @@ import {
 } from "./quick-planner-control-motion";
 
 import { calendarMonthRows } from "./calendar-render-data";
+import { combinedCalendarPreview } from "./combined-calendar-preview";
 
 interface SceneValue {
   progress: SharedValue<number>;
@@ -255,6 +256,7 @@ export function SharedCalendarMonth({
       specialDays={holidays.specialDays}
       separator={palette.textMuted}
       selectionFill={palette.primarySoft}
+      slotFill={palette.surface}
     />
   );
 }
@@ -277,6 +279,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   specialDays,
   separator,
   selectionFill,
+  slotFill,
   stampMode,
   stampTransitionProgress,
   stampToolLabel,
@@ -287,6 +290,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
   specialDays: ReadonlyMap<string, { readonly label: string }>;
   separator: string;
   selectionFill: string;
+  slotFill: string;
 }) {
   const layout = useMemo(
     () => calendarPrototypeLayout(month, scene.width, scene.height),
@@ -294,6 +298,8 @@ const SharedMonthBody = memo(function SharedMonthBody({
   );
   const selected = month === scene.month;
   const currentDate = today(profile.timeZone);
+  const detailed = display.showShiftTimes || display.showShiftDuration;
+  const slot = combinedCalendarPreview([], [], layout.weekHeight, detailed);
   const progress = selected ? scene.progress : still;
   const visible = accessibilityVisible && scene.mode === "MONTH" && !scene.busy;
   const opacity = useAnimatedStyle(() => ({ opacity: selected ? 1 : scene.progress.value }));
@@ -354,21 +360,20 @@ const SharedMonthBody = memo(function SharedMonthBody({
               width: layout.cellWidth,
               height: layout.weekHeight,
               borderRadius: RADII.small,
-              borderWidth: stampMode && selectedDate === day.date ? 2 : 0,
-              borderColor: separator,
-              backgroundColor:
-                stampMode && selectedDate === day.date ? selectionFill + "20" : "transparent",
             }}
           >
             {!entriesByDate.get(day.date)?.length &&
             !sharedEntriesByDate?.get(day.date)?.length &&
-            selectedDate !== day.date &&
             day.date !== currentDate &&
             stampTransitionProgress ? (
               <StampDayOutline
                 date={day.date}
                 progress={stampTransitionProgress}
                 color={separator}
+                fill={selectedDate === day.date ? selectionFill : slotFill}
+                selected={selectedDate === day.date}
+                top={slot.headerHeight}
+                height={slot.lineHeight * (detailed ? 2 : 1)}
               />
             ) : null}
           </Pressable>
@@ -383,10 +388,18 @@ function StampDayOutline({
   date,
   progress,
   color,
+  fill,
+  selected,
+  top,
+  height,
 }: {
   date: string;
   progress: SharedValue<number>;
   color: string;
+  fill: string;
+  selected: boolean;
+  top: number;
+  height: number;
 }) {
   const motionStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
@@ -396,10 +409,15 @@ function StampDayOutline({
       pointerEvents="none"
       testID={`quick-stamp-outline-${date}`}
       style={[
-        StyleSheet.absoluteFill,
         {
-          borderWidth: 1.5,
+          position: "absolute",
+          top,
+          height,
+          left: 1,
+          right: 1,
+          borderWidth: selected ? 2 : 1,
           borderColor: color,
+          backgroundColor: fill + "99",
           borderRadius: RADII.small,
           borderCurve: CORNER_CURVE,
         },

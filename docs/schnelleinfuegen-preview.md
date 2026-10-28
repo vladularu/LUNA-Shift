@@ -1,5 +1,19 @@
 # Schnelleinfügen: Preview
 
+## Zweite Korrektur nach iPhone-Foto vom 28.10., 20:05 Uhr
+
+Ziel: Große Tagesrahmen durch gut erkennbare Platzhalter direkt auf Diensthöhe ersetzen. Ein voll deckender Rahmen und eine zu 60 Prozent deckende Themenfläche halten die kompakten Felder auch vor dem Kalenderfoto sichtbar. Die gesamte Tageszelle bleibt als Tippfläche erhalten; die Datumsmarkierung bleibt unverändert. Keine zusätzliche Safe-Area-Abdeckung.
+
+Die untere Dienstvorlage hebt sich bei Auswahl um vier Punkte leicht an, vergrößert sich behutsam und öffnet ihre Uhrzeiten über 240 ms. Bei Abwahl gleitet alles mit derselben Kurve zurück. Die Zeitspalte bleibt für die Rückbewegung montiert und wird erst räumlich eingeklappt; VoiceOver erhält unmittelbar den richtigen Auswahlzustand. Schnelles Wechseln kehrt die laufende Bewegung um. Reduzierte Bewegung verwendet keine Verschiebung oder Skalierung. Die bestätigte Einfüge-/Entfernen-Animation im Kalender bleibt erhalten.
+
+Nicht-Ziele: Datenbank, Speichern, Berechnung, native Konfiguration, globale Farben und andere Ansichten. Zielplattform: iOS Preview, bestehender Build 44. Dateiscope: gemeinsame Kalenderansicht, Vorlagenkachel und -leiste, zugehörige Komponententests und diese Notiz; sechs Dateien. Umsetzung und erneutes Preview-OTA folgen der fortgeltenden Freigabe.
+
+Abnahme: Kompakte Felder stehen unter dem Datum auf Eintragshöhe, bleiben in Hell/Dunkel lesbar und behalten die große Tippfläche. Wahl, Abwahl und direkter Vorlagenwechsel bewegen sich sanft vorwärts/rückwärts, einschließlich der Uhrzeiten. Prüfung auf dem iPhone nach Veröffentlichung offen.
+
+Prüfung: `npm.cmd run verify:fast` vollständig bestanden, einschließlich 9.838 Unit-Tests in 508 Dateien, 1.504 Komponententests in 163 Dateien und sämtlicher zusätzlicher Projektchecks. Die vier fokussierten Kalender-/Planungssuiten bestehen mit 87 Tests. Der neu berechnete interne iOS-Fingerprint bleibt `b99c3cf0dd56e6b1bb126d195f21c665de57760b` und stimmt mit Build 44 sowie der vorherigen Preview überein. Protokolle: `C:/Users/veron/.codex/tmp/quick-entry-refinement-20261028/`. Das Nutzerfeedback bestätigt die Kalenderanimation der vorherigen Preview; diese neue Gestaltung und Auswahlbewegung benötigen noch die Sichtprüfung auf dem iPhone.
+
+Die nachfolgenden Abschnitte dokumentieren frühere Iterationen.
+
 ## Korrektur nach iPhone-Feedback
 
 Ziel: Die ursprünglichen, gut sichtbaren Tagesrahmen und den Bereich hinter der unteren Leiste wiederherstellen. Die hinzugefügte und als störend gemeldete Safe-Area-Abdeckung entfällt. Beginn/Ende an der aktiven Vorlage bleiben erhalten. Ein zweiter Tipp auf dieselbe Vorlage wählt sie wieder ab.

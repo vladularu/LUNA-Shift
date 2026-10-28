@@ -8,7 +8,6 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { MOTION } from "@/theme/motion";
@@ -43,34 +42,46 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
   const editorIcon = action.kind === "APPOINTMENT" ? "calendar-outline" : "add";
   const editorColor =
     action.kind === "APPOINTMENT" ? APPOINTMENT_COLOR : QUICK_PLANNER_COLORS.active;
-  const pressMotion = usePressMotion(1, 0.95);
+  const pressMotion = usePressMotion(1, MOTION.scale.press);
   const reduceMotion = useReducedMotion();
-  const badgeScale = useSharedValue(1);
-  const previousActive = useRef(active);
+  const showDetail = active && isStampAction;
+  const selection = useSharedValue(showDetail ? 1 : 0);
+  const previousActive = useRef(showDetail);
   useEffect(() => {
-    if (previousActive.current === active) return;
-    previousActive.current = active;
-    cancelAnimation(badgeScale);
-    badgeScale.value = reduceMotion
-      ? 1
-      : withSequence(
-          withTiming(active ? 2 - MOTION.scale.emphasis : MOTION.scale.emphasis, {
-            duration: MOTION.duration.instant,
-          }),
-          withTiming(1, { duration: MOTION.duration.fast, easing: MOTION.easing.standard }),
-        );
-  }, [active, badgeScale, reduceMotion]);
-  useEffect(() => () => cancelAnimation(badgeScale), [badgeScale]);
-  const badgeMotion = useAnimatedStyle(() => ({ transform: [{ scale: badgeScale.value }] }));
-  const detail =
-    active && isStampAction
-      ? action.template.allDay
-        ? ["Ganztägig"]
-        : action.template.startTime && action.template.endTime
-          ? [action.template.startTime, action.template.endTime]
-          : ["Ohne Zeit"]
-      : null;
-  const labelWidth = width - (detail ? detailWidth : 0);
+    if (previousActive.current === showDetail) return;
+    previousActive.current = showDetail;
+    selection.value = reduceMotion
+      ? showDetail
+        ? 1
+        : 0
+      : withTiming(showDetail ? 1 : 0, {
+          duration: MOTION.duration.normal,
+          easing: MOTION.easing.calm,
+        });
+  }, [showDetail, selection, reduceMotion]);
+  useEffect(() => () => cancelAnimation(selection), [selection]);
+  const labelWidth = width - (showDetail ? detailWidth : 0);
+  const tileMotion = useAnimatedStyle(() => ({
+    width: labelWidth + detailWidth * selection.value,
+  }));
+  const templateMotion = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: reduceMotion ? 0 : -MOTION.distance.subtle * selection.value },
+      { scale: reduceMotion ? 1 : 1 + (1 - MOTION.scale.emphasis) * selection.value },
+    ],
+  }));
+  const detailMotion = useAnimatedStyle(() => ({
+    width: detailWidth * selection.value,
+    opacity: selection.value,
+    transform: [{ translateX: reduceMotion ? 0 : -MOTION.distance.subtle * (1 - selection.value) }],
+  }));
+  const detail = isStampAction
+    ? action.template.allDay
+      ? ["Ganztägig"]
+      : action.template.startTime && action.template.endTime
+        ? [action.template.startTime, action.template.endTime]
+        : ["Ohne Zeit"]
+    : null;
 
   return (
     <AnimatedPressable
@@ -78,16 +89,19 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
       accessibilityHint={active ? "Erneut antippen, um die Vorlage abzuwählen." : undefined}
       accessibilityRole="button"
       accessibilityState={{ disabled, selected: active }}
-      accessibilityValue={detail ? { text: detail.join(" bis ") } : undefined}
+      accessibilityValue={showDetail && detail ? { text: detail.join(" bis ") } : undefined}
       disabled={disabled}
       onPress={() => onPress(action)}
       onPressIn={pressMotion.onPressIn}
       onPressOut={pressMotion.onPressOut}
-      style={[styles.tile, { width }, pressMotion.animatedStyle]}
+      style={[styles.tile, tileMotion, pressMotion.animatedStyle]}
     >
-      <View style={[styles.template, { width: labelWidth }]}>
-        <Animated.View
-          style={[styles.badgeRing, active && { borderColor: palette.primary }, badgeMotion]}
+      <Animated.View
+        style={[styles.template, { width: labelWidth }, templateMotion]}
+        testID={`quick-planner-template-${action.key}`}
+      >
+        <View
+          style={[styles.badgeRing, active && { borderColor: palette.primary }]}
           testID={`quick-planner-badge-${action.key}`}
         >
           {isStampAction ? (
@@ -106,7 +120,7 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
               />
             </View>
           )}
-        </Animated.View>
+        </View>
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={[
@@ -120,22 +134,27 @@ export const QuickEntryActionTile = memo(function QuickEntryActionTile({
         >
           {action.label}
         </Text>
-      </View>
+      </Animated.View>
       {detail ? (
-        <View
-          style={[styles.details, { width: detailWidth }]}
+        <Animated.View
+          accessibilityElementsHidden={!showDetail}
+          importantForAccessibility={showDetail ? "auto" : "no-hide-descendants"}
+          pointerEvents="none"
+          style={[styles.detailClip, detailMotion]}
           testID={`quick-planner-detail-${action.key}`}
         >
-          {detail.map((line, index) => (
-            <Text
-              key={index}
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={[styles.time, { color: palette.text }]}
-            >
-              {line}
-            </Text>
-          ))}
-        </View>
+          <View style={[styles.details, { width: detailWidth }]}>
+            {detail.map((line, index) => (
+              <Text
+                key={index}
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={[styles.time, { color: palette.text }]}
+              >
+                {line}
+              </Text>
+            ))}
+          </View>
+        </Animated.View>
       ) : null}
     </AnimatedPressable>
   );
@@ -157,6 +176,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
+  },
+  detailClip: {
+    overflow: "hidden",
   },
   time: {
     fontFamily: INTER_FONTS.medium,
