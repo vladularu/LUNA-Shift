@@ -341,6 +341,10 @@ function validateRecurrence(value: RecurrenceRule | null | undefined): Recurrenc
 }
 
 export function validateTemplate(input: SaveShiftTemplateInput): SaveShiftTemplateInput {
+  if (input.specialDuty?.standbyAgreement?.sequence != null)
+    throw new ValidationError(
+      "Die Monatsnummer gehört in den Kalendereintrag, nicht in die Vorlage.",
+    );
   if (input.specialDuty?.callouts.length || input.specialDuty?.calloutsComplete)
     throw new ValidationError("Tatsächliche Einsätze gehören nicht in eine Dienstvorlage.");
   const specialDuty = validateSpecialDuty(input.specialDuty);

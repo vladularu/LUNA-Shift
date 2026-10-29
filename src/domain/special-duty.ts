@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { validateStandbyAgreement, type StandbyAgreement } from "./standby-agreement";
 
 /** Wall-clock minutes relative to the entry's local date; dates survive copying. */
 export interface DutyPart {
@@ -14,7 +15,7 @@ export interface DutyCallout extends DutyPart {
 }
 
 export interface SpecialDuty {
-  readonly version: 1;
+  readonly version: 1 | 2;
   readonly kind: "SPLIT" | "ON_CALL" | "STANDBY";
   readonly timeZone: string;
   /** Explicit local end day, 0 = start date. */
@@ -24,6 +25,7 @@ export interface SpecialDuty {
   readonly calloutsComplete: boolean;
   readonly standbyLevel: "UNKNOWN" | "I" | "II" | "III" | "A" | "B" | "C" | "D";
   readonly settlement: "UNKNOWN" | "PAY" | "TIME_OFF";
+  readonly standbyAgreement?: StandbyAgreement;
 }
 
 export const DUTY_LABELS = {
@@ -102,6 +104,7 @@ function part(value: unknown, callout: boolean): DutyPart | DutyCallout {
 /** The same validator guards UI persistence, SQLite reads and backup import. */
 export function validateSpecialDuty(value: unknown): SpecialDuty | null {
   if (value === undefined || value === null) return null;
+  const version = (value as Record<string, unknown>).version;
   const raw = record(value, [
     "version",
     "kind",
@@ -112,8 +115,12 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
     "calloutsComplete",
     "standbyLevel",
     "settlement",
+    ...(version === 2 ? ["standbyAgreement"] : []),
   ]);
-  if (raw.version !== 1 || !["SPLIT", "ON_CALL", "STANDBY"].includes(String(raw.kind)))
+  if (
+    (raw.version !== 1 && raw.version !== 2) ||
+    !["SPLIT", "ON_CALL", "STANDBY"].includes(String(raw.kind))
+  )
     return invalid();
   if (typeof raw.timeZone !== "string") return invalid();
   Temporal.Now.zonedDateTimeISO(raw.timeZone);
@@ -133,6 +140,7 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
   if (!["UNKNOWN", "PAY", "TIME_OFF"].includes(String(raw.settlement))) return invalid();
   if (raw.kind !== "SPLIT" && parts.length > 0) return invalid();
   if (raw.kind !== "ON_CALL" && (callouts.length > 0 || raw.calloutsComplete)) return invalid();
+  if (version === 2 && raw.kind !== "STANDBY") return invalid();
   for (const intervals of [
     parts,
     callouts.map((item) => ({ start: item.departure, end: item.returned })),
@@ -142,7 +150,7 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
       return invalid();
   }
   return Object.freeze({
-    version: 1,
+    version: raw.version as 1 | 2,
     kind: raw.kind as SpecialDuty["kind"],
     timeZone: raw.timeZone,
     endDay,
@@ -151,6 +159,7 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
     calloutsComplete: raw.calloutsComplete,
     standbyLevel: raw.standbyLevel as SpecialDuty["standbyLevel"],
     settlement: raw.settlement as SpecialDuty["settlement"],
+    ...(version === 2 ? { standbyAgreement: validateStandbyAgreement(raw.standbyAgreement) } : {}),
   });
 }
 
@@ -209,5 +218,14 @@ export function dutyInstant(
 
 /** Actual events never become a planned template or a future copy. */
 export function plannedSpecialDuty(duty: SpecialDuty | null | undefined): SpecialDuty | null {
-  return duty ? { ...duty, callouts: [], calloutsComplete: false } : null;
+  return duty
+    ? {
+        ...duty,
+        callouts: [],
+        calloutsComplete: false,
+        ...(duty.standbyAgreement
+          ? { standbyAgreement: { ...duty.standbyAgreement, sequence: null } }
+          : {}),
+      }
+    : null;
 }
