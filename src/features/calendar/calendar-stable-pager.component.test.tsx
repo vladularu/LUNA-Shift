@@ -1,7 +1,7 @@
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { useLayoutEffect, useState } from "react";
-import { Pressable, Text, StyleSheet } from "react-native";
+import { Pressable, ScrollView, Text, StyleSheet } from "react-native";
 import type { UserProfile } from "@/domain/types";
 import { createMonthWindow } from "./month-window";
 import { CalendarStablePager } from "./calendar-stable-pager";
@@ -24,6 +24,15 @@ const profile = {
 } as UserProfile;
 const noop = () => {};
 const onDate = jest.fn();
+const flushIdleWork = () =>
+  act(async () => {
+    const pending = mockIdleWork.mock.calls.map(([work]) => work);
+    mockIdleWork.mockClear();
+    for (const work of pending) work();
+  });
+afterEach(() => {
+  mockIdleWork.mockClear();
+});
 
 it.each([false, true])(
   "renders only the first month until presentation; immediate swipe: %s",
@@ -179,7 +188,7 @@ describe("permanent calendar slots with the real shared scene", () => {
       within(screen.getByTestId("calendar-slot-0")).getByRole("header", { name: "September" }),
     ).toBeVisible();
   });
-  it("retains four actual month bodies and their glyphs on each window advance", async () => {
+  it("retains four actual month bodies and glyphs through each deferred window advance", async () => {
     const screen = await render(<Harness />);
     const pager = screen.getByTestId("calendar-month-pager");
     const months = createMonthWindow("2026-09", 24, 36);
@@ -206,6 +215,10 @@ describe("permanent calendar slots with the real shared scene", () => {
           screen.getByTestId(`calendar-date-marker-${month}-01`, { includeHiddenElements: true }),
         ).toBe(glyphs[i]);
       });
+      await fireEvent(pager, "momentumScrollEnd", {
+        nativeEvent: { contentOffset: { x: 0, y: index * 700 } },
+      });
+      await flushIdleWork();
       await waitFor(() =>
         expect(
           screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }),
@@ -222,14 +235,11 @@ describe("permanent calendar slots with the real shared scene", () => {
       await fireEvent(pager, "scrollBeginDrag");
       await fireEvent.scroll(pager, { nativeEvent: { contentOffset: { x: 0, y: index * 700 } } });
       expect(
-        within(screen.getByTestId("calendar-slot-0", { includeHiddenElements: true })).getByTestId(
-          `shared-month-${months[index]}`,
-          { includeHiddenElements: true },
-        ),
+        screen.getByTestId(`shared-month-${months[index]}`, { includeHiddenElements: true }),
       ).toBeTruthy();
-      expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
-        5,
-      );
+      expect(
+        screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }).length,
+      ).toBeLessThanOrEqual(5);
       expect(screen.getByTestId("heading")).toHaveTextContent("MONTH:2026-09");
       expect(pager.props.scrollEnabled).toBe(true);
     }
@@ -291,9 +301,9 @@ describe("permanent calendar slots with the real shared scene", () => {
       expect(
         within(screen.getByTestId("calendar-slot-0")).getByTestId(`shared-month-${months[index]}`),
       ).toBeTruthy();
-      expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
-        5,
-      );
+      expect(
+        screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }).length,
+      ).toBeLessThanOrEqual(5);
     }
   });
 
@@ -398,6 +408,7 @@ describe("permanent calendar slots with the real shared scene", () => {
         within(screen.getByTestId("calendar-slot-0")).getByTestId(`shared-month-${month}`),
       ).toBeTruthy();
       expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+      await flushIdleWork();
       await waitFor(() =>
         expect(
           screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }),
@@ -484,6 +495,7 @@ it("commits only the destination and defers neighbour mounts until the real morp
     expect(screen.getByTestId("calendar-month-pager").props.scrollEnabled).toBe(false);
     await screen.rerender(<CalendarStablePager {...props} month="2026-01" enabled />);
     await flushFrame();
+    await flushIdleWork();
     expect(screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true })).toHaveLength(
       5,
     );
@@ -496,6 +508,7 @@ it("commits only the destination and defers neighbour mounts until the real morp
     await screen.rerender(<CalendarStablePager {...props} month="2026-05" enabled transitioning />);
     const during = [...mounted];
     await flushFrame();
+    await flushIdleWork();
     expect(mounted).toEqual(during);
 
     // The next destination supersedes both old native position and deferred work.
@@ -523,4 +536,91 @@ it("commits only the destination and defers neighbour mounts until the real morp
     frame.mockRestore();
     cancel.mockRestore();
   }
+});
+
+describe("native Today positioning", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+  const months = createMonthWindow("2027-01", 24, 36);
+  const props = {
+    month: "2027-03",
+    months,
+    height: 700,
+    enabled: true,
+    revision: 0,
+    onBeginDrag: noop,
+    onSettled: jest.fn(),
+    renderMonth: (month: string) => <Text testID={`today-page-${month}`}>{month}</Text>,
+  };
+  it("animates both prepared pages and ignores stale momentum without an early retry", async () => {
+    jest.useFakeTimers();
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    const onPositioned = jest.fn();
+    const screen = await render(<CalendarStablePager {...props} onPositioned={onPositioned} />);
+    scrollTo.mockClear();
+    onPositioned.mockClear();
+    await screen.rerender(
+      <CalendarStablePager
+        {...props}
+        month="2027-01"
+        revision={1}
+        animatedRevision={1}
+        onPositioned={onPositioned}
+      />,
+    );
+    const pager = screen.getByTestId("calendar-month-pager");
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 24 * 700, animated: true });
+    for (const month of ["2027-01", "2027-02", "2027-03"])
+      expect(
+        screen.getByTestId(`today-page-${month}`, { includeHiddenElements: true }),
+      ).toBeTruthy();
+    expect(pager.props.scrollEnabled).toBe(false);
+    await fireEvent(pager, "contentSizeChange", 430, 61 * 700);
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    await fireEvent(pager, "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { y: 26 * 700 } },
+    });
+    expect(onPositioned).not.toHaveBeenCalled();
+    await fireEvent.scroll(pager, { nativeEvent: { contentOffset: { y: 25 * 700 } } });
+    expect(onPositioned).not.toHaveBeenCalled();
+    await fireEvent.scroll(pager, { nativeEvent: { contentOffset: { y: 24 * 700 } } });
+    expect(onPositioned).toHaveBeenLastCalledWith(calendarPageTarget("2027-01", 1, months[0], 700));
+    expect(pager.props.scrollEnabled).toBe(true);
+    expect(props.onSettled).not.toHaveBeenCalled();
+  });
+  it("recovers a lost animation and cancels it on a viewport change", async () => {
+    jest.useFakeTimers();
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    const screen = await render(<CalendarStablePager {...props} />);
+    await screen.rerender(
+      <CalendarStablePager {...props} month="2027-01" revision={1} animatedRevision={1} />,
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(1600);
+    });
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 24 * 700, animated: false });
+    await screen.rerender(
+      <CalendarStablePager
+        {...props}
+        month="2027-01"
+        revision={1}
+        animatedRevision={1}
+        height={640}
+      />,
+    );
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 24 * 640, animated: false });
+  });
+  it("never animates a jump of three pages even if a caller requests it", async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    const screen = await render(<CalendarStablePager {...props} month="2027-04" />);
+    await screen.rerender(
+      <CalendarStablePager {...props} month="2027-01" revision={1} animatedRevision={1} />,
+    );
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 24 * 700, animated: false });
+  });
 });

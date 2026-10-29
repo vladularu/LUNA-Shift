@@ -2,7 +2,12 @@ import { act, fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import * as MockReact from "react";
-import { Pressable as MockPressable, Text as MockText, View as MockView } from "react-native";
+import {
+  Pressable as MockPressable,
+  ScrollView as MockScrollView,
+  Text as MockText,
+  View as MockView,
+} from "react-native";
 
 import { addMonths, today } from "@/engine/calendar";
 import { CalendarScreen } from "@/features/calendar/calendar-screen";
@@ -617,6 +622,45 @@ describe("CalendarScreen quick-entry navigation", () => {
     expect(mockActiveMonth).toBe("2026-02");
   });
 
+  it.each([-3, -2, -1, 1, 2, 3])(
+    "uses a native Today return from %s months, with three as the instant boundary",
+    async (distance) => {
+      const month = today("Europe/Berlin").slice(0, 7);
+      mockActiveMonth = addMonths(month, distance);
+      const scrollTo = jest.spyOn(MockScrollView.prototype, "scrollTo");
+      try {
+        const screen = await render(<CalendarScreen />);
+        await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+          nativeEvent: { layout: { height: 700 } },
+        });
+        const pager = screen.getByTestId("calendar-month-pager");
+        scrollTo.mockClear();
+        mockTodayRequestRevision = 1;
+        await screen.rerender(<CalendarScreen />);
+        const animated = Math.abs(distance) < 3;
+        const y = (animated ? 24 - distance : 24) * 700;
+        expect(scrollTo).toHaveBeenLastCalledWith({ y, animated });
+        if (animated) {
+          expect(mockActiveMonthCoordinator.completeTodayRequest).not.toHaveBeenCalled();
+          await act(async () => {
+            pager.props.onScroll({
+              nativeEvent: { contentOffset: { x: 0, y: y + Math.sign(distance) * 350 } },
+            });
+          });
+          expect(mockActiveMonthCoordinator.completeTodayRequest).not.toHaveBeenCalled();
+          await act(async () => {
+            pager.props.onScroll({ nativeEvent: { contentOffset: { x: 0, y } } });
+          });
+        }
+        expect(mockActiveMonthCoordinator.completeTodayRequest).toHaveBeenCalledWith(1);
+        expect(pager.props.scrollEnabled).toBe(true);
+        expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
+      } finally {
+        scrollTo.mockRestore();
+      }
+    },
+  );
+
   it.each([-36, 36])(
     "returns from a distant year (%s months) without publishing animation pages",
     async (distance) => {
@@ -656,25 +700,30 @@ describe("CalendarScreen quick-entry navigation", () => {
     },
   );
 
-  it.each(["momentumScrollEnd", "scrollEndDrag"])(
-    "keeps the December/January pager mounted after %s while entries refresh",
-    async (completion) => {
+  it.each([
+    { completion: "momentumScrollEnd", height: 700 },
+    { completion: "scrollEndDrag", height: 700 },
+    { completion: "momentumScrollEnd", height: 700 + 1 / 3 },
+    { completion: "scrollEndDrag", height: 700 + 1 / 3 },
+  ])(
+    "keeps the December/January pager mounted after $completion at height $height while entries refresh",
+    async ({ completion, height }) => {
       mockActiveMonth = "2026-12";
       const screen = await render(<CalendarScreen />);
       await act(async () =>
         fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
-          nativeEvent: { layout: { height: 700 } },
+          nativeEvent: { layout: { height } },
         }),
       );
       const pager = screen.getByTestId("calendar-month-pager");
       await fireEvent(pager, "scrollBeginDrag");
       await act(async () =>
-        fireEvent.scroll(pager, { nativeEvent: { contentOffset: { y: 700 * 25 } } }),
+        fireEvent.scroll(pager, { nativeEvent: { contentOffset: { y: height * 25 } } }),
       );
       expect(mockActiveMonth).toBe("2026-12");
       await act(async () =>
         fireEvent(pager, completion, {
-          nativeEvent: { contentOffset: { y: 700 * 25 }, velocity: { y: 0 } },
+          nativeEvent: { contentOffset: { y: height * 25 }, velocity: { y: 0 } },
         }),
       );
       expect(mockActiveMonth).toBe("2027-01");
@@ -826,7 +875,7 @@ describe("CalendarScreen quick-entry navigation", () => {
       expect(screen.getByTestId("calendar-month-scene").props.onLayout).toBeUndefined();
       await fireEvent(viewport, "layout", { nativeEvent: { layout: { height: 640 } } });
       const pager = screen.getByTestId("calendar-month-pager");
-      expect(pager.props.snapToInterval).toBe(640);
+      expect(screen.getByTestId("calendar-slot-0")).toHaveStyle({ height: 640 });
       for (const viewMode of ["YEAR", "MONTH", "YEAR", "MONTH"]) {
         mockPreferences.viewMode = viewMode;
         await screen.rerender(<CalendarScreen />);
@@ -840,7 +889,9 @@ describe("CalendarScreen quick-entry navigation", () => {
         expect(screen.getByTestId("calendar-month-pager", { includeHiddenElements: true })).toBe(
           pager,
         );
-        expect(pager.props.snapToInterval).toBe(640);
+        expect(screen.getByTestId("calendar-slot-0", { includeHiddenElements: true })).toHaveStyle({
+          height: 640,
+        });
       }
     },
   );
@@ -851,12 +902,6 @@ describe("CalendarScreen quick-entry navigation", () => {
 
     await act(async () => {
       fireEvent(pager, "layout", { nativeEvent: { layout: { height: 700 } } });
-    });
-    expect(screen.getByTestId("calendar-month-pager").props).toMatchObject({
-      decelerationRate: "fast",
-      disableIntervalMomentum: true,
-      pagingEnabled: true,
-      snapToInterval: 700,
     });
     expect(screen.getByTestId("quick-planner-dock")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("calendar-day"));

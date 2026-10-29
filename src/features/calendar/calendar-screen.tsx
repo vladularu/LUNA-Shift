@@ -6,7 +6,7 @@ import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, View, type LayoutChangeEvent } from "react-native";
-import Animated, { useSharedValue } from "react-native-reanimated";
+import Animated, { useReducedMotion, useSharedValue } from "react-native-reanimated";
 
 import {
   usePflegeShiftEntries,
@@ -289,30 +289,28 @@ export function CalendarScreen() {
     setPlannerError(null);
   }, []);
 
-  const { finishTodayScrollAtMonth, todayScrollActive } = useCalendarTodayScroll({
-    activeMonthCoordinator,
-    pagerReady: profile !== null && pageHeight > 0,
-    isFocused,
-    months,
-    pageHeight,
-    // Match the accepted prototype: Today goes straight to its destination,
-    // without mounting/scrolling intermediate months during the year zoom.
-    reduceMotion: true,
-    resetTransientUi: resetTodayUi,
-    scrollToMonth,
-    setHeaderDirection,
-    setHeaderTransition,
-    setMonthAnchor,
-    setPagerResetRevision,
-    setSelectedDate,
-    setSelectionVisible,
-    setViewMode,
-    setVisibleMonth,
-    settledMonthRef: settledMonth,
-    timeZone,
-    viewMode: preferences.viewMode,
-    visibleMonth,
-  });
+  const { finishTodayScrollAtMonth, todayScrollActive, animatedTodayRevision } =
+    useCalendarTodayScroll({
+      activeMonthCoordinator,
+      pagerReady: monthPositioned,
+      pagerRevision: pagerResetRevision,
+      isFocused,
+      months,
+      reduceMotion: useReducedMotion(),
+      resetTransientUi: resetTodayUi,
+      setHeaderDirection,
+      setHeaderTransition,
+      setMonthAnchor,
+      setPagerResetRevision,
+      setSelectedDate,
+      setSelectionVisible,
+      setViewMode,
+      setVisibleMonth,
+      settledMonthRef: settledMonth,
+      timeZone,
+      viewMode: preferences.viewMode,
+      visibleMonth: controller.displayMonth,
+    });
 
   const openMonth = useCallback(
     (month: string) => {
@@ -374,7 +372,8 @@ export function CalendarScreen() {
 
   const measurePager = useCallback(
     (event: LayoutChangeEvent) => {
-      const nextHeight = Math.round(event.nativeEvent.layout.height);
+      // Native iOS paging uses the exact viewport height, including subpixels.
+      const nextHeight = event.nativeEvent.layout.height;
       calendarPerformance.record("pager-layout", { height: nextHeight });
       if (nextHeight > 0 && nextHeight !== pageHeight) setPageHeight(nextHeight);
     },
@@ -582,7 +581,11 @@ export function CalendarScreen() {
         bottomReserve={calendarBottomReserve}
         onSelectMonth={openMonth}
       >
-        <View style={{ flex: 1 }} testID="calendar-month-scene">
+        <View
+          style={{ flex: 1 }}
+          pointerEvents={todayScrollActive ? "none" : "auto"}
+          testID="calendar-month-scene"
+        >
           <Animated.View
             onLayout={measurePager}
             testID="calendar-month-pager-shell"
@@ -595,7 +598,8 @@ export function CalendarScreen() {
                 months={months}
                 height={pageHeight}
                 revision={pagerResetRevision}
-                enabled={preferences.viewMode === "MONTH" && !todayScrollActive}
+                enabled={preferences.viewMode === "MONTH"}
+                animatedRevision={animatedTodayRevision}
                 transitioning={controller.busy}
                 onPositioned={setPositionedTarget}
                 onSettled={finishPaging}
