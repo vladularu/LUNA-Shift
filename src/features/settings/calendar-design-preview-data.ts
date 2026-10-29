@@ -73,6 +73,12 @@ export function calendarDesignPreviewData(
   });
   return {
     entries: shifts,
-    holidays: new Map<string, { readonly name: string }>(),
+    // An explicitly named display example stays visible even in months without holidays.
+    holidays: new Map([
+      [
+        days.find((day, index) => index < 14 && day.inMonth && !day.weekend)!.date,
+        { name: "Feiertag / Sondertag (Beispiel)" },
+      ],
+    ]),
   };
 }

@@ -27,7 +27,6 @@ const SINGLE_LINE_ALLOWLIST = new Set([
   "features/calendar/shared-calendar-entry-content.tsx",
   // Bounded prototype day cells; complete titles remain in each day's accessible label.
   "features/calendar/calendar-appointment-label.tsx",
-  "features/calendar/calendar-prototype-canvas.tsx",
   "features/calendar/prototype-entry-content.tsx",
   "features/calendar/month-card.tsx",
   "features/calendar/year-overview.tsx",

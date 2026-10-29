@@ -9,7 +9,12 @@ import React, {
   type PropsWithChildren,
 } from "react";
 
-import type { CalendarLabelMode, CalendarPreferencesData, CalendarViewMode } from "@/domain/types";
+import type {
+  CalendarHolidayColor,
+  CalendarLabelMode,
+  CalendarPreferencesData,
+  CalendarViewMode,
+} from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import {
   DEFAULT_CALENDAR_PREFERENCES,
@@ -23,6 +28,7 @@ interface CalendarPreferencesValue {
   readonly showShifts: boolean;
   readonly showAppointments: boolean;
   readonly showHolidays: boolean;
+  readonly holidayColor: CalendarHolidayColor;
   readonly labelMode: CalendarLabelMode;
   readonly showShiftTimes: boolean;
   readonly showShiftDuration: boolean;
@@ -35,6 +41,7 @@ interface CalendarPreferencesValue {
   readonly setShowShifts: (value: boolean) => void;
   readonly setShowAppointments: (value: boolean) => void;
   readonly setShowHolidays: (value: boolean) => void;
+  readonly setHolidayColor: (value: CalendarHolidayColor) => void;
   readonly setLabelMode: (value: CalendarLabelMode) => void;
   readonly setShowShiftTimes: (value: boolean) => void;
   readonly setShowShiftDuration: (value: boolean) => void;
@@ -160,6 +167,10 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
     (labelMode: CalendarLabelMode) => update({ labelMode }),
     [update],
   );
+  const setHolidayColor = useCallback(
+    (holidayColor: CalendarHolidayColor) => update({ holidayColor }),
+    [update],
+  );
   const setShowShiftTimes = useCallback(
     (showShiftTimes: boolean) => update({ showShiftTimes }),
     [update],
@@ -181,6 +192,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setShowShifts,
       setShowAppointments,
       setShowHolidays,
+      setHolidayColor,
       setLabelMode,
       setShowShiftTimes,
       setShowShiftDuration,
@@ -195,6 +207,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setLabelMode,
       setShowAppointments,
       setShowHolidays,
+      setHolidayColor,
       setShowShiftDuration,
       setShowShiftTimes,
       setShowShifts,

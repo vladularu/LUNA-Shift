@@ -34,8 +34,9 @@ export function useCalendarMonthRenderer({
       labelMode: display.labelMode,
       showShiftTimes: display.showShiftTimes,
       showShiftDuration: display.showShiftDuration,
+      holidayColor: display.holidayColor,
     }),
-    [display.labelMode, display.showShiftTimes, display.showShiftDuration],
+    [display.labelMode, display.showShiftTimes, display.showShiftDuration, display.holidayColor],
   );
   return useCallback(
     (month: string) =>

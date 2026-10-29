@@ -14,6 +14,7 @@ const mockDefaults: CalendarPreferencesData = {
   showShifts: true,
   showAppointments: true,
   showHolidays: true,
+  holidayColor: "ORANGE",
   labelMode: "FULL",
   showShiftTimes: false,
   showShiftDuration: false,
@@ -46,6 +47,7 @@ function PreferencesHarness() {
           showShifts: preferences.showShifts,
           showAppointments: preferences.showAppointments,
           showHolidays: preferences.showHolidays,
+          holidayColor: preferences.holidayColor,
           labelMode: preferences.labelMode,
           showShiftTimes: preferences.showShiftTimes,
           showShiftDuration: preferences.showShiftDuration,
@@ -63,6 +65,11 @@ function PreferencesHarness() {
         onPress={() => preferences.setShowShifts(false)}
       />
       <Text>{preferences.error ?? "OK"}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Blau wählen"
+        onPress={() => preferences.setHolidayColor("BLUE")}
+      />
       <Pressable
         accessibilityLabel="Jahresansicht wählen"
         accessibilityRole="button"
@@ -82,6 +89,33 @@ describe("CalendarPreferencesProvider", () => {
     mockLoadCalendarPreferences.mockReset();
     mockSaveCalendarPreferences.mockReset();
     mockLoadCalendarPreferences.mockResolvedValue(mockDefaults);
+  });
+
+  it("saves the selected holiday color and restores it after restart", async () => {
+    mockSaveCalendarPreferences.mockImplementation(async (_db, snapshot) => {
+      mockLoadCalendarPreferences.mockResolvedValue(snapshot);
+    });
+    const screen = await render(
+      <CalendarPreferencesProvider>
+        <PreferencesHarness />
+      </CalendarPreferencesProvider>,
+    );
+    await waitFor(() => expect(screen.getByText("READY")).toBeTruthy());
+    await fireEvent.press(screen.getByRole("button", { name: "Blau wählen" }));
+    await waitFor(() =>
+      expect(mockSaveCalendarPreferences).toHaveBeenLastCalledWith(
+        mockDatabase,
+        expect.objectContaining({ holidayColor: "BLUE" }),
+      ),
+    );
+    await screen.unmount();
+    const restarted = await render(
+      <CalendarPreferencesProvider>
+        <PreferencesHarness />
+      </CalendarPreferencesProvider>,
+    );
+    await waitFor(() => expect(restarted.getByText("READY")).toBeTruthy());
+    expect(JSON.parse(restarted.getByTestId("snapshot").props.children).holidayColor).toBe("BLUE");
   });
 
   it("rolls back a failed optimistic write and retries the complete snapshot", async () => {
@@ -146,6 +180,7 @@ describe("CalendarPreferencesProvider", () => {
       showShifts: false,
       showAppointments: false,
       showHolidays: true,
+      holidayColor: "RED",
       labelMode: "SYMBOL",
       showShiftTimes: true,
       showShiftDuration: true,

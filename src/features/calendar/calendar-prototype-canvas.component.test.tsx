@@ -37,12 +37,14 @@ function Month({
   entriesByDate = new Map(),
   holidays = new Map(),
   specialDays = new Map(),
+  holidayColor = "ORANGE",
 }: {
   month?: string;
   height?: number;
   entriesByDate?: ReadonlyMap<string, readonly CalendarEntry[]>;
   holidays?: ReadonlyMap<string, { name: string }>;
   specialDays?: ReadonlyMap<string, { label: string }>;
+  holidayColor?: import("@/domain/types").CalendarHolidayColor;
 }) {
   const progress = useSharedValue(1);
   return (
@@ -53,7 +55,7 @@ function Month({
       holidays={holidays}
       specialDays={specialDays}
       visible
-      display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+      display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false, holidayColor }}
       timeZone="Europe/Berlin"
     />
   );
@@ -237,8 +239,8 @@ describe("compact services and appointments", () => {
   });
 });
 
-describe("holiday entry alignment", () => {
-  it.each([false, true])("keeps the first shift above the holiday in dark=%s", async (dark) => {
+describe("subtle calendar day markings", () => {
+  it.each([false, true])("tints holidays without adding an entry row in dark=%s", async (dark) => {
     const scheme = jest
       .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
       .mockReturnValue(dark ? "dark" : "light");
@@ -258,12 +260,12 @@ describe("holiday entry alignment", () => {
           holidays={new Map([[holidayShift.date, { name: holidayName }]])}
         />,
       );
-      const content = screen.getByText(holidayName).parent!;
+      const content = screen.getByTestId("calendar-combined-entries-" + holidayShift.date);
       expect(
         within(content)
-          .getAllByText(/^(Spät|13:18|Tag der Deutschen Einheit)$/)
+          .getAllByText(/^(Spät|13:18)$/)
           .map((node) => node.props.children),
-      ).toEqual(["Spät", "13:18", holidayName]);
+      ).toEqual(["Spät", "13:18"]);
       expect(content).toHaveStyle({ marginTop: 31 });
       expect(screen.getByTestId("calendar-combined-entries-2026-10-02")).toHaveStyle({
         marginTop: 31,
@@ -271,23 +273,68 @@ describe("holiday entry alignment", () => {
       const titleHeight = StyleSheet.flatten(screen.getByText("Spät").props.style).height;
       expect(titleHeight).toBeGreaterThanOrEqual(11);
       expect(titleHeight).toBeLessThanOrEqual(CALENDAR_METRICS.entryRowHeight);
-      expect(screen.getByText(holidayName)).toHaveStyle({
-        height: CALENDAR_METRICS.entryRowHeight,
-        color: (dark ? DARK_PALETTE : LIGHT_PALETTE).textMuted,
+      expect(screen.queryByText(holidayName)).toBeNull();
+      const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
+      expect(screen.getByTestId("calendar-combined-day-" + holidayShift.date)).toHaveStyle({
+        backgroundColor: "#D39A4540",
       });
+      expect(screen.getByTestId("calendar-combined-day-2026-10-04")).toHaveStyle({
+        backgroundColor: palette.text + "14",
+      });
+      expect(screen.getByTestId("calendar-combined-day-2026-10-02")).toHaveStyle({
+        backgroundColor: "transparent",
+      });
+      for (const index of [5, 6])
+        expect(screen.getByTestId("calendar-weekday-" + index)).toHaveStyle({
+          backgroundColor: palette.text + "14",
+        });
+      expect(screen.getByTestId("calendar-combined-day-" + holidayShift.date)).toHaveProp(
+        "accessibilityLabel",
+        expect.stringContaining(holidayName),
+      );
     } finally {
       scheme.mockRestore();
     }
   });
 
-  it("keeps a holiday without entries visible and removes it when holidays are hidden", async () => {
+  it.each([
+    { holidayColor: "RED", color: "#D94B4B40" },
+    { holidayColor: "BLUE", color: "#3B82D040" },
+    { holidayColor: "ORANGE", color: "#D39A4540" },
+  ] as const)(
+    "updates holiday and tariff marker colors to $holidayColor",
+    async ({ holidayColor, color }) => {
+      const props = {
+        month: "2026-12",
+        holidays: new Map([["2026-12-25", { name: "Weihnachten" }]]),
+        specialDays: new Map([["2026-12-24", { label: "Heiligabend" }]]),
+      };
+      const screen = await render(<Month {...props} />);
+      await screen.rerender(<Month {...props} holidayColor={holidayColor} />);
+      for (const date of ["2026-12-24", "2026-12-25"])
+        expect(screen.getByTestId("calendar-combined-day-" + date)).toHaveStyle({
+          backgroundColor: color,
+        });
+    },
+  );
+
+  it("marks an empty holiday and restores its weekend tint when holidays are hidden", async () => {
     const screen = await render(
       <Month month="2026-10" holidays={new Map([[holidayShift.date, { name: holidayName }]])} />,
     );
-    expect(screen.getByText(holidayName)).toBeTruthy();
+    expect(screen.queryByText(holidayName)).toBeNull();
+    expect(screen.getByTestId("calendar-combined-day-" + holidayShift.date)).toHaveStyle({
+      backgroundColor: "#D39A4540",
+    });
     expect(screen.queryByText("Spät")).toBeNull();
     await screen.rerender(<Month month="2026-10" />);
-    expect(screen.queryByText(holidayName)).toBeNull();
+    expect(screen.getByTestId("calendar-combined-day-" + holidayShift.date)).toHaveStyle({
+      backgroundColor: LIGHT_PALETTE.text + "14",
+    });
+    expect(screen.getByTestId("calendar-combined-day-" + holidayShift.date)).toHaveProp(
+      "accessibilityLabel",
+      expect.not.stringContaining(holidayName),
+    );
   });
 
   it.each([540, 760])(
@@ -325,7 +372,10 @@ describe("holiday entry alignment", () => {
       expect(heightUsed).toBeLessThanOrEqual(
         calendarPrototypeLayout("2026-08", 430, height).weekHeight,
       );
-      if (height === 760) expect(content.getByText("Testfeiertag")).toBeTruthy();
+      expect(content.queryByText("Testfeiertag")).toBeNull();
+      expect(screen.getByTestId("calendar-combined-day-" + date)).toHaveStyle({
+        backgroundColor: "#D39A4540",
+      });
     },
   );
 });
@@ -363,8 +413,8 @@ it("keeps the twelve month areas and selected date nodes when moving years forwa
   }
 });
 
-describe("tariff special-day labels", () => {
-  it("distinguishes special days from statutory holidays in the same month", async () => {
+describe("tariff special-day markings", () => {
+  it("uses the same quiet tint and retains the full accessible names", async () => {
     const screen = await render(
       <Month
         month="2026-12"
@@ -372,11 +422,15 @@ describe("tariff special-day labels", () => {
         holidays={new Map([["2026-12-25", { name: "1. Weihnachtstag" }]])}
       />,
     );
-    expect(screen.getByText("◇ Heiligabend")).toBeVisible();
+    expect(screen.queryByText("◇ Heiligabend")).toBeNull();
+    for (const date of ["2026-12-24", "2026-12-25"])
+      expect(screen.getByTestId("calendar-combined-day-" + date)).toHaveStyle({
+        backgroundColor: "#D39A4540",
+      });
     expect(
       screen.getByTestId("calendar-combined-day-2026-12-24").props.accessibilityLabel,
     ).toContain("tariflicher Sondertag");
-    expect(screen.getByText("1. Weihnachtstag")).toBeVisible();
+    expect(screen.queryByText("1. Weihnachtstag")).toBeNull();
     expect(screen.queryByText("◇ 1. Weihnachtstag")).toBeNull();
   });
   it("retains the full special-day label for a crowded cell", async () => {

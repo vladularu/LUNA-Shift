@@ -13,7 +13,8 @@ import { CalendarAppointmentLabel } from "./calendar-appointment-label";
 export type PrototypeDisplay = Pick<
   CalendarPreferencesData,
   "labelMode" | "showShiftTimes" | "showShiftDuration"
->;
+> &
+  Partial<Pick<CalendarPreferencesData, "holidayColor">>;
 
 export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   entry,

@@ -746,6 +746,7 @@ describe("SQLite repository", () => {
       showShifts: true,
       showAppointments: false,
       showHolidays: false,
+      holidayColor: "BLUE",
       labelMode: SHORT_LABEL_MODE,
       showShiftTimes: true,
       showShiftDuration: true,
@@ -755,6 +756,7 @@ describe("SQLite repository", () => {
       showShifts: true,
       showAppointments: false,
       showHolidays: false,
+      holidayColor: "BLUE",
       labelMode: "SHORT",
       showShiftTimes: true,
       showShiftDuration: true,
@@ -765,6 +767,7 @@ describe("SQLite repository", () => {
       showShifts: true,
       showAppointments: true,
       showHolidays: true,
+      holidayColor: "RED",
       labelMode: "SYMBOL",
       showShiftTimes: false,
       showShiftDuration: false,
@@ -772,6 +775,17 @@ describe("SQLite repository", () => {
     expect(await loadCalendarPreferences(db)).toMatchObject({
       labelMode: "SYMBOL",
     });
+  });
+
+  it("defaults missing or unsupported holiday colors without touching other preferences", async () => {
+    expect((await loadCalendarPreferences(db)).holidayColor).toBe("ORANGE");
+    await db.runAsync(
+      "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)",
+      "calendar_holiday_color",
+      "PURPLE",
+      new Date().toISOString(),
+    );
+    expect((await loadCalendarPreferences(db)).holidayColor).toBe("ORANGE");
   });
 
   it("rolls back every calendar preference when one write fails", async () => {
@@ -792,6 +806,7 @@ describe("SQLite repository", () => {
         showShifts: false,
         showAppointments: false,
         showHolidays: false,
+        holidayColor: "BLUE",
         labelMode: "SYMBOL",
         showShiftTimes: true,
         showShiftDuration: true,

@@ -320,12 +320,14 @@ export type CalendarEntry = ShiftEntry | Appointment;
 
 export type CalendarViewMode = "MONTH" | "YEAR";
 export type CalendarLabelMode = "FULL" | "SHORT" | "SYMBOL";
+export type CalendarHolidayColor = "RED" | "BLUE" | "ORANGE";
 
 export interface CalendarPreferencesData {
   readonly viewMode: CalendarViewMode;
   readonly showShifts: boolean;
   readonly showAppointments: boolean;
   readonly showHolidays: boolean;
+  readonly holidayColor: CalendarHolidayColor;
   readonly labelMode: CalendarLabelMode;
   readonly showShiftTimes: boolean;
   readonly showShiftDuration: boolean;

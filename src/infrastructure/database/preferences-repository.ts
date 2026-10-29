@@ -87,6 +87,7 @@ const CALENDAR_PREFERENCE_KEYS = {
   showShifts: "calendar_show_shifts",
   showAppointments: "calendar_show_appointments",
   showHolidays: "calendar_show_holidays",
+  holidayColor: "calendar_holiday_color",
   labelMode: "calendar_label_mode",
   showShiftTimes: "calendar_show_shift_times",
   showShiftDuration: "calendar_show_shift_duration",
@@ -113,6 +114,7 @@ export const DEFAULT_CALENDAR_PREFERENCES: CalendarPreferencesData = Object.free
   showShifts: true,
   showAppointments: true,
   showHolidays: true,
+  holidayColor: "ORANGE",
   labelMode: "FULL",
   showShiftTimes: false,
   showShiftDuration: false,
@@ -130,12 +132,13 @@ export async function loadCalendarPreferences(
   const keys = Object.values(CALENDAR_PREFERENCE_KEYS);
   const rows = await db.getAllAsync<PreferenceRow>(
     `SELECT key,value,updated_at FROM app_preferences
-     WHERE key IN (?,?,?,?,?,?,?)`,
+     WHERE key IN (${keys.map(() => "?").join(",")})`,
     ...keys,
   );
   const values = new Map(rows.map((row) => [row.key, row.value]));
   const viewMode = values.get(CALENDAR_PREFERENCE_KEYS.viewMode);
   const labelMode = values.get(CALENDAR_PREFERENCE_KEYS.labelMode);
+  const holidayColor = values.get(CALENDAR_PREFERENCE_KEYS.holidayColor);
   return Object.freeze({
     viewMode: viewMode === "YEAR" ? "YEAR" : "MONTH",
     showShifts: storedBoolean(
@@ -151,6 +154,7 @@ export async function loadCalendarPreferences(
       DEFAULT_CALENDAR_PREFERENCES.showHolidays,
     ),
     labelMode: labelMode === "SHORT" || labelMode === "SYMBOL" ? labelMode : "FULL",
+    holidayColor: holidayColor === "RED" || holidayColor === "BLUE" ? holidayColor : "ORANGE",
     showShiftTimes: storedBoolean(
       values.get(CALENDAR_PREFERENCE_KEYS.showShiftTimes),
       DEFAULT_CALENDAR_PREFERENCES.showShiftTimes,
@@ -172,6 +176,7 @@ export async function saveCalendarPreferences(
     [CALENDAR_PREFERENCE_KEYS.showShifts, String(preferences.showShifts)],
     [CALENDAR_PREFERENCE_KEYS.showAppointments, String(preferences.showAppointments)],
     [CALENDAR_PREFERENCE_KEYS.showHolidays, String(preferences.showHolidays)],
+    [CALENDAR_PREFERENCE_KEYS.holidayColor, preferences.holidayColor],
     [CALENDAR_PREFERENCE_KEYS.labelMode, preferences.labelMode],
     [CALENDAR_PREFERENCE_KEYS.showShiftTimes, String(preferences.showShiftTimes)],
     [CALENDAR_PREFERENCE_KEYS.showShiftDuration, String(preferences.showShiftDuration)],
