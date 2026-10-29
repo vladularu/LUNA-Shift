@@ -308,7 +308,7 @@ describe("MonthCard", () => {
     expect(within(outsideDay).getByText("Frühdienst")).toBeTruthy();
   });
 
-  it("uses a clean surface and muted date labels for in-month weekends", async () => {
+  it("tints in-month weekends while preserving selection and date labels", async () => {
     const screen = await render(
       <MonthCard
         bottomReserve={80}
@@ -328,7 +328,7 @@ describe("MonthCard", () => {
       name: new RegExp(formatDateTitle("2026-08-03")),
     });
 
-    expect(saturday).toHaveStyle({ backgroundColor: "transparent" });
+    expect(saturday).toHaveStyle({ backgroundColor: LIGHT_PALETTE.text + "14" });
     expect(monday).toHaveStyle({ backgroundColor: "transparent" });
     expect(within(saturday).getByText("1").parent).toHaveStyle({
       backgroundColor: LIGHT_PALETTE.calendarSelection,
@@ -617,7 +617,7 @@ describe("MonthCard", () => {
   });
 });
 
-it("marks tariff days separately in the original month card", async () => {
+it("tints holidays and tariff days in the original month card without name rows", async () => {
   const profile = createWorkingTimeCalculationProfile(
     { ...work, federalState: "HE", sundayHolidayWorkEligible: true },
     null,
@@ -633,10 +633,23 @@ it("marks tariff days separately in the original month card", async () => {
     selectedDate: null,
   };
   const screen = await render(<MonthCard {...props} showHolidays />);
-  expect(screen.getByText("◇ Heiligabend")).toBeVisible();
+  expect(screen.queryByText("◇ Heiligabend")).toBeNull();
+  expect(screen.queryByText("1. Weihn.")).toBeNull();
+  for (const date of ["2026-12-24", "2026-12-25"])
+    expect(screen.getByTestId("calendar-day-current-" + date)).toHaveStyle({
+      backgroundColor: "#D39A4540",
+    });
+  expect(screen.getByTestId("calendar-day-current-2026-12-26")).toHaveStyle({
+    backgroundColor: "#D39A4540",
+  });
   expect(screen.getByTestId("calendar-day-current-2026-12-24").props.accessibilityLabel).toContain(
     "tariflicher Sondertag",
   );
   await screen.rerender(<MonthCard {...props} showHolidays={false} />);
-  expect(screen.queryByText("◇ Heiligabend")).toBeNull();
+  expect(screen.getByTestId("calendar-day-current-2026-12-24")).toHaveStyle({
+    backgroundColor: "transparent",
+  });
+  expect(screen.getByTestId("calendar-day-current-2026-12-26")).toHaveStyle({
+    backgroundColor: LIGHT_PALETTE.text + "14",
+  });
 });

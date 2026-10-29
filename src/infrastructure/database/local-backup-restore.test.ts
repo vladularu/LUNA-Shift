@@ -257,6 +257,40 @@ describe("local backup restore", () => {
     });
   });
 
+  it("round-trips the holiday color and rejects unsupported color values", async () => {
+    await sourceDb.runAsync(
+      "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)",
+      "calendar_holiday_color",
+      "BLUE",
+      new Date().toISOString(),
+    );
+    const exported = await createLocalBackupDocument(await loadLocalBackupSnapshot(sourceDb), {
+      appVersion: "test",
+      createdAt: new Date(),
+      sha256,
+    });
+    const backup = await validateLocalBackup(exported.serialized, {
+      maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
+      sha256,
+    });
+    await restoreLocalBackup(destinationDb, backup);
+    expect(
+      await destinationDb.getFirstAsync(
+        "SELECT value FROM app_preferences WHERE key='calendar_holiday_color'",
+      ),
+    ).toEqual({ value: "BLUE" });
+    const malformed = await signedSerialized(exported.document, (unsigned) => {
+      const data = unsigned.data as { preferences: Record<string, unknown>[] };
+      data.preferences.find((row) => row.key === "calendar_holiday_color")!.value = "PURPLE";
+    });
+    await expect(
+      validateLocalBackup(malformed, {
+        maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
+        sha256,
+      }),
+    ).rejects.toThrow(LocalBackupValidationError);
+  });
+
   it.each(["P5", "P6"] as const)(
     "persists and restores %s stage 1 without a schema migration",
     async (payGroup) => {

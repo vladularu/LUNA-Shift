@@ -1,4 +1,4 @@
-import { calendarDayLabel } from "./calendar-special-days";
+import { calendarDayTints } from "@/theme/calendar-day-tints";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import { memo } from "react";
@@ -319,16 +319,19 @@ export function PrototypeMonthContent({
     >
       <View testID="calendar-month-weekdays" style={styles.weekdays}>
         {["M", "D", "M", "D", "F", "S", "S"].map((label, i) => (
-          <Text
+          <View
             key={i}
+            testID={"calendar-weekday-" + i}
             style={{
               width: layout.cellWidth,
-              textAlign: "center",
-              color: i >= 5 ? palette.danger : labelColor,
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: i >= 5 ? calendarDayTints(palette).weekend : "transparent",
             }}
           >
-            {label}
-          </Text>
+            <Text style={{ color: i >= 5 ? palette.danger : labelColor }}>{label}</Text>
+          </View>
         ))}
       </View>
       {[...layout.adjacentDays, ...layout.days].map((day) => (
@@ -430,6 +433,12 @@ function CombinedDayContent({
         height: layout.weekHeight,
         borderTopWidth: StyleSheet.hairlineWidth,
         borderColor: palette.separator,
+        backgroundColor:
+          holiday || specialDay
+            ? calendarDayTints(palette, display.holidayColor).specialDay
+            : day.weekend
+              ? calendarDayTints(palette).weekend
+              : "transparent",
         overflow: "hidden",
         opacity: 1,
       }}
@@ -511,22 +520,6 @@ function CombinedDayContent({
               )}
             </Animated.View>
           ))}
-
-          {(holiday || specialDay) &&
-          preview.headerHeight + preview.usedHeight + 18 < layout.weekHeight ? (
-            <Text
-              allowFontScaling={false}
-              numberOfLines={1}
-              style={{
-                height: CALENDAR_METRICS.entryRowHeight,
-                marginTop: CALENDAR_METRICS.chipGap,
-                color: labelColor,
-                fontSize: CALENDAR_METRICS.entryFontSize,
-              }}
-            >
-              {calendarDayLabel(holiday, specialDay)}
-            </Text>
-          ) : null}
         </View>
       </LayoutAnimationConfig>
     </View>

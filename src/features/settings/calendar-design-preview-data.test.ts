@@ -14,7 +14,10 @@ describe("calendar design examples", () => {
         .filter((item) => item.inMonth);
       expect(examples.entries.map((entry) => entry.date)).toEqual(visible.map((item) => item.date));
       expect(examples.entries.every((entry) => entry.kind === "SHIFT")).toBe(true);
-      expect(examples.holidays.size).toBe(0);
+      expect(examples.holidays.size).toBe(1);
+      const [markedDate, marker] = [...examples.holidays][0];
+      expect(visible.some((day) => day.date === markedDate && !day.weekend)).toBe(true);
+      expect(marker.name).toContain("Beispiel");
     },
   );
   it("uses saved template colors and symbols without modifying the templates or plan", () => {

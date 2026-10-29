@@ -33,6 +33,8 @@ const mockDisplay = {
   setShowShifts: jest.fn(),
   setShowAppointments: jest.fn(),
   setShowHolidays: jest.fn(),
+  setHolidayColor: jest.fn(),
+  holidayColor: "ORANGE",
   setLabelMode: jest.fn(),
   setShowShiftTimes: jest.fn(),
   setShowShiftDuration: jest.fn(),
@@ -121,6 +123,7 @@ describe("appearance controls", () => {
     mockDisplay.showShifts = true;
     mockDisplay.showAppointments = true;
     mockDisplay.showHolidays = true;
+    mockDisplay.holidayColor = "ORANGE";
     mockDisplay.labelMode = "SHORT";
     mockDisplay.showShiftTimes = false;
     mockDisplay.showShiftDuration = false;
@@ -452,6 +455,30 @@ describe("appearance controls", () => {
     await fireEvent.press(screen.getByRole("radio", { name: "Name" }));
     expect(mockDisplay.setLabelMode).toHaveBeenCalledWith("FULL");
   });
+  it("offers three named color dots with fixed opacity and follows the selection in the live preview", async () => {
+    const screen = await render(screenWith());
+    const group = within(screen.getByTestId("calendar-holiday-color-settings"));
+    expect(group.getAllByRole("radio")).toHaveLength(3);
+    expect(group.getByRole("radio", { name: "Orange", checked: true })).toBeTruthy();
+    expect(group.queryByRole("adjustable")).toBeNull();
+    await fireEvent.press(group.getByRole("radio", { name: "Blau" }));
+    expect(mockDisplay.setHolidayColor).toHaveBeenCalledWith("BLUE");
+    mockDisplay.holidayColor = "BLUE";
+    await screen.rerender(screenWith());
+    await fireEvent(screen.getByTestId("appearance-preview-month"), "layout", {
+      nativeEvent: { layout: { width: 360, height: 220 } },
+    });
+    expect(screen.getByTestId("calendar-combined-day-2026-10-01")).toHaveStyle({
+      backgroundColor: "#3B82D040",
+    });
+    mockDisplay.showHolidays = false;
+    await screen.rerender(screenWith());
+    expect(group.getByRole("radio", { name: "Blau", checked: true })).toBeDisabled();
+    expect(screen.getByTestId("calendar-combined-day-2026-10-01")).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+  });
+
   it("retains label and time values while hidden services disable their controls", async () => {
     mockDisplay.showShifts = false;
     mockDisplay.showShiftTimes = true;

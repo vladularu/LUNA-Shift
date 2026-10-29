@@ -38,6 +38,7 @@ const mockPreferences = {
   showShifts: true,
   showAppointments: true,
   showHolidays: true,
+  holidayColor: "ORANGE",
   labelMode: "FULL" as MockLabelMode,
   showShiftTimes: false,
   showShiftDuration: true,
@@ -48,6 +49,7 @@ const mockPreferences = {
   setShowShifts: jest.fn(),
   setShowAppointments: jest.fn(),
   setShowHolidays: jest.fn(),
+  setHolidayColor: jest.fn(),
   setLabelMode: jest.fn(),
   setShowShiftTimes: jest.fn(),
   setShowShiftDuration: jest.fn(),
@@ -144,7 +146,9 @@ describe("CalendarViewScreen", () => {
       ["2026-10-02", "Nacht", "N"],
       ["2026-10-04", "Frei", "F"],
     ]) {
-      expect(within(screen.getByLabelText(`${date}, ${title}`)).getByText(label)).toBeTruthy();
+      const day = screen.getByTestId(`calendar-combined-day-${date}`);
+      expect(day).toHaveProp("accessibilityLabel", expect.stringContaining(`${date}, ${title}`));
+      expect(within(day).getByText(label)).toBeTruthy();
     }
     expect(screen.queryByTestId("shift-symbol-rise")).toBeNull();
   });
@@ -169,7 +173,10 @@ describe("CalendarViewScreen", () => {
     const screen = await renderView();
     expect(screen.queryByText("Früh")).toBeNull();
     expect(screen.queryByText("Urlaub")).toBeNull();
-    expect(screen.getByLabelText("2026-10-01, Keine Einträge")).toBeTruthy();
+    expect(screen.getByTestId("calendar-combined-day-2026-10-01")).toHaveProp(
+      "accessibilityLabel",
+      "2026-10-01, Keine Einträge, Feiertag / Sondertag (Beispiel)",
+    );
     expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();
     expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
   });

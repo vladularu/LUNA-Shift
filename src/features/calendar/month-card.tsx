@@ -20,7 +20,12 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 
-import type { CalendarEntry, CalendarLabelMode, UserProfile } from "@/domain/types";
+import type {
+  CalendarEntry,
+  CalendarHolidayColor,
+  CalendarLabelMode,
+  UserProfile,
+} from "@/domain/types";
 import { createMonthGrid, formatDateTitle, today } from "@/engine/calendar";
 import { calendarShiftDetail, calendarEntryPreview } from "@/features/calendar/calendar-display";
 import {
@@ -33,7 +38,7 @@ import {
   calendarSelectionTouchesMonth,
 } from "@/features/calendar/calendar-rendering";
 import { useCalendarHolidayResolution } from "@/features/calendar/calendar-holidays";
-import { calendarDayLabel } from "./calendar-special-days";
+import { calendarDayTints } from "@/theme/calendar-day-tints";
 import { stampDayAccessibilityHint } from "@/features/calendar/stamp-accessibility";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarChipPalette } from "@/theme/color-contrast";
@@ -54,6 +59,7 @@ interface DayCellProps {
   readonly entries: readonly CalendarEntry[];
   readonly holidayName?: string;
   readonly specialDayName?: string;
+  readonly holidayColor?: CalendarHolidayColor;
   readonly isSelected: boolean;
   readonly isToday: boolean;
   readonly onSelectDate: (
@@ -234,6 +240,7 @@ const DayCell = memo(
     entries,
     holidayName,
     specialDayName,
+    holidayColor,
     isSelected,
     isToday,
     onSelectDate,
@@ -317,7 +324,13 @@ const DayCell = memo(
             opacity: 1,
             overflow: "hidden",
             borderRadius: 0,
-            backgroundColor: pressed ? palette.primarySoft : "transparent",
+            backgroundColor: pressed
+              ? palette.primarySoft
+              : holidayName || specialDayName
+                ? calendarDayTints(palette, holidayColor).specialDay
+                : cell.weekend
+                  ? calendarDayTints(palette).weekend
+                  : "transparent",
             paddingHorizontal: 5,
             paddingTop: 8,
           })}
@@ -374,24 +387,6 @@ const DayCell = memo(
                 {cell.day}
               </Text>
             </Animated.View>
-            {holidayName || specialDayName ? (
-              <Text
-                maxFontSizeMultiplier={COMPACT_TEXT_MAX_SCALE}
-                numberOfLines={1}
-                style={{
-                  position: "absolute",
-                  right: 1,
-                  bottom: 0,
-                  left: 1,
-                  color: palette.warning,
-                  fontSize: 9,
-                  fontWeight: "700",
-                  textAlign: "center",
-                }}
-              >
-                {calendarDayLabel(holidayName, specialDayName, true)}
-              </Text>
-            ) : null}
           </View>
           <View
             testID={`calendar-entry-layer-${cell.date}`}
@@ -453,6 +448,7 @@ const DayCell = memo(
     previous.entryRowCapacity === next.entryRowCapacity &&
     previous.holidayName === next.holidayName &&
     previous.specialDayName === next.specialDayName &&
+    previous.holidayColor === next.holidayColor &&
     previous.isSelected === next.isSelected &&
     previous.isToday === next.isToday &&
     previous.onSelectDate === next.onSelectDate &&
@@ -481,6 +477,7 @@ interface MonthCardProps {
   readonly stampTransitionProgress?: SharedValue<number>;
   readonly stampToolLabel?: string | null;
   readonly showHolidays?: boolean;
+  readonly holidayColor?: CalendarHolidayColor;
   readonly testData?: boolean;
   readonly accessibilityVisible?: boolean;
   readonly labelMode?: CalendarLabelMode;
@@ -500,6 +497,7 @@ function monthCardPropsEqual(previous: MonthCardProps, next: MonthCardProps): bo
     previous.stampTransitionProgress !== next.stampTransitionProgress ||
     previous.stampToolLabel !== next.stampToolLabel ||
     previous.showHolidays !== next.showHolidays ||
+    previous.holidayColor !== next.holidayColor ||
     previous.testData !== next.testData ||
     previous.accessibilityVisible !== next.accessibilityVisible ||
     previous.labelMode !== next.labelMode ||
@@ -530,6 +528,7 @@ export const MonthCard = memo(function MonthCard({
   stampTransitionProgress,
   stampToolLabel = null,
   showHolidays = true,
+  holidayColor = "ORANGE",
   testData = false,
   accessibilityVisible = true,
   labelMode = "FULL",
@@ -614,8 +613,8 @@ export const MonthCard = memo(function MonthCard({
                 flex: 1,
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: 4,
-                backgroundColor: "transparent",
+                height: "100%",
+                backgroundColor: index >= 5 ? calendarDayTints(palette).weekend : "transparent",
               }}
             >
               <Text
@@ -652,6 +651,7 @@ export const MonthCard = memo(function MonthCard({
                 entryRowCapacity={entryRowCapacity}
                 holidayName={holidays.get(cell.date)?.name}
                 specialDayName={specialDays.get(cell.date)?.label}
+                holidayColor={holidayColor}
                 isSelected={selectedDate !== null && cell.date === selectedDate}
                 isToday={cell.date === currentDate}
                 onSelectDate={onSelectDate}

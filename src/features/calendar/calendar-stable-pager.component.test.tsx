@@ -296,14 +296,21 @@ describe("permanent calendar slots with the real shared scene", () => {
     expect(screen.getByTestId("heading")).toHaveTextContent("MONTH:2026-01");
     expect(screen.getByTestId("calendar-month-pager")).toBe(pager);
     expect(
-      within(screen.getByTestId("calendar-slot-0")).getByText("Neujahr", {
-        includeHiddenElements: true,
-      }),
-    ).toBeTruthy();
+      within(screen.getByTestId("calendar-slot-0")).getByTestId(
+        "calendar-combined-day-2026-01-01",
+        {
+          includeHiddenElements: true,
+        },
+      ),
+    ).toHaveProp("accessibilityLabel", expect.stringContaining("Neujahr"));
     await fireEvent.press(screen.getByRole("button", { name: "Heute" }));
     expect(screen.getByTestId("heading")).toHaveTextContent("MONTH:2026-09");
     const center = screen.getByTestId("calendar-slot-0");
-    expect(within(center).queryByText("Neujahr", { includeHiddenElements: true })).toBeNull();
+    expect(
+      within(center).queryByTestId("calendar-combined-day-2026-01-01", {
+        includeHiddenElements: true,
+      }),
+    ).toBeNull();
     const returnedSeptember = screen.getByTestId("shared-month-2026-09");
     await fireEvent.press(screen.getByRole("button", { name: "Jahr" }));
     expect(screen.getByTestId("shared-month-2026-09", { includeHiddenElements: true })).toBe(

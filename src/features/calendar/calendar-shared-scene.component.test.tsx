@@ -8,6 +8,7 @@ import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calcu
 import { work } from "@/engine/remuneration-test-fixtures";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { SharedCalendarMonth, SharedCalendarScene } from "./calendar-shared-scene";
+import { useCalendarMonthRenderer } from "./use-calendar-month-renderer";
 
 import {
   CALENDAR_IMAGE_STRENGTH_OPTIONS,
@@ -125,6 +126,32 @@ function BackgroundTree({
 }
 
 describe("shared live calendar scene", () => {
+  it("refreshes the live month renderer when only the holiday color changes", async () => {
+    const options = {
+      entriesByDate: new Map(),
+      display,
+      profile,
+      ruleResolver: bundledRuleResolver,
+      onSelectDate,
+      pageHeight: 700,
+      selectedDate: null,
+      showHolidays: true,
+      stampMode: false,
+      isFocused: true,
+      visibleMonth: "2026-01",
+      testMonths: [],
+    };
+    const hook = await renderHook(
+      ({ holidayColor }: { holidayColor: import("@/domain/types").CalendarHolidayColor }) =>
+        useCalendarMonthRenderer({ ...options, display: { ...display, holidayColor } }),
+      { initialProps: { holidayColor: "ORANGE" } },
+    );
+    const first = hook.result.current;
+    expect(first("2026-01")?.props.display.holidayColor).toBe("ORANGE");
+    await hook.rerender({ holidayColor: "BLUE" });
+    expect(hook.result.current).not.toBe(first);
+    expect(hook.result.current("2026-01")?.props.display.holidayColor).toBe("BLUE");
+  });
   it("retains the selected-date glyph while hidden beneath an editor without a focus handoff", async () => {
     const hidden = { includeHiddenElements: true };
     const screen = await render(<Tree />);
@@ -396,7 +423,12 @@ it("uses the automatic target profile in the live shared month and hides both la
   await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
     nativeEvent: { layout: { width: 430, height: 700 } },
   });
-  expect(screen.getByText("◇ Heiligabend", { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.queryByText("◇ Heiligabend", { includeHiddenElements: true })).toBeNull();
+  expect(
+    screen.getByTestId("calendar-combined-day-2026-12-24", { includeHiddenElements: true }),
+  ).toHaveStyle({
+    backgroundColor: "#D39A4540",
+  });
   expect(screen.getByTestId("calendar-day-2026-12-24").props.accessibilityLabel).toContain(
     "tariflicher Sondertag",
   );
@@ -404,6 +436,11 @@ it("uses the automatic target profile in the live shared month and hides both la
     "1. Weihnachtstag",
   );
   await screen.rerender(<Tree month="2026-12" userProfile={userProfile} showHolidays={false} />);
+  expect(
+    screen.getByTestId("calendar-combined-day-2026-12-24", { includeHiddenElements: true }),
+  ).toHaveStyle({
+    backgroundColor: "transparent",
+  });
   expect(screen.queryByText("◇ Heiligabend", { includeHiddenElements: true })).toBeNull();
   expect(screen.getByTestId("calendar-day-2026-12-24").props.accessibilityLabel).not.toContain(
     "tariflicher Sondertag",

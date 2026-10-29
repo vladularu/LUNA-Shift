@@ -722,6 +722,9 @@ function validatePreferenceValue(key: string, value: string): void {
   if (key === "calendar_label_mode" && !["FULL", "SHORT", "SYMBOL"].includes(value)) {
     return invalid();
   }
+  if (key === "calendar_holiday_color" && !["RED", "BLUE", "ORANGE"].includes(value)) {
+    return invalid();
+  }
   if (
     key === "tvoed_workplace_coverage" &&
     !["UNKNOWN", "AROUND_THE_CLOCK", "NOT_AROUND_THE_CLOCK"].includes(value)

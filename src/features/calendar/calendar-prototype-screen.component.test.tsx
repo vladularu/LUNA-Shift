@@ -135,7 +135,11 @@ describe("isolated calendar prototype", () => {
     });
     await fireEvent.press(screen.getByRole("button", { name: `Januar ${year} öffnen` }));
     expect(screen.getByText("Physiotherapie")).toBeTruthy();
-    expect(screen.getByText("Neujahr")).toBeTruthy();
+    expect(screen.queryByText("Neujahr")).toBeNull();
+    expect(screen.getByTestId("calendar-combined-day-" + year + "-01-01")).toHaveProp(
+      "accessibilityLabel",
+      expect.stringContaining("Neujahr"),
+    );
     mockPreferences.showAppointments = false;
     await screen.rerender(<CalendarPrototypeScreen />);
     expect(screen.queryByText("Physiotherapie")).toBeNull();
