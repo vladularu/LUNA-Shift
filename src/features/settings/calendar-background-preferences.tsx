@@ -99,7 +99,9 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
       const previousRemoved = removed.current;
       const next = action === "undo" ? previousRemoved : imported;
       const nextRemoved = action === "remove" ? previous : null;
-      await storage.saveCalendarBackgroundChange(db, next, nextRemoved, action === "reset");
+      const nextStrength =
+        action === "choose" ? 50 : action === "reset" ? DEFAULT_CALENDAR_IMAGE_STRENGTH : null;
+      await storage.saveCalendarBackgroundChange(db, next, nextRemoved, nextStrength);
       saved = true;
       current.current = next;
       removed.current = nextRemoved;
@@ -107,7 +109,7 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
         setUri(next);
         setPreviewStrength(null);
         setRemovedUri(nextRemoved);
-        if (action === "reset") setStrength(DEFAULT_CALENDAR_IMAGE_STRENGTH);
+        if (nextStrength !== null) setStrength(nextStrength);
       }
       for (const old of new Set([previous, previousRemoved]))
         if (old !== next && old !== nextRemoved) cleanup(old);

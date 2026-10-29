@@ -260,14 +260,14 @@ describe("calendar photo transactions on SQLite", () => {
       ["salary-sentinel", "preserve-me"],
     ])
       insert.run(key, value);
-    let failUndo = false;
+    let failedKey: string | null = null;
     const db = {
       execAsync: async (sql: string) => {
         raw.exec(sql);
       },
       runAsync: async (sql: string, ...params: unknown[]) => {
-        if (failUndo && params[0] === "calendar_background_removed_image")
-          throw new Error("Synthetic undo write failure");
+        if (failedKey !== null && params[0] === failedKey)
+          throw new Error("Synthetic preference write failure");
         return raw.prepare(sql).run(...params);
       },
       getFirstAsync: async (sql: string, ...params: unknown[]) =>
@@ -284,8 +284,8 @@ describe("calendar photo transactions on SQLite", () => {
       raw,
       db,
       value,
-      fail: () => {
-        failUndo = true;
+      fail: (key = "calendar_background_removed_image") => {
+        failedKey = key;
       },
     };
   }
@@ -312,7 +312,7 @@ describe("calendar photo transactions on SQLite", () => {
     try {
       fail();
       await expect(saveCalendarBackgroundChange(db, null, old)).rejects.toThrow(
-        "Synthetic undo write failure",
+        "Synthetic preference write failure",
       );
       expect(value("calendar_background_image")).toBe("calendar-old.jpg");
       expect(value("calendar_background_removed_image")).toBeUndefined();
@@ -339,13 +339,43 @@ describe("calendar photo transactions on SQLite", () => {
   it("resets only the background keys and strength while preserving other preferences", async () => {
     const { raw, db, value } = openDatabase();
     try {
-      await saveCalendarBackgroundChange(db, null, null, true);
+      await saveCalendarBackgroundChange(db, null, null, "medium");
       expect(value("calendar_background_image")).toBeUndefined();
       expect(value("calendar_background_removed_image")).toBeUndefined();
       expect(value("calendar_background_strength")).toBe("medium");
       expect(value("salary-sentinel")).toBe("preserve-me");
       expect(value("appearance_mode")).toBe("dark");
       expect(value("appearance_theme")).toBe("standard");
+    } finally {
+      raw.close();
+    }
+  });
+  it("stores a replacement and its 50-percent opacity in the same transaction", async () => {
+    const { raw, db, value } = openDatabase();
+    const next = "file:///sandbox/Documents/calendar-backgrounds/calendar-new.jpg";
+    state.files.set(next, 100);
+    try {
+      await saveCalendarBackgroundChange(db, next, null, 50);
+      expect(value("calendar_background_image")).toBe("calendar-new.jpg");
+      expect(value("calendar_background_strength")).toBe("50");
+      expect(value("calendar_background_removed_image")).toBeUndefined();
+      expect(value("salary-sentinel")).toBe("preserve-me");
+    } finally {
+      raw.close();
+    }
+  });
+  it("rolls the replacement back when the initial opacity cannot be saved", async () => {
+    const { raw, db, value, fail } = openDatabase();
+    const next = "file:///sandbox/Documents/calendar-backgrounds/calendar-new.jpg";
+    state.files.set(next, 100);
+    try {
+      fail("calendar_background_strength");
+      await expect(saveCalendarBackgroundChange(db, next, null, 50)).rejects.toThrow(
+        "Synthetic preference write failure",
+      );
+      expect(value("calendar_background_image")).toBe("calendar-old.jpg");
+      expect(value("calendar_background_strength")).toBe("strong");
+      expect(value("calendar_background_removed_image")).toBeUndefined();
     } finally {
       raw.close();
     }

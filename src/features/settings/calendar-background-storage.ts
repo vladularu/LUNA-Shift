@@ -3,11 +3,7 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
 
-import {
-  DEFAULT_CALENDAR_IMAGE_STRENGTH,
-  parseCalendarImageStrength,
-  type CalendarImageStrength,
-} from "@/theme/calendar-image";
+import { parseCalendarImageStrength, type CalendarImageStrength } from "@/theme/calendar-image";
 
 export const CALENDAR_BACKGROUND_STRENGTH_KEY = "calendar_background_strength";
 export const CALENDAR_BACKGROUND_KEY = "calendar_background_image";
@@ -94,18 +90,17 @@ async function saveImageReference(db: SQLiteDatabase, key: string, uri: string |
 export const saveCalendarBackground = (db: SQLiteDatabase, uri: string | null) =>
   saveImageReference(db, CALENDAR_BACKGROUND_KEY, uri);
 
-/** Keep one removable photo across navigation and app restarts; commit both pointers together. */
+/** Commit photo pointers and an optional opacity together, including replacements and reset. */
 export async function saveCalendarBackgroundChange(
   db: SQLiteDatabase,
   uri: string | null,
   removedUri: string | null,
-  resetStrength = false,
+  strength: CalendarImageStrength | null = null,
 ) {
   await withImmediateTransaction(db, async (transaction) => {
     await saveImageReference(transaction, CALENDAR_BACKGROUND_KEY, uri);
     await saveImageReference(transaction, CALENDAR_BACKGROUND_REMOVED_KEY, removedUri);
-    if (resetStrength)
-      await saveCalendarBackgroundStrength(transaction, DEFAULT_CALENDAR_IMAGE_STRENGTH);
+    if (strength !== null) await saveCalendarBackgroundStrength(transaction, strength);
   });
 }
 
