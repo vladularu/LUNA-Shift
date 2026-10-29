@@ -4,7 +4,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 
 import { usePalette } from "@/theme/palette";
 import { MOTION } from "@/theme/motion";
-import { CORNER_CURVE, SELECTION_METRICS, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SELECTION_METRICS, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
@@ -48,6 +48,7 @@ export function SelectionControl<T extends string>({
     fontScale > SELECTION_METRICS.stackFontScale ||
     (width < SELECTION_METRICS.narrowWidth && items.length > 2);
   const intrinsicWidth = kind === "view" && density === "compact";
+  const optionRadius = RADII.control - SELECTION_METRICS.trackInset;
   return (
     <View
       accessibilityRole={kind === "setting" ? "radiogroup" : "tablist"}
@@ -56,10 +57,9 @@ export function SelectionControl<T extends string>({
       style={{
         flexDirection: vertical ? "column" : "row",
         gap: SELECTION_METRICS.trackInset,
-        padding: SELECTION_METRICS.trackInset,
-        borderRadius: vertical
-          ? SELECTION_METRICS.stackedTrackRadius
-          : SELECTION_METRICS.trackRadius,
+        paddingHorizontal: SELECTION_METRICS.trackInset,
+        paddingVertical: vertical ? SELECTION_METRICS.trackInset : 0,
+        borderRadius: RADII.control,
         borderCurve: CORNER_CURVE,
         backgroundColor: palette.selectionTrack,
       }}
@@ -89,8 +89,8 @@ export function SelectionControl<T extends string>({
               justifyContent: "center",
               gap: SPACING.xs,
               paddingVertical: SPACING.sm,
-              paddingHorizontal: SPACING.md,
-              borderRadius: SELECTION_METRICS.optionRadius,
+              paddingHorizontal: density === "compact" ? SPACING.sm : SPACING.md,
+              borderRadius: optionRadius,
               borderCurve: CORNER_CURVE,
               opacity: disabled
                 ? SELECTION_METRICS.disabledOpacity
@@ -106,11 +106,11 @@ export function SelectionControl<T extends string>({
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  top: 0,
+                  top: vertical ? 0 : SELECTION_METRICS.trackInset,
                   right: 0,
-                  bottom: 0,
+                  bottom: vertical ? 0 : SELECTION_METRICS.trackInset,
                   left: 0,
-                  borderRadius: SELECTION_METRICS.optionRadius,
+                  borderRadius: optionRadius,
                   borderCurve: CORNER_CURVE,
                   borderWidth: 1,
                   borderColor: palette.selectionActiveBorder,

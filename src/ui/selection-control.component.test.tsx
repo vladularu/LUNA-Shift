@@ -79,11 +79,11 @@ describe("shared selection family", () => {
     );
     expect(screen.getByTestId("large-selection")).toHaveStyle({
       flexDirection: "column",
-      borderRadius: 24,
+      borderRadius: 12,
     });
     for (const item of items) {
       const option = screen.getByRole("radio", { name: item.label });
-      expect(option).toHaveStyle({ minHeight: 44, borderRadius: 999 });
+      expect(option).toHaveStyle({ minHeight: 44, borderRadius: 8 });
       expect(option.props.hitSlop).toBeUndefined();
       const text = screen.getByText(item.label);
       expect(text.props.numberOfLines).toBeUndefined();
@@ -106,11 +106,11 @@ describe("shared selection family", () => {
       );
       expect(screen.getByTestId("mode-selection")).toHaveStyle({
         backgroundColor: palette.selectionTrack,
-        borderRadius: 999,
+        borderRadius: 12,
         borderCurve: "continuous",
       });
       expect(screen.getByTestId("mode-selection:active-surface")).toHaveStyle({
-        borderRadius: 999,
+        borderRadius: 8,
         borderCurve: "continuous",
       });
       expect(screen.getByText("Nach Tarif")).toHaveStyle({ color: palette.text });
