@@ -1,5 +1,7 @@
 import {
   DEFAULT_CALENDAR_IMAGE_STRENGTH,
+  calendarImageOpacityPercentage,
+  parseCalendarImageStrength,
   type CalendarImageStrength,
 } from "@/theme/calendar-image";
 import { CalendarBackgroundContext } from "./calendar-background-context";
@@ -15,6 +17,7 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
   const db = useSQLiteContext();
   const [uri, setUri] = useState<string | null>(null);
   const [strength, setStrength] = useState<CalendarImageStrength>(DEFAULT_CALENDAR_IMAGE_STRENGTH);
+  const [previewStrength, setPreviewStrength] = useState<CalendarImageStrength | null>(null);
   const [removedUri, setRemovedUri] = useState<string | null>(null);
   const removed = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -47,6 +50,7 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
         current.current = loaded;
         setUri(loaded);
         setStrength(loadedStrength);
+        setPreviewStrength(null);
         removed.current = loadedRemoved;
         setRemovedUri(loadedRemoved);
         setError(null);
@@ -101,6 +105,7 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
       removed.current = nextRemoved;
       if (mounted.current) {
         setUri(next);
+        setPreviewStrength(null);
         setRemovedUri(nextRemoved);
         if (action === "reset") setStrength(DEFAULT_CALENDAR_IMAGE_STRENGTH);
       }
@@ -123,13 +128,16 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
     }
   }
   async function changeStrength(next: CalendarImageStrength) {
-    if (locked.current || !ready || !current.current || Platform.OS === "web" || next === strength)
+    if (locked.current || !ready || !current.current || Platform.OS === "web") return;
+    if (calendarImageOpacityPercentage(next) === calendarImageOpacityPercentage(strength)) {
+      setPreviewStrength(null);
       return;
+    }
     locked.current = true;
     setBusy(true);
     setError(null);
     const previousStrength = strength;
-    setStrength(next);
+    setPreviewStrength(next);
     try {
       await storage.saveCalendarBackgroundStrength(db, next);
       if (mounted.current) setStrength(next);
@@ -142,7 +150,10 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
         );
     } finally {
       locked.current = false;
-      if (mounted.current) setBusy(false);
+      if (mounted.current) {
+        setPreviewStrength(null);
+        setBusy(false);
+      }
     }
   }
   return (
@@ -150,6 +161,18 @@ export function CalendarBackgroundProvider({ children }: PropsWithChildren) {
       value={{
         uri,
         strength,
+        previewStrength,
+        setPreviewStrength: (next) => {
+          if (next === null) setPreviewStrength(null);
+          else if (
+            !locked.current &&
+            ready &&
+            current.current &&
+            Platform.OS !== "web" &&
+            parseCalendarImageStrength(next) === next
+          )
+            setPreviewStrength(next);
+        },
         setStrength: changeStrength,
         ready,
         busy,

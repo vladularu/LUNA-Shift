@@ -55,6 +55,12 @@ export async function validatePrivateCloudDocument(
     if (canonicalize(Object.keys(document.data).sort()) !== canonicalize(keys)) throw new Error();
     const { calendarImage, calendarImageStrength } = document.presentation;
     if (!["subtle", "medium", "strong"].includes(calendarImageStrength)) throw new Error();
+    const opacity = document.presentation.calendarImageOpacity;
+    if (
+      opacity !== undefined &&
+      (typeof opacity !== "number" || !Number.isInteger(opacity) || opacity < 0 || opacity > 100)
+    )
+      throw new Error();
     if (
       calendarImage !== null &&
       (typeof calendarImage !== "string" ||

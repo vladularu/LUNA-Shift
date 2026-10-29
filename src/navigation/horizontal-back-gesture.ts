@@ -14,6 +14,8 @@ const separatePresentations = new Set([
 ]);
 
 const options = Object.freeze({ gestureEnabled: true, fullScreenGestureEnabled: true });
+// Keep native edge-back navigation out of the photo slider's horizontal touch area.
+const calendarDesignOptions = Object.freeze({ ...options, fullScreenGestureEnabled: false });
 const reportOptions = Object.freeze({ ...options, freezeOnBlur: true });
 const reports = new Set([
   "salary",
@@ -26,6 +28,7 @@ const reports = new Set([
 
 /** Include automatic card routes while preserving modal, vertical-editor and tab gestures. */
 export function horizontalBackGestureOptions(routeName: string) {
+  if (routeName === "calendar-design") return calendarDesignOptions;
   return separatePresentations.has(routeName)
     ? undefined
     : reports.has(routeName)

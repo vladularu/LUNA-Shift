@@ -30,7 +30,7 @@ export function CalendarBackground({ uri: overrideUri }: { readonly uri?: string
           StyleSheet.absoluteFill,
           {
             backgroundColor: palette.calendarBackground,
-            opacity: calendarImageOverlayOpacity(background.strength),
+            opacity: calendarImageOverlayOpacity(background.previewStrength ?? background.strength),
           },
         ]}
       />

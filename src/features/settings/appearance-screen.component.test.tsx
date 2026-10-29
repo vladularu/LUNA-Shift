@@ -145,24 +145,28 @@ describe("appearance controls", () => {
     expect(preferences.setTheme).not.toHaveBeenCalled();
   });
 
-  it("offers exactly the three chosen image strengths for a saved photo", async () => {
+  it("offers continuous opacity instead of the three preset buttons", async () => {
     const screen = await render(pictureScreen());
-    for (const name of ["Dezent", "Mittel", "Kräftig"])
-      expect(screen.getByRole("radio", { name })).toBeTruthy();
-    expect(screen.getByRole("radio", { name: "Mittel", checked: true })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("radio", { name: "Kräftig" }));
-    expect(setStrength).toHaveBeenCalledWith("strong");
+    expect(screen.queryByRole("radio", { name: "Mittel" })).toBeNull();
+    const slider = screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" });
+    expect(slider).toHaveProp("accessibilityValue", {
+      min: 0,
+      max: 100,
+      now: 25,
+      text: "25 Prozent",
+    });
+    await fireEvent(slider, "accessibilityAction", { nativeEvent: { actionName: "increment" } });
+    expect(setStrength).toHaveBeenCalledWith(26);
   });
-  it("stacks image strengths with usable touch targets when text is large", async () => {
+  it("keeps an adjustable 44-point slider when text is large", async () => {
     jest
       .spyOn(nativeModule, "useWindowDimensions")
       .mockReturnValue({ width: 320, height: 640, scale: 2, fontScale: 2 });
     const screen = await render(pictureScreen());
-    expect(screen.getByLabelText("Bildsichtbarkeit")).toHaveStyle({
-      flexDirection: "column",
+    expect(screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" })).toHaveStyle({
+      minHeight: 44,
     });
-    for (const name of ["Dezent", "Mittel", "Kräftig"])
-      expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
+    expect(screen.getByLabelText("Kalenderhintergrund")).toHaveStyle({ flexDirection: "column" });
   });
   it("does not write again when the selected mode is pressed", async () => {
     const screen = await render(screenWith());
@@ -202,12 +206,7 @@ describe("appearance controls", () => {
     for (const mode of ["light", "dark"] as const) {
       await screen.rerender(screenWith({ mode }, { uri: "file:///photo.jpg" }));
       const palette = resolvePalette("mint", mode === "dark");
-      for (const label of [
-        "Erscheinungsbild",
-        "Kalenderhintergrund",
-        "Bildsichtbarkeit",
-        "Dienstbezeichnung",
-      ]) {
+      for (const label of ["Erscheinungsbild", "Kalenderhintergrund", "Dienstbezeichnung"]) {
         const group = screen.getByLabelText(label);
         expect(group).toHaveStyle({
           backgroundColor: palette.selectionTrack,
@@ -260,13 +259,25 @@ describe("appearance controls", () => {
       JSON.stringify(root).indexOf("appearance-settings"),
     );
   });
-  it("keeps the live preview outside the scrolling controls", async () => {
+  it("keeps the live preview fixed above the four scrolling sections with a non-interactive fade", async () => {
     const screen = await render(pictureScreen());
     await layoutPreview(screen);
     const preview = screen.getByTestId("appearance-calendar-preview");
     const controls = screen.getByTestId("calendar-design-controls");
     expect(within(controls).queryByTestId("appearance-calendar-preview")).toBeNull();
-    expect(within(controls).getByText("Darstellung")).toBeTruthy();
+    expect(
+      screen.getByTestId("calendar-design-scroll-fade", { includeHiddenElements: true }),
+    ).toHaveProp("pointerEvents", "none");
+    for (const name of ["Aussehen", "Hintergrund", "Kalenderinhalt", "Dienstanzeige"])
+      expect(within(controls).getByText(name)).toBeTruthy();
+    for (const name of [
+      "Dienste & Abwesenheiten",
+      "Termine",
+      "Feiertage",
+      "Startzeit",
+      "Gesamtdauer",
+    ])
+      expect(within(controls).getByRole("switch", { name })).toBeTruthy();
     expect(
       within(controls).getByRole("button", { name: "Kalenderoptionen zurücksetzen" }),
     ).toBeTruthy();
@@ -291,6 +302,8 @@ describe("appearance controls", () => {
         ["subtle", 0.9],
         ["medium", 0.75],
         ["strong", 0.6],
+        [0, 1],
+        [100, 0],
       ] as const) {
         await screen.rerender(screenWith({ mode }, { uri: "file:///photo.jpg", strength }));
         expect(
@@ -403,8 +416,9 @@ describe("appearance controls", () => {
       .spyOn(nativeModule, "useWindowDimensions")
       .mockReturnValue({ width: 320, height: 568, scale: 2, fontScale: 3 });
     const screen = await render(pictureScreen());
-    for (const name of ["Hell", "Dunkel", "System", "Dezent", "Mittel", "Kräftig"])
+    for (const name of ["Hell", "Dunkel", "System"])
       expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
+    expect(screen.getByRole("adjustable")).toHaveStyle({ minHeight: 44 });
     for (const name of ["Foto ändern", "Foto entfernen"])
       expect(screen.getByRole("button", { name })).toHaveStyle({ minHeight: 56 });
     expect(screen.getByRole("button", { name: "Kalenderoptionen zurücksetzen" })).toHaveStyle({

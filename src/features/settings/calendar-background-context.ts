@@ -7,6 +7,8 @@ import {
 interface CalendarBackgroundValue {
   readonly uri: string | null;
   readonly strength: CalendarImageStrength;
+  readonly previewStrength?: CalendarImageStrength | null;
+  readonly setPreviewStrength?: (strength: CalendarImageStrength | null) => void;
   readonly setStrength: (strength: CalendarImageStrength) => Promise<void>;
   readonly ready: boolean;
   readonly busy: boolean;

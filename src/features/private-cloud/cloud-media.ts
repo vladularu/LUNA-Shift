@@ -3,6 +3,10 @@ import * as Crypto from "expo-crypto";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { PrivateCloudDocument } from "@/domain/private-cloud";
 import {
+  CALENDAR_IMAGE_STRENGTH_OPTIONS,
+  calendarImageOpacityPercentage,
+} from "@/theme/calendar-image";
+import {
   loadCalendarBackground,
   loadCalendarBackgroundStrength,
   CALENDAR_BACKGROUND_KEY,
@@ -16,9 +20,20 @@ export async function readCloudPresentation(
   const file = uri ? new File(uri) : null;
   if (file && file.size > 6 * 1024 * 1024)
     throw new Error("Dein Kalenderfoto ist für die Cloud zu groß. Bitte wähle es erneut aus.");
+  const strength = await loadCalendarBackgroundStrength(db);
+  const legacyStrength =
+    typeof strength === "number"
+      ? CALENDAR_IMAGE_STRENGTH_OPTIONS.reduce((nearest, option) =>
+          Math.abs(calendarImageOpacityPercentage(option.value) - strength) <
+          Math.abs(calendarImageOpacityPercentage(nearest.value) - strength)
+            ? option
+            : nearest,
+        ).value
+      : strength;
   return {
     calendarImage: file ? await file.base64() : null,
-    calendarImageStrength: await loadCalendarBackgroundStrength(db),
+    calendarImageStrength: legacyStrength,
+    ...(typeof strength === "number" ? { calendarImageOpacity: strength } : {}),
   };
 }
 
@@ -56,7 +71,7 @@ export async function prepareCloudPresentation(
       await db.runAsync(
         "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at",
         CALENDAR_BACKGROUND_STRENGTH_KEY,
-        presentation.calendarImageStrength,
+        String(presentation.calendarImageOpacity ?? presentation.calendarImageStrength),
         new Date().toISOString(),
       );
     },

@@ -42,6 +42,32 @@ afterEach(() => {
 });
 
 describe("atomic private cloud storage", () => {
+  it.each([0, 35, 100])(
+    "preserves an exact photo opacity of %s alongside the compatible preset",
+    async (opacity) => {
+      const snapshot = await local().capture();
+      const next = { ...snapshot, presentation: { ...present, calendarImageOpacity: opacity } };
+      const validated = await validatePrivateCloudDocument(
+        next,
+        LATEST_DATABASE_SCHEMA_VERSION,
+        sha256,
+      );
+      expect(validated.document.presentation).toEqual(next.presentation);
+    },
+  );
+  it.each([-1, 101, 1.5, "35", null])(
+    "rejects malformed optional photo opacity %j",
+    async (opacity) => {
+      const snapshot = await local().capture();
+      await expect(
+        validatePrivateCloudDocument(
+          { ...snapshot, presentation: { ...present, calendarImageOpacity: opacity } },
+          LATEST_DATABASE_SCHEMA_VERSION,
+          sha256,
+        ),
+      ).rejects.toThrow("Cloud-Stand");
+    },
+  );
   it("requires fresh cloud consent after a manual JSON import", async () => {
     const port = local();
     await port.bind("a", () => true);
