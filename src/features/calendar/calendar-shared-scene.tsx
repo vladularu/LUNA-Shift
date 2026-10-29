@@ -27,10 +27,13 @@ import {
   quickPlannerTransitionDuration,
 } from "./quick-planner-control-motion";
 
+import { CalendarMonthTitle } from "./calendar-month-title";
 import { calendarMonthRows } from "./calendar-render-data";
 import { combinedCalendarPreview } from "./combined-calendar-preview";
 
 interface SceneValue {
+  headerOverlap: number;
+  referenceMonth?: string;
   progress: SharedValue<number>;
   month: string;
   mode: CalendarViewMode;
@@ -46,6 +49,7 @@ type SharedCalendarSceneProps = {
   viewMode: CalendarViewMode;
   active: boolean;
   bottomReserve: number;
+  headerOverlap?: number;
   showBackground?: boolean;
   onSelectMonth: (month: string) => void;
   onTransitionStart?: (mode: CalendarViewMode) => void;
@@ -77,6 +81,7 @@ function StandaloneCalendarScene(props: SharedCalendarSceneProps) {
 
 function CalendarSceneContent({
   bottomReserve,
+  headerOverlap = 0,
   showBackground = true,
   onSelectMonth,
   children,
@@ -95,15 +100,27 @@ function CalendarSceneContent({
           `${year}-${String(index + 1).padStart(2, "0")}`,
           size.width,
           height,
+          headerOverlap,
         ),
       ),
-    [height, size.width, year],
+    [height, headerOverlap, size.width, year],
   );
   return (
-    <Scene value={{ progress, month, mode: viewMode, width: size.width, height, busy }}>
+    <Scene
+      value={{
+        progress,
+        month,
+        mode: viewMode,
+        width: size.width,
+        height,
+        busy,
+        headerOverlap,
+        referenceMonth,
+      }}
+    >
       <View
         testID="calendar-shared-scene"
-        style={styles.fill}
+        style={[styles.fill, { marginTop: -headerOverlap }]}
         onLayout={(event) => {
           const { width, height: nextHeight } = event.nativeEvent.layout;
           setSize((old) =>
@@ -225,13 +242,22 @@ export function SharedCalendarMonth({
   const ownRows = useMonthRows(entriesByDate, month);
   const sharedRows = useMonthRows(sharedEntriesByDate, month);
   const selected = scene?.month === month;
-  const { progress, mode, busy, width, height } = scene ?? {};
+  const { progress, mode, busy, width, height, headerOverlap = 0, referenceMonth } = scene ?? {};
   const monthScene = useMemo(
     () =>
       progress && mode && busy !== undefined && width !== undefined && height !== undefined
-        ? { progress, mode, busy, width, height, month: selected ? month : "" }
+        ? {
+            progress,
+            mode,
+            busy,
+            width,
+            height,
+            headerOverlap,
+            referenceMonth,
+            month: selected ? month : "",
+          }
         : null,
-    [progress, mode, busy, width, height, selected, month],
+    [progress, mode, busy, width, height, headerOverlap, referenceMonth, selected, month],
   );
   if (!monthScene) throw new Error("SharedCalendarMonth requires SharedCalendarScene");
   return (
@@ -290,8 +316,8 @@ const SharedMonthBody = memo(function SharedMonthBody({
   slotFill: string;
 }) {
   const layout = useMemo(
-    () => calendarPrototypeLayout(month, scene.width, scene.height),
-    [month, scene.width, scene.height],
+    () => calendarPrototypeLayout(month, scene.width, scene.height, scene.headerOverlap),
+    [month, scene.width, scene.height, scene.headerOverlap],
   );
   const selected = month === scene.month;
   const currentDate = today(profile.timeZone);
@@ -300,11 +326,21 @@ const SharedMonthBody = memo(function SharedMonthBody({
   const progress = selected ? scene.progress : still;
   const visible = accessibilityVisible && scene.mode === "MONTH" && !scene.busy;
   const opacity = useAnimatedStyle(() => ({ opacity: selected ? 1 : scene.progress.value }));
+  const titleOpacity = useAnimatedStyle(() => ({ opacity: scene.progress.value }));
   return (
     <Animated.View
       testID={`shared-month-${month}`}
       style={[{ height: pageHeight, width: scene.width }, opacity]}
     >
+      {scene.headerOverlap > 0 ? (
+        <Animated.View style={titleOpacity} pointerEvents="none">
+          <CalendarMonthTitle
+            month={month}
+            referenceMonth={scene.referenceMonth ?? currentDate.slice(0, 7)}
+            accessible={visible}
+          />
+        </Animated.View>
+      ) : null}
       <PrototypeMonthContent
         animateChanges={stampMode && visible}
         layout={layout}

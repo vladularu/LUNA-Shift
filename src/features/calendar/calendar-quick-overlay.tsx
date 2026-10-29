@@ -11,7 +11,11 @@ export function CalendarQuickOverlay({
   readonly modal: boolean;
 }) {
   const content = (
-    <View pointerEvents="box-none" style={StyleSheet.absoluteFill} testID="calendar-quick-overlay">
+    <View
+      pointerEvents="box-none"
+      style={[StyleSheet.absoluteFill, { zIndex: 2 }]}
+      testID="calendar-quick-overlay"
+    >
       {children}
     </View>
   );

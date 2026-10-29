@@ -21,6 +21,25 @@ describe("prototype shared calendar coordinates", () => {
       expect(calendarPrototypeLayout(key, 430, 640)).toEqual(layout);
     }
   });
+  it.each([84, 154, 210])(
+    "preserves month and year geometry with a scrolling header of %s",
+    (inset) => {
+      for (const month of ["2026-02", "2026-08", "2026-12", "2027-01"]) {
+        const previous = calendarPrototypeLayout(month, 430, 640);
+        const page = calendarPrototypeLayout(month, 430, 640 + inset, inset);
+        expect(page.weekHeight).toBe(previous.weekHeight);
+        expect(page.tile).toEqual({ ...previous.tile, y: previous.tile.y + inset });
+        page.days.forEach((day, index) => {
+          expect(day.fromY - inset).toBeCloseTo(previous.days[index].fromY);
+          expect(day.toY - inset).toBeCloseTo(previous.days[index].toY);
+        });
+        const cells = [...page.days, ...page.adjacentDays];
+        expect(Math.max(...cells.map((day) => day.toY - 20 + page.weekHeight))).toBeCloseTo(
+          640 + inset,
+        );
+      }
+    },
+  );
   it("recalculates coordinates after a viewport change", () => {
     const first = calendarPrototypeLayout("2026-01", 430, 640);
     const resized = calendarPrototypeLayout("2026-01", 390, 580);

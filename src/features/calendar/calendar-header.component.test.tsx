@@ -33,6 +33,7 @@ function PlannerHeader({
   titleTransition = "SPATIAL",
   viewMode = "MONTH",
   synchronized = false,
+  pageTitle = false,
   notice,
   plannerActive = true,
 }: {
@@ -42,6 +43,7 @@ function PlannerHeader({
   titleTransition?: "SPATIAL" | "CROSSFADE";
   viewMode?: "MONTH" | "YEAR";
   synchronized?: boolean;
+  pageTitle?: boolean;
   notice?: string;
   plannerActive?: boolean;
 } = {}) {
@@ -54,6 +56,7 @@ function PlannerHeader({
       }}
     >
       <CalendarHeader
+        pageTitle={pageTitle}
         synchronized={synchronized}
         notice={notice}
         direction={direction}
@@ -72,6 +75,16 @@ function PlannerHeader({
 }
 
 describe("CalendarHeader", () => {
+  it("keeps fixed controls but leaves the month title to its scrolling page", async () => {
+    const screen = await render(<PlannerHeader pageTitle synchronized plannerActive={false} />);
+    expect(screen.queryByRole("header")).toBeNull();
+    expect(screen.getByTestId("calendar-header")).toHaveStyle({ backgroundColor: "transparent" });
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+    await screen.rerender(
+      <PlannerHeader pageTitle synchronized plannerActive={false} viewMode="YEAR" />,
+    );
+    expect(screen.getByRole("header", { name: "2026" })).toBeVisible();
+  });
   it("reveals the same photo behind the title and safe top while keeping controls accessible", async () => {
     const screen = await render(<PlannerHeader plannerActive={false} />);
     const initial = StyleSheet.flatten(screen.getByTestId("calendar-header").props.style);

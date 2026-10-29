@@ -102,6 +102,8 @@ function Harness() {
         }}
       />
       <SharedCalendarScene
+        headerOverlap={84}
+        referenceMonth="2026-09"
         controller={controller}
         month={month}
         viewMode={mode}
@@ -146,6 +148,37 @@ function Harness() {
 }
 
 describe("permanent calendar slots with the real shared scene", () => {
+  it("keeps each title inside its date page during partial swipes, reversal and Today", async () => {
+    const screen = await render(<Harness />);
+    const pager = screen.getByTestId("calendar-month-pager");
+    const september = screen.getByTestId("shared-month-2026-09");
+    const title = within(september).getByRole("header", { name: "September" });
+    await fireEvent(pager, "scrollBeginDrag");
+    for (const position of [24.25, 24.8, 24.2, 24]) {
+      await fireEvent.scroll(pager, {
+        nativeEvent: { contentOffset: { x: 0, y: position * 700 } },
+      });
+      expect(
+        within(september).getByRole("header", { name: "September", includeHiddenElements: true }),
+      ).toBe(title);
+      expect(
+        within(
+          screen.getByTestId("shared-month-2026-10", { includeHiddenElements: true }),
+        ).getByText("Oktober", { includeHiddenElements: true }),
+      ).toBeTruthy();
+    }
+    await fireEvent.scroll(pager, { nativeEvent: { contentOffset: { x: 0, y: 29 * 700 } } });
+    await fireEvent.press(screen.getByRole("button", { name: "Heute" }));
+    expect(
+      within(screen.getByTestId("calendar-slot-0")).getByRole("header", { name: "September" }),
+    ).toBeVisible();
+    await fireEvent(pager, "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { x: 0, y: 29 * 700 } },
+    });
+    expect(
+      within(screen.getByTestId("calendar-slot-0")).getByRole("header", { name: "September" }),
+    ).toBeVisible();
+  });
   it("retains four actual month bodies and their glyphs on each window advance", async () => {
     const screen = await render(<Harness />);
     const pager = screen.getByTestId("calendar-month-pager");
