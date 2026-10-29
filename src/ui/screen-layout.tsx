@@ -71,6 +71,8 @@ export function TabScreenHeader({
   stableTitle = false,
   transparent = false,
   toolbar,
+  safeTopOverride,
+  titleHidden = false,
 }: {
   readonly accessory?: ReactNode;
   readonly surface?: ScreenSurface;
@@ -83,13 +85,16 @@ export function TabScreenHeader({
   readonly stableTitle?: boolean;
   readonly transparent?: boolean;
   readonly toolbar?: ReactNode;
+  readonly safeTopOverride?: number;
+  readonly titleHidden?: boolean;
 }) {
   const palette = usePalette();
   const topInset = useContext(SafeAreaInsetsContext)?.top ?? 0;
   const { fontScale } = useWindowDimensions();
   const stackAccessory =
     Boolean(accessory) && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
-  const safeTop = process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : topInset;
+  const safeTop =
+    safeTopOverride ?? (process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : topInset);
   const titleAreaMinHeight =
     SCREEN_LAYOUT.headerMinHeight -
     SCREEN_LAYOUT.headerTopPadding -
@@ -98,6 +103,7 @@ export function TabScreenHeader({
   return (
     <View
       testID={testID}
+      pointerEvents={titleHidden ? "box-none" : "auto"}
       style={{
         minHeight: safeTop + SCREEN_LAYOUT.headerMinHeight,
         backgroundColor: transparent ? "transparent" : palette[surface],
@@ -107,6 +113,7 @@ export function TabScreenHeader({
       }}
     >
       <View
+        pointerEvents={titleHidden ? "box-none" : "auto"}
         testID={testID ? `${testID}-title-area` : undefined}
         style={{
           minHeight: titleAreaMinHeight,
@@ -114,6 +121,7 @@ export function TabScreenHeader({
         }}
       >
         <View
+          pointerEvents={titleHidden ? "box-none" : "auto"}
           style={{
             flexDirection: stackAccessory ? "column" : "row",
             alignItems: stackAccessory ? "stretch" : "flex-end",
@@ -121,6 +129,10 @@ export function TabScreenHeader({
           }}
         >
           <Animated.Text
+            pointerEvents={titleHidden ? "none" : "auto"}
+            accessible={!titleHidden}
+            accessibilityElementsHidden={titleHidden}
+            importantForAccessibility={titleHidden ? "no-hide-descendants" : "auto"}
             key={titleKey}
             accessibilityRole="header"
             dynamicTypeRamp="largeTitle"
@@ -131,6 +143,7 @@ export function TabScreenHeader({
             adjustsFontSizeToFit={stableTitle}
             accessibilityLabel={title}
             style={{
+              ...(titleHidden ? { opacity: 0 } : {}),
               flex: stackAccessory ? undefined : 1,
               color: titleColor ?? palette.text,
               ...TYPOGRAPHY.hero,
