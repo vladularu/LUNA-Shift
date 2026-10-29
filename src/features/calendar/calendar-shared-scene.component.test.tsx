@@ -170,7 +170,7 @@ describe("shared live calendar scene", () => {
     });
     const day = screen.getByTestId("calendar-day-2026-01-09");
     const slot = screen.getByTestId("quick-stamp-outline-2026-01-09");
-    expect(slot).toHaveStyle({ top: 30, height: 34, left: 1, right: 1, borderWidth: 1 });
+    expect(slot).toHaveStyle({ top: 31, height: 32, left: 1, right: 1, borderWidth: 1 });
     expect(day).toHaveStyle({ width: 430 / 7, height: (645 - 32) / 6 });
     await fireEvent.press(day, {
       nativeEvent: { pageX: 100, pageY: 200, locationX: 10, locationY: 80 },
@@ -190,7 +190,7 @@ describe("shared live calendar scene", () => {
       <Tree stampMode dayDisplay={{ ...display, showShiftTimes: false }} />,
     );
     expect(screen.getByTestId("quick-stamp-outline-2026-01-09")).toHaveStyle({
-      top: 30,
+      top: 31,
       height: 17,
     });
   });
@@ -258,14 +258,14 @@ describe("shared live calendar scene", () => {
       nativeEvent: { layout: { width: 420, height: 700 } },
     });
     const month = screen.getByTestId("shared-month-2026-01");
-    expect(screen.getByText("• Termin alt", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByText("Termin alt", { includeHiddenElements: true })).toBeTruthy();
     await screen.rerender(
       <Tree entries={[{ ...appointment, title: "Termin neu", revision: 2 }]} />,
     );
-    expect(screen.queryByText("• Termin alt", { includeHiddenElements: true })).toBeNull();
-    expect(screen.getByText("• Termin neu", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText("Termin alt", { includeHiddenElements: true })).toBeNull();
+    expect(screen.getByText("Termin neu", { includeHiddenElements: true })).toBeTruthy();
     await screen.rerender(<Tree entries={[]} />);
-    expect(screen.queryByText("• Termin neu", { includeHiddenElements: true })).toBeNull();
+    expect(screen.queryByText("Termin neu", { includeHiddenElements: true })).toBeNull();
     expect(screen.getByTestId("shared-month-2026-01")).toBe(month);
   });
   it("shows a saved photo in the real calendar and updates it without remounting the month", async () => {

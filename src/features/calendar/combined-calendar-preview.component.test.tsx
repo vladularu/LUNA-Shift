@@ -178,7 +178,7 @@ it("keeps weekend numbers red including adjacent months and preserves selection 
 });
 
 it.each([1, 0.5, 0])(
-  "fades the selected circle with the popup opacity %s while keeping today marked",
+  "fades the selected capsule with the popup opacity %s while keeping today marked",
   async (opacity) => {
     const { result } = await renderHook(() => ({
       progress: useSharedValue(1),
@@ -212,7 +212,7 @@ it.each([1, 0.5, 0])(
   },
 );
 
-it("uses the same smaller marker for today and the open day without moving either date", async () => {
+it("uses the same flat capsule for today and the open day without moving either date", async () => {
   const { result } = await renderHook(() => ({
     progress: useSharedValue(1),
     palette: usePalette(),
@@ -236,13 +236,13 @@ it("uses the same smaller marker for today and the open day without moving eithe
   const marker = screen.getByTestId("calendar-date-marker-2026-10-08", hidden);
   const pose = getAnimatedStyle(marker);
   expect(todayFill).toHaveStyle({
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 18,
     backgroundColor: result.current.palette.calendarToday,
   });
   expect(openFill).toHaveStyle({
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 18,
     backgroundColor: result.current.palette.calendarToday,
   });
   await screen.rerender(content(null));

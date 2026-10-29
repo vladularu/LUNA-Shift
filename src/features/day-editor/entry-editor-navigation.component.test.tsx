@@ -100,13 +100,15 @@ describe("entry editor with real Expo Router navigation", () => {
   });
 
   it.each([
-    { kind: "Dienst", dismissal: "button" },
-    { kind: "Termin", dismissal: "button" },
-    { kind: "Dienst", dismissal: "navigation" },
-    { kind: "Termin", dismissal: "navigation" },
+    { kind: "Dienst", dismissal: "button", edited: false, saves: 1 },
+    { kind: "Termin", dismissal: "button", edited: false, saves: 0 },
+    { kind: "Dienst", dismissal: "navigation", edited: false, saves: 1 },
+    { kind: "Termin", dismissal: "navigation", edited: false, saves: 0 },
+    { kind: "Termin", dismissal: "button", edited: true, saves: 1 },
+    { kind: "Termin", dismissal: "navigation", edited: true, saves: 1 },
   ])(
-    "opens $kind and saves once on $dismissal dismissal with real router contexts",
-    async ({ kind, dismissal }) => {
+    "closes $kind via $dismissal with edited=$edited and $saves writes using real router contexts",
+    async ({ kind, dismissal, edited, saves }) => {
       const screen = await renderRouter({
         _layout: Layout,
         index: Home,
@@ -117,13 +119,16 @@ describe("entry editor with real Expo Router navigation", () => {
       await waitFor(() =>
         expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy(),
       );
+      if (edited) await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
       if (dismissal === "navigation") await act(() => router.back());
       else await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
       await act(async () => {});
       await waitFor(() =>
         expect(screen.getByRole("button", { name: `${kind} öffnen` })).toBeTruthy(),
       );
-      expect(kind === "Dienst" ? mockUpsertShift : mockUpsertAppointment).toHaveBeenCalledTimes(1);
+      expect(kind === "Dienst" ? mockUpsertShift : mockUpsertAppointment).toHaveBeenCalledTimes(
+        saves,
+      );
     },
   );
 });

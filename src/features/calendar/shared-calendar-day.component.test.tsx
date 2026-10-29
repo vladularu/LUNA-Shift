@@ -73,6 +73,22 @@ it("does not render a separate shared day sheet or editor touch target", async (
   expect(screen.getByText("21:00")).toBeTruthy();
   expect(screen.queryAllByRole("button")).toHaveLength(0);
 });
+it("keeps a shared appointment compact while preserving its calendar stripe", async () => {
+  const row = sharedCalendarDays([cache], "Europe/Berlin", null).get("2026-10-11")![0];
+  const screen = await render(
+    <SharedCalendarEntryContent
+      row={{ ...row, entry: { ...row.entry, kind: "APPOINTMENT", title: "Ohne Titel" } }}
+      display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: true }}
+      lineHeight={15}
+    />,
+  );
+  expect(screen.getByText("Ohne Titel").parent).toHaveStyle({ height: 15 });
+  expect(screen.getByTestId("shared-calendar-entry-cal-entry")).toHaveStyle({
+    borderLeftColor: cache.calendar.color,
+  });
+  expect(screen.queryByText("21:00 · 9:30 h")).toBeNull();
+  expect(screen.queryAllByRole("button")).toHaveLength(0);
+});
 it.each<[boolean, boolean, string | null]>([
   [true, false, "21:00"],
   [false, true, "9:30 h"],

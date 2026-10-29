@@ -74,7 +74,8 @@ export function useEntryEditorDraft(
   );
   const [initialDraft] = useState(draft);
   return {
-    hasChanges: (initialShift ?? initialAppointment) === null || draft !== initialDraft,
+    // Opening an appointment sheet alone must not create its default values.
+    hasChanges: (mode === "SHIFT" && initialShift === null) || draft !== initialDraft,
     shiftType,
     shiftAllDay,
     selectedTemplateId,

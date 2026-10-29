@@ -134,11 +134,11 @@ describe("isolated calendar prototype", () => {
       nativeEvent: { layout: { width: 430, height: 640 } },
     });
     await fireEvent.press(screen.getByRole("button", { name: `Januar ${year} öffnen` }));
-    expect(screen.getByText("• Physiotherapie")).toBeTruthy();
+    expect(screen.getByText("Physiotherapie")).toBeTruthy();
     expect(screen.getByText("Neujahr")).toBeTruthy();
     mockPreferences.showAppointments = false;
     await screen.rerender(<CalendarPrototypeScreen />);
-    expect(screen.queryByText("• Physiotherapie")).toBeNull();
+    expect(screen.queryByText("Physiotherapie")).toBeNull();
   });
   it("keeps navigation available while loading or on retryable failure", async () => {
     mockData.loading = true;

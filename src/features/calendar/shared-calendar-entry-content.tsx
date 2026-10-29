@@ -7,6 +7,7 @@ import { SharedShiftSymbol } from "@/ui/shared-shift-symbol";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { PrototypeDisplay } from "./prototype-entry-content";
 import { sharedShiftDetail } from "./shared-shift-detail";
+import { CalendarAppointmentLabel } from "./calendar-appointment-label";
 
 export function SharedCalendarEntryContent({
   row,
@@ -38,7 +39,9 @@ export function SharedCalendarEntryContent({
         backgroundColor: colors.detail,
       }}
     >
-      {display.labelMode === "SYMBOL" ? (
+      {row.entry.kind === "APPOINTMENT" ? (
+        <CalendarAppointmentLabel title={row.entry.title} lineHeight={lineHeight} />
+      ) : display.labelMode === "SYMBOL" ? (
         <View style={{ height: lineHeight, alignItems: "center", justifyContent: "center" }}>
           <SharedShiftSymbol color={colors.onDetail} size={12} value={row.entry.symbol} />
         </View>
@@ -47,7 +50,7 @@ export function SharedCalendarEntryContent({
           {display.labelMode === "SHORT" ? row.entry.title.slice(0, 1) : row.entry.title}
         </Text>
       )}
-      {detail !== null ? (
+      {row.entry.kind !== "APPOINTMENT" && detail !== null ? (
         <Text numberOfLines={1} allowFontScaling={false} style={textStyle}>
           {detail}
         </Text>

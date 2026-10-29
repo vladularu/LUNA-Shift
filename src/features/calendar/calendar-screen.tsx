@@ -55,12 +55,7 @@ import { useCalendarTodayScroll } from "@/features/calendar/use-calendar-today-s
 import { useCalendarPaging } from "@/features/calendar/use-calendar-paging";
 import { useOpenShiftSelection } from "@/features/calendar/use-open-shift-selection";
 import { useQuickStampAction } from "@/features/calendar/use-quick-stamp-action";
-import {
-  dayDetailsRoute,
-  dayEditorRoute,
-  sharedDayEditorRoute,
-  quickAddRoute,
-} from "@/navigation/routes";
+import { dayEditorRoute, sharedDayEditorRoute, quickAddRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
@@ -466,11 +461,6 @@ export function CalendarScreen() {
     setQuickPopup(null);
     router.push(sharedDayEditorRoute(date, row.calendarId, row.entry.id));
   }, []);
-  const openDayDetails = useCallback((date: string) => {
-    pendingSelectedDate.current = date;
-    setQuickPopup(null);
-    router.push(dayDetailsRoute(date));
-  }, []);
   const selectPopupAction = useCallback(
     (action: QuickEntryAction, date: string) => {
       if (isQuickEntryStampAction(action)) {
@@ -631,7 +621,6 @@ export function CalendarScreen() {
             holidayName={quickPopupHolidayName}
             onClose={closeQuickPopup}
             highlightOpacity={dayHighlightOpacity}
-            onOpenDetails={openDayDetails}
             onOpenEntry={openEntry}
             onDeleteEntry={removeEntry}
             onOpenShiftPicker={openShiftPicker}
