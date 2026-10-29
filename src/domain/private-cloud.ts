@@ -12,6 +12,8 @@ export interface PrivateCloudDocument {
   readonly presentation: {
     readonly calendarImage: string | null;
     readonly calendarImageStrength: "subtle" | "medium" | "strong";
+    /** Exact slider setting; the legacy strength remains readable by older clients. */
+    readonly calendarImageOpacity?: number;
   };
 }
 

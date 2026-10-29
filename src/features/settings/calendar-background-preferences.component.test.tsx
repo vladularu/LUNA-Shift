@@ -82,6 +82,24 @@ async function open() {
   await waitFor(() => expect(screen.getByRole("button", { name: "choose" })).toBeEnabled());
   return screen;
 }
+async function dragOpacity(
+  screen: Awaited<ReturnType<typeof open>>,
+  value: number,
+  release = true,
+) {
+  const slider = screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" });
+  await fireEvent(slider, "layout", { nativeEvent: { layout: { width: 124 } } });
+  await fireEvent(slider, "responderGrant", {
+    nativeEvent: { pageX: 100, locationX: value + 12 },
+  });
+  if (release) await fireEvent(slider, "responderRelease");
+}
+function expectOpacity(screen: Awaited<ReturnType<typeof open>>, value: number) {
+  expect(screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" })).toHaveProp(
+    "accessibilityValue",
+    expect.objectContaining({ now: value }),
+  );
+}
 describe("local calendar background", () => {
   beforeEach(() => {
     mockLoad.mockReset().mockResolvedValue("file:///old.jpg");
@@ -99,7 +117,7 @@ describe("local calendar background", () => {
   it("restores the saved strength and displays the matching photo preview", async () => {
     mockLoadStrength.mockResolvedValue("strong");
     const screen = await open();
-    expect(screen.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy();
+    expectOpacity(screen, 40);
     expect(
       screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
     ).toHaveStyle({ opacity: 0.6 });
@@ -109,25 +127,23 @@ describe("local calendar background", () => {
       mockLoadStrength.mockResolvedValue(strength);
     });
     const first = await open();
-    await fireEvent.press(first.getByRole("radio", { name: "Kräftig" }));
-    await waitFor(() =>
-      expect(first.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy(),
-    );
-    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, "strong");
+    await dragOpacity(first, 35);
+    await waitFor(() => expectOpacity(first, 35));
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 35);
     expect(mockSave).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
     await first.unmount();
     const second = await open();
-    expect(second.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy();
+    expectOpacity(second, 35);
   });
   it("keeps the previous strength and photo when saving strength fails", async () => {
     mockSaveStrength.mockRejectedValue(new Error("disk full"));
     const screen = await open();
-    await fireEvent.press(screen.getByRole("radio", { name: "Kräftig" }));
+    await dragOpacity(screen, 40);
     await waitFor(() =>
       expect(screen.getByText(/Bildstärke konnte nicht gespeichert/)).toBeTruthy(),
     );
-    expect(screen.getByRole("radio", { name: "Mittel", checked: true })).toBeTruthy();
+    expectOpacity(screen, 25);
     expect(screen.getByTestId("uri")).toHaveTextContent("file:///old.jpg");
     expect(mockDelete).not.toHaveBeenCalled();
   });
@@ -139,17 +155,17 @@ describe("local calendar background", () => {
       }),
     );
     const screen = await open();
-    await fireEvent.press(screen.getByRole("radio", { name: "Kräftig" }));
-    await waitFor(() => expect(screen.getByRole("radio", { name: "Dezent" })).toBeDisabled());
+    await dragOpacity(screen, 40);
+    await waitFor(() => expect(screen.getByRole("adjustable")).toBeDisabled());
     await fireEvent.press(screen.getByRole("button", { name: "choose" }));
     expect(mockPick).not.toHaveBeenCalled();
     await act(async () => complete());
-    await waitFor(() => expect(screen.getByRole("radio", { name: "Kräftig" })).toBeEnabled());
-    expect(screen.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole("adjustable")).toBeEnabled());
+    expectOpacity(screen, 40);
   });
   it("does not write again for the selected strength", async () => {
     const screen = await open();
-    await fireEvent.press(screen.getByRole("radio", { name: "Mittel" }));
+    await dragOpacity(screen, 25);
     expect(mockSaveStrength).not.toHaveBeenCalled();
   });
   it("retains strength when replacing the image", async () => {
@@ -157,7 +173,7 @@ describe("local calendar background", () => {
     const screen = await open();
     await fireEvent.press(screen.getByRole("button", { name: "choose" }));
     await waitFor(() => expect(screen.getByTestId("uri")).toHaveTextContent("file:///new.jpg"));
-    expect(screen.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy();
+    expectOpacity(screen, 40);
     expect(mockSaveStrength).not.toHaveBeenCalled();
   });
   it("restores the saved image after remount", async () => {
@@ -257,8 +273,8 @@ describe("local calendar background", () => {
       }),
     );
     const screen = await open();
-    await fireEvent.press(screen.getByRole("radio", { name: "Kräftig" }));
-    expect(screen.getByRole("radio", { name: "Kräftig", checked: true })).toBeTruthy();
+    await dragOpacity(screen, 40);
+    expectOpacity(screen, 40);
     expect(
       screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
     ).toHaveStyle({ opacity: 0.6 });
@@ -272,5 +288,74 @@ describe("local calendar background", () => {
     expect(screen.getByTestId("strength")).toHaveTextContent("medium");
     expect(mockDelete).toHaveBeenCalledWith("file:///old.jpg");
     expect(screen.queryByRole("button", { name: "Rückgängig" })).toBeNull();
+  });
+  it("previews continuous dragging without persisting or changing the widget value until release", async () => {
+    const screen = await open();
+    await dragOpacity(screen, 35, false);
+    expectOpacity(screen, 35);
+    expect(screen.getByTestId("strength")).toHaveTextContent("medium");
+    expect(mockSaveStrength).not.toHaveBeenCalled();
+    expect(
+      screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
+    ).toHaveStyle({ opacity: 0.65 });
+    await fireEvent(screen.getByRole("adjustable"), "responderMove", {
+      nativeEvent: { pageX: 120 },
+    });
+    expectOpacity(screen, 55);
+    expect(mockSaveStrength).not.toHaveBeenCalled();
+    await fireEvent(screen.getByRole("adjustable"), "responderRelease");
+    expect(mockSaveStrength).toHaveBeenCalledTimes(1);
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 55);
+    expect(screen.getByTestId("strength")).toHaveTextContent("55");
+  });
+  it("restores saved opacity when a drag is interrupted", async () => {
+    const screen = await open();
+    await dragOpacity(screen, 75, false);
+    await fireEvent(screen.getByRole("adjustable"), "responderTerminate");
+    expectOpacity(screen, 25);
+    expect(mockSaveStrength).not.toHaveBeenCalled();
+    expect(
+      screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
+    ).toHaveStyle({ opacity: 0.75 });
+  });
+  it.each([
+    { start: 100, blocked: "increment", allowed: "decrement", next: 99 },
+    { start: 0, blocked: "decrement", allowed: "increment", next: 1 },
+  ])(
+    "adjusts by one percent with VoiceOver at the $start-percent endpoint",
+    async ({ start, blocked, allowed, next }) => {
+      mockLoadStrength.mockResolvedValue(start);
+      const screen = await open();
+      await fireEvent(screen.getByRole("adjustable"), "accessibilityAction", {
+        nativeEvent: { actionName: blocked },
+      });
+      expect(mockSaveStrength).not.toHaveBeenCalled();
+      await fireEvent(screen.getByRole("adjustable"), "accessibilityAction", {
+        nativeEvent: { actionName: allowed },
+      });
+      expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, next);
+      expectOpacity(screen, next);
+    },
+  );
+  it("retains a 100-percent photo without writing on load, then stores an explicit 50-percent choice", async () => {
+    mockLoadStrength.mockResolvedValue(100);
+    const screen = await open();
+    expectOpacity(screen, 100);
+    expect(
+      screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
+    ).toHaveStyle({ opacity: 0 });
+    expect(mockSaveStrength).not.toHaveBeenCalled();
+    await dragOpacity(screen, 50);
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 50);
+    expect(screen.getByTestId("uri")).toHaveTextContent("file:///old.jpg");
+  });
+  it.each([
+    [-100, 0],
+    [150, 100],
+  ])("clamps out-of-track touch %s to %s percent", async (touch, expected) => {
+    const screen = await open();
+    await dragOpacity(screen, touch);
+    expectOpacity(screen, expected);
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, expected);
   });
 });

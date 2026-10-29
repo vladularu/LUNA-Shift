@@ -132,7 +132,7 @@ export async function saveCalendarBackgroundStrength(
   await db.runAsync(
     "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at",
     CALENDAR_BACKGROUND_STRENGTH_KEY,
-    strength,
+    String(strength),
     new Date().toISOString(),
   );
 }

@@ -5,7 +5,7 @@ import { horizontalBackGestureOptions } from "./horizontal-back-gesture";
 const layout = readFileSync(new URL("../../app/_layout.tsx", import.meta.url), "utf8");
 
 describe("horizontal card back gestures", () => {
-  it("enables full-screen native back on every card submenu", () => {
+  it("enables full-screen native back on card submenus without horizontal inputs", () => {
     const cards = Array.from(layout.matchAll(/<Stack\.Screen\b([\s\S]*?)\/>/g))
       .map((match) => match[1])
       .filter((screen) => screen.includes('presentation: "card"'));
@@ -13,13 +13,19 @@ describe("horizontal card back gestures", () => {
     for (const card of cards) {
       const name = /name="([^"]+)"/.exec(card)?.[1];
       expect(name).toBeDefined();
-      if (name === "quick-add") continue;
+      if (name === "quick-add" || name === "calendar-design") continue;
       expect(horizontalBackGestureOptions(name!), name).toMatchObject({
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
       });
     }
     expect(layout).toContain("...horizontalBackGestureOptions(route.name)");
+  });
+  it("keeps edge-back navigation on calendar design while leaving the photo slider free", () => {
+    expect(horizontalBackGestureOptions("calendar-design")).toEqual({
+      gestureEnabled: true,
+      fullScreenGestureEnabled: false,
+    });
   });
 
   it.each([

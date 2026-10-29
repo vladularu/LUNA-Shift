@@ -2,6 +2,10 @@ import Database from "better-sqlite3";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SQLiteDatabase } from "expo-sqlite";
 import {
+  readCloudPresentation,
+  prepareCloudPresentation,
+} from "@/features/private-cloud/cloud-media";
+import {
   loadCalendarBackground,
   loadRemovedCalendarBackground,
   saveCalendarBackgroundChange,
@@ -21,6 +25,7 @@ const state = vi.hoisted(() => ({
   save: vi.fn(),
   copy: vi.fn(),
 }));
+vi.mock("expo-crypto", () => ({ randomUUID: () => "test-photo" }));
 vi.mock("expo-file-system", () => {
   class Directory {
     uri: string;
@@ -76,6 +81,23 @@ const db = { getFirstAsync: get, runAsync: run } as unknown as SQLiteDatabase;
 const old = "file:///sandbox/Documents/calendar-backgrounds/calendar-old.jpg";
 
 describe("calendar background storage", () => {
+  it.each([0, 35, 100])(
+    "round-trips %s percent through cloud presentation without changing the legacy field",
+    async (opacity) => {
+      get.mockImplementation(async (_sql, key) =>
+        key === "calendar_background_strength" ? { value: String(opacity) } : null,
+      );
+      const presentation = await readCloudPresentation(db);
+      expect(presentation.calendarImageOpacity).toBe(opacity);
+      expect(["subtle", "medium", "strong"]).toContain(presentation.calendarImageStrength);
+      const prepared = await prepareCloudPresentation(db, presentation);
+      await prepared.apply(db);
+      expect(run.mock.calls.at(-1)?.slice(1, 3)).toEqual([
+        "calendar_background_strength",
+        String(opacity),
+      ]);
+    },
+  );
   beforeEach(() => {
     vi.clearAllMocks();
     state.files.clear();
@@ -89,12 +111,15 @@ describe("calendar background storage", () => {
     get.mockResolvedValue({ value: "calendar-old.jpg" });
     run.mockResolvedValue(undefined);
   });
-  it.each(["subtle", "medium", "strong"] as const)(
+  it.each(["subtle", "medium", "strong", 0, 35, 100] as const)(
     "persists and loads image strength %s independently of the image pointer",
     async (strength) => {
       await saveCalendarBackgroundStrength(db, strength);
-      expect(run.mock.calls[0].slice(1, 3)).toEqual(["calendar_background_strength", strength]);
-      get.mockResolvedValue({ value: strength });
+      expect(run.mock.calls[0].slice(1, 3)).toEqual([
+        "calendar_background_strength",
+        String(strength),
+      ]);
+      get.mockResolvedValue({ value: String(strength) });
       expect(await loadCalendarBackgroundStrength(db)).toBe(strength);
       expect(get).toHaveBeenCalledWith(
         "SELECT value FROM app_preferences WHERE key=?",
