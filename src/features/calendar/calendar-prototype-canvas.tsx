@@ -21,6 +21,7 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
 import { combinedCalendarPreview } from "./combined-calendar-preview";
+import { CalendarOverflowDots } from "./calendar-overflow-dots";
 import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
 import { quickStampEntering, quickStampExiting } from "./quick-stamp-motion";
@@ -392,11 +393,6 @@ function CombinedDayContent({
     layout.weekHeight,
     display.showShiftTimes || display.showShiftDuration,
   );
-  const usedHeight =
-    preview.rows.length *
-      preview.lineHeight *
-      (display.showShiftTimes || display.showShiftDuration ? 2 : 1) +
-    Math.max(0, preview.rows.length - 1);
   const occurrences = new Map<string, number>();
   const motionRows = preview.rows.map((item) => {
     // Optimistic and persisted shifts share a template key. Saving must not
@@ -422,7 +418,8 @@ function CombinedDayContent({
           ...entries.map((e) => e.title),
           ...shared.map((r) => r.calendarName + ": " + r.entry.title),
         ].join(", ") || "Keine Einträge") +
-        (holiday ? ", " + holiday : specialDay ? ", " + specialDay : "")
+        (holiday ? ", " + holiday : specialDay ? ", " + specialDay : "") +
+        (preview.overflowCount ? `, ${preview.overflowCount} weitere Einträge` : "")
       }
       testID={"calendar-combined-day-" + day.date}
       style={{
@@ -459,21 +456,11 @@ function CombinedDayContent({
           </View>
         </View>
       ) : null}
-      {preview.overflowCount > 0 ? (
-        <Text
-          testID={"calendar-overflow-" + day.date}
-          allowFontScaling={false}
-          style={{
-            position: "absolute",
-            right: 2,
-            top: 3,
-            fontSize: CALENDAR_METRICS.weekNumberFontSize,
-            color: labelColor,
-          }}
-        >
-          {"+" + preview.overflowCount}
-        </Text>
-      ) : null}
+      <CalendarOverflowDots
+        date={day.date}
+        hiddenRows={preview.hiddenRows}
+        headerHeight={preview.headerHeight}
+      />
       <LayoutAnimationConfig skipEntering skipExiting>
         <View
           testID={
@@ -482,7 +469,6 @@ function CombinedDayContent({
           style={{
             marginTop: adjacent ? 0 : preview.headerHeight,
             marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
-            gap: CALENDAR_METRICS.chipGap,
             opacity: adjacent ? 0.3 : 1,
           }}
         >
@@ -505,9 +491,8 @@ function CombinedDayContent({
               }
               testID={"calendar-entry-slot-" + day.date + "-" + index}
               style={{
-                height:
-                  preview.lineHeight *
-                  (display.showShiftTimes || display.showShiftDuration ? 2 : 1),
+                height: preview.heights[index],
+                marginTop: preview.gaps[index],
               }}
             >
               {item.kind === "own" ? (
@@ -527,12 +512,14 @@ function CombinedDayContent({
             </Animated.View>
           ))}
 
-          {(holiday || specialDay) && preview.headerHeight + usedHeight + 18 < layout.weekHeight ? (
+          {(holiday || specialDay) &&
+          preview.headerHeight + preview.usedHeight + 18 < layout.weekHeight ? (
             <Text
               allowFontScaling={false}
               numberOfLines={1}
               style={{
                 height: CALENDAR_METRICS.entryRowHeight,
+                marginTop: CALENDAR_METRICS.chipGap,
                 color: labelColor,
                 fontSize: CALENDAR_METRICS.entryFontSize,
               }}
@@ -588,10 +575,10 @@ const styles = StyleSheet.create({
   },
   dayHighlight: {
     position: "absolute",
-    width: CALENDAR_METRICS.dayMarkerSize,
-    height: CALENDAR_METRICS.dayMarkerSize,
-    left: (30 - CALENDAR_METRICS.dayMarkerSize) / 2,
-    top: (30 - CALENDAR_METRICS.dayMarkerSize) / 2,
+    width: CALENDAR_METRICS.dayMarkerWidth,
+    height: CALENDAR_METRICS.dayMarkerHeight,
+    left: (30 - CALENDAR_METRICS.dayMarkerWidth) / 2,
+    top: (30 - CALENDAR_METRICS.dayMarkerHeight) / 2,
     borderRadius: RADII.pill,
   },
   day: {

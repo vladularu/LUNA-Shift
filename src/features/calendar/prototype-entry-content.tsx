@@ -8,6 +8,7 @@ import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, CALENDAR_METRICS } from "@/theme/tokens";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { calendarShiftDetail } from "./calendar-display";
+import { CalendarAppointmentLabel } from "./calendar-appointment-label";
 
 export type PrototypeDisplay = Pick<
   CalendarPreferencesData,
@@ -28,15 +29,7 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   const palette = usePalette();
   const rowStyle = { height: lineHeight, lineHeight, fontSize: Math.min(12, lineHeight - 1) };
   if (entry.kind === "APPOINTMENT")
-    return (
-      <Text
-        numberOfLines={1}
-        allowFontScaling={false}
-        style={[styles.row, rowStyle, { color: palette.text }]}
-      >
-        {`• ${entry.title}`}
-      </Text>
-    );
+    return <CalendarAppointmentLabel title={entry.title} lineHeight={lineHeight} />;
   const colors = calendarChipPalette(entry.color, palette.dark);
   const detail = calendarShiftDetail(entry, { ...display, timeZone });
   return (

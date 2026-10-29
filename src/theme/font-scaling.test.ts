@@ -26,6 +26,7 @@ const SINGLE_LINE_ALLOWLIST = new Set([
   // Foreign service glyphs share the bounded day cell; full names stay in the day label and scalable editor.
   "features/calendar/shared-calendar-entry-content.tsx",
   // Bounded prototype day cells; complete titles remain in each day's accessible label.
+  "features/calendar/calendar-appointment-label.tsx",
   "features/calendar/calendar-prototype-canvas.tsx",
   "features/calendar/prototype-entry-content.tsx",
   "features/calendar/month-card.tsx",

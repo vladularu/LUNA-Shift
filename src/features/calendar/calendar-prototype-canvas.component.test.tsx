@@ -177,6 +177,66 @@ describe("adjacent month shifts", () => {
   });
 });
 
+describe("compact services and appointments", () => {
+  it.each([500, 640])("fits one service and two appointment rows at height=%s", async (height) => {
+    const date = "2026-03-13";
+    const service = { ...holidayShift, date };
+    const first = {
+      ...service,
+      kind: "APPOINTMENT" as const,
+      allDay: false,
+      id: "a1",
+      title: "Ohne Titel",
+      recurrence: null,
+    };
+    const second = { ...first, id: "a2", title: "Arzttermin" };
+    const screen = await render(
+      <Month
+        month="2026-03"
+        height={height}
+        entriesByDate={new Map([[date, [service, first, second]]])}
+      />,
+    );
+    const layer = within(screen.getByTestId("calendar-combined-entries-" + date));
+    expect(layer.getByText("Ohne Titel")).toBeTruthy();
+    expect(layer.getByText("Arzttermin")).toBeTruthy();
+    const slots = layer
+      .getAllByTestId(/calendar-entry-slot-/)
+      .map((slot) => StyleSheet.flatten(slot.props.style));
+    expect(slots).toHaveLength(3);
+    expect(slots[0].height).toBe(slots[1].height + slots[2].height);
+    expect(slots[2].marginTop).toBe(0);
+    expect(screen.queryByTestId("calendar-overflow-" + date)).toBeNull();
+  });
+
+  it("separates services and puts only hidden service colors beneath the date", async () => {
+    const date = holidayShift.date;
+    const entries = [
+      holidayShift,
+      { ...holidayShift, id: "two", color: "#4477AA" },
+      { ...holidayShift, id: "three", color: "#EEAA44" },
+      { ...holidayShift, id: "four", color: "#8855CC" },
+    ];
+    const screen = await render(
+      <Month month="2026-10" entriesByDate={new Map([[date, entries]])} />,
+    );
+    expect(screen.getByTestId(`calendar-entry-slot-${date}-1`)).toHaveStyle({ marginTop: 4 });
+    expect(screen.getByTestId(`calendar-overflow-dot-${date}-0`)).toHaveStyle({
+      backgroundColor: entries[2].color,
+    });
+    expect(screen.getByTestId(`calendar-overflow-dot-${date}-1`)).toHaveStyle({
+      backgroundColor: entries[3].color,
+    });
+    const dots = StyleSheet.flatten(screen.getByTestId("calendar-overflow-" + date).props.style);
+    const layer = StyleSheet.flatten(
+      screen.getByTestId("calendar-combined-entries-" + date).props.style,
+    );
+    expect(dots.top + dots.height).toBeLessThan(layer.marginTop);
+    expect(screen.queryByText("+2")).toBeNull();
+    expect(screen.queryByTestId("calendar-overflow-more-" + date)).toBeNull();
+  });
+});
+
 describe("holiday entry alignment", () => {
   it.each([false, true])("keeps the first shift above the holiday in dark=%s", async (dark) => {
     const scheme = jest
@@ -204,11 +264,13 @@ describe("holiday entry alignment", () => {
           .getAllByText(/^(Spät|13:18|Tag der Deutschen Einheit)$/)
           .map((node) => node.props.children),
       ).toEqual(["Spät", "13:18", holidayName]);
-      expect(content).toHaveStyle({ marginTop: 30 });
+      expect(content).toHaveStyle({ marginTop: 31 });
       expect(screen.getByTestId("calendar-combined-entries-2026-10-02")).toHaveStyle({
-        marginTop: 30,
+        marginTop: 31,
       });
-      expect(screen.getByText("Spät")).toHaveStyle({ height: CALENDAR_METRICS.entryRowHeight });
+      const titleHeight = StyleSheet.flatten(screen.getByText("Spät").props.style).height;
+      expect(titleHeight).toBeGreaterThanOrEqual(11);
+      expect(titleHeight).toBeLessThanOrEqual(CALENDAR_METRICS.entryRowHeight);
       expect(screen.getByText(holidayName)).toHaveStyle({
         height: CALENDAR_METRICS.entryRowHeight,
         color: (dark ? DARK_PALETTE : LIGHT_PALETTE).textMuted,
@@ -245,11 +307,21 @@ describe("holiday entry alignment", () => {
         content = within(day);
       expect(content.getAllByText("Spät")).toHaveLength(2);
       expect(content.getAllByText("13:18")).toHaveLength(2);
-      expect(content.getByText("+18")).toBeTruthy();
+      expect(content.getByTestId("calendar-overflow-" + date)).toHaveProp(
+        "accessibilityLabel",
+        "18 weitere Einträge",
+      );
+      expect(content.getAllByTestId(/calendar-overflow-dot-/)).toHaveLength(5);
+      expect(content.getByTestId("calendar-overflow-more-" + date)).toBeTruthy();
       expect(day.props.accessibilityLabel).toContain("Testfeiertag");
       const slots = content.getAllByTestId(/calendar-entry-slot-/);
       const heightUsed =
-        30 + slots.reduce((sum, slot) => sum + StyleSheet.flatten(slot.props.style).height, 0) + 1;
+        StyleSheet.flatten(content.getByTestId("calendar-combined-entries-" + date).props.style)
+          .marginTop +
+        slots.reduce((sum, slot) => {
+          const style = StyleSheet.flatten(slot.props.style);
+          return sum + style.height + style.marginTop;
+        }, 0);
       expect(heightUsed).toBeLessThanOrEqual(
         calendarPrototypeLayout("2026-08", 430, height).weekHeight,
       );
@@ -325,6 +397,9 @@ describe("tariff special-day labels", () => {
     expect(screen.getByTestId("calendar-combined-day-" + date).props.accessibilityLabel).toContain(
       "Heiligabend (tariflicher Sondertag)",
     );
-    expect(screen.getByText("+18")).toBeTruthy();
+    expect(screen.getByTestId("calendar-overflow-" + date)).toHaveProp(
+      "accessibilityLabel",
+      "18 weitere Einträge",
+    );
   });
 });

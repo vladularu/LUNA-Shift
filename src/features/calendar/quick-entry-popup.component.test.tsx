@@ -85,15 +85,17 @@ const existingShift: ShiftEntry = {
 async function renderCompact(
   entries: readonly CalendarEntry[],
   props: Partial<React.ComponentProps<typeof QuickEntryPopup>> = {},
+  viewport = { width: 400, height: 800, fontScale: 1 },
+  insets = { bottom: 0, left: 0, right: 0, top: 0 },
 ) {
   jest
     .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useWindowDimensions")
-    .mockReturnValue({ width: 400, height: 800, scale: 1, fontScale: 1 });
+    .mockReturnValue({ ...viewport, scale: 1 });
   const content = (currentEntries: readonly CalendarEntry[]) => (
     <SafeAreaProvider
       initialMetrics={{
-        frame: { height: 800, width: 400, x: 0, y: 0 },
-        insets: { bottom: 0, left: 0, right: 0, top: 0 },
+        frame: { height: viewport.height, width: viewport.width, x: 0, y: 0 },
+        insets,
       }}
     >
       <QuickEntryPopup
@@ -107,7 +109,6 @@ async function renderCompact(
         entries={currentEntries}
         animateEntry={false}
         onClose={jest.fn()}
-        onOpenDetails={jest.fn()}
         onOpenEntry={jest.fn()}
         onOpenShiftPicker={jest.fn()}
         onSelectAction={jest.fn()}
@@ -123,6 +124,133 @@ async function renderCompact(
 }
 
 describe("QuickEntryPopup", () => {
+  it("grows to contain six services without a further-entries route", async () => {
+    const entries = Array.from({ length: 6 }, (_, index) => ({
+      ...existingShift,
+      id: `service-${index}`,
+      title: `Dienst ${index + 1}`,
+    }));
+    const onOpenEntry = jest.fn();
+    const screen = await renderCompact(entries, { onOpenEntry });
+    for (const entry of entries)
+      expect(screen.getByRole("button", { name: `${entry.title} bearbeiten` })).toBeTruthy();
+    expect(screen.queryByText(/weitere/)).toBeNull();
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 462 });
+    expect(screen.getByTestId("quick-entry-scroll")).toHaveProp("scrollEnabled", false);
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst 6 bearbeiten" }));
+    expect(onOpenEntry).toHaveBeenCalledWith(entries[5]);
+  });
+
+  it.each([1, 2])(
+    "scrolls all entries within the bounded card at fontScale=%s with fixed controls",
+    async (fontScale) => {
+      const entries = Array.from({ length: 30 }, (_, index) => ({
+        ...existingShift,
+        id: `service-${index}`,
+        title: `Dienst ${index + 1}`,
+      }));
+      const onClose = jest.fn();
+      const onSelectAction = jest.fn();
+      const screen = await renderCompact(
+        entries,
+        { onClose, onSelectAction },
+        { width: 375, height: 667, fontScale },
+        { top: 20, bottom: 0, left: 0, right: 0 },
+      );
+      const popup = screen.getByTestId("quick-entry-popup");
+      expect(popup).toHaveStyle({ height: 541 });
+      const list = screen.getByTestId("quick-entry-scroll");
+      expect(list).toHaveProp("scrollEnabled", true);
+      expect(within(list).getByRole("button", { name: "Dienst 30 bearbeiten" })).toBeTruthy();
+      expect(within(list).queryByRole("button", { name: "Termin hinzufügen" })).toBeNull();
+      expect(within(list).queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
+      expect(screen.getByRole("header", { name: "Di., 4. Aug., 30 Einträge" })).toBeTruthy();
+      await fireEvent.press(
+        within(screen.getByTestId("quick-entry-footer")).getByRole("button", {
+          name: "Termin hinzufügen",
+        }),
+      );
+      expect(onSelectAction).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "APPOINTMENT" }),
+        "2026-08-04",
+      );
+      await fireEvent.press(screen.getByRole("button", { name: "Schnellauswahl schließen" }));
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    },
+  );
+
+  it("measures taller content and discards its old height when the entries change", async () => {
+    const screen = await renderCompact([existingShift]);
+    const list = screen.getByTestId("quick-entry-scroll");
+    await fireEvent(list, "contentSizeChange", 376, 250);
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 352 });
+    await fireEvent(list, "contentSizeChange", 376, 900);
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 694 });
+    expect(list).toHaveProp("scrollEnabled", true);
+    await screen.updateEntries([]);
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 102 });
+    expect(screen.getByTestId("quick-entry-scroll")).toHaveProp("scrollEnabled", false);
+  });
+
+  it("keeps shared entries beyond the former limit in the same read-only list", async () => {
+    const sharedEntries = Array.from({ length: 30 }, (_, index) => ({
+      calendarId: "shared-calendar",
+      calendarName: "Selena",
+      calendarColor: "#527D92",
+      fetchedAt: "2026-08-04T10:00:00Z",
+      when: "07:00–15:00",
+      entry: {
+        id: `foreign-${index}`,
+        title: `Geteilt ${index + 1}`,
+        color: "#6B67BE",
+        symbol: "sunrise",
+        startsAt: "2026-08-04T05:00:00Z",
+        endsAt: "2026-08-04T13:00:00Z",
+        timeZone: "Europe/Berlin",
+        allDay: false,
+      },
+    }));
+    const onOpenSharedEntry = jest.fn();
+    const onDeleteEntry = jest.fn(async () => {});
+    const screen = await renderCompact([existingShift], {
+      sharedEntries,
+      onOpenSharedEntry,
+      onDeleteEntry,
+    });
+    const last = screen.getByRole("button", { name: "Geteilt 30 ansehen" });
+    expect(last.props.accessibilityActions).toBeUndefined();
+    expect(screen.getAllByTestId(/^swipe-entry-/)).toHaveLength(1);
+    expect(screen.queryByText(/weitere/)).toBeNull();
+    await fireEvent.press(last);
+    expect(onOpenSharedEntry).toHaveBeenCalledWith(sharedEntries[29], "2026-08-04");
+    expect(onDeleteEntry).not.toHaveBeenCalled();
+  });
+
+  it("deletes a later row from a long list with confirmation and keeps the popup open", async () => {
+    const entries = Array.from({ length: 8 }, (_, index) => ({
+      ...existingShift,
+      id: `service-${index}`,
+      title: `Dienst ${index + 1}`,
+    }));
+    const onDeleteEntry = jest.fn(async (_entry: CalendarEntry) => {});
+    const onClose = jest.fn();
+    const screen = await renderCompact(entries, { onDeleteEntry, onClose });
+    const swipe = screen.getByTestId("swipe-entry-SHIFT:service-7");
+    await fireEvent(swipe, "swipeableWillOpen");
+    expect(screen.getByRole("button", { name: "Dienst 8 löschen" })).toBeTruthy();
+    await fireEvent(screen.getByTestId("quick-entry-scroll"), "scrollBeginDrag");
+    expect(screen.queryByRole("button", { name: "Dienst 8 löschen" })).toBeNull();
+    await fireEvent(screen.getByRole("button", { name: "Dienst 8 bearbeiten" }), "longPress");
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst 8 endgültig löschen" }));
+    expect(onDeleteEntry).toHaveBeenCalledTimes(1);
+    expect(onDeleteEntry).toHaveBeenCalledWith(entries[7]);
+    await screen.updateEntries(entries.slice(0, 7));
+    expect(screen.queryByRole("button", { name: "Dienst 8 bearbeiten" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Dienst 7 bearbeiten" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it.each([false, true])(
     "keeps swipe and confirmation actions filled red against the inverse popup in dark=%s",
     async (dark) => {
@@ -149,7 +277,7 @@ describe("QuickEntryPopup", () => {
       onDeleteEntry: jest.fn(async () => {}),
     });
     const popup = screen.getByTestId("quick-entry-popup");
-    expect(popup).toHaveStyle({ height: 118 });
+    expect(popup).toHaveStyle({ height: 162 });
     await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
 
     const footer = screen.getByTestId("quick-entry-footer");
@@ -157,7 +285,7 @@ describe("QuickEntryPopup", () => {
     expect(within(footer).getByRole("button", { name: "Löschen abbrechen" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Dienst hinzufügen" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Termin hinzufügen" })).toBeNull();
-    expect(popup).toHaveStyle({ height: 118 });
+    expect(popup).toHaveStyle({ height: 162 });
     expect(popup).toHaveProp("pointerEvents", "auto");
     expect(screen.getByTestId("quick-entry-scroll", { includeHiddenElements: true })).toHaveProp(
       "accessibilityElementsHidden",
@@ -173,7 +301,7 @@ describe("QuickEntryPopup", () => {
     expect(within(footer).getByRole("button", { name: "Dienst hinzufügen" })).toBeEnabled();
     expect(within(footer).getByRole("button", { name: "Termin hinzufügen" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeEnabled();
-    expect(popup).toHaveStyle({ height: 118 });
+    expect(popup).toHaveStyle({ height: 162 });
   });
 
   it("reveals delete on swipe, cancels locally and keeps the popup open after confirmed deletion", async () => {
@@ -232,10 +360,10 @@ describe("QuickEntryPopup", () => {
     await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
       nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
     });
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 202 });
     await fireEvent.press(screen.getByRole("button", { name: "Löschen abbrechen" }));
     await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 118 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 162 });
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -314,7 +442,7 @@ describe("QuickEntryPopup", () => {
     await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
       nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
     });
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 202 });
     expect(within(footer).getByRole("button", { name: "Nacht endgültig löschen" })).toBeEnabled();
     expect(deletionFeedback).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
@@ -375,9 +503,11 @@ describe("QuickEntryPopup", () => {
     "shows only compact content and actions (withEntry=%s)",
     async (withEntry) => {
       const screen = await renderCompact(withEntry ? [existingShift] : []);
-      expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: withEntry ? 118 : 58 });
-      expect(screen.queryByRole("header")).toBeNull();
-      expect(screen.queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
+      expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({
+        height: withEntry ? 162 : 102,
+      });
+      expect(screen.getByRole("header")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Schnellauswahl schließen" })).toBeEnabled();
       expect(screen.getByRole("button", { name: "Dienst hinzufügen" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeTruthy();
       expect(screen.getByTestId("quick-entry-popup")).toHaveProp("accessibilityActions", [
@@ -445,7 +575,6 @@ describe("QuickEntryPopup", () => {
             date="2026-08-04"
             entries={[existingShift]}
             onClose={jest.fn()}
-            onOpenDetails={jest.fn()}
             onOpenEntry={jest.fn()}
             onOpenShiftPicker={jest.fn()}
             onSelectAction={jest.fn()}
@@ -490,7 +619,6 @@ describe("QuickEntryPopup", () => {
           entries={[existingShift]}
           animateEntry={false}
           onClose={jest.fn()}
-          onOpenDetails={jest.fn()}
           onOpenEntry={jest.fn()}
           onOpenShiftPicker={jest.fn()}
           onSelectAction={jest.fn()}
@@ -525,7 +653,6 @@ describe("QuickEntryPopup", () => {
           date="2026-08-04"
           entries={[existingShift]}
           onClose={jest.fn()}
-          onOpenDetails={jest.fn()}
           onOpenEntry={jest.fn()}
           onOpenShiftPicker={onOpenShiftPicker}
           onSelectAction={onSelectAction}
@@ -567,7 +694,6 @@ describe("QuickEntryPopup", () => {
           entries={[existingShift]}
           animateEntry={false}
           onClose={jest.fn()}
-          onOpenDetails={jest.fn()}
           onOpenEntry={jest.fn()}
           onOpenShiftPicker={jest.fn()}
           onSelectAction={jest.fn()}
@@ -596,7 +722,6 @@ describe("QuickEntryPopup", () => {
           date="2026-08-04"
           entries={[]}
           onClose={onClose}
-          onOpenDetails={jest.fn()}
           onOpenEntry={jest.fn()}
           onOpenShiftPicker={jest.fn()}
           onSelectAction={jest.fn()}
@@ -628,7 +753,6 @@ describe("QuickEntryPopup", () => {
       date: "2026-08-04",
       entries: [existingShift],
       onClose: jest.fn(),
-      onOpenDetails: jest.fn(),
       onOpenEntry: jest.fn(),
       onOpenShiftPicker: jest.fn(),
       onSelectAction: jest.fn(),

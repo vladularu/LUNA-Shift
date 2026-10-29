@@ -26,6 +26,29 @@ const shift: ShiftEntry = {
   deletedAt: null,
 };
 describe("prototype real shift content", () => {
+  it("uses a compact separate dot and the full appointment title for width-based truncation", async () => {
+    const screen = await render(
+      <PrototypeEntryContent
+        entry={{
+          ...shift,
+          kind: "APPOINTMENT",
+          allDay: false,
+          title: "Ohne Titel",
+          recurrence: null,
+        }}
+        display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+        timeZone="Europe/Berlin"
+      />,
+    );
+    const title = screen.getByText("Ohne Titel");
+    expect(title).toHaveProp("numberOfLines", 1);
+    expect(title).toHaveProp("ellipsizeMode", "tail");
+    expect(title).toHaveStyle({ flex: 1, minWidth: 0, fontSize: 12, fontWeight: "500" });
+    expect(title.parent).toHaveStyle({ height: 17 });
+    expect(title.parent?.children).toHaveLength(2);
+    expect(screen.queryByText("07:00")).toBeNull();
+  });
+
   it.each([
     ["#59CA50", false],
     ["#FFA338", false],

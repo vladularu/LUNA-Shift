@@ -125,6 +125,13 @@ describe("DayEditorScreen", () => {
             }),
         );
       const screen = await render(deletionScreen());
+      if (mode === "APPOINTMENT") {
+        await fireEvent(
+          screen.getByRole("switch", { name: "Termin ganztägig" }),
+          "valueChange",
+          true,
+        );
+      }
       const action = { type: "GO_BACK" };
       const preventDefault = jest.fn();
       await act(() => {
@@ -238,6 +245,65 @@ describe("DayEditorScreen", () => {
       </SafeAreaProvider>
     );
   }
+
+  it("closes a new untouched appointment without creating an entry or intercepting native dismissal", async () => {
+    mockRouteParams = { date: "2026-08-23", mode: "APPOINTMENT" };
+    const screen = await render(deletionScreen());
+
+    expect(mockBeforeRemoveListener).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockUpsertAppointment).not.toHaveBeenCalled();
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+    expect(mockRemoveEntry).not.toHaveBeenCalled();
+  });
+
+  it("does not create an appointment after visiting options and reverting edits", async () => {
+    mockRouteParams = { date: "2026-08-23", mode: "APPOINTMENT" };
+    const screen = await render(deletionScreen());
+
+    await fireEvent.press(screen.getByRole("button", { name: "Wiederholen: Niemals" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Wiederholung schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Erinnerung schließen" }));
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
+    expect(mockBeforeRemoveListener).not.toBeNull();
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Ohne Titel");
+    await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", true);
+    await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", false);
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
+    await fireEvent.changeText(screen.getByLabelText("Notizen"), "Notiz");
+    await fireEvent.changeText(screen.getByLabelText("Notizen"), "");
+
+    expect(mockBeforeRemoveListener).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(mockUpsertAppointment).not.toHaveBeenCalled();
+  });
+
+  it("saves a new untitled appointment exactly once when only its settings change", async () => {
+    mockRouteParams = { date: "2026-08-23", mode: "APPOINTMENT" };
+    const screen = await render(deletionScreen());
+    await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", true);
+    const action = { type: "GO_BACK" };
+    await act(async () => {
+      mockBeforeRemoveListener?.({ preventDefault: jest.fn(), data: { action } });
+    });
+
+    expect(mockUpsertAppointment).toHaveBeenCalledTimes(1);
+    expect(mockUpsertAppointment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date: "2026-08-23",
+        title: "Ohne Titel",
+        allDay: true,
+        startTime: null,
+        endTime: null,
+      }),
+    );
+    expect(mockNavigationDispatch).toHaveBeenCalledTimes(1);
+    expect(mockNavigationDispatch).toHaveBeenCalledWith(action);
+  });
 
   it.each(["SHIFT", "APPOINTMENT"] as const)(
     "lets unchanged saved %s entries dismiss natively and protects edits until saved",
