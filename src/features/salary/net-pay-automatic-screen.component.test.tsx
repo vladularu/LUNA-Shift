@@ -1054,10 +1054,10 @@ describe("integrated salary-to-net workflow", () => {
       date: "2026-12-09",
       title: "Bereitschaftsdienst",
       type: "DAY",
-      startTime: "07:00",
-      endTime: "14:30",
-      breakMinutes: 0,
-      specialDuty: newSpecialDuty("STANDBY", "07:00", "14:30", "Europe/Berlin"),
+      startTime: "08:00",
+      endTime: "16:00",
+      breakMinutes: 30,
+      specialDuty: newSpecialDuty("STANDBY", "08:00", "16:00", "Europe/Berlin"),
     });
     mockEntries = [onCall, standby];
     const screen = await render(<SalaryScreen />);
@@ -1085,7 +1085,7 @@ describe("integrated salary-to-net workflow", () => {
         specialDuty: {
           ...standby.specialDuty!,
           version: 2,
-          standbyLevel: "I",
+          standbyLevel: "II",
           settlement: "PAY",
           standbyAgreement: { ...newStandbyAgreement("TVOED_K"), rule: "STANDARD" },
         },
@@ -1094,7 +1094,8 @@ describe("integrated salary-to-net workflow", () => {
     await screen.rerender(<SalaryScreen />);
     expect(screen.queryByText("Gehaltsprognose noch offen")).toBeNull();
     expect(screen.queryByText("Betrag noch offen")).toBeNull();
-    expect(screen.getByText(/Auszahlung Bereitschaftsdienst: 104,81/)).toBeTruthy();
+    expect(screen.getByText(/Auszahlung Bereitschaftsdienst: 131,01/)).toBeTruthy();
+    expect(screen.getByText(/Geleistet: 450 Min.*Vergütung: 337,5 Min/)).toBeTruthy();
     expect(screen.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
   });
   it("preserves manual gross salary and its separate component access", async () => {

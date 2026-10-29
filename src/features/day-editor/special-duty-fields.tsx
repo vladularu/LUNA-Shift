@@ -134,7 +134,7 @@ export function SpecialDutyFields({
             {value.kind === "ON_CALL"
               ? "Du bist erreichbar und arbeitest bei Bedarf. Nur tatsächliche Einsätze und Wege zählen hier zur erfassten Arbeitszeit. Bei stark eingeschränkter Freizeit kann die rechtliche Einordnung abweichen."
               : value.kind === "STANDBY"
-                ? "Du bleibst vor Ort und arbeitest bei Bedarf. Der ganze Zeitraum zählt zur Arbeitsschutzzeit. Zeitgutschrift und Vergütung sind davon getrennt."
+                ? "Du bleibst vor Ort und arbeitest bei Bedarf. Auch Ruhephasen mit Bereitschaftspflicht zählen zur Arbeitsschutzzeit. Nur echte Pausen ohne Bereitschaftspflicht werden von Dienstzeit und Vergütung abgezogen. Zeitgutschrift und Vergütung werden getrennt berechnet."
                 : "Die Dienstteile gehören zusammen. Die Unterbrechung zählt nicht zur Arbeitszeit. Pausen innerhalb jedes Teils erfasst du getrennt."}
           </Text>
           <Choice

@@ -39,8 +39,6 @@ export function calculateStandbyPay(
   const family = dutyTariffFamily(work);
   if (!family || family !== agreement.tariff)
     return unknown("Die gespeicherte Bereitschaftsregelung passt nicht zum Tarif an diesem Tag.");
-  if (shift.breakMinutes)
-    return unknown("Für Bereitschaftsdienste mit Pausen muss deren Zuordnung noch geprüft werden.");
   if (agreement.rule === "CARE" && family !== "TVOED_K" && family !== "TVOED_B")
     return unknown("Diese Sonderbewertung gehört nicht zum gewählten Tarif.");
   const start = dutyInstant(shift.date, clockMinute(shift.startTime!), duty.timeZone);
@@ -50,10 +48,23 @@ export function calculateStandbyPay(
     duty.timeZone,
   );
   const lastDate = end.subtract({ milliseconds: 1 }).toPlainDate().toString();
-  if (actualMinutes <= 0 || actualMinutes > 1440 || shift.date.slice(0, 7) !== lastDate.slice(0, 7))
+  const elapsedMinutes = Number(end.epochMilliseconds - start.epochMilliseconds) / 60000;
+  if (
+    elapsedMinutes <= 0 ||
+    elapsedMinutes > 1440 ||
+    shift.date.slice(0, 7) !== lastDate.slice(0, 7)
+  )
     return unknown(
       "Bereitschaft über 24 Stunden oder eine Monatsgrenze: die Aufteilung ist noch offen.",
     );
+  if (
+    !Number.isSafeInteger(shift.breakMinutes) ||
+    shift.breakMinutes < 0 ||
+    !Number.isFinite(actualMinutes) ||
+    actualMinutes <= 0 ||
+    actualMinutes > elapsedMinutes
+  )
+    return unknown("Prüfe die Dauer und Pausenangabe deines Bereitschaftsdienstes.");
   if (shift.date < DUTY_RULE_SOURCES[family].version || lastDate > "2026-12-31")
     return unknown("Für diesen Zeitraum fehlen geprüfte Bereitschaftsregeln.");
   let factor: number | null;
@@ -127,15 +138,38 @@ export function calculateStandbyPay(
       (item) => item.date,
     ),
   );
+  const periodTypes = new Set<string>();
   for (let i = 1; i < points.length; i++) {
     const local = Temporal.Instant.fromEpochMilliseconds(points[i - 1]).toZonedDateTimeISO(
       duty.timeZone,
     );
     const minutes = (points[i] - points[i - 1]) / 60000;
-    if (local.hour < 6 || local.hour >= (family === "TVUK" ? 20 : 21)) night += minutes;
-    if (local.hour < 4) deepNight += minutes;
-    if (holidays.has(local.toPlainDate().toString())) holiday += minutes;
-    if (local.dayOfWeek === 7) sunday += minutes;
+    // Only boundaries that change this tariff's remuneration need a break position.
+    const inNight =
+      (family === "TVUK" || family === "TVOED_K" || family === "TVOED_B") &&
+      (local.hour < 6 || local.hour >= (family === "TVUK" ? 20 : 21));
+    const inDeepNight = family === "TVUK" && local.hour < 4;
+    const onHoliday =
+      (family === "TVOED_K" || family === "TVL_43" || family === "TVH_43") &&
+      holidays.has(local.toPlainDate().toString());
+    const onSunday = family === "TVUK" && local.dayOfWeek === 7;
+    periodTypes.add([inNight, inDeepNight, onHoliday, onSunday].join(","));
+    if (inNight) night += minutes;
+    if (inDeepNight) deepNight += minutes;
+    if (onHoliday) holiday += minutes;
+    if (onSunday) sunday += minutes;
+  }
+  if (shift.breakMinutes) {
+    if (periodTypes.size !== 1)
+      return unknown(
+        "Für die Zuordnung zu Nacht-, Sonn- oder Feiertagszeiten fehlt die genaue Lage der Pause. Die Abrechnung bleibt noch offen.",
+      );
+    // Each relevant period covers the entire service or none of it. Deduct the
+    // declared duty-free break once, without assuming where it was taken.
+    if (night) night -= shift.breakMinutes;
+    if (deepNight) deepNight -= shift.breakMinutes;
+    if (holiday) holiday -= shift.breakMinutes;
+    if (sunday) sunday -= shift.breakMinutes;
   }
   const weightedMinutes =
     actualMinutes * factor + (family === "TVL_43" || family === "TVH_43" ? holiday * 0.25 : 0);

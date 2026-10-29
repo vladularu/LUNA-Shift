@@ -65,6 +65,266 @@ function shift(
 
 describe("dated standby remuneration", () => {
   it.each([
+    ["TVöD-P", profiles.p, "TVOED_K", {}, 13101],
+    ["TVöD-E", profiles.e, "TVOED_K", {}, 13916],
+    ["TV-L", profiles.l, "TVL_43", {}, 10523],
+    ["TV-H", profiles.h, "TVH_43", {}, 10733],
+    ["TV-UK", profiles.uk, "TVUK", { hourlyCents: 2000 }, 13125],
+    ["TVAöD", profiles.training, "TVOED_K", { hourlyCents: 1200 }, 6750],
+    ["TVA-L", profiles.tval, "TVL_43", { hourlyCents: 1250 }, 4688],
+  ] as const)(
+    "deducts a thirty-minute duty-free break before valuation, gross and net for %s",
+    (_name, profile, family, agreement, expected) => {
+      const entry = shift(family, agreement, { breakMinutes: 30 });
+      const before = JSON.stringify(entry);
+      const line = calculateSpecialDutyPay("2026-07", [entry], profile, resolver)[0];
+      expect(line.complete).toBe(true);
+      expect(line.baseAmountCents).toBe(expected);
+      expect(line.standbyPay?.actualMinutes).toBe(450);
+      const pay = calculateMonthlyPayEstimate("2026-07", [entry], profile, null);
+      const without = calculateMonthlyPayEstimate("2026-07", [], profile, null);
+      expect(pay.available).toBe(true);
+      expect(Math.round((pay.estimatedGrossAmount! - without.estimatedGrossAmount!) * 100)).toBe(
+        expected,
+      );
+      const net = calculateAutomaticNetPayForecast(
+        { month: "2026-07", profile, settings: automatedSettings(), shifts: [entry], pay },
+        resolver,
+      );
+      expect(net.result.status).toBe("available");
+      expect(JSON.stringify(entry)).toBe(before);
+    },
+  );
+
+  it("calculates the December screenshot using net duty time before level II valuation", () => {
+    expect(
+      calculateStandbyPay(
+        shift(
+          "TVOED_K",
+          {},
+          {
+            date: "2026-12-09",
+            startTime: "08:00",
+            endTime: "16:00",
+            breakMinutes: 30,
+          },
+        ),
+        profiles.p,
+        resolver,
+      ),
+    ).toMatchObject({
+      actualMinutes: 450,
+      weightedMinutes: 337.5,
+      cashAmountCents: 13101,
+      notes: [],
+    });
+  });
+
+  it("deducts a break from a wholly nocturnal period without inventing its position", () => {
+    const entry = shift("TVOED_K", {}, { startTime: "22:00", endTime: "06:00", breakMinutes: 30 });
+    expect(
+      calculateStandbyPay(
+        { ...entry, specialDuty: { ...entry.specialDuty!, endDay: 1 } },
+        profiles.p,
+        resolver,
+      ),
+    ).toMatchObject({
+      actualMinutes: 450,
+      weightedMinutes: 337.5,
+      baseAmountCents: 13101,
+      nightPremiumCents: 2620,
+    });
+  });
+
+  it.each([
+    ["2026-03-28", 390, 292.5, 11047, 2209],
+    ["2026-10-24", 510, 382.5, 14847, 2969],
+  ] as const)(
+    "uses elapsed minutes and deducts the break once through clock change %s",
+    (date, actualMinutes, weightedMinutes, baseAmountCents, nightPremiumCents) => {
+      const entry = shift(
+        "TVOED_K",
+        {},
+        { date, startTime: "22:00", endTime: "06:00", breakMinutes: 30 },
+      );
+      expect(
+        calculateStandbyPay(
+          { ...entry, specialDuty: { ...entry.specialDuty!, endDay: 1 } },
+          profiles.p,
+          resolver,
+        ),
+      ).toMatchObject({
+        actualMinutes,
+        weightedMinutes,
+        baseAmountCents,
+        nightPremiumCents,
+      });
+    },
+  );
+
+  it("reduces TV-UK deep-night pay and mandatory health leave by the same duty-free break", () => {
+    const entry = shift(
+      "TVUK",
+      { hourlyCents: 2000 },
+      { startTime: "02:00", endTime: "04:00", breakMinutes: 30 },
+    );
+    const pay = calculateStandbyPay(entry, profiles.uk, resolver);
+    expect(pay).toMatchObject({
+      actualMinutes: 90,
+      baseAmountCents: 2100,
+      overtimePremiumCents: 525,
+      nightPremiumCents: 735,
+      cashAmountCents: 3360,
+    });
+    expect(pay.weightedMinutes).toBeCloseTo(63, 8);
+    expect(pay.mandatoryRestMinutes).toBeCloseTo(3.15);
+    const off = calculateStandbyPay(
+      {
+        ...entry,
+        specialDuty: {
+          ...entry.specialDuty!,
+          settlement: "TIME_OFF",
+          standbyAgreement: { ...entry.specialDuty!.standbyAgreement!, timeOffMode: "WEIGHTED" },
+        },
+      },
+      profiles.uk,
+      resolver,
+    );
+    expect(off.cashAmountCents).toBe(315);
+    expect(off.timeCreditMinutes).toBeCloseTo(94.5, 8);
+    expect(off.mandatoryRestMinutes).toBeCloseTo(3.15);
+  });
+
+  it("deducts a break from Sunday time in TV-UK without subtracting it twice from leave", () => {
+    const entry = shift(
+      "TVUK",
+      { hourlyCents: 2000, timeOffMode: "WEIGHTED" },
+      { date: "2026-07-12", breakMinutes: 30 },
+    );
+    expect(calculateStandbyPay(entry, profiles.uk, resolver)).toMatchObject({
+      weightedMinutes: 315,
+      sundayPremiumCents: 4200,
+      cashAmountCents: 17325,
+    });
+    expect(
+      calculateStandbyPay(
+        { ...entry, specialDuty: { ...entry.specialDuty!, settlement: "TIME_OFF" } },
+        profiles.uk,
+        resolver,
+      ),
+    ).toMatchObject({ cashAmountCents: 0, timeCreditMinutes: 519.75, notes: [] });
+  });
+
+  it.each([-30, 0.5, 480])(
+    "does not calculate pay for invalid break duration %s",
+    (breakMinutes) => {
+      expect(
+        calculateStandbyPay(shift("TVOED_K", {}, { breakMinutes }), profiles.p, resolver)
+          .cashAmountCents,
+      ).toBeNull();
+    },
+  );
+
+  it("deducts breaks from holiday remuneration and factorized leave, without posting a balance", () => {
+    const entry = shift(
+      "TVOED_K",
+      { timeOffMode: "FACTORIZED" },
+      { date: "2026-12-25", breakMinutes: 30 },
+    );
+    expect(calculateStandbyPay(entry, profiles.p, resolver)).toMatchObject({
+      actualMinutes: 450,
+      weightedMinutes: 337.5,
+      baseAmountCents: 13101,
+      holidayPremiumCents: 3275,
+      cashAmountCents: 16376,
+    });
+    expect(
+      calculateStandbyPay(
+        { ...entry, specialDuty: { ...entry.specialDuty!, settlement: "TIME_OFF" } },
+        profiles.p,
+        resolver,
+      ),
+    ).toMatchObject({
+      timeCreditMinutes: 457.5,
+      cashAmountCents: 0,
+      notes: [],
+    });
+  });
+
+  it("keeps an unspecified break open when relevant premium periods differ", () => {
+    for (const entry of [
+      shift("TVOED_K", {}, { startTime: "20:00", endTime: "22:00", breakMinutes: 30 }),
+      {
+        ...shift(
+          "TVUK",
+          { hourlyCents: 2000 },
+          { startTime: "02:00", endTime: "05:00", breakMinutes: 30 },
+        ),
+      },
+    ]) {
+      const result = calculateStandbyPay(
+        entry,
+        entry.specialDuty!.standbyAgreement!.tariff === "TVUK" ? profiles.uk : profiles.p,
+        resolver,
+      );
+      expect(result.cashAmountCents).toBeNull();
+      expect(result.notes.join(" ")).toMatch(/Lage der Pause/);
+    }
+    const holiday = shift(
+      "TVL_43",
+      {},
+      { date: "2026-04-30", startTime: "22:00", endTime: "06:00", breakMinutes: 30 },
+    );
+    expect(
+      calculateStandbyPay(
+        { ...holiday, specialDuty: { ...holiday.specialDuty!, endDay: 1 } },
+        profiles.l,
+        resolver,
+      ).cashAmountCents,
+    ).toBeNull();
+  });
+
+  it("ignores midnight and night boundaries that do not change a tariff's remuneration", () => {
+    const entry = shift("TVL_43", {}, { startTime: "22:00", endTime: "06:00", breakMinutes: 30 });
+    expect(
+      calculateStandbyPay(
+        { ...entry, specialDuty: { ...entry.specialDuty!, endDay: 1 } },
+        profiles.l,
+        resolver,
+      ),
+    ).toMatchObject({
+      actualMinutes: 450,
+      weightedMinutes: 225,
+      cashAmountCents: 10523,
+      notes: [],
+    });
+    const b = { ...profiles.p, tariff: { ...profiles.p.tariff!, sector: "BT_B" as const } };
+    expect(
+      calculateStandbyPay(shift("TVOED_B", {}, { breakMinutes: 30 }), b, resolver),
+    ).toMatchObject({
+      actualMinutes: 450,
+      weightedMinutes: 225,
+      cashAmountCents: 10058,
+      notes: [],
+    });
+  });
+
+  it("keeps an elapsed twenty-five-hour service unsupported even when a break brings net time below a day", () => {
+    const entry = shift(
+      "TVOED_K",
+      {},
+      { date: "2026-10-25", startTime: "00:00", endTime: "00:00", breakMinutes: 90 },
+    );
+    const result = calculateStandbyPay(
+      { ...entry, specialDuty: { ...entry.specialDuty!, endDay: 1 } },
+      profiles.p,
+      resolver,
+    );
+    expect(result.actualMinutes).toBe(1410);
+    expect(result.cashAmountCents).toBeNull();
+    expect(result.notes.join(" ")).toMatch(/24 Stunden/);
+  });
+  it.each([
     ["TVöD-P", profiles.p, "TVOED_K", {}, 13974],
     ["TVöD-E", profiles.e, "TVOED_K", {}, 14844],
     ["TV-L", profiles.l, "TVL_43", {}, 11224],
@@ -272,10 +532,9 @@ describe("dated standby remuneration", () => {
     });
   });
 
-  it("keeps unconfirmed facts, pauses, conflicts and unsupported intervals open", () => {
+  it("keeps unconfirmed facts, conflicts and unsupported intervals open", () => {
     for (const entry of [
       shift("TVOED_K", { rule: "UNKNOWN" }),
-      shift("TVOED_K", {}, { breakMinutes: 30 }),
       shift("TVOED_K", {}, { date: "2027-01-05" }),
     ])
       expect(calculateStandbyPay(entry, profiles.p, resolver).cashAmountCents).toBeNull();
