@@ -160,7 +160,7 @@ export function specialDutyOpenItems(
     result.add(
       shift.specialDuty.kind === "ON_CALL"
         ? "Rufbereitschaft: tarifliche Zeitgutschrift noch offen. Die Abrechnung findest du unter Gehalt."
-        : "Bereitschaftsdienst: tarifliche Vergütung und Zeitgutschrift noch offen.",
+        : "Bereitschaftsdienst: Zeitgutschrift im Zeitkonto noch offen. Die Abrechnung findest du unter Gehalt.",
     );
   }
   return [...result];

@@ -9,6 +9,7 @@ import { DUTY_RULE_SOURCES, dutyTariffFamily, onCallBaseHours } from "./special-
 import { specialDutyHourlyCents } from "./special-duty-hourly-rate";
 import { getPublicHolidays } from "./holidays";
 import { calculateDutyCalloutPay } from "./special-duty-callout-pay";
+import { calculateStandbyPay } from "./standby-pay";
 
 function calculateDutyBase(
   shift: ShiftEntry,
@@ -23,6 +24,7 @@ function calculateDutyBase(
   let durationMinutes = 0;
   let source: string | null = null;
   let calloutPay: SpecialDutyPayLine["calloutPay"];
+  let standbyPay: SpecialDutyPayLine["standbyPay"];
   try {
     const work = employmentProfileAt(profile, shift.date);
     const family = dutyTariffFamily(work);
@@ -42,9 +44,11 @@ function calculateDutyBase(
       notes.push("Für diesen Zeitraum fehlen geprüfte Bereitschaftsregeln.");
     else if (duty.kind === "STANDBY") {
       source = DUTY_RULE_SOURCES[family].standby;
-      notes.push(
-        "Bereitschaftsdienst: Tabellenzuordnung, Bewertung und Abgeltung sind noch offen.",
-      );
+      standbyPay = calculateStandbyPay(shift, profile, resolver);
+      baseAmountCents = standbyPay.cashAmountCents;
+      hourlyCents = standbyPay.hourlyCents;
+      paidHours = standbyPay.weightedMinutes === null ? null : standbyPay.weightedMinutes / 60;
+      notes.push(...standbyPay.notes);
     } else if (durationMinutes > 1440 || duty.endDay > 1) {
       notes.push("Mehrtägige Rufbereitschaft: die Aufteilung der Pauschalen ist noch offen.");
     } else if (
@@ -114,6 +118,7 @@ function calculateDutyBase(
     hourlyCents,
     baseAmountCents,
     ...(calloutPay ? { calloutPay } : {}),
+    ...(standbyPay ? { standbyPay } : {}),
     complete: notes.length === 0 && baseAmountCents !== null,
     notes,
   };

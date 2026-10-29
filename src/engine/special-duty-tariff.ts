@@ -40,12 +40,12 @@ export const DUTY_RULE_SOURCES = {
   },
   TVL_43: {
     version: "2026-02-14",
-    standby: "§ 43 Nr. 5 TV-L / Anlage E",
+    standby: "§ 42 Nr. 6 / § 43 Nr. 5 TV-L / Anlage E",
     onCall: "§ 8 Abs. 5 TV-L",
   },
   TVH_43: {
     version: "2026-03-27",
-    standby: "§ 43 Nr. 5 TV-H / Anlage D",
+    standby: "§ 42 Nr. 6 / § 43 Nr. 5 TV-H / Anlage D",
     onCall: "§ 8 Abs. 5 TV-H",
   },
   TVUK: { version: "2025-01-01", standby: "§ 12 Abs. 1 TV-UK", onCall: "§ 12 Abs. 2 TV-UK" },
