@@ -4,10 +4,12 @@ const { createRequire } = require("node:module");
 const { join, relative, resolve } = require("node:path");
 
 const repoRoot = resolve(__dirname, "..");
-const manifestHash = "52561d5e0aaca62693b43b13ba693763f9281e9b2bcbe2bc7abfaf8eb76f6dae";
+const proofs = new WeakMap();
+const DECODER_ADVISORY_URL = "https://github.com/advisories/GHSA-qr28-fpjm-wq7f";
+const manifestHash = "a8f1822a0bc96ca0be877f93fd9804336a20be81048285d9711708e122635a34";
 const archiveIntegrity =
   "sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==";
-const upstreamCommit = "a12fabaa28303cc8b5b07e93d128f4fc09fc31e5";
+const upstreamCommit = "fad01d65b93bd3f2f0dc32dfd8d57a38b57bc608";
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 function manifest() {
@@ -17,6 +19,7 @@ function manifest() {
   if (
     data.commit !== upstreamCommit ||
     hash(data.originalSource) !== data.originalSha256 ||
+    hash(data.previousPatchedSource) !== data.previousPatchedSha256 ||
     hash(data.patchedSource) !== data.patchedSha256
   )
     throw new Error("DECODER_MANIFEST_IDENTITY");
@@ -72,6 +75,20 @@ function verifyDecodeUriComponentHardening(root = repoRoot) {
   const data = manifest();
   const file = installedTarget(root);
   if (hash(readFileSync(file)) !== data.patchedSha256) throw new Error("DECODER_HARDENING_MISSING");
+  const proof = Object.freeze({ nodes: Object.freeze(["node_modules/decode-uri-component"]) });
+  proofs.set(proof, realpathSync(root));
+  return proof;
+}
+
+function isVerifiedDecodeUriComponentHardening(proof, root = repoRoot) {
+  if (typeof proof !== "object" || proof === null || proofs.get(proof) !== realpathSync(root))
+    return false;
+  try {
+    verifyDecodeUriComponentHardening(root);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function applyDecodeUriComponentHardening(root = repoRoot) {
@@ -79,13 +96,19 @@ function applyDecodeUriComponentHardening(root = repoRoot) {
   const file = installedTarget(root);
   const digest = hash(readFileSync(file));
   if (digest !== data.patchedSha256) {
-    if (digest !== data.originalSha256) throw new Error("DECODER_UNEXPECTED_SOURCE");
+    if (digest !== data.originalSha256 && digest !== data.previousPatchedSha256)
+      throw new Error("DECODER_UNEXPECTED_SOURCE");
     writeFileSync(file, data.patchedSource, "utf8");
   }
   verifyDecodeUriComponentHardening(root);
 }
 
-module.exports = { applyDecodeUriComponentHardening, verifyDecodeUriComponentHardening };
+module.exports = {
+  DECODER_ADVISORY_URL,
+  applyDecodeUriComponentHardening,
+  verifyDecodeUriComponentHardening,
+  isVerifiedDecodeUriComponentHardening,
+};
 
 if (require.main === module) {
   try {
@@ -93,7 +116,7 @@ if (require.main === module) {
     if (command === "apply") applyDecodeUriComponentHardening();
     else if (command === "verify") verifyDecodeUriComponentHardening();
     else throw new Error("DECODER_COMMAND");
-    console.log("decode-uri-component: verified CVE-2026-45822 upstream decoder backport.");
+    console.log("decode-uri-component: verified CVE-2026-45822 and CVE-2026-118664 backports.");
     // Keep the established install/verify entrypoint stable for SDK 57 runtimes.
     // Imported decoder helpers stay independent; only this CLI also checks Zod.
     const result = require("node:child_process").spawnSync(
