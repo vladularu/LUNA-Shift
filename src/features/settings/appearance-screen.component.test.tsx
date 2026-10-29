@@ -148,7 +148,7 @@ describe("appearance controls", () => {
     expect(preferences.setTheme).not.toHaveBeenCalled();
   });
 
-  it("offers continuous opacity instead of the three preset buttons", async () => {
+  it("offers held ten-percent adjustments instead of the three preset buttons", async () => {
     const screen = await render(pictureScreen());
     expect(screen.queryByRole("radio", { name: "Mittel" })).toBeNull();
     const slider = screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" });
@@ -159,7 +159,15 @@ describe("appearance controls", () => {
       text: "25 Prozent",
     });
     await fireEvent(slider, "accessibilityAction", { nativeEvent: { actionName: "increment" } });
-    expect(setStrength).toHaveBeenCalledWith(26);
+    expect(setStrength).toHaveBeenCalledWith(30);
+    expect(screen.queryByText("0 %")).toBeNull();
+    expect(screen.queryByText("100 %")).toBeNull();
+    expect(
+      screen.getByTestId("calendar-image-opacity-value", { includeHiddenElements: true }),
+    ).toHaveTextContent("25 %");
+    expect(
+      screen.getByTestId("calendar-image-opacity-value", { includeHiddenElements: true }),
+    ).toHaveStyle({ textAlign: "center" });
   });
   it("keeps an adjustable 44-point slider when text is large", async () => {
     jest

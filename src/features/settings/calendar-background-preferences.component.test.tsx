@@ -1,6 +1,8 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Pressable, Text, View } from "react-native";
+import type { PanGesture } from "react-native-gesture-handler";
+import { getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import {
   CalendarBackgroundProvider,
   useCalendarBackground,
@@ -36,10 +38,13 @@ jest.mock("./calendar-background-storage", () => ({
     db: unknown,
     uri: string | null,
     removed: string | null,
-    reset: boolean,
+    strength: CalendarImageStrength | null,
   ) => {
     await mockSave(db, uri);
-    if (reset) await mockSaveStrength(db, "medium");
+    if (strength !== null) {
+      await mockSaveStrength(db, strength);
+      mockLoadStrength.mockResolvedValue(strength);
+    }
     mockLoad.mockResolvedValue(uri);
     mockLoadRemoved.mockResolvedValue(removed);
   },
@@ -88,11 +93,21 @@ async function dragOpacity(
   release = true,
 ) {
   const slider = screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" });
-  await fireEvent(slider, "layout", { nativeEvent: { layout: { width: 124 } } });
-  await fireEvent(slider, "responderGrant", {
-    nativeEvent: { pageX: 100, locationX: value + 12 },
+  const current = slider.props.accessibilityValue.now;
+  await fireEvent(slider, "layout", { nativeEvent: { layout: { width: 140 } } });
+  await act(async () => {
+    const gesture = getByGestureTestId("calendar-image-opacity-pan") as PanGesture;
+    gesture.handlers.onStart?.({ translationX: 0 } as never);
+    gesture.handlers.onUpdate?.({ translationX: value - current } as never);
   });
-  if (release) await fireEvent(slider, "responderRelease");
+  if (release) await finishOpacity();
+}
+async function finishOpacity(success = true) {
+  await act(async () => {
+    const gesture = getByGestureTestId("calendar-image-opacity-pan") as PanGesture;
+    gesture.handlers.onEnd?.({} as never, success);
+    gesture.handlers.onFinalize?.({} as never, success);
+  });
 }
 function expectOpacity(screen: Awaited<ReturnType<typeof open>>, value: number) {
   expect(screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" })).toHaveProp(
@@ -127,14 +142,14 @@ describe("local calendar background", () => {
       mockLoadStrength.mockResolvedValue(strength);
     });
     const first = await open();
-    await dragOpacity(first, 35);
-    await waitFor(() => expectOpacity(first, 35));
-    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 35);
+    await dragOpacity(first, 30);
+    await waitFor(() => expectOpacity(first, 30));
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 30);
     expect(mockSave).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
     await first.unmount();
     const second = await open();
-    expectOpacity(second, 35);
+    expectOpacity(second, 30);
   });
   it("keeps the previous strength and photo when saving strength fails", async () => {
     mockSaveStrength.mockRejectedValue(new Error("disk full"));
@@ -166,14 +181,6 @@ describe("local calendar background", () => {
   it("does not write again for the selected strength", async () => {
     const screen = await open();
     await dragOpacity(screen, 25);
-    expect(mockSaveStrength).not.toHaveBeenCalled();
-  });
-  it("retains strength when replacing the image", async () => {
-    mockLoadStrength.mockResolvedValue("strong");
-    const screen = await open();
-    await fireEvent.press(screen.getByRole("button", { name: "choose" }));
-    await waitFor(() => expect(screen.getByTestId("uri")).toHaveTextContent("file:///new.jpg"));
-    expectOpacity(screen, 40);
     expect(mockSaveStrength).not.toHaveBeenCalled();
   });
   it("restores the saved image after remount", async () => {
@@ -291,27 +298,29 @@ describe("local calendar background", () => {
   });
   it("previews continuous dragging without persisting or changing the widget value until release", async () => {
     const screen = await open();
-    await dragOpacity(screen, 35, false);
-    expectOpacity(screen, 35);
+    await dragOpacity(screen, 30, false);
+    expectOpacity(screen, 30);
     expect(screen.getByTestId("strength")).toHaveTextContent("medium");
     expect(mockSaveStrength).not.toHaveBeenCalled();
     expect(
       screen.getByTestId("calendar-custom-background-overlay", { includeHiddenElements: true }),
-    ).toHaveStyle({ opacity: 0.65 });
-    await fireEvent(screen.getByRole("adjustable"), "responderMove", {
-      nativeEvent: { pageX: 120 },
+    ).toHaveStyle({ opacity: 0.7 });
+    await act(async () => {
+      (getByGestureTestId("calendar-image-opacity-pan") as PanGesture).handlers.onUpdate?.({
+        translationX: 25,
+      } as never);
     });
-    expectOpacity(screen, 55);
+    expectOpacity(screen, 50);
     expect(mockSaveStrength).not.toHaveBeenCalled();
-    await fireEvent(screen.getByRole("adjustable"), "responderRelease");
+    await finishOpacity();
     expect(mockSaveStrength).toHaveBeenCalledTimes(1);
-    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 55);
-    expect(screen.getByTestId("strength")).toHaveTextContent("55");
+    expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 50);
+    expect(screen.getByTestId("strength")).toHaveTextContent("50");
   });
   it("restores saved opacity when a drag is interrupted", async () => {
     const screen = await open();
-    await dragOpacity(screen, 75, false);
-    await fireEvent(screen.getByRole("adjustable"), "responderTerminate");
+    await dragOpacity(screen, 70, false);
+    await finishOpacity(false);
     expectOpacity(screen, 25);
     expect(mockSaveStrength).not.toHaveBeenCalled();
     expect(
@@ -319,10 +328,10 @@ describe("local calendar background", () => {
     ).toHaveStyle({ opacity: 0.75 });
   });
   it.each([
-    { start: 100, blocked: "increment", allowed: "decrement", next: 99 },
-    { start: 0, blocked: "decrement", allowed: "increment", next: 1 },
+    { start: 100, blocked: "increment", allowed: "decrement", next: 90 },
+    { start: 0, blocked: "decrement", allowed: "increment", next: 10 },
   ])(
-    "adjusts by one percent with VoiceOver at the $start-percent endpoint",
+    "adjusts by ten percent with VoiceOver at the $start-percent endpoint",
     async ({ start, blocked, allowed, next }) => {
       mockLoadStrength.mockResolvedValue(start);
       const screen = await open();
@@ -357,5 +366,39 @@ describe("local calendar background", () => {
     await dragOpacity(screen, touch);
     expectOpacity(screen, expected);
     expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, expected);
+  });
+  it.each([null, "file:///old.jpg"])(
+    "starts a newly chosen photo at 50 percent and retains it after remount (previous=%s)",
+    async (uri) => {
+      mockLoad.mockResolvedValue(uri);
+      mockLoadStrength.mockResolvedValue(70);
+      const first = await open();
+      await fireEvent.press(first.getByRole("button", { name: "choose" }));
+      await waitFor(() => expect(first.getByTestId("uri")).toHaveTextContent("file:///new.jpg"));
+      expectOpacity(first, 50);
+      expect(mockSaveStrength).toHaveBeenCalledWith(mockDb, 50);
+      await first.unmount();
+      const second = await open();
+      expectOpacity(second, 50);
+    },
+  );
+  it("keeps the old photo and opacity when storing the new 50-percent value fails", async () => {
+    mockLoadStrength.mockResolvedValue(70);
+    mockSaveStrength.mockRejectedValue(new Error("disk full"));
+    const screen = await open();
+    await fireEvent.press(screen.getByRole("button", { name: "choose" }));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("file:///new.jpg"));
+    expect(screen.getByTestId("uri")).toHaveTextContent("file:///old.jpg");
+    expectOpacity(screen, 70);
+    expect(mockDelete).not.toHaveBeenCalledWith("file:///old.jpg");
+  });
+  it("does not reset opacity to 50 when the photo picker is canceled", async () => {
+    mockLoadStrength.mockResolvedValue(70);
+    mockPick.mockResolvedValue({ canceled: true, assets: [] });
+    const screen = await open();
+    await fireEvent.press(screen.getByRole("button", { name: "choose" }));
+    await waitFor(() => expect(mockPick).toHaveBeenCalled());
+    expectOpacity(screen, 70);
+    expect(mockSaveStrength).not.toHaveBeenCalled();
   });
 });

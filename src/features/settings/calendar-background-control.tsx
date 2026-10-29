@@ -14,7 +14,6 @@ import {
   SurfaceCard,
 } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
-import { selectionFeedback } from "@/ui/haptics";
 
 export function CalendarBackgroundControl() {
   const background = useCalendarBackground();
@@ -83,7 +82,6 @@ export function CalendarBackgroundControl() {
                   disabled={disabled}
                   onPreview={(value) => background.setPreviewStrength?.(value)}
                   onCommit={(value) => {
-                    selectionFeedback();
                     void background.setStrength(value);
                   }}
                 />
