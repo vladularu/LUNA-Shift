@@ -38,7 +38,6 @@ import { QuickEntryDeleteConfirmation } from "./quick-entry-delete-confirmation"
 import { usePopupEntryDeletion } from "./use-popup-entry-deletion";
 
 const HOLIDAY_HEADER_HEIGHT = 28;
-const DATE_HEADER_HEIGHT = 44;
 const ENTRY_ROW_HEIGHT = 60;
 const ACTION_ROW_HEIGHT = 56;
 
@@ -120,7 +119,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   const palette = useInversePalette();
   const insets = useSafeAreaInsets();
   const { width, height, fontScale } = useWindowDimensions();
-  const dialogHeadingRef = useRef<View>(null);
+  const dialogFocusRef = useRef<View>(null);
   const layoutScale = Math.max(1, fontScale);
   const entryRowHeight = Math.ceil(ENTRY_ROW_HEIGHT * layoutScale);
   const actionRowHeight = Math.ceil(ACTION_ROW_HEIGHT * layoutScale);
@@ -140,7 +139,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
     if (deletion.busy) return;
     deletion.cancel();
     setSwipedEntry(null);
-    scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
+    scheduleAccessibilityFocus(findNodeHandle(dialogFocusRef.current));
   };
   useEffect(() => {
     setSwipedEntry(null);
@@ -178,9 +177,8 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
     popupRows.length * entryRowHeight,
     contentSize?.key === rowLayoutKey ? contentSize.height : 0,
   );
-  const dateHeaderHeight = Math.ceil(DATE_HEADER_HEIGHT * layoutScale);
   const holidayHeaderHeight = Math.ceil((holidayName ? HOLIDAY_HEADER_HEIGHT : 0) * layoutScale);
-  const headerHeight = dateHeaderHeight + holidayHeaderHeight;
+  const headerHeight = holidayHeaderHeight;
   const footerHeight = deletion.pending
     ? Math.max(actionRowHeight, confirmationHeight)
     : actionRowHeight;
@@ -219,7 +217,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
   });
 
   useEffect(() => {
-    if (active) scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
+    if (active) scheduleAccessibilityFocus(findNodeHandle(dialogFocusRef.current));
   }, [active]);
 
   const dismiss = () => {
@@ -319,52 +317,6 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
           }}
           testID="quick-entry-clipped-content"
         >
-          <View
-            testID="quick-entry-header"
-            accessibilityElementsHidden={deletion.pending !== null}
-            importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
-            style={{
-              height: dateHeaderHeight,
-              flexShrink: 0,
-              flexDirection: "row",
-              alignItems: "center",
-              paddingLeft: 14,
-            }}
-          >
-            <View
-              ref={dialogHeadingRef}
-              accessible
-              accessibilityRole="header"
-              accessibilityLabel={`${compactDate(date)}, ${popupRows.length} ${popupRows.length === 1 ? "Eintrag" : "Einträge"}`}
-              style={{ minWidth: 0, flex: 1 }}
-            >
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={{
-                  color: palette.text,
-                  fontFamily: INTER_FONTS.semibold,
-                  fontSize: TYPOGRAPHY.label.fontSize,
-                }}
-              >
-                {compactDate(date)}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityLabel="Schnellauswahl schließen"
-              accessibilityRole="button"
-              disabled={interactionBlocked}
-              onPress={dismiss}
-              style={({ pressed }) => ({
-                width: 44,
-                minHeight: 44,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.58 : 1,
-              })}
-            >
-              <Ionicons accessible={false} name="close" color={palette.textMuted} size={22} />
-            </Pressable>
-          </View>
           {holidayName ? (
             <View
               accessibilityLabel={holidayName}
@@ -415,7 +367,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
             importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
             style={{ height: listViewportHeight, flexShrink: 1, flexGrow: 0 }}
           >
-            {popupRows.map((entry) => {
+            {popupRows.map((entry, index) => {
               const duration = entry.duration;
               const localEntry = entry.localEntry;
               const canDelete = localEntry !== null && onDeleteEntry !== undefined;
@@ -426,6 +378,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
               const row = (
                 <Pressable
                   key={entry.key}
+                  ref={index === 0 ? dialogFocusRef : undefined}
                   accessibilityLabel={`${entry.title} ${entry.readOnly ? "ansehen" : "bearbeiten"}`}
                   accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
                   accessibilityRole="button"
@@ -565,7 +518,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                   void deletion.confirm().then((deleted) => {
                     if (deleted) {
                       setSwipedEntry(null);
-                      scheduleAccessibilityFocus(findNodeHandle(dialogHeadingRef.current));
+                      scheduleAccessibilityFocus(findNodeHandle(dialogFocusRef.current));
                     }
                   });
                 }}
@@ -582,6 +535,7 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
                 {editorActions.map((action, index) => (
                   <Pressable
                     key={action.key}
+                    ref={!popupRows.length && index === 0 ? dialogFocusRef : undefined}
                     accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Dienst"} hinzufügen`}
                     accessibilityHint={compactDate(date)}
                     accessibilityRole="button"

@@ -135,7 +135,7 @@ describe("QuickEntryPopup", () => {
     for (const entry of entries)
       expect(screen.getByRole("button", { name: `${entry.title} bearbeiten` })).toBeTruthy();
     expect(screen.queryByText(/weitere/)).toBeNull();
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 462 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 418 });
     expect(screen.getByTestId("quick-entry-scroll")).toHaveProp("scrollEnabled", false);
     await fireEvent.press(screen.getByRole("button", { name: "Dienst 6 bearbeiten" }));
     expect(onOpenEntry).toHaveBeenCalledWith(entries[5]);
@@ -164,7 +164,7 @@ describe("QuickEntryPopup", () => {
       expect(within(list).getByRole("button", { name: "Dienst 30 bearbeiten" })).toBeTruthy();
       expect(within(list).queryByRole("button", { name: "Termin hinzufügen" })).toBeNull();
       expect(within(list).queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
-      expect(screen.getByRole("header", { name: "Di., 4. Aug., 30 Einträge" })).toBeTruthy();
+      expect(screen.queryByRole("header")).toBeNull();
       await fireEvent.press(
         within(screen.getByTestId("quick-entry-footer")).getByRole("button", {
           name: "Termin hinzufügen",
@@ -174,7 +174,7 @@ describe("QuickEntryPopup", () => {
         expect.objectContaining({ kind: "APPOINTMENT" }),
         "2026-08-04",
       );
-      await fireEvent.press(screen.getByRole("button", { name: "Schnellauswahl schließen" }));
+      await fireEvent(popup, "accessibilityAction", { nativeEvent: { actionName: "dismiss" } });
       await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     },
   );
@@ -183,12 +183,12 @@ describe("QuickEntryPopup", () => {
     const screen = await renderCompact([existingShift]);
     const list = screen.getByTestId("quick-entry-scroll");
     await fireEvent(list, "contentSizeChange", 376, 250);
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 352 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 308 });
     await fireEvent(list, "contentSizeChange", 376, 900);
     expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 694 });
     expect(list).toHaveProp("scrollEnabled", true);
     await screen.updateEntries([]);
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 102 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 58 });
     expect(screen.getByTestId("quick-entry-scroll")).toHaveProp("scrollEnabled", false);
   });
 
@@ -277,7 +277,7 @@ describe("QuickEntryPopup", () => {
       onDeleteEntry: jest.fn(async () => {}),
     });
     const popup = screen.getByTestId("quick-entry-popup");
-    expect(popup).toHaveStyle({ height: 162 });
+    expect(popup).toHaveStyle({ height: 118 });
     await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
 
     const footer = screen.getByTestId("quick-entry-footer");
@@ -285,7 +285,7 @@ describe("QuickEntryPopup", () => {
     expect(within(footer).getByRole("button", { name: "Löschen abbrechen" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Dienst hinzufügen" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Termin hinzufügen" })).toBeNull();
-    expect(popup).toHaveStyle({ height: 162 });
+    expect(popup).toHaveStyle({ height: 118 });
     expect(popup).toHaveProp("pointerEvents", "auto");
     expect(screen.getByTestId("quick-entry-scroll", { includeHiddenElements: true })).toHaveProp(
       "accessibilityElementsHidden",
@@ -301,7 +301,7 @@ describe("QuickEntryPopup", () => {
     expect(within(footer).getByRole("button", { name: "Dienst hinzufügen" })).toBeEnabled();
     expect(within(footer).getByRole("button", { name: "Termin hinzufügen" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Nacht bearbeiten" })).toBeEnabled();
-    expect(popup).toHaveStyle({ height: 162 });
+    expect(popup).toHaveStyle({ height: 118 });
   });
 
   it("reveals delete on swipe, cancels locally and keeps the popup open after confirmed deletion", async () => {
@@ -360,10 +360,10 @@ describe("QuickEntryPopup", () => {
     await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
       nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
     });
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 202 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
     await fireEvent.press(screen.getByRole("button", { name: "Löschen abbrechen" }));
     await fireEvent(screen.getByRole("button", { name: "Nacht bearbeiten" }), "longPress");
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 162 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 118 });
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -442,7 +442,7 @@ describe("QuickEntryPopup", () => {
     await fireEvent(screen.getByTestId("quick-entry-delete-confirmation"), "layout", {
       nativeEvent: { layout: { x: 0, y: 0, width: 374, height: 96 } },
     });
-    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 202 });
+    expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({ height: 158 });
     expect(within(footer).getByRole("button", { name: "Nacht endgültig löschen" })).toBeEnabled();
     expect(deletionFeedback).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Nacht endgültig löschen" }));
@@ -504,10 +504,12 @@ describe("QuickEntryPopup", () => {
     async (withEntry) => {
       const screen = await renderCompact(withEntry ? [existingShift] : []);
       expect(screen.getByTestId("quick-entry-popup")).toHaveStyle({
-        height: withEntry ? 162 : 102,
+        height: withEntry ? 118 : 58,
       });
-      expect(screen.getByRole("header")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Schnellauswahl schließen" })).toBeEnabled();
+      expect(screen.queryByTestId("quick-entry-header")).toBeNull();
+      expect(screen.queryByRole("header")).toBeNull();
+      expect(screen.queryByText("Di., 4. Aug.")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Schnellauswahl schließen" })).toBeNull();
       expect(screen.getByRole("button", { name: "Dienst hinzufügen" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "Termin hinzufügen" })).toBeTruthy();
       expect(screen.getByTestId("quick-entry-popup")).toHaveProp("accessibilityActions", [

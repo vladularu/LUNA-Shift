@@ -29,11 +29,11 @@ Umgesetzt: Dienste stehen vor den kompakten Terminzeilen. Zwei Terminzeilen bele
 
 ## 3. Scrollbares Tagespopup
 
-Das Tagespopup enthält alle Einträge und wächst bis zur verfügbaren Höhe. Danach scrollt nur die Liste. Datum, Schließen und Hinzufügen bleiben erreichbar. Die bisherige Begrenzung auf zwei Einträge mit erzwungener Detailnavigation entfällt. Bearbeiten, bestätigtes Löschen und der Schreibschutz geteilter Einträge bleiben erhalten.
+Das Tagespopup enthält alle Einträge und wächst bis zur verfügbaren Höhe. Danach scrollt nur die Liste. Hinzufügen bleibt im festen Fußbereich erreichbar. Im Popup erscheinen weder ein zusätzliches Datum noch ein X-Schließenknopf; geschlossen wird über einen Tipp außerhalb oder die bestehenden Bedienungshilfen. Die bisherige Begrenzung auf zwei Einträge mit erzwungener Detailnavigation entfällt. Bearbeiten, bestätigtes Löschen und der Schreibschutz geteilter Einträge bleiben erhalten.
 
 Scope: Tagespopup, erforderliche Anbindung und passende Tests.
 
-Umgesetzt: Die bisherigen Grenzen von zwei eigenen beziehungsweise 25 gemischten Einträgen sind entfernt. Eine feste Kopfzeile zeigt Datum und Schließen; Hinzufügen beziehungsweise die Löschbestätigung bleiben im festen Fußbereich. Die Liste berücksichtigt auch gemessene Zeilenhöhen für längere Texte. Beim vertikalen Scrollen schließt eine zuvor aufgeschobene Löschzeile. Die nicht mehr benötigte Detailnavigation wurde aus der Kalenderanbindung entfernt.
+Umgesetzt: Die bisherigen Grenzen von zwei eigenen beziehungsweise 25 gemischten Einträgen sind entfernt. Hinzufügen beziehungsweise die Löschbestätigung bleiben im festen Fußbereich. Die Liste berücksichtigt auch gemessene Zeilenhöhen für längere Texte. Beim vertikalen Scrollen schließt eine zuvor aufgeschobene Löschzeile. Die nicht mehr benötigte Detailnavigation wurde aus der Kalenderanbindung entfernt. Die beim Umbau versehentlich ergänzte Kopfzeile wird mit der unten beschriebenen Korrektur wieder entfernt.
 
 ## Lokale Prüfung am 29.10.2026
 
@@ -88,6 +88,37 @@ Der Nutzer bestätigte nach der iPhone-Prüfung der visuellen Preview-Nachjustie
 Referenz ist die Preview-OTA-Gruppe `ae3bf5c8-29cd-4b03-a54e-f51e179fd6c8` beziehungsweise Update-ID `01a1855c-d8ca-7ee6-857b-2945d0ce9db8` für Preview Build 44 mit der oben dokumentierten Bundle-SHA-256. Beizubehalten sind die kompakte Dienst-/Terminanordnung, die Abstände, die Punktdarstellung, die mittlere Termin-Schriftstärke, die Datumszahlen mit 16 Punkten und die flache Kapsel mit 30 × 18 Punkten. Spätere visuelle Änderungen sind gegen diese Referenz zu prüfen und erneut auf dem iPhone abzunehmen.
 
 Separat freigegeben wurden jetzt Commit, Push, Pull Request, Merge nach vollständiger erfolgreicher CI und anschließend das TestFlight-Update. Geliefert werden ausschließlich die drei beschriebenen Arbeitspakete einschließlich der abgenommenen visuellen Nachjustierung, ihrer Tests und dieser Dokumentation: insgesamt 22 Dateien. Es sind keine weiteren Produktänderungen und kein nativer Build vorgesehen. Die iOS-TestFlight-OTA verwendet die gesondert geprüfte Production-Laufzeit; ihre Geräteabnahme ist ein eigener Schritt.
+
+## Korrektur der erneut eingeblendeten Popup-Kopfzeile am 29.10.2026
+
+Der Nutzer meldete nach der TestFlight-Abnahme, dass Datum und X im Tagespopup erneut erscheinen, obwohl diese bereits entfernt sein sollten. Ursache ist die in PR #329 beim Umbau auf die scrollbare Liste ergänzte Datumskopfzeile. Die neue Rückmeldung präzisiert die verbindliche Referenz ausschließlich für diese Kopfzeile.
+
+Ziel und Scope: Auf dem iPhone Datum, X und den reservierten Kopfbereich entfernen. Betroffen sind ausschließlich `quick-entry-popup.tsx`, die vorhandenen Popup-Komponententests und diese Dokumentation. Kalenderkacheln, Schrift, Punkte, Datumsmarkierung im Monatsraster, Daten und native Integration bleiben beim abgenommenen Stand. Ein Feiertagshinweis wird weiterhin bei Bedarf angezeigt.
+
+Abnahme: Weder bei einem leeren Tag noch mit Einträgen gibt es eine sichtbare Datumskopfzeile, einen X-Knopf oder einen leeren Ersatzbereich. Alle Einträge bleiben im selben begrenzten Popup scrollbar; Hinzufügen und bestätigtes Löschen bleiben nutzbar. Der Bedienungshilfen-Fokus liegt wieder auf dem ersten Eintrag beziehungsweise bei einem leeren Tag auf der ersten Hinzufügen-Aktion. Datumskontext für Bedienungshilfen, Schließen per Tipp außerhalb und die vorhandene Escape-/Schließen-Aktion bleiben erhalten.
+
+Lokale Prüfung: 49 gezielte Popup-/Kalender-Komponententests und anschließend `npm.cmd run verify:fast` vollständig bestanden, einschließlich 9.859 Unit-Tests, 1.528 Komponententests und aller nachgelagerten Projektprüfungen. Die übrigen 19 Dateien des zuvor gelieferten Kalenderpakets sind anhand ihrer SHA-256 unverändert.
+
+Diese gezielte Korrektur ist auf `codex/calendar-popup-header` umgesetzt und geprüft. Nach der separaten Freigabe „OTA“ wurde sie zunächst ausschließlich als iOS-Preview-OTA veröffentlicht. Die anschließende Sichtprüfung auf dem iPhone wurde vom Nutzer bestätigt; danach folgte die separate Freigabe für Git-Auslieferung und TestFlight-OTA.
+
+### Preview-OTA der Kopfzeilenkorrektur
+
+- Ziel: Branch/Kanal `preview`, Plattform `ios`, Environment `preview`, `APP_VARIANT=internal`; passend zum vorhandenen Preview Build 44.
+- [OTA-Gruppe 3d3634ac-4a89-493a-bb46-06e89d741970](https://expo.dev/accounts/vladularu/projects/pflegeshift/updates/3d3634ac-4a89-493a-bb46-06e89d741970), iOS-Update `01a1858c-8a7c-72ce-a377-400be0b139fc`.
+- Build, Veröffentlichungs-Environment und OTA haben die Runtime `b99c3cf0dd56e6b1bb126d195f21c665de57760b`.
+- Preview-Kanal und ausgeliefertes Manifest zeigen die neue Update-ID. Manifest und CDN-Paket antworten mit HTTP 200.
+- Lokaler Export, Manifest und heruntergeladenes Paket haben dieselbe SHA-256: `c8eb4434fc6ab1390171f506eaf5b8ffd4d57dfaae4ada6b14996b6c66512537`.
+- Die zuvor auf TestFlight abgenommene OTA-Gruppe `c14149d8-c747-445d-a67b-f08e57c90696` bleibt unverändert.
+- Der Anwendungs- und Testcode war vor und während der Paketierung gegenüber dem vollständig geprüften Stand unverändert. Anschließend wurde ausschließlich diese Dokumentation um den Auslieferungsnachweis ergänzt.
+- Zum Laden: Preview-App vollständig schließen, öffnen und mindestens 15 Sekunden warten, wieder schließen und öffnen. Danach einen leeren und einen belegten Tag öffnen und die fehlende Datum-/X-Kopfzeile sowie Scrollen und Hinzufügen prüfen.
+
+### Verbindliche iPhone-Referenz der Kopfzeilenkorrektur
+
+Am 29.10.2026 bestätigte der Nutzer: „Hab es auf dem iPhone getestet, Datum und X sind jetzt weg.“ Zusätzlich verlangte er, diesen Stand beizubehalten, die Korrektur zu committen, zu pushen, eine PR zu erstellen, nach grüner CI zu mergen und als TestFlight-OTA bereitzustellen.
+
+Verbindliche Referenz ist damit die oben dokumentierte Preview-OTA-Gruppe `3d3634ac-4a89-493a-bb46-06e89d741970` für Build 44 mit der Bundle-SHA-256 `c8eb4434fc6ab1390171f506eaf5b8ffd4d57dfaae4ada6b14996b6c66512537`. Das Tagespopup bleibt ohne zusätzliches Datum, X und reservierten Ersatzbereich. Die bereits abgenommene übrige Kalenderdarstellung bleibt erhalten. Spätere visuelle Änderungen sind gegen diese Referenz zu prüfen und erneut auf dem iPhone abzunehmen; Gerätetyp und iOS-Version wurden nicht genannt.
+
+Die Git-Auslieferung umfasst ausschließlich die drei beschriebenen Dateien. Nach vollständiger erfolgreicher PR-CI und Merge folgt die separat freigegebene iOS-TestFlight-OTA für die passende Production-Laufzeit. Es ist kein neuer nativer Build vorgesehen. Die anschließende TestFlight-Geräteprüfung dieser Korrektur bleibt ein eigener Schritt.
 
 ## Abnahme
 
