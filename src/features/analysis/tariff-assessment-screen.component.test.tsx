@@ -3,7 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { View } from "react-native";
 
 import { TariffQuestion } from "@/features/analysis/tariff-question";
-import { CONTROL_HEIGHT, RADII } from "@/theme/tokens";
+import { CONTROL_HEIGHT } from "@/theme/tokens";
 
 describe("tariff assessment questions", () => {
   it("gives repeated radio labels their question context", async () => {
@@ -43,7 +43,7 @@ describe("tariff assessment questions", () => {
       screen.getByRole("radio", { name: "Erste Frage?: Unsicher", checked: true }),
     ).toHaveStyle({
       minHeight: CONTROL_HEIGHT.compact,
-      borderRadius: RADII.pill,
+      borderRadius: 8,
     });
   });
 });

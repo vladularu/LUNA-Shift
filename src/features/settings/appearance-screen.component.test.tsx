@@ -212,7 +212,7 @@ describe("appearance controls", () => {
     expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({ flexDirection: "column" });
   });
 
-  it("uses standalone pill selections with the same contrast in both modes", async () => {
+  it("uses card-shaped selections with the same contrast in both modes", async () => {
     const screen = await render(screenWith({ mode: "light" }, { uri: "file:///photo.jpg" }));
     for (const mode of ["light", "dark"] as const) {
       await screen.rerender(screenWith({ mode }, { uri: "file:///photo.jpg" }));
@@ -221,12 +221,12 @@ describe("appearance controls", () => {
         const group = screen.getByLabelText(label);
         expect(group).toHaveStyle({
           backgroundColor: palette.selectionTrack,
-          borderRadius: 999,
+          borderRadius: 12,
         });
         expect(within(group).getByRole("radio", { checked: true })).toBeTruthy();
         expect(within(group).getByTestId(`${label}:active-surface`)).toHaveStyle({
           backgroundColor: palette.selectionActiveSurface,
-          borderRadius: 999,
+          borderRadius: 8,
         });
         expect(ReactNative.StyleSheet.flatten(group.parent?.props.style)).not.toHaveProperty(
           "backgroundColor",
