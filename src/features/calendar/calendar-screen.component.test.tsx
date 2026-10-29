@@ -155,6 +155,7 @@ jest.mock("@/navigation/active-month", () => ({
 }));
 
 jest.mock("@/features/calendar/calendar-header", () => ({
+  ...jest.requireActual<object>("@/features/calendar/calendar-header"),
   CalendarHeader: ({
     month,
     viewMode,

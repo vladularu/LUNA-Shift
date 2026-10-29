@@ -25,7 +25,7 @@ import { addMonths, currentMonth, today } from "@/engine/calendar";
 import { calendarPerformance } from "@/application/calendar-performance";
 import { useCalendarStartup } from "./use-calendar-startup";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
-import { CalendarHeader } from "@/features/calendar/calendar-header";
+import { CalendarHeader, useCalendarHeaderOverlap } from "@/features/calendar/calendar-header";
 import { CalendarMonthBackground } from "./calendar-background";
 import { SharedCalendarScene } from "./calendar-shared-scene";
 import { CalendarStablePager } from "./calendar-stable-pager";
@@ -105,6 +105,7 @@ export function CalendarScreen() {
   const [visibleMonth, setVisibleMonth] = useState(targetMonth);
   useCalendarPerformance(isFocused, visibleMonth, preferences.viewMode);
   const [pageHeight, setPageHeight] = useState(0);
+  const { headerOverlap, measureHeader } = useCalendarHeaderOverlap();
   const [pagerResetRevision, setPagerResetRevision] = useState(0);
   const [positionedTarget, setPositionedTarget] = useState<string | null>(null);
   const monthPositioned =
@@ -517,56 +518,60 @@ export function CalendarScreen() {
   return (
     <View testID="calendar-screen" style={{ flex: 1, backgroundColor: palette.calendarBackground }}>
       <CalendarMonthBackground progress={controller.progress} />
-      <CalendarHeader
-        synchronized
-        notice={
-          !calendarReady
-            ? "Kalenderdaten werden geladen …"
-            : visibleHolidayResolution.status !== "AVAILABLE"
-              ? "Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
-              : undefined
-        }
-        direction={headerDirection}
-        month={controller.displayMonth}
-        onMoveYear={moveYear}
-        onOpenSharing={() => router.push("/calendar-sharing")}
-        onOpenDisplay={openCalendarDisplay}
-        onOpenYear={openYear}
-        plannerActive={plannerMode}
-        plannerTransition={plannerTransition}
-        referenceMonth={currentMonth(timeZone)}
-        transition={headerTransition}
-        viewMode={controller.mode}
-      />
-      <SharedCalendarFilters
-        ownVisible={preferences.showShifts}
-        onOwnVisible={preferences.setShowShifts}
-      />
-      {plannerError ? (
-        <View
-          style={{
-            paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-            paddingBottom: SPACING.sm,
-          }}
-        >
-          <InlineNotice message={plannerError} tone="error" />
-        </View>
-      ) : null}
-      {preferences.error ? (
-        <View
-          style={{
-            gap: SPACING.sm,
-            paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-            paddingBottom: SPACING.sm,
-          }}
-        >
-          <InlineNotice message={preferences.error} tone="error" />
-          <PrimaryButton disabled={preferences.saving} onPress={preferences.retry}>
-            Speichern erneut versuchen
-          </PrimaryButton>
-        </View>
-      ) : null}
+      <View pointerEvents="box-none" style={{ zIndex: 1 }} onLayout={measureHeader}>
+        <CalendarHeader
+          pageTitle
+          synchronized
+          notice={
+            !calendarReady
+              ? "Kalenderdaten werden geladen …"
+              : visibleHolidayResolution.status !== "AVAILABLE"
+                ? "Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
+                : undefined
+          }
+          direction={headerDirection}
+          month={controller.displayMonth}
+          onMoveYear={moveYear}
+          onOpenSharing={() => router.push("/calendar-sharing")}
+          onOpenDisplay={openCalendarDisplay}
+          onOpenYear={openYear}
+          plannerActive={plannerMode}
+          plannerTransition={plannerTransition}
+          referenceMonth={currentMonth(timeZone)}
+          transition={headerTransition}
+          viewMode={controller.mode}
+        />
+        <SharedCalendarFilters
+          ownVisible={preferences.showShifts}
+          onOwnVisible={preferences.setShowShifts}
+        />
+        {plannerError ? (
+          <View
+            style={{
+              paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
+              paddingBottom: SPACING.sm,
+            }}
+          >
+            <InlineNotice message={plannerError} tone="error" />
+          </View>
+        ) : null}
+        {preferences.error ? (
+          <View
+            style={{
+              gap: SPACING.sm,
+              paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
+              paddingBottom: SPACING.sm,
+            }}
+          >
+            <InlineNotice message={preferences.error} tone="error" />
+            <PrimaryButton disabled={preferences.saving} onPress={preferences.retry}>
+              Speichern erneut versuchen
+            </PrimaryButton>
+          </View>
+        ) : null}
+      </View>
       <SharedCalendarScene
+        headerOverlap={headerOverlap}
         showBackground={false}
         controller={controller}
         entriesByDate={entriesByDate}

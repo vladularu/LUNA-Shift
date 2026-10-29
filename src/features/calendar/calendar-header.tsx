@@ -1,6 +1,7 @@
 import Ionicons from "@/ui/icon";
-import { memo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { memo, useContext, useState } from "react";
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import Animated, {
   Extrapolation,
   FadeInDown,
@@ -21,8 +22,19 @@ import {
 import { usePalette } from "@/theme/palette";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
 import { MOTION } from "@/theme/motion";
-import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII } from "@/theme/tokens";
+import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII, SCREEN_LAYOUT } from "@/theme/tokens";
 import { TabScreenHeader } from "@/ui/screen-layout";
+
+/** Include fixed filters/notices while keeping the native pager below the safe area. */
+export function useCalendarHeaderOverlap() {
+  const safeTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
+  const [height, setHeight] = useState(0);
+  const top = process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : safeTop;
+  return {
+    headerOverlap: Math.max(0, height - top),
+    measureHeader: (event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height),
+  };
+}
 
 function HeaderIconButton({
   label,
@@ -66,6 +78,7 @@ export const CalendarHeader = memo(function CalendarHeader({
   direction = "NEXT",
   transition = "SPATIAL",
   synchronized = false,
+  pageTitle = false,
   notice,
 }: {
   readonly month: string;
@@ -80,6 +93,7 @@ export const CalendarHeader = memo(function CalendarHeader({
   readonly direction?: "NEXT" | "PREVIOUS";
   readonly transition?: "SPATIAL" | "CROSSFADE";
   readonly synchronized?: boolean;
+  readonly pageTitle?: boolean;
   readonly notice?: string;
 }) {
   const palette = usePalette();
@@ -119,7 +133,8 @@ export const CalendarHeader = memo(function CalendarHeader({
   return (
     <TabScreenHeader
       testID="calendar-header"
-      transparent={Boolean(background.uri)}
+      transparent={pageTitle || Boolean(background.uri)}
+      titleHidden={pageTitle && viewMode === "MONTH"}
       surface="calendarBackground"
       accessory={
         <Animated.View

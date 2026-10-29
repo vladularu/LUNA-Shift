@@ -17,18 +17,29 @@ export const PROTOTYPE_MONTH_NAMES = [
 ] as const;
 
 /** Both scenes and the moving dates use these same positions. No native reads. */
-export function calendarPrototypeLayout(month: string, width: number, height: number) {
+export function calendarPrototypeLayout(
+  month: string,
+  width: number,
+  height: number,
+  topInset = 0,
+) {
   const column = (Number(month.slice(5)) - 1) % 3;
   const row = Math.floor((Number(month.slice(5)) - 1) / 3);
   const miniWidth = width / 3;
-  const miniHeight = height / 4;
+  const miniHeight = (height - topInset) / 4;
   const miniStep = Math.min(21, (miniHeight - 36) / 6);
   const grid = createMonthGrid(month);
-  const weekHeight = (height - 32) / (grid.length / 7);
+  const weekHeight = (height - topInset - 32) / (grid.length / 7);
   return {
     month,
-    tile: { x: column * miniWidth, y: row * miniHeight, width: miniWidth, height: miniHeight },
-    title: { x: column * miniWidth + 8, y: row * miniHeight + 4 },
+    topInset,
+    tile: {
+      x: column * miniWidth,
+      y: topInset + row * miniHeight,
+      width: miniWidth,
+      height: miniHeight,
+    },
+    title: { x: column * miniWidth + 8, y: topInset + row * miniHeight + 4 },
     cellWidth: width / 7,
     weekHeight,
     adjacentDays: grid.flatMap((cell, index) =>
@@ -40,7 +51,7 @@ export function calendarPrototypeLayout(month: string, width: number, height: nu
               day: cell.day,
               weekend: cell.weekend,
               toX: (((index % 7) + 0.5) * width) / 7,
-              toY: 32 + Math.floor(index / 7) * weekHeight + 20,
+              toY: topInset + 32 + Math.floor(index / 7) * weekHeight + 20,
             },
           ],
     ),
@@ -52,9 +63,10 @@ export function calendarPrototypeLayout(month: string, width: number, height: nu
               day: cell.day,
               weekend: cell.weekend,
               fromX: column * miniWidth + 8 + (((index % 7) + 0.5) * (miniWidth - 16)) / 7,
-              fromY: row * miniHeight + 36 + Math.floor(index / 7) * miniStep + miniStep / 2,
+              fromY:
+                topInset + row * miniHeight + 36 + Math.floor(index / 7) * miniStep + miniStep / 2,
               toX: (((index % 7) + 0.5) * width) / 7,
-              toY: 32 + Math.floor(index / 7) * weekHeight + 20,
+              toY: topInset + 32 + Math.floor(index / 7) * weekHeight + 20,
             },
           ]
         : [],

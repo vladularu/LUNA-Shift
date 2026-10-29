@@ -317,7 +317,10 @@ export function PrototypeMonthContent({
       importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
       style={[StyleSheet.absoluteFill, motion]}
     >
-      <View testID="calendar-month-weekdays" style={styles.weekdays}>
+      <View
+        testID="calendar-month-weekdays"
+        style={[styles.weekdays, { marginTop: layout.topInset }]}
+      >
         {["M", "D", "M", "D", "F", "S", "S"].map((label, i) => (
           <View
             key={i}
