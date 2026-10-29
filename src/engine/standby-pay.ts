@@ -82,7 +82,11 @@ export function calculateStandbyPay(
   const lastWork = employmentProfileAt(profile, lastDate);
   const lastRate = standbyHourlyRate(lastDate, lastWork, agreement, resolver);
   if (!rate || !lastRate)
-    return unknown("Die Bereitschaftsgruppe oder das vereinbarte Stundenentgelt fehlt.");
+    return unknown(
+      work.nursingTrainingTariff || work.tvalPflegeTariff
+        ? "Für deine Ausbildung: Öffne Abrechnung, tippe auf Stundenentgelt und trage den bestätigten Grundstundensatz deines Arbeitgebers ohne Zuschläge ein."
+        : "Die Bereitschaftsgruppe oder das vereinbarte Stundenentgelt fehlt.",
+    );
   if (
     JSON.stringify(rate) !== JSON.stringify(lastRate) ||
     work.federalState !== lastWork.federalState ||
