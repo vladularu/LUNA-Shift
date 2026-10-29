@@ -86,7 +86,30 @@ function findingKey(finding) {
   return `${finding.source ?? "unknown"}:${finding.name}:${finding.url ?? ""}`;
 }
 
-function hasVerifiedMitigation(finding, vulnerabilities, proof, bracesProof, zodProof) {
+function hasVerifiedMitigation(
+  finding,
+  vulnerabilities,
+  proof,
+  bracesProof,
+  zodProof,
+  decoderProof,
+) {
+  const decoderNodes = vulnerabilities["decode-uri-component"]?.nodes;
+  if (
+    finding.name === "decode-uri-component" &&
+    finding.dependency === "decode-uri-component" &&
+    finding.source === 1243857 &&
+    finding.severity === "high" &&
+    finding.url === decoderHardening.DECODER_ADVISORY_URL &&
+    finding.range === "<=0.5.0" &&
+    finding.title ===
+      "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs" &&
+    decoderHardening.isVerifiedDecodeUriComponentHardening(decoderProof) &&
+    Array.isArray(decoderNodes) &&
+    decoderNodes.length === decoderProof.nodes.length &&
+    decoderNodes.every((node, index) => node === decoderProof.nodes[index])
+  )
+    return true;
   const zodNodes = vulnerabilities.zod?.nodes;
   if (
     finding.name === "zod" &&
@@ -135,7 +158,7 @@ function hasVerifiedMitigation(finding, vulnerabilities, proof, bracesProof, zod
   );
 }
 
-export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProof) {
+export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProof, decoderProof) {
   const vulnerabilities = report?.vulnerabilities;
   if (!vulnerabilities || typeof vulnerabilities !== "object") {
     throw new Error("npm audit lieferte keinen auswertbaren Vulnerability-Report.");
@@ -167,6 +190,7 @@ export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProo
         hardeningProof,
         bracesProof,
         zodProof,
+        decoderProof,
       )
         ? mitigated
         : blocking;
@@ -236,6 +260,7 @@ export function runProductionAudit() {
       verifyNodeForgeHardening(),
       verifyBracesHardening(),
       verifyZodHardening(),
+      decoderHardening.verifyDecodeUriComponentHardening(),
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

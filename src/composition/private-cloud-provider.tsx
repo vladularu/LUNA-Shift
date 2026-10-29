@@ -40,6 +40,7 @@ import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-cont
 import { saveAccountName } from "@/application/save-account-name";
 import { createCloudSharingClient } from "@/infrastructure/sharing/cloud-sharing-client";
 import { UserFacingError } from "@/domain/errors";
+import { useAccountPhoto } from "@/features/account/use-account-photo";
 
 const sha256 = (value: string) =>
   Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, value);
@@ -106,6 +107,7 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
     runtime.setAllowed(allowed);
   }, [runtime, allowed]);
   const status = useSyncExternalStore(runtime.subscribe, runtime.snapshot, runtime.snapshot);
+  const photo = useAccountPhoto(db, user?.id ?? null, initialized && accountReady, runtime);
   async function refreshAccount() {
     const epoch = accountEpoch.current;
     const value = await auth.getSession();
@@ -175,6 +177,7 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
     <PrivateCloudContext.Provider
       value={{
         user,
+        photo,
         status,
         runtime,
         refreshAccount,

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { Image, useWindowDimensions, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@/ui/icon";
 import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-context";
@@ -49,7 +49,13 @@ export function AccountSummaryCard() {
               justifyContent: "center",
             }}
           >
-            {initials && fontScale < 1.3 ? (
+            {user && cloud?.photo?.uri ? (
+              <Image
+                source={{ uri: cloud.photo.uri }}
+                accessibilityLabel="Profilbild"
+                style={{ width: 48, height: 48, borderRadius: RADII.pill }}
+              />
+            ) : initials && fontScale < 1.3 ? (
               <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>{initials}</Text>
             ) : (
               <Ionicons name="person-outline" size={24} color={palette.text} />

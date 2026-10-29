@@ -16,18 +16,34 @@ function Card({
   user = null,
   phase = "signed_out",
   ready = true,
+  photoUri = null,
 }: {
   user?: SharingAuthUser | null;
   phase?: PrivateCloudStatus["phase"];
   ready?: boolean;
+  photoUri?: string | null;
 }) {
   return (
-    <PrivateCloudContext value={{ user, ready, status: { phase, lastSyncedAt: null } } as never}>
+    <PrivateCloudContext
+      value={
+        { user, ready, photo: { uri: photoUri }, status: { phase, lastSyncedAt: null } } as never
+      }
+    >
       <AccountSummaryCard />
     </PrivateCloudContext>
   );
 }
 describe("More Cloud account card", () => {
+  it("shows the photo for a ready account and hides it when signed out", async () => {
+    const photoUri = "data:image/jpeg;base64,/9j/AAAA";
+    const screen = await render(
+      <Card user={{ id: "a", displayName: "Vlad Ularu" }} photoUri={photoUri} />,
+    );
+    expect(screen.getByLabelText("Profilbild").props.source.uri).toBe(photoUri);
+    expect(screen.queryByText("VU")).toBeNull();
+    await screen.rerender(<Card photoUri={photoUri} />);
+    expect(screen.queryByLabelText("Profilbild")).toBeNull();
+  });
   beforeEach(() => {
     mockFontScale = 1;
   });

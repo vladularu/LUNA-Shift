@@ -3,6 +3,11 @@ import * as Crypto from "expo-crypto";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { PrivateCloudDocument } from "@/domain/private-cloud";
 import {
+  boundPhotoAccount,
+  loadAccountPhoto,
+  writeAccountPhoto,
+} from "@/infrastructure/database/account-photo-repository";
+import {
   CALENDAR_IMAGE_STRENGTH_OPTIONS,
   calendarImageOpacityPercentage,
 } from "@/theme/calendar-image";
@@ -21,6 +26,8 @@ export async function readCloudPresentation(
   if (file && file.size > 6 * 1024 * 1024)
     throw new Error("Dein Kalenderfoto ist für die Cloud zu groß. Bitte wähle es erneut aus.");
   const strength = await loadCalendarBackgroundStrength(db);
+  const accountId = await boundPhotoAccount(db);
+  const accountPhoto = accountId ? await loadAccountPhoto(db, accountId) : undefined;
   const legacyStrength =
     typeof strength === "number"
       ? CALENDAR_IMAGE_STRENGTH_OPTIONS.reduce((nearest, option) =>
@@ -31,6 +38,7 @@ export async function readCloudPresentation(
         ).value
       : strength;
   return {
+    ...(accountPhoto !== undefined ? { accountPhoto } : {}),
     calendarImage: file ? await file.base64() : null,
     calendarImageStrength: legacyStrength,
     ...(typeof strength === "number" ? { calendarImageOpacity: strength } : {}),
@@ -59,6 +67,11 @@ export async function prepareCloudPresentation(
   }
   return {
     async apply(db: SQLiteDatabase) {
+      if (presentation.accountPhoto !== undefined) {
+        const accountId = await boundPhotoAccount(db);
+        if (!accountId) throw new Error("No bound account for photo");
+        await writeAccountPhoto(db, accountId, presentation.accountPhoto);
+      }
       if (name === null)
         await db.runAsync("DELETE FROM app_preferences WHERE key=?", CALENDAR_BACKGROUND_KEY);
       else
