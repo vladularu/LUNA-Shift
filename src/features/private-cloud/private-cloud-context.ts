@@ -4,10 +4,12 @@ import type {
   PrivateCloudStatus,
 } from "@/application/private-cloud-runtime";
 import type { SharingAuthUser } from "@/infrastructure/auth/sharing-auth";
+import type { useAccountPhoto } from "@/features/account/use-account-photo";
 
 export type PrivateCloudRuntime = ReturnType<typeof createPrivateCloudRuntime>;
 export const PrivateCloudContext = createContext<{
   readonly user: SharingAuthUser | null;
+  readonly photo?: ReturnType<typeof useAccountPhoto>;
   readonly status: PrivateCloudStatus;
   readonly runtime: PrivateCloudRuntime;
   readonly refreshAccount: () => Promise<void>;

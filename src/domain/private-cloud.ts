@@ -14,6 +14,8 @@ export interface PrivateCloudDocument {
     readonly calendarImageStrength: "subtle" | "medium" | "strong";
     /** Exact slider setting; the legacy strength remains readable by older clients. */
     readonly calendarImageOpacity?: number;
+    /** Missing on older clients; null explicitly removes the account photo. */
+    readonly accountPhoto?: string | null;
   };
 }
 

@@ -45,6 +45,16 @@ export function mergePrivateCloudDocuments(
   local: PrivateCloudDocument,
   remote: PrivateCloudDocument,
 ): { readonly document: PrivateCloudDocument; readonly conflicts: readonly string[] } {
+  // Old clients omit this field when capturing. Omission is not a user deletion.
+  const compatible = (value: PrivateCloudDocument): PrivateCloudDocument =>
+    value.presentation.accountPhoto === undefined && base.presentation.accountPhoto !== undefined
+      ? {
+          ...value,
+          presentation: { ...value.presentation, accountPhoto: base.presentation.accountPhoto },
+        }
+      : value;
+  local = compatible(local);
+  remote = compatible(remote);
   const conflicts: string[] = [];
   function merge(
     before: CloudJson | undefined,

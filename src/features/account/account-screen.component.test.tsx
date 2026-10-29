@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
-import { Alert } from "react-native";
+import { ActionSheetIOS, Alert, Platform } from "react-native";
 import type { ReactNode } from "react";
 import { router } from "expo-router";
 import { AccountScreen } from "./account-screen";
@@ -14,6 +14,8 @@ const mockLogout = jest.fn<() => Promise<void>>();
 const mockDelete = jest.fn<() => Promise<void>>();
 const mockSave = jest.fn<(id: string, first: string, last: string) => Promise<void>>();
 const mockRefresh = jest.fn<() => Promise<void>>();
+const mockChoosePhoto = jest.fn<() => Promise<void>>();
+const mockRemovePhoto = jest.fn<() => Promise<void>>();
 let mockUser: SharingAuthUser | null;
 let mockDeletionAvailable = true;
 jest.mock("expo-router", () => ({
@@ -49,14 +51,29 @@ jest.mock("@/ui/back-footer-layout", () => ({
 function Harness({
   name = false,
   phase = "synced",
+  photoUri,
+  photoBusy = false,
 }: {
   name?: boolean;
   phase?: "synced" | "setup";
+  photoUri?: string | null;
+  photoBusy?: boolean;
 }) {
   return (
     <PrivateCloudContext
       value={{
         user: mockUser,
+        photo:
+          photoUri === undefined
+            ? undefined
+            : {
+                uri: photoUri,
+                ready: true,
+                busy: photoBusy,
+                error: null,
+                choose: mockChoosePhoto,
+                remove: mockRemovePhoto,
+              },
         ready: true,
         initializationError: null,
         status: {
@@ -87,6 +104,9 @@ async function confirm(text: string) {
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.replaceProperty(Platform, "OS", "ios");
+  jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation(() => undefined);
+  jest.spyOn(ActionSheetIOS, "dismissActionSheet").mockImplementation(() => undefined);
   mockUser = { id: "a", displayName: "Alex Sommer", email: "alex@example.test" };
   mockDeletionAvailable = true;
   mockApple.mockResolvedValue(null);
@@ -98,6 +118,77 @@ beforeEach(() => {
   jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 });
 describe("shared LUNA account", () => {
+  it("uses the avatar as the only visible photo control and offers actions on demand", async () => {
+    const screen = await render(<Harness photoUri={null} />);
+    expect(screen.queryByText("Profilbild auswählen")).toBeNull();
+    expect(screen.queryByText("Profilbild ändern")).toBeNull();
+    expect(screen.queryByText("Profilbild entfernen")).toBeNull();
+    expect(screen.queryByText("Wird über LUNA Cloud synchronisiert.")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Profilbild auswählen" }));
+    expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ options: ["Foto auswählen", "Abbrechen"], cancelButtonIndex: 1 }),
+      expect.any(Function),
+    );
+    expect(mockChoosePhoto).not.toHaveBeenCalled();
+    await act(async () =>
+      jest.mocked(ActionSheetIOS.showActionSheetWithOptions).mock.calls.at(-1)?.[1](0),
+    );
+    expect(mockChoosePhoto).toHaveBeenCalledTimes(1);
+    await screen.rerender(<Harness photoUri="data:image/jpeg;base64,/9j/AAAA" />);
+    expect(screen.getByLabelText("Profilbild").props.source.uri).toBe(
+      "data:image/jpeg;base64,/9j/AAAA",
+    );
+    expect(screen.queryByText("AS")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Profilbild ändern" }));
+    expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        options: ["Foto auswählen", "Foto entfernen", "Abbrechen"],
+        destructiveButtonIndex: 1,
+        cancelButtonIndex: 2,
+      }),
+      expect.any(Function),
+    );
+    expect(mockRemovePhoto).not.toHaveBeenCalled();
+    await act(async () =>
+      jest.mocked(ActionSheetIOS.showActionSheetWithOptions).mock.calls.at(-1)?.[1](1),
+    );
+    expect(mockRemovePhoto).toHaveBeenCalledTimes(1);
+    expect(Alert.alert).not.toHaveBeenCalled();
+  });
+  it("does not open stacked menus or change the photo when cancelled", async () => {
+    const screen = await render(<Harness photoUri="data:image/jpeg;base64,/9j/AAAA" />);
+    const photo = screen.getByRole("button", { name: "Profilbild ändern" });
+    await fireEvent.press(photo);
+    await fireEvent.press(photo);
+    expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenCalledTimes(1);
+    await act(async () =>
+      jest.mocked(ActionSheetIOS.showActionSheetWithOptions).mock.calls.at(-1)?.[1](2),
+    );
+    expect(mockRemovePhoto).not.toHaveBeenCalled();
+    expect(mockChoosePhoto).not.toHaveBeenCalled();
+    await fireEvent.press(photo);
+    expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenCalledTimes(2);
+  });
+  it("discards photo menu actions after an account switch", async () => {
+    const screen = await render(<Harness photoUri="data:image/jpeg;base64,/9j/AAAA" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Profilbild ändern" }));
+    const choose = jest.mocked(ActionSheetIOS.showActionSheetWithOptions).mock.calls.at(-1)![1];
+    mockUser = { id: "b", displayName: "Sam Beispiel" };
+    await screen.rerender(<Harness photoUri={null} />);
+    expect(ActionSheetIOS.dismissActionSheet).toHaveBeenCalledTimes(1);
+    await act(async () => choose(1));
+    expect(mockRemovePhoto).not.toHaveBeenCalled();
+    expect(mockChoosePhoto).not.toHaveBeenCalled();
+  });
+  it("keeps a busy avatar in place and disables photo and account actions", async () => {
+    const screen = await render(<Harness photoUri="data:image/jpeg;base64,/9j/AAAA" photoBusy />);
+    expect(screen.getByRole("button", { name: "Profilbild ändern" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Profilbild ändern" }).props.accessibilityState.busy,
+    ).toBe(true);
+    expect(screen.getByRole("button", { name: "Abmelden" })).toBeDisabled();
+    expect(screen.queryByText("Wird gespeichert …")).toBeNull();
+  });
   it("shows identity, sync and name without backup actions or an account menu", async () => {
     const screen = await render(<Harness />);
     expect(screen.getByText("AS")).toBeTruthy();
