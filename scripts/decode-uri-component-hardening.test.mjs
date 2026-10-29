@@ -69,6 +69,20 @@ test("rejects unreviewed versions and duplicate decoder copies", () => {
   }
 });
 
+test("upgrades the exact earlier backport and invalidates stale evidence after tampering", () => {
+  const dir = fixture();
+  const target = join(dir, "node_modules/decode-uri-component/index.js");
+  writeFileSync(target, patch.previousPatchedSource);
+  assert.throws(() => verifyDecodeUriComponentHardening(dir), /DECODER_HARDENING_MISSING/);
+  applyDecodeUriComponentHardening(dir);
+  const proof = verifyDecodeUriComponentHardening(dir);
+  assert.equal(hardening.isVerifiedDecodeUriComponentHardening(proof, dir), true);
+  assert.equal(hardening.isVerifiedDecodeUriComponentHardening(proof), false);
+  assert.equal(hardening.isVerifiedDecodeUriComponentHardening({ ...proof }, dir), false);
+  writeFileSync(target, patch.previousPatchedSource);
+  assert.equal(hardening.isVerifiedDecodeUriComponentHardening(proof, dir), false);
+});
+
 test("preserves valid Unicode, malformed-byte fallback, plus handling and the CJS API", () => {
   const dir = fixture();
   applyDecodeUriComponentHardening(dir);
@@ -81,9 +95,41 @@ test("preserves valid Unicode, malformed-byte fallback, plus handling and the CJ
     ["%FE%FF", "\uFFFD\uFFFD"],
     ["%C2", "\uFFFD"],
     ["%", "%"],
+    ["%2525%zz", "%25%zz"],
+    ["%24%26%zz", "$&%zz"],
+    ["%FF%FE%C3%A5%C2%ab", "\uFFFD\uFFFDå«"],
   ])
     assert.equal(decode(input), expected);
   assert.throws(() => decode(null), TypeError);
+});
+
+test("bounds many distinct encoded runs through the installed Expo query parser", () => {
+  verifyDecodeUriComponentHardening();
+  const script = `
+    const assert = require('node:assert/strict');
+    const {createRequire} = require('node:module');
+    const fromRouter = createRequire(require.resolve('expo-router/package.json'));
+    const query = fromRouter('query-string');
+    const fromQuery = createRequire(fromRouter.resolve('query-string/package.json'));
+    const decode = fromQuery('decode-uri-component');
+    let payload = '';
+    for (let i = 0; i < 32000; i++) {
+      payload += '%' + Math.floor(i / 256).toString(16).padStart(2, '0')
+        + '%' + (i % 256).toString(16).padStart(2, '0') + 'x';
+    }
+    payload += '%zz';
+    const expected = decode(payload);
+    assert.ok(expected.endsWith('%zz'));
+    assert.equal(query.parse('x=' + payload).x, expected);
+    assert.equal(query.parse(payload + '=x')[expected], 'x');
+  `;
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 5000,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("the installed SDK 57 query parser bounds hostile deep-link keys and values", () => {

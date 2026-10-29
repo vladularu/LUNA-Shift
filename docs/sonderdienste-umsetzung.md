@@ -49,3 +49,16 @@ Arbeitspakete: (1) datierte Überstundensätze der sieben Tarifmodelle und Rundu
 Abnahme: Vor-Ort-Einsätze einzeln mit Wegen runden; Telefonarbeit zusammenfassen; TV-L/TV-H auf volle halbe Stunden, TVöD auf volle Stunden; TV-UK-Dreistundengarantie nur einmal beim kürzesten auswärtigen Einsatz. Grundentgelt mit tariflicher Stufengrenze und Zuschlag mit eigener Bezugsstufe berechnen. Keine doppelte Teilzeitkürzung und keine fiktiven Arbeitsminuten durch Rundung. Bestätigte Tageseinsätze an gewöhnlichen Werktagen ohne weitere Zeitzuschläge können vollständig in die Netto-Prognose einfließen. Bei Nacht-/Wochenend-/Feiertagseinsätzen bleiben zusätzliche Zeitzuschläge und deren SFN-Behandlung ausdrücklich offen; bekannte Einsatzgrundbeträge werden separat gezeigt. Pausen, Tarifwechsel innerhalb eines Einsatzes, mehrtägige Dienste, Monatsgrenzen und Freizeitumwandlung werden nicht durch Annahmen vervollständigt.
 
 F2b (Bereitschaftsdiensttabellen, individuelle Zuordnungen und Freizeitausgleich) und F3 (vollständige Zeitzuschläge/SFN und Zeitkonten) bleiben eigenständige Pakete. Die bisherige Preview ist technisch ausgeliefert; eine Geräteabnahme wird aus „weiter“ nicht abgeleitet.
+
+### Separates Auslieferungspaket: Decoder-Sicherheitskorrektur
+
+Am 29.10.2026 blockiert die CI mit GHSA-qr28-fpjm-wq7f (CVE-2026-118664).
+Der bisherige Backport beseitigt die neue quadratische Ersetzungsschleife noch nicht.
+Ziel: offiziellen Single-Pass-Fix aus Commit fad01d65b93bd3f2f0dc32dfd8d57a38b57bc608
+CommonJS-kompatibel übernehmen; bestehende Plus-Behandlung erhalten.
+Dateiscope: Decoder-Manifest, Verifier und Tests sowie Produktionsaudit und dessen Tests.
+Keine SDK-, native, UI- oder Tarifänderungen. Ziel bleibt die iOS-Preview-Runtime.
+Abnahme: begrenzte Laufzeit über den echten Expo-Query-Parser, Unicode-/Fallback-Regression,
+Manipulationsschutz, exakte Audit-Identität, verify:fast, PR-CI und neuer iOS-Export.
+Der Audit-Nachweis benötigt die tatsächlich installierte, erneut per Hash geprüfte Datei.
+Quelle: https://github.com/advisories/GHSA-qr28-fpjm-wq7f

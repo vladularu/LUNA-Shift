@@ -332,3 +332,56 @@ test("a verified Zod fix cannot mask another high advisory in the same package",
 
 // Existing audit-policy command also runs the bounded-collection regressions.
 import "./zod-hardening.test.mjs";
+
+import decoderHardening from "./decode-uri-component-hardening.cjs";
+const decoderAdvisory = {
+  source: 1243857,
+  name: "decode-uri-component",
+  dependency: "decode-uri-component",
+  severity: "high",
+  title:
+    "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
+  url: decoderHardening.DECODER_ADVISORY_URL,
+  range: "<=0.5.0",
+};
+const decoderReport = (advisory = decoderAdvisory, nodes = ["node_modules/decode-uri-component"]) =>
+  report({ "decode-uri-component": { severity: "high", via: [advisory], nodes } });
+const evaluateDecoder = (input, proof) =>
+  evaluateAuditReport(input, undefined, undefined, undefined, proof);
+
+test("requires genuine decoder evidence and resolves the Expo dependency chain", () => {
+  const proof = decoderHardening.verifyDecodeUriComponentHardening();
+  for (const fake of [undefined, true, { ...proof }, JSON.parse(JSON.stringify(proof))])
+    assert.deepEqual(evaluateDecoder(decoderReport(), fake).blocking, [decoderAdvisory]);
+  const input = decoderReport();
+  input.vulnerabilities["query-string"] = { severity: "high", via: ["decode-uri-component"] };
+  input.vulnerabilities["expo-router"] = { severity: "high", via: ["query-string"] };
+  const result = evaluateDecoder(input, proof);
+  assert.deepEqual(result.blocking, []);
+  assert.deepEqual(result.approved, []);
+  assert.deepEqual(result.mitigated, [decoderAdvisory]);
+});
+
+test("rejects changed decoder advisory fields and unexpected installed locations", () => {
+  const proof = decoderHardening.verifyDecodeUriComponentHardening();
+  for (const change of [
+    { source: 999 },
+    { name: "another-package" },
+    { dependency: "another-package" },
+    { severity: "critical" },
+    { range: "<0.5.2" },
+    { title: "Another vulnerability" },
+    { url: "https://github.com/advisories/GHSA-xxxx-xxxx-xxxx" },
+  ]) {
+    const advisory = { ...decoderAdvisory, ...change };
+    assert.deepEqual(evaluateDecoder(decoderReport(advisory), proof).blocking, [advisory]);
+  }
+  for (const nodes of [[], ["node_modules/other/node_modules/decode-uri-component"], null, "bad"])
+    assert.deepEqual(evaluateDecoder(decoderReport(decoderAdvisory, nodes), proof).blocking, [
+      decoderAdvisory,
+    ]);
+  const input = decoderReport();
+  const other = { ...decoderAdvisory, source: 999, title: "Unrelated issue" };
+  input.vulnerabilities["decode-uri-component"].via.push(other);
+  assert.deepEqual(evaluateDecoder(input, proof).blocking, [other]);
+});
