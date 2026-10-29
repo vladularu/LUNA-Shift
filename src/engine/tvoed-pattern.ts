@@ -21,6 +21,7 @@ export const DEFAULT_TVOED_WORK_PATTERN_SETTINGS: TvoedWorkPatternSettings = Obj
 
 export function isPayWorkShift(shift: ShiftEntry): boolean {
   return (
+    !shift.specialDuty &&
     !shift.allDay &&
     WORK_TYPES.has(shift.type) &&
     shift.startTime !== null &&

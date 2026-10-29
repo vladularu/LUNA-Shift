@@ -92,7 +92,7 @@ function SalaryMonthPage({
               Für diesen Monat nicht verfügbar
             </Text>
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-              Für diesen Zeitraum fehlen Tarifdaten.
+              {pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten."}
             </Text>
           </SurfaceCard>
         ) : !manual && !monthShifts.length ? (

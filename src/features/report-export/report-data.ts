@@ -169,7 +169,12 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       month,
       "Monatsübersicht",
       calculation.summary.ok
-        ? calculation.summary.value
+        ? {
+            ...calculation.summary.value,
+            ...(calculation.summary.value.specialDutyNotes?.length
+              ? { balanceMinutes: null, status: "Zeitgutschrift der Bereitschaften noch offen" }
+              : {}),
+          }
         : { status: "Nicht verfügbar", reason: calculation.summary.error.message },
     );
     add("Schichtstatistik", month, "Verteilung", calculation.shiftTypeAnalysis);

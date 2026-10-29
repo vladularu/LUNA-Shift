@@ -1,3 +1,4 @@
+import { dutyCalendarDates } from "@/engine/special-duty";
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { compareCalendarEntries } from "@/engine/calendar-entry-order";
 
@@ -22,19 +23,22 @@ export function buildCalendarEntryIndex(
     if (entry.deletedAt !== null) continue;
 
     if (entry.kind === "SHIFT") {
-      const month = entry.date.slice(0, 7);
-      const monthShifts = shiftsByMonth.get(month) ?? [];
-      monthShifts.push(entry);
-      shiftsByMonth.set(month, monthShifts);
+      for (const month of new Set(dutyCalendarDates(entry).map((date) => date.slice(0, 7)))) {
+        const monthShifts = shiftsByMonth.get(month) ?? [];
+        monthShifts.push(entry);
+        shiftsByMonth.set(month, monthShifts);
+      }
       if (!options.showShifts) continue;
     } else if (!options.showAppointments) {
       continue;
     }
 
     visibleEntries.push(entry);
-    const dayEntries = entriesByDate.get(entry.date) ?? [];
-    dayEntries.push(entry);
-    entriesByDate.set(entry.date, dayEntries);
+    for (const date of entry.kind === "SHIFT" ? dutyCalendarDates(entry) : [entry.date]) {
+      const dayEntries = entriesByDate.get(date) ?? [];
+      dayEntries.push(entry);
+      entriesByDate.set(date, dayEntries);
+    }
   }
 
   visibleEntries.sort(compareCalendarEntries);

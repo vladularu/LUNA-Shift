@@ -1,3 +1,4 @@
+import { validateSpecialDuty, validateDutyParent } from "./special-duty";
 import { requireTvalPflegeTariff } from "./tval-pflege-tariff";
 import { requireTvhKrTariff } from "./tvh-kr-tariff";
 import { requireTvUkNursingTariff } from "./tvuk-nursing-tariff";
@@ -340,6 +341,17 @@ function validateRecurrence(value: RecurrenceRule | null | undefined): Recurrenc
 }
 
 export function validateTemplate(input: SaveShiftTemplateInput): SaveShiftTemplateInput {
+  if (input.specialDuty?.callouts.length || input.specialDuty?.calloutsComplete)
+    throw new ValidationError("Tatsächliche Einsätze gehören nicht in eine Dienstvorlage.");
+  const specialDuty = validateSpecialDuty(input.specialDuty);
+  try {
+    validateDutyParent(specialDuty, input);
+  } catch {
+    throw new ValidationError(
+      "Bitte prüfe die Zeiten des Sonderdienstes. Teile dürfen sich nicht überlappen; Einsätze müssen innerhalb der Rufbereitschaft liegen. Nicht eindeutige Uhrzeiten bei der Zeitumstellung bitte korrigieren.",
+    );
+  }
+  if (input.specialDuty !== undefined) input = { ...input, specialDuty };
   if (!SHIFT_TYPES.includes(input.type)) {
     throw new ValidationError("Unbekannte Dienstart.");
   }
@@ -357,7 +369,7 @@ export function validateTemplate(input: SaveShiftTemplateInput): SaveShiftTempla
   }
   const startTime = requireLocalTime(input.startTime ?? "");
   const endTime = requireLocalTime(input.endTime ?? "");
-  requireTimedRange(startTime, endTime);
+  if (!specialDuty) requireTimedRange(startTime, endTime);
 
   return {
     ...base,
@@ -368,6 +380,19 @@ export function validateTemplate(input: SaveShiftTemplateInput): SaveShiftTempla
 }
 
 export function validateShift(input: SaveShiftInput): SaveShiftInput {
+  if (input.specialDuty && input.specialDuty.kind !== "SPLIT" && (input.overtimeMinutes ?? 0) > 0)
+    throw new ValidationError(
+      "Überstunden bei Sonderdiensten sind noch nicht zugeordnet. Erfasse hier nur die tatsächlichen Zeiten.",
+    );
+  const specialDuty = validateSpecialDuty(input.specialDuty);
+  try {
+    validateDutyParent(specialDuty, input);
+  } catch {
+    throw new ValidationError(
+      "Bitte prüfe die Zeiten des Sonderdienstes. Teile dürfen sich nicht überlappen; Einsätze müssen innerhalb der Rufbereitschaft liegen. Nicht eindeutige Uhrzeiten bei der Zeitumstellung bitte korrigieren.",
+    );
+  }
+  if (input.specialDuty !== undefined) input = { ...input, specialDuty };
   if (!SHIFT_TYPES.includes(input.type)) {
     throw new ValidationError("Unbekannte Dienstart.");
   }
@@ -418,7 +443,7 @@ export function validateShift(input: SaveShiftInput): SaveShiftInput {
 
   const startTime = requireLocalTime(input.startTime ?? "");
   const endTime = requireLocalTime(input.endTime ?? "");
-  requireTimedRange(startTime, endTime);
+  if (!specialDuty) requireTimedRange(startTime, endTime);
   return {
     ...base,
     startTime,

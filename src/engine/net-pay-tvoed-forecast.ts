@@ -1,3 +1,4 @@
+import { projectRegularPayShifts } from "./special-duty";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { SfnNetPayResult, SfnShift } from "@/domain/net-pay-sfn";
 import type { MonthlyPayEstimate, ShiftEntry, UserProfile } from "@/domain/types";
@@ -70,7 +71,7 @@ export function calculateTvoedNetPayForecast(
     ];
     if (components.reduce((sum, value) => sum + cents(value), 0) !== grossCents)
       return unavailable("Die Bestandteile der Gehaltsprognose passen nicht zum Gesamtbrutto.");
-    const monthShifts = input.shifts.filter(
+    const monthShifts = projectRegularPayShifts(input.shifts).filter(
       (shift) => shift.deletedAt === null && shift.date.startsWith(`${month}-`),
     );
     if (

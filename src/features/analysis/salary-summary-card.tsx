@@ -131,7 +131,8 @@ export function SalarySummaryCard({
             selectable
             style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
           >
-            Wähle einen unterstützten Monat oder aktualisiere deine Gehaltsgrundlage.
+            {pay.specialDutyNotes?.join(" ") ??
+              "Wähle einen unterstützten Monat oder aktualisiere deine Gehaltsgrundlage."}
           </Text>
         </View>
       ) : (

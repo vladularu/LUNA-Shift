@@ -1,3 +1,4 @@
+import { newSpecialDuty } from "@/domain/special-duty";
 import { captureEmploymentProfile } from "@/domain/employment-history";
 import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { describe, expect, it } from "vitest";
@@ -81,6 +82,55 @@ function calculateMonth(
   };
 }
 describe("automatic payroll across every selectable salary model", () => {
+  it.each(models)(
+    "keeps split services in %s identical to the two actual work periods",
+    (_name, profile) => {
+      const first = forecastShift({
+        type: "CUSTOM",
+        startTime: "06:00",
+        endTime: "10:00",
+        breakMinutes: 0,
+      });
+      const second = { ...first, id: "second", startTime: "16:00", endTime: "20:00" };
+      const combined = {
+        ...first,
+        specialDuty: {
+          ...newSpecialDuty("SPLIT", "06:00", "10:00", "Europe/Berlin"),
+          parts: [{ start: 960, end: 1200, breakMinutes: 0 }],
+        },
+      };
+      const expected = calculateMonth(profile, "2026-07", [first, second]);
+      const expectedPay = calculateMonthlyPayEstimate(
+        "2026-07",
+        [first, second],
+        profile,
+        null,
+        [],
+        DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+        resolver,
+      );
+      const actual = calculateMonth(profile, "2026-07", [combined]);
+      expect(actual.pay.estimatedGrossAmount).toBe(expectedPay.estimatedGrossAmount);
+      expect(actual.pay.timePremiumAmount).toBe(expectedPay.timePremiumAmount);
+      expect(actual.forecast.result.status).toBe(expected.forecast.result.status);
+      expect(actual.pay.shiftBreakdowns).toHaveLength(expected.pay.shiftBreakdowns.length);
+    },
+  );
+  it.each(models)(
+    "does not publish complete %s payroll for unresolved standby",
+    (_name, profile) => {
+      const shift = forecastShift({
+        breakMinutes: 0,
+        specialDuty: newSpecialDuty("STANDBY", "21:00", "07:00", "Europe/Berlin"),
+      });
+      const actual = calculateMonth(profile, "2026-07", [shift]);
+      expect(actual.pay.available).toBe(false);
+      expect(actual.pay.estimatedGrossAmount).toBeNull();
+      expect(actual.pay.specialDutyNotes?.length).toBeGreaterThan(0);
+      expect(actual.forecast.result.status).toBe("unavailable");
+    },
+  );
+
   it("identifies the affected service when work times are missing", () => {
     const shift = forecastShift({
       id: "missing-times",

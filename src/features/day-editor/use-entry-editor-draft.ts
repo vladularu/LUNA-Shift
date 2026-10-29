@@ -1,3 +1,4 @@
+import type { SpecialDuty } from "@/domain/special-duty";
 import { useState } from "react";
 
 import type {
@@ -15,6 +16,7 @@ export function useEntryEditorDraft(
   initialAppointment: Appointment | null,
   mode: "SHIFT" | "APPOINTMENT",
 ) {
+  const specialDuty = useState<SpecialDuty | null>(initialShift?.specialDuty ?? null);
   const shiftType = useState<ShiftType>(initialShift?.type ?? "CUSTOM");
   const shiftAllDay = useState(initialShift?.allDay ?? false);
   const selectedTemplateId = useState(initialShift?.templateId ?? null);
@@ -46,6 +48,7 @@ export function useEntryEditorDraft(
     mode === "SHIFT"
       ? [
           shiftType[0],
+          specialDuty[0],
           shiftAllDay[0],
           selectedTemplateId[0],
           shiftTitle[0],
@@ -76,6 +79,7 @@ export function useEntryEditorDraft(
   return {
     // Opening an appointment sheet alone must not create its default values.
     hasChanges: (mode === "SHIFT" && initialShift === null) || draft !== initialDraft,
+    specialDuty,
     shiftType,
     shiftAllDay,
     selectedTemplateId,

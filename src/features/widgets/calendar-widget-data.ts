@@ -1,3 +1,4 @@
+import { dutyCalendarDates } from "@/engine/special-duty";
 import { Temporal } from "@js-temporal/polyfill";
 import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import {
@@ -211,9 +212,11 @@ export function buildCalendarWidgetTimeline({
   const byDate = new Map<string, ShiftEntry[]>();
   for (const entry of [...entries].sort(compareCalendarEntries)) {
     if (entry.kind !== "SHIFT" || entry.deletedAt !== null) continue;
-    const bucket = byDate.get(entry.date) ?? [];
-    bucket.push(entry);
-    byDate.set(entry.date, bucket);
+    for (const date of dutyCalendarDates(entry)) {
+      const bucket = byDate.get(date) ?? [];
+      bucket.push(entry);
+      byDate.set(date, bucket);
+    }
   }
   const base = {
     themeMode,

@@ -94,14 +94,18 @@ export function MonthOverview({
             }
             balance={
               summary.ok
-                ? formatSignedMinutes(summary.value.balanceMinutes) + " h"
+                ? summary.value.specialDutyNotes?.length
+                  ? "Noch offen"
+                  : formatSignedMinutes(summary.value.balanceMinutes) + " h"
                 : "Nicht verfügbar"
             }
             caption={
               summary.ok
-                ? summary.value.targetCalculation?.status === "PROVISIONAL"
-                  ? "Sollzeit vorläufig · Tippe für die Berechnung"
-                  : undefined
+                ? summary.value.specialDutyNotes?.length
+                  ? "Bereitschaften: Zeitgutschrift noch offen"
+                  : summary.value.targetCalculation?.status === "PROVISIONAL"
+                    ? "Sollzeit vorläufig · Tippe für die Berechnung"
+                    : undefined
                 : "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen."
             }
           />

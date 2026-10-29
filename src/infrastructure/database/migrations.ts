@@ -1,3 +1,4 @@
+import { migrateSpecialDuties } from "./migration-35-special-duties";
 import { migrateWorkingTimeTarget } from "./migration-34-working-time-target";
 import { migrateCalendarSharing } from "./calendar-sharing-repository";
 import { migrateNetPayProfiles } from "./migration-32-net-pay-profiles";
@@ -15,7 +16,7 @@ import { migrateTariffAnnualClaims } from "./migration-21-tariff-annual-claims";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { withImmediateTransaction } from "./transaction";
 
-export const LATEST_DATABASE_SCHEMA_VERSION = 34;
+export const LATEST_DATABASE_SCHEMA_VERSION = 35;
 
 const MIGRATION_1 = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -715,4 +716,5 @@ export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
   await migrateNetPayProfiles(db, now);
   await migrateCalendarSharing(db, now);
   await migrateWorkingTimeTarget(db, now);
+  await migrateSpecialDuties(db, now);
 }

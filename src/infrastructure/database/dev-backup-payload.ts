@@ -1,3 +1,4 @@
+import { validateSpecialDuty, validateDutyParent } from "@/domain/special-duty";
 import { validateDevTraining } from "./dev-training-backup";
 import type { ShiftTrainingRow } from "./training-repository";
 import {
@@ -25,6 +26,7 @@ export interface RawShiftRow {
   overtime_minutes: number;
   tariff_overtime_confirmed: number;
   holiday_premium_mode: string;
+  special_duty_json?: string | null;
   revision: number;
   created_at: string;
   updated_at: string;
@@ -160,6 +162,18 @@ function validateShift(value: unknown, month: string, currentPayload: boolean): 
   if (!PREMIUM_MODES.has(stringValue(row, "holiday_premium_mode"))) {
     invalid("Feiertagsmodus");
   }
+  const dutyJson = row.special_duty_json;
+  if (dutyJson !== undefined && dutyJson !== null && typeof dutyJson !== "string")
+    throw new Error("Ungültige Sonderdienstdaten im Backup.");
+  const duty = validateSpecialDuty(dutyJson ? JSON.parse(dutyJson as string) : null);
+  validateDutyParent(duty, {
+    date: row.date as string,
+    type: row.type as string,
+    allDay: row.all_day === 1,
+    startTime: row.start_time as string,
+    endTime: row.end_time as string,
+    breakMinutes: row.break_minutes as number,
+  });
   const allDay = versionedInteger(row, "all_day", currentPayload, 0);
   if (allDay !== 0 && allDay !== 1) invalid("Ganztagsstatus");
   const alarmEnabled = row.alarm_enabled === undefined ? 0 : integerValue(row, "alarm_enabled");
@@ -190,6 +204,7 @@ function validateShift(value: unknown, month: string, currentPayload: boolean): 
     overtime_minutes: integerValue(row, "overtime_minutes"),
     tariff_overtime_confirmed: tariffOvertimeConfirmed,
     holiday_premium_mode: stringValue(row, "holiday_premium_mode"),
+    special_duty_json: (dutyJson as string | null) ?? null,
     revision: integerValue(row, "revision", 1),
     created_at: stringValue(row, "created_at"),
     updated_at: stringValue(row, "updated_at"),

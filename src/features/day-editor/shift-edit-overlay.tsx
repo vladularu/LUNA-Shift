@@ -83,6 +83,8 @@ function PauseRow({
 }
 
 export function ShiftEditOverlay({
+  specialDutyFields,
+  specialDutyActive = false,
   alarmEnabled,
   breakMinutes,
   busy,
@@ -178,17 +180,19 @@ export function ShiftEditOverlay({
                         onPress={openPausePicker}
                         value={breakMinutes}
                       />
-                      <ShiftOvertimeFields
-                        compact
-                        confirmed={tariffOvertimeConfirmed}
-                        inputRef={overtimeInputRef}
-                        onConfirmedChange={onTariffOvertimeConfirmedChange}
-                        onMinutesChange={onOvertimeMinutesChange}
-                        overtimeMinutes={overtimeMinutes}
-                      />
+                      {!specialDutyActive ? (
+                        <ShiftOvertimeFields
+                          compact
+                          confirmed={tariffOvertimeConfirmed}
+                          inputRef={overtimeInputRef}
+                          onConfirmedChange={onTariffOvertimeConfirmedChange}
+                          onMinutesChange={onOvertimeMinutesChange}
+                          overtimeMinutes={overtimeMinutes}
+                        />
+                      ) : null}
                     </ResponsiveFieldRow>
                   </View>
-                  {Number(overtimeMinutes) > 0 ? (
+                  {!specialDutyActive && Number(overtimeMinutes) > 0 ? (
                     <ShiftOvertimeConfirmation
                       confirmed={tariffOvertimeConfirmed}
                       onConfirmedChange={onTariffOvertimeConfirmedChange}
@@ -199,6 +203,7 @@ export function ShiftEditOverlay({
                 <ValueRow label="Dauer" separator={false} value="Ganztägig" />
               )}
             </EntryEditGroup>
+            {specialDutyFields}
             <EntryEditGroup testID="shift-edit-reminder-group">
               <ValueRow
                 label="Erinnerung"

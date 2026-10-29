@@ -1,3 +1,4 @@
+import { projectRegularPayShifts, specialDutyOpenItems } from "./special-duty";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
 import { employmentWorkPatternAt, employmentProfileAt } from "@/domain/employment-history";
 import {
@@ -580,6 +581,43 @@ export function calculateShiftPremiumBreakdown(
 const cachedMonthlyPay = createSimpleMonthlyPayCache();
 
 export function calculateMonthlyPayEstimate(
+  month: string,
+  shifts: readonly ShiftEntry[],
+  profile: UserProfile,
+  decision: MonthlyTariffDecision | null,
+  assessmentShifts: readonly ShiftEntry[] = shifts,
+  workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+  ruleResolver: RuleResolver = bundledRuleResolver,
+): MonthlyPayEstimate {
+  if (
+    !shifts.some((shift) => shift.specialDuty) &&
+    !assessmentShifts.some((shift) => shift.specialDuty)
+  )
+    return calculateRegularMonthlyPayEstimate(
+      month,
+      shifts,
+      profile,
+      decision,
+      assessmentShifts,
+      workPatternSettings,
+      ruleResolver,
+    );
+  const notes = specialDutyOpenItems(shifts, month);
+  const estimate = calculateRegularMonthlyPayEstimate(
+    month,
+    projectRegularPayShifts(shifts),
+    profile,
+    decision,
+    assessmentShifts.filter((shift) => !shift.specialDuty),
+    workPatternSettings,
+    ruleResolver,
+  );
+  return notes.length
+    ? { ...estimate, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }
+    : estimate;
+}
+
+function calculateRegularMonthlyPayEstimate(
   month: string,
   shifts: readonly ShiftEntry[],
   profile: UserProfile,

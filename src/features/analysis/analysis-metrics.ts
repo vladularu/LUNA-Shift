@@ -1,3 +1,4 @@
+import { projectDutyCalendarDays } from "@/engine/special-duty";
 import {
   SHIFT_TYPES,
   type CalendarEntry,
@@ -90,6 +91,10 @@ function* buildMonthlyShiftTypeAnalysisWithCreditSteps(
     shifts: readonly ShiftEntry[],
   ) => { readonly minutesByType: Readonly<Partial<Record<ShiftType, number>>> },
 ): Generator<number, MonthlyShiftTypeAnalysis, void> {
+  entries = entries.flatMap<CalendarEntry>((entry) =>
+    entry.kind === "SHIFT" ? projectDutyCalendarDays([entry]) : [entry],
+  );
+  const counted = new Set<string>();
   const counts: Partial<Record<ShiftType, number>> = {};
   const minutes: Partial<Record<ShiftType, number>> = {};
   const appearances: Partial<Record<ShiftType, ShiftAppearance[]>> = {};
@@ -111,7 +116,8 @@ function* buildMonthlyShiftTypeAnalysisWithCreditSteps(
       styles.push(Object.freeze({ title: entry.title, color: entry.color, symbol: entry.symbol }));
       appearances[entry.type] = styles;
     }
-    counts[entry.type] = (counts[entry.type] ?? 0) + 1;
+    if (!counted.has(entry.id)) counts[entry.type] = (counts[entry.type] ?? 0) + 1;
+    counted.add(entry.id);
     const dateShifts = shiftsByDate.get(entry.date) ?? [];
     dateShifts.push(entry);
     shiftsByDate.set(entry.date, dateShifts);

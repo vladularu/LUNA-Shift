@@ -1,3 +1,4 @@
+import { specialDutyWorkMinutes } from "./special-duty";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { ShiftEntry } from "@/domain/types";
@@ -15,18 +16,25 @@ function timeParts(value: string): { hour: number; minute: number } {
 }
 
 export function calculateTimedShiftBounds(
-  shift: Pick<ShiftEntry, "date" | "startTime" | "endTime" | "breakMinutes" | "allDay">,
+  shift: Pick<
+    ShiftEntry,
+    "date" | "startTime" | "endTime" | "breakMinutes" | "allDay" | "specialDuty"
+  >,
   timeZone: string,
 ): TimedShiftBounds | null {
   if (shift.allDay || shift.startTime === null || shift.endTime === null) {
     return null;
   }
 
+  if (shift.specialDuty) timeZone = shift.specialDuty.timeZone;
   const date = Temporal.PlainDate.from(shift.date);
   const startTime = Temporal.PlainTime.from(shift.startTime);
   const endTime = Temporal.PlainTime.from(shift.endTime);
-  const endDate =
-    Temporal.PlainTime.compare(endTime, startTime) <= 0 ? date.add({ days: 1 }) : date;
+  const endDate = shift.specialDuty
+    ? date.add({ days: shift.specialDuty.endDay })
+    : Temporal.PlainTime.compare(endTime, startTime) <= 0
+      ? date.add({ days: 1 })
+      : date;
   const startParts = timeParts(shift.startTime);
   const endParts = timeParts(shift.endTime);
   const start = Temporal.ZonedDateTime.from(
@@ -47,9 +55,13 @@ export function calculateTimedShiftBounds(
 }
 
 export function calculateTimedShiftMinutes(
-  shift: Pick<ShiftEntry, "date" | "startTime" | "endTime" | "breakMinutes" | "allDay">,
+  shift: Pick<
+    ShiftEntry,
+    "date" | "startTime" | "endTime" | "breakMinutes" | "allDay" | "specialDuty"
+  >,
   timeZone: string,
 ): number {
+  if (shift.specialDuty) return specialDutyWorkMinutes(shift);
   return calculateTimedShiftBounds(shift, timeZone)?.netMinutes ?? 0;
 }
 

@@ -1,81 +1,16 @@
+import { mapTemplate, type TemplateRow } from "./shift-template-row";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import type {
-  EntryLocation,
-  EntryNotification,
-  SaveShiftTemplateInput,
-  ShiftTemplate,
-} from "@/domain/types";
+import type { SaveShiftTemplateInput, ShiftTemplate } from "@/domain/types";
 import { ConcurrencyError } from "@/domain/errors";
-import { createId, ValidationError, validateTemplate } from "@/domain/validation";
-import {
-  parseJson,
-  requireChanged,
-  serializeJson,
-} from "@/infrastructure/database/repository-shared";
+import { createId, validateTemplate } from "@/domain/validation";
+import { requireChanged, serializeJson } from "@/infrastructure/database/repository-shared";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
-
-interface TemplateRow {
-  id: string;
-  name: string;
-  type: ShiftTemplate["type"];
-  all_day: number;
-  start_time: string | null;
-  end_time: string | null;
-  break_minutes: number;
-  color: string;
-  symbol: string;
-  notification_json: string | null;
-  location_json: string | null;
-  sort_order: number;
-  revision: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-function mapTemplate(row: TemplateRow): ShiftTemplate {
-  if (!Number.isInteger(row.sort_order) || !Number.isInteger(row.revision)) {
-    throw new ValidationError("Gespeicherte Vorlagendaten sind ungültig.");
-  }
-  const validated = validateTemplate({
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    allDay: row.all_day === 1 || row.start_time === null,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    breakMinutes: row.break_minutes,
-    color: row.color,
-    symbol: row.symbol,
-    notification: parseJson<EntryNotification>(row.notification_json, "Benachrichtigung"),
-    location: parseJson<EntryLocation>(row.location_json, "Ort"),
-    sortOrder: row.sort_order,
-  });
-  return Object.freeze({
-    id: row.id,
-    name: validated.name,
-    type: validated.type,
-    allDay: validated.allDay ?? false,
-    startTime: validated.startTime ?? null,
-    endTime: validated.endTime ?? null,
-    breakMinutes: validated.breakMinutes,
-    color: validated.color,
-    symbol: validated.symbol,
-    notification: validated.notification ?? null,
-    location: validated.location ?? null,
-    sortOrder: validated.sortOrder,
-    revision: row.revision,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    deletedAt: row.deleted_at,
-  });
-}
 
 export async function listTemplates(db: SQLiteDatabase): Promise<readonly ShiftTemplate[]> {
   const rows = await db.getAllAsync<TemplateRow>(
     `SELECT id,name,type,all_day,start_time,end_time,break_minutes,color,symbol,
-      notification_json,location_json,sort_order,
+      notification_json,location_json,sort_order,special_duty_json,
       revision,created_at,updated_at,deleted_at
      FROM shift_templates WHERE deleted_at IS NULL ORDER BY sort_order,name`,
   );
@@ -94,9 +29,9 @@ export async function saveTemplate(
     await db.runAsync(
       `INSERT INTO shift_templates(
         id,name,type,all_day,start_time,end_time,break_minutes,color,symbol,
-        notification_json,location_json,sort_order,
+        notification_json,location_json,sort_order,special_duty_json,
         revision,created_at,updated_at,deleted_at
-      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,NULL)`,
+      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,NULL)`,
       id,
       input.name,
       input.type,
@@ -109,6 +44,7 @@ export async function saveTemplate(
       serializeJson(input.notification),
       serializeJson(input.location),
       input.sortOrder,
+      serializeJson(input.specialDuty),
       now,
       now,
     );
@@ -116,7 +52,7 @@ export async function saveTemplate(
     const result = await db.runAsync(
       `UPDATE shift_templates SET
         name=?,type=?,all_day=?,start_time=?,end_time=?,break_minutes=?,color=?,symbol=?,
-        notification_json=?,location_json=?,sort_order=?,revision=revision+1,updated_at=?
+        notification_json=?,location_json=?,sort_order=?,special_duty_json=?,revision=revision+1,updated_at=?
        WHERE id=? AND revision=? AND deleted_at IS NULL`,
       input.name,
       input.type,
@@ -129,6 +65,7 @@ export async function saveTemplate(
       serializeJson(input.notification),
       serializeJson(input.location),
       input.sortOrder,
+      serializeJson(input.specialDuty),
       now,
       id,
       input.expectedRevision ?? -1,
@@ -138,7 +75,7 @@ export async function saveTemplate(
 
   const row = await db.getFirstAsync<TemplateRow>(
     `SELECT id,name,type,all_day,start_time,end_time,break_minutes,color,symbol,
-      notification_json,location_json,sort_order,
+      notification_json,location_json,sort_order,special_duty_json,
       revision,created_at,updated_at,deleted_at FROM shift_templates WHERE id=?`,
     id,
   );
@@ -193,7 +130,7 @@ export async function swapTemplateSortOrder(
 
     const rows = await transaction.getAllAsync<TemplateRow>(
       `SELECT id,name,type,all_day,start_time,end_time,break_minutes,color,symbol,
-        notification_json,location_json,sort_order,
+        notification_json,location_json,sort_order,special_duty_json,
         revision,created_at,updated_at,deleted_at
        FROM shift_templates WHERE id IN (?,?)`,
       first.id,

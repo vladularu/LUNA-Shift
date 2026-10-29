@@ -1,3 +1,4 @@
+import { projectRegularPayShifts } from "./special-duty";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
 import { employmentProfileAt } from "@/domain/employment-history";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -95,7 +96,7 @@ export function* calculateAutomaticNetPayForecastSteps(
       return stop("Für diese Zeitzone ist keine Netto-Prognose verfügbar.");
     if (!Number.isSafeInteger(profile.weeklyMinutes) || profile.weeklyMinutes <= 0)
       return stop("Deine Wochenarbeitszeit fehlt.", { kind: "profile", section: "WORK" });
-    const shifts = input.shifts.filter(
+    const shifts = projectRegularPayShifts(input.shifts).filter(
       (s) => s.deletedAt === null && s.date.startsWith(`${month}-`),
     );
     const incompleteShift = shifts.find(

@@ -1,3 +1,4 @@
+import { dutyCalendarDates } from "@/engine/special-duty";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
@@ -25,7 +26,13 @@ export function selectMonthlyAnalysisEntries(
   const monthEntries: CalendarEntry[] = [];
   const monthShifts: ShiftEntry[] = [];
   for (const entry of entries) {
-    if (entry.deletedAt !== null || !entry.date.startsWith(monthPrefix)) continue;
+    if (
+      entry.deletedAt !== null ||
+      !(entry.kind === "SHIFT" && entry.specialDuty
+        ? dutyCalendarDates(entry).some((date) => date.startsWith(monthPrefix))
+        : entry.date.startsWith(monthPrefix))
+    )
+      continue;
     monthEntries.push(entry);
     if (entry.kind === "SHIFT") monthShifts.push(entry);
   }
