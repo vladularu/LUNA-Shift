@@ -62,6 +62,7 @@ export function calculateTvoedNetPayForecast(
   try {
     const grossCents = cents(pay.estimatedGrossAmount);
     const components = [
+      pay.specialDutyAmount ?? 0,
       pay.personalBaseAmount,
       pay.timePremiumAmount,
       pay.overtimeAmount,

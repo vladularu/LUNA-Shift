@@ -409,3 +409,15 @@ export function calculateNursingTrainingMonth(
     confirmedAllowance: decision?.allowanceStatus ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getTrainingDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const ctx = trainingContext(date, profile, resolver);
+  return ctx
+    ? roundRemunerationCents(ctx.monthlyCents * 60000, ctx.fullTimeWeeklyMinutes * 4348)
+    : null;
+}

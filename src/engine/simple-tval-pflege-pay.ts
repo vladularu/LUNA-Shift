@@ -245,3 +245,19 @@ export function calculateTvalPflegeMonth(
     confirmedAllowance: options.confirmedAllowance ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getTvalDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const selected = profile.tvalPflegeTariff;
+  const ctx = selected ? context(date, selected, profile.weeklyMinutes, resolver) : null;
+  return ctx
+    ? roundRemunerationCents(
+        ctx.monthly * 60000,
+        ctx.fullTime * ctx.policy.monthlyFactorThousandths,
+      )
+    : null;
+}

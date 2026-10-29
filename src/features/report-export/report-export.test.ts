@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { newSpecialDuty } from "@/domain/special-duty";
+import { reportView } from "./report-view-data";
 import type { CalendarEntry, ShiftEntry, UserProfile } from "@/domain/types";
 import { bundledRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { buildReportSteps, type ReportInput } from "./report-data";
@@ -97,6 +99,40 @@ function savedNet(settings: MonthlyNetPaySettings): SavedMonthlyNetPaySettings {
 }
 
 describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
+  it("exports on-call flat rates with taxable gross and a separate financial component", () => {
+    const entry = forecastShift({
+      date: "2026-07-07",
+      startTime: "06:00",
+      endTime: "18:00",
+      breakMinutes: 0,
+      specialDuty: {
+        ...newSpecialDuty("ON_CALL", "06:00", "18:00", "Europe/Berlin"),
+        calloutsComplete: true,
+      },
+    });
+    const report = build({
+      period: "2026-07",
+      profile: forecastProfile,
+      entries: [entry],
+      netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+    });
+    expect(value(report, "Gehaltsprognose", "specialDutyAmount", "2026-07")).toBe("48,06");
+    expect(reportView(report).specialDuties).toBe(48.06);
+    expect(reportView(report).net).not.toBeNull();
+    expect(report.rows.find((row) => row.field === "specialDutyAmount")?.label).toContain(
+      "Rufbereitschaftspauschalen",
+    );
+    expect(reportToCsv(report)).not.toContain("48,06");
+    expect(reportToHtml(report)).toContain("Rufbereitschaftspauschalen");
+    const open = build({
+      period: "2026-07",
+      profile: forecastProfile,
+      entries: [{ ...entry, specialDuty: { ...entry.specialDuty!, calloutsComplete: false } }],
+    });
+    expect(reportView(open).gross).toBeNull();
+    expect(reportView(open).specialDutyNote).toContain("Bestätige noch");
+    expect(reportToHtml(open)).toContain("Bestätige noch");
+  });
   it("includes the unsaved tariff forecast consistently in monthly gross, net and the annual total", () => {
     const base = input({
       profile: forecastProfile,

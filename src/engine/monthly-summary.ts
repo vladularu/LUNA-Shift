@@ -62,7 +62,18 @@ export function* calculateMonthlySummarySteps(
   MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget },
   void
 > {
-  const specialDutyNotes = specialDutyOpenItems(entries, month);
+  const specialDutyNotes = specialDutyOpenItems(
+    entries.filter(
+      (entry) =>
+        !(
+          entry.specialDuty?.kind === "ON_CALL" &&
+          entry.specialDuty.calloutsComplete &&
+          entry.specialDuty.callouts.length === 0 &&
+          entry.specialDuty.settlement !== "TIME_OFF"
+        ),
+    ),
+    month,
+  );
   entries = projectDutyCalendarDays(entries);
   const work = category();
   const training = category();

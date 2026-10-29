@@ -133,6 +133,16 @@ export function reportView(report: ReportDocument) {
         ),
     premiums: number(salarySection, annual ? "premiumAmount" : "timePremiumAmount"),
     overtime: number(salarySection, "overtimeAmount"),
+    specialDuties: annual ? null : number("Gehaltsprognose", "specialDutyAmount"),
+    specialDutyNote: report.rows
+      .filter(
+        (row) =>
+          row.section === "Gehaltsprognose" &&
+          row.period === report.period &&
+          row.field.startsWith("specialDutyNotes"),
+      )
+      .map((row) => row.value)
+      .join(" "),
     tax: annual
       ? null
       : sum(

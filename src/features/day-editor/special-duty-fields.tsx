@@ -379,8 +379,8 @@ export function SpecialDutyFields({
           ) : null}
           {value.kind !== "SPLIT" ? (
             <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted, padding: 12 }]}>
-              Vergütung und Zeitgutschrift: noch offen. Die reguläre Gehaltsschätzung wird für
-              diesen Monat als unvollständig gekennzeichnet.
+              Die Abrechnung findest du unter Gehalt. Fehlende Angaben und noch offene Berechnungen
+              werden dort getrennt angezeigt.
             </Text>
           ) : null}
         </>

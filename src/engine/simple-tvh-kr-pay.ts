@@ -508,3 +508,16 @@ export function calculateTvhKrMonth(
     confirmedAllowance: options.confirmedAllowance ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getTvhDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const selected = profile.tvhKrTariff;
+  const ctx = selected ? context(date, selected, profile.weeklyMinutes, resolver) : null;
+  return ctx
+    ? roundRemunerationCents(ctx.monthly * 100, roundRemunerationCents(ctx.fullTime * 4348, 600))
+    : null;
+}

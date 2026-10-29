@@ -535,6 +535,8 @@ export interface TvoedAssessmentCriterion {
 }
 
 export interface MonthlyPayEstimate {
+  readonly specialDutyAmount?: number;
+  readonly specialDutyBreakdowns?: readonly import("./special-duty-pay").SpecialDutyPayLine[];
   readonly specialDutyNotes?: readonly string[];
   /** TV-UK compulsory time credit; excluded from the salary estimate. */
   readonly nightCompensatoryMinutes?: number;

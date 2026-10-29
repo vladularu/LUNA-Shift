@@ -39,6 +39,9 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate)
         ...(pay.overtimeAmount > 0
           ? [{ label: "Überstunden", value: euro(pay.overtimeAmount) }]
           : []),
+        ...((pay.specialDutyAmount ?? 0) > 0
+          ? [{ label: "Rufbereitschaftspauschalen", value: euro(pay.specialDutyAmount!) }]
+          : []),
         ...(pay.allowanceAmount > 0
           ? [
               {

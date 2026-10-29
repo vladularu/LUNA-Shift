@@ -465,3 +465,15 @@ export function calculateVkaEMonth(
     confirmedAllowance: decision?.allowanceStatus ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getVkaEDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const ctx = eContext(date, profile, resolver);
+  return ctx
+    ? roundRemunerationCents(ctx.monthlyCents * 60000, ctx.fullTimeWeeklyMinutes * 4348)
+    : null;
+}

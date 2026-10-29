@@ -1,4 +1,5 @@
 import { Text } from "@/ui/text";
+import { SpecialDutyPayCard } from "./special-duty-pay-card";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { router, useLocalSearchParams } from "expo-router";
 import { Pressable } from "react-native";
@@ -106,6 +107,7 @@ function SalaryMonthPage({
             </Text>
           </SurfaceCard>
         ) : null}
+        <SpecialDutyPayCard lines={pay.specialDutyBreakdowns ?? []} />
         <NetPayAutomaticEntryCard
           key={month}
           month={month}

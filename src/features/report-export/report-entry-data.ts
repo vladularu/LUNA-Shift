@@ -82,10 +82,16 @@ export function reportEntries(
               profile.timeZone,
             ),
       creditMinutes:
-        entry.kind === "APPOINTMENT" ||
-        (entry.kind === "SHIFT" && entry.specialDuty && entry.specialDuty.kind !== "SPLIT")
-          ? null
-          : creditMinutes,
+        entry.kind === "SHIFT" &&
+        entry.specialDuty?.kind === "ON_CALL" &&
+        entry.specialDuty.calloutsComplete &&
+        entry.specialDuty.callouts.length === 0 &&
+        entry.specialDuty.settlement !== "TIME_OFF"
+          ? 0
+          : entry.kind === "APPOINTMENT" ||
+              (entry.kind === "SHIFT" && entry.specialDuty && entry.specialDuty.kind !== "SPLIT")
+            ? null
+            : creditMinutes,
     };
   });
 }

@@ -111,6 +111,7 @@ export function* calculateAutomaticNetPayForecastSteps(
     if (!pay.available || pay.personalBaseAmount === null || pay.estimatedGrossAmount === null)
       return stop("Die vollständige Brutto-Gehaltsprognose fehlt.");
     const components = [
+      pay.specialDutyAmount ?? 0,
       pay.personalBaseAmount,
       pay.timePremiumAmount,
       pay.overtimeAmount,

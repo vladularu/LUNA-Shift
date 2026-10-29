@@ -1,4 +1,5 @@
-import { projectRegularPayShifts, specialDutyOpenItems } from "./special-duty";
+import { projectRegularPayShifts } from "./special-duty";
+import { calculateSpecialDutyPay } from "./special-duty-pay";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
 import { employmentWorkPatternAt, employmentProfileAt } from "@/domain/employment-history";
 import {
@@ -602,7 +603,8 @@ export function calculateMonthlyPayEstimate(
       workPatternSettings,
       ruleResolver,
     );
-  const notes = specialDutyOpenItems(shifts, month);
+  const specialDutyBreakdowns = calculateSpecialDutyPay(month, shifts, profile, ruleResolver);
+  const notes = [...new Set(specialDutyBreakdowns.flatMap((line) => line.notes))];
   const estimate = calculateRegularMonthlyPayEstimate(
     month,
     projectRegularPayShifts(shifts),
@@ -612,9 +614,19 @@ export function calculateMonthlyPayEstimate(
     workPatternSettings,
     ruleResolver,
   );
-  return notes.length
-    ? { ...estimate, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }
-    : estimate;
+  if (!specialDutyBreakdowns.length) return estimate;
+  const specialDutyAmount =
+    specialDutyBreakdowns.reduce((sum, line) => sum + (line.baseAmountCents ?? 0), 0) / 100;
+  const result = { ...estimate, specialDutyBreakdowns, specialDutyAmount };
+  return specialDutyBreakdowns.some((line) => !line.complete)
+    ? { ...result, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }
+    : {
+        ...result,
+        estimatedGrossAmount:
+          estimate.estimatedGrossAmount === null
+            ? null
+            : roundMoney(estimate.estimatedGrossAmount + specialDutyAmount),
+      };
 }
 
 function calculateRegularMonthlyPayEstimate(
