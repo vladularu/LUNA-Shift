@@ -16,6 +16,41 @@ const line: SpecialDutyPayLine = {
   notes: [],
 };
 describe("special duty pay details", () => {
+  it("shows standby leave separately from cash and never labels it an on-call flat rate", async () => {
+    const view = await render(
+      <SpecialDutyPayCard
+        lines={[
+          {
+            ...line,
+            title: "Bereitschaftsdienst",
+            baseAmountCents: 0,
+            standbyPay: {
+              actualMinutes: 480,
+              weightedMinutes: 288,
+              factorBasisPoints: 6000,
+              hourlyCents: 2329,
+              payGroup: "P8",
+              baseAmountCents: 11179,
+              overtimePremiumCents: 0,
+              nightPremiumCents: 0,
+              holidayPremiumCents: 0,
+              sundayPremiumCents: 0,
+              cashAmountCents: 0,
+              timeCreditMinutes: 296,
+              mandatoryRestMinutes: 0,
+              notes: [],
+            },
+          },
+        ]}
+      />,
+    );
+    expect(view.getByText(/Auszahlung Bereitschaftsdienst: 0,00/)).toBeTruthy();
+    expect(view.getByText(/Geleistet: 480 Min.*Vergütung: 288 Min/)).toBeTruthy();
+    expect(
+      view.getByText(/Vorgesehener Freizeitausgleich: 296 Min.*Noch nicht aufs Zeitkonto gebucht/),
+    ).toBeTruthy();
+    expect(view.queryByText(/Rufbereitschaftspauschale/)).toBeNull();
+  });
   it("separates worked minutes from paid rounding and overtime remuneration", async () => {
     const view = await render(
       <SpecialDutyPayCard

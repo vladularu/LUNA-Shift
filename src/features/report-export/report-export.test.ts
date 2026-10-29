@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { newSpecialDuty } from "@/domain/special-duty";
+import { newStandbyAgreement } from "@/domain/standby-agreement";
 import { reportView } from "./report-view-data";
 import type { CalendarEntry, ShiftEntry, UserProfile } from "@/domain/types";
 import { bundledRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
@@ -99,6 +100,41 @@ function savedNet(settings: MonthlyNetPaySettings): SavedMonthlyNetPaySettings {
 }
 
 describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
+  it("exports standby cash, valuation and proposed leave as separate financial facts", () => {
+    const entry = forecastShift({
+      date: "2026-07-07",
+      startTime: "06:00",
+      endTime: "14:00",
+      breakMinutes: 0,
+      specialDuty: {
+        ...newSpecialDuty("STANDBY", "06:00", "14:00", "Europe/Berlin"),
+        version: 2,
+        standbyLevel: "II",
+        settlement: "PAY",
+        standbyAgreement: { ...newStandbyAgreement("TVOED_K"), rule: "STANDARD" },
+      },
+    });
+    const report = build({
+      period: "2026-07",
+      profile: forecastProfile,
+      entries: [entry],
+      netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+    });
+    expect(reportView(report).specialDuties).toBe(139.74);
+    expect(reportView(report).net).not.toBeNull();
+    expect(
+      report.rows.some(
+        (row) => row.field.endsWith("standbyPay.weightedMinutes") && row.value === "360",
+      ),
+    ).toBe(true);
+    expect(
+      report.rows.some(
+        (row) => row.field.endsWith("standbyPay.actualMinutes") && row.value === "480",
+      ),
+    ).toBe(true);
+    expect(reportToHtml(report)).toContain("Bereitschaftsvergütung");
+    expect(reportToCsv(report)).not.toContain("139,74");
+  });
   it("includes completed daytime callout pay once in the financial report", () => {
     const entry = forecastShift({
       date: "2026-07-07",
@@ -129,7 +165,7 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(
       report.rows.some((row) => row.field.endsWith("calloutPay.paidMinutes") && row.value === "60"),
     ).toBe(true);
-    expect(reportToHtml(report)).toContain("Pauschalen und Einsätze");
+    expect(reportToHtml(report)).toContain("Bereitschaftsvergütung");
     expect(reportToCsv(report)).not.toContain("Einsatzvergütung");
   });
   it("exports on-call flat rates with taxable gross and a separate financial component", () => {
@@ -153,10 +189,10 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(reportView(report).specialDuties).toBe(48.06);
     expect(reportView(report).net).not.toBeNull();
     expect(report.rows.find((row) => row.field === "specialDutyAmount")?.label).toContain(
-      "Rufbereitschaft: Pauschalen und Einsätze",
+      "Bereitschaftsvergütung",
     );
     expect(reportToCsv(report)).not.toContain("48,06");
-    expect(reportToHtml(report)).toContain("Rufbereitschaft: Pauschalen und Einsätze");
+    expect(reportToHtml(report)).toContain("Bereitschaftsvergütung");
     const open = build({
       period: "2026-07",
       profile: forecastProfile,

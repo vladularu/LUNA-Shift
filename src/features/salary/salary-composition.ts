@@ -42,7 +42,7 @@ export function salaryComposition(profile: UserProfile, pay: MonthlyPayEstimate)
         ...((pay.specialDutyAmount ?? 0) > 0
           ? [
               {
-                label: "Rufbereitschaft: Pauschalen und Einsätze",
+                label: "Bereitschaftsvergütung",
                 value: euro(pay.specialDutyAmount!),
               },
             ]

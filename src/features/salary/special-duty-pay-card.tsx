@@ -23,14 +23,62 @@ export function SpecialDutyPayCard({ lines }: { readonly lines: readonly Special
           <Text style={{ ...TYPOGRAPHY.body, color: palette.text }}>
             {line.baseAmountCents === null
               ? "Betrag noch offen"
-              : `Rufbereitschaftspauschale: ${money(line.baseAmountCents)}`}
+              : line.standbyPay
+                ? `Auszahlung Bereitschaftsdienst: ${money(line.baseAmountCents)}`
+                : `Rufbereitschaftspauschale: ${money(line.baseAmountCents)}`}
           </Text>
-          {line.baseAmountCents !== null && line.paidHours !== null && line.hourlyCents !== null ? (
+          {!line.standbyPay &&
+          line.baseAmountCents !== null &&
+          line.paidHours !== null &&
+          line.hourlyCents !== null ? (
             <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
               {line.paidHours.toLocaleString("de-DE", { maximumFractionDigits: 4 })} Stunden ×{" "}
               {money(line.hourlyCents)}
               {line.source?.includes("TV-UK") ? " × 1,25" : ""}
             </Text>
+          ) : null}
+          {line.standbyPay ? (
+            <View style={{ gap: SPACING.xs }}>
+              <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                Geleistet: {line.standbyPay.actualMinutes} Min.
+                {line.standbyPay.weightedMinutes === null
+                  ? ""
+                  : ` Für die Vergütung: ${line.standbyPay.weightedMinutes.toLocaleString("de-DE", { maximumFractionDigits: 2 })} Min.`}
+              </Text>
+              {line.standbyPay.hourlyCents !== null ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Entgeltgrundlage: {line.standbyPay.payGroup} ·{" "}
+                  {money(line.standbyPay.hourlyCents)}/Std.
+                </Text>
+              ) : null}
+              {line.standbyPay.baseAmountCents !== null ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Grundbetrag: {money(line.standbyPay.baseAmountCents)}
+                  {[
+                    ["Überstunden", line.standbyPay.overtimePremiumCents],
+                    ["Nacht", line.standbyPay.nightPremiumCents],
+                    ["Feiertag", line.standbyPay.holidayPremiumCents],
+                    ["Sonntag", line.standbyPay.sundayPremiumCents],
+                  ]
+                    .filter(([, amount]) => typeof amount === "number" && amount > 0)
+                    .map(([label, amount]) => ` · ${label}: ${money(amount as number)}`)
+                    .join("")}
+                </Text>
+              ) : null}
+              {line.standbyPay.timeCreditMinutes !== null &&
+              line.standbyPay.timeCreditMinutes > 0 ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Vorgesehener Freizeitausgleich:{" "}
+                  {line.standbyPay.timeCreditMinutes.toLocaleString("de-DE", {
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  Min. Noch nicht aufs Zeitkonto gebucht.
+                  {line.standbyPay.mandatoryRestMinutes
+                    ? ` Davon ${line.standbyPay.mandatoryRestMinutes.toLocaleString("de-DE", { maximumFractionDigits: 2 })} Min. gesundheitlicher Ausgleich.`
+                    : ""}
+                </Text>
+              ) : null}
+            </View>
           ) : null}
           {line.calloutPay ? (
             <View style={{ gap: SPACING.xs }}>
@@ -57,9 +105,11 @@ export function SpecialDutyPayCard({ lines }: { readonly lines: readonly Special
           ) : null}
           <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
             {line.complete
-              ? line.calloutPay
-                ? "Pauschale und Einsatzentgelt sind berechnet und steuerpflichtig. Die Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit."
-                : "Pauschale berechnet. Sie wird als steuerpflichtiger Betrag berücksichtigt und erhöht die Arbeitszeit nicht."
+              ? line.standbyPay
+                ? "Die Auszahlung ist berechnet. Eine vorgesehene Zeitgutschrift wird getrennt ausgewiesen."
+                : line.calloutPay
+                  ? "Pauschale und Einsatzentgelt sind berechnet und steuerpflichtig. Die Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit."
+                  : "Pauschale berechnet. Sie wird als steuerpflichtiger Betrag berücksichtigt und erhöht die Arbeitszeit nicht."
               : line.notes.join(" ")}
           </Text>
           {line.source ? (

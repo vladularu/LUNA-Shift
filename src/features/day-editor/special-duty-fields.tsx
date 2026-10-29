@@ -1,6 +1,7 @@
+import { DutyChoice as Choice } from "./special-duty-choice";
+import { StandbyAgreementFields } from "./standby-agreement-fields";
 import { standbyLevels, type DutyTariffFamily } from "@/engine/special-duty-tariff";
-import { useState } from "react";
-import { ActionSheetIOS, Platform, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import {
   clockMinute,
   dutyClock,
@@ -9,64 +10,11 @@ import {
   type DutyPart,
   type SpecialDuty,
 } from "@/domain/special-duty";
-import { EntryEditGroup, EntryEditTimePair, EntryEditValueRow } from "./entry-edit-fields";
+import { EntryEditGroup, EntryEditTimePair } from "./entry-edit-fields";
 import { Field as InputField } from "@/ui/form-controls";
 import { Text } from "@/ui/text";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
-
-function Choice({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly options: readonly { readonly label: string; readonly value: string }[];
-  readonly onChange: (value: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const palette = usePalette();
-  return (
-    <>
-      <EntryEditValueRow
-        label={label}
-        value={options.find((option) => option.value === value)?.label ?? value}
-        onPress={() => {
-          if (Platform.OS !== "ios") {
-            setOpen(!open);
-            return;
-          }
-          ActionSheetIOS.showActionSheetWithOptions(
-            {
-              title: label,
-              options: [...options.map((option) => option.label), "Abbrechen"],
-              cancelButtonIndex: options.length,
-              userInterfaceStyle: palette.dark ? "dark" : "light",
-            },
-            (index) => {
-              if (options[index]) onChange(options[index].value);
-            },
-          );
-        }}
-      />
-      {open
-        ? options.map((option) => (
-            <EntryEditValueRow
-              key={option.value}
-              label={option.label}
-              value={option.value === value ? "Ausgewählt" : ""}
-              onPress={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-            />
-          ))
-        : null}
-    </>
-  );
-}
 
 function Action({ label, onPress }: { readonly label: string; readonly onPress: () => void }) {
   const palette = usePalette();
@@ -354,10 +302,12 @@ export function SpecialDutyFields({
                 value={value.standbyLevel}
                 options={[
                   { value: "UNKNOWN", label: "Weiß ich noch nicht" },
-                  ...standbyLevels(tariffFamily).map((level) => ({
-                    value: level,
-                    label: `Stufe ${level}`,
-                  })),
+                  ...standbyLevels(tariffFamily ?? value.standbyAgreement?.tariff ?? null).map(
+                    (level) => ({
+                      value: level,
+                      label: `Stufe ${level}`,
+                    }),
+                  ),
                 ]}
                 onChange={(level) =>
                   onChange({ ...value, standbyLevel: level as SpecialDuty["standbyLevel"] })
@@ -374,6 +324,12 @@ export function SpecialDutyFields({
                 onChange={(settlement) =>
                   onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
                 }
+              />
+              <StandbyAgreementFields
+                value={value}
+                tariffFamily={tariffFamily}
+                template={template}
+                onChange={onChange}
               />
             </>
           ) : null}
