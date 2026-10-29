@@ -5,7 +5,7 @@ import {
   validateDevRemunerationBackup,
   type DevRemunerationBackup,
 } from "./dev-remuneration-backup";
-export const DEV_BACKUP_VERSION = 16;
+export const DEV_BACKUP_VERSION = 17;
 
 export interface RawShiftRow {
   id: string;
@@ -289,6 +289,11 @@ function normalizePayload(value: unknown, expectedMonth: string): BackupPayload 
     payload.version <= DEV_BACKUP_VERSION;
   const currentPayload = hasVersion(3);
   const shifts = sourceShifts.map((row) => validateShift(row, expectedMonth, currentPayload));
+  if (
+    !hasVersion(17) &&
+    shifts.some((row) => row.special_duty_json && JSON.parse(row.special_duty_json).version === 2)
+  )
+    invalid("Bereitschaftsgrundlage passt nicht zur Version");
   const appointments = sourceAppointments.map((row) =>
     validateAppointment(row, expectedMonth, currentPayload),
   );

@@ -41,6 +41,7 @@ export async function validatePrivateCloudDocument(
       document.version !== 1 ||
       (document.backupVersion !== 20 &&
         document.backupVersion !== 21 &&
+        document.backupVersion !== 22 &&
         document.backupVersion !== LOCAL_BACKUP_VERSION) ||
       !Number.isSafeInteger(document.databaseSchemaVersion) ||
       !document.data ||
