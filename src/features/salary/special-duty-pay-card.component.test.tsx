@@ -1,5 +1,5 @@
-import { render } from "@testing-library/react-native";
-import { describe, expect, it } from "@jest/globals";
+import { fireEvent, render } from "@testing-library/react-native";
+import { describe, expect, it, jest } from "@jest/globals";
 import { SpecialDutyPayCard } from "./special-duty-pay-card";
 import type { SpecialDutyPayLine } from "@/domain/special-duty-pay";
 
@@ -16,6 +16,27 @@ const line: SpecialDutyPayLine = {
   notes: [],
 };
 describe("special duty pay details", () => {
+  it("opens the selected duty without treating its missing amount as zero", async () => {
+    const onOpenDuty = jest.fn<(duty: SpecialDutyPayLine) => void>();
+    const openLine = {
+      ...line,
+      baseAmountCents: null,
+      complete: false,
+      notes: ["Angaben fehlen."],
+    };
+    const view = await render(<SpecialDutyPayCard lines={[openLine]} onOpenDuty={onOpenDuty} />);
+    await fireEvent.press(
+      view.getByRole("button", { name: "Dienst öffnen: 07.07. · Rufbereitschaft" }),
+    );
+    expect(onOpenDuty).toHaveBeenCalledWith(openLine);
+    expect(view.getByText("Betrag noch offen")).toBeTruthy();
+    expect(view.queryByText(/0,00/)).toBeNull();
+  });
+  it("uses the singular for a one-hour flat-rate basis", async () => {
+    const view = await render(<SpecialDutyPayCard lines={[{ ...line, paidHours: 1 }]} />);
+    expect(view.getByText(/1 Stunde × 24,03/)).toBeTruthy();
+    expect(view.queryByText(/1 Stunden/)).toBeNull();
+  });
   it("shows standby leave separately from cash and never labels it an on-call flat rate", async () => {
     const view = await render(
       <SpecialDutyPayCard

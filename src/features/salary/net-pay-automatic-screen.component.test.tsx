@@ -4,6 +4,8 @@ import { Temporal } from "@js-temporal/polyfill";
 import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
+import { newSpecialDuty } from "@/domain/special-duty";
+import { newStandbyAgreement } from "@/domain/standby-agreement";
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
@@ -1033,6 +1035,67 @@ describe("integrated salary-to-net workflow", () => {
     const detail = await details("services");
     expect(detail.getByLabelText(/^Keine Zeitzuschläge\./)).toBeTruthy();
     expect(detail.queryByTestId("dropdown-modal-content")).toBeNull();
+  });
+  it("opens each incomplete December duty and recalculates after the missing facts are saved", async () => {
+    mockParams = { month: "2026-12" };
+    mockMonth = "2026-12";
+    const onCall = forecastShift({
+      id: "december-on-call",
+      date: "2026-12-05",
+      title: "Rufbereitschaft",
+      type: "DAY",
+      startTime: "08:00",
+      endTime: "10:00",
+      breakMinutes: 0,
+      specialDuty: newSpecialDuty("ON_CALL", "08:00", "10:00", "Europe/Berlin"),
+    });
+    const standby = forecastShift({
+      id: "december-standby",
+      date: "2026-12-09",
+      title: "Bereitschaftsdienst",
+      type: "DAY",
+      startTime: "07:00",
+      endTime: "14:30",
+      breakMinutes: 0,
+      specialDuty: newSpecialDuty("STANDBY", "07:00", "14:30", "Europe/Berlin"),
+    });
+    mockEntries = [onCall, standby];
+    const screen = await render(<SalaryScreen />);
+    expect(screen.getByText("Gehaltsprognose noch offen")).toBeTruthy();
+    expect(screen.getByText(/Rufbereitschaftspauschale: 6,01/)).toBeTruthy();
+    expect(screen.getByText("Betrag noch offen")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Gesamtbrutto:/)).toBeNull();
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    for (const [entry, label] of [
+      [onCall, "Dienst öffnen: 05.12. · Rufbereitschaft"],
+      [standby, "Dienst öffnen: 09.12. · Bereitschaftsdienst"],
+    ] as const) {
+      await fireEvent.press(screen.getByRole("button", { name: label }));
+      expect(router.push).toHaveBeenLastCalledWith({
+        pathname: "/shift-editor",
+        params: { date: entry.date, mode: "SHIFT", entryId: entry.id },
+      });
+    }
+    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockParams.month).toBe("2026-12");
+    mockEntries = [
+      { ...onCall, specialDuty: { ...onCall.specialDuty!, calloutsComplete: true } },
+      {
+        ...standby,
+        specialDuty: {
+          ...standby.specialDuty!,
+          version: 2,
+          standbyLevel: "I",
+          settlement: "PAY",
+          standbyAgreement: { ...newStandbyAgreement("TVOED_K"), rule: "STANDARD" },
+        },
+      },
+    ];
+    await screen.rerender(<SalaryScreen />);
+    expect(screen.queryByText("Gehaltsprognose noch offen")).toBeNull();
+    expect(screen.queryByText("Betrag noch offen")).toBeNull();
+    expect(screen.getByText(/Auszahlung Bereitschaftsdienst: 104,81/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
   });
   it("preserves manual gross salary and its separate component access", async () => {
     mockSettings = null;

@@ -1,15 +1,21 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import type { SpecialDutyPayLine } from "@/domain/special-duty-pay";
 import { Text } from "@/ui/text";
 import { SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
-import { TYPOGRAPHY } from "@/theme/typography";
-import { SPACING } from "@/theme/tokens";
+import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import { CONTROL_HEIGHT, CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 
 const money = (cents: number) =>
   (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
-export function SpecialDutyPayCard({ lines }: { readonly lines: readonly SpecialDutyPayLine[] }) {
+export function SpecialDutyPayCard({
+  lines,
+  onOpenDuty,
+}: {
+  readonly lines: readonly SpecialDutyPayLine[];
+  readonly onOpenDuty?: (line: SpecialDutyPayLine) => void;
+}) {
   const palette = usePalette();
   if (!lines.length) return null;
   return (
@@ -32,8 +38,8 @@ export function SpecialDutyPayCard({ lines }: { readonly lines: readonly Special
           line.paidHours !== null &&
           line.hourlyCents !== null ? (
             <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
-              {line.paidHours.toLocaleString("de-DE", { maximumFractionDigits: 4 })} Stunden ×{" "}
-              {money(line.hourlyCents)}
+              {line.paidHours.toLocaleString("de-DE", { maximumFractionDigits: 4 })}{" "}
+              {line.paidHours === 1 ? "Stunde" : "Stunden"} × {money(line.hourlyCents)}
               {line.source?.includes("TV-UK") ? " × 1,25" : ""}
             </Text>
           ) : null}
@@ -114,6 +120,33 @@ export function SpecialDutyPayCard({ lines }: { readonly lines: readonly Special
           </Text>
           {line.source ? (
             <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>{line.source}</Text>
+          ) : null}
+          {onOpenDuty ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Dienst öffnen: ${line.date.slice(8, 10)}.${line.date.slice(5, 7)}. · ${line.title}`}
+              accessibilityHint="Öffnet diesen Dienst zum Prüfen und Ergänzen der Angaben."
+              onPress={() => onOpenDuty(line)}
+              style={({ pressed }) => ({
+                minHeight: CONTROL_HEIGHT.regular,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: SPACING.md,
+                paddingVertical: SPACING.sm,
+                borderWidth: 1,
+                borderColor: palette.border,
+                borderRadius: RADII.control,
+                borderCurve: CORNER_CURVE,
+                backgroundColor: pressed ? palette.surfaceMuted : palette.surfaceRaised,
+              })}
+            >
+              <Text
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{ ...TYPOGRAPHY.button, color: palette.primary }}
+              >
+                Dienst öffnen
+              </Text>
+            </Pressable>
           ) : null}
         </View>
       ))}

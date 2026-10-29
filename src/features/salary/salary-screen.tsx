@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Pressable } from "react-native";
 import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
-import { settingsEditorRoute } from "@/navigation/routes";
+import { dayEditorRoute, settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
 import { usePalette } from "@/theme/palette";
@@ -70,6 +70,8 @@ function SalaryMonthPage({
   else if (!ready || !profile || !calculation) content = <LoadingView />;
   else {
     const { pay, monthShifts } = calculation.value;
+    const specialDutyLines = pay.specialDutyBreakdowns ?? [];
+    const specialDutiesOpen = specialDutyLines.some((line) => !line.complete);
     const manual = profile.tariff === null && profile.manualMonthlyGrossCents != null;
     const salaryReady = !!(
       profile.tariff ||
@@ -90,10 +92,14 @@ function SalaryMonthPage({
         ) : !pay.available ? (
           <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.xs }}>
             <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>
-              Für diesen Monat nicht verfügbar
+              {specialDutiesOpen
+                ? "Gehaltsprognose noch offen"
+                : "Für diesen Monat nicht verfügbar"}
             </Text>
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-              {pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten."}
+              {specialDutiesOpen
+                ? "Bei mindestens einer Bereitschaft sind noch Beträge offen. Öffne den jeweiligen Dienst unten und prüfe die Angaben."
+                : (pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten.")}
             </Text>
           </SurfaceCard>
         ) : !manual && !monthShifts.length ? (
@@ -107,7 +113,10 @@ function SalaryMonthPage({
             </Text>
           </SurfaceCard>
         ) : null}
-        <SpecialDutyPayCard lines={pay.specialDutyBreakdowns ?? []} />
+        <SpecialDutyPayCard
+          lines={specialDutyLines}
+          onOpenDuty={(line) => router.push(dayEditorRoute(line.date, "SHIFT", line.shiftId))}
+        />
         <NetPayAutomaticEntryCard
           key={month}
           month={month}
