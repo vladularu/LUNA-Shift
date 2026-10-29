@@ -159,7 +159,7 @@ export function specialDutyOpenItems(
       result.add("Rufbereitschaft: Einsätze noch nicht abgeschlossen.");
     result.add(
       shift.specialDuty.kind === "ON_CALL"
-        ? "Rufbereitschaft: tarifliche Vergütung und Zeitgutschrift noch offen."
+        ? "Rufbereitschaft: tarifliche Zeitgutschrift noch offen. Die Abrechnung findest du unter Gehalt."
         : "Bereitschaftsdienst: tarifliche Vergütung und Zeitgutschrift noch offen.",
     );
   }

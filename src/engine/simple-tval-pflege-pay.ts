@@ -261,3 +261,19 @@ export function getTvalDutyHourlyCents(
       )
     : null;
 }
+
+export function getTvalDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const selected = profile.tvalPflegeTariff;
+  const ctx = selected ? context(date, selected, profile.weeklyMinutes, resolver) : null;
+  return ctx
+    ? {
+        baseHourlyCents: ctx.overtimeHourlyCents,
+        premiumHourlyCents: ctx.premiumHourlyCents,
+        premiumBasisPoints: ctx.overtimeBasisPoints,
+      }
+    : null;
+}

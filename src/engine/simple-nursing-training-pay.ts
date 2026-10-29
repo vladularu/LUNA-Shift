@@ -421,3 +421,19 @@ export function getTrainingDutyHourlyCents(
     ? roundRemunerationCents(ctx.monthlyCents * 60000, ctx.fullTimeWeeklyMinutes * 4348)
     : null;
 }
+
+export function getTrainingDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const ctx = trainingContext(date, profile, resolver);
+  const rates = ctx?.rulePackage.rules.premiumRules.filter((r) => r.premiumType === "OVERTIME");
+  const hourly = getTrainingDutyHourlyCents(date, profile, resolver);
+  if (hourly === null || rates?.length !== 1) return null;
+  return {
+    baseHourlyCents: hourly,
+    premiumHourlyCents: hourly,
+    premiumBasisPoints: rates[0].percentageBasisPoints,
+  };
+}

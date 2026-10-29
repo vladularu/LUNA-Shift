@@ -99,6 +99,39 @@ function savedNet(settings: MonthlyNetPaySettings): SavedMonthlyNetPaySettings {
 }
 
 describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
+  it("includes completed daytime callout pay once in the financial report", () => {
+    const entry = forecastShift({
+      date: "2026-07-07",
+      startTime: "06:00",
+      endTime: "18:00",
+      breakMinutes: 0,
+      specialDuty: {
+        ...newSpecialDuty("ON_CALL", "06:00", "18:00", "Europe/Berlin"),
+        calloutsComplete: true,
+        callouts: [
+          { kind: "REMOTE", start: 600, end: 625, departure: 600, returned: 625, breakMinutes: 0 },
+        ],
+      },
+    });
+    const report = build({
+      period: "2026-07",
+      profile: forecastProfile,
+      entries: [entry],
+      netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+    });
+    expect(reportView(report).specialDuties).toBeGreaterThan(48.06 + 24.03);
+    expect(reportView(report).net).not.toBeNull();
+    expect(
+      report.rows.some(
+        (row) => row.field.endsWith("calloutPay.actualMinutes") && row.value === "25",
+      ),
+    ).toBe(true);
+    expect(
+      report.rows.some((row) => row.field.endsWith("calloutPay.paidMinutes") && row.value === "60"),
+    ).toBe(true);
+    expect(reportToHtml(report)).toContain("Pauschalen und Einsätze");
+    expect(reportToCsv(report)).not.toContain("Einsatzvergütung");
+  });
   it("exports on-call flat rates with taxable gross and a separate financial component", () => {
     const entry = forecastShift({
       date: "2026-07-07",
@@ -120,10 +153,10 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(reportView(report).specialDuties).toBe(48.06);
     expect(reportView(report).net).not.toBeNull();
     expect(report.rows.find((row) => row.field === "specialDutyAmount")?.label).toContain(
-      "Rufbereitschaftspauschalen",
+      "Rufbereitschaft: Pauschalen und Einsätze",
     );
     expect(reportToCsv(report)).not.toContain("48,06");
-    expect(reportToHtml(report)).toContain("Rufbereitschaftspauschalen");
+    expect(reportToHtml(report)).toContain("Rufbereitschaft: Pauschalen und Einsätze");
     const open = build({
       period: "2026-07",
       profile: forecastProfile,

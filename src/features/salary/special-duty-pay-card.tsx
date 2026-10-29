@@ -32,9 +32,34 @@ export function SpecialDutyPayCard({ lines }: { readonly lines: readonly Special
               {line.source?.includes("TV-UK") ? " × 1,25" : ""}
             </Text>
           ) : null}
+          {line.calloutPay ? (
+            <View style={{ gap: SPACING.xs }}>
+              <Text style={{ ...TYPOGRAPHY.body, color: palette.text }}>
+                {line.calloutPay.baseAmountCents === null ||
+                line.calloutPay.overtimePremiumCents === null
+                  ? "Einsatzvergütung noch offen"
+                  : `Einsatzentgelt: ${money(line.calloutPay.baseAmountCents)} + ${money(line.calloutPay.overtimePremiumCents)} Überstundenzuschlag`}
+              </Text>
+              <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                Tatsächlich: {line.calloutPay.actualMinutes} Min. einschließlich Wege.
+                {line.calloutPay.paidMinutes === null
+                  ? ""
+                  : ` Für die Bezahlung: ${line.calloutPay.paidMinutes} Min. nach Tarif.`}
+              </Text>
+              {line.calloutPay.rates ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Grundentgelt: {money(line.calloutPay.rates.baseHourlyCents)}/Std. · Zuschlag:{" "}
+                  {(line.calloutPay.rates.premiumBasisPoints / 100).toLocaleString("de-DE")}% von{" "}
+                  {money(line.calloutPay.rates.premiumHourlyCents)}/Std.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
           <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
             {line.complete
-              ? "Pauschale berechnet. Sie wird als steuerpflichtiger Betrag berücksichtigt und erhöht die Arbeitszeit nicht."
+              ? line.calloutPay
+                ? "Pauschale und Einsatzentgelt sind berechnet und steuerpflichtig. Die Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit."
+                : "Pauschale berechnet. Sie wird als steuerpflichtiger Betrag berücksichtigt und erhöht die Arbeitszeit nicht."
               : line.notes.join(" ")}
           </Text>
           {line.source ? (

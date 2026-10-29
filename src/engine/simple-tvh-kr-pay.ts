@@ -521,3 +521,20 @@ export function getTvhDutyHourlyCents(
     ? roundRemunerationCents(ctx.monthly * 100, roundRemunerationCents(ctx.fullTime * 4348, 600))
     : null;
 }
+
+export function getTvhDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const ctx = profile.tvhKrTariff
+    ? context(date, profile.tvhKrTariff, profile.weeklyMinutes, resolver)
+    : null;
+  return ctx
+    ? {
+        baseHourlyCents: ctx.overtimeHourlyCents,
+        premiumHourlyCents: ctx.premiumHourlyCents,
+        premiumBasisPoints: ctx.overtimeBasisPoints,
+      }
+    : null;
+}

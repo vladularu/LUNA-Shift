@@ -128,11 +128,12 @@ describe("on-call base remuneration", () => {
     expect(result.durationMinutes).toBe(660);
     expect(result.paidHours).toBe(1.375);
   });
-  it("keeps open callouts and recorded callouts out of complete gross", () => {
+  it("keeps unconfirmed callouts out of complete gross", () => {
     for (const specialDuty of [
       { ...duty().specialDuty!, calloutsComplete: false },
       {
         ...duty().specialDuty!,
+        calloutsComplete: false,
         callouts: [
           {
             start: 600,

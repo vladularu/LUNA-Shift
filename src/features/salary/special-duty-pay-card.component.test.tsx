@@ -16,6 +16,28 @@ const line: SpecialDutyPayLine = {
   notes: [],
 };
 describe("special duty pay details", () => {
+  it("separates worked minutes from paid rounding and overtime remuneration", async () => {
+    const view = await render(
+      <SpecialDutyPayCard
+        lines={[
+          {
+            ...line,
+            calloutPay: {
+              actualMinutes: 25,
+              paidMinutes: 60,
+              baseAmountCents: 2403,
+              overtimePremiumCents: 650,
+              rates: { baseHourlyCents: 2403, premiumHourlyCents: 2167, premiumBasisPoints: 3000 },
+              notes: [],
+            },
+          },
+        ]}
+      />,
+    );
+    expect(view.getByText(/Einsatzentgelt: 24,03.*6,50.*Überstundenzuschlag/)).toBeTruthy();
+    expect(view.getByText(/Tatsächlich: 25 Min.*Bezahlung: 60 Min/)).toBeTruthy();
+    expect(view.getByText(/Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit/)).toBeTruthy();
+  });
   it("shows the calculated flat rate and its basis separately from working time", async () => {
     const view = await render(<SpecialDutyPayCard lines={[line]} />);
     expect(view.getByText(/Rufbereitschaftspauschale: 48,06/)).toBeTruthy();

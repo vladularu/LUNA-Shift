@@ -616,7 +616,14 @@ export function calculateMonthlyPayEstimate(
   );
   if (!specialDutyBreakdowns.length) return estimate;
   const specialDutyAmount =
-    specialDutyBreakdowns.reduce((sum, line) => sum + (line.baseAmountCents ?? 0), 0) / 100;
+    specialDutyBreakdowns.reduce(
+      (sum, line) =>
+        sum +
+        (line.baseAmountCents ?? 0) +
+        (line.calloutPay?.baseAmountCents ?? 0) +
+        (line.calloutPay?.overtimePremiumCents ?? 0),
+      0,
+    ) / 100;
   const result = { ...estimate, specialDutyBreakdowns, specialDutyAmount };
   return specialDutyBreakdowns.some((line) => !line.complete)
     ? { ...result, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }

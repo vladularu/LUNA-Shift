@@ -300,3 +300,27 @@ export function getTvlDutyHourlyCents(
       )
     : null;
 }
+
+export function getTvlDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const selected = profile.tvlKrTariff;
+  const ctx = selected
+    ? context(
+        date,
+        { payGroup: selected.payGroup, payLevel: selected.payLevel },
+        selected.universityRegion,
+        profile.weeklyMinutes,
+        resolver,
+      )
+    : null;
+  return ctx
+    ? {
+        baseHourlyCents: ctx.overtimeHourlyCents,
+        premiumHourlyCents: ctx.premiumHourlyCents,
+        premiumBasisPoints: ctx.overtimeBasisPoints,
+      }
+    : null;
+}

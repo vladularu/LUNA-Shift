@@ -8,6 +8,7 @@ import { dutyCalendarDates } from "./special-duty";
 import { DUTY_RULE_SOURCES, dutyTariffFamily, onCallBaseHours } from "./special-duty-tariff";
 import { specialDutyHourlyCents } from "./special-duty-hourly-rate";
 import { getPublicHolidays } from "./holidays";
+import { calculateDutyCalloutPay } from "./special-duty-callout-pay";
 
 function calculateDutyBase(
   shift: ShiftEntry,
@@ -21,6 +22,7 @@ function calculateDutyBase(
   let baseAmountCents: number | null = null;
   let durationMinutes = 0;
   let source: string | null = null;
+  let calloutPay: SpecialDutyPayLine["calloutPay"];
   try {
     const work = employmentProfileAt(profile, shift.date);
     const family = dutyTariffFamily(work);
@@ -82,6 +84,10 @@ function calculateDutyBase(
         if (paidHours !== null) {
           // TV-UK §12(2) uses overtime remuneration, i.e. the table rate plus 25%.
           baseAmountCents = Math.round(paidHours * hourlyCents * (family === "TVUK" ? 1.25 : 1));
+          if (duty.callouts.length) {
+            calloutPay = calculateDutyCalloutPay(shift, profile, family, resolver);
+            notes.push(...calloutPay.notes);
+          }
         }
       }
     }
@@ -93,7 +99,7 @@ function calculateDutyBase(
       notes.push(
         "Bestätige noch, ob alle Einsätze erfasst sind oder kein Einsatz stattgefunden hat.",
       );
-    if (duty.callouts.length)
+    if (duty.callouts.length && !calloutPay)
       notes.push("Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.");
     if (duty.settlement === "TIME_OFF")
       notes.push("Die vereinbarte Umwandlung in Freizeit ist noch offen.");
@@ -107,6 +113,7 @@ function calculateDutyBase(
     paidHours,
     hourlyCents,
     baseAmountCents,
+    ...(calloutPay ? { calloutPay } : {}),
     complete: notes.length === 0 && baseAmountCents !== null,
     notes,
   };
