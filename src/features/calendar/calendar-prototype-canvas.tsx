@@ -22,6 +22,7 @@ import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
 import { combinedCalendarPreview } from "./combined-calendar-preview";
 import { CalendarOverflowDots } from "./calendar-overflow-dots";
+import { shiftDisplayColor } from "@/theme/shift-colors";
 import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
 import { quickStampEntering, quickStampExiting } from "./quick-stamp-motion";
@@ -197,6 +198,7 @@ export const PrototypeYear = memo(function PrototypeYear({
   progress,
   referenceMonth = today("Europe/Berlin").slice(0, 7),
   entriesByDate,
+  pastelColors = false,
 }: {
   layouts: readonly PrototypeMonth[];
   selectedMonth: string;
@@ -204,6 +206,7 @@ export const PrototypeYear = memo(function PrototypeYear({
   progress: SharedValue<number>;
   referenceMonth?: string;
   entriesByDate?: ReadonlyMap<string, readonly CalendarEntry[]>;
+  pastelColors?: boolean;
 }) {
   const palette = usePalette();
   const motion = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
@@ -268,7 +271,7 @@ export const PrototypeYear = memo(function PrototypeYear({
                       width: 3,
                       height: 3,
                       borderRadius: RADII.pill,
-                      backgroundColor: entry.color,
+                      backgroundColor: shiftDisplayColor(entry.color, pastelColors),
                     }}
                   />
                 ))}
@@ -477,6 +480,7 @@ function CombinedDayContent({
         date={day.date}
         hiddenRows={preview.hiddenRows}
         headerHeight={preview.headerHeight}
+        pastelColors={display.pastelColors}
       />
       <LayoutAnimationConfig skipEntering skipExiting>
         <View

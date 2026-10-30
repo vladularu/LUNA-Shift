@@ -11,6 +11,86 @@ import {
   relativeLuminance,
 } from "@/theme/color-contrast";
 import { DARK_PALETTE, LIGHT_PALETTE, type Palette } from "@/theme/palette-values";
+import { SHIFT_PRESET_COLOR_PAIRS, shiftDisplayColor } from "@/theme/shift-colors";
+import { SHIFT_COLOR_SWATCHES } from "@/theme/color-grid";
+
+describe("optional pastel shift colors", () => {
+  it.each([
+    ["#4FCB68", "#DDF4E2"],
+    ["#F05C68", "#F9DDE0"],
+    ["#F2A93B", "#FCEBCC"],
+    ["#31A7C3", "#D8F0F5"],
+    ["#2F80ED", "#DCEAFE"],
+    ["#858A8E", "#E5E7E8"],
+  ])("recognizes the previously offered preset %s without rewriting it", (main, soft) => {
+    expect(shiftDisplayColor(main, false)).toBe(main);
+    expect(shiftDisplayColor(main.toLowerCase(), true)).toBe(soft);
+    for (const dark of [false, true]) {
+      const chip = calendarChipPalette(main, dark, true);
+      expect(chip.main).toBe(soft);
+      expect(colorContrastRatio(chip.onMain, chip.main)).toBeGreaterThanOrEqual(4.5);
+      expect(colorContrastRatio(chip.onDetail, chip.detail)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each([false, true])("uses preset pairs with readable labels in dark=%s", (dark) => {
+    for (const { main, soft } of SHIFT_PRESET_COLOR_PAIRS) {
+      expect(shiftDisplayColor(main)).toBe(main);
+      expect(shiftDisplayColor(main.toLowerCase(), true)).toBe(soft);
+      const chip = calendarChipPalette(main, dark, true);
+      expect(chip.main).toBe(soft);
+      expect(colorContrastRatio(chip.onMain, chip.main)).toBeGreaterThanOrEqual(4.5);
+      expect(colorContrastRatio(chip.onDetail, chip.detail)).toBeGreaterThanOrEqual(4.5);
+      const shared = sharedCalendarChipPalette(main, dark, true);
+      expect(colorContrastRatio(shared.onDetail, shared.detail)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each([false, true])(
+    "renders every individual swatch as a readable pastel in dark=%s",
+    (dark) => {
+      for (const color of SHIFT_COLOR_SWATCHES) {
+        const fill = shiftDisplayColor(color, true);
+        expect(fill).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(relativeLuminance(fill)).toBeGreaterThan(0.65);
+        const chip = calendarChipPalette(color, dark, true);
+        expect(colorContrastRatio(chip.onMain, chip.main)).toBeGreaterThanOrEqual(4.5);
+        expect(colorContrastRatio(chip.onDetail, chip.detail)).toBeGreaterThanOrEqual(4.5);
+        const shared = sharedCalendarChipPalette(color, dark, true);
+        expect(colorContrastRatio(shared.onDetail, shared.detail)).toBeGreaterThanOrEqual(4.5);
+        expect(shiftDisplayColor(fill, true)).toBe(fill);
+        expect(shiftDisplayColor(color, false)).toBe(color);
+      }
+    },
+  );
+
+  it("derives individual pastels while retaining originals and accepted preset pairs", () => {
+    expect(shiftDisplayColor("#123456", true)).toBe("#E1E6EA");
+    expect(shiftDisplayColor("#abcdef", true)).toBe("#D4E6F7");
+    expect(shiftDisplayColor("#8050A0", true)).toBe("#E7DEED");
+    expect(shiftDisplayColor("#FF0000", true)).toBe("#FFCCCC");
+    expect(shiftDisplayColor("#00FF00", true)).toBe("#CCFFCC");
+    expect(shiftDisplayColor("#0000FF", true)).toBe("#CCCCFF");
+    for (const { main, soft } of SHIFT_PRESET_COLOR_PAIRS) {
+      expect(shiftDisplayColor(main, true)).toBe(soft);
+      expect(shiftDisplayColor(soft, true)).toBe(soft);
+    }
+    for (const color of ["#123456", "#abcdef", "#B27A66", "#000000", "#FFFFFF"]) {
+      expect(shiftDisplayColor(color, false)).toBe(color);
+    }
+    expect(shiftDisplayColor("#000000", true)).toBe("#E6E6E6");
+    expect(shiftDisplayColor("#FFFFFF", true)).toBe("#FFFFFF");
+    expect(shiftDisplayColor("#F7F7F7", true)).toBe("#F7F7F7");
+    expect(shiftDisplayColor("#123", true)).toBe(shiftDisplayColor("#112233", true));
+    expect(shiftDisplayColor("#fff", true)).toBe("#fff");
+    for (const invalid of ["transparent", "", "#12", "#GGGGGG", "rgb(1,2,3)"]) {
+      expect(shiftDisplayColor(invalid, true)).toBe(invalid);
+    }
+    expect(shiftDisplayColor("#59CA50", true)).toBe("#DDF4D9");
+    expect(shiftDisplayColor("#E74C55", true)).toBe("#F8D8DA");
+    expect(shiftDisplayColor("#E74C55", false)).toBe("#E74C55");
+  });
+});
 
 describe("accessible service chips", () => {
   it("keeps the label color consistently white", () => {

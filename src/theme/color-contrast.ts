@@ -1,3 +1,5 @@
+import { shiftDisplayColor } from "./shift-colors";
+
 const LIGHT_TEXT = "#FFFFFF";
 const DARK_TEXT = "#171719";
 export const MINIMUM_TEXT_CONTRAST = 4.5;
@@ -59,9 +61,9 @@ export function readableTextColor(backgroundColor: string): string {
   return lightContrast >= darkContrast ? LIGHT_TEXT : DARK_TEXT;
 }
 
-export function calendarChipPalette(backgroundColor: string, dark: boolean) {
-  const main = backgroundColor;
-  const detail = mixHexColors(backgroundColor, dark ? "#242426" : "#FFFFFF", 0.72);
+export function calendarChipPalette(backgroundColor: string, dark: boolean, pastelColors = false) {
+  const main = shiftDisplayColor(backgroundColor, pastelColors);
+  const detail = mixHexColors(main, dark ? "#242426" : "#FFFFFF", 0.72);
   return Object.freeze({
     main,
     detail,
@@ -71,13 +73,17 @@ export function calendarChipPalette(backgroundColor: string, dark: boolean) {
 }
 
 /** Muted service-colored text, with small-text contrast against its tinted background. */
-export function sharedCalendarChipPalette(backgroundColor: string, dark: boolean) {
-  const colors = calendarChipPalette(backgroundColor, dark);
+export function sharedCalendarChipPalette(
+  backgroundColor: string,
+  dark: boolean,
+  pastelColors = false,
+) {
+  const colors = calendarChipPalette(backgroundColor, dark, pastelColors);
   let weight = 0.7;
-  let text = mixHexColors(backgroundColor, colors.onDetail, weight);
+  let text = mixHexColors(colors.main, colors.onDetail, weight);
   while ((colorContrastRatio(text, colors.detail) ?? 0) < 4.5 && weight < 1) {
     weight = Math.min(1, weight + 0.05);
-    text = mixHexColors(backgroundColor, colors.onDetail, weight);
+    text = mixHexColors(colors.main, colors.onDetail, weight);
   }
   return { ...colors, onDetail: text };
 }

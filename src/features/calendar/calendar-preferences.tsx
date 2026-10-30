@@ -29,6 +29,7 @@ interface CalendarPreferencesValue {
   readonly showAppointments: boolean;
   readonly showHolidays: boolean;
   readonly holidayColor: CalendarHolidayColor;
+  readonly pastelColors: boolean;
   readonly labelMode: CalendarLabelMode;
   readonly showShiftTimes: boolean;
   readonly showShiftDuration: boolean;
@@ -42,6 +43,7 @@ interface CalendarPreferencesValue {
   readonly setShowAppointments: (value: boolean) => void;
   readonly setShowHolidays: (value: boolean) => void;
   readonly setHolidayColor: (value: CalendarHolidayColor) => void;
+  readonly setPastelColors: (value: boolean) => void;
   readonly setLabelMode: (value: CalendarLabelMode) => void;
   readonly setShowShiftTimes: (value: boolean) => void;
   readonly setShowShiftDuration: (value: boolean) => void;
@@ -171,6 +173,10 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
     (holidayColor: CalendarHolidayColor) => update({ holidayColor }),
     [update],
   );
+  const setPastelColors = useCallback(
+    (pastelColors: boolean) => update({ pastelColors }),
+    [update],
+  );
   const setShowShiftTimes = useCallback(
     (showShiftTimes: boolean) => update({ showShiftTimes }),
     [update],
@@ -193,6 +199,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setShowAppointments,
       setShowHolidays,
       setHolidayColor,
+      setPastelColors,
       setLabelMode,
       setShowShiftTimes,
       setShowShiftDuration,
@@ -208,6 +215,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setShowAppointments,
       setShowHolidays,
       setHolidayColor,
+      setPastelColors,
       setShowShiftDuration,
       setShowShiftTimes,
       setShowShifts,

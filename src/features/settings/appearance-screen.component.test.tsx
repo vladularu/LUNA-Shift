@@ -35,6 +35,8 @@ const mockDisplay = {
   setShowHolidays: jest.fn(),
   setHolidayColor: jest.fn(),
   holidayColor: "ORANGE",
+  pastelColors: false,
+  setPastelColors: jest.fn(),
   setLabelMode: jest.fn(),
   setShowShiftTimes: jest.fn(),
   setShowShiftDuration: jest.fn(),
@@ -124,6 +126,7 @@ describe("appearance controls", () => {
     mockDisplay.showAppointments = true;
     mockDisplay.showHolidays = true;
     mockDisplay.holidayColor = "ORANGE";
+    mockDisplay.pastelColors = false;
     mockDisplay.labelMode = "SHORT";
     mockDisplay.showShiftTimes = false;
     mockDisplay.showShiftDuration = false;
@@ -134,6 +137,67 @@ describe("appearance controls", () => {
       fontScale: 1,
     });
   });
+
+  it("offers persistent preset color modes with accessible rows and disabled loading state", async () => {
+    const screen = await render(screenWith());
+    const group = within(screen.getByLabelText("Farbschema für Dienste"));
+    expect(group.getByRole("radio", { name: "Kräftige Farben", checked: true })).toHaveStyle({
+      minHeight: 44,
+    });
+    expect(screen.queryByText("Eigene Farben bleiben erhalten.")).toBeNull();
+    for (const mode of ["vivid", "pastel"]) {
+      expect(screen.getByTestId(`shift-color-scheme-${mode}-swatches`).children).toHaveLength(3);
+      expect(screen.getByTestId(`shift-color-scheme-${mode}-indicator`)).toBeTruthy();
+    }
+    expect(group.getByRole("radio", { name: "Kräftige Farben" })).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+    await fireEvent.press(group.getByRole("radio", { name: "Kräftige Farben" }));
+    expect(mockDisplay.setPastelColors).not.toHaveBeenCalled();
+    await fireEvent.press(group.getByRole("radio", { name: "Pastellfarben" }));
+    expect(mockDisplay.setPastelColors).toHaveBeenCalledWith(true);
+    mockDisplay.pastelColors = true;
+    await screen.rerender(screenWith());
+    expect(screen.getByRole("radio", { name: "Pastellfarben", checked: true })).toBeTruthy();
+    expect(group.getByRole("radio", { name: "Pastellfarben" })).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+    await fireEvent.press(screen.getByRole("radio", { name: "Kräftige Farben" }));
+    expect(mockDisplay.setPastelColors).toHaveBeenLastCalledWith(false);
+    mockDisplay.ready = false;
+    await screen.rerender(screenWith());
+    expect(screen.getByRole("radio", { name: "Pastellfarben", disabled: true })).toBeTruthy();
+  });
+
+  it.each(["light", "dark"] as const)(
+    "updates the live preview from legacy, current and custom colors in %s",
+    async (mode) => {
+      const original = mockEntries[0];
+      try {
+        mockEntries[0] = { ...original, color: "#4FCB68" };
+        const screen = await render(screenWith({ mode }));
+        await layoutPreview(screen);
+        const title = () => within(screen.getByLabelText("2026-10-06, Früh")).getByText("F");
+        expect(title().parent).toHaveStyle({ backgroundColor: "#4FCB68" });
+        mockDisplay.pastelColors = true;
+        await screen.rerender(screenWith({ mode }));
+        expect(title().parent).toHaveStyle({ backgroundColor: "#DDF4E2" });
+        expect(mockEntries[0].color).toBe("#4FCB68");
+        mockEntries[0] = { ...original, color: "#123456" };
+        await screen.rerender(screenWith({ mode }));
+        expect(title().parent).toHaveStyle({ backgroundColor: "#E1E6EA" });
+        expect(mockEntries[0].color).toBe("#123456");
+        mockEntries[0] = { ...original, color: "#E74C55" };
+        await screen.rerender(screenWith({ mode }));
+        expect(title().parent).toHaveStyle({ backgroundColor: "#F8D8DA" });
+        mockDisplay.pastelColors = false;
+        await screen.rerender(screenWith({ mode }));
+        expect(title().parent).toHaveStyle({ backgroundColor: "#E74C55" });
+      } finally {
+        mockEntries[0] = original;
+      }
+    },
+  );
 
   it("keeps the appearance mode and offers a custom calendar image without extra themes", async () => {
     const screen = await render(screenWith());

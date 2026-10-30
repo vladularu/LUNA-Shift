@@ -575,6 +575,7 @@ export function CalendarScreen() {
         controller={controller}
         entriesByDate={entriesByDate}
         referenceMonth={currentMonth(profile?.timeZone ?? "Europe/Berlin")}
+        pastelColors={preferences.pastelColors}
         month={visibleMonth}
         viewMode={preferences.viewMode}
         active={isFocused}

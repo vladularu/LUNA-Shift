@@ -331,6 +331,7 @@ export interface CalendarPreferencesData {
   readonly showAppointments: boolean;
   readonly showHolidays: boolean;
   readonly holidayColor: CalendarHolidayColor;
+  readonly pastelColors: boolean;
   readonly labelMode: CalendarLabelMode;
   readonly showShiftTimes: boolean;
   readonly showShiftDuration: boolean;

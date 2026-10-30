@@ -12,10 +12,12 @@ function Year({
   year = "2026",
   entries = [],
   onSelect = () => {},
+  pastelColors = false,
 }: {
   year?: string;
   entries?: CalendarEntry[];
   onSelect?: (month: string) => void;
+  pastelColors?: boolean;
 }) {
   const progress = useSharedValue(0);
   return (
@@ -28,6 +30,7 @@ function Year({
       progress={progress}
       onSelect={onSelect}
       entriesByDate={new Map([["2026-01-08", entries]])}
+      pastelColors={pastelColors}
     />
   );
 }
@@ -38,6 +41,7 @@ function Month({
   holidays = new Map(),
   specialDays = new Map(),
   holidayColor = "ORANGE",
+  pastelColors = false,
 }: {
   month?: string;
   height?: number;
@@ -45,6 +49,7 @@ function Month({
   holidays?: ReadonlyMap<string, { name: string }>;
   specialDays?: ReadonlyMap<string, { label: string }>;
   holidayColor?: import("@/domain/types").CalendarHolidayColor;
+  pastelColors?: boolean;
 }) {
   const progress = useSharedValue(1);
   return (
@@ -55,7 +60,13 @@ function Month({
       holidays={holidays}
       specialDays={specialDays}
       visible
-      display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false, holidayColor }}
+      display={{
+        labelMode: "FULL",
+        showShiftTimes: true,
+        showShiftDuration: false,
+        holidayColor,
+        pastelColors,
+      }}
       timeZone="Europe/Berlin"
     />
   );
@@ -77,6 +88,17 @@ describe("calendar orientation", () => {
     expect(marks.children).toHaveLength(2);
     expect(marks.children[0]).toHaveStyle({ backgroundColor: "#59CA50" });
     expect(marks.children[1]).toHaveStyle({ backgroundColor: "#FFA338" });
+    await screen.rerender(<Year entries={entries} pastelColors />);
+    const pastelMarks = screen.getByTestId("calendar-mini-shifts-2026-01-08", {
+      includeHiddenElements: true,
+    });
+    expect(pastelMarks.children[0]).toHaveStyle({ backgroundColor: "#DDF4D9" });
+    expect(pastelMarks.children[1]).toHaveStyle({ backgroundColor: "#FFE7C4" });
+    await screen.rerender(<Year entries={[{ ...entry, color: "#123456" }]} pastelColors />);
+    expect(
+      screen.getByTestId("calendar-mini-shifts-2026-01-08", { includeHiddenElements: true })
+        .children[0],
+    ).toHaveStyle({ backgroundColor: "#E1E6EA" });
     await screen.rerender(
       <Year
         entries={[
@@ -216,7 +238,7 @@ describe("compact services and appointments", () => {
     const entries = [
       holidayShift,
       { ...holidayShift, id: "two", color: "#4477AA" },
-      { ...holidayShift, id: "three", color: "#EEAA44" },
+      { ...holidayShift, id: "three", color: "#FFA338" },
       { ...holidayShift, id: "four", color: "#8855CC" },
     ];
     const screen = await render(
@@ -236,6 +258,15 @@ describe("compact services and appointments", () => {
     expect(dots.top + dots.height).toBeLessThan(layer.marginTop);
     expect(screen.queryByText("+2")).toBeNull();
     expect(screen.queryByTestId("calendar-overflow-more-" + date)).toBeNull();
+    await screen.rerender(
+      <Month month="2026-10" entriesByDate={new Map([[date, entries]])} pastelColors />,
+    );
+    expect(screen.getByTestId(`calendar-overflow-dot-${date}-0`)).toHaveStyle({
+      backgroundColor: "#FFE7C4",
+    });
+    expect(screen.getByTestId(`calendar-overflow-dot-${date}-1`)).toHaveStyle({
+      backgroundColor: "#E4D8F3",
+    });
   });
 });
 

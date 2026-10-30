@@ -11,6 +11,7 @@ import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, RowButton, SegmentedControl, SurfaceCard } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
+import { ShiftColorSchemePicker } from "./shift-color-scheme-picker";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 
 function DisplaySwitch({
@@ -165,6 +166,15 @@ export function CalendarDisplayControls() {
               );
             })}
           </View>
+        </SurfaceCard>
+      </SelectionGroup>
+      <SelectionGroup title="Dienstfarben" testID="calendar-shift-colors-settings">
+        <SurfaceCard>
+          <ShiftColorSchemePicker
+            pastelColors={preferences.pastelColors}
+            disabled={displayDisabled}
+            onChange={preferences.setPastelColors}
+          />
         </SurfaceCard>
       </SelectionGroup>
       <SelectionGroup title="Dienstanzeige" testID="calendar-label-settings">

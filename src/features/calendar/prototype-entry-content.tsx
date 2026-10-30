@@ -14,7 +14,7 @@ export type PrototypeDisplay = Pick<
   CalendarPreferencesData,
   "labelMode" | "showShiftTimes" | "showShiftDuration"
 > &
-  Partial<Pick<CalendarPreferencesData, "holidayColor">>;
+  Partial<Pick<CalendarPreferencesData, "holidayColor" | "pastelColors">>;
 
 export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   entry,
@@ -31,18 +31,19 @@ export const PrototypeEntryContent = memo(function PrototypeEntryContent({
   const rowStyle = { height: lineHeight, lineHeight, fontSize: Math.min(12, lineHeight - 1) };
   if (entry.kind === "APPOINTMENT")
     return <CalendarAppointmentLabel title={entry.title} lineHeight={lineHeight} />;
-  const colors = calendarChipPalette(entry.color, palette.dark);
+  const colors = calendarChipPalette(entry.color, palette.dark, display.pastelColors);
+  const titleColor = display.pastelColors ? colors.onMain : CALENDAR_METRICS.chipTextColor;
   const detail = calendarShiftDetail(entry, { ...display, timeZone });
   return (
     <View style={styles.chip}>
       <View style={[styles.main, { height: lineHeight, backgroundColor: colors.main }]}>
         {display.labelMode === "SYMBOL" ? (
-          <ShiftSymbol value={entry.symbol} color={CALENDAR_METRICS.chipTextColor} size={12} />
+          <ShiftSymbol value={entry.symbol} color={titleColor} size={12} />
         ) : (
           <Text
             numberOfLines={1}
             allowFontScaling={false}
-            style={[styles.row, rowStyle, styles.center, { color: CALENDAR_METRICS.chipTextColor }]}
+            style={[styles.row, rowStyle, styles.center, { color: titleColor }]}
           >
             {display.labelMode === "SHORT" ? entry.title.slice(0, 1) : entry.title}
           </Text>
