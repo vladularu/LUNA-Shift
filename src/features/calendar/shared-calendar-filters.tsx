@@ -1,12 +1,101 @@
-import { Pressable, ScrollView, View } from "react-native";
-import { useRef, useState } from "react";
+import { Image, Pressable, ScrollView, View } from "react-native";
+import { useContext, useRef, useState } from "react";
+import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-context";
 import { useSharingUiController } from "@/features/sharing/sharing-ui-provider";
 import { usePalette } from "@/theme/palette";
 import { Text } from "@/ui/text";
+import Ionicons from "@/ui/icon";
 import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { SharingStatus } from "@/features/sharing/sharing-ui-elements";
 import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharingController } from "@/domain/sharing-ui-contract";
+
+function PersonAvatar({
+  name,
+  color,
+  visible,
+  photoUri,
+}: {
+  readonly name: string;
+  readonly color: string;
+  readonly visible: boolean;
+  readonly photoUri?: string | null;
+}) {
+  const palette = usePalette();
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  const initials = name
+    .trim()
+    .split(/\s+/u)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0])
+    .join("")
+    .toLocaleUpperCase("de-DE");
+  return (
+    <View
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: RADII.pill,
+        borderWidth: 2,
+        borderColor: visible ? color : palette.border,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: visible ? 1 : 0.6,
+      }}
+    >
+      <View
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: RADII.pill,
+          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: palette.surface,
+        }}
+      >
+        {photoUri && photoUri !== failedUri ? (
+          <Image
+            key={photoUri}
+            testID="calendar-person-photo"
+            source={{ uri: photoUri }}
+            resizeMode="cover"
+            accessible={false}
+            onError={() => setFailedUri(photoUri)}
+            style={{ width: 32, height: 32 }}
+          />
+        ) : initials ? (
+          <Text allowFontScaling={false} style={{ ...TYPOGRAPHY.label, color: palette.text }}>
+            {initials}
+          </Text>
+        ) : (
+          <Ionicons name="person-outline" size={18} color={palette.text} />
+        )}
+      </View>
+      {visible ? (
+        <View
+          style={{
+            position: "absolute",
+            right: -2,
+            bottom: -2,
+            width: 14,
+            height: 14,
+            borderRadius: RADII.pill,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: palette.text,
+          }}
+        >
+          <Ionicons name="checkmark" size={10} color={palette.surface} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 export function SharedCalendarFilters(props: {
   readonly ownVisible: boolean;
@@ -26,6 +115,9 @@ function Filters({
   readonly onOwnVisible: (visible: boolean) => void;
 }) {
   const palette = usePalette();
+  const cloud = useContext(PrivateCloudContext);
+  const ownUser = cloud?.ready ? cloud.user : null;
+  const ownPhotoUri = ownUser ? cloud?.photo?.uri : null;
   const [failed, setFailed] = useState(false);
   const requests = useRef(new Map<string, number>());
   const setVisible = (id: string, visible: boolean) => {
@@ -52,44 +144,33 @@ function Filters({
         horizontal
         style={{ height: MINIMUM_TOUCH_TARGET, flexGrow: 0 }}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.xs }}
+        contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm }}
       >
         {rows.map((row) => (
           <Pressable
             key={row.id}
             accessibilityRole="button"
             accessibilityLabel={`${row.name} anzeigen`}
+            accessibilityHint="Tippen blendet die Dienste ein oder aus."
             accessibilityState={{ selected: row.visible }}
             onPress={() => {
               if (row.id === "own") onOwnVisible(!ownVisible);
               else setVisible(row.id, !row.visible);
             }}
-            style={{ minHeight: MINIMUM_TOUCH_TARGET, justifyContent: "center" }}
+            style={{
+              minWidth: MINIMUM_TOUCH_TARGET,
+              minHeight: MINIMUM_TOUCH_TARGET,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <View
-              style={{
-                minHeight: 28,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: SPACING.xs,
-                paddingHorizontal: SPACING.sm,
-                borderRadius: RADII.pill,
-                borderWidth: 1,
-                borderColor: palette.border,
-                backgroundColor: row.visible ? palette.surface : "transparent",
-                opacity: row.visible ? 1 : 0.6,
-              }}
-            >
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: RADII.pill,
-                  backgroundColor: row.color,
-                }}
-              />
-              <Text style={{ ...TYPOGRAPHY.caption, color: palette.text }}>{row.name}</Text>
-            </View>
+            <PersonAvatar
+              key={row.id === "own" ? (ownUser?.id ?? "guest") : row.id}
+              name={row.id === "own" ? ownUser?.displayName || "Du" : row.name}
+              color={row.color}
+              visible={row.visible}
+              photoUri={row.id === "own" ? ownPhotoUri : null}
+            />
           </Pressable>
         ))}
       </ScrollView>
