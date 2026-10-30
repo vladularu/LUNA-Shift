@@ -54,7 +54,7 @@ describe("Stunden ohne Dienste", () => {
       ],
     };
     const screen = await render(<WorktimeDetailsScreen />);
-    expect(screen.getByLabelText("Ist: 5:37:30 h")).toBeTruthy();
+    expect(screen.getByLabelText("Zeitkonto: 5:37:30 h")).toBeTruthy();
     expect(screen.getByText(/Erfasst: 7:30 h/)).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /09\.08\. · Bereitschaftsdienst/ }));
     expect(router.push).toHaveBeenLastCalledWith({
@@ -71,7 +71,7 @@ describe("Stunden ohne Dienste", () => {
       specialDutyNotes: ["Abgeltung noch offen"],
     };
     const screen = await render(<WorktimeDetailsScreen />);
-    expect(screen.getByLabelText("Ist: Noch offen")).toBeTruthy();
+    expect(screen.getByLabelText("Zeitkonto: Noch offen")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: Noch offen")).toBeTruthy();
     expect(screen.getByText(/Erfasst: 7:30 h/)).toBeTruthy();
   });

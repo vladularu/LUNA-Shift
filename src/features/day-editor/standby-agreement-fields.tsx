@@ -181,31 +181,6 @@ export function StandbyAgreementFields({
                   </Text>
                 </>
               ) : null}
-              {value.settlement === "TIME_OFF" ? (
-                <DutyChoice
-                  label="Vereinbarter Freizeitausgleich"
-                  value={agreement.timeOffMode}
-                  options={[
-                    { value: "UNKNOWN", label: "Weiß ich noch nicht" },
-                    {
-                      value: "WEIGHTED",
-                      label:
-                        tariff === "TVL_43" || tariff === "TVH_43"
-                          ? "Gewertete Zeit 1:1"
-                          : "Gewertete Zeit und umwandelbare Zuschläge",
-                    },
-                    ...(tariff === "TVOED_K"
-                      ? [{ value: "FACTORIZED", label: "Faktorisierung nach §46 Abs.9" }]
-                      : []),
-                  ]}
-                  onChange={(timeOffMode) =>
-                    update({
-                      ...agreement,
-                      timeOffMode: timeOffMode as StandbyAgreement["timeOffMode"],
-                    })
-                  }
-                />
-              ) : null}
             </>
           ) : null}
         </View>

@@ -1,4 +1,5 @@
 import { StandbyBreakFields } from "./standby-break-fields";
+import { StandbyTimeOffFields } from "./standby-time-off-fields";
 import { StandbyAgreementFields } from "./standby-agreement-fields";
 import { Fragment, useRef, useState } from "react";
 import { View } from "react-native";
@@ -403,6 +404,7 @@ export function SpecialDutyFields({
                   onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
                 }
               />
+              <StandbyTimeOffFields value={value} tariffFamily={tariffFamily} onChange={onChange} />
             </EntryEditGroup>
           ) : null}
 

@@ -209,6 +209,7 @@ export function AnnualReportDetails({
         ) : (
           <>
             <WorktimeCard
+              actualLabel={report.timeAccountMinutes !== undefined ? "Zeitkonto" : undefined}
               actual={timeAccountActual(report)}
               caption={timeAccountCaption(report)}
               balance={

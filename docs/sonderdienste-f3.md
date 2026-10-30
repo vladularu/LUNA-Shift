@@ -30,6 +30,16 @@ Vor der Aktualisierung der Branch-Basis bestand verify:fast vollständig. Auf de
 
 Nach der Aktualisierung auf den modernen Editor wurde die Monatsübersicht des Jahresberichts ergänzt: auch 337,5 Kontominuten erscheinen dort als 5:37:30 h. Jahresproben bestätigen getrennt 450 erfasste Minuten, 337,5 Kontominuten und einen offenen Saldo bei unbekannter Vereinbarung. Die abschließende Gesamtprüfung und Preview-Auslieferung werden unter artifacts/sonderdienste-f3 dokumentiert. Die neue iPhone-Abnahme steht aus; frühere Abnahmen bestätigen nur den jeweils geprüften Eingabe- bzw. Gehaltsfluss. Keine Live-Supabase-Prüfung und kein nativer Build in diesem Paket.
 
+## Korrektur nach iPhone-Rückmeldung vom 30.10.2026
+
+Die Geräteprüfung der OTA a6b4f4d5 wurde nicht abgenommen. Die drei Nutzerfotos zeigen: Beim Wechsel des Bereitschaftsdienstes vom 09.12. auf Freizeitausgleich bleibt das vereinbarte Verfahren unbekannt. Die bisherige Auswahl ist unter Abrechnung eingeklappt; Gehalt und Zeitkonto bleiben dadurch offen. Bei Auszahlung zeigt das Konto 63:36 h gegenüber 71:06 h erfasster Zeit. Die bisherige Beschriftung Ist erklärt diesen Unterschied zu indirekt.
+
+Ziel: das Verfahren direkt beim gewählten Freizeitausgleich zeigen, den genauen fehlenden Schritt samt Dienst benennen und direkt erreichbar machen. Sonderdienste verwenden die Spaltenüberschrift Zeitkonto; erfasste Zeit bleibt sichtbar. Keine automatische Annahme eines vereinbarten Verfahrens, keine Änderung an Tarifsätzen, Bewertungsformeln, Pausen-, Netto- oder Persistenzlogik. Bestehende kompakte Gehaltsübersicht erhalten. Plattform: iOS Preview, SDK 57; bestehende Implementierungs-, Git- und Preview-OTA-Freigaben gelten. PR #342 bleibt bis zur erneuten Geräteprüfung im Entwurf.
+
+Mehr als 15 Dateien werden erwartet, daher getrennte Pakete: (1) Editor-Auswahl einschließlich ihrer Integrationstests; (2) präzise offene Hinweise, direkte Navigation und eindeutige Kontoanzeige in Monats-/Jahresansichten; (3) Regressionsprüfungen, Gesamtgate/CI, Abgleich mit der zuletzt veröffentlichten Preview und technische OTA-Prüfung. Screenshots und negative Geräteabnahme sind in artifacts/sonderdienste-f3/usability-fix dokumentiert.
+
+Abnahme: Freizeitausgleich blendet das Verfahren unmittelbar ein, ohne Abrechnung öffnen zu müssen. Ein bewusst gewähltes Verfahren bleibt bei Auszahlung/Freizeit-Wechsel und erneutem Öffnen erhalten. Fehlende Angaben werden nicht als Null oder vollständige Prognose ausgegeben. Ein offener Dienst ist aus der Zeitkarte direkt erreichbar; bei mehreren offenen Diensten öffnet sich deren Übersicht. Die ursprüngliche Tagesberechnung und normale Dienste bleiben unverändert.
+
 ## Rechtsquellen
 
 - [§3b EStG](https://www.gesetze-im-internet.de/estg/__3b.html) und [§1 SvEV](https://www.gesetze-im-internet.de/svev/__1.html).

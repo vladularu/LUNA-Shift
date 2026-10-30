@@ -3,6 +3,7 @@ import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { ActionSheetIOS, Text } from "react-native";
 import { newSpecialDuty, type SpecialDuty } from "@/domain/special-duty";
+import { newStandbyAgreement } from "@/domain/standby-agreement";
 import type { DutyTariffFamily } from "@/engine/special-duty-tariff";
 import { SpecialDutyFields } from "./special-duty-fields";
 
@@ -66,6 +67,43 @@ const split = {
 };
 
 describe("special duty editor", () => {
+  it("shows the required time-off method next to settlement without opening Abrechnung", async () => {
+    const initial: SpecialDuty = {
+      ...newSpecialDuty("STANDBY", "08:00", "10:00", "Europe/Berlin"),
+      version: 3,
+      breakStart: null,
+      standbyLevel: "II",
+      settlement: "PAY",
+      standbyAgreement: { ...newStandbyAgreement("TVOED_K"), rule: "STANDARD" },
+    };
+    const screen = await render(<Harness initial={initial} tariffFamily="TVOED_K" />);
+    expect(screen.queryByText("Berechnung der Zeitgutschrift")).toBeNull();
+    await select(screen, "Ausgleich: Auszahlung", "Freizeitausgleich");
+    expect(screen.getByText("Berechnung der Zeitgutschrift")).toBeTruthy();
+    expect(screen.queryByText("Bewertung laut Arbeitgeber")).toBeNull();
+    expect(
+      JSON.parse(screen.getByTestId("draft").props.children).standbyAgreement.timeOffMode,
+    ).toBe("UNKNOWN");
+    await select(screen, "Berechnung der Zeitgutschrift: Bitte wählen", "Bewertete Dienstzeit");
+    const saved = JSON.parse(screen.getByTestId("draft").props.children) as SpecialDuty;
+    expect(saved).toEqual({
+      ...initial,
+      settlement: "TIME_OFF",
+      standbyAgreement: { ...initial.standbyAgreement!, timeOffMode: "WEIGHTED" },
+    });
+    await select(screen, "Ausgleich: Freizeitausgleich", "Auszahlung");
+    expect(screen.queryByText("Berechnung der Zeitgutschrift")).toBeNull();
+    await select(screen, "Ausgleich: Auszahlung", "Freizeitausgleich");
+    expect(
+      screen.getByLabelText("Berechnung der Zeitgutschrift: Bewertete Dienstzeit"),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByText("Abrechnung"));
+    expect(screen.getAllByText("Berechnung der Zeitgutschrift")).toHaveLength(1);
+    const reopened = await render(<Harness initial={saved} tariffFamily="TVOED_K" />);
+    expect(
+      reopened.getByLabelText("Berechnung der Zeitgutschrift: Bewertete Dienstzeit"),
+    ).toBeTruthy();
+  });
   it("retains actual calls when choosing the agreed callout settlement", async () => {
     const initial = {
       ...newSpecialDuty("ON_CALL", "08:00", "10:00", "Europe/Berlin"),

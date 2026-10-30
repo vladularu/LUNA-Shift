@@ -1,5 +1,10 @@
 import { router } from "expo-router";
-import { formatMinutes, formatSignedMinutes } from "@/engine/working-time";
+import { formatMinutes } from "@/engine/working-time";
+import {
+  timeAccountActual,
+  timeAccountBalance,
+  timeAccountCaption,
+} from "./special-duty-time-presentation";
 import { annualDetailsRoute } from "@/navigation/routes";
 import type { AnnualReport } from "./annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
@@ -53,8 +58,9 @@ export function AnnualOverview({
       cards={{
         WORK: (
           <WorkListCard
+            actualLabel={report.timeAccountMinutes !== undefined ? "Zeitkonto" : undefined}
             onPress={() => router.push(annualDetailsRoute(report.year, "WORK"))}
-            actual={formatMinutes(report.actualMinutes) + " h"}
+            actual={timeAccountActual(report) + (report.timeAccountMinutes === null ? "" : " h")}
             target={
               pending
                 ? "Wird berechnet"
@@ -66,17 +72,20 @@ export function AnnualOverview({
               pending
                 ? "Wird berechnet"
                 : report.balanceMinutes === null
-                  ? "Nicht verfügbar"
-                  : formatSignedMinutes(report.balanceMinutes) + " h"
+                  ? report.timeAccountMinutes === null
+                    ? "Noch offen"
+                    : "Nicht verfügbar"
+                  : timeAccountBalance({ ...report, balanceMinutes: report.balanceMinutes }) + " h"
             }
             caption={
               pending
                 ? "Erfasste Zeiten · Soll und Saldo werden berechnet."
-                : !report.worktimeCoverageComplete
-                  ? "Erfasste Zeiten · Soll und Saldo nicht berechenbar"
-                  : report.targetStatus === "PROVISIONAL"
-                    ? "Sollzeit vorläufig · offene Angaben in einzelnen Monaten"
-                    : undefined
+                : (timeAccountCaption(report) ??
+                  (!report.worktimeCoverageComplete
+                    ? "Erfasste Zeiten · Soll und Saldo nicht berechenbar"
+                    : report.targetStatus === "PROVISIONAL"
+                      ? "Sollzeit vorläufig · offene Angaben in einzelnen Monaten"
+                      : undefined))
             }
           />
         ),

@@ -37,12 +37,16 @@ export function WorkListCard({
   balance,
   onPress,
   caption,
+  actualLabel,
+  action,
 }: {
   readonly actual: string;
   readonly target: string;
   readonly balance: string;
   readonly onPress?: () => void;
   readonly caption?: string;
+  readonly actualLabel?: string;
+  readonly action?: { readonly label: string; readonly onPress: () => void };
 }) {
   const p = usePalette();
   const withoutUnit = (value: string) => value.replace(/ h$/u, "");
@@ -62,6 +66,8 @@ export function WorkListCard({
       }
       onPress={onPress}
       caption={caption}
+      actualLabel={actualLabel}
+      action={action}
     />
   );
 }

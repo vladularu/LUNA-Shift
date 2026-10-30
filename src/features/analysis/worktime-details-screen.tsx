@@ -100,6 +100,9 @@ export function WorktimeDetailsScreen() {
       <Stack.Screen options={{ title: "Stunden" }} />
       <AnalysisDetailSummaryCard title="Deine Stunden" period={formatMonthTitle(month)} />
       <WorktimeCard
+        actualLabel={
+          summary.ok && summary.value.timeAccountMinutes !== undefined ? "Zeitkonto" : undefined
+        }
         caption={
           summary.ok
             ? (timeAccountCaption(summary.value) ??

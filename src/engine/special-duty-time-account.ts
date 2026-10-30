@@ -68,10 +68,16 @@ export function specialDutyTimeAccount(
         duty.kind === "STANDBY"
           ? (money?.standbyPay?.timeCreditMinutes ?? null)
           : (money?.calloutPay?.timeCreditMinutes ?? null);
-    if (creditedMinutes === null && !notes.length)
+    if (creditedMinutes === null && !notes.length) {
+      const reasons = money?.standbyPay?.notes ?? money?.calloutPay?.notes ?? [];
       notes.push(
-        `${DUTY_LABELS[duty.kind]}: Die Grundlage für die Zeitgutschrift fehlt oder ist noch offen.`,
+        ...(reasons.length
+          ? reasons
+          : [
+              `${DUTY_LABELS[duty.kind]}: Die Grundlage für die Zeitgutschrift fehlt oder ist noch offen.`,
+            ]),
       );
+    }
     if (creditedMinutes !== null && creditedMinutes > 0) {
       const own = intervals(entry);
       if (

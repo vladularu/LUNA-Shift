@@ -32,6 +32,24 @@ const summary = (entries: readonly ShiftEntry[]) =>
   calculateMonthlySummary("2026-12", entries, forecastProfile, resolver);
 
 describe("derived special-duty time account", () => {
+  it("names the missing time-off method instead of hiding it behind a generic account warning", () => {
+    const entry = standby();
+    const value = summary([
+      {
+        ...entry,
+        specialDuty: {
+          ...entry.specialDuty!,
+          standbyAgreement: { ...entry.specialDuty!.standbyAgreement!, timeOffMode: "UNKNOWN" },
+        },
+      },
+    ]);
+    expect(value.actualMinutes).toBe(450);
+    expect(value.timeAccountMinutes).toBeNull();
+    expect(value.specialDutyTimeCredits![0].notes).toEqual([
+      "Ergänze das vereinbarte Verfahren für den Freizeitausgleich.",
+    ]);
+    expect(value.specialDutyNotes).toEqual(value.specialDutyTimeCredits![0].notes);
+  });
   it("keeps full recorded work while crediting only agreed weighted time", () => {
     const entry = standby(),
       before = JSON.stringify(entry),
