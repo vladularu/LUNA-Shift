@@ -7,13 +7,15 @@ import { ActionSheetIOS } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TemplateEditorScreen } from "@/features/templates/template-editor-screen";
-import type { SaveShiftTemplateInput, ShiftTemplate, ShiftType } from "@/domain/types";
+import type { SaveShiftTemplateInput, ShiftTemplate, ShiftType, UserProfile } from "@/domain/types";
+import { newSpecialDuty } from "@/domain/special-duty";
 
 const mockUpsertShift = jest.fn<() => Promise<void>>();
 const mockUpsertTemplate = jest.fn<(input: SaveShiftTemplateInput) => Promise<ShiftTemplate>>();
 const mockRemoveTemplate = jest.fn<() => Promise<void>>();
 let mockParams: { id?: string; quickEntryDate?: string } = {};
 let mockTemplates: readonly ShiftTemplate[] = [];
+let mockProfile: UserProfile | null = null;
 
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), dismiss: jest.fn(), push: jest.fn() },
@@ -26,6 +28,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/application/pflegeshift-provider", () => ({
+  usePflegeShiftProfile: () => ({ profile: mockProfile }),
   usePflegeShiftEntries: () => ({ entries: [], upsertShift: mockUpsertShift }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTemplates: () => ({
@@ -53,6 +56,7 @@ describe("TemplateEditorScreen compact layout", () => {
     jest.clearAllMocks();
     mockParams = {};
     mockTemplates = [];
+    mockProfile = null;
     jest.mocked(Notifications.getPermissionsAsync).mockResolvedValue({
       granted: true,
     } as Notifications.NotificationPermissionsStatus);
@@ -312,5 +316,92 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(screen.queryByTestId("template-start-row")).toBeNull();
     expect(screen.queryByTestId("template-end-row")).toBeNull();
     expect(screen.queryByTestId("template-pause-row")).toBeNull();
+  });
+
+  it.each(["SPLIT", "ON_CALL", "STANDBY"] as const)(
+    "opens, edits and saves the existing %s template without duplicate time or pause controls",
+    async (kind) => {
+      const existing: ShiftTemplate = {
+        id: "special-template",
+        name: "Sonderdienst",
+        type: "CUSTOM",
+        allDay: false,
+        startTime: "08:00",
+        endTime: "10:00",
+        breakMinutes: kind === "ON_CALL" ? 0 : 15,
+        specialDuty: {
+          ...newSpecialDuty(kind, "08:00", "10:00", "Europe/Berlin"),
+          parts: kind === "SPLIT" ? [{ start: 1020, end: 1260, breakMinutes: 7 }] : [],
+          standbyLevel: kind === "STANDBY" ? "II" : "UNKNOWN",
+          settlement: kind === "STANDBY" ? "PAY" : "UNKNOWN",
+        },
+        color: "#7C4DCC",
+        symbol: "S",
+        notification: null,
+        location: null,
+        sortOrder: 10,
+        revision: 1,
+        createdAt: "2026-10-29T00:00:00.000Z",
+        updatedAt: "2026-10-29T00:00:00.000Z",
+        deletedAt: null,
+      };
+      mockTemplates = [existing];
+      mockParams = { id: existing.id };
+      mockUpsertTemplate.mockResolvedValue(existing);
+      await renderEditor();
+      expect(screen.queryByTestId("template-start-row")).toBeNull();
+      expect(screen.queryByTestId("template-pause-row")).toBeNull();
+      expect(screen.queryByLabelText("Einsatz hinzufügen")).toBeNull();
+      if (kind === "SPLIT")
+        expect(screen.getByRole("button", { name: "Dienstteil 2: Pause: 7 Minuten" })).toBeTruthy();
+      if (kind === "STANDBY") expect(screen.getByText("Stufe II")).toBeTruthy();
+      await fireEvent.changeText(screen.getByLabelText("Titel"), "Sonderdienst geändert");
+      await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
+      await waitFor(() =>
+        expect(mockUpsertTemplate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: "Sonderdienst geändert",
+            startTime: "08:00",
+            endTime: "10:00",
+            breakMinutes: existing.breakMinutes,
+            specialDuty: existing.specialDuty,
+          }),
+        ),
+      );
+    },
+  );
+
+  it("inherits the stored tariff profile for readiness templates without asking for it again", async () => {
+    mockProfile = {
+      federalState: "NW",
+      holidayRegion: "NONE",
+      timeZone: "Europe/Berlin",
+      weeklyMinutes: 2310,
+      regularRotatingNightWork: true,
+      sundayHolidayWorkEligible: true,
+      allEmploymentWorkRecorded: true,
+      tariff: {
+        payGroup: "P8",
+        payLevel: 3,
+        sector: "BT_B",
+        tariffRegion: "OTHER",
+        fullTimeWeeklyMinutes: 2310,
+      },
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+    };
+    jest
+      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
+      .mockImplementation((options, callback) => {
+        const index = options.options.indexOf("Bereitschaftsdienst");
+        expect(index).toBeGreaterThanOrEqual(0);
+        callback(index);
+      });
+    await renderEditor();
+    await fireEvent.press(screen.getByLabelText("Dienstform: Regulärer Dienst"));
+    await fireEvent.press(screen.getByText("Abrechnung"));
+    expect(screen.getByText("Tarif aus deinem Profil: TVöD Pflege/Betreuung")).toBeTruthy();
+    expect(screen.queryByText("Tarifbereich der Bereitschaft")).toBeNull();
+    expect(screen.getByText("Bewertung laut Arbeitgeber")).toBeTruthy();
   });
 });

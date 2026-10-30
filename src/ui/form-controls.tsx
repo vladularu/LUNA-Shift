@@ -49,11 +49,13 @@ function asTimeString(date: Date): string {
 
 export function TimePickerField({
   label,
+  accessibilityLabel,
   value,
   onChange,
   layout = "inline",
 }: {
   readonly label: string;
+  readonly accessibilityLabel?: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly layout?: "inline" | "stacked";
@@ -64,6 +66,7 @@ export function TimePickerField({
     return (
       <Field
         autoCapitalize="none"
+        accessibilityLabel={accessibilityLabel}
         label={label}
         maxLength={5}
         onChangeText={onChange}
@@ -74,7 +77,7 @@ export function TimePickerField({
   if (process.env.EXPO_OS === "android") {
     return (
       <Pressable
-        accessibilityLabel={`${label}, ${value}. Uhrzeit wählen`}
+        accessibilityLabel={accessibilityLabel ?? `${label}, ${value}. Uhrzeit wählen`}
         accessibilityRole="button"
         onPress={() => {
           DateTimePickerAndroid.open({
@@ -139,7 +142,7 @@ export function TimePickerField({
         {label}
       </Text>
       <DateTimePicker
-        accessibilityLabel={`${label} wählen`}
+        accessibilityLabel={accessibilityLabel ?? `${label} wählen`}
         style={stacked ? { minHeight: 44, alignSelf: "flex-start" } : undefined}
         display="compact"
         mode="time"

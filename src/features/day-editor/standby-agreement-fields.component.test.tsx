@@ -9,6 +9,31 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 describe("standby agreement editor", () => {
+  it.each([
+    { tariff: "TVOED_B", label: "TVöD Pflege/Betreuung" },
+    { tariff: "TVL_43", label: "TV-L Pflege" },
+    { tariff: "TVH_43", label: "TV-H Pflege" },
+  ] as const)(
+    "uses the known $tariff profile and retains all employer choices",
+    async ({ tariff, label }) => {
+      const changed = jest.fn();
+      const view = await render(
+        <StandbyAgreementFields
+          value={newSpecialDuty("STANDBY", "06:00", "14:00", "Europe/Berlin")}
+          tariffFamily={tariff}
+          template
+          onChange={changed}
+        />,
+      );
+      await fireEvent.press(view.getByText("Abrechnung"));
+      expect(view.getByText(`Tarif aus deinem Profil: ${label}`)).toBeTruthy();
+      expect(view.queryByText("Tarifbereich der Bereitschaft")).toBeNull();
+      expect(view.getByText("Bewertung laut Arbeitgeber")).toBeTruthy();
+      expect(view.getByText("Bereitschaftsgruppe laut Arbeitgeber")).toBeTruthy();
+      expect(view.getByText("Stundenentgelt")).toBeTruthy();
+      expect(changed).not.toHaveBeenCalled();
+    },
+  );
   it("keeps detail fields collapsed and requires deliberate employer facts", async () => {
     const changed = jest.fn<(next: SpecialDuty) => void>();
     function Harness() {

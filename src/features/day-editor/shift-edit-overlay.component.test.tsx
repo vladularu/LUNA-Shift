@@ -520,6 +520,22 @@ describe("ShiftEditOverlay", () => {
     expect(shouldDismissShiftEditOverlay(12, 900)).toBe(true);
   });
 
+  it.each(["SPLIT", "ON_CALL", "STANDBY"] as const)(
+    "lets the %s blocks own their times and pauses while preserving split overtime",
+    async (kind) => {
+      const { screen } = await renderOverlay({ specialDutyKind: kind, overtimeMinutes: "15" });
+      expect(screen.queryByTestId("shift-edit-time-group")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Pause: 0 Minuten" })).toBeNull();
+      if (kind === "SPLIT") {
+        expect(screen.getByText("Überstunden im ersten Dienstteil")).toBeTruthy();
+        expect(screen.getByTestId("shift-edit-split-overtime-group")).toBeTruthy();
+      } else {
+        expect(screen.queryByTestId("shift-edit-split-overtime-group")).toBeNull();
+      }
+      expect(screen.getByRole("button", { name: "Wecker: Aus" })).toBeTruthy();
+    },
+  );
+
   it("saves and dismisses after dragging the header down", async () => {
     mockNativePresentation = false;
     const { props } = await renderOverlay();
