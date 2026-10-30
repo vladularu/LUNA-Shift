@@ -1,6 +1,7 @@
 import { View } from "react-native";
 
 import { usePalette } from "@/theme/palette";
+import { shiftDisplayColor } from "@/theme/shift-colors";
 import { CALENDAR_METRICS, RADII } from "@/theme/tokens";
 import type { CombinedCalendarRow } from "./combined-calendar-preview";
 
@@ -8,10 +9,12 @@ export function CalendarOverflowDots({
   date,
   hiddenRows,
   headerHeight,
+  pastelColors = false,
 }: {
   readonly date: string;
   readonly hiddenRows: readonly CombinedCalendarRow[];
   readonly headerHeight: number;
+  readonly pastelColors?: boolean;
 }) {
   const palette = usePalette();
   if (hiddenRows.length === 0) return null;
@@ -42,7 +45,10 @@ export function CalendarOverflowDots({
               width: CALENDAR_METRICS.entryDotSize,
               height: CALENDAR_METRICS.entryDotSize,
               borderRadius: RADII.pill,
-              backgroundColor: entry.kind === "APPOINTMENT" ? palette.textMuted : entry.color,
+              backgroundColor:
+                entry.kind === "APPOINTMENT"
+                  ? palette.textMuted
+                  : shiftDisplayColor(entry.color, pastelColors),
             }}
           />
         );

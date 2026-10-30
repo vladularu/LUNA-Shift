@@ -63,6 +63,7 @@ it("renders both actual services in the same short six-week day cell", async () 
     rows: readonly SharedCalendarDayEntry[],
     ownEntry = own,
     animateChanges = false,
+    pastelColors = false,
   ) => (
     <View>
       <PrototypeMonthContent
@@ -72,7 +73,12 @@ it("renders both actual services in the same short six-week day cell", async () 
         entriesByDate={new Map([[own.date, [ownEntry]]])}
         sharedEntriesByDate={new Map([[own.date, rows]])}
         holidays={new Map()}
-        display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+        display={{
+          labelMode: "FULL",
+          showShiftTimes: true,
+          showShiftDuration: false,
+          pastelColors,
+        }}
         timeZone="Europe/Berlin"
         visible
       />
@@ -95,6 +101,27 @@ it("renders both actual services in the same short six-week day cell", async () 
   expect(screen.getByText("21:00")).toHaveStyle({
     color: sharedCalendarChipPalette(shared.entry.color, palette.current.dark).onDetail,
   });
+  const preset = { ...shared, entry: { ...shared.entry, color: "#59CA50" } };
+  await screen.rerender(content([preset], own, false, true));
+  expect(screen.getByTestId("shared-calendar-entry-selena-foreign")).toHaveStyle({
+    backgroundColor: sharedCalendarChipPalette("#59CA50", palette.current.dark, true).detail,
+  });
+  const custom = { ...shared, entry: { ...shared.entry, color: "#123456" } };
+  await screen.rerender(content([custom], { ...own, color: "#123456" }, false, true));
+  expect(screen.getByText("Spät").parent).toHaveStyle({ backgroundColor: "#E1E6EA" });
+  expect(screen.getByTestId("shared-calendar-entry-selena-foreign")).toHaveStyle({
+    backgroundColor: sharedCalendarChipPalette("#E1E6EA", palette.current.dark).detail,
+  });
+  expect(custom.entry.color).toBe("#123456");
+  const appointment: SharedCalendarDayEntry = {
+    ...preset,
+    entry: { ...preset.entry, kind: "APPOINTMENT" },
+  };
+  await screen.rerender(content([appointment], own, false, true));
+  expect(screen.getByTestId("shared-calendar-entry-selena-foreign")).toHaveStyle({
+    backgroundColor: sharedCalendarChipPalette("#59CA50", palette.current.dark).detail,
+  });
+  await screen.rerender(content([shared]));
   const day = screen.getByTestId("calendar-combined-day-2026-03-13"),
     slot = screen.getByTestId("calendar-entry-slot-2026-03-13-0");
   const slotHeight = StyleSheet.flatten(slot.props.style).height,
