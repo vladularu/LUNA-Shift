@@ -1,6 +1,7 @@
-import { fireEvent, render } from "@testing-library/react-native";
-import { describe, expect, it, jest } from "@jest/globals";
-import { StyleSheet } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from "expo-glass-effect";
+import { AccessibilityInfo, Platform, StyleSheet } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -36,6 +37,9 @@ function PlannerHeader({
   pageTitle = false,
   notice,
   plannerActive = true,
+  onOpenSharing,
+  onOpenDisplay = jest.fn(),
+  onOpenYear = jest.fn(),
 }: {
   direction?: "NEXT" | "PREVIOUS";
   month?: string;
@@ -46,6 +50,9 @@ function PlannerHeader({
   pageTitle?: boolean;
   notice?: string;
   plannerActive?: boolean;
+  onOpenSharing?: () => void;
+  onOpenDisplay?: () => void;
+  onOpenYear?: () => void;
 } = {}) {
   const plannerTransition = useSharedValue(plannerActive ? 1 : 0);
   return (
@@ -62,8 +69,9 @@ function PlannerHeader({
         direction={direction}
         month={month}
         onMoveYear={jest.fn()}
-        onOpenDisplay={jest.fn()}
-        onOpenYear={jest.fn()}
+        onOpenSharing={onOpenSharing}
+        onOpenDisplay={onOpenDisplay}
+        onOpenYear={onOpenYear}
         plannerActive={plannerActive}
         plannerTransition={plannerTransition}
         referenceMonth={referenceMonth}
@@ -75,6 +83,123 @@ function PlannerHeader({
 }
 
 describe("CalendarHeader", () => {
+  beforeEach(() => {
+    jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(false);
+    jest.mocked(isLiquidGlassAvailable).mockReturnValue(false);
+  });
+
+  it("keeps all three actions compact with comfortable touch targets and preserves their destinations", async () => {
+    jest
+      .spyOn(
+        jest.requireActual<typeof import("react-native")>("react-native"),
+        "useWindowDimensions",
+      )
+      .mockReturnValue({ width: 430, height: 932, scale: 3, fontScale: 1 });
+    const onOpenSharing = jest.fn();
+    const onOpenYear = jest.fn();
+    const onOpenDisplay = jest.fn();
+    const screen = await render(
+      <PlannerHeader
+        pageTitle
+        plannerActive={false}
+        onOpenSharing={onOpenSharing}
+        onOpenYear={onOpenYear}
+        onOpenDisplay={onOpenDisplay}
+      />,
+    );
+    const actions = screen.getAllByRole("button");
+    expect(actions).toHaveLength(3);
+    expect(screen.getByTestId("calendar-header-position")).toHaveStyle({
+      marginRight: -18,
+      transform: [{ translateY: 3.5 }],
+    });
+    expect(screen.getByTestId("calendar-header-position")).toHaveProp("pointerEvents", "box-none");
+    expect(screen.getByTestId("calendar-header")).toHaveStyle({ paddingHorizontal: 24 });
+    expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
+      minHeight: 48,
+      paddingHorizontal: 2,
+      paddingVertical: 2 - StyleSheet.hairlineWidth,
+    });
+    for (const action of actions) {
+      expect(action).toHaveStyle({ width: 48, height: 44 });
+    }
+    await fireEvent.press(screen.getByRole("button", { name: "Kalender teilen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "2026, Jahresansicht öffnen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Kalender gestalten öffnen" }));
+    expect(onOpenSharing).toHaveBeenCalledTimes(1);
+    expect(onOpenYear).toHaveBeenCalledTimes(1);
+    expect(onOpenDisplay).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([false, true])("uses native glass in the selected theme (dark=%s)", async (dark) => {
+    jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(true);
+    jest.mocked(isLiquidGlassAvailable).mockReturnValue(true);
+    jest.spyOn(AccessibilityInfo, "isReduceTransparencyEnabled").mockResolvedValue(false);
+    jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue(dark ? "dark" : "light");
+    const screen = await render(<PlannerHeader plannerActive={false} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("calendar-header-glass")).toHaveProp(
+        "colorScheme",
+        dark ? "dark" : "light",
+      );
+    });
+    expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+    expect(screen.getByTestId("calendar-header-glass")).toHaveProp("pointerEvents", "none");
+  });
+
+  it.each([false, true])(
+    "keeps a readable fallback without native glass (dark=%s)",
+    async (dark) => {
+      jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const screen = await render(
+        <PlannerHeader plannerActive={false} onOpenSharing={jest.fn()} />,
+      );
+      expect(screen.queryByTestId("calendar-header-glass")).toBeNull();
+      expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
+        backgroundColor: (dark ? DARK_PALETTE : LIGHT_PALETTE).surfaceRaised,
+      });
+      expect(screen.getAllByRole("button")).toHaveLength(3);
+    },
+  );
+
+  it("keeps all actions usable on Android without requesting iOS glass", async () => {
+    jest.replaceProperty(Platform, "OS", "android");
+    const screen = await render(<PlannerHeader plannerActive={false} onOpenSharing={jest.fn()} />);
+    expect(isGlassEffectAPIAvailable).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("calendar-header-glass")).toBeNull();
+    expect(screen.getAllByRole("button")).toHaveLength(3);
+  });
+
+  it("responds to reduced transparency without hiding the three controls", async () => {
+    jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(true);
+    jest.mocked(isLiquidGlassAvailable).mockReturnValue(true);
+    jest.spyOn(AccessibilityInfo, "isReduceTransparencyEnabled").mockResolvedValue(false);
+    jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue("light");
+    const events = jest.spyOn(AccessibilityInfo, "addEventListener");
+    const screen = await render(<PlannerHeader plannerActive={false} onOpenSharing={jest.fn()} />);
+    await waitFor(() => expect(screen.getByTestId("calendar-header-glass")).toBeTruthy());
+    const onChange = events.mock.calls.find(
+      ([event]) => String(event) === "reduceTransparencyChanged",
+    )?.[1] as ((enabled: boolean) => void) | undefined;
+    expect(onChange).toBeDefined();
+    await act(() => onChange?.(true));
+    expect(screen.queryByTestId("calendar-header-glass")).toBeNull();
+    expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
+      backgroundColor: LIGHT_PALETTE.surfaceRaised,
+    });
+    expect(screen.getAllByRole("button")).toHaveLength(3);
+    await act(() => onChange?.(false));
+    expect(screen.getByTestId("calendar-header-glass")).toBeTruthy();
+  });
+
   it("keeps fixed controls but leaves the month title to its scrolling page", async () => {
     const screen = await render(<PlannerHeader pageTitle synchronized plannerActive={false} />);
     expect(screen.queryByRole("header")).toBeNull();
@@ -162,7 +287,7 @@ describe("CalendarHeader", () => {
         name: "2026, Jahresansicht öffnen",
         includeHiddenElements: true,
       }),
-    ).toHaveStyle({ width: 44, height: 44 });
+    ).toHaveStyle({ width: 48, height: 44 });
   });
 
   it("uses complete eight-point title swaps in both time directions", async () => {
