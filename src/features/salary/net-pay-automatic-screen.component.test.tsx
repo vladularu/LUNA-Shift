@@ -1,7 +1,7 @@
 import type { AllowanceStatus, UserProfile } from "@/domain/types";
 import * as MockReact from "react";
 import { Temporal } from "@js-temporal/polyfill";
-import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
@@ -10,6 +10,8 @@ import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import * as forecastEngine from "@/engine/net-pay-automatic-forecast";
 import * as payEngine from "@/engine/simple-pay";
+import type { NavigationAction } from "expo-router/react-navigation";
+import { NetPaySettingsScreen } from "./net-pay-settings-screen";
 import { NetPayAutomaticScreen } from "./net-pay-automatic-screen";
 import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
 import { NetPayScreen } from "./net-pay-screen";
@@ -28,6 +30,21 @@ jest.mock("@/features/report-export/report-export-button", () => ({
     mockExport(props);
     const { Text: MockText } = jest.requireActual<typeof import("react-native")>("react-native");
     return <MockText testID="salary-export-current">{props.period}</MockText>;
+  },
+}));
+
+const mockNativeGuard = {
+  active: false,
+  callback: (_event: { data: { action: NavigationAction } }) => {},
+};
+const mockNavigation = { dispatch: jest.fn() };
+let mockSettingsEnabled = true;
+jest.mock("expo-router/react-navigation", () => ({
+  useHeaderHeight: () => 100,
+  HeaderBackButton: () => null,
+  usePreventRemove: (active: boolean, callback: typeof mockNativeGuard.callback) => {
+    mockNativeGuard.active = active;
+    mockNativeGuard.callback = callback;
   },
 }));
 
@@ -56,11 +73,15 @@ jest.mock("react-native-safe-area-context", () => ({
 jest.mock("expo-router", () => ({
   router: {
     back: jest.fn(),
+    canGoBack: () => true,
+    replace: jest.fn(),
     push: jest.fn(),
     setParams: jest.fn<(mockNextParams: Partial<typeof mockParams>) => void>((mockNextParams) => {
       mockParams = { ...mockParams, ...mockNextParams };
     }),
   },
+  Stack: { Screen: () => null },
+  useNavigation: () => mockNavigation,
   useIsFocused: () => true,
   useLocalSearchParams: () => mockParams,
   useFocusEffect: (callback: () => void) => MockReact.useEffect(callback, [callback]),
@@ -86,7 +107,8 @@ jest.mock("@/application/rule-catalog-runtime-provider", () => ({
   }),
 }));
 jest.mock("./use-net-pay-profile", () => ({
-  useNetPayProfile: () => {
+  useNetPayProfile: (_month: string, enabled: boolean) => {
+    mockSettingsEnabled = enabled;
     const [value, setValue] = MockReact.useState(mockSettings);
     return {
       status: "ready",
@@ -117,7 +139,8 @@ jest.mock("./use-net-pay-profile", () => ({
       save: async (next: MonthlyNetPaySettings, effectiveMonth?: string) => {
         if (effectiveMonth) await mockSave(next, effectiveMonth);
         else await mockSave(next);
-        setValue(effectiveMonth ? { ...next, month: effectiveMonth } : next);
+        mockSettings = effectiveMonth ? { ...next, month: effectiveMonth } : next;
+        setValue(mockSettings);
       },
     };
   },
@@ -125,6 +148,8 @@ jest.mock("./use-net-pay-profile", () => ({
 
 describe("integrated salary-to-net workflow", () => {
   beforeEach(() => {
+    mockNativeGuard.active = false;
+    mockNavigation.dispatch.mockClear();
     mockParams = { month: "2026-07" };
     mockMonth = "2026-07";
     mockProfile = forecastProfile;
@@ -140,6 +165,10 @@ describe("integrated salary-to-net workflow", () => {
     jest.mocked(router.back).mockClear();
     jest.mocked(router.setParams).mockClear();
   });
+  async function edit(month = "2026-07") {
+    mockParams = { month };
+    return render(<NetPaySettingsScreen />);
+  }
   async function overview(month = "2026-07") {
     return render(<NetPayAutomaticScreen month={month} />);
   }
@@ -147,10 +176,17 @@ describe("integrated salary-to-net workflow", () => {
     mockParams = { month, section };
     return render(<SalaryDetailsScreen />);
   }
-  it("passes the chosen effective month from the salary editor to persistence", async () => {
-    const screen = await overview();
-    await fireEvent.press(screen.getByText("Netto-Angaben"));
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
+
+  it("passes the chosen effective month from the settings page to persistence", async () => {
+    const entry = await overview();
+    await fireEvent.press(entry.getByRole("button", { name: /^Netto-Einstellungen/ }));
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/net-pay-settings",
+      params: { month: "2026-07" },
+    });
+    await entry.unmount();
+    const screen = await edit();
     await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Gültig ab: Januar 2026" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 4" }));
@@ -162,6 +198,19 @@ describe("integrated salary-to-net workflow", () => {
       }),
       "2026-01",
     );
+    expect(router.back).toHaveBeenCalledTimes(1);
+  });
+  it("places the prominent settings entry between net result and premiums", async () => {
+    const screen = await overview();
+    const output = JSON.stringify(screen.toJSON());
+    expect(output.indexOf("net-pay-settings-entry")).toBeGreaterThan(
+      output.indexOf("Netto-Prognose"),
+    );
+    expect(output.indexOf("Zeitzuschläge")).toBeGreaterThan(
+      output.indexOf("net-pay-settings-entry"),
+    );
+    expect(screen.getAllByRole("button", { name: /^Netto-Einstellungen/ })).toHaveLength(1);
+    expect(screen.queryByText("Netto-Angaben")).toBeNull();
   });
   it("does not show saved November Christmas pay or its explanation in October", async () => {
     mockEntries = [];
@@ -684,65 +733,46 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.queryByTestId("dropdown-modal-content")).toBeNull();
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it("sets up new personal data in three steps while keeping gross visible before setup", async () => {
+
+  it("opens first setup as a full page and saves the whole profile once", async () => {
     mockSettings = null;
-    const screen = await render(
+    const entry = await render(
       <NetPayAutomaticEntryCard month="2026-07" proposedGrossCents={500000} blocked={false} />,
     );
-    expect(screen.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /^Netto-Angaben/ })).toBeNull();
-    expect(screen.getAllByRole("button", { name: "Netto einmal einrichten" })).toHaveLength(1);
-    await fireEvent.press(screen.getByRole("button", { name: "Netto einmal einrichten" }));
-    expect(screen.getByRole("header", { name: /^Netto einrichten,/ })).toBeTruthy();
-    expect(screen.getByRole("header", { name: /^Steuern$/ })).toBeTruthy();
+    expect(entry.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
+    await fireEvent.press(entry.getByRole("button", { name: "Netto einmal einrichten" }));
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/net-pay-settings",
+      params: { month: "2026-07" },
+    });
+    await entry.unmount();
+    const screen = await edit();
+    for (const title of ["Steuern", "Familie", "Versicherung & Vorsorge", "Weitere Angaben"])
+      expect(screen.getByRole("header", { name: title })).toBeTruthy();
+    expect(screen.queryByTestId("dropdown-modal-content")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 1" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zahlst du Kirchensteuer?: Nein" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.getByRole("header", { name: /^Familie$/ })).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "15.01.1990");
     await fireEvent.press(screen.getByRole("radio", { name: "Hast du Kinder?: Nein" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.getByText("Schritt 3 von 3")).toBeTruthy();
-    expect(screen.getAllByRole("header", { name: /^Versicherung & Vorsorge$/ })).toHaveLength(1);
     await fireEvent.press(screen.getByRole("button", { name: "Zusatzversorgung auswählen" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zusatzversorgung: Weiß ich nicht" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
+    expect(mockSave).toHaveBeenCalledTimes(1);
     expect(mockSave).toHaveBeenCalledWith(
       expect.objectContaining({ month: "2026-07", version: 2 }),
     );
-    expect(screen.getByLabelText(/^Netto vor Zusatzversorgung:/)).toBeTruthy();
+    expect(router.back).toHaveBeenCalledTimes(1);
   });
-  it("cancels setup through the single close action without saving and restarts at the first step", async () => {
-    mockSettings = null;
-    const screen = await render(
-      <NetPayAutomaticEntryCard month="2026-07" proposedGrossCents={500000} blocked={false} />,
-    );
-    await fireEvent.press(screen.getByRole("button", { name: "Netto einmal einrichten" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 1" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Zahlst du Kirchensteuer?: Nein" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.queryByRole("button", { name: "Bearbeitung abbrechen" })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
-    await waitFor(() => expect(screen.queryByText("Schritt 2 von 3")).toBeNull());
-    expect(mockSave).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Netto einmal einrichten" }));
-    expect(screen.getByRole("header", { name: /^Netto einrichten,/ })).toBeTruthy();
-    expect(screen.getByText("Schritt 1 von 3")).toBeTruthy();
-    expect(
-      screen.getByRole("radio", { name: "Steuerklasse: 1" }).props.accessibilityState.checked,
-    ).toBe(false);
-  });
-  it("upgrades an old monthly profile only after explicit setup save", async () => {
+  it("upgrades an old monthly profile only after saving the full form", async () => {
     mockSettings = settings();
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: "Netto einmal einrichten" }));
+    const screen = await edit();
     expect(screen.getByText(/Deine bisherigen Angaben gelten nur/)).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
-    for (let step = 0; step < 2; step++)
-      await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
     await fireEvent.press(screen.getByRole("button", { name: "Zusatzversorgung auswählen" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zusatzversorgung: Keine" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(mockSave).toHaveBeenCalledWith(
       expect.objectContaining({
         version: 2,
@@ -751,7 +781,7 @@ describe("integrated salary-to-net workflow", () => {
       }),
     );
   });
-  it("edits a single section from the current month and retains other data", async () => {
+  it("saves tax and family changes together while preserving custom pension and deductions", async () => {
     const initial = automatedSettings("2026-06");
     mockSettings = {
       ...initial,
@@ -762,99 +792,85 @@ describe("integrated salary-to-net workflow", () => {
         additionalNetDeductionCents: 1500,
       },
     };
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
-    expect(screen.getByText("Gültig ab Juni 2026. Änderungen gelten ab Juli 2026.")).toBeTruthy();
-    expect(screen.getByTestId("net-pay-settings-overview")).toBeTruthy();
-    expect(screen.queryByRole("tab")).toBeNull();
-    expect(screen.queryByRole("radio")).toBeNull();
-    expect(screen.getByRole("button", { name: /Familie · Keine Kinder/ })).toBeTruthy();
-    expect(
-      screen.getByRole("button", {
-        name: /Versicherung & Zusatzversorgung · Gesetzlich · 3,4 % Zusatzbeitrag · VBL West/,
-      }),
-    ).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(screen.getAllByTestId("dropdown-modal-content")).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();
+    const prior = mockSettings;
+    const screen = await edit();
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 2" }));
+    await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "15.01.1990");
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(mockSave).toHaveBeenCalledWith({
-      ...mockSettings,
+      ...prior,
       month: "2026-07",
-      profile: { ...mockSettings.profile, taxClass: 2 },
+      profile: { ...prior.profile, taxClass: 2, birthDate: "1990-01-15" },
     });
-    expect(screen.getByTestId("net-pay-settings-overview")).toBeTruthy();
-    expect(screen.queryByRole("radio")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: /^Netto-Angaben.*Steuerklasse 2/ })).toBeTruthy(),
+  });
+  it("keeps the common save action outside the scroll area", async () => {
+    const screen = await edit();
+    expect(
+      within(screen.getByTestId("net-pay-settings-screen")).queryByRole("button", {
+        name: "Änderungen speichern",
+      }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId("net-pay-settings-footer")).getByRole("button", {
+        name: "Änderungen speichern",
+      }),
+    ).toBeTruthy();
+    expect(screen.getByTestId("net-pay-settings-screen").props.keyboardShouldPersistTaps).toBe(
+      "handled",
     );
   });
-  it("returns to the settings list on back and discards the single-area draft", async () => {
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(screen.queryByRole("button", { name: /^Familie ·/ })).toBeNull();
+  it("keeps edits on cancelled native back and discards only after explicit confirmation", async () => {
+    const screen = await edit();
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 3" }));
-    expect(
-      within(screen.getByTestId("selection-sheet-list")).queryByRole("button", {
-        name: "Änderungen speichern",
-      }),
-    ).toBeNull();
-    expect(
-      within(screen.getByTestId("selection-sheet-footer")).getByRole("button", {
-        name: "Änderungen speichern",
-      }),
-    ).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Zurück zur Angaben-Übersicht" }));
-    expect(screen.getByRole("button", { name: /^Steuern · Klasse 1/ })).toBeTruthy();
-    expect(screen.getAllByTestId("dropdown-modal-content")).toHaveLength(1);
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(screen.getByRole("radio", { name: "Steuerklasse: 1", checked: true })).toBeTruthy();
-    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockNativeGuard.active).toBe(true);
+    const alert = jest.spyOn(Native.Alert, "alert");
+    try {
+      const action = { type: "GO_BACK" };
+      await act(() => mockNativeGuard.callback({ data: { action } }));
+      expect(alert).toHaveBeenCalledWith(
+        "Änderungen verwerfen?",
+        expect.any(String),
+        expect.any(Array),
+      );
+      const buttons = alert.mock.calls[0]![2]!;
+      await act(() => buttons.find((b) => b.text === "Weiter bearbeiten")!.onPress!());
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled();
+      expect(screen.getByRole("radio", { name: "Steuerklasse: 3", checked: true })).toBeTruthy();
+      await act(() => mockNativeGuard.callback({ data: { action } }));
+      const discard = alert.mock.calls[1]![2]!.find((b) => b.text === "Änderungen verwerfen")!;
+      await act(() => discard.onPress!());
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(action);
+      expect(mockSave).not.toHaveBeenCalled();
+      await screen.unmount();
+      const reopened = await edit();
+      expect(reopened.getByRole("radio", { name: "Steuerklasse: 1", checked: true })).toBeTruthy();
+    } finally {
+      alert.mockRestore();
+    }
   });
-  it("closes without saving and restores the stored answers on reopening", async () => {
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 3" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
-    await waitFor(() => expect(screen.queryByTestId("dropdown-modal-content")).toBeNull());
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
-    expect(screen.getByTestId("net-pay-settings-overview")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /^Steuern · Klasse 1/ })).toBeTruthy();
-    expect(screen.getAllByTestId("dropdown-modal-content")).toHaveLength(1);
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(
-      screen.getByRole("radio", { name: "Steuerklasse: 1" }).props.accessibilityState.checked,
-    ).toBe(true);
-    expect(mockSave).not.toHaveBeenCalled();
-  });
-  it("labels saved private insurance explicitly in the settings overview", async () => {
+  it("labels saved private insurance on the entry and on the full settings page", async () => {
     mockSettings = { ...automatedSettings("2026-06"), specialCases: ["PRIVATE_INSURANCE"] };
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben.*Steuerklasse/ }));
+    const entry = await overview();
     expect(
-      screen.getByRole("button", { name: /^Versicherung & Zusatzversorgung · Privat versichert/ }),
+      entry.getByRole("button", { name: /^Netto-Einstellungen.*privat versichert/ }),
     ).toBeTruthy();
-    expect(
-      screen.queryByRole("button", { name: /^Versicherung & Zusatzversorgung · Gesetzlich/ }),
-    ).toBeNull();
-    expect(mockSave).not.toHaveBeenCalled();
+    await entry.unmount();
+    const screen = await edit();
+    expect(screen.getByText("Privat versichert · Standardprognose nicht verfügbar")).toBeTruthy();
+    expect(screen.queryByRole("radio", { name: /^Beitrag für die Prognose:/ })).toBeNull();
   });
-  it("keeps an edit open on a write conflict without overwriting the result", async () => {
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
-    await fireEvent.press(screen.getByRole("button", { name: /^Familie ·/ }));
+  it("keeps the full draft open on a write conflict", async () => {
+    const screen = await edit();
+    await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "16.01.1990");
     mockSave.mockRejectedValueOnce(
       new Error("Die Angaben wurden zwischenzeitlich geändert. Erneut laden."),
     );
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(screen.getByText(/zwischenzeitlich geändert/)).toBeTruthy();
-    expect(screen.getByRole("header", { name: "Familie" })).toBeTruthy();
-    expect(screen.queryByTestId("net-pay-settings-overview")).toBeNull();
-    expect(screen.getAllByTestId("dropdown-modal-content")).toHaveLength(1);
+    expect(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)").props.value).toBe("16.01.1990");
+    expect(mockNativeGuard.active).toBe(true);
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    expect(router.back).not.toHaveBeenCalled();
   });
   it("keeps the 2027 marker and unknown pension qualifier visible", async () => {
     mockEntries = [forecastShift({ date: "2027-01-03" })];
@@ -884,25 +900,42 @@ describe("integrated salary-to-net workflow", () => {
       before,
     );
   });
-  it("closes prior-month settings when changing months", async () => {
+
+  it("passes the current month when opening settings after a month change", async () => {
     const screen = await render(
       <NetPayAutomaticEntryCard month="2026-07" proposedGrossCents={500000} blocked={false} />,
     );
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
+    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Einstellungen/ }));
     await screen.rerender(
       <NetPayAutomaticEntryCard month="2026-08" proposedGrossCents={500000} blocked={false} />,
     );
-    expect(screen.queryByLabelText(/^Steuerbrutto:/)).toBeNull();
-    expect(screen.queryByTestId("dropdown-modal-content")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Einstellungen/ }));
+    const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/net-pay-settings",
+      params: { month: "2026-08" },
+    });
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it("keeps personal settings to three areas without a manual calculator", async () => {
-    const screen = await overview();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Angaben/ }));
+  it("keeps all settings on one page without opening a manual calculator", async () => {
+    const screen = await edit();
     expect(screen.queryByRole("button", { name: "Manuellen Rechner öffnen" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Weitere Möglichkeiten" })).toBeNull();
-    for (const area of [/^Steuern ·/, /^Familie ·/, /^Versicherung & Zusatzversorgung ·/])
-      expect(screen.getByRole("button", { name: area })).toBeTruthy();
+    for (const title of ["Steuern", "Familie", "Versicherung & Vorsorge", "Weitere Angaben"])
+      expect(screen.getByRole("header", { name: title })).toBeTruthy();
+  });
+  it("rejects invalid settings links and test months before enabling profile access", async () => {
+    for (const month of ["2026-13", "bad-month"]) {
+      const screen = await edit(month);
+      expect(screen.getByText("Der Link enthält keinen gültigen Monat.")).toBeTruthy();
+      expect(mockSettingsEnabled).toBe(false);
+      expect(screen.queryByTestId("net-pay-settings-screen")).toBeNull();
+      await screen.unmount();
+    }
+    mockTestMonths = ["2026-07"];
+    const screen = await edit();
+    expect(screen.getByText("Für Testdaten gibt es keine Netto-Prognose.")).toBeTruthy();
+    expect(mockSettingsEnabled).toBe(false);
+    expect(mockSave).not.toHaveBeenCalled();
   });
   it("does not suggest changing salary data when a future tariff is unavailable", async () => {
     mockEntries = [forecastShift({ date: "2027-04-04" })];
@@ -916,7 +949,7 @@ describe("integrated salary-to-net workflow", () => {
     mockTestMonths = ["2026-07"];
     const screen = await overview();
     expect(screen.queryByLabelText(/^Voraussichtliches Netto:/)).toBeNull();
-    expect(screen.queryByRole("button", { name: /^Netto-Angaben/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Netto-Einstellungen/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Netto einmal einrichten" })).toBeNull();
     expect(screen.getByText("Für Testdaten gibt es keine Netto-Prognose.")).toBeTruthy();
     const deduction = await details("deductions");

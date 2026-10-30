@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { Pressable, View, useWindowDimensions } from "react-native";
@@ -32,6 +33,7 @@ export function NetPaySalarySummary({
   onDeductions,
   onPremiums,
   annualPayment,
+  afterSummary,
 }: {
   readonly pay: AvailablePay;
   readonly pensionOmitted: boolean;
@@ -41,6 +43,7 @@ export function NetPaySalarySummary({
   readonly onDeductions: () => void;
   readonly onPremiums: () => void;
   readonly annualPayment?: AnnualPaymentForecast;
+  readonly afterSummary?: ReactNode;
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
@@ -116,6 +119,7 @@ export function NetPaySalarySummary({
           </View>
         </View>
       </SalarySectionCard>
+      {afterSummary}
       <SalaryPremiumCard
         totalCents={premiums.paidPremiumCents}
         taxFreeCents={premiums.taxFreeCents}

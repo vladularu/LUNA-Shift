@@ -1,16 +1,15 @@
-import { useState, type ReactNode } from "react";
-import { Text } from "@/ui/text";
+import { useRef, useState, type PropsWithChildren, type ReactNode } from "react";
 import { Keyboard, View } from "react-native";
-import { NetPayValidity } from "./net-pay-validity";
+import { Text } from "@/ui/text";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { NetPayPensionScheme } from "@/domain/net-pay-automation";
 import { NET_PAY_PENSION_OPTIONS, netPayPensionMaxOwnRate } from "@/domain/net-pay-pension-schemes";
+import { SPACING } from "@/theme/tokens";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RADII, SPACING } from "@/theme/tokens";
-import { SurfaceCard } from "@/ui/design-system";
-import { NetPaySettingsOverview } from "./net-pay-settings-overview";
-import { FormStatus } from "@/ui/form-layout";
+import { FormSection, FormStatus } from "@/ui/form-layout";
+import { useProfileLeaveGuard } from "@/features/settings/use-profile-leave-guard";
+import { NetPayValidity } from "./net-pay-validity";
 import { NetPayCheck } from "./net-pay-controls";
 import {
   NetPayWorkflowAction,
@@ -29,12 +28,8 @@ import {
   NET_PAY_HEALTH_FORECAST_RATE,
   netPaySetupSettings,
   netPaySetupValues,
-  validateNetPaySetupStep,
 } from "./net-pay-setup-values";
 
-const STEPS = ["Steuern", "Familie", "Versicherung & Vorsorge"] as const;
-export type NetPaySetupSection = "tax" | "family" | "insurance";
-const SECTION_STEP = { tax: 0, family: 1, insurance: 2 } as const;
 const YES_NO = [
   { value: true, label: "Ja" },
   { value: false, label: "Nein" },
@@ -55,12 +50,10 @@ export function NetPaySetupForm({
   churchTaxDefaultPercent,
   busy,
   onSave,
-  section,
-  showTitle = true,
-  onStepChange,
-  renderLayout,
-  allowSectionSwitch = false,
   firstSetup = initial === null,
+  onSaved,
+  onValidationFailure,
+  renderLayout,
 }: {
   readonly month: string;
   readonly initial: MonthlyNetPaySettings | null;
@@ -68,28 +61,16 @@ export function NetPaySetupForm({
   readonly churchTaxDefaultPercent: 8 | 9;
   readonly busy: boolean;
   readonly onSave: (settings: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>;
-  readonly section?: NetPaySetupSection;
-  readonly showTitle?: boolean;
-  readonly onStepChange?: (step: number) => void;
-  readonly renderLayout?: (layout: {
-    content: ReactNode;
-    footer: ReactNode;
-    onBack?: () => void;
-    locked: boolean;
-    editing: boolean;
-    page: number;
-  }) => ReactNode;
-  readonly allowSectionSwitch?: boolean;
   readonly firstSetup?: boolean;
+  readonly onSaved?: () => void;
+  readonly onValidationFailure?: () => void;
+  readonly renderLayout?: (layout: {
+    readonly content: ReactNode;
+    readonly footer: ReactNode;
+    readonly locked: boolean;
+  }) => ReactNode;
 }) {
-  const palette = usePalette();
   const [form, setForm] = useState(() => netPaySetupValues(initial, worksInSaxony));
-  const [step, setStep] = useState<number>(
-    section ? SECTION_STEP[section] : allowSectionSwitch ? -1 : 0,
-  );
-  const [details, setDetails] = useState(false);
-  const [help, setHelp] = useState(false);
-  const [healthExpanded, setHealthExpanded] = useState(false);
   const [effectiveMonth, setEffectiveMonth] = useState(month);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,59 +98,75 @@ export function NetPaySetupForm({
   );
   const locked = busy || saving;
   const employmentCases = (form.specialCases ?? []).filter((value) => EMPLOYMENT_CASES.has(value));
+  const [familyHelp, setFamilyHelp] = useState(false);
+  const [insuranceHelp, setInsuranceHelp] = useState(false);
+  const submitting = useRef(false);
+  const draft = JSON.stringify({
+    form,
+    effectiveMonth,
+    pensionScheme,
+    pensionEmployeeRate,
+    additionalGross,
+    additionalNet,
+  });
+  const [baseline] = useState(draft);
+  const leave = useProfileLeaveGuard(draft !== baseline, locked);
+  const specialInsurance =
+    form.specialCases?.includes("PRIVATE_INSURANCE") ||
+    form.specialCases?.includes("OTHER_INSURANCE_STATUS");
   function change<K extends keyof NetPayFormValues>(key: K, value: NetPayFormValues[K]) {
     setForm((current) => ({ ...current, [key]: value }));
     setError(null);
   }
-  function move(next: number) {
-    if (locked) return;
-    Keyboard.dismiss();
-    setStep(next);
-    onStepChange?.(next);
-    setDetails(false);
-    setHelp(false);
-    setHealthExpanded(false);
-    setError(null);
-  }
-  async function advance() {
-    if (locked) return;
+  async function save() {
+    if (locked || submitting.current) return;
     setError(null);
     try {
-      if (!section && !allowSectionSwitch && step < 2) {
-        validateNetPaySetupStep(month, step, form);
-        move(step + 1);
-      } else {
-        Keyboard.dismiss();
-        const value = netPaySetupSettings(
-          month,
-          { ...form, worksInSaxony },
-          pensionScheme,
-          additionalGross,
-          additionalNet,
-          initial,
-          pensionEmployeeRate,
-        );
-        setSaving(true);
-        if (effectiveMonth === month) await onSave(value);
-        else await onSave(value, effectiveMonth);
-        if (allowSectionSwitch) {
-          setStep(-1);
-          setDetails(false);
-          setHelp(false);
-        }
-      }
+      const value = netPaySetupSettings(
+        month,
+        { ...form, worksInSaxony },
+        pensionScheme,
+        additionalGross,
+        additionalNet,
+        initial,
+        pensionEmployeeRate,
+      );
+      Keyboard.dismiss();
+      submitting.current = true;
+      setSaving(true);
+      if (effectiveMonth === month) await onSave(value);
+      else await onSave(value, effectiveMonth);
+      leave.saved(onSaved);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : "Die Angaben konnten nicht gesichert werden.",
       );
+      onValidationFailure?.();
     } finally {
+      submitting.current = false;
       setSaving(false);
     }
   }
-  const fields = (
-    <View style={{ gap: SPACING.lg }}>
-      {step === 0 ? (
-        <>
+  const content = (
+    <View style={{ gap: SPACING.xl }}>
+      <FormSection>
+        <NetPayValidity
+          month={month}
+          firstSetup={firstSetup}
+          value={effectiveMonth}
+          onChange={setEffectiveMonth}
+          disabled={locked}
+        />
+        {initial?.version === 1 ? (
+          <NetPayText>
+            Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden sie auch
+            für folgende Monate übernommen.
+          </NetPayText>
+        ) : null}
+      </FormSection>
+      <FormStatus error={error} />
+      <NetPaySettingsSection title="Steuern">
+        <View style={{ gap: SPACING.lg }}>
           <NetPayChoice
             label="Steuerklasse"
             value={form.taxClass}
@@ -210,199 +207,6 @@ export function NetPaySetupForm({
               />
             </>
           ) : null}
-        </>
-      ) : step === 1 ? (
-        <>
-          <Field
-            label="Geburtsdatum (TT.MM.JJJJ)"
-            value={form.birthDate}
-            editable={!locked}
-            onChangeText={(value) => change("birthDate", value)}
-            autoCorrect={false}
-            keyboardType="numbers-and-punctuation"
-            placeholder="15.01.1990"
-          />
-          <NetPayChoice
-            label="Hast du Kinder?"
-            value={form.isParent}
-            disabled={locked}
-            options={YES_NO}
-            onChange={(yes) => {
-              setForm((current) => ({
-                ...current,
-                isParent: yes,
-                childrenUnder25: yes ? current.childrenUnder25 : "0",
-              }));
-              setError(null);
-            }}
-          />
-          {form.isParent ? (
-            <NetPayChoice
-              label="Wie viele Kinder sind unter 25?"
-              value={Math.min(5, Number(form.childrenUnder25))}
-              disabled={locked}
-              options={[0, 1, 2, 3, 4, 5].map((value) => ({
-                value,
-                label: value === 5 ? "5+" : String(value),
-              }))}
-              onChange={(value) => change("childrenUnder25", String(value))}
-            />
-          ) : null}
-          <NetPayWorkflowLink onPress={() => setHelp(!help)} disabled={locked} expanded={help}>
-            Warum diese Angaben?
-          </NetPayWorkflowLink>
-          {help ? (
-            <NetPayText>
-              Auch erwachsene Kinder zählen. Das beeinflusst deinen Beitrag zur Pflegeversicherung.
-              Der steuerliche Kinderfreibetrag ist eine separate Angabe.
-            </NetPayText>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: SPACING.md,
-            }}
-          >
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
-              >
-                Krankenversicherung
-              </Text>
-              <NetPayText>
-                {form.specialCases?.includes("PRIVATE_INSURANCE")
-                  ? "Privat versichert · Standardprognose nicht verfügbar"
-                  : form.specialCases?.includes("OTHER_INSURANCE_STATUS")
-                    ? "Abweichender Versicherungsfall · Standardprognose nicht verfügbar"
-                    : `Gesetzlich · Zusatzbeitrag ${form.healthAdditionalRate} %`}
-              </NetPayText>
-            </View>
-            <NetPayWorkflowLink
-              onPress={() => setHealthExpanded(!healthExpanded)}
-              disabled={locked}
-              expanded={healthExpanded}
-            >
-              Ändern
-            </NetPayWorkflowLink>
-          </View>
-          {healthExpanded ? (
-            <>
-              <NetPayChoice
-                label="Versicherungsart"
-                value={
-                  form.specialCases?.includes("PRIVATE_INSURANCE")
-                    ? "PRIVATE_INSURANCE"
-                    : form.specialCases?.includes("OTHER_INSURANCE_STATUS")
-                      ? "OTHER_INSURANCE_STATUS"
-                      : "GKV"
-                }
-                disabled={locked}
-                options={[
-                  { value: "GKV", label: "Gesetzlich" },
-                  { value: "PRIVATE_INSURANCE", label: "Privat" },
-                  { value: "OTHER_INSURANCE_STATUS", label: "Anderer Fall" },
-                ]}
-                onChange={(value) =>
-                  change("specialCases", [
-                    ...(form.specialCases ?? []).filter(
-                      (v) => v !== "PRIVATE_INSURANCE" && v !== "OTHER_INSURANCE_STATUS",
-                    ),
-                    ...(value === "GKV" ? [] : [value]),
-                  ])
-                }
-              />
-              <NetPayChoice
-                label="Beitrag für die Prognose"
-                value={customHealth}
-                disabled={locked}
-                options={[
-                  { value: false, label: "Durchschnitt verwenden" },
-                  { value: true, label: "Eigener Zusatzbeitrag" },
-                ]}
-                onChange={(custom) => {
-                  setCustomHealth(custom);
-                  if (!custom) change("healthAdditionalRate", NET_PAY_HEALTH_FORECAST_RATE);
-                  setError(null);
-                }}
-              />
-              {customHealth ? (
-                <Field
-                  label="Zusatzbeitrag deiner Krankenkasse (%)"
-                  value={form.healthAdditionalRate}
-                  onChangeText={(value) => change("healthAdditionalRate", value)}
-                  editable={!locked}
-                  keyboardType="decimal-pad"
-                />
-              ) : null}
-            </>
-          ) : null}
-          <NetPayWorkflowSelect<NetPayPensionScheme>
-            label="Zusatzversorgung"
-            value={pensionScheme}
-            disabled={locked}
-            searchable
-            options={NET_PAY_PENSION_OPTIONS}
-            onChange={(value) => {
-              setPensionScheme(value);
-              setPensionEmployeeRate("");
-              setError(null);
-            }}
-          />
-          <NetPayText>Die Kasse steht auf deiner Gehaltsabrechnung.</NetPayText>
-          {needsOwnPensionRate ? (
-            <>
-              <Field
-                label="Dein EZVK-Eigenanteil laut Abrechnung (%)"
-                value={pensionEmployeeRate}
-                onChangeText={(value) => {
-                  setPensionEmployeeRate(value);
-                  setError(null);
-                }}
-                editable={!locked}
-                keyboardType="decimal-pad"
-                placeholder="Optional · z. B. 1,00"
-              />
-              <NetPayText>
-                Kein eigener Abzug? Trage 0 ein. Unbekannt? Lass das Feld frei.
-              </NetPayText>
-            </>
-          ) : null}
-          {pensionScheme === "UNKNOWN" ||
-          pensionScheme === "OTHER" ||
-          (needsOwnPensionRate && pensionEmployeeRate.trim() === "") ? (
-            <NetPayText>
-              Netto vor Zusatzversorgung · Beiträge und ihre Auswirkungen sind noch offen.
-            </NetPayText>
-          ) : null}
-          <NetPayWorkflowLink onPress={() => setHelp(!help)} disabled={locked} expanded={help}>
-            {help ? "Erklärung schließen" : "So rechnen wir"}
-          </NetPayWorkflowLink>
-          {help ? (
-            <NetPayText>
-              Voller bezahlter Monat, gesetzliche Versicherungen, geplante Dienste mit mittiger
-              Pause. Sonderzahlungen erfasst du getrennt in der Gehaltsübersicht. Deine
-              Zusatzversorgung steht auf der Gehaltsabrechnung und hängt vom Arbeitgeber ab. Das
-              Bundesland allein reicht zur Auswahl nicht aus.
-            </NetPayText>
-          ) : null}
-        </>
-      )}
-      {step !== 1 ? (
-        <NetPayWorkflowLink
-          onPress={() => setDetails(!details)}
-          disabled={locked}
-          expanded={details}
-        >
-          {details ? "Weitere Angaben schließen" : "Weitere Angaben"}
-        </NetPayWorkflowLink>
-      ) : null}
-      {details && step === 0 ? (
-        <>
           {form.taxClass !== null && form.taxClass <= 4 ? (
             <>
               <Field
@@ -448,9 +252,179 @@ export function NetPaySetupForm({
               ) : null}
             </>
           ) : null}
-        </>
-      ) : details && step === 2 ? (
-        <>
+        </View>
+      </NetPaySettingsSection>
+      <NetPaySettingsSection title="Familie">
+        <View style={{ gap: SPACING.lg }}>
+          <Field
+            label="Geburtsdatum (TT.MM.JJJJ)"
+            value={form.birthDate}
+            editable={!locked}
+            onChangeText={(value) => change("birthDate", value)}
+            autoCorrect={false}
+            keyboardType="numbers-and-punctuation"
+            placeholder="15.01.1990"
+          />
+          <NetPayChoice
+            label="Hast du Kinder?"
+            value={form.isParent}
+            disabled={locked}
+            options={YES_NO}
+            onChange={(yes) => {
+              setForm((current) => ({
+                ...current,
+                isParent: yes,
+                childrenUnder25: yes ? current.childrenUnder25 : "0",
+              }));
+              setError(null);
+            }}
+          />
+          {form.isParent ? (
+            <NetPayChoice
+              label="Wie viele Kinder sind unter 25?"
+              value={Math.min(5, Number(form.childrenUnder25))}
+              disabled={locked}
+              options={[0, 1, 2, 3, 4, 5].map((value) => ({
+                value,
+                label: value === 5 ? "5+" : String(value),
+              }))}
+              onChange={(value) => change("childrenUnder25", String(value))}
+            />
+          ) : null}
+          <NetPayWorkflowLink
+            onPress={() => setFamilyHelp(!familyHelp)}
+            disabled={locked}
+            expanded={familyHelp}
+          >
+            Warum diese Angaben?
+          </NetPayWorkflowLink>
+          {familyHelp ? (
+            <NetPayText>
+              Auch erwachsene Kinder zählen. Das beeinflusst deinen Beitrag zur Pflegeversicherung.
+              Der steuerliche Kinderfreibetrag ist eine separate Angabe.
+            </NetPayText>
+          ) : null}
+        </View>
+      </NetPaySettingsSection>
+      <NetPaySettingsSection title="Versicherung & Vorsorge">
+        <View style={{ gap: SPACING.lg }}>
+          <NetPayChoice
+            label="Versicherungsart"
+            value={
+              form.specialCases?.includes("PRIVATE_INSURANCE")
+                ? "PRIVATE_INSURANCE"
+                : form.specialCases?.includes("OTHER_INSURANCE_STATUS")
+                  ? "OTHER_INSURANCE_STATUS"
+                  : "GKV"
+            }
+            disabled={locked}
+            options={[
+              { value: "GKV", label: "Gesetzlich" },
+              { value: "PRIVATE_INSURANCE", label: "Privat" },
+              { value: "OTHER_INSURANCE_STATUS", label: "Anderer Fall" },
+            ]}
+            onChange={(value) =>
+              change("specialCases", [
+                ...(form.specialCases ?? []).filter(
+                  (v) => v !== "PRIVATE_INSURANCE" && v !== "OTHER_INSURANCE_STATUS",
+                ),
+                ...(value === "GKV" ? [] : [value]),
+              ])
+            }
+          />
+          {specialInsurance ? (
+            <NetPayText>
+              {form.specialCases?.includes("PRIVATE_INSURANCE")
+                ? "Privat versichert · Standardprognose nicht verfügbar"
+                : "Abweichender Versicherungsfall · Standardprognose nicht verfügbar"}
+            </NetPayText>
+          ) : (
+            <>
+              <NetPayChoice
+                label="Beitrag für die Prognose"
+                value={customHealth}
+                disabled={locked}
+                options={[
+                  { value: false, label: "Durchschnitt verwenden" },
+                  { value: true, label: "Eigener Zusatzbeitrag" },
+                ]}
+                onChange={(custom) => {
+                  setCustomHealth(custom);
+                  if (!custom) change("healthAdditionalRate", NET_PAY_HEALTH_FORECAST_RATE);
+                  setError(null);
+                }}
+              />
+              {customHealth ? (
+                <Field
+                  label="Zusatzbeitrag deiner Krankenkasse (%)"
+                  value={form.healthAdditionalRate}
+                  onChangeText={(value) => change("healthAdditionalRate", value)}
+                  editable={!locked}
+                  keyboardType="decimal-pad"
+                />
+              ) : null}
+              {!customHealth ? (
+                <NetPayText>Gesetzlich · Zusatzbeitrag {form.healthAdditionalRate} %</NetPayText>
+              ) : null}
+            </>
+          )}
+          <NetPayWorkflowSelect<NetPayPensionScheme>
+            label="Zusatzversorgung"
+            value={pensionScheme}
+            disabled={locked}
+            searchable
+            options={NET_PAY_PENSION_OPTIONS}
+            onChange={(value) => {
+              setPensionScheme(value);
+              setPensionEmployeeRate("");
+              setError(null);
+            }}
+          />
+          <NetPayText>Die Kasse steht auf deiner Gehaltsabrechnung.</NetPayText>
+          {needsOwnPensionRate ? (
+            <>
+              <Field
+                label="Dein EZVK-Eigenanteil laut Abrechnung (%)"
+                value={pensionEmployeeRate}
+                onChangeText={(value) => {
+                  setPensionEmployeeRate(value);
+                  setError(null);
+                }}
+                editable={!locked}
+                keyboardType="decimal-pad"
+                placeholder="Optional · z. B. 1,00"
+              />
+              <NetPayText>
+                Kein eigener Abzug? Trage 0 ein. Unbekannt? Lass das Feld frei.
+              </NetPayText>
+            </>
+          ) : null}
+          {pensionScheme === "UNKNOWN" ||
+          pensionScheme === "OTHER" ||
+          (needsOwnPensionRate && pensionEmployeeRate.trim() === "") ? (
+            <NetPayText>
+              Netto vor Zusatzversorgung · Beiträge und ihre Auswirkungen sind noch offen.
+            </NetPayText>
+          ) : null}
+          <NetPayWorkflowLink
+            onPress={() => setInsuranceHelp(!insuranceHelp)}
+            disabled={locked}
+            expanded={insuranceHelp}
+          >
+            {insuranceHelp ? "Erklärung schließen" : "So rechnen wir"}
+          </NetPayWorkflowLink>
+          {insuranceHelp ? (
+            <NetPayText>
+              Voller bezahlter Monat, gesetzliche Versicherungen, geplante Dienste mit mittiger
+              Pause. Sonderzahlungen erfasst du getrennt in der Gehaltsübersicht. Deine
+              Zusatzversorgung steht auf der Gehaltsabrechnung und hängt vom Arbeitgeber ab. Das
+              Bundesland allein reicht zur Auswahl nicht aus.
+            </NetPayText>
+          ) : null}
+        </View>
+      </NetPaySettingsSection>
+      <NetPaySettingsSection title="Weitere Angaben">
+        <View style={{ gap: SPACING.lg }}>
           <NetPayWorkflowSelect
             label="Beschäftigungsfall"
             value={
@@ -526,114 +500,37 @@ export function NetPaySetupForm({
             Zusatzversorgung oben auswählen. Reine Abzüge vom ausgezahlten Netto gehören ins
             Euro-Feld.
           </NetPayText>
-        </>
-      ) : null}
+        </View>
+      </NetPaySettingsSection>
     </View>
   );
   const footer = (
-    <NetPayWorkflowAction onPress={() => void advance()} disabled={locked} busy={saving || busy}>
-      {section || allowSectionSwitch
-        ? "Änderungen speichern"
-        : step === 2
-          ? "Netto-Prognose anzeigen"
-          : "Weiter"}
+    <NetPayWorkflowAction onPress={() => void save()} disabled={locked} busy={locked}>
+      Änderungen speichern
     </NetPayWorkflowAction>
   );
-  const content = (
-    <View style={{ gap: SPACING.lg }}>
-      {!section && !allowSectionSwitch ? (
-        <View
-          accessible
-          accessibilityLabel={`Schritt ${step + 1} von 3`}
-          style={{ gap: SPACING.sm }}
-        >
-          <View style={{ flexDirection: "row", gap: SPACING.xs }}>
-            {STEPS.map((title, index) => (
-              <View
-                key={title}
-                style={{
-                  flex: 1,
-                  height: 3,
-                  borderRadius: RADII.pill,
-                  backgroundColor: index <= step ? palette.primary : palette.separator,
-                }}
-              />
-            ))}
-          </View>
-          <NetPayText>{`Schritt ${step + 1} von 3`}</NetPayText>
-        </View>
-      ) : null}
-      <View style={{ gap: SPACING.xs }}>
-        {showTitle ? (
-          <Text
-            accessibilityRole="header"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
-          >
-            {STEPS[step]}
-          </Text>
-        ) : null}
-        <NetPayValidity
-          month={month}
-          firstSetup={firstSetup}
-          value={effectiveMonth}
-          onChange={setEffectiveMonth}
-          disabled={locked}
-        />
-      </View>
-      <SurfaceCard style={{ padding: SPACING.md }}>{fields}</SurfaceCard>
-      <FormStatus error={error} />
-    </View>
-  );
-  function discardEdit() {
-    if (locked) return;
-    setForm(netPaySetupValues(initial, worksInSaxony));
-    setEffectiveMonth(month);
-    setPensionScheme(initial?.automation?.pensionScheme ?? null);
-    setPensionEmployeeRate(
-      initial?.automation?.pensionEmployeeRateBps == null
-        ? ""
-        : decimalFormValue(initial.automation.pensionEmployeeRateBps),
-    );
-    setChurchRate(initial?.profile.churchTaxRatePercent || churchTaxDefaultPercent);
-    setCustomHealth((initial?.profile.healthAdditionalRateBps ?? 290) !== 290);
-    setAdditionalGross(decimalFormValue(initial?.automation?.additionalRecurringGrossCents ?? 0));
-    setAdditionalNet(decimalFormValue(initial?.automation?.additionalNetDeductionCents ?? 0));
-    move(-1);
-  }
-  const editing = allowSectionSwitch && step >= 0;
-  const onBack = editing ? discardEdit : !section && step > 0 ? () => move(step - 1) : undefined;
-  const overview =
-    allowSectionSwitch && step < 0 && initial ? (
-      <NetPaySettingsOverview
-        month={month}
-        settings={initial}
-        busy={locked}
-        onSelect={(next) => move(SECTION_STEP[next])}
-      />
-    ) : null;
   return renderLayout ? (
-    renderLayout({
-      content: overview ?? content,
-      footer: overview ? null : footer,
-      onBack,
-      locked,
-      editing,
-      page: step,
-    })
+    renderLayout({ content, footer, locked })
   ) : (
     <View style={{ gap: SPACING.lg }}>
-      {overview ?? content}
-      {overview ? null : (
-        <View style={{ flexDirection: "row", gap: SPACING.sm, alignItems: "center" }}>
-          {onBack ? (
-            <NetPayWorkflowLink disabled={locked} onPress={onBack}>
-              Zurück
-            </NetPayWorkflowLink>
-          ) : null}
-          {footer}
-        </View>
-      )}
+      {content}
+      {footer}
+    </View>
+  );
+}
+
+function NetPaySettingsSection({ children, title }: PropsWithChildren<{ readonly title: string }>) {
+  const palette = usePalette();
+  return (
+    <View style={{ gap: SPACING.sm }}>
+      <Text
+        accessibilityRole="header"
+        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+        style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+      >
+        {title}
+      </Text>
+      <FormSection>{children}</FormSection>
     </View>
   );
 }
