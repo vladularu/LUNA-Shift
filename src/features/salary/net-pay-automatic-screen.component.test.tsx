@@ -1036,7 +1036,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(detail.getByLabelText(/^Keine Zeitzuschläge\./)).toBeTruthy();
     expect(detail.queryByTestId("dropdown-modal-content")).toBeNull();
   });
-  it("opens each incomplete December duty and recalculates after the missing facts are saved", async () => {
+  it("keeps readiness pay with salary components and opens each December duty from its details", async () => {
     mockParams = { month: "2026-12" };
     mockMonth = "2026-12";
     const onCall = forecastShift({
@@ -1062,15 +1062,34 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [onCall, standby];
     const screen = await render(<SalaryScreen />);
     expect(screen.getByText("Gehaltsprognose noch offen")).toBeTruthy();
-    expect(screen.getByText(/Rufbereitschaftspauschale: 6,01/)).toBeTruthy();
-    expect(screen.getByText("Betrag noch offen")).toBeTruthy();
+    expect(screen.queryByText("Bereitschaften")).toBeNull();
+    expect(screen.queryByText(/Rufbereitschaftspauschale:/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Dienst öffnen:/ })).toBeNull();
     expect(screen.queryByLabelText(/^Gesamtbrutto:/)).toBeNull();
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
+    await fireEvent.press(screen.getByRole("button", { name: "Gehaltsbestandteile" }));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/salary-details",
+      params: { month: "2026-12", section: "components" },
+    });
+    await screen.unmount();
+    const components = await details("components", "2026-12");
+    expect(components.getByLabelText(/^Bereitschaftsvergütung: Noch offen/)).toBeTruthy();
+    expect(components.queryByText("Für diesen Monat fehlen Tarifdaten.")).toBeNull();
+    await fireEvent.press(components.getByRole("button", { name: /^Bereitschaften/ }));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/salary-details",
+      params: { month: "2026-12", section: "special-duties" },
+    });
+    await components.unmount();
+    const dutyDetails = await details("special-duties", "2026-12");
+    expect(dutyDetails.getByText(/Rufbereitschaftspauschale: 6,01/)).toBeTruthy();
+    expect(dutyDetails.getByText("Betrag noch offen")).toBeTruthy();
     for (const [entry, label] of [
       [onCall, "Dienst öffnen: 05.12. · Rufbereitschaft"],
       [standby, "Dienst öffnen: 09.12. · Bereitschaftsdienst"],
     ] as const) {
-      await fireEvent.press(screen.getByRole("button", { name: label }));
+      await fireEvent.press(dutyDetails.getByRole("button", { name: label }));
       expect(router.push).toHaveBeenLastCalledWith({
         pathname: "/shift-editor",
         params: { date: entry.date, mode: "SHIFT", entryId: entry.id },
@@ -1091,12 +1110,31 @@ describe("integrated salary-to-net workflow", () => {
         },
       },
     ];
-    await screen.rerender(<SalaryScreen />);
-    expect(screen.queryByText("Gehaltsprognose noch offen")).toBeNull();
-    expect(screen.queryByText("Betrag noch offen")).toBeNull();
-    expect(screen.getByText(/Auszahlung Bereitschaftsdienst: 131,01/)).toBeTruthy();
-    expect(screen.getByText(/Geleistet: 450 Min.*Vergütung: 337,5 Min/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Gesamtbrutto:/)).toBeTruthy();
+    await dutyDetails.rerender(<SalaryDetailsScreen />);
+    expect(dutyDetails.queryByText("Betrag noch offen")).toBeNull();
+    expect(dutyDetails.getByText(/Auszahlung Bereitschaftsdienst: 131,01/)).toBeTruthy();
+    expect(dutyDetails.getByText(/Geleistet: 450 Min.*Vergütung: 337,5 Min/)).toBeTruthy();
+    await dutyDetails.unmount();
+    const completed = await details("components", "2026-12");
+    expect(completed.getByLabelText(/^Bereitschaftsvergütung: 137,02/)).toBeTruthy();
+    expect(completed.queryByRole("button", { name: /^Bereitschaftsvergütung:/ })).toBeNull();
+    expect(completed.queryByText(/Auszahlung Bereitschaftsdienst:/)).toBeNull();
+    const gross = completed.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
+    await completed.unmount();
+    mockParams = { month: "2026-12" };
+    const overview = await render(<SalaryScreen />);
+    expect(overview.queryByText("Gehaltsprognose noch offen")).toBeNull();
+    expect(overview.queryByText("Bereitschaften")).toBeNull();
+    expect(overview.queryByText(/Auszahlung Bereitschaftsdienst:/)).toBeNull();
+    expect(overview.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(gross);
+    expect(overview.getByLabelText(/^Voraussichtliches Netto:/)).toBeTruthy();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+  it("shows an empty readiness detail without inventing amounts or duty links", async () => {
+    const screen = await details("special-duties");
+    expect(screen.getByText("Keine Bereitschaften in diesem Monat.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Dienst öffnen:/ })).toBeNull();
+    expect(mockSave).not.toHaveBeenCalled();
   });
   it("preserves manual gross salary and its separate component access", async () => {
     mockSettings = null;
