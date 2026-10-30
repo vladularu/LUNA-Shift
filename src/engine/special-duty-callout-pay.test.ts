@@ -64,6 +64,7 @@ const duty = (calls: readonly DutyCallout[], overrides: Partial<ShiftEntry> = {}
     breakMinutes: 0,
     specialDuty: {
       ...newSpecialDuty("ON_CALL", "06:00", "20:00", "Europe/Berlin"),
+      settlement: "PAY",
       callouts: calls,
       calloutsComplete: true,
     },
@@ -175,7 +176,7 @@ describe("on-call employment remuneration", () => {
     expect(six.premiumHourlyCents).not.toBe(six.baseHourlyCents);
     expect(six.premiumBasisPoints).toBe(3000);
   });
-  it("keeps known night and holiday base pay separate from unresolved SFN premiums", () => {
+  it("adds actual night and holiday premiums without changing the known overtime base", () => {
     for (const shift of [
       duty([call(300, 330)], { startTime: "00:00" }),
       duty([call(600, 615)], { date: "2026-07-05" }),
@@ -192,10 +193,10 @@ describe("on-call employment remuneration", () => {
         forecastProfile,
         null,
       );
-      expect(pay.available).toBe(false);
-      expect(pay.estimatedGrossAmount).toBeNull();
+      expect(pay.available).toBe(true);
+      expect(pay.estimatedGrossAmount).not.toBeNull();
       expect(pay.specialDutyBreakdowns?.[0].calloutPay?.baseAmountCents).toBeGreaterThan(0);
-      expect(pay.specialDutyNotes?.join(" ")).toMatch(/zuschläge/i);
+      expect(pay.specialDutyBreakdowns?.[0].calloutPay?.timePremiumCents).toBeGreaterThan(0);
     }
   });
   it("does not invent missing or conflicting overtime rates", () => {
@@ -223,7 +224,7 @@ describe("on-call employment remuneration", () => {
       true,
     );
     expect(calculateSpecialDutyPay("2026-07", [evening], models[4][1], resolver)[0].complete).toBe(
-      false,
+      true,
     );
     const autumn = duty([call(90, 210, "ON_SITE")], {
       date: "2026-10-25",
@@ -233,7 +234,7 @@ describe("on-call employment remuneration", () => {
     const line = calculateSpecialDutyPay("2026-10", [autumn], forecastProfile, resolver)[0];
     expect(line.calloutPay?.actualMinutes).toBe(180);
     expect(line.calloutPay?.paidMinutes).toBe(180);
-    expect(line.complete).toBe(false);
+    expect(line.complete).toBe(true);
   });
   it("does not assume a normal working day without reviewed holiday data", () => {
     const missing = {
@@ -250,12 +251,12 @@ describe("on-call employment remuneration", () => {
     )[0];
     expect(line.baseAmountCents).toBeGreaterThan(0);
     expect(line.complete).toBe(false);
-    expect(line.calloutPay).toBeUndefined();
+    expect(line.calloutPay?.timePremiumCents).toBeNull();
+    expect(line.calloutPay?.notes.length).toBeGreaterThan(0);
   });
-  it("leaves pauses, time-off and unconfirmed callouts open", () => {
+  it("leaves unlocated callout pauses and unconfirmed callouts open", () => {
     for (const specialDuty of [
       { ...duty([call(600, 660)]).specialDuty!, calloutsComplete: false },
-      { ...duty([call(600, 660)]).specialDuty!, settlement: "TIME_OFF" as const },
       { ...duty([{ ...call(600, 660), breakMinutes: 15 }]).specialDuty! },
     ]) {
       const pay = calculateMonthlyPayEstimate(

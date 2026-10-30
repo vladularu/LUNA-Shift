@@ -261,6 +261,11 @@ function* classifySteps(
     if (!shift || typeof shift.id !== "string" || shift.id.length === 0 || ids.has(shift.id))
       return fail("invalid-input", "Schicht-IDs müssen eindeutig sein.");
     ids.add(shift.id);
+    if (
+      shift.sourceShiftId !== undefined &&
+      (typeof shift.sourceShiftId !== "string" || shift.sourceShiftId.length === 0)
+    )
+      return fail("invalid-input", "Der ursprüngliche Diensteintrag fehlt.");
     const [start, end] = range(shift);
     const minutes = minuteIndex(end, start);
     if (minutes > 1_560)
@@ -478,6 +483,7 @@ function* classifySteps(
     results.push(
       Object.freeze({
         shiftId: shift.id,
+        ...(shift.sourceShiftId === undefined ? {} : { sourceShiftId: shift.sourceShiftId }),
         workedMinutes,
         nightMinutes,
         dayMinutes,

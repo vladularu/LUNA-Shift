@@ -1,3 +1,5 @@
+import { StandbyBreakFields } from "./standby-break-fields";
+import { StandbyTimeOffFields } from "./standby-time-off-fields";
 import { StandbyAgreementFields } from "./standby-agreement-fields";
 import { Fragment, useRef, useState } from "react";
 import { View } from "react-native";
@@ -184,6 +186,13 @@ export function SpecialDutyFields({
                 })
               }
             />
+            <StandbyBreakFields
+              value={value}
+              startTime={startTime}
+              endTime={endTime}
+              breakMinutes={Number(breakMinutes)}
+              onChange={onChange}
+            />
             {value.kind === "SPLIT" ? (
               <>
                 {value.parts.map((part, index) => {
@@ -228,6 +237,27 @@ export function SpecialDutyFields({
               </>
             ) : null}
           </EntryEditGroup>
+
+          {value.kind === "ON_CALL" ? (
+            <EntryEditGroup>
+              <DutyChoice
+                label="Abgeltung der Einsätze"
+                value={value.settlement}
+                options={[
+                  { value: "UNKNOWN", label: "Weiß ich noch nicht" },
+                  { value: "PAY", label: "Auszahlung" },
+                  { value: "TIME_OFF", label: "Freizeitausgleich" },
+                ]}
+                onChange={(settlement) =>
+                  onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
+                }
+              />
+              <DutyHint>
+                Freizeitausgleich gilt für das Einsatzentgelt und den Überstundenzuschlag laut
+                Vereinbarung. Die Rufbereitschaftspauschale und Zeitzuschläge werden ausgezahlt.
+              </DutyHint>
+            </EntryEditGroup>
+          ) : null}
 
           {value.kind === "ON_CALL" && !template ? (
             <EntryEditGroup>
@@ -374,6 +404,7 @@ export function SpecialDutyFields({
                   onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
                 }
               />
+              <StandbyTimeOffFields value={value} tariffFamily={tariffFamily} onChange={onChange} />
             </EntryEditGroup>
           ) : null}
 

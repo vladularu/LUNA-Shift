@@ -48,7 +48,11 @@ export function reportView(report: ReportDocument) {
     return {
       period,
       target: number("Arbeitszeit", "targetMinutes", period),
-      actual: number("Arbeitszeit", "actualMinutes", period),
+      hasTimeAccount: text("Arbeitszeit", "timeAccountMinutes", period) !== "",
+      actual:
+        text("Arbeitszeit", "timeAccountMinutes", period) !== ""
+          ? number("Arbeitszeit", "timeAccountMinutes", period)
+          : number("Arbeitszeit", "actualMinutes", period),
       balance: number("Arbeitszeit", "balanceMinutes", period),
       gross: number("Gehaltsprognose", "estimatedGrossAmount", period),
       net,
@@ -113,6 +117,8 @@ export function reportView(report: ReportDocument) {
     referenceDate: text("Bericht", "referenceDate") || report.createdAt.slice(0, 10),
     target: completeTime ? number(section, "targetMinutes") : null,
     actual: completeTime ? number(section, "actualMinutes") : null,
+    hasTimeAccount: text(section, "timeAccountMinutes") !== "",
+    timeAccount: completeTime ? number(section, "timeAccountMinutes") : null,
     balance: completeTime ? number(section, "balanceMinutes") : null,
     gross: number(salarySection, "estimatedGrossAmount"),
     net,

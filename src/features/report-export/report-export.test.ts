@@ -95,6 +95,73 @@ function value(report: ReportDocument, section: string, field: string, period = 
   )?.value;
 }
 
+describe("special duty account and SFN export", () => {
+  function standby(settlement: "PAY" | "TIME_OFF", night = false) {
+    const start = night ? "22:00" : "08:00",
+      end = night ? "23:00" : "16:00";
+    return forecastShift({
+      id: "standby",
+      date: "2026-07-07",
+      startTime: start,
+      endTime: end,
+      breakMinutes: night ? 0 : 30,
+      specialDuty: {
+        ...newSpecialDuty("STANDBY", start, end, "Europe/Berlin"),
+        version: 2,
+        standbyLevel: "II",
+        settlement,
+        standbyAgreement: {
+          ...newStandbyAgreement("TVOED_K"),
+          rule: "STANDARD",
+          timeOffMode: "WEIGHTED",
+        },
+      },
+    });
+  }
+  it("exports precise account credits while retaining recorded work and avoiding duplicate cash", () => {
+    const report = build({
+      period: "2026-07",
+      entries: [standby("TIME_OFF")],
+      profile: forecastProfile,
+    });
+    const view = reportView(report);
+    expect(view.actual).toBe(450);
+    expect(view.timeAccount).toBe(337.5);
+    expect(view.monthly[0].actual).toBe(337.5);
+    expect(view.specialDuties).toBe(0);
+    const html = reportToHtml(report);
+    expect(html).toContain("5:37:30");
+    expect(html).toContain("Erfasste Zeit: 7:30");
+    const annual = build({
+      period: "2026",
+      entries: [standby("TIME_OFF")],
+      profile: forecastProfile,
+    });
+    expect(reportView(annual).timeAccount).toBe(337.5);
+    expect(reportToHtml(annual)).toContain("<td>5:37:30 h</td>");
+  });
+  it("includes the known night payment in gross without exposing internal tax traces", () => {
+    const report = build({
+      period: "2026-07",
+      entries: [standby("PAY", true)],
+      profile: forecastProfile,
+      netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+    });
+    const view = reportView(report);
+    expect(view.specialDuties).toBe(20.96);
+    expect(view.net).not.toBeNull();
+    expect(view.timeAccount).toBe(0);
+    expect(report.rows.some((row) => row.field.includes("payrollTrace"))).toBe(false);
+    expect(
+      report.rows.some(
+        (row) =>
+          row.field.endsWith("standbyPay.nightPremiumCents") &&
+          Number(row.value.replace(",", ".")) === 3.49,
+      ),
+    ).toBe(true);
+  });
+});
+
 function savedNet(settings: MonthlyNetPaySettings): SavedMonthlyNetPaySettings {
   return { settings, revision: 1, createdAt: "2026-01-01", updatedAt: "2026-01-01" };
 }
@@ -143,6 +210,7 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
       breakMinutes: 0,
       specialDuty: {
         ...newSpecialDuty("ON_CALL", "06:00", "18:00", "Europe/Berlin"),
+        settlement: "PAY",
         calloutsComplete: true,
         callouts: [
           { kind: "REMOTE", start: 600, end: 625, departure: 600, returned: 625, breakMinutes: 0 },

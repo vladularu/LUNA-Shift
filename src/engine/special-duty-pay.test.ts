@@ -158,7 +158,7 @@ describe("on-call base remuneration", () => {
       expect(pay.specialDutyNotes?.length).toBeGreaterThan(0);
     }
   });
-  it("keeps multi-day, month-crossing, time-off and unknown tariff cases explicitly open", () => {
+  it("keeps multi-day, month-crossing and unknown tariff cases explicitly open", () => {
     for (const shift of [
       duty({ specialDuty: { ...duty().specialDuty!, endDay: 2 } }),
       duty({
@@ -167,7 +167,6 @@ describe("on-call base remuneration", () => {
         endTime: "06:00",
         specialDuty: { ...duty().specialDuty!, endDay: 1 },
       }),
-      duty({ specialDuty: { ...duty().specialDuty!, settlement: "TIME_OFF" } }),
     ])
       expect(
         calculateSpecialDutyPay("2026-07", [shift], forecastProfile, resolver)[0].complete,

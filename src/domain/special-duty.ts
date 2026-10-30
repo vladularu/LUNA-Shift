@@ -15,7 +15,7 @@ export interface DutyCallout extends DutyPart {
 }
 
 export interface SpecialDuty {
-  readonly version: 1 | 2;
+  readonly version: 1 | 2 | 3;
   readonly kind: "SPLIT" | "ON_CALL" | "STANDBY";
   readonly timeZone: string;
   /** Explicit local end day, 0 = start date. */
@@ -25,7 +25,9 @@ export interface SpecialDuty {
   readonly calloutsComplete: boolean;
   readonly standbyLevel: "UNKNOWN" | "I" | "II" | "III" | "A" | "B" | "C" | "D";
   readonly settlement: "UNKNOWN" | "PAY" | "TIME_OFF";
-  readonly standbyAgreement?: StandbyAgreement;
+  readonly standbyAgreement?: StandbyAgreement | null;
+  /** Start of one genuine duty-free break, in local minutes relative to the entry date. */
+  readonly breakStart?: number | null;
 }
 
 export const DUTY_LABELS = {
@@ -115,10 +117,11 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
     "calloutsComplete",
     "standbyLevel",
     "settlement",
-    ...(version === 2 ? ["standbyAgreement"] : []),
+    ...(version === 2 || version === 3 ? ["standbyAgreement"] : []),
+    ...(version === 3 ? ["breakStart"] : []),
   ]);
   if (
-    (raw.version !== 1 && raw.version !== 2) ||
+    (raw.version !== 1 && raw.version !== 2 && raw.version !== 3) ||
     !["SPLIT", "ON_CALL", "STANDBY"].includes(String(raw.kind))
   )
     return invalid();
@@ -140,7 +143,7 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
   if (!["UNKNOWN", "PAY", "TIME_OFF"].includes(String(raw.settlement))) return invalid();
   if (raw.kind !== "SPLIT" && parts.length > 0) return invalid();
   if (raw.kind !== "ON_CALL" && (callouts.length > 0 || raw.calloutsComplete)) return invalid();
-  if (version === 2 && raw.kind !== "STANDBY") return invalid();
+  if ((version === 2 || version === 3) && raw.kind !== "STANDBY") return invalid();
   for (const intervals of [
     parts,
     callouts.map((item) => ({ start: item.departure, end: item.returned })),
@@ -150,7 +153,7 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
       return invalid();
   }
   return Object.freeze({
-    version: raw.version as 1 | 2,
+    version: raw.version as 1 | 2 | 3,
     kind: raw.kind as SpecialDuty["kind"],
     timeZone: raw.timeZone,
     endDay,
@@ -159,7 +162,17 @@ export function validateSpecialDuty(value: unknown): SpecialDuty | null {
     calloutsComplete: raw.calloutsComplete,
     standbyLevel: raw.standbyLevel as SpecialDuty["standbyLevel"],
     settlement: raw.settlement as SpecialDuty["settlement"],
-    ...(version === 2 ? { standbyAgreement: validateStandbyAgreement(raw.standbyAgreement) } : {}),
+    ...(version === 2 || version === 3
+      ? {
+          standbyAgreement:
+            version === 3 && raw.standbyAgreement === null
+              ? null
+              : validateStandbyAgreement(raw.standbyAgreement),
+        }
+      : {}),
+    ...(version === 3
+      ? { breakStart: raw.breakStart === null ? null : minute(raw.breakStart) }
+      : {}),
   });
 }
 
@@ -190,6 +203,18 @@ export function validateDutyParent(
   if (duty.kind === "ON_CALL" && (parent.breakMinutes ?? 0) !== 0) return invalid();
   if (duty.parts.some((item) => item.start < end || item.end - start > 1440)) return invalid();
   if (duty.callouts.some((item) => item.departure < start || item.returned > end)) return invalid();
+  if (duty.breakStart != null && (parent.breakMinutes ?? 0) > 0) {
+    if (duty.breakStart < start || duty.breakStart >= end) return invalid();
+    if (parent.date) {
+      const pauseEnd = dutyInstant(parent.date, duty.breakStart, duty.timeZone).add({
+        minutes: parent.breakMinutes!,
+      });
+      if (
+        Temporal.ZonedDateTime.compare(pauseEnd, dutyInstant(parent.date, end, duty.timeZone)) > 0
+      )
+        return invalid();
+    } else if (duty.breakStart + parent.breakMinutes! > end) return invalid();
+  }
   if (parent.date) {
     const intervals = [
       { start, end },

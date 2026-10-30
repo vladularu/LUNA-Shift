@@ -177,7 +177,7 @@ describe("simple app return preserves stored data", () => {
       sha256,
     });
     expect(file.document.version).toBe(LOCAL_BACKUP_VERSION);
-    expect(LOCAL_BACKUP_VERSION).toBe(23);
+    expect(LOCAL_BACKUP_VERSION).toBe(24);
     const validated = await validateLocalBackup(file.serialized, {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       sha256,

@@ -35,15 +35,63 @@ export function salaryServiceRows(
   filter: string | null = null,
 ) {
   const byId = new Map(shifts.map((shift) => [shift.id, shift]));
-  const classified = new Map(classification?.shifts.map((row) => [row.shiftId, row]) ?? []);
+  const classified = new Map<string, SalaryClassification["shifts"][number]>();
+  for (const tax of classification?.shifts ?? []) {
+    const id = tax.sourceShiftId ?? tax.shiftId;
+    const previous = classified.get(id);
+    if (!previous) {
+      classified.set(id, tax.sourceShiftId ? { ...tax, shiftId: id } : tax);
+      continue;
+    }
+    const categories = new Map(previous.premiumBreakdown.map((p) => [p.category, p]));
+    for (const p of tax.premiumBreakdown) {
+      const before = categories.get(p.category);
+      categories.set(
+        p.category,
+        before
+          ? {
+              category: p.category,
+              paidPremiumCents: before.paidPremiumCents + p.paidPremiumCents,
+              taxFreeCents: before.taxFreeCents + p.taxFreeCents,
+              taxablePremiumCents: before.taxablePremiumCents + p.taxablePremiumCents,
+            }
+          : p,
+      );
+    }
+    classified.set(id, {
+      ...previous,
+      shiftId: id,
+      workedMinutes: previous.workedMinutes + tax.workedMinutes,
+      nightMinutes: previous.nightMinutes + tax.nightMinutes,
+      dayMinutes: previous.dayMinutes + tax.dayMinutes,
+      paidPremiumCents: previous.paidPremiumCents + tax.paidPremiumCents,
+      taxFreeCents: previous.taxFreeCents + tax.taxFreeCents,
+      socialInsuranceFreeCents: previous.socialInsuranceFreeCents + tax.socialInsuranceFreeCents,
+      taxablePremiumCents: previous.taxablePremiumCents + tax.taxablePremiumCents,
+      socialInsuranceLiablePremiumCents:
+        previous.socialInsuranceLiablePremiumCents + tax.socialInsuranceLiablePremiumCents,
+      premiumBreakdown: [...categories.values()],
+    });
+  }
   const raw = pay ? buildPremiumBreakdown(pay.shiftBreakdowns, shifts, filter) : null;
-  const ids = raw ? raw.rows.map((row) => row.shiftId) : [...classified.keys()];
+  const categoryFilter = filter?.startsWith("sfn:") ? filter.slice(4) : null;
+  const ids =
+    filter === null
+      ? [...new Set([...(raw?.rows.map((row) => row.shiftId) ?? []), ...classified.keys()])]
+      : categoryFilter
+        ? [...classified.keys()]
+        : raw
+          ? raw.rows.map((row) => row.shiftId)
+          : [...classified.keys()];
   return ids
     .map((id) => {
       const detail = raw?.rows.find((row) => row.shiftId === id);
       const tax = classified.get(id) ?? null;
-      const amountCents =
-        filter === null && tax
+      const amountCents = categoryFilter
+        ? (tax?.premiumBreakdown
+            .filter((p) => p.category === categoryFilter)
+            .reduce((sum, p) => sum + p.paidPremiumCents, 0) ?? 0)
+        : filter === null && tax
           ? tax.paidPremiumCents
           : detail
             ? Math.round(premiumAmount(detail.premiumLines) * 100)

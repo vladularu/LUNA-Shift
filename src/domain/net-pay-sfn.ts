@@ -28,6 +28,8 @@ export interface SfnPremiumPayment {
 
 export interface SfnShift extends SfnTimeRange {
   readonly id: string;
+  /** Derived callout traces keep their original calendar entry for detail links. */
+  readonly sourceShiftId?: string;
   /** null means unknown; [] explicitly confirms that no unpaid break is deducted. */
   readonly unpaidBreaks: readonly SfnTimeRange[] | null;
   /** Paid pauses are also excluded from actual SFN work. Their cash remains taxable. */
@@ -55,6 +57,7 @@ export interface SfnPayrollInput {
 
 export interface SfnShiftClassification {
   readonly shiftId: string;
+  readonly sourceShiftId?: string;
   readonly workedMinutes: number;
   readonly nightMinutes: number;
   readonly dayMinutes: number;

@@ -1,3 +1,5 @@
+import { tariffPayrollTrace } from "./tariff-payroll-trace";
+import { specialDutyPayrollTraces } from "./special-duty-payroll-trace";
 import { projectRegularPayShifts } from "./special-duty";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
 import { employmentProfileAt } from "@/domain/employment-history";
@@ -10,14 +12,6 @@ import type { RuleResolver } from "@/rules/rule-resolver";
 import { calculateMonthlyNetPay } from "./net-pay";
 import { addAnnualSalaryPayment, type AnnualPaymentForecast } from "./net-pay-annual-payment";
 import { classifySfnPayroll2026Steps } from "./net-pay-sfn";
-import { premiumCategory, premiumKind } from "./net-pay-premium-trace";
-import { calculateTvoedShiftPremiumTrace } from "./simple-pay";
-import { calculateVkaEShift } from "./simple-vka-e-pay";
-import { calculateNursingTrainingShift } from "./simple-nursing-training-pay";
-import { calculateTvlKrShift } from "./simple-tvl-kr-pay";
-import { calculateTvhKrShift } from "./simple-tvh-kr-pay";
-import { calculateTvUkNursingShift } from "./simple-tvuk-nursing-pay";
-import { calculateTvalPflegeShift } from "./simple-tval-pflege-pay";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
 
@@ -164,72 +158,19 @@ export function* calculateAutomaticNetPayForecastSteps(
           date: shift.date,
           entryId: shift.id,
         });
-      let breakdown;
-      let trace: SfnShift;
-      if (profile.tvalPflegeTariff)
-        breakdown = calculateTvalPflegeShift(
-          shift,
-          profile,
-          profile.tvalPflegeTariff,
+      const { breakdown, trace } = tariffPayrollTrace(
+        shift,
+        profile,
+        {
+          allowanceStatus,
           saturdayShiftWork,
-          resolver,
-          true,
-        );
-      else if (profile.tvhKrTariff)
-        breakdown = calculateTvhKrShift(
-          shift,
-          profile,
-          profile.tvhKrTariff,
-          { allowanceStatus, saturdayShiftWork },
-          resolver,
-          true,
-        );
-      else if (profile.tvUkNursingTariff)
-        breakdown = calculateTvUkNursingShift(
-          shift,
-          profile,
-          profile.tvUkNursingTariff,
-          { regularShiftWork: pay.assessment.shiftWork === "DETECTED" },
-          resolver,
-          true,
-        );
-      else if (profile.tvlKrTariff)
-        breakdown = calculateTvlKrShift(
-          shift,
-          profile,
-          { payGroup: profile.tvlKrTariff.payGroup, payLevel: profile.tvlKrTariff.payLevel },
-          profile.tvlKrTariff.universityRegion,
-          saturdayShiftWork,
-          resolver,
-          true,
-        );
-      else if (profile.vkaETariff) breakdown = calculateVkaEShift(shift, profile, resolver, true);
-      else if (profile.nursingTrainingTariff)
-        breakdown = calculateNursingTrainingShift(shift, profile, resolver, true);
-      else if (profile.tariff) {
-        const dated = calculateTvoedShiftPremiumTrace(shift, profile, resolver);
-        breakdown = dated.breakdown;
-        trace = {
-          id: shift.id,
-          start: dated.start,
-          end: dated.end,
-          unpaidBreaks: dated.unpaidBreaks,
-          payments: dated.premiums.map((p) => ({
-            id: `${shift.id}:${p.ruleId}`,
-            kind: premiumKind(p.premiumType),
-            category: premiumCategory(p.premiumType),
-            amountCents: cents(p.line.amount),
-            additionalToBasicPay: true,
-            periods: p.periods,
-          })),
-        };
-      } else return stop("Für diese Gehaltsbasis fehlt eine vollständige Tarifberechnung.");
-      const { payrollTrace, ...cashBreakdown } = breakdown;
+          regularShiftWork: pay.assessment.shiftWork === "DETECTED",
+        },
+        resolver,
+      );
       const recorded = pay.shiftBreakdowns.find((b) => b.shiftId === shift.id);
-      if (!recorded || JSON.stringify(recorded) !== JSON.stringify(cashBreakdown))
+      if (!recorded || JSON.stringify(recorded) !== JSON.stringify(breakdown))
         return stop("Die Zuschläge konnten nicht vollständig berechnet werden.");
-      trace = payrollTrace ?? trace!;
-      if (!trace) return stop("Die Zuschläge konnten nicht vollständig berechnet werden.");
       traces.push(trace);
       yield 1;
     }
@@ -241,6 +182,7 @@ export function* calculateAutomaticNetPayForecastSteps(
     )
       return stop("Die Zuschlagssummen passen nicht zum Brutto.");
     yield 0;
+    traces.push(...specialDutyPayrollTraces(pay.specialDutyBreakdowns ?? []));
     const classification = yield* classifySfnPayroll2026Steps(
       {
         month,

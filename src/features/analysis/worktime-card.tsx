@@ -4,7 +4,7 @@ import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
 import { CardFooterLine, SurfaceCard } from "@/ui/design-system";
-import { AnalysisCardHeader } from "./analysis-list-card";
+import { AnalysisCardHeader, AnalysisValueRow } from "./analysis-list-card";
 
 export function WorktimeCard({
   target,
@@ -13,6 +13,8 @@ export function WorktimeCard({
   balanceAccent,
   onPress,
   caption,
+  actualLabel = "Ist",
+  action,
 }: {
   readonly target: string;
   readonly actual: string;
@@ -20,6 +22,8 @@ export function WorktimeCard({
   readonly balanceAccent: string;
   readonly onPress?: () => void;
   readonly caption?: string;
+  readonly actualLabel?: string;
+  readonly action?: { readonly label: string; readonly onPress: () => void };
 }) {
   const palette = usePalette();
   const secondaryText = palette.dark ? palette.text : palette.textMuted;
@@ -28,14 +32,14 @@ export function WorktimeCard({
   const withUnit = (value: string) => (/[0-9]/u.test(value) ? value + " h" : value);
   const values = [
     { label: "Soll", value: target, accent: palette.text },
-    { label: "Ist", value: actual, accent: palette.text },
+    { label: actualLabel, value: actual, accent: palette.text },
     { label: "Saldo", value: balance, accent: balanceAccent },
   ];
   return (
     <SurfaceCard>
       <AnalysisCardHeader
         title="Arbeitszeit"
-        label={`Stunden, Ist ${withUnit(actual)}, Soll ${withUnit(target)}, Saldo ${withUnit(balance)}`}
+        label={`Stunden, ${actualLabel} ${withUnit(actual)}, Soll ${withUnit(target)}, Saldo ${withUnit(balance)}`}
         onPress={onPress}
       />
       <View
@@ -90,6 +94,9 @@ export function WorktimeCard({
         >
           {caption}
         </Text>
+      ) : null}
+      {action ? (
+        <AnalysisValueRow first label={action.label} value="" onPress={action.onPress} />
       ) : null}
       <CardFooterLine />
     </SurfaceCard>

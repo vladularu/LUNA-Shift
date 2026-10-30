@@ -71,7 +71,7 @@ describe("one youth protection preference", () => {
     await saveYouthProtectionPreference(memory.db, enabled);
     const file = await backup();
     expect(file.document.version).toBe(LOCAL_BACKUP_VERSION);
-    expect(LOCAL_BACKUP_VERSION).toBe(23);
+    expect(LOCAL_BACKUP_VERSION).toBe(24);
     await saveYouthProtectionPreference(memory.db, !enabled);
     await restore(file.serialized);
     expect(await loadYouthProtectionPreference(memory.db)).toBe(enabled);

@@ -43,6 +43,7 @@ export interface AnnualMonthReport {
   readonly entryCount: number;
   readonly targetMinutes: number | null;
   readonly actualMinutes: number;
+  readonly timeAccountMinutes?: number | null;
   readonly balanceMinutes: number | null;
   readonly estimatedGrossAmount: number | null;
   readonly premiumAmount: number;
@@ -63,6 +64,7 @@ export interface AnnualReport {
   readonly months: readonly AnnualMonthReport[];
   readonly targetMinutes: number | null;
   readonly actualMinutes: number;
+  readonly timeAccountMinutes?: number | null;
   readonly balanceMinutes: number | null;
   readonly workMinutes: number;
   readonly trainingMinutes: number;
@@ -291,7 +293,10 @@ function* calculateAnnualMonthContribution(
       targetMinutes: summary.targetMinutes,
       ...(summary.targetCalculation ? { targetStatus: summary.targetCalculation.status } : {}),
       actualMinutes: summary.actualMinutes,
-      balanceMinutes: summary.balanceMinutes,
+      ...(summary.timeAccountMinutes === undefined
+        ? {}
+        : { timeAccountMinutes: summary.timeAccountMinutes }),
+      balanceMinutes: summary.specialDutyNotes?.length ? null : summary.balanceMinutes,
       timePremiumAmount: profile.tariff !== null && pay.available ? pay.timePremiumAmount : null,
       estimatedGrossAmount: pay.estimatedGrossAmount,
       premiumAmount: pay.timePremiumAmount + pay.overtimeAmount + allowanceAmount,
@@ -427,7 +432,21 @@ export function* buildAnnualReportSteps(
         }
       : {}),
     actualMinutes,
-    balanceMinutes: actualMinutes - targetMinutes,
+    ...(months.some((month) => month.timeAccountMinutes !== undefined)
+      ? {
+          timeAccountMinutes: months.some((month) => month.timeAccountMinutes === null)
+            ? null
+            : months.reduce(
+                (sum, month) => sum + (month.timeAccountMinutes ?? month.actualMinutes),
+                0,
+              ),
+        }
+      : {}),
+    balanceMinutes: months.some((month) => month.balanceMinutes === null)
+      ? null
+      : months.some((month) => month.timeAccountMinutes !== undefined)
+        ? months.reduce((sum, month) => sum + month.balanceMinutes!, 0)
+        : actualMinutes - targetMinutes,
     workMinutes,
     trainingMinutes,
     vacationDays,

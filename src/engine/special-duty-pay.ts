@@ -105,8 +105,8 @@ function calculateDutyBase(
       );
     if (duty.callouts.length && !calloutPay)
       notes.push("Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.");
-    if (duty.settlement === "TIME_OFF")
-      notes.push("Die vereinbarte Umwandlung in Freizeit ist noch offen.");
+    if (duty.callouts.length && duty.settlement === "UNKNOWN")
+      notes.push("Wähle für deine Einsätze Auszahlung oder den vereinbarten Freizeitausgleich.");
   }
   return {
     shiftId: shift.id,

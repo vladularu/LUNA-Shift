@@ -1,14 +1,25 @@
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
-import { formatMinutes, formatSignedMinutes } from "@/engine/working-time";
+import { formatMinutes } from "@/engine/working-time";
 import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
-import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
+import {
+  complianceDetailsRoute,
+  salaryRoute,
+  dayEditorRoute,
+  worktimeDetailsRoute,
+} from "@/navigation/routes";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { annualSalaryGrossCents, type AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import type { ReactNode } from "react";
+import {
+  timeAccountActual,
+  timeAccountBalance,
+  timeAccountCaption,
+  pendingTimeAccountDuties,
+} from "./special-duty-time-presentation";
 import { annualPayoutMonths, salaryAnnualFamily } from "@/domain/salary-annual-schedule";
 
 export function MonthOverview({
@@ -73,11 +84,32 @@ export function MonthOverview({
     profile.manualMonthlyGrossCents != null;
   const estimate = pay.ok && pay.value.available ? pay.value : null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
+  const hasAccount = summary.ok && summary.value.timeAccountMinutes !== undefined;
+  const pendingDuties = summary.ok ? pendingTimeAccountDuties(summary.value) : [];
   return (
     <AnalysisDashboard
       cards={{
         WORK: (
           <WorkListCard
+            actualLabel={hasAccount ? "Zeitkonto" : undefined}
+            action={
+              hasAccount
+                ? {
+                    label:
+                      pendingDuties.length === 1
+                        ? `${pendingDuties[0].date.slice(8, 10)}.${pendingDuties[0].date.slice(5, 7)}.: Angaben ergänzen`
+                        : pendingDuties.length > 1
+                          ? `${pendingDuties.length} Bereitschaften prüfen`
+                          : "Bereitschaften ansehen",
+                    onPress: () =>
+                      router.push(
+                        pendingDuties.length === 1
+                          ? dayEditorRoute(pendingDuties[0].date, "SHIFT", pendingDuties[0].shiftId)
+                          : worktimeDetailsRoute(month),
+                      ),
+                  }
+                : undefined
+            }
             onPress={() =>
               router.push({
                 pathname: "/working-time-profile",
@@ -85,9 +117,10 @@ export function MonthOverview({
               })
             }
             actual={
-              formatMinutes(
-                summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
-              ) + " h"
+              summary.ok
+                ? timeAccountActual(summary.value) +
+                  (summary.value.timeAccountMinutes === null ? "" : " h")
+                : formatMinutes(shiftTypeAnalysis.totalMinutes) + " h"
             }
             target={
               summary.ok ? formatMinutes(summary.value.targetMinutes) + " h" : "Nicht verfügbar"
@@ -96,16 +129,17 @@ export function MonthOverview({
               summary.ok
                 ? summary.value.specialDutyNotes?.length
                   ? "Noch offen"
-                  : formatSignedMinutes(summary.value.balanceMinutes) + " h"
+                  : timeAccountBalance(summary.value) + " h"
                 : "Nicht verfügbar"
             }
             caption={
               summary.ok
-                ? summary.value.specialDutyNotes?.length
-                  ? "Bereitschaften: Zeitgutschrift noch offen"
-                  : summary.value.targetCalculation?.status === "PROVISIONAL"
-                    ? "Sollzeit vorläufig · Tippe für die Berechnung"
-                    : undefined
+                ? (timeAccountCaption(summary.value) ??
+                  (summary.value.specialDutyNotes?.length
+                    ? "Bereitschaften: Zeitgutschrift noch offen"
+                    : summary.value.targetCalculation?.status === "PROVISIONAL"
+                      ? "Sollzeit vorläufig · Tippe für die Berechnung"
+                      : undefined))
                 : "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen."
             }
           />
@@ -150,7 +184,8 @@ export function MonthOverview({
               estimate
                 ? estimate.allowanceAmount +
                   estimate.tvoedAllowanceAmount +
-                  estimate.careAllowanceAmount
+                  estimate.careAllowanceAmount +
+                  (estimate.specialDutyAmount ?? 0)
                 : undefined
             }
             gross={
