@@ -311,6 +311,10 @@ function ThemedApp() {
                               options={{ presentation: "card", headerShown: false }}
                             />
                             <Stack.Screen
+                              name="net-pay-settings"
+                              options={{ title: "Netto-Einstellungen", presentation: "card" }}
+                            />
+                            <Stack.Screen
                               name="net-pay"
                               options={{ title: "Brutto-Netto", presentation: "card" }}
                             />

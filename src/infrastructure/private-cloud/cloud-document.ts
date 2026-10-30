@@ -1,4 +1,5 @@
 import canonicalize from "canonicalize";
+import { isAccountPhoto } from "@/domain/account-photo";
 import { UserFacingError } from "@/domain/errors";
 import {
   PRIVATE_CLOUD_MAX_CHARACTERS,
@@ -57,6 +58,11 @@ export async function validatePrivateCloudDocument(
     ].sort();
     if (canonicalize(Object.keys(document.data).sort()) !== canonicalize(keys)) throw new Error();
     const { calendarImage, calendarImageStrength } = document.presentation;
+    if (
+      document.presentation.accountPhoto !== undefined &&
+      !isAccountPhoto(document.presentation.accountPhoto)
+    )
+      throw new Error();
     if (!["subtle", "medium", "strong"].includes(calendarImageStrength)) throw new Error();
     const opacity = document.presentation.calendarImageOpacity;
     if (

@@ -7,6 +7,7 @@ import {
   monthAtPagerOffset,
   prependMonths,
   shouldRecenterMonthWindow,
+  shouldAnimateTodayScroll,
 } from "@/features/calendar/month-window";
 
 describe("continuous calendar month window", () => {
@@ -59,4 +60,16 @@ describe("continuous calendar month window", () => {
     expect(boundedMonthScrollStart("2028-12", "2026-08")).toBe("2026-12");
     expect(boundedMonthScrollStart("2026-08", "2026-08")).toBe("2026-08");
   });
+});
+
+it.each([
+  ["2026-12", "2027-01", true],
+  ["2026-11", "2027-01", true],
+  ["2027-03", "2027-01", true],
+  ["2026-10", "2027-01", false],
+  ["2027-04", "2027-01", false],
+  ["2027-01", "2027-01", false],
+  ["2025-01", "2027-01", false],
+])("Today movement from %s to %s: %s", (from, to, animated) => {
+  expect(shouldAnimateTodayScroll(from, to)).toBe(animated);
 });

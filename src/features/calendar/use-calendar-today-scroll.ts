@@ -1,15 +1,7 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { today } from "@/engine/calendar";
-import { calendarTodayTarget } from "@/features/calendar/calendar-layout";
-import { boundedMonthScrollStart } from "@/features/calendar/month-window";
+import { calendarTodayTarget } from "./calendar-layout";
+import { shouldAnimateTodayScroll } from "./month-window";
 import {
   useCalendarTodayRequestRevision,
   type ActiveMonthCoordinator,
@@ -18,20 +10,18 @@ import { selectionFeedback } from "@/ui/haptics";
 
 interface TodayScrollState {
   readonly requestRevision: number;
-  readonly startMonth: string;
+  readonly pagerRevision: number;
   readonly targetDate: string;
   readonly targetMonth: string;
 }
-
 interface CalendarTodayScrollOptions {
   readonly activeMonthCoordinator: ActiveMonthCoordinator;
   readonly pagerReady: boolean;
+  readonly pagerRevision: number;
   readonly isFocused: boolean;
   readonly months: readonly string[];
-  readonly pageHeight: number;
   readonly reduceMotion: boolean | null;
   readonly resetTransientUi: () => void;
-  readonly scrollToMonth: (month: string, animated?: boolean) => boolean;
   readonly setHeaderDirection: Dispatch<SetStateAction<"NEXT" | "PREVIOUS">>;
   readonly setHeaderTransition: Dispatch<SetStateAction<"SPATIAL" | "CROSSFADE">>;
   readonly setMonthAnchor: Dispatch<SetStateAction<string>>;
@@ -46,32 +36,31 @@ interface CalendarTodayScrollOptions {
   readonly visibleMonth: string;
 }
 
-export function useCalendarTodayScroll({
-  activeMonthCoordinator,
-  pagerReady,
-  isFocused,
-  months,
-  pageHeight,
-  reduceMotion,
-  resetTransientUi,
-  scrollToMonth,
-  setHeaderDirection,
-  setHeaderTransition,
-  setMonthAnchor,
-  setPagerResetRevision,
-  setSelectedDate,
-  setSelectionVisible,
-  setViewMode,
-  setVisibleMonth,
-  settledMonthRef,
-  timeZone,
-  viewMode,
-  visibleMonth,
-}: CalendarTodayScrollOptions) {
+/** Native page positioning owns completion; no second scroll clock races its events. */
+export function useCalendarTodayScroll(options: CalendarTodayScrollOptions) {
+  const {
+    activeMonthCoordinator,
+    pagerReady,
+    pagerRevision,
+    isFocused,
+    months,
+    reduceMotion,
+    resetTransientUi,
+    setHeaderDirection,
+    setHeaderTransition,
+    setMonthAnchor,
+    setPagerResetRevision,
+    setSelectedDate,
+    setSelectionVisible,
+    setViewMode,
+    setVisibleMonth,
+    settledMonthRef,
+    timeZone,
+    viewMode,
+    visibleMonth,
+  } = options;
   const todayRequestRevision = useCalendarTodayRequestRevision();
   const [todayScroll, setTodayScroll] = useState<TodayScrollState | null>(null);
-  const startedTodayScrollRevision = useRef<number | null>(null);
-
   const completeTodayScroll = useCallback(
     (scroll: TodayScrollState) => {
       setSelectedDate(scroll.targetDate);
@@ -79,7 +68,6 @@ export function useCalendarTodayScroll({
       setVisibleMonth(scroll.targetMonth);
       activeMonthCoordinator.setMonth(scroll.targetMonth);
       settledMonthRef.current = scroll.targetMonth;
-      startedTodayScrollRevision.current = null;
       setTodayScroll(null);
       activeMonthCoordinator.completeTodayRequest(scroll.requestRevision);
       selectionFeedback();
@@ -93,124 +81,102 @@ export function useCalendarTodayScroll({
     ],
   );
 
-  const goToToday = useCallback(
-    (requestRevision: number) => {
-      const target = calendarTodayTarget(today(timeZone));
-      const changesVisibleMonth = target.visibleMonth !== visibleMonth;
-      const scroll: TodayScrollState = {
-        requestRevision,
-        startMonth: boundedMonthScrollStart(visibleMonth, target.visibleMonth),
-        targetDate: target.selectedDate,
-        targetMonth: target.visibleMonth,
-      };
-
-      resetTransientUi();
-      setHeaderTransition(viewMode === "MONTH" ? "SPATIAL" : "CROSSFADE");
-      setViewMode(target.viewMode);
-      // A live native swipe can differ from the committed month (even within
-      // the same page). Every Today request must cancel that gesture/preview.
-      setPagerResetRevision((revision) => revision + 1);
-
-      if (!changesVisibleMonth || reduceMotion) {
-        if (changesVisibleMonth || todayScroll !== null) {
-          setHeaderDirection(target.visibleMonth > visibleMonth ? "NEXT" : "PREVIOUS");
-          setMonthAnchor(target.visibleMonth);
-        }
-        completeTodayScroll(scroll);
-        return;
-      }
-
-      setHeaderDirection(target.visibleMonth > visibleMonth ? "NEXT" : "PREVIOUS");
-      setSelectedDate(target.selectedDate);
-      setSelectionVisible(false);
-      setVisibleMonth(scroll.startMonth);
-      // Load the destination once; intermediate animation pages stay local.
-      activeMonthCoordinator.setMonth(scroll.targetMonth);
-      settledMonthRef.current = scroll.targetMonth;
-      setMonthAnchor(scroll.startMonth);
-      startedTodayScrollRevision.current = null;
-      setTodayScroll(scroll);
-    },
-    [
-      activeMonthCoordinator,
-      completeTodayScroll,
-      reduceMotion,
-      resetTransientUi,
-      setHeaderDirection,
-      setHeaderTransition,
-      setMonthAnchor,
-      setPagerResetRevision,
-      setSelectedDate,
-      setSelectionVisible,
-      setViewMode,
-      setVisibleMonth,
-      settledMonthRef,
-      timeZone,
-      todayScroll,
-      visibleMonth,
-      viewMode,
-    ],
-  );
-
   useEffect(() => {
     if (
       !isFocused ||
       todayScroll?.requestRevision === todayRequestRevision ||
       !activeMonthCoordinator.hasPendingTodayRequest(todayRequestRevision)
-    ) {
+    )
       return;
-    }
-    goToToday(todayRequestRevision);
-  }, [activeMonthCoordinator, goToToday, isFocused, todayRequestRevision, todayScroll]);
-
-  useEffect(() => {
-    if (
-      todayScroll === null ||
-      !isFocused ||
-      !pagerReady ||
-      viewMode !== "MONTH" ||
-      pageHeight <= 0 ||
-      startedTodayScrollRevision.current === todayScroll.requestRevision ||
-      months.indexOf(todayScroll.targetMonth) < 0
-    ) {
-      return;
-    }
-
-    const frame = requestAnimationFrame(() => {
-      if (scrollToMonth(todayScroll.targetMonth, true))
-        startedTodayScrollRevision.current = todayScroll.requestRevision;
-    });
-    // Native momentum completion can be lost when a pager is remounted or blurred.
-    const fallback = setTimeout(() => {
-      if (scrollToMonth(todayScroll.targetMonth, false)) completeTodayScroll(todayScroll);
-    }, 1500);
-    return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(fallback);
-      startedTodayScrollRevision.current = null;
+    const target = calendarTodayTarget(today(timeZone));
+    const animate =
+      viewMode === "MONTH" &&
+      reduceMotion === false &&
+      pagerReady &&
+      months.includes(target.visibleMonth) &&
+      shouldAnimateTodayScroll(visibleMonth, target.visibleMonth);
+    const scroll = {
+      requestRevision: todayRequestRevision,
+      pagerRevision: pagerRevision + 1,
+      targetDate: target.selectedDate,
+      targetMonth: target.visibleMonth,
     };
+    resetTransientUi();
+    setHeaderTransition(viewMode === "MONTH" ? "SPATIAL" : "CROSSFADE");
+    setHeaderDirection(target.visibleMonth > visibleMonth ? "NEXT" : "PREVIOUS");
+    setViewMode("MONTH");
+    setPagerResetRevision(scroll.pagerRevision);
+    if (!animate) {
+      if (target.visibleMonth !== visibleMonth) setMonthAnchor(target.visibleMonth);
+      completeTodayScroll(scroll);
+      return;
+    }
+    setSelectedDate(target.selectedDate);
+    setSelectionVisible(false);
+    setVisibleMonth(target.visibleMonth);
+    activeMonthCoordinator.setMonth(target.visibleMonth);
+    settledMonthRef.current = target.visibleMonth;
+    setTodayScroll(scroll);
   }, [
+    activeMonthCoordinator,
     completeTodayScroll,
     isFocused,
     months,
-    pageHeight,
     pagerReady,
-    scrollToMonth,
+    pagerRevision,
+    reduceMotion,
+    resetTransientUi,
+    setHeaderDirection,
+    setHeaderTransition,
+    setMonthAnchor,
+    setPagerResetRevision,
+    setSelectedDate,
+    setSelectionVisible,
+    setViewMode,
+    setVisibleMonth,
+    settledMonthRef,
+    timeZone,
+    todayRequestRevision,
     todayScroll,
     viewMode,
+    visibleMonth,
+  ]);
+
+  useEffect(() => {
+    if (!todayScroll) return;
+    if (
+      viewMode !== "MONTH" ||
+      pagerRevision !== todayScroll.pagerRevision ||
+      visibleMonth !== todayScroll.targetMonth
+    ) {
+      activeMonthCoordinator.completeTodayRequest(todayScroll.requestRevision);
+      setTodayScroll(null);
+    } else if (isFocused && pagerReady) {
+      completeTodayScroll(todayScroll);
+    }
+  }, [
+    activeMonthCoordinator,
+    completeTodayScroll,
+    isFocused,
+    pagerReady,
+    pagerRevision,
+    todayScroll,
+    viewMode,
+    visibleMonth,
   ]);
 
   const finishTodayScrollAtMonth = useCallback(
     (month: string): boolean => {
-      if (todayScroll === null) return false;
+      if (!todayScroll) return false;
       if (month === todayScroll.targetMonth) completeTodayScroll(todayScroll);
       return true;
     },
     [completeTodayScroll, todayScroll],
   );
-
   return {
     finishTodayScrollAtMonth,
     todayScrollActive: todayScroll !== null,
+    animatedTodayRevision:
+      isFocused && reduceMotion === false ? todayScroll?.pagerRevision : undefined,
   } as const;
 }

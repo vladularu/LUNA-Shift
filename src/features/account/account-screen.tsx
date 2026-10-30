@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import {
+  ActionSheetIOS,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  View,
+} from "react-native";
+import { Pencil } from "lucide-react-native";
 import { router, Stack } from "expo-router";
 import {
   createSharingAuthPort,
@@ -30,6 +39,15 @@ export function AccountScreen() {
   const working = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const account = cloud.user;
+  const photoMenu = useRef({ open: false, version: 0 });
+  useEffect(() => {
+    const menu = photoMenu.current;
+    return () => {
+      menu.version++;
+      if (menu.open && Platform.OS === "ios") ActionSheetIOS.dismissActionSheet();
+      menu.open = false;
+    };
+  }, [account?.id]);
   useEffect(() => {
     let active = true;
     void isSharingAppleSignInAvailable().then(
@@ -95,9 +113,53 @@ export function AccountScreen() {
     );
   }
   const body = { ...TYPOGRAPHY.body, color: palette.textSecondary };
-  const disabled = busy || !!controller?.busy;
+  const disabled = busy || !!controller?.busy || !!cloud.photo?.busy;
   const deletionDisabled =
     disabled || !controller?.accountDeletionAvailable || controller.status !== "signedIn";
+  function openPhotoMenu() {
+    const photo = cloud.photo;
+    const menu = photoMenu.current;
+    if (!account || !photo?.ready || disabled || menu.open) return;
+    const accountId = account.id;
+    const version = menu.version;
+    const { uri, choose, remove } = photo;
+    const options = ["Foto auswählen", ...(photo.uri ? ["Foto entfernen"] : []), "Abbrechen"];
+    const cancelButtonIndex = options.length - 1;
+    menu.open = true;
+    function select(index: number) {
+      if (version !== menu.version) return;
+      menu.open = false;
+      if (!cloud.runtime.isCurrentAccount(accountId)) return;
+      if (index === 0) void choose();
+      else if (uri && index === 1) void remove();
+    }
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+          destructiveButtonIndex: photo.uri ? 1 : undefined,
+        },
+        select,
+      );
+    } else {
+      Alert.alert(
+        "Profilbild",
+        undefined,
+        options.map((text, index) => ({
+          text,
+          style: index === cancelButtonIndex ? "cancel" : index === 1 ? "destructive" : "default",
+          onPress: () => select(index),
+        })),
+        {
+          cancelable: true,
+          onDismiss: () => {
+            menu.open = false;
+          },
+        },
+      );
+    }
+  }
   if (!account)
     return (
       <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
@@ -162,29 +224,74 @@ export function AccountScreen() {
                 <View
                   style={{ alignItems: "center", gap: SPACING.sm, paddingVertical: SPACING.lg }}
                 >
-                  <View
-                    accessible={false}
-                    style={{
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      cloud.photo?.uri ? "Profilbild ändern" : "Profilbild auswählen"
+                    }
+                    accessibilityHint="Öffnet die Fotoaktionen."
+                    accessibilityState={{
+                      disabled: disabled || !cloud.photo?.ready,
+                      busy: !!cloud.photo?.busy,
+                    }}
+                    disabled={disabled || !cloud.photo?.ready}
+                    onPress={openPhotoMenu}
+                    style={({ pressed }) => ({
                       width: 104,
                       height: 104,
                       borderRadius: RADII.pill,
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: palette.primary,
-                    }}
+                      opacity: pressed ? 0.75 : 1,
+                      marginBottom: SPACING.sm,
+                    })}
                   >
-                    <Text style={{ ...TYPOGRAPHY.hero, color: palette.onPrimary }}>
-                      {account.displayName
-                        .trim()
-                        .split(/\s+/u)
-                        .filter(Boolean)
-                        .map((part) => Array.from(part)[0])
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .join("")
-                        .toLocaleUpperCase("de-DE")}
-                    </Text>
-                  </View>
+                    {cloud.photo?.uri ? (
+                      <Image
+                        source={{ uri: cloud.photo.uri }}
+                        accessibilityLabel="Profilbild"
+                        style={{ width: 104, height: 104, borderRadius: RADII.pill }}
+                      />
+                    ) : (
+                      <Text style={{ ...TYPOGRAPHY.hero, color: palette.onPrimary }}>
+                        {account.displayName
+                          .trim()
+                          .split(/\s+/u)
+                          .filter(Boolean)
+                          .map((part) => Array.from(part)[0])
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .join("")
+                          .toLocaleUpperCase("de-DE")}
+                      </Text>
+                    )}
+                    {cloud.photo ? (
+                      <View
+                        pointerEvents="none"
+                        accessible={false}
+                        style={{
+                          position: "absolute",
+                          right: -2,
+                          bottom: -2,
+                          width: 32,
+                          height: 32,
+                          borderRadius: RADII.pill,
+                          borderWidth: 3,
+                          borderColor: palette.groupedBackground,
+                          backgroundColor: palette.surfaceMuted,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {cloud.photo.busy ? (
+                          <ActivityIndicator size="small" color={palette.text} />
+                        ) : (
+                          <Pencil size={16} strokeWidth={2} color={palette.text} />
+                        )}
+                      </View>
+                    ) : null}
+                  </Pressable>
                   <Text
                     style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text, textAlign: "center" }}
                   >
@@ -193,6 +300,14 @@ export function AccountScreen() {
                   {account.email ? (
                     <Text selectable style={{ ...body, textAlign: "center" }}>
                       {account.email}
+                    </Text>
+                  ) : null}
+                  {cloud.photo?.error ? (
+                    <Text
+                      accessibilityRole="alert"
+                      style={{ ...body, color: palette.danger, textAlign: "center" }}
+                    >
+                      {cloud.photo.error}
                     </Text>
                   ) : null}
                 </View>

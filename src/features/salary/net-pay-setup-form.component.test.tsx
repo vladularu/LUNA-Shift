@@ -2,12 +2,23 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
-import { NetPaySetupForm, type NetPaySetupSection } from "./net-pay-setup-form";
+import { NetPaySetupForm } from "./net-pay-setup-form";
+
+type NetPaySetupSection = "tax" | "family" | "insurance";
+
+const mockSaved = jest.fn<(onLeave?: () => void) => void>();
+const mockGuard = jest.fn<(dirty: boolean, saving: boolean) => void>();
+jest.mock("@/features/settings/use-profile-leave-guard", () => ({
+  useProfileLeaveGuard: (dirty: boolean, saving: boolean) => {
+    mockGuard(dirty, saving);
+    return { saved: mockSaved };
+  },
+}));
 
 function setup(
   initial: MonthlyNetPaySettings | null = null,
   busy = false,
-  section?: NetPaySetupSection,
+  _section?: NetPaySetupSection,
 ) {
   const onSave = jest
     .fn<(value: MonthlyNetPaySettings) => Promise<void>>()
@@ -18,7 +29,6 @@ function setup(
       <NetPaySetupForm
         month="2026-07"
         initial={initial}
-        section={section}
         worksInSaxony={false}
         churchTaxDefaultPercent={9}
         busy={busy}
@@ -28,7 +38,7 @@ function setup(
   };
 }
 
-describe("three short net forecast setup steps", () => {
+describe("one continuous net forecast settings page", () => {
   it.each<NetPaySetupSection>(["tax", "family", "insurance"])(
     "lets a later %s change start in a chosen month without another step",
     async (section) => {
@@ -64,7 +74,7 @@ describe("three short net forecast setup steps", () => {
       const screen = await render(element);
       await fireEvent.press(screen.getByRole("button", { name: /^Zusatzversorgung auswählen/ }));
       await fireEvent.changeText(screen.getByLabelText("Zusatzversorgung suchen"), "darmstadt");
-      expect(screen.queryAllByRole("radio")).toHaveLength(3);
+      expect(screen.queryAllByRole("radio", { name: /^Zusatzversorgung:/ })).toHaveLength(3);
       expect(
         screen.getByRole("radio", { name: "Zusatzversorgung: EZVK · Bestand Darmstadt" }),
       ).toBeTruthy();
@@ -85,7 +95,7 @@ describe("three short net forecast setup steps", () => {
     expect(screen.queryByLabelText("Zusatzversorgung suchen")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /^Zusatzversorgung auswählen/ }));
     await fireEvent.changeText(screen.getByLabelText("Zusatzversorgung suchen"), "  sachsen  ");
-    expect(screen.queryAllByRole("radio")).toHaveLength(1);
+    expect(screen.queryAllByRole("radio", { name: /^Zusatzversorgung:/ })).toHaveLength(1);
     await fireEvent.press(
       screen.getByRole("radio", { name: "Zusatzversorgung: ZVK Sachsen · ATV-K" }),
     );
@@ -154,93 +164,46 @@ describe("three short net forecast setup steps", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith({ ...initial, month: "2026-07" });
   });
-  it("opens a compact list, edits one area and discards unsaved changes on back", async () => {
-    const onSave = jest
-      .fn<(value: MonthlyNetPaySettings) => Promise<void>>()
-      .mockResolvedValue(undefined);
-    const screen = await render(
-      <NetPaySetupForm
-        month="2026-07"
-        initial={automatedSettings()}
-        allowSectionSwitch
-        worksInSaxony={false}
-        churchTaxDefaultPercent={9}
-        busy={false}
-        onSave={onSave}
-      />,
-    );
-    expect(screen.queryByRole("radio")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Änderungen speichern" })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(screen.queryByRole("button", { name: /^Familie ·/ })).toBeNull();
-    expect(screen.queryByRole("tab")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Gültig ab: Januar 2026" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 2" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
-    expect(screen.getByRole("button", { name: /^Steuern · Klasse 1/ })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: /^Steuern ·/ }));
-    expect(screen.getByRole("radio", { name: "Steuerklasse: 1", checked: true })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" })).toBeTruthy();
-    expect(onSave).not.toHaveBeenCalled();
+  it("shows four open sections and one save action without a section overview", async () => {
+    const { element } = setup(automatedSettings());
+    const screen = await render(element);
+    for (const title of ["Steuern", "Familie", "Versicherung & Vorsorge", "Weitere Angaben"])
+      expect(screen.getByRole("header", { name: title })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Änderungen speichern" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /^Gültig ab auswählen/ })).toHaveLength(1);
+    expect(screen.getByLabelText("Kinderfreibetrag laut Gehaltsabrechnung")).toBeTruthy();
+    expect(screen.getByLabelText("Weitere feste monatliche Zulage (€)")).toBeTruthy();
+    expect(screen.queryByTestId("net-pay-settings-overview")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();
   });
-  it("keeps invalid family answers in the editor and leaves other areas unchanged", async () => {
-    const initial = automatedSettings();
-    const onSave = jest
-      .fn<(value: MonthlyNetPaySettings) => Promise<void>>()
-      .mockResolvedValue(undefined);
-    const screen = await render(
-      <NetPaySetupForm
-        month="2026-07"
-        initial={initial}
-        allowSectionSwitch
-        worksInSaxony={false}
-        churchTaxDefaultPercent={9}
-        busy={false}
-        onSave={onSave}
-      />,
-    );
-    await fireEvent.press(screen.getByRole("button", { name: /^Familie ·/ }));
+  it("validates all areas without saving a partial draft", async () => {
+    const { element, onSave } = setup(automatedSettings());
+    const screen = await render(element);
     await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "31.02.1990");
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.getByRole("header", { name: "Familie" })).toBeTruthy();
-    expect(screen.queryByTestId("net-pay-settings-overview")).toBeNull();
+    expect(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)").props.value).toBe("31.02.1990");
     await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "15.01.1990");
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
-    expect(onSave).toHaveBeenCalledWith({
-      ...initial,
-      month: "2026-07",
-      profile: { ...initial.profile, birthDate: "1990-01-15" },
-    });
-    expect(screen.getByTestId("net-pay-settings-overview")).toBeTruthy();
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ profile: expect.objectContaining({ birthDate: "1990-01-15" }) }),
+    );
   });
-  it("reaches a stored forecast in three steps without technical payroll inputs or confirmations", async () => {
+  it("sets up annual net data on one page with an explicitly unknown pension", async () => {
     const { element, onSave } = setup();
     const screen = await render(element);
-    expect(screen.getByText("Schritt 1 von 3")).toBeTruthy();
     expect(screen.getByText("Für das ganze Jahr 2026")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Gültig ab auswählen/ })).toBeNull();
-    expect(screen.queryByLabelText("Kinderfreibetrag laut Gehaltsabrechnung")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(screen.getByText("Bitte deine Steuerklasse auswählen.")).toBeTruthy();
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 1" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zahlst du Kirchensteuer?: Nein" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.getByText("Schritt 2 von 3")).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Geburtsdatum (TT.MM.JJJJ)"), "15.01.1990");
     await fireEvent.press(screen.getByRole("radio", { name: "Hast du Kinder?: Nein" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.getByText("Schritt 3 von 3")).toBeTruthy();
-    expect(screen.getByText(/Gesetzlich · Zusatzbeitrag 2,90/)).toBeTruthy();
-    expect(screen.queryByLabelText("Zusatzbeitrag deiner Krankenkasse (%)")).toBeNull();
-    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
-    expect(screen.queryByRole("radio", { name: "Zusatzversorgung: Weiß ich nicht" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Zusatzversorgung auswählen" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zusatzversorgung: Weiß ich nicht" }));
-    expect(screen.queryByRole("radio", { name: "Zusatzversorgung: Keine" })).toBeNull();
     expect(screen.getByText(/Netto vor Zusatzversorgung/)).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         version: 2,
@@ -276,9 +239,7 @@ describe("three short net forecast setup steps", () => {
     };
     const { element, onSave } = setup(initial);
     const screen = await render(element);
-    for (let i = 0; i < 2; i++)
-      await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ profile: initial.profile, automation: initial.automation }),
     );
@@ -290,13 +251,10 @@ describe("three short net forecast setup steps", () => {
     await fireEvent.press(
       screen.getByRole("radio", { name: "Dein Wohnort: Bayern / Baden-Württemberg" }),
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Hast du Kinder?: Ja" }));
     await fireEvent.press(
       screen.getByRole("radio", { name: "Wie viele Kinder sind unter 25?: 0" }),
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Ändern" }));
     await fireEvent.press(
       screen.getByRole("radio", { name: "Beitrag für die Prognose: Eigener Zusatzbeitrag" }),
     );
@@ -304,7 +262,7 @@ describe("three short net forecast setup steps", () => {
       screen.getByLabelText("Zusatzbeitrag deiner Krankenkasse (%)"),
       "3,40",
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         profile: expect.objectContaining({
@@ -319,46 +277,42 @@ describe("three short net forecast setup steps", () => {
   it("clears incompatible optional child allowances on tax class change and keeps errors in the current step", async () => {
     const { element, onSave } = setup(automatedSettings());
     const screen = await render(element);
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben" }));
     await fireEvent.changeText(
       screen.getByLabelText("Kinderfreibetrag laut Gehaltsabrechnung"),
       "0,7",
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(screen.getByText(/Schritten von 0,5/)).toBeTruthy();
     await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 5" }));
     expect(screen.queryByLabelText("Kinderfreibetrag laut Gehaltsabrechnung")).toBeNull();
-    for (let i = 0; i < 2; i++)
-      await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Netto-Prognose anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         profile: expect.objectContaining({ taxClass: 5, childAllowanceHalfUnits: 0 }),
       }),
     );
   });
-  it("preserves answers when going back and blocks navigation while saving", async () => {
+  it("tracks the full draft and blocks all input while saving", async () => {
     const { element } = setup(automatedSettings());
     const screen = await render(element);
-    await fireEvent.press(screen.getByRole("button", { name: "Weiter" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
-    expect(
-      screen.getByRole("radio", { name: "Steuerklasse: 1" }).props.accessibilityState.selected,
-    ).toBe(true);
-    expect(screen.getByRole("radio", { name: "Steuerklasse: 1", checked: true })).toBeTruthy();
+    expect(mockGuard).toHaveBeenLastCalledWith(false, false);
+    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 2" }));
+    expect(mockGuard).toHaveBeenLastCalledWith(true, false);
+    await fireEvent.press(screen.getByRole("radio", { name: "Steuerklasse: 1" }));
+    expect(mockGuard).toHaveBeenLastCalledWith(false, false);
     await screen.rerender(setup(automatedSettings(), true).element);
-    expect(
-      screen.getByRole("button", { name: "Wird gespeichert" }).props.accessibilityState.disabled,
-    ).toBe(true);
+    expect(mockGuard).toHaveBeenLastCalledWith(false, true);
+    expect(screen.getByRole("button", { name: "Wird gespeichert" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Steuerklasse: 2" })).toBeDisabled();
   });
   it("keeps supplementary pension selection compact and preserves it when reopening", async () => {
     const { element, onSave } = setup(automatedSettings(), false, "insurance");
     const screen = await render(element);
-    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    expect(screen.queryAllByRole("radio", { name: /^Zusatzversorgung:/ })).toHaveLength(0);
     expect(screen.queryByRole("button", { name: "Bearbeitung abbrechen" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /^Zusatzversorgung auswählen/ }));
     await fireEvent.press(screen.getByRole("radio", { name: "Zusatzversorgung: VBL West" }));
-    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    expect(screen.queryAllByRole("radio", { name: /^Zusatzversorgung:/ })).toHaveLength(0);
     await fireEvent.press(
       screen.getByRole("button", { name: "Zusatzversorgung auswählen: VBL West" }),
     );

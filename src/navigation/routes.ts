@@ -85,6 +85,13 @@ export function salaryRoute(month: string) {
   });
 }
 
+export function netPaySettingsRoute(month: string) {
+  return Object.freeze({
+    pathname: "/net-pay-settings" as const,
+    params: Object.freeze({ month: requireMonth(month) }),
+  });
+}
+
 export function analysisPeriodRoute(month: string, period: "MONTH" | "YEAR") {
   return {
     pathname: "/(tabs)/(analysis)/period" as const,

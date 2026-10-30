@@ -4,6 +4,12 @@ function monthOrdinal(month: string): number {
   return Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1;
 }
 
+/** Three or more calendar months use a direct jump, in either direction. */
+export function shouldAnimateTodayScroll(visibleMonth: string, targetMonth: string): boolean {
+  const distance = Math.abs(monthOrdinal(targetMonth) - monthOrdinal(visibleMonth));
+  return distance > 0 && distance < 3;
+}
+
 export function boundedMonthScrollStart(
   visibleMonth: string,
   targetMonth: string,
