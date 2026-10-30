@@ -1,10 +1,6 @@
-import {
-  changeEditorDuty,
-  editorDutyDuration,
-  editorDutyTariff,
-} from "./special-duty-editor-state";
+import { editorDutyDuration, editorDutyTariff } from "./special-duty-editor-state";
 import { calculateTimedShiftMinutes } from "@/engine/working-time";
-import { SpecialDutyFields } from "./special-duty-fields";
+import { DayEditorSpecialDutyFields } from "./day-editor-special-duty";
 import { TextInput } from "@/ui/text";
 import { router, Stack, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -318,16 +314,14 @@ export function DayEditorForm({
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <ShiftEditOverlay
-          specialDutyActive={specialDuty !== null && specialDuty.kind !== "SPLIT"}
+          specialDutyKind={specialDuty?.kind}
           specialDutyFields={
             shiftIsTimed && shiftType !== "TRAINING" ? (
-              <SpecialDutyFields
+              <DayEditorSpecialDutyFields
                 tariffFamily={editorDutyTariff(profile, initialShift?.date ?? date)}
-                value={specialDuty}
-                startTime={startTime}
-                endTime={endTime}
+                draft={draftState}
+                date={initialShift?.date ?? date}
                 timeZone={profile?.timeZone ?? "Europe/Berlin"}
-                onChange={(next) => changeEditorDuty(draftState, next)}
               />
             ) : undefined
           }

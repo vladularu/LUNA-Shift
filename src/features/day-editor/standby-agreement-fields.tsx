@@ -8,7 +8,7 @@ import {
 } from "@/domain/standby-agreement";
 import type { DutyTariffFamily } from "@/engine/special-duty-tariff";
 import { standbyGroupOptions } from "@/engine/standby-hourly-rate";
-import { EntryEditValueRow } from "./entry-edit-fields";
+import { DutyValueRow } from "./special-duty-controls";
 import { DutyChoice } from "./special-duty-choice";
 import { Field } from "@/ui/form-controls";
 import { Text } from "@/ui/text";
@@ -49,7 +49,7 @@ export function StandbyAgreementFields({
   const monthlySequence = tariff === "TVOED_B" || tariff === "TVL_43" || tariff === "TVH_43";
   return (
     <>
-      <EntryEditValueRow
+      <DutyValueRow
         label="Abrechnung"
         value={
           open
@@ -59,9 +59,15 @@ export function StandbyAgreementFields({
               : "Angaben ergänzen"
         }
         onPress={() => setOpen(!open)}
+        expanded={open}
       />
       {open ? (
         <View style={{ gap: 8, padding: 12 }}>
+          {tariffFamily ? (
+            <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted }]}>
+              Tarif aus deinem Profil: {names[tariffFamily]}
+            </Text>
+          ) : null}
           {!tariffFamily ? (
             <DutyChoice
               label="Tarifbereich der Bereitschaft"
@@ -126,10 +132,7 @@ export function StandbyAgreementFields({
                   options={[
                     {
                       value: "AUTO",
-                      label:
-                        tariff === "TVOED_B"
-                          ? "Pflegegruppe aus Tarifprofil"
-                          : "Weiß ich noch nicht",
+                      label: tariff === "TVOED_B" ? "Aus Tarifprofil" : "Weiß ich noch nicht",
                     },
                     ...standbyGroupOptions(tariff),
                   ]}
@@ -143,7 +146,8 @@ export function StandbyAgreementFields({
                   Die Bereitschaftsgruppe kann von deiner aktuellen KR-Gruppe abweichen.
                 </Text>
               ) : null}
-              <EntryEditValueRow
+              <DutyValueRow
+                stacked
                 label="Stundenentgelt"
                 value={ownRate ? "Laut Arbeitgeber" : "Aus Tariftabelle"}
                 onPress={() => {

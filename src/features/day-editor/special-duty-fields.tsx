@@ -1,88 +1,41 @@
-import { DutyChoice as Choice } from "./special-duty-choice";
 import { StandbyAgreementFields } from "./standby-agreement-fields";
-import { standbyLevels, type DutyTariffFamily } from "@/engine/special-duty-tariff";
-import { Pressable, View } from "react-native";
+import { Fragment, useRef, useState } from "react";
+import { View } from "react-native";
 import {
   clockMinute,
   dutyClock,
   DUTY_LABELS,
   newSpecialDuty,
-  type DutyPart,
+  type DutyCallout,
   type SpecialDuty,
 } from "@/domain/special-duty";
-import { EntryEditGroup, EntryEditTimePair } from "./entry-edit-fields";
-import { Field as InputField } from "@/ui/form-controls";
-import { Text } from "@/ui/text";
-import { usePalette } from "@/theme/palette";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { standbyLevels, type DutyTariffFamily } from "@/engine/special-duty-tariff";
+import { SPACING } from "@/theme/tokens";
+import { EntryEditGroup } from "./entry-edit-fields";
+import {
+  DutyAction,
+  DutyChoice,
+  DutyDivider,
+  DutyHeading,
+  DutyHint,
+  DutyMinutesField,
+  DutyValueRow,
+} from "./special-duty-controls";
+import {
+  changeDutyClock,
+  dutyDurationLabel,
+  dutyFormFeedback,
+  dutyIntervalMinutes,
+  dutyParentPart,
+} from "./special-duty-form-state";
+import { DutyTimeBlock } from "./special-duty-time-block";
 
-function Action({ label, onPress }: { readonly label: string; readonly onPress: () => void }) {
-  const palette = usePalette();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{ minHeight: 44, justifyContent: "center", padding: 12 }}
-    >
-      <Text style={[TYPOGRAPHY.body, { color: palette.text }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function PartFields({
-  value,
-  onChange,
-  label,
-  onRemove,
-  maxDay = 14,
-}: {
-  readonly value: DutyPart;
-  readonly onChange: (part: DutyPart) => void;
-  readonly label: string;
-  readonly onRemove: () => void;
-  readonly maxDay?: number;
-}) {
-  return (
-    <View>
-      <Choice
-        label={`${label} – Tag`}
-        value={String(Math.floor(value.start / 1440))}
-        options={Array.from({ length: maxDay + 1 }, (_, day) => ({
-          value: String(day),
-          label: day === 0 ? "Am Dienstbeginn" : `${day} Tag${day === 1 ? "" : "e"} später`,
-        }))}
-        onChange={(day) => {
-          const change = (Number(day) - Math.floor(value.start / 1440)) * 1440;
-          onChange({ ...value, start: value.start + change, end: value.end + change });
-        }}
-      />
-      <EntryEditTimePair
-        startTime={dutyClock(value.start)}
-        endTime={dutyClock(value.end)}
-        onStartChange={(time) => {
-          const start = Math.floor(value.start / 1440) * 1440 + clockMinute(time);
-          let end = Math.floor(start / 1440) * 1440 + (value.end % 1440);
-          if (end <= start) end += 1440;
-          onChange({ ...value, start, end });
-        }}
-        onEndChange={(time) => {
-          let end = Math.floor(value.start / 1440) * 1440 + clockMinute(time);
-          if (end <= value.start) end += 1440;
-          onChange({ ...value, end });
-        }}
-      />
-      <InputField
-        label={`${label} – Pause (Min.)`}
-        keyboardType="number-pad"
-        value={String(value.breakMinutes)}
-        onChangeText={(text) =>
-          onChange({ ...value, breakMinutes: text === "" ? 0 : Number(text) })
-        }
-      />
-      <Action label={`${label} entfernen`} onPress={onRemove} />
-    </View>
-  );
+type DutyKind = SpecialDuty["kind"] | "REGULAR";
+interface DutyDraft {
+  readonly duty: SpecialDuty | null;
+  readonly startTime: string;
+  readonly endTime: string;
+  readonly breakMinutes: string;
 }
 
 export function SpecialDutyFields({
@@ -90,7 +43,12 @@ export function SpecialDutyFields({
   onChange,
   startTime,
   endTime,
+  breakMinutes,
+  onStartChange,
+  onEndChange,
+  onBreakMinutesChange,
   timeZone,
+  date,
   template = false,
   tariffFamily = null,
 }: {
@@ -98,121 +56,241 @@ export function SpecialDutyFields({
   readonly onChange: (duty: SpecialDuty | null) => void;
   readonly startTime: string;
   readonly endTime: string;
+  readonly breakMinutes: string;
+  readonly onStartChange: (value: string) => void;
+  readonly onEndChange: (value: string) => void;
+  readonly onBreakMinutesChange: (value: string) => void;
   readonly timeZone: string;
+  readonly date?: string;
   readonly template?: boolean;
   readonly tariffFamily?: DutyTariffFamily | null;
 }) {
-  const palette = usePalette();
-  function choose(kind: string) {
-    if (kind === "REGULAR") {
-      onChange(null);
-      return;
-    }
-    if (value?.kind !== kind)
-      onChange(newSpecialDuty(kind as SpecialDuty["kind"], startTime, endTime, timeZone));
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  // Session-only drafts: changing the form must not discard parts or actual calls.
+  const drafts = useRef<Partial<Record<DutyKind, DutyDraft>>>({});
+  const parent = dutyParentPart(startTime, endTime, value?.endDay ?? 0, breakMinutes);
+  const feedback = value ? dutyFormFeedback(value, parent, date) : null;
+
+  function rememberDraft() {
+    drafts.current[value?.kind ?? "REGULAR"] = { duty: value, startTime, endTime, breakMinutes };
   }
+
+  function choose(kind: string) {
+    if (kind === (value?.kind ?? "REGULAR")) return;
+    rememberDraft();
+    const nextKind = kind as DutyKind;
+    const saved = drafts.current[nextKind];
+    const next =
+      saved?.duty ??
+      (nextKind === "REGULAR" ? null : newSpecialDuty(nextKind, startTime, endTime, timeZone));
+    onChange(next);
+    onStartChange(saved?.startTime ?? startTime);
+    onEndChange(saved?.endTime ?? endTime);
+    onBreakMinutesChange(saved?.breakMinutes ?? (nextKind === "ON_CALL" ? "0" : breakMinutes));
+  }
+
   function addPart() {
+    if (!value) rememberDraft();
     const duty =
       value?.kind === "SPLIT" ? value : newSpecialDuty("SPLIT", startTime, endTime, timeZone);
-    const start = (duty.parts.at(-1)?.end ?? duty.endDay * 1440 + clockMinute(endTime)) + 60;
+    const start =
+      Math.max(duty.endDay * 1440 + clockMinute(endTime), ...duty.parts.map((part) => part.end)) +
+      60;
     onChange({ ...duty, parts: [...duty.parts, { start, end: start + 240, breakMinutes: 0 }] });
   }
+
+  function changeParentClock(field: "start" | "end", time: string) {
+    if (!value) return;
+    (field === "start" ? onStartChange : onEndChange)(time);
+    try {
+      const next = changeDutyClock(parent, field, time);
+      if (Number.isFinite(next.end)) {
+        onEndChange(dutyClock(next.end));
+        onChange({
+          ...value,
+          endDay: Math.floor(next.end / 1440),
+          ...(value.kind === "ON_CALL" ? { calloutsComplete: false } : {}),
+        });
+      }
+    } catch {
+      /* A partially entered web time is validated beside the block. */
+    }
+  }
+
+  function updateCallout(index: number, next: DutyCallout) {
+    if (!value) return;
+    onChange({
+      ...value,
+      calloutsComplete: false,
+      callouts: value.callouts.map((call, i) => (i === index ? next : call)),
+    });
+  }
+
+  const parentTitle =
+    value?.kind === "SPLIT"
+      ? "Dienstteil 1"
+      : value?.kind === "ON_CALL"
+        ? "Rufbereitschaftszeitraum"
+        : "Bereitschaftszeitraum";
   return (
-    <EntryEditGroup testID="special-duty-fields">
-      <Choice
-        label="Dienstform"
-        value={value?.kind ?? "REGULAR"}
-        options={[
-          { value: "REGULAR", label: "Regulärer Dienst" },
-          ...Object.entries(DUTY_LABELS).map(([key, label]) => ({ value: key, label })),
-        ]}
-        onChange={choose}
-      />
+    <View testID="special-duty-fields" style={{ gap: SPACING.md }}>
+      <EntryEditGroup>
+        <DutyChoice
+          label="Dienstform"
+          value={value?.kind ?? "REGULAR"}
+          options={[
+            { value: "REGULAR", label: "Regulärer Dienst" },
+            ...Object.entries(DUTY_LABELS).map(([key, label]) => ({ value: key, label })),
+          ]}
+          onChange={choose}
+        />
+        {!value ? <DutyAction label="Dienstteil hinzufügen" onPress={addPart} /> : null}
+      </EntryEditGroup>
       {value ? (
         <>
-          <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted, padding: 12 }]}>
-            {value.kind === "ON_CALL"
-              ? "Du bist erreichbar und arbeitest bei Bedarf. Nur tatsächliche Einsätze und Wege zählen hier zur erfassten Arbeitszeit. Bei stark eingeschränkter Freizeit kann die rechtliche Einordnung abweichen."
-              : value.kind === "STANDBY"
-                ? "Du bleibst vor Ort und arbeitest bei Bedarf. Auch Ruhephasen mit Bereitschaftspflicht zählen zur Arbeitsschutzzeit. Nur echte Pausen ohne Bereitschaftspflicht werden von Dienstzeit und Vergütung abgezogen. Zeitgutschrift und Vergütung werden getrennt berechnet."
-                : "Die Dienstteile gehören zusammen. Die Unterbrechung zählt nicht zur Arbeitszeit. Pausen innerhalb jedes Teils erfasst du getrennt."}
-          </Text>
-          <Choice
-            label="Ende des ersten Zeitraums"
-            value={String(value.endDay)}
-            options={Array.from({ length: value.kind === "ON_CALL" ? 15 : 2 }, (_, day) => ({
-              value: String(day),
-              label: day === 0 ? "Gleicher Tag" : `${day} Tag${day === 1 ? "" : "e"} später`,
-            }))}
-            onChange={(day) => onChange({ ...value, endDay: Number(day) })}
-          />
-          {value.kind === "SPLIT"
-            ? value.parts.map((part, index) => (
-                <PartFields
-                  key={index}
-                  maxDay={1}
-                  label={`Dienstteil ${index + 2}`}
-                  value={part}
-                  onChange={(next) =>
-                    onChange({
-                      ...value,
-                      parts: value.parts.map((item, i) => (i === index ? next : item)),
-                    })
-                  }
-                  onRemove={() =>
-                    onChange({ ...value, parts: value.parts.filter((_, i) => i !== index) })
-                  }
-                />
-              ))
-            : null}
+          <EntryEditGroup>
+            {value.kind === "ON_CALL" ? (
+              <DutyHint>
+                {template
+                  ? "Du bist erreichbar. Tatsächliche Einsätze erfasst du später im eingetragenen Dienst."
+                  : "Du bist erreichbar. Erfasse deine tatsächlichen Einsätze darunter."}
+              </DutyHint>
+            ) : value.kind === "STANDBY" ? (
+              <DutyHint>
+                Du bist vor Ort und arbeitest bei Bedarf. Nur echte Pausen ohne Bereitschaftspflicht
+                werden von Dienstzeit und Vergütung abgezogen.
+              </DutyHint>
+            ) : null}
+            <DutyTimeBlock
+              title={parentTitle}
+              value={parent}
+              fixedStartDay
+              hidePause={value.kind === "ON_CALL"}
+              maxDay={value.kind === "ON_CALL" ? 14 : 1}
+              error={feedback?.parentError}
+              parentFields={{
+                startTime,
+                endTime,
+                breakMinutes,
+                onStartChange: (time) => changeParentClock("start", time),
+                onEndChange: (time) => changeParentClock("end", time),
+                onPauseChange: onBreakMinutesChange,
+              }}
+              onChange={(part) =>
+                onChange({
+                  ...value,
+                  endDay: Math.floor(part.end / 1440),
+                  ...(value.kind === "ON_CALL" ? { calloutsComplete: false } : {}),
+                })
+              }
+            />
+            {value.kind === "SPLIT" ? (
+              <>
+                {value.parts.map((part, index) => {
+                  const previous = index === 0 ? parent : value.parts[index - 1];
+                  const gap =
+                    feedback?.workMinutes !== null && part.start > previous.end
+                      ? dutyIntervalMinutes(previous.end, part.start, value.timeZone, date)
+                      : null;
+                  return (
+                    <Fragment key={index}>
+                      <DutyDivider />
+                      {gap !== null ? (
+                        <DutyHint>{dutyDurationLabel(gap)} Unterbrechung</DutyHint>
+                      ) : null}
+                      <DutyTimeBlock
+                        title={`Dienstteil ${index + 2}`}
+                        value={part}
+                        error={feedback?.partErrors[index]}
+                        onChange={(next) =>
+                          onChange({
+                            ...value,
+                            parts: value.parts.map((item, i) => (i === index ? next : item)),
+                          })
+                        }
+                        onRemove={() =>
+                          onChange({ ...value, parts: value.parts.filter((_, i) => i !== index) })
+                        }
+                      />
+                    </Fragment>
+                  );
+                })}
+                <DutyDivider />
+                {value.parts.length < 8 ? (
+                  <DutyAction label="Dienstteil hinzufügen" onPress={addPart} />
+                ) : null}
+                {feedback?.workMinutes !== null && feedback?.workMinutes !== undefined ? (
+                  <DutyValueRow
+                    label={template ? "Geplante Arbeitszeit" : "Erfasste Arbeitszeit"}
+                    value={dutyDurationLabel(feedback.workMinutes)}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </EntryEditGroup>
+
           {value.kind === "ON_CALL" && !template ? (
-            <>
+            <EntryEditGroup>
+              <DutyHeading>Einsätze</DutyHeading>
+              {!value.callouts.length ? <DutyHint>Noch keine Einsätze erfasst.</DutyHint> : null}
               {value.callouts.map((call, index) => (
-                <View key={index}>
-                  <Choice
-                    label={`Einsatz ${index + 1}`}
+                <Fragment key={index}>
+                  <DutyChoice
+                    label="Einsatzart"
+                    accessibilityLabel={`Einsatz ${index + 1}: Einsatzart`}
                     value={call.kind}
                     options={[
                       { value: "REMOTE", label: "Telefonisch / von zu Hause" },
                       { value: "ON_SITE", label: "Vor Ort" },
                     ]}
                     onChange={(kind) =>
-                      onChange({
-                        ...value,
-                        callouts: value.callouts.map((item, i) =>
-                          i === index
-                            ? {
-                                ...call,
-                                kind: kind as "REMOTE" | "ON_SITE",
-                                departure: call.start,
-                                returned: call.end,
-                              }
-                            : item,
-                        ),
+                      updateCallout(index, {
+                        ...call,
+                        kind: kind as DutyCallout["kind"],
+                        departure: call.start,
+                        returned: call.end,
                       })
                     }
                   />
-                  <PartFields
-                    label={`Einsatz ${index + 1}`}
+                  <DutyTimeBlock
+                    title={`Einsatz ${index + 1}`}
                     value={call}
                     maxDay={value.endDay}
+                    error={feedback?.calloutErrors[index]}
                     onChange={(next) =>
-                      onChange({
-                        ...value,
-                        callouts: value.callouts.map((item, i) =>
-                          i === index
-                            ? {
-                                ...call,
-                                ...next,
-                                departure: next.start - (call.start - call.departure),
-                                returned: next.end + (call.returned - call.end),
-                              }
-                            : item,
-                        ),
-                        calloutsComplete: false,
+                      updateCallout(index, {
+                        ...call,
+                        ...next,
+                        departure: next.start - (call.start - call.departure),
+                        returned: next.end + (call.returned - call.end),
                       })
                     }
-                    onRemove={() =>
+                  />
+                  {call.kind === "ON_SITE" ? (
+                    <>
+                      <DutyMinutesField
+                        label="Hinweg"
+                        accessibilityLabel={`Einsatz ${index + 1}: Hinweg in Minuten`}
+                        value={String(call.start - call.departure)}
+                        onChange={(text) =>
+                          updateCallout(index, { ...call, departure: call.start - Number(text) })
+                        }
+                      />
+                      <DutyMinutesField
+                        label="Rückweg"
+                        accessibilityLabel={`Einsatz ${index + 1}: Rückweg in Minuten`}
+                        value={String(call.returned - call.end)}
+                        onChange={(text) =>
+                          updateCallout(index, { ...call, returned: call.end + Number(text) })
+                        }
+                      />
+                      <DutyHint>Wege unmittelbar vor und nach diesem Einsatz.</DutyHint>
+                    </>
+                  ) : null}
+                  <DutyAction
+                    destructive
+                    label={`Einsatz ${index + 1} entfernen`}
+                    onPress={() =>
                       onChange({
                         ...value,
                         callouts: value.callouts.filter((_, i) => i !== index),
@@ -220,44 +298,11 @@ export function SpecialDutyFields({
                       })
                     }
                   />
-                  {call.kind === "ON_SITE" ? (
-                    <>
-                      <InputField
-                        label={`Einsatz ${index + 1} – Hinweg (Min. unmittelbar davor)`}
-                        keyboardType="number-pad"
-                        value={String(call.start - call.departure)}
-                        onChangeText={(text) =>
-                          onChange({
-                            ...value,
-                            callouts: value.callouts.map((item, i) =>
-                              i === index
-                                ? { ...call, departure: call.start - Number(text) }
-                                : item,
-                            ),
-                            calloutsComplete: false,
-                          })
-                        }
-                      />
-                      <InputField
-                        label={`Einsatz ${index + 1} – Rückweg (Min. unmittelbar danach)`}
-                        keyboardType="number-pad"
-                        value={String(call.returned - call.end)}
-                        onChangeText={(text) =>
-                          onChange({
-                            ...value,
-                            callouts: value.callouts.map((item, i) =>
-                              i === index ? { ...call, returned: call.end + Number(text) } : item,
-                            ),
-                            calloutsComplete: false,
-                          })
-                        }
-                      />
-                    </>
-                  ) : null}
-                </View>
+                  <DutyDivider />
+                </Fragment>
               ))}
               {value.callouts.length < 64 ? (
-                <Action
+                <DutyAction
                   label="Einsatz hinzufügen"
                   onPress={() => {
                     const start = value.callouts.at(-1)?.returned ?? clockMinute(startTime);
@@ -279,11 +324,11 @@ export function SpecialDutyFields({
                   }}
                 />
               ) : null}
-              <Choice
-                label="Einsätze"
+              <DutyChoice
+                label="Erfassung"
                 value={value.calloutsComplete ? "COMPLETE" : "OPEN"}
                 options={[
-                  { value: "OPEN", label: "Noch nicht abgeschlossen" },
+                  { value: "OPEN", label: "Noch offen" },
                   {
                     value: "COMPLETE",
                     label: value.callouts.length ? "Alle Einsätze erfasst" : "Kein Einsatz",
@@ -293,12 +338,14 @@ export function SpecialDutyFields({
                   onChange({ ...value, calloutsComplete: status === "COMPLETE" })
                 }
               />
-            </>
+            </EntryEditGroup>
           ) : null}
+
           {value.kind === "STANDBY" ? (
-            <>
-              <Choice
-                label="Bereitschaftsstufe laut Vereinbarung"
+            <EntryEditGroup>
+              <DutyHeading>Vereinbarung</DutyHeading>
+              <DutyChoice
+                label="Bereitschaftsstufe"
                 value={value.standbyLevel}
                 options={[
                   { value: "UNKNOWN", label: "Weiß ich noch nicht" },
@@ -313,8 +360,10 @@ export function SpecialDutyFields({
                   onChange({ ...value, standbyLevel: level as SpecialDuty["standbyLevel"] })
                 }
               />
-              <Choice
-                label="Abgeltung"
+              <DutyHint>Laut deiner Vereinbarung.</DutyHint>
+              <DutyDivider />
+              <DutyChoice
+                label="Ausgleich"
                 value={value.settlement}
                 options={[
                   { value: "UNKNOWN", label: "Weiß ich noch nicht" },
@@ -325,25 +374,46 @@ export function SpecialDutyFields({
                   onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
                 }
               />
+            </EntryEditGroup>
+          ) : null}
+
+          {value.kind === "STANDBY" ? (
+            <EntryEditGroup>
               <StandbyAgreementFields
                 value={value}
                 tariffFamily={tariffFamily}
                 template={template}
                 onChange={onChange}
               />
-            </>
+            </EntryEditGroup>
           ) : null}
-          {value.kind !== "SPLIT" ? (
-            <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted, padding: 12 }]}>
-              Die Abrechnung findest du unter Gehalt. Fehlende Angaben und noch offene Berechnungen
-              werden dort getrennt angezeigt.
-            </Text>
-          ) : null}
+
+          <EntryEditGroup>
+            <DutyValueRow
+              label="Hinweise zur Arbeitszeit"
+              value=""
+              accessibilityLabel="Hinweise zur Arbeitszeit"
+              expanded={detailsOpen}
+              onPress={() => setDetailsOpen(!detailsOpen)}
+            />
+            {detailsOpen ? (
+              <DutyHint>
+                {value.kind === "ON_CALL"
+                  ? "Nur tatsächliche Einsätze und Wege zählen hier zur erfassten Arbeitszeit. Bei stark eingeschränkter Freizeit kann die rechtliche Einordnung abweichen."
+                  : value.kind === "STANDBY"
+                    ? "Auch Ruhephasen mit Bereitschaftspflicht zählen zur Arbeitsschutzzeit. Zeitgutschrift und Vergütung sind davon getrennt. Die gewählte Stufe allein bedeutet noch keine vollständige Abrechnung."
+                    : "Die Dienstteile gehören zusammen. Die Unterbrechung zählt nicht zur Arbeitszeit. Pausen innerhalb jedes Teils erfasst du getrennt."}
+              </DutyHint>
+            ) : null}
+            {value.kind !== "SPLIT" ? (
+              <DutyHint>
+                Die Abrechnung findest du unter Gehalt. Offene Angaben und Berechnungen bleiben dort
+                sichtbar.
+              </DutyHint>
+            ) : null}
+          </EntryEditGroup>
         </>
       ) : null}
-      {(!value || value.kind === "SPLIT") && (value?.parts.length ?? 0) < 8 ? (
-        <Action label="Weiteren Dienstteil hinzufügen" onPress={addPart} />
-      ) : null}
-    </EntryEditGroup>
+    </View>
   );
 }

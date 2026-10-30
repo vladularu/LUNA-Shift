@@ -84,7 +84,7 @@ function PauseRow({
 
 export function ShiftEditOverlay({
   specialDutyFields,
-  specialDutyActive = false,
+  specialDutyKind,
   alarmEnabled,
   breakMinutes,
   busy,
@@ -156,31 +156,32 @@ export function ShiftEditOverlay({
       cardContent={
         <>
           <View style={styles.body}>
-            <EntryEditGroup
-              testID="shift-edit-time-group"
-              onLayout={({ nativeEvent: { layout } }) => setTimeGroupTop(layout.y)}
-            >
-              {shiftIsTimed ? (
-                <>
-                  <EntryEditTimePair
-                    startTime={startTime}
-                    endTime={endTime}
-                    onStartChange={onStartTimeChange}
-                    onEndChange={onEndTimeChange}
-                  />
-                  <View
-                    testID="shift-edit-pause-overtime-pair"
-                    onLayout={({ nativeEvent: { layout } }) =>
-                      setPauseRowBottom(layout.y + layout.height)
-                    }
-                  >
-                    <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
-                      <PauseRow
-                        onLayout={undefined}
-                        onPress={openPausePicker}
-                        value={breakMinutes}
-                      />
-                      {!specialDutyActive ? (
+            {specialDutyFields}
+            {!specialDutyKind ? (
+              <EntryEditGroup
+                testID="shift-edit-time-group"
+                onLayout={({ nativeEvent: { layout } }) => setTimeGroupTop(layout.y)}
+              >
+                {shiftIsTimed ? (
+                  <>
+                    <EntryEditTimePair
+                      startTime={startTime}
+                      endTime={endTime}
+                      onStartChange={onStartTimeChange}
+                      onEndChange={onEndTimeChange}
+                    />
+                    <View
+                      testID="shift-edit-pause-overtime-pair"
+                      onLayout={({ nativeEvent: { layout } }) =>
+                        setPauseRowBottom(layout.y + layout.height)
+                      }
+                    >
+                      <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
+                        <PauseRow
+                          onLayout={undefined}
+                          onPress={openPausePicker}
+                          value={breakMinutes}
+                        />
                         <ShiftOvertimeFields
                           compact
                           confirmed={tariffOvertimeConfirmed}
@@ -189,21 +190,43 @@ export function ShiftEditOverlay({
                           onMinutesChange={onOvertimeMinutesChange}
                           overtimeMinutes={overtimeMinutes}
                         />
-                      ) : null}
-                    </ResponsiveFieldRow>
-                  </View>
-                  {!specialDutyActive && Number(overtimeMinutes) > 0 ? (
-                    <ShiftOvertimeConfirmation
-                      confirmed={tariffOvertimeConfirmed}
-                      onConfirmedChange={onTariffOvertimeConfirmedChange}
-                    />
-                  ) : null}
-                </>
-              ) : (
-                <ValueRow label="Dauer" separator={false} value="Ganztägig" />
-              )}
-            </EntryEditGroup>
-            {specialDutyFields}
+                      </ResponsiveFieldRow>
+                    </View>
+                    {Number(overtimeMinutes) > 0 ? (
+                      <ShiftOvertimeConfirmation
+                        confirmed={tariffOvertimeConfirmed}
+                        onConfirmedChange={onTariffOvertimeConfirmedChange}
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <ValueRow label="Dauer" separator={false} value="Ganztägig" />
+                )}
+              </EntryEditGroup>
+            ) : null}
+            {specialDutyKind === "SPLIT" ? (
+              <EntryEditGroup testID="shift-edit-split-overtime-group">
+                <Text
+                  style={{ ...TYPOGRAPHY.small, color: palette.textSecondary, padding: SPACING.md }}
+                >
+                  Überstunden im ersten Dienstteil
+                </Text>
+                <ShiftOvertimeFields
+                  compact
+                  confirmed={tariffOvertimeConfirmed}
+                  inputRef={overtimeInputRef}
+                  onConfirmedChange={onTariffOvertimeConfirmedChange}
+                  onMinutesChange={onOvertimeMinutesChange}
+                  overtimeMinutes={overtimeMinutes}
+                />
+                {Number(overtimeMinutes) > 0 ? (
+                  <ShiftOvertimeConfirmation
+                    confirmed={tariffOvertimeConfirmed}
+                    onConfirmedChange={onTariffOvertimeConfirmedChange}
+                  />
+                ) : null}
+              </EntryEditGroup>
+            ) : null}
             <EntryEditGroup testID="shift-edit-reminder-group">
               <ValueRow
                 label="Erinnerung"

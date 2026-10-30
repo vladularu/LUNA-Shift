@@ -11,6 +11,7 @@ import { FullWindowOverlay } from "react-native-screens";
 
 import {
   usePflegeShiftEntries,
+  usePflegeShiftProfile,
   usePflegeShiftStatus,
   usePflegeShiftTemplates,
 } from "@/application/pflegeshift-provider";
@@ -43,7 +44,7 @@ import { MOTION } from "@/theme/motion";
 import { DEFAULT_TEMPLATE_COLOR, SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { RADII, SPACING } from "@/theme/tokens";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { CardSeparator, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { ColorPicker, PrimaryButton, SecondaryButton, TimePickerField } from "@/ui/form-controls";
@@ -51,7 +52,9 @@ import { DestructiveFormAction, FormScreen, FormStatus, HeaderSaveAction } from 
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { deletionFeedback, successFeedback, warningFeedback } from "@/ui/haptics";
 import { LabeledSwitch } from "@/ui/labeled-switch";
-import { PauseWheel } from "@/ui/pause-wheel";
+import { PausePicker } from "@/ui/pause-picker";
+import { today } from "@/engine/calendar";
+import { editorDutyTariff } from "@/features/day-editor/special-duty-editor-state";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { ShiftSymbolPicker } from "@/ui/shift-symbol-picker";
 import { NotificationSheet, notificationLabel } from "@/features/day-editor/entry-options";
@@ -203,85 +206,7 @@ function CompactPausePicker({
   readonly onChange: (value: string) => void;
   readonly value: string;
 }) {
-  const palette = usePalette();
-  const minutes = Number(value) || 0;
-  const [expanded, setExpanded] = useState(false);
-
-  function togglePicker() {
-    if (expanded) {
-      setExpanded(false);
-      return;
-    }
-    setExpanded(true);
-  }
-
-  return (
-    <SurfaceCard>
-      <Pressable
-        accessibilityHint={expanded ? "Klappt die Auswahl ein" : "Öffnet die Pausenauswahl"}
-        accessibilityLabel={`Pause: ${minutes} Minuten`}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        onPress={togglePicker}
-        testID="template-pause-row"
-        style={({ pressed }) => ({
-          minHeight: 56,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: SPACING.md,
-          backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-          paddingHorizontal: SPACING.lg,
-          paddingVertical: SPACING.xs,
-        })}
-      >
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-        >
-          Pause
-        </Text>
-        <View
-          style={{
-            borderCurve: CORNER_CURVE,
-            minHeight: 36,
-            minWidth: 92,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: RADII.control,
-            backgroundColor: palette.surfaceMuted,
-            paddingHorizontal: SPACING.md,
-          }}
-        >
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.text, fontVariant: ["tabular-nums"], ...TYPOGRAPHY.body }}
-          >
-            {minutes} Min.
-          </Text>
-        </View>
-      </Pressable>
-      {expanded ? (
-        <>
-          <CardSeparator />
-          <Animated.View
-            accessibilityLabel="Pausendauer auswählen"
-            entering={FadeInDown.duration(MOTION.duration.fast).reduceMotion(MOTION.reduceMotion)}
-            exiting={FadeOut.duration(MOTION.duration.instant).reduceMotion(MOTION.reduceMotion)}
-            style={{ alignItems: "center", paddingVertical: SPACING.sm }}
-            testID="template-pause-popover"
-          >
-            <PauseWheel
-              onChange={(nextMinutes) => onChange(String(nextMinutes))}
-              selectionTestID="template-pause-selection"
-              testID="template-pause-wheel"
-              value={minutes}
-            />
-          </Animated.View>
-        </>
-      ) : null}
-    </SurfaceCard>
-  );
+  return <PausePicker onChange={onChange} value={value} testID="template-pause" />;
 }
 
 export function TemplateEditorScreen() {
@@ -345,6 +270,10 @@ function TemplateEditorForm({
   readonly sessionKey: string;
 }) {
   const palette = usePalette();
+  const { profile } = usePflegeShiftProfile();
+  const tariffFamily = profile?.salaryBasisConflict
+    ? null
+    : editorDutyTariff(profile, quickEntryDate ?? today(profile?.timeZone ?? "Europe/Berlin"));
   const { templates, upsertTemplate, removeTemplate } = usePflegeShiftTemplates();
   const { entries, upsertShift } = usePflegeShiftEntries();
   const { initialValue: existing } = useStableEditorSession(sessionKey, () => loadedExisting);
@@ -458,7 +387,8 @@ function TemplateEditorForm({
           name,
           type,
           allDay: absence || allDay,
-          specialDuty: absence || allDay ? null : plannedSpecialDuty(specialDuty),
+          specialDuty:
+            absence || allDay || type === "TRAINING" ? null : plannedSpecialDuty(specialDuty),
           startTime: absence ? null : startTime,
           endTime: absence ? null : endTime,
           breakMinutes: absence ? 0 : Number(breakMinutes),
@@ -652,18 +582,6 @@ function TemplateEditorForm({
                 testID="template-all-day-row"
                 value={allDay}
               />
-              {!allDay ? (
-                <>
-                  <CardSeparator />
-                  <View testID="template-start-row" style={{ paddingHorizontal: SPACING.lg }}>
-                    <TimePickerField label="Start" onChange={setStartTime} value={startTime} />
-                  </View>
-                  <CardSeparator />
-                  <View testID="template-end-row" style={{ paddingHorizontal: SPACING.lg }}>
-                    <TimePickerField label="Ende" onChange={setEndTime} value={endTime} />
-                  </View>
-                </>
-              ) : null}
             </>
           )}
         </SurfaceCard>
@@ -672,10 +590,15 @@ function TemplateEditorForm({
       <View style={{ gap: SPACING.md }}>
         {!absence && !allDay && type !== "TRAINING" ? (
           <SpecialDutyFields
+            tariffFamily={tariffFamily}
             template
             value={specialDuty}
             startTime={startTime}
             endTime={endTime}
+            breakMinutes={breakMinutes}
+            onStartChange={setStartTime}
+            onEndChange={setEndTime}
+            onBreakMinutesChange={setBreakMinutes}
             timeZone="Europe/Berlin"
             onChange={(next) => {
               setSpecialDuty(next);
@@ -683,8 +606,19 @@ function TemplateEditorForm({
             }}
           />
         ) : null}
-        {!absence && !allDay ? (
-          <CompactPausePicker onChange={setBreakMinutes} value={breakMinutes} />
+        {!absence && !allDay && (!specialDuty || type === "TRAINING") ? (
+          <>
+            <SurfaceCard>
+              <View testID="template-start-row" style={{ paddingHorizontal: SPACING.lg }}>
+                <TimePickerField label="Start" onChange={setStartTime} value={startTime} />
+              </View>
+              <CardSeparator />
+              <View testID="template-end-row" style={{ paddingHorizontal: SPACING.lg }}>
+                <TimePickerField label="Ende" onChange={setEndTime} value={endTime} />
+              </View>
+            </SurfaceCard>
+            <CompactPausePicker onChange={setBreakMinutes} value={breakMinutes} />
+          </>
         ) : null}
         <SurfaceCard>
           <CompactActionRow

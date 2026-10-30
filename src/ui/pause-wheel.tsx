@@ -23,23 +23,18 @@ import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_CORNERS } from "@/theme/tokens";
 
-const PAUSE_OPTIONS = [0, 15, 30, 45, 60] as const;
+export const PAUSE_OPTIONS = [0, 15, 30, 45, 60] as const;
 export const PAUSE_WHEEL_ITEM_HEIGHT = 44;
 const PAUSE_WHEEL_PADDING = PAUSE_WHEEL_ITEM_HEIGHT * 2;
 
-function pauseIndexForOffset(offsetY: number): number {
-  return Math.max(
-    0,
-    Math.min(PAUSE_OPTIONS.length - 1, Math.round(offsetY / PAUSE_WHEEL_ITEM_HEIGHT)),
-  );
+function pauseIndexForOffset(offsetY: number, optionCount: number): number {
+  return Math.max(0, Math.min(optionCount - 1, Math.round(offsetY / PAUSE_WHEEL_ITEM_HEIGHT)));
 }
 
-function pauseIndexForMinutes(minutes: number): number {
-  const exactIndex = PAUSE_OPTIONS.findIndex((option) => option === minutes);
-  if (exactIndex >= 0) return exactIndex;
-  return PAUSE_OPTIONS.reduce<number>(
+function pauseIndexForMinutes(minutes: number, options: readonly number[]): number {
+  return options.reduce<number>(
     (closestIndex, option, index) =>
-      Math.abs(option - minutes) < Math.abs((PAUSE_OPTIONS[closestIndex] ?? 0) - minutes)
+      Math.abs(option - minutes) < Math.abs((options[closestIndex] ?? 0) - minutes)
         ? index
         : closestIndex,
     0,
@@ -135,6 +130,7 @@ function FlatPauseOption({
 export function PauseWheel({
   animatedOptions = false,
   onChange,
+  options = PAUSE_OPTIONS,
   selectionStyle,
   selectionTestID,
   testID,
@@ -142,13 +138,14 @@ export function PauseWheel({
 }: {
   readonly animatedOptions?: boolean;
   readonly onChange: (minutes: number) => void;
+  readonly options?: readonly number[];
   readonly selectionStyle?: StyleProp<ViewStyle>;
   readonly selectionTestID?: string;
   readonly testID?: string;
   readonly value: number;
 }) {
   const palette = usePalette();
-  const initialIndex = pauseIndexForMinutes(value);
+  const initialIndex = pauseIndexForMinutes(value, options);
   const [previewIndex, setPreviewIndex] = useState(initialIndex);
   const previewIndexRef = useRef(initialIndex);
   const scrollRef = useRef<ScrollView>(null);
@@ -161,15 +158,15 @@ export function PauseWheel({
         previewIndexRef.current = index;
         setPreviewIndex(index);
       }
-      if (changed || notifyUnchanged) onChange(PAUSE_OPTIONS[index]);
+      if (changed || notifyUnchanged) onChange(options[index]);
     },
-    [onChange],
+    [onChange, options],
   );
   const selectOffset = useCallback(
     (offsetY: number, notifyUnchanged = true) => {
-      selectIndex(pauseIndexForOffset(offsetY), notifyUnchanged);
+      selectIndex(pauseIndexForOffset(offsetY, options.length), notifyUnchanged);
     },
-    [selectIndex],
+    [selectIndex, options.length],
   );
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -188,6 +185,8 @@ export function PauseWheel({
     },
     [selectOffset],
   );
+  const accessibilityLabel =
+    options === PAUSE_OPTIONS ? "Pausendauer in 15-Minuten-Schritten" : "Pausendauer auswählen";
 
   return (
     <View style={styles.container}>
@@ -197,7 +196,7 @@ export function PauseWheel({
         testID={selectionTestID}
       />
       <Animated.ScrollView
-        accessibilityLabel="Pausendauer in 15-Minuten-Schritten"
+        accessibilityLabel={accessibilityLabel}
         accessibilityRole="radiogroup"
         contentContainerStyle={styles.content}
         contentOffset={{ x: 0, y: initialIndex * PAUSE_WHEEL_ITEM_HEIGHT }}
@@ -213,7 +212,7 @@ export function PauseWheel({
         style={styles.wheel}
         testID={testID}
       >
-        {PAUSE_OPTIONS.map((minutes, index) => {
+        {options.map((minutes, index) => {
           const selected = previewIndex === index;
           const onPress = () => {
             selectIndex(index);
