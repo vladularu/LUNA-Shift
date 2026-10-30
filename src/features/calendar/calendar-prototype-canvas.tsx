@@ -52,16 +52,21 @@ const MovingDay = memo(function MovingDay({
   const isSelected = selectedDate === day.date;
   const motion = useAnimatedStyle(() => ({
     transform: [
-      { translateX: day.fromX + (day.toX - day.fromX) * progress.value - 15 },
+      { translateX: (day.fromX - day.toX) * (1 - progress.value) },
       {
-        translateY: day.fromY + (day.toY - day.fromY) * progress.value - 15 - 5 * progress.value,
+        translateY: (day.fromY - day.toY + 5) * (1 - progress.value),
       },
       { scale: 0.6 + 0.4 * progress.value },
     ],
   }));
   // The normal glyph stays mounted; the bold selection fades as a separate layer.
   return (
-    <Animated.View testID={`${testIDPrefix}-${day.date}`} style={[styles.day, motion]}>
+    <Animated.View
+      testID={`${testIDPrefix}-${day.date}`}
+      // Keep settled dates in the same React layout as their entry cells. A
+      // retained native transform then cannot hold an obsolete month position.
+      style={[styles.day, { left: day.toX - 15, top: day.toY - 20 }, motion]}
+    >
       <View
         pointerEvents="none"
         testID={

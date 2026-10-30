@@ -332,7 +332,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
       testID={`shared-month-${month}`}
       style={[{ height: pageHeight, width: scene.width }, opacity]}
     >
-      {scene.headerOverlap > 0 ? (
+      {scene.headerOverlap > 0 && scene.width > 0 ? (
         <Animated.View style={titleOpacity} pointerEvents="none">
           <CalendarMonthTitle
             month={month}

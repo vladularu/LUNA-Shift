@@ -28,6 +28,8 @@ export const CalendarMonthTitle = memo(function CalendarMonthTitle({
       <TabScreenHeader
         title={title}
         stableTitle
+        minimumTitleScale={0.75}
+        titleHeightMode="content"
         transparent
         safeTopOverride={0}
         accessory={

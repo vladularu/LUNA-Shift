@@ -69,6 +69,8 @@ export function TabScreenHeader({
   titleColor,
   titleKey,
   stableTitle = false,
+  minimumTitleScale,
+  titleHeightMode = "fixed",
   transparent = false,
   toolbar,
   safeTopOverride,
@@ -83,6 +85,8 @@ export function TabScreenHeader({
   readonly titleColor?: string;
   readonly titleKey?: Key;
   readonly stableTitle?: boolean;
+  readonly minimumTitleScale?: number;
+  readonly titleHeightMode?: "fixed" | "content";
   readonly transparent?: boolean;
   readonly toolbar?: ReactNode;
   readonly safeTopOverride?: number;
@@ -91,6 +95,9 @@ export function TabScreenHeader({
   const palette = usePalette();
   const topInset = useContext(SafeAreaInsetsContext)?.top ?? 0;
   const { fontScale } = useWindowDimensions();
+  const stableTitleHeight = stableTitle
+    ? Math.ceil(TYPOGRAPHY.hero.lineHeight * fontScale)
+    : undefined;
   const stackAccessory =
     Boolean(accessory) && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
   const safeTop =
@@ -141,13 +148,15 @@ export function TabScreenHeader({
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             numberOfLines={stableTitle ? 1 : undefined}
             adjustsFontSizeToFit={stableTitle}
+            minimumFontScale={stableTitle ? minimumTitleScale : undefined}
             accessibilityLabel={title}
             style={{
               ...(titleHidden ? { opacity: 0 } : {}),
               flex: stackAccessory ? undefined : 1,
               color: titleColor ?? palette.text,
               ...TYPOGRAPHY.hero,
-              height: stableTitle ? Math.ceil(TYPOGRAPHY.hero.lineHeight * fontScale) : undefined,
+              height: titleHeightMode === "fixed" ? stableTitleHeight : undefined,
+              minHeight: titleHeightMode === "content" ? stableTitleHeight : undefined,
             }}
           >
             {title}
