@@ -4,6 +4,7 @@ import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
 import { calculateAutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
+import { newSpecialDuty } from "@/domain/special-duty";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import {
   salaryServiceDate,
@@ -12,6 +13,54 @@ import {
 } from "./salary-service-presentation";
 
 describe("salary service presentation", () => {
+  it("groups separate callout tax traces under their original duty and filters its cash correctly", () => {
+    const entry = forecastShift({
+      id: "on-call",
+      date: "2026-07-07",
+      startTime: "20:00",
+      endTime: "23:00",
+      breakMinutes: 0,
+      specialDuty: {
+        ...newSpecialDuty("ON_CALL", "20:00", "23:00", "Europe/Berlin"),
+        settlement: "PAY",
+        calloutsComplete: true,
+        callouts: [1320, 1340].map((start) => ({
+          kind: "REMOTE" as const,
+          start,
+          end: start + 10,
+          departure: start,
+          returned: start + 10,
+          breakMinutes: 0,
+        })),
+      },
+    });
+    const pay = calculateMonthlyPayEstimate("2026-07", [entry], forecastProfile, null);
+    const forecast = calculateAutomaticNetPayForecast(
+      {
+        month: "2026-07",
+        profile: forecastProfile,
+        shifts: [entry],
+        pay,
+        settings: automatedSettings("2026-07"),
+      },
+      bundledRuleResolver,
+    );
+    if (forecast.result.status !== "available") throw new Error(forecast.result.reason);
+    const before = JSON.stringify(forecast.result.classification);
+    const rows = salaryServiceRows(pay, forecast.result.classification, [entry]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(entry.id);
+    expect(rows[0].shift).toBe(entry);
+    expect(rows[0].tax!.workedMinutes).toBe(20);
+    expect(rows[0].amountCents).toBe(forecast.result.classification.paidPremiumCents);
+    expect(
+      salaryServiceRows(pay, forecast.result.classification, [entry], "sfn:NIGHT")[0].amountCents,
+    ).toBe(rows[0].amountCents);
+    expect(salaryServiceRows(pay, forecast.result.classification, [entry], "sfn:SUNDAY")).toEqual(
+      [],
+    );
+    expect(JSON.stringify(forecast.result.classification)).toBe(before);
+  });
   it.each([
     ["2026-10-05", "Mo. 05.10."],
     ["2026-10-06", "Di. 06.10."],

@@ -9,7 +9,7 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 import { formatMonthTitle } from "@/engine/calendar";
-import { formatMinutes, formatSignedMinutes } from "@/engine/working-time";
+import { formatMinutes } from "@/engine/working-time";
 import { buildAnnualDistributionSections } from "@/features/analysis/annual-distribution";
 import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note";
 import type { AnnualReport } from "@/features/analysis/annual-report";
@@ -27,6 +27,11 @@ import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { AnnualPremiumReport } from "./annual-premium-report";
 import { AnnualOverview } from "./annual-overview";
 import { useAnnualSalaryPayments } from "./use-annual-salary-payments";
+import {
+  timeAccountActual,
+  timeAccountBalance,
+  timeAccountCaption,
+} from "./special-duty-time-presentation";
 import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
 import { CheckPeriod } from "./check-summary-card";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
@@ -152,7 +157,7 @@ export function AnnualReportDetails({
               key={month.month}
               first={index === 0}
               label={formatMonthTitle(month.month)}
-              value={formatMinutes(month.actualMinutes) + " h"}
+              value={timeAccountActual(month) + (month.timeAccountMinutes === null ? "" : " h")}
               onPress={() => onSelectMonth(month.month)}
             />
           ))}
@@ -204,13 +209,14 @@ export function AnnualReportDetails({
         ) : (
           <>
             <WorktimeCard
-              actual={formatMinutes(report.actualMinutes)}
+              actual={timeAccountActual(report)}
+              caption={timeAccountCaption(report)}
               balance={
                 pending
                   ? "Wird berechnet"
                   : report.balanceMinutes === null
                     ? "Nicht verfügbar"
-                    : formatSignedMinutes(report.balanceMinutes)
+                    : timeAccountBalance({ ...report, balanceMinutes: report.balanceMinutes })
               }
               balanceAccent={
                 report.balanceMinutes === null
@@ -534,7 +540,7 @@ function MonthlyBars({
           <View key={item.month}>
             {index > 0 ? <CardSeparator inset={0} /> : null}
             <Pressable
-              accessibilityLabel={`${formatMonthTitle(item.month)}, ${formatMinutes(item.actualMinutes)} ${pending ? "erfasst; Prüfung ausstehend" : "Ist"}${testMonths.includes(item.month) ? ", Testdaten" : ""}`}
+              accessibilityLabel={`${formatMonthTitle(item.month)}, ${pending ? formatMinutes(item.actualMinutes) : timeAccountActual(item)} ${pending ? "erfasst; Prüfung ausstehend" : "Ist"}${testMonths.includes(item.month) ? ", Testdaten" : ""}`}
               accessibilityRole="button"
               onPress={() => onSelectMonth(item.month)}
               style={({ pressed }) => ({
@@ -556,7 +562,9 @@ function MonthlyBars({
                     maxFontSizeMultiplier={TEXT_MAX_SCALE}
                     style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
                   >
-                    {formatMinutes(item.actualMinutes)} h {pending ? "erfasst" : "Ist"} · Soll{" "}
+                    {pending ? formatMinutes(item.actualMinutes) : timeAccountActual(item)}
+                    {item.timeAccountMinutes === null && !pending ? "" : " h"}{" "}
+                    {pending ? "erfasst" : "Ist"} · Soll{" "}
                     {pending
                       ? "Wird berechnet"
                       : item.targetMinutes === null

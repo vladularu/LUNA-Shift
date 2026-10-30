@@ -1,3 +1,5 @@
+import type { SfnShift } from "./net-pay-sfn";
+
 export interface DutyOvertimeRates {
   readonly baseHourlyCents: number;
   readonly premiumHourlyCents: number;
@@ -10,6 +12,10 @@ export interface DutyCalloutPay {
   readonly baseAmountCents: number | null;
   readonly overtimePremiumCents: number | null;
   readonly rates: DutyOvertimeRates | null;
+  readonly timePremiumCents?: number | null;
+  readonly timeCreditMinutes?: number | null;
+  readonly mandatoryRestMinutes?: number;
+  readonly payrollTraces?: readonly SfnShift[];
   readonly notes: readonly string[];
 }
 
@@ -41,8 +47,19 @@ export interface StandbyPay {
   readonly holidayPremiumCents: number | null;
   readonly sundayPremiumCents: number | null;
   readonly cashAmountCents: number | null;
-  /** Proposed credit only; posting to a time account is a separate operation. */
+  /** Derived planned credit; never an external employer booking. */
   readonly timeCreditMinutes: number | null;
   readonly mandatoryRestMinutes: number | null;
+  readonly payrollTrace?: SfnShift;
+  readonly notes: readonly string[];
+}
+
+export interface SpecialDutyTimeCredit {
+  readonly shiftId: string;
+  readonly date: string;
+  readonly title: string;
+  readonly recordedMinutes: number;
+  readonly creditedMinutes: number | null;
+  readonly settlement: "UNKNOWN" | "PAY" | "TIME_OFF";
   readonly notes: readonly string[];
 }

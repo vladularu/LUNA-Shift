@@ -7,6 +7,7 @@ import { calculateMonthlyNetPayWithSfn } from "./net-pay-with-sfn";
 import { calculateTvoedShiftPremiumTrace } from "./simple-pay";
 import { isPayWorkShift } from "./tvoed-pattern";
 import { calculateTimedShiftBounds } from "./working-time";
+import { specialDutyPayrollTraces } from "./special-duty-payroll-trace";
 
 export function isTvoedSfnForecastProfile(profile: UserProfile): boolean {
   return Boolean(
@@ -148,7 +149,7 @@ export function calculateTvoedNetPayForecast(
           workplace: { federalState: profile.federalState, holidayRegion: profile.holidayRegion },
           workEvidence: "PLANNED",
           monthAttribution: "SHIFT_START",
-          shifts: sfnShifts,
+          shifts: [...sfnShifts, ...specialDutyPayrollTraces(pay.specialDutyBreakdowns ?? [])],
         },
         profile: settings.profile,
         specialCases: settings.specialCases,

@@ -74,11 +74,11 @@ export function SpecialDutyPayCard({
               {line.standbyPay.timeCreditMinutes !== null &&
               line.standbyPay.timeCreditMinutes > 0 ? (
                 <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
-                  Vorgesehener Freizeitausgleich:{" "}
+                  Geplante Zeitgutschrift:{" "}
                   {line.standbyPay.timeCreditMinutes.toLocaleString("de-DE", {
                     maximumFractionDigits: 2,
                   })}{" "}
-                  Min. Noch nicht aufs Zeitkonto gebucht.
+                  Min. Als Prognose aus deiner Abgeltung berechnet.
                   {line.standbyPay.mandatoryRestMinutes
                     ? ` Davon ${line.standbyPay.mandatoryRestMinutes.toLocaleString("de-DE", { maximumFractionDigits: 2 })} Min. gesundheitlicher Ausgleich.`
                     : ""}
@@ -98,13 +98,30 @@ export function SpecialDutyPayCard({
                 Tatsächlich: {line.calloutPay.actualMinutes} Min. einschließlich Wege.
                 {line.calloutPay.paidMinutes === null
                   ? ""
-                  : ` Für die Bezahlung: ${line.calloutPay.paidMinutes} Min. nach Tarif.`}
+                  : ` Tariflich bewertet: ${line.calloutPay.paidMinutes} Min.`}
               </Text>
               {line.calloutPay.rates ? (
                 <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
                   Grundentgelt: {money(line.calloutPay.rates.baseHourlyCents)}/Std. · Zuschlag:{" "}
                   {(line.calloutPay.rates.premiumBasisPoints / 100).toLocaleString("de-DE")}% von{" "}
                   {money(line.calloutPay.rates.premiumHourlyCents)}/Std.
+                </Text>
+              ) : null}
+              {(line.calloutPay.timePremiumCents ?? 0) > 0 ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Zeitzuschläge der Einsätze: {money(line.calloutPay.timePremiumCents!)}
+                </Text>
+              ) : null}
+              {(line.calloutPay.timeCreditMinutes ?? 0) > 0 ? (
+                <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
+                  Geplante Zeitgutschrift:{" "}
+                  {line.calloutPay.timeCreditMinutes!.toLocaleString("de-DE", {
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  Min. Zeitzuschläge werden ausgezahlt.
+                  {(line.calloutPay.mandatoryRestMinutes ?? 0) > 0
+                    ? ` Davon ${line.calloutPay.mandatoryRestMinutes!.toLocaleString("de-DE", { maximumFractionDigits: 2 })} Min. gesundheitlicher Ausgleich.`
+                    : ""}
                 </Text>
               ) : null}
             </View>
@@ -114,7 +131,7 @@ export function SpecialDutyPayCard({
               ? line.standbyPay
                 ? "Die Auszahlung ist berechnet. Eine vorgesehene Zeitgutschrift wird getrennt ausgewiesen."
                 : line.calloutPay
-                  ? "Pauschale und Einsatzentgelt sind berechnet und steuerpflichtig. Die Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit."
+                  ? "Pauschale und Einsatzgrundentgelt bleiben steuerpflichtig. Zeitzuschläge werden getrennt geprüft. Die Rundung verändert die erfasste Arbeitszeit nicht."
                   : "Pauschale berechnet. Sie wird als steuerpflichtiger Betrag berücksichtigt und erhöht die Arbeitszeit nicht."
               : line.notes.join(" ")}
           </Text>

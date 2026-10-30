@@ -75,3 +75,10 @@ export function formatMinutes(value: number): string {
 export function formatSignedMinutes(value: number): string {
   return `${value >= 0 ? "+" : "−"}${formatMinutes(Math.abs(value))}`;
 }
+
+/** Tariff credits can contain half minutes; retain them without changing existing clocks. */
+export function formatPreciseMinutes(value: number): string {
+  const seconds = Math.round(Math.abs(value) * 60);
+  const clock = `${Math.floor(seconds / 3600)}:${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}`;
+  return `${value < 0 ? "−" : ""}${clock}${seconds % 60 ? `:${String(seconds % 60).padStart(2, "0")}` : ""}`;
+}

@@ -1,4 +1,5 @@
-import { projectDutyCalendarDays, specialDutyOpenItems } from "./special-duty";
+import { projectDutyCalendarDays } from "./special-duty";
+import { specialDutyTimeAccount } from "./special-duty-time-account";
 import type {
   MonthlySummary,
   MonthlySummaryCategory,
@@ -62,18 +63,8 @@ export function* calculateMonthlySummarySteps(
   MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget },
   void
 > {
-  const specialDutyNotes = specialDutyOpenItems(
-    entries.filter(
-      (entry) =>
-        !(
-          entry.specialDuty?.kind === "ON_CALL" &&
-          entry.specialDuty.calloutsComplete &&
-          entry.specialDuty.callouts.length === 0 &&
-          entry.specialDuty.settlement !== "TIME_OFF"
-        ),
-    ),
-    month,
-  );
+  const account = specialDutyTimeAccount(month, entries, profile, ruleResolver);
+  const specialDutyNotes = account.notes;
   entries = projectDutyCalendarDays(entries);
   const work = category();
   const training = category();
@@ -101,6 +92,7 @@ export function* calculateMonthlySummarySteps(
   }
 
   let overlapMinutes = 0;
+  let ordinaryMinutes = 0;
   for (const [date, dayEntries] of entriesByDate) {
     const day = calculateDailyWorkCredit(date, dayEntries, profile, ruleResolver);
     work.minutes += day.workMinutes;
@@ -108,6 +100,14 @@ export function* calculateMonthlySummarySteps(
     vacation.minutes += day.vacationMinutes;
     sick.minutes += day.sickMinutes;
     overlapMinutes += day.overlapMinutes;
+    ordinaryMinutes += dayEntries.some((entry) => account.ids.has(entry.id))
+      ? calculateDailyWorkCredit(
+          date,
+          dayEntries.filter((entry) => !account.ids.has(entry.id)),
+          profile,
+          ruleResolver,
+        ).actualMinutes
+      : day.actualMinutes;
     yield 1;
   }
 
@@ -119,14 +119,17 @@ export function* calculateMonthlySummarySteps(
     targetContext,
   );
   const targetMinutes = requireTargetMinutes(targetCalculation);
+  const timeAccountMinutes =
+    account.creditedMinutes === null ? null : ordinaryMinutes + account.creditedMinutes;
 
   return Object.freeze({
     month,
     ...(specialDutyNotes.length ? { specialDutyNotes } : {}),
+    ...(account.lines.length ? { timeAccountMinutes, specialDutyTimeCredits: account.lines } : {}),
     targetMinutes,
     ...(targetContext === undefined && !profile.workingTimeTarget ? {} : { targetCalculation }),
     actualMinutes,
-    balanceMinutes: actualMinutes - targetMinutes,
+    balanceMinutes: (timeAccountMinutes ?? actualMinutes) - targetMinutes,
     overlapMinutes,
     work: freezeCategory(work),
     training: freezeCategory(training),

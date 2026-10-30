@@ -98,7 +98,7 @@ describe("working-time target backup v21", () => {
   });
   it("restores the exact context, revisions and timestamps and still calculates 146:18", async () => {
     const backup = await exportTvlBackup(source);
-    expect(backup.document.version).toBe(23);
+    expect(backup.document.version).toBe(24);
     const original = await loadWorkingTimeTargetSettings(source.db);
     await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
     const restored = await loadWorkingTimeTargetSettings(target.db);
@@ -164,7 +164,7 @@ describe("working-time target backup v21", () => {
     });
     const original = await loadWorkingTimeTargetSettings(source.db);
     const backup = await exportTvlBackup(source);
-    expect(backup.document.version).toBe(23);
+    expect(backup.document.version).toBe(24);
     await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
     const restored = await loadWorkingTimeTargetSettings(target.db);
     expect(restored).toEqual(original);
@@ -209,7 +209,7 @@ describe("working-time target backup v21", () => {
       });
       const original = await loadWorkingTimeTargetSettings(source.db);
       const backup = await exportTvlBackup(source);
-      expect(backup.document.version).toBe(23);
+      expect(backup.document.version).toBe(24);
       await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
       const restored = await loadWorkingTimeTargetSettings(target.db);
       expect(restored).toEqual(original);
@@ -246,7 +246,7 @@ describe("working-time target backup v21", () => {
       });
       const original = await loadWorkingTimeTargetSettings(source.db);
       const backup = await exportTvlBackup(source);
-      expect(backup.document.version).toBe(23);
+      expect(backup.document.version).toBe(24);
       await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
       const restored = await loadWorkingTimeTargetSettings(target.db);
       expect(restored).toEqual(original);
@@ -425,7 +425,7 @@ describe("working-time target backup v21", () => {
       };
       await check(source);
       const backup = await exportTvlBackup(source);
-      expect(backup.document.version).toBe(23);
+      expect(backup.document.version).toBe(24);
       await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
       await check(target);
     },
@@ -511,7 +511,7 @@ describe("working-time target backup v21", () => {
       };
       await check(source);
       const backup = await exportTvlBackup(source);
-      expect(backup.document.version).toBe(23);
+      expect(backup.document.version).toBe(24);
       await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
       await check(target);
     },
@@ -548,7 +548,7 @@ describe("working-time target backup v21", () => {
     };
     await check(source);
     const backup = await exportTvlBackup(source);
-    expect(backup.document.version).toBe(23);
+    expect(backup.document.version).toBe(24);
     await restoreLocalBackup(target.db, await validateTvlBackup(backup.serialized));
     await check(target);
   });

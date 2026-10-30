@@ -343,6 +343,9 @@ export interface MonthlySummaryCategory {
 
 export interface MonthlySummary {
   readonly specialDutyNotes?: readonly string[];
+  /** Planned account credit, separately from recorded work and absence credits. */
+  readonly timeAccountMinutes?: number | null;
+  readonly specialDutyTimeCredits?: readonly import("./special-duty-pay").SpecialDutyTimeCredit[];
   readonly month: string;
   readonly targetMinutes: number;
   readonly actualMinutes: number;

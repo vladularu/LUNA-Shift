@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
-import { formatMinutes, formatSignedMinutes } from "@/engine/working-time";
+import { formatMinutes } from "@/engine/working-time";
 import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
@@ -9,6 +9,11 @@ import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { annualSalaryGrossCents, type AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import type { ReactNode } from "react";
+import {
+  timeAccountActual,
+  timeAccountBalance,
+  timeAccountCaption,
+} from "./special-duty-time-presentation";
 import { annualPayoutMonths, salaryAnnualFamily } from "@/domain/salary-annual-schedule";
 
 export function MonthOverview({
@@ -85,9 +90,10 @@ export function MonthOverview({
               })
             }
             actual={
-              formatMinutes(
-                summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
-              ) + " h"
+              summary.ok
+                ? timeAccountActual(summary.value) +
+                  (summary.value.timeAccountMinutes === null ? "" : " h")
+                : formatMinutes(shiftTypeAnalysis.totalMinutes) + " h"
             }
             target={
               summary.ok ? formatMinutes(summary.value.targetMinutes) + " h" : "Nicht verfügbar"
@@ -96,16 +102,17 @@ export function MonthOverview({
               summary.ok
                 ? summary.value.specialDutyNotes?.length
                   ? "Noch offen"
-                  : formatSignedMinutes(summary.value.balanceMinutes) + " h"
+                  : timeAccountBalance(summary.value) + " h"
                 : "Nicht verfügbar"
             }
             caption={
               summary.ok
-                ? summary.value.specialDutyNotes?.length
-                  ? "Bereitschaften: Zeitgutschrift noch offen"
-                  : summary.value.targetCalculation?.status === "PROVISIONAL"
-                    ? "Sollzeit vorläufig · Tippe für die Berechnung"
-                    : undefined
+                ? (timeAccountCaption(summary.value) ??
+                  (summary.value.specialDutyNotes?.length
+                    ? "Bereitschaften: Zeitgutschrift noch offen"
+                    : summary.value.targetCalculation?.status === "PROVISIONAL"
+                      ? "Sollzeit vorläufig · Tippe für die Berechnung"
+                      : undefined))
                 : "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen."
             }
           />

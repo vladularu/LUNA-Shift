@@ -40,11 +40,28 @@ export function NetPayServiceDetails({
     [pay, classification, shifts],
   );
   const selected = allRows.find((row) => row.id === selectedId) ?? null;
-  const categories = pay
-    ? buildPremiumBreakdown(pay.shiftBreakdowns, shifts, null).categories.filter(
-        (row) => row.amount > 0,
-      )
-    : [];
+  const hasSpecialPremiums = pay?.specialDutyBreakdowns?.some(
+    (line) => line.standbyPay?.payrollTrace || line.calloutPay?.payrollTraces?.length,
+  );
+  const categories =
+    hasSpecialPremiums && classification
+      ? SALARY_PREMIUM_CATEGORIES.map(({ category, label }) => ({
+          key: `sfn:${category}`,
+          label,
+          amount: classification.shifts.reduce(
+            (sum, shift) =>
+              sum +
+              shift.premiumBreakdown
+                .filter((p) => p.category === category)
+                .reduce((n, p) => n + p.paidPremiumCents, 0),
+            0,
+          ),
+        })).filter((row) => row.amount > 0)
+      : pay
+        ? buildPremiumBreakdown(pay.shiftBreakdowns, shifts, null).categories.filter(
+            (row) => row.amount > 0,
+          )
+        : [];
   const interval = salaryShiftTime(selected?.shift);
   return (
     <View testID="net-pay-service-details" style={{ gap: SPACING.md }}>

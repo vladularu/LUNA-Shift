@@ -1,5 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
+import { formatPreciseMinutes } from "@/engine/working-time";
 import {
   DEFAULT_REPORT_OPTIONS,
   REPORT_CHECK_SCOPE,
@@ -19,6 +20,10 @@ import {
 } from "./report-view-data";
 
 type View = ReturnType<typeof reportView>;
+const accountMinutes = (value: number | null, signed = false) =>
+  value === null
+    ? "Noch offen"
+    : `${signed && value >= 0 ? "+" : ""}${formatPreciseMinutes(value)} h`;
 const short = (value: string, max = 54) =>
   value.length > max ? value.slice(0, max - 1) + "…" : value;
 const color = (entry: ReportEntry) =>
@@ -55,14 +60,30 @@ function kpis(view: View): string {
       : "";
   return `<div class="metrics">${[
     ["Sollzeit", reportMinutes(view.target)],
-    ["Erfasste Kontozeit", reportMinutes(view.actual)],
-    ["Saldo", reportMinutes(view.balance, true)],
+    [
+      "Erfasste Kontozeit",
+      view.hasTimeAccount
+        ? view.timeAccount === null
+          ? "Noch offen"
+          : formatPreciseMinutes(view.timeAccount) + " h"
+        : reportMinutes(view.actual),
+    ],
+    [
+      "Saldo",
+      view.hasTimeAccount
+        ? view.balance === null
+          ? "Noch offen"
+          : (view.balance >= 0 ? "+" : "") + formatPreciseMinutes(view.balance) + " h"
+        : reportMinutes(view.balance, true),
+    ],
   ]
     .map(
       ([label, value]) =>
         `<div><small>${label}</small><strong class="${value === "Nicht verfügbar" ? "unavailable" : ""}">${html(value)}</strong></div>`,
     )
-    .join("")}</div>${targetNote ? `<p class="muted">${html(targetNote)}</p>` : ""}`;
+    .join(
+      "",
+    )}</div>${view.hasTimeAccount ? `<p class="muted">Erfasste Zeit: ${html(reportMinutes(view.actual))}. Die Kontozeit berücksichtigt die geplanten Zeitgutschriften aus der gewählten Abgeltung.</p>` : ""}${targetNote ? `<p class="muted">${html(targetNote)}</p>` : ""}`;
 }
 
 function salary(view: View, details: boolean): string {
@@ -93,7 +114,7 @@ function monthCalendar(view: View): string {
 }
 
 function annualTable(view: View, includeSalary: boolean): string {
-  return `<section><h2>Zwölf Monate im Überblick</h2><table class="annual"><thead><tr><th>Monat</th><th>Soll</th><th>Kontozeit</th><th>Saldo</th>${includeSalary ? "<th>Brutto</th><th>Netto</th>" : ""}</tr></thead><tbody>${view.monthly.map((month, i) => `<tr><td>${REPORT_MONTH_NAMES[i]}</td><td>${html(reportMinutes(month.target))}</td><td>${html(reportMinutes(month.actual))}</td><td>${html(reportMinutes(month.balance, true))}</td>${includeSalary ? `<td>${html(reportMoney(month.gross))}</td><td>${html(month.netDisplay)}</td>` : ""}</tr>`).join("")}</tbody></table>${includeSalary && view.netBasisNote ? `<p class="muted">${html(view.netBasisNote)}</p>` : ""}<p class="muted">Vollständige tägliche Einzelliste im CSV-Export.</p></section>`;
+  return `<section><h2>Zwölf Monate im Überblick</h2><table class="annual"><thead><tr><th>Monat</th><th>Soll</th><th>Kontozeit</th><th>Saldo</th>${includeSalary ? "<th>Brutto</th><th>Netto</th>" : ""}</tr></thead><tbody>${view.monthly.map((month, i) => `<tr><td>${REPORT_MONTH_NAMES[i]}</td><td>${html(reportMinutes(month.target))}</td><td>${html(month.hasTimeAccount ? accountMinutes(month.actual) : reportMinutes(month.actual))}</td><td>${html(month.hasTimeAccount ? accountMinutes(month.balance, true) : reportMinutes(month.balance, true))}</td>${includeSalary ? `<td>${html(reportMoney(month.gross))}</td><td>${html(month.netDisplay)}</td>` : ""}</tr>`).join("")}</tbody></table>${includeSalary && view.netBasisNote ? `<p class="muted">${html(view.netBasisNote)}</p>` : ""}<p class="muted">Vollständige tägliche Einzelliste im CSV-Export.</p></section>`;
 }
 
 function categories(view: View): string {

@@ -476,7 +476,8 @@ describe("dated standby remuneration", () => {
       cashAmountCents: 16836,
       holidayPremiumCents: 0,
     });
-    expect(l.notes).not.toEqual([]);
+    expect(l.notes).toEqual([]);
+    expect(l.payrollTrace).toBeUndefined();
     const b = { ...profiles.p, tariff: { ...profiles.p.tariff!, sector: "BT_B" as const } };
     expect(
       calculateStandbyPay(shift("TVOED_B", {}, { date: "2026-05-01" }), b, resolver),

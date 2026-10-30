@@ -66,6 +66,29 @@ const split = {
 };
 
 describe("special duty editor", () => {
+  it("retains actual calls when choosing the agreed callout settlement", async () => {
+    const initial = {
+      ...newSpecialDuty("ON_CALL", "08:00", "10:00", "Europe/Berlin"),
+      calloutsComplete: true,
+      callouts: [
+        {
+          kind: "REMOTE" as const,
+          start: 540,
+          end: 550,
+          departure: 540,
+          returned: 550,
+          breakMinutes: 0,
+        },
+      ],
+    };
+    const screen = await render(<Harness initial={initial} />);
+    await select(screen, "Abgeltung der Einsätze: Weiß ich noch nicht", "Freizeitausgleich");
+    expect(JSON.parse(screen.getByTestId("draft").props.children)).toEqual({
+      ...initial,
+      settlement: "TIME_OFF",
+    });
+    expect(screen.getByLabelText("Einsatz 1 entfernen")).toBeTruthy();
+  });
   it("retains the published versioned standby agreement through pause and form changes", async () => {
     const screen = await render(
       <Harness

@@ -8,6 +8,7 @@ import {
   setupTvlShiftWork,
   exportTvlBackup,
   validateTvlBackup,
+  resignTvlBackup,
 } from "./tvl-shift-work-test-fixtures";
 import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import { describe, expect, it } from "vitest";
@@ -17,8 +18,99 @@ import { listCalendarEntries, saveShift } from "./calendar-entry-repository";
 import { listTemplates, saveTemplate } from "./shift-template-repository";
 import { restoreLocalBackup } from "./local-backup-restore";
 import { quickEntryShiftInputFromTemplate } from "@/features/calendar/quick-entry-actions";
+import {
+  createDevBackupPayload,
+  parseDevBackupPayload,
+  type RawShiftRow,
+} from "./dev-backup-payload";
+import { snapshotDevRemuneration } from "./dev-remuneration-backup";
+import { snapshotDevTraining } from "./dev-training-backup";
 
 describe("special-duty storage", () => {
+  it("roundtrips an exact night break through SQLite, backup 24 and cloud; still reads backup 23", async () => {
+    const source = await setupTvlShiftWork();
+    const target = await setupTvlShiftWork();
+    try {
+      const oldFile = await exportTvlBackup(source);
+      await expect(
+        validateTvlBackup(
+          await resignTvlBackup(oldFile.serialized, (v) => {
+            v.version = 23;
+          }),
+        ),
+      ).resolves.toBeTruthy();
+      const duty = {
+        ...newSpecialDuty("STANDBY", "20:00", "08:00", "Europe/Berlin"),
+        version: 3 as const,
+        breakStart: 1470,
+        standbyAgreement: null,
+      };
+      const saved = await saveShift(source.db, {
+        ...source.shift,
+        expectedRevision: source.shift.revision,
+        startTime: "20:00",
+        endTime: "08:00",
+        breakMinutes: 30,
+        specialDuty: duty,
+      });
+      const cloud = makePrivateCloudDocument(await loadLocalBackupSnapshot(source.db), {
+        calendarImage: null,
+        calendarImageStrength: "medium",
+      });
+      const checked = await validatePrivateCloudDocument(
+        cloud,
+        LATEST_DATABASE_SCHEMA_VERSION,
+        tvlSha256,
+      );
+      expect(
+        JSON.parse(
+          checked.backup.document.data.shifts.find((row) => row.id === saved.id)!
+            .special_duty_json as string,
+        ),
+      ).toEqual(duty);
+      await expect(
+        validatePrivateCloudDocument(
+          { ...cloud, backupVersion: 23 },
+          LATEST_DATABASE_SCHEMA_VERSION,
+          tvlSha256,
+        ),
+      ).rejects.toThrow();
+      const file = await exportTvlBackup(source);
+      const dev = createDevBackupPayload(saved.date.slice(0, 7), {
+        shifts: await source.db.getAllAsync<RawShiftRow>(
+          "SELECT * FROM shift_entries WHERE id=?",
+          saved.id,
+        ),
+        appointments: [],
+        decision: null,
+        remuneration: await snapshotDevRemuneration(source.db, saved.date.slice(0, 7)),
+        training: await snapshotDevTraining(source.db, saved.date.slice(0, 7)),
+      });
+      expect(
+        JSON.parse(
+          parseDevBackupPayload(JSON.stringify(dev), saved.date.slice(0, 7)).shifts[0]
+            .special_duty_json!,
+        ),
+      ).toEqual(duty);
+      expect(() =>
+        parseDevBackupPayload(JSON.stringify({ ...dev, version: 17 }), saved.date.slice(0, 7)),
+      ).toThrow();
+      await expect(
+        validateTvlBackup(
+          await resignTvlBackup(file.serialized, (v) => {
+            v.version = 23;
+          }),
+        ),
+      ).rejects.toThrow();
+      await restoreLocalBackup(target.db, await validateTvlBackup(file.serialized));
+      expect(
+        (await listCalendarEntries(target.db)).find((row) => row.id === saved.id),
+      ).toMatchObject({ specialDuty: duty, breakMinutes: 30 });
+    } finally {
+      source.adapter.database.close();
+      target.adapter.database.close();
+    }
+  });
   it("roundtrips a dated standby agreement through backup 23 and cloud and clears copied ordinals", async () => {
     const source = await setupTvlShiftWork();
     const target = await setupTvlShiftWork();
@@ -48,7 +140,7 @@ describe("special-duty storage", () => {
         calendarImage: null,
         calendarImageStrength: "medium",
       });
-      expect(cloud.backupVersion).toBe(23);
+      expect(cloud.backupVersion).toBe(24);
       await validatePrivateCloudDocument(cloud, LATEST_DATABASE_SCHEMA_VERSION, tvlSha256);
       await expect(
         validatePrivateCloudDocument(
@@ -58,7 +150,7 @@ describe("special-duty storage", () => {
         ),
       ).rejects.toThrow();
       const file = await exportTvlBackup(source);
-      expect(file.document.version).toBe(23);
+      expect(file.document.version).toBe(24);
       await restoreLocalBackup(target.db, await validateTvlBackup(file.serialized));
       expect((await listCalendarEntries(target.db)).find((row) => row.id === saved.id)?.kind).toBe(
         "SHIFT",

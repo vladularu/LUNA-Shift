@@ -621,7 +621,8 @@ export function calculateMonthlyPayEstimate(
         sum +
         (line.baseAmountCents ?? 0) +
         (line.calloutPay?.baseAmountCents ?? 0) +
-        (line.calloutPay?.overtimePremiumCents ?? 0),
+        (line.calloutPay?.overtimePremiumCents ?? 0) +
+        (line.calloutPay?.timePremiumCents ?? 0),
       0,
     ) / 100;
   const result = { ...estimate, specialDutyBreakdowns, specialDutyAmount };

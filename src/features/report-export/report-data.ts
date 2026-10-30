@@ -59,6 +59,18 @@ function reportMonths(period: string): readonly string[] {
   );
 }
 
+/** Internal tax traces are calculation evidence, not user-facing report fields. */
+function reportPayrollValues(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(reportPayrollValues);
+  if (value !== null && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => key !== "payrollTrace" && key !== "payrollTraces")
+        .map(([key, item]) => [key, reportPayrollValues(item)]),
+    );
+  return value;
+}
+
 export function* buildReportSteps(input: ReportInput): Generator<void, ReportDocument, void> {
   const months = reportMonths(input.period);
   const annualPayments = annualSalaryForecast(
@@ -79,14 +91,20 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
   let availableNetMonthCount = 0;
   let annualNetCents = 0;
   const add = (section: string, period: string, record: string, data: unknown) =>
-    appendReportData(rows, section, period, record, data);
+    appendReportData(
+      rows,
+      section,
+      period,
+      record,
+      section === "Gehaltsprognose" ? reportPayrollValues(data) : data,
+    );
   add("Bericht", input.period, "Grundlagen", {
     createdAt: input.createdAt,
     referenceDate: input.referenceDate,
     testMonths: input.testMonths.filter((month) => months.includes(month)),
     youthProtection: input.youthProtection,
     reason:
-      "Gehaltsprognose: unverbindliche Brutto-/Nettoschätzung, keine Lohnabrechnung. Pausen werden mangels Lageangabe mittig angesetzt. Automatische Prüfhinweise sind keine Rechtsberatung.",
+      "Gehaltsprognose: unverbindliche Brutto-/Nettoschätzung, keine Lohnabrechnung. Bei regulären Diensten setzt die Prognose Pausen ohne Zeitangabe mittig an. Bei Bereitschaftsdiensten können weitere Pausenangaben nötig sein. Automatische Prüfhinweise sind keine Rechtsberatung.",
   });
   const {
     workingTimeTarget: _calculationInput,

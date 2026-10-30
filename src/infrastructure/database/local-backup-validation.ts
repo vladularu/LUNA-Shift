@@ -533,9 +533,11 @@ function validateTemplateRow(value: unknown): BackupRow {
 
 function upgradeDutyRow(value: unknown, version: number): unknown {
   if (version >= 22) {
-    if (version < 23 && value && typeof value === "object" && !Array.isArray(value)) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
       const json = (value as Record<string, unknown>).special_duty_json;
-      if (typeof json === "string" && JSON.parse(json)?.version === 2) return invalid();
+      const dutyVersion = typeof json === "string" ? JSON.parse(json)?.version : null;
+      if ((version < 23 && dutyVersion === 2) || (version < 24 && dutyVersion === 3))
+        return invalid();
     }
     return value;
   }
@@ -927,6 +929,7 @@ export async function validateLocalBackup(
       root.version !== 20 &&
       root.version !== 21 &&
       root.version !== 22 &&
+      root.version !== 23 &&
       root.version !== LOCAL_BACKUP_VERSION
     ) {
       return invalid("Diese Backup-Version wird von LUNA Shift nicht unterstützt.");

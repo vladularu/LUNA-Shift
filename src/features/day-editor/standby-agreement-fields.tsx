@@ -45,7 +45,7 @@ export function StandbyAgreementFields({
   const agreement = value.standbyAgreement ?? (tariff ? newStandbyAgreement(tariff) : null);
   const ownRate = agreement?.rateMode === "AGREED";
   const update = (next: StandbyAgreement) =>
-    onChange({ ...value, version: 2, standbyAgreement: next });
+    onChange({ ...value, version: value.version === 3 ? 3 : 2, standbyAgreement: next });
   const monthlySequence = tariff === "TVOED_B" || tariff === "TVL_43" || tariff === "TVH_43";
   return (
     <>

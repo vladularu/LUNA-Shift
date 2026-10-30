@@ -8,6 +8,8 @@ import { standbyHourlyRate } from "./standby-hourly-rate";
 import { standbyNormalFactor, dutyTariffFamily, DUTY_RULE_SOURCES } from "./special-duty-tariff";
 import { specialDutyWorkMinutes } from "./special-duty";
 import { getPublicHolidays } from "./holidays";
+import type { SfnTimeRange, SfnPremiumPayment } from "@/domain/net-pay-sfn";
+import { standbyPayrollTrace } from "./special-duty-payroll-trace";
 
 export function calculateStandbyPay(
   shift: ShiftEntry,
@@ -120,8 +122,22 @@ export function calculateStandbyPay(
     Number(start.epochMilliseconds),
     Number(end.epochMilliseconds),
   ]);
+  const pauseStart =
+    duty.breakStart != null && shift.breakMinutes > 0
+      ? Number(dutyInstant(shift.date, duty.breakStart, duty.timeZone).epochMilliseconds)
+      : null;
+  const pauseEnd = pauseStart === null ? null : pauseStart + shift.breakMinutes * 60000;
+  if (
+    pauseStart !== null &&
+    (pauseStart < Number(start.epochMilliseconds) || pauseEnd! > Number(end.epochMilliseconds))
+  )
+    return unknown("Prüfe den Beginn und die Dauer deiner Bereitschaftspause.");
+  if (pauseStart !== null) {
+    boundaries.add(pauseStart);
+    boundaries.add(pauseEnd!);
+  }
   for (let day = 0; day <= duty.endDay; day++) {
-    for (const hour of [0, 4, 6, family === "TVUK" ? 20 : 21, 24]) {
+    for (const hour of [0, 4, 6, 20, 21, 24]) {
       const at = Number(
         dutyInstant(shift.date, day * 1440 + hour * 60, duty.timeZone).epochMilliseconds,
       );
@@ -139,7 +155,14 @@ export function calculateStandbyPay(
     ),
   );
   const periodTypes = new Set<string>();
+  const periods: Record<"night" | "deepNight" | "holiday" | "sunday", SfnTimeRange[]> = {
+    night: [],
+    deepNight: [],
+    holiday: [],
+    sunday: [],
+  };
   for (let i = 1; i < points.length; i++) {
+    if (pauseStart !== null && points[i - 1] >= pauseStart && points[i] <= pauseEnd!) continue;
     const local = Temporal.Instant.fromEpochMilliseconds(points[i - 1]).toZonedDateTimeISO(
       duty.timeZone,
     );
@@ -158,8 +181,18 @@ export function calculateStandbyPay(
     if (inDeepNight) deepNight += minutes;
     if (onHoliday) holiday += minutes;
     if (onSunday) sunday += minutes;
+    const range = {
+      start: local.toString({ smallestUnit: "minute", timeZoneName: "never" }),
+      end: Temporal.Instant.fromEpochMilliseconds(points[i])
+        .toZonedDateTimeISO(duty.timeZone)
+        .toString({ smallestUnit: "minute", timeZoneName: "never" }),
+    };
+    if (inNight) periods.night.push(range);
+    if (inDeepNight) periods.deepNight.push(range);
+    if (onHoliday) periods.holiday.push(range);
+    if (onSunday) periods.sunday.push(range);
   }
-  if (shift.breakMinutes) {
+  if (shift.breakMinutes && pauseStart === null) {
     if (periodTypes.size !== 1)
       return unknown(
         "Für die Zuordnung zu Nacht-, Sonn- oder Feiertagszeiten fehlt die genaue Lage der Pause. Die Abrechnung bleibt noch offen.",
@@ -217,13 +250,41 @@ export function calculateStandbyPay(
     // TV-UK's additional fifteen night percentage points cannot be converted.
     cashAmountCents = family === "TVUK" ? amount(deepNight * factor, 0.15) : 0;
   }
-  const hasSfnCash =
-    duty.settlement === "PAY"
-      ? nightPremiumCents > 0 ||
-        holidayPremiumCents > 0 ||
-        sundayPremiumCents > 0 ||
-        ((family === "TVL_43" || family === "TVH_43") && holiday > 0)
-      : cashAmountCents > 0;
+  const payments: SfnPremiumPayment[] = [];
+  const payment = (
+    key: keyof typeof periods,
+    amountCents: number,
+    kind: SfnPremiumPayment["kind"],
+    category: SfnPremiumPayment["category"],
+  ) => {
+    if (amountCents > 0)
+      payments.push({
+        id: `${shift.id}:standby:${key}`,
+        kind,
+        category,
+        amountCents,
+        additionalToBasicPay: true,
+        periods: periods[key],
+      });
+  };
+  const deepNightCash = family === "TVUK" ? amount(deepNight * factor, 0.15) : 0;
+  if (duty.settlement === "PAY") {
+    payment("night", nightPremiumCents - deepNightCash, "NIGHT", "NIGHT");
+    payment("holiday", holidayPremiumCents, "DAY", "HOLIDAY");
+    payment("sunday", sundayPremiumCents, "DAY", "SUNDAY");
+  }
+  payment("deepNight", deepNightCash, "NIGHT", "NIGHT");
+  let payrollTrace: StandbyPay["payrollTrace"];
+  const notes: string[] = [];
+  if (payments.length) {
+    try {
+      payrollTrace = standbyPayrollTrace(shift, payments, work, resolver);
+    } catch {
+      notes.push(
+        "Für die steuerliche Zuschlagszuordnung fehlt die genaue Lage der Bereitschaftspause.",
+      );
+    }
+  }
   return {
     actualMinutes,
     weightedMinutes,
@@ -238,10 +299,7 @@ export function calculateStandbyPay(
     cashAmountCents,
     timeCreditMinutes,
     mandatoryRestMinutes,
-    notes: hasSfnCash
-      ? [
-          "Die Vergütung ist berechnet. Die steuerliche Behandlung der Nacht-, Sonn- oder Feiertagsanteile ist noch offen.",
-        ]
-      : [],
+    ...(payrollTrace ? { payrollTrace } : {}),
+    notes,
   };
 }

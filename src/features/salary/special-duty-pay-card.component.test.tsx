@@ -68,7 +68,7 @@ describe("special duty pay details", () => {
     expect(view.getByText(/Auszahlung Bereitschaftsdienst: 0,00/)).toBeTruthy();
     expect(view.getByText(/Geleistet: 480 Min.*Vergütung: 288 Min/)).toBeTruthy();
     expect(
-      view.getByText(/Vorgesehener Freizeitausgleich: 296 Min.*Noch nicht aufs Zeitkonto gebucht/),
+      view.getByText(/Geplante Zeitgutschrift: 296 Min.*Als Prognose aus deiner Abgeltung/),
     ).toBeTruthy();
     expect(view.queryByText(/Rufbereitschaftspauschale/)).toBeNull();
   });
@@ -91,8 +91,8 @@ describe("special duty pay details", () => {
       />,
     );
     expect(view.getByText(/Einsatzentgelt: 24,03.*6,50.*Überstundenzuschlag/)).toBeTruthy();
-    expect(view.getByText(/Tatsächlich: 25 Min.*Bezahlung: 60 Min/)).toBeTruthy();
-    expect(view.getByText(/Rundung erhöht nur die Bezahlung, nicht die Arbeitszeit/)).toBeTruthy();
+    expect(view.getByText(/Tatsächlich: 25 Min.*Tariflich bewertet: 60 Min/)).toBeTruthy();
+    expect(view.getByText(/Rundung verändert die erfasste Arbeitszeit nicht/)).toBeTruthy();
   });
   it("shows the calculated flat rate and its basis separately from working time", async () => {
     const view = await render(<SpecialDutyPayCard lines={[line]} />);
