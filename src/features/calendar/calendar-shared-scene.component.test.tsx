@@ -53,6 +53,7 @@ function Tree({
   showHolidays = true,
   dayDisplay = display,
   selectedDate = "2026-01-08",
+  headerOverlap = 0,
 }: {
   mode?: CalendarViewMode;
   entries?: CalendarEntry[];
@@ -64,6 +65,7 @@ function Tree({
   showHolidays?: boolean;
   dayDisplay?: typeof display;
   selectedDate?: string;
+  headerOverlap?: number;
 }) {
   return (
     <SharedCalendarScene
@@ -71,6 +73,7 @@ function Tree({
       viewMode={mode}
       active={active}
       bottomReserve={55}
+      headerOverlap={headerOverlap}
       onSelectMonth={onSelectMonth}
       onTransitionStart={onStart}
       onTransitionComplete={onComplete}
@@ -93,6 +96,17 @@ function Tree({
     </SharedCalendarScene>
   );
 }
+it("waits for a measured page width before fitting the month title", async () => {
+  const screen = await render(<Tree headerOverlap={96} />);
+  expect(screen.queryByTestId("calendar-month-title-2026-01")).toBeNull();
+  await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+    nativeEvent: { layout: { width: 430, height: 700 } },
+  });
+  expect(screen.getByTestId("calendar-month-title-2026-01")).toBeTruthy();
+  await screen.rerender(<Tree headerOverlap={120} />);
+  expect(screen.getByTestId("calendar-month-title-2026-01")).toBeTruthy();
+});
+
 function BackgroundTree({
   uri,
   mode = "MONTH",

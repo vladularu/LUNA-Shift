@@ -159,6 +159,9 @@ function Harness() {
 describe("permanent calendar slots with the real shared scene", () => {
   it("keeps each title inside its date page during partial swipes, reversal and Today", async () => {
     const screen = await render(<Harness />);
+    await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+      nativeEvent: { layout: { width: 430, height: 700 } },
+    });
     const pager = screen.getByTestId("calendar-month-pager");
     const september = screen.getByTestId("shared-month-2026-09");
     const title = within(september).getByRole("header", { name: "September" });
@@ -289,6 +292,8 @@ describe("permanent calendar slots with the real shared scene", () => {
   it("accepts five consecutive swipes and immediate reversal without recenter events", async () => {
     const screen = await render(<Harness />);
     const pager = screen.getByTestId("calendar-month-pager");
+    const heading = screen.getByTestId("heading");
+    const page = within(pager);
     const months = createMonthWindow("2026-09", 24, 36);
     for (const index of [25, 26, 27, 28, 29, 28, 27, 26, 25, 24]) {
       expect(pager.props.scrollEnabled).toBe(true);
@@ -296,10 +301,10 @@ describe("permanent calendar slots with the real shared scene", () => {
       await fireEvent(pager, "momentumScrollEnd", {
         nativeEvent: { contentOffset: { x: 0, y: index * 700 } },
       });
-      expect(screen.getByTestId("heading")).toHaveTextContent(`MONTH:${months[index]}`);
+      expect(heading).toHaveTextContent(`MONTH:${months[index]}`);
       expect(pager.props.scrollEnabled).toBe(true);
       expect(
-        within(screen.getByTestId("calendar-slot-0")).getByTestId(`shared-month-${months[index]}`),
+        within(page.getByTestId("calendar-slot-0")).getByTestId(`shared-month-${months[index]}`),
       ).toBeTruthy();
       expect(
         screen.getAllByTestId(/calendar-slot-/, { includeHiddenElements: true }).length,

@@ -28,22 +28,23 @@ describe("month page title", () => {
       opacity: 0,
     });
   });
-  it.each([1, 1.4, 2])(
-    "preserves the existing header typography at font scale %s",
+  it.each([0.823, 0.882, 0.941, 1, 1.4, 2])(
+    "lets the native large-title line determine its height at font scale %s",
     async (fontScale) => {
       jest
         .spyOn(
           jest.requireActual<typeof import("react-native")>("react-native"),
           "useWindowDimensions",
         )
-        .mockReturnValue({ width: 430, height: 932, scale: 3, fontScale });
+        .mockReturnValue({ width: 393, height: 852, scale: 3, fontScale });
       const screen = await render(
         <CalendarMonthTitle month="2027-01" referenceMonth="2026-10" accessible />,
       );
       const title = screen.getByRole("header", { name: "Januar 2027" });
-      expect(title).toHaveStyle({ height: Math.ceil(41 * fontScale) });
+      expect(title).toHaveStyle({ height: undefined, minHeight: Math.ceil(41 * fontScale) });
       expect(title.props.maxFontSizeMultiplier).toBe(0);
       expect(title.props.numberOfLines).toBe(1);
+      expect(title.props.minimumFontScale).toBeGreaterThanOrEqual(0.75);
     },
   );
 });
