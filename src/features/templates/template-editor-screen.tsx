@@ -443,13 +443,15 @@ function TemplateEditorForm({
       <Stack.Screen
         options={{
           title: existing ? "Dienstvorlage" : "Neue Dienstvorlage",
-          headerRight: createsCalendarEntry
-            ? undefined
-            : () => (
-                <HeaderSaveAction busy={saving} label="Speichern" onPress={() => void submit()} />
-              ),
         }}
       />
+      {!createsCalendarEntry ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.View hidesSharedBackground>
+            <HeaderSaveAction busy={saving} label="Speichern" onPress={() => void submit()} />
+          </Stack.Toolbar.View>
+        </Stack.Toolbar>
+      ) : null}
 
       <SurfaceCard>
         <CompactInputRow

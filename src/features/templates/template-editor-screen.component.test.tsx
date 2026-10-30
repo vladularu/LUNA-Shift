@@ -20,8 +20,10 @@ let mockProfile: UserProfile | null = null;
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), dismiss: jest.fn(), push: jest.fn() },
   Stack: {
-    Screen: ({ options }: { options: { headerRight?: () => ReactNode } }) =>
-      options.headerRight?.() ?? null,
+    Screen: () => null,
+    Toolbar: Object.assign(({ children }: { children: ReactNode }) => children, {
+      View: ({ children }: { children: ReactNode }) => children,
+    }),
   },
   useFocusEffect: (effect: () => void) => effect(),
   useLocalSearchParams: () => mockParams,
