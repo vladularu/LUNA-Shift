@@ -747,6 +747,7 @@ describe("SQLite repository", () => {
       showAppointments: false,
       showHolidays: false,
       holidayColor: "BLUE",
+      pastelColors: true,
       labelMode: SHORT_LABEL_MODE,
       showShiftTimes: true,
       showShiftDuration: true,
@@ -757,6 +758,7 @@ describe("SQLite repository", () => {
       showAppointments: false,
       showHolidays: false,
       holidayColor: "BLUE",
+      pastelColors: true,
       labelMode: "SHORT",
       showShiftTimes: true,
       showShiftDuration: true,
@@ -768,6 +770,7 @@ describe("SQLite repository", () => {
       showAppointments: true,
       showHolidays: true,
       holidayColor: "RED",
+      pastelColors: false,
       labelMode: "SYMBOL",
       showShiftTimes: false,
       showShiftDuration: false,
@@ -775,6 +778,22 @@ describe("SQLite repository", () => {
     expect(await loadCalendarPreferences(db)).toMatchObject({
       labelMode: "SYMBOL",
     });
+  });
+
+  it("defaults old or malformed pastel preferences to vivid and persists either choice", async () => {
+    expect((await loadCalendarPreferences(db)).pastelColors).toBe(false);
+    await db.runAsync(
+      "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)",
+      "calendar_pastel_colors",
+      "invalid",
+      new Date().toISOString(),
+    );
+    expect((await loadCalendarPreferences(db)).pastelColors).toBe(false);
+    const original = await loadCalendarPreferences(db);
+    await saveCalendarPreferences(db, { ...original, pastelColors: true });
+    expect((await loadCalendarPreferences(db)).pastelColors).toBe(true);
+    await saveCalendarPreferences(db, { ...original, pastelColors: false });
+    expect((await loadCalendarPreferences(db)).pastelColors).toBe(false);
   });
 
   it("defaults missing or unsupported holiday colors without touching other preferences", async () => {
@@ -807,6 +826,7 @@ describe("SQLite repository", () => {
         showAppointments: false,
         showHolidays: false,
         holidayColor: "BLUE",
+        pastelColors: true,
         labelMode: "SYMBOL",
         showShiftTimes: true,
         showShiftDuration: true,

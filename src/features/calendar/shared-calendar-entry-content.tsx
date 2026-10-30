@@ -19,7 +19,11 @@ export function SharedCalendarEntryContent({
   readonly lineHeight: number;
 }) {
   const palette = usePalette();
-  const colors = sharedCalendarChipPalette(row.entry.color, palette.dark);
+  const colors = sharedCalendarChipPalette(
+    row.entry.color,
+    palette.dark,
+    row.entry.kind !== "APPOINTMENT" && display.pastelColors,
+  );
   const detail = sharedShiftDetail(row.entry, row.when.split("–")[0], display);
   const textStyle = {
     height: lineHeight,

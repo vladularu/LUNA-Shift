@@ -58,6 +58,7 @@ type SharedCalendarSceneProps = {
   controller?: CalendarController;
   referenceMonth?: string;
   entriesByDate?: ReadonlyMap<string, readonly CalendarEntry[]>;
+  pastelColors?: boolean;
 };
 
 export function SharedCalendarScene(props: SharedCalendarSceneProps) {
@@ -88,6 +89,7 @@ function CalendarSceneContent({
   controller,
   referenceMonth,
   entriesByDate,
+  pastelColors = false,
 }: SharedCalendarSceneProps & { controller: CalendarController }) {
   const { month, mode: viewMode, progress, busy, yearVisible } = controller;
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -139,6 +141,7 @@ function CalendarSceneContent({
           progress={progress}
           referenceMonth={referenceMonth}
           entriesByDate={entriesByDate}
+          pastelColors={pastelColors}
         />
         <View
           style={styles.fill}

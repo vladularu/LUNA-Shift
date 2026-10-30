@@ -140,6 +140,85 @@ function BackgroundTree({
 }
 
 describe("shared live calendar scene", () => {
+  it.each([false, true])(
+    "updates reused real month pages when pastel mode changes, dark=%s",
+    async (dark) => {
+      const scheme = jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const shift: import("@/domain/types").ShiftEntry = {
+        ...appointment,
+        kind: "SHIFT",
+        type: "EARLY",
+        title: "Früh",
+        templateId: null,
+        startTime: "06:00",
+        endTime: "14:00",
+        allDay: false,
+        breakMinutes: 30,
+        symbol: "sunrise",
+        color: "#4FCB68",
+        overtimeMinutes: 0,
+        holidayPremiumMode: "WITH_TIME_OFF",
+      };
+      const options = {
+        entriesByDate: new Map([["2026-01-08", [shift]]]),
+        display,
+        profile,
+        ruleResolver: bundledRuleResolver,
+        onSelectDate,
+        pageHeight: 700,
+        selectedDate: null,
+        showHolidays: true,
+        stampMode: false,
+        isFocused: true,
+        visibleMonth: "2026-01",
+        testMonths: [],
+      };
+      const hook = await renderHook(
+        ({ pastelColors, color }: { pastelColors: boolean; color: string }) =>
+          useCalendarMonthRenderer({
+            ...options,
+            entriesByDate:
+              color === shift.color
+                ? options.entriesByDate
+                : new Map([[shift.date, [{ ...shift, color }]]]),
+            display: { ...display, pastelColors },
+          }),
+        { initialProps: { pastelColors: false, color: shift.color } },
+      );
+      const tree = () => (
+        <SharedCalendarScene
+          month="2026-01"
+          viewMode="MONTH"
+          active
+          bottomReserve={55}
+          onSelectMonth={onSelectMonth}
+        >
+          {hook.result.current("2026-01")}
+        </SharedCalendarScene>
+      );
+      const screen = await render(tree());
+      await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+        nativeEvent: { layout: { width: 390, height: 755, x: 0, y: 0 } },
+      });
+      const title = () => screen.getByText("Früh", { includeHiddenElements: true });
+      expect(title().parent).toHaveStyle({ backgroundColor: "#4FCB68" });
+      await hook.rerender({ pastelColors: true, color: shift.color });
+      expect(hook.result.current("2026-01")?.props.display.pastelColors).toBe(true);
+      await screen.rerender(tree());
+      expect(title().parent).toHaveStyle({ backgroundColor: "#DDF4E2" });
+      await hook.rerender({ pastelColors: true, color: "#123456" });
+      await screen.rerender(tree());
+      expect(title().parent).toHaveStyle({ backgroundColor: "#E1E6EA" });
+      await hook.rerender({ pastelColors: false, color: "#123456" });
+      await screen.rerender(tree());
+      expect(title().parent).toHaveStyle({ backgroundColor: "#123456" });
+      expect(shift.color).toBe("#4FCB68");
+      scheme.mockRestore();
+    },
+  );
+
   it("refreshes the live month renderer when only the holiday color changes", async () => {
     const options = {
       entriesByDate: new Map(),

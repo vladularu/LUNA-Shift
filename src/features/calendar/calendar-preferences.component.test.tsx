@@ -15,6 +15,7 @@ const mockDefaults: CalendarPreferencesData = {
   showAppointments: true,
   showHolidays: true,
   holidayColor: "ORANGE",
+  pastelColors: false,
   labelMode: "FULL",
   showShiftTimes: false,
   showShiftDuration: false,
@@ -48,6 +49,7 @@ function PreferencesHarness() {
           showAppointments: preferences.showAppointments,
           showHolidays: preferences.showHolidays,
           holidayColor: preferences.holidayColor,
+          pastelColors: preferences.pastelColors,
           labelMode: preferences.labelMode,
           showShiftTimes: preferences.showShiftTimes,
           showShiftDuration: preferences.showShiftDuration,
@@ -65,6 +67,11 @@ function PreferencesHarness() {
         onPress={() => preferences.setShowShifts(false)}
       />
       <Text>{preferences.error ?? "OK"}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Pastellfarben wählen"
+        onPress={() => preferences.setPastelColors(true)}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Blau wählen"
@@ -89,6 +96,37 @@ describe("CalendarPreferencesProvider", () => {
     mockLoadCalendarPreferences.mockReset();
     mockSaveCalendarPreferences.mockReset();
     mockLoadCalendarPreferences.mockResolvedValue(mockDefaults);
+  });
+
+  it("persists pastel selection across restart and resets it with the display options", async () => {
+    mockSaveCalendarPreferences.mockImplementation(async (_db, snapshot) => {
+      mockLoadCalendarPreferences.mockResolvedValue(snapshot);
+    });
+    const content = (
+      <CalendarPreferencesProvider>
+        <PreferencesHarness />
+      </CalendarPreferencesProvider>
+    );
+    const screen = await render(content);
+    await waitFor(() => expect(screen.getByText("READY")).toBeTruthy());
+    await fireEvent.press(screen.getByRole("button", { name: "Pastellfarben wählen" }));
+    await waitFor(() =>
+      expect(mockSaveCalendarPreferences).toHaveBeenLastCalledWith(
+        mockDatabase,
+        expect.objectContaining({ pastelColors: true }),
+      ),
+    );
+    await screen.unmount();
+    const restarted = await render(content);
+    await waitFor(() => expect(restarted.getByText("READY")).toBeTruthy());
+    expect(JSON.parse(restarted.getByTestId("snapshot").props.children).pastelColors).toBe(true);
+    await fireEvent.press(restarted.getByRole("button", { name: "Anzeige zurücksetzen" }));
+    await waitFor(() =>
+      expect(mockSaveCalendarPreferences).toHaveBeenLastCalledWith(
+        mockDatabase,
+        expect.objectContaining({ pastelColors: false }),
+      ),
+    );
   });
 
   it("saves the selected holiday color and restores it after restart", async () => {
@@ -181,6 +219,7 @@ describe("CalendarPreferencesProvider", () => {
       showAppointments: false,
       showHolidays: true,
       holidayColor: "RED",
+      pastelColors: true,
       labelMode: "SYMBOL",
       showShiftTimes: true,
       showShiftDuration: true,
