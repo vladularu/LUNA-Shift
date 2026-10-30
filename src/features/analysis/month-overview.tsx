@@ -184,7 +184,8 @@ export function MonthOverview({
               estimate
                 ? estimate.allowanceAmount +
                   estimate.tvoedAllowanceAmount +
-                  estimate.careAllowanceAmount
+                  estimate.careAllowanceAmount +
+                  (estimate.specialDutyAmount ?? 0)
                 : undefined
             }
             gross={

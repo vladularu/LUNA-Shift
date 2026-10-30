@@ -40,6 +40,12 @@ Mehr als 15 Dateien werden erwartet, daher getrennte Pakete: (1) Editor-Auswahl 
 
 Abnahme: Freizeitausgleich blendet das Verfahren unmittelbar ein, ohne Abrechnung öffnen zu müssen. Ein bewusst gewähltes Verfahren bleibt bei Auszahlung/Freizeit-Wechsel und erneutem Öffnen erhalten. Fehlende Angaben werden nicht als Null oder vollständige Prognose ausgegeben. Ein offener Dienst ist aus der Zeitkarte direkt erreichbar; bei mehreren offenen Diensten öffnet sich deren Übersicht. Die ursprüngliche Tagesberechnung und normale Dienste bleiben unverändert.
 
+## Geräteabnahme und Abschluss der Monatszusammenfassung
+
+Der Nutzer bestätigte für die Preview f4b95619 am 30.10.2026: Auswahl direkt sichtbar und Gehalt/Zeitkonto nach bewusst gewähltem Verfahren wieder berechnet. Das iPhone-Foto zeigt 71:06 h erfasst, 69:13:30 h Kontozeit und -77:04:30 h Saldo. Diese Abnahme gilt für den beschriebenen Freizeitausgleichsfluss; sie ist keine pauschale Bestätigung weiterer Geräte- oder Tarifkonstellationen.
+
+Im Abschlussfoto fehlen die bereits im Brutto enthaltenen 24,35 Euro Rufbereitschaft in der Zeile Weitere Zulagen. Scope der abschließenden Korrektur: month-overview.tsx, dessen vorhandener Integrationstest und diese Dokumentation. Die Zeile umfasst künftig auch den bereits berechneten specialDutyAmount. Die gezeigte Summe steigt von 416,82 auf 441,17 Euro; Brutto 4.684,09 Euro, Netto und Zeitkonto ändern sich durch diese reine Zusammenfassung nicht. Keine neue Karte, kein Layout-, Tarif-, Datenmodell- oder Native-Eingriff. Prüfung mit Pauschale, Pauschale plus Bereitschaftsauszahlung und ohne Sondervergütung; bestehende Freigaben für Git-Abschluss und Preview-OTA gelten.
+
 ## Rechtsquellen
 
 - [§3b EStG](https://www.gesetze-im-internet.de/estg/__3b.html) und [§1 SvEV](https://www.gesetze-im-internet.de/svev/__1.html).
