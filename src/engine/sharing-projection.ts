@@ -1,3 +1,5 @@
+import { DUTY_LABELS } from "@/domain/special-duty";
+import { projectDutyWork } from "./special-duty";
 import { Temporal } from "@js-temporal/polyfill";
 import type { CalendarEntry, ShiftType } from "@/domain/types";
 import type { CalendarSharingVisibility, SharedCalendarEntry } from "@/domain/calendar-sharing";
@@ -26,6 +28,16 @@ export function projectSharingEntries(
   entries: readonly CalendarEntry[],
   options: SharingProjectionOptions,
 ): readonly SharedCalendarEntry[] {
+  entries = entries.flatMap((entry): CalendarEntry[] => {
+    if (entry.kind !== "SHIFT" || !entry.specialDuty) return [entry];
+    if (entry.specialDuty.kind === "SPLIT")
+      return projectDutyWork(entry).map((part, index) => ({
+        ...part,
+        id: index === 0 ? entry.id : `${entry.id}:part:${index}`,
+        title: "Geteilter Dienst",
+      }));
+    return [{ ...entry, title: DUTY_LABELS[entry.specialDuty.kind] }];
+  });
   const selected = new Set(options.selectedAppointmentIds ?? []);
   const result: SharedCalendarEntry[] = [];
   for (const entry of entries) {

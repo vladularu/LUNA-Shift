@@ -53,7 +53,8 @@ export function resolveShiftTypePreset(
   templates: readonly ShiftTemplate[],
 ): ShiftTypePreset {
   const template = templates.find(
-    (candidate) => candidate.deletedAt === null && candidate.type === type,
+    (candidate) =>
+      candidate.deletedAt === null && candidate.type === type && !candidate.specialDuty,
   );
   if (template) {
     return {

@@ -67,7 +67,7 @@ describe("monthly net-pay profile backup compatibility", () => {
 
   it("exports v20 and restores all profile fields, revisions and timestamps", async () => {
     const exported = await exportTvlBackup(source);
-    expect(LOCAL_BACKUP_VERSION).toBe(21);
+    expect(LOCAL_BACKUP_VERSION).toBe(23);
     expect(exported.document.databaseSchemaVersion).toBe(LATEST_DATABASE_SCHEMA_VERSION);
     expect(exported.document.data.netPayProfiles).toHaveLength(2);
     const original = await loadMonthlyNetPaySettings(source.db, "2026-09");

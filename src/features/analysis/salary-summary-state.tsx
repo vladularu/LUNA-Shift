@@ -30,7 +30,7 @@ export function salarySummaryPresentation(
   if (!pay.available) {
     return {
       value: "Nicht verfügbar",
-      visibleSummary: "Für diesen Monat fehlen Tarifdaten",
+      visibleSummary: pay.specialDutyNotes?.join(" ") ?? "Für diesen Monat fehlen Tarifdaten",
     };
   }
   return { value: formatEuro(pay.estimatedGrossAmount), visibleSummary: undefined };

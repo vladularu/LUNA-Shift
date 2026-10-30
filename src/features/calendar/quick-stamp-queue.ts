@@ -1,3 +1,4 @@
+import { plannedSpecialDuty } from "@/domain/special-duty";
 import type { CalendarEntry, ShiftEntry, SaveShiftInput } from "@/domain/types";
 import {
   matchingQuickEntries,
@@ -126,6 +127,7 @@ export function createQuickStampQueue(port: {
         templateId: action.template.id,
         title: action.template.name,
         type: action.template.type,
+        specialDuty: plannedSpecialDuty(action.template.specialDuty),
         startTime: action.template.startTime,
         endTime: action.template.endTime,
         breakMinutes: action.template.breakMinutes,

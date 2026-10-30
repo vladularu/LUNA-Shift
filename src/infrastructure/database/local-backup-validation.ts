@@ -1,3 +1,4 @@
+import { validateSpecialDuty } from "@/domain/special-duty";
 import { TVAL_PFLEGE_PREFERENCE_KEY, requireTvalPflegeTariff } from "@/domain/tval-pflege-tariff";
 import { TVH_KR_PREFERENCE_KEY, requireTvhKrTariff } from "@/domain/tvh-kr-tariff";
 import { mapWorkingTimeTargetRow } from "./working-time-target-repository";
@@ -139,6 +140,7 @@ const LEGACY_PROFILE_COLUMNS = [
 export const PROFILE_COLUMNS = [...LEGACY_PROFILE_COLUMNS, ...PROFILE_IDENTITY_COLUMNS] as const;
 
 export const TEMPLATE_COLUMNS = [
+  "special_duty_json",
   "id",
   "name",
   "type",
@@ -158,6 +160,7 @@ export const TEMPLATE_COLUMNS = [
 ] as const;
 
 export const SHIFT_COLUMNS = [
+  "special_duty_json",
   "id",
   "date",
   "template_id",
@@ -495,6 +498,7 @@ function validateTemplateRow(value: unknown): BackupRow {
   const symbol = stringValue(row, "symbol");
   const sortOrder = integerValue(row, "sort_order");
   const validated = validateTemplate({
+    specialDuty: specialDutyValue(row),
     id,
     name,
     type,
@@ -525,6 +529,29 @@ function validateTemplateRow(value: unknown): BackupRow {
   instantValue(row, "updated_at");
   nullableInstantValue(row, "deleted_at");
   return frozenBackupRow(row);
+}
+
+function upgradeDutyRow(value: unknown, version: number): unknown {
+  if (version >= 22) {
+    if (version < 23 && value && typeof value === "object" && !Array.isArray(value)) {
+      const json = (value as Record<string, unknown>).special_duty_json;
+      if (typeof json === "string" && JSON.parse(json)?.version === 2) return invalid();
+    }
+    return value;
+  }
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    ("special_duty_json" in value && value.special_duty_json !== null)
+  )
+    return invalid();
+  return { ...value, special_duty_json: null };
+}
+
+function specialDutyValue(row: Record<string, unknown>) {
+  const json = nullableStringValue(row, "special_duty_json");
+  return validateSpecialDuty(json === null ? null : JSON.parse(json));
 }
 
 function validateShiftRow(value: unknown): BackupRow {
@@ -565,6 +592,7 @@ function validateShiftRow(value: unknown): BackupRow {
     overtimeMinutes,
     tariffOvertimeConfirmed,
     holidayPremiumMode: holidayPremiumMode as never,
+    specialDuty: specialDutyValue(row),
   });
   if (
     validated.date !== date ||
@@ -897,6 +925,8 @@ export async function validateLocalBackup(
       root.version !== 18 &&
       root.version !== 19 &&
       root.version !== 20 &&
+      root.version !== 21 &&
+      root.version !== 22 &&
       root.version !== LOCAL_BACKUP_VERSION
     ) {
       return invalid("Diese Backup-Version wird von LUNA Shift nicht unterstützt.");
@@ -912,6 +942,7 @@ export async function validateLocalBackup(
       return invalid("Das Backup stammt aus einer neueren LUNA-Shift-Version.");
     }
 
+    if (root.version >= 22 && (databaseSchemaVersion as number) < 35) return invalid();
     if (root.version >= 2 && (databaseSchemaVersion as number) < 14) return invalid();
     const data = exactRecord(root.data, [
       ...DATA_KEYS,
@@ -979,8 +1010,16 @@ export async function validateLocalBackup(
       remunerationProfiles.filter((row) => row.effective_from !== null),
       "effective_from",
     );
-    const templates = Object.freeze(asArray(data.templates).map(validateTemplateRow));
-    const shifts = Object.freeze(asArray(data.shifts).map(validateShiftRow));
+    const templates = Object.freeze(
+      asArray(data.templates).map((row) =>
+        validateTemplateRow(upgradeDutyRow(row, root.version as number)),
+      ),
+    );
+    const shifts = Object.freeze(
+      asArray(data.shifts).map((row) =>
+        validateShiftRow(upgradeDutyRow(row, root.version as number)),
+      ),
+    );
     const appointments = Object.freeze(asArray(data.appointments).map(validateAppointmentRow));
     const monthlyTariffDecisions = Object.freeze(
       asArray(data.monthlyTariffDecisions).map(validateTariffDecisionRow),
@@ -1532,7 +1571,7 @@ export async function validateLocalBackup(
       appVersion: document.appVersion,
       databaseSchemaVersion: document.databaseSchemaVersion,
       data: Object.fromEntries(
-        Object.entries(document.data).filter(
+        Object.entries({ ...document.data, templates: data.templates, shifts: data.shifts }).filter(
           ([key]) =>
             !(document.version < 2 && key === "remunerationProfiles") &&
             !(document.version < 3 && key === "allowanceDecisions") &&

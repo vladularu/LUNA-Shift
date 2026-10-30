@@ -276,3 +276,51 @@ export function calculateTvlKrMonth(
     confirmedAllowance: options.confirmedAllowance ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getTvlDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const selected = profile.tvlKrTariff;
+  const ctx = selected
+    ? context(
+        date,
+        { payGroup: selected.payGroup, payLevel: selected.payLevel },
+        selected.universityRegion,
+        profile.weeklyMinutes,
+        resolver,
+      )
+    : null;
+  return ctx
+    ? roundRemunerationCents(
+        ctx.monthly * 60000,
+        ctx.fullTime * ctx.policy.monthlyFactorThousandths,
+      )
+    : null;
+}
+
+export function getTvlDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const selected = profile.tvlKrTariff;
+  const ctx = selected
+    ? context(
+        date,
+        { payGroup: selected.payGroup, payLevel: selected.payLevel },
+        selected.universityRegion,
+        profile.weeklyMinutes,
+        resolver,
+      )
+    : null;
+  return ctx
+    ? {
+        baseHourlyCents: ctx.overtimeHourlyCents,
+        premiumHourlyCents: ctx.premiumHourlyCents,
+        premiumBasisPoints: ctx.overtimeBasisPoints,
+      }
+    : null;
+}

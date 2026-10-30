@@ -1,3 +1,4 @@
+import { plannedSpecialDuty } from "@/domain/special-duty";
 import { type SaveShiftInput, type ShiftEntry, type ShiftTemplate } from "@/domain/types";
 
 export interface QuickEntryStampAction {
@@ -103,6 +104,7 @@ export function quickEntryShiftInputFromTemplate(
     title: template.name,
     type: template.type,
     allDay: template.allDay,
+    ...(template.specialDuty ? { specialDuty: plannedSpecialDuty(template.specialDuty) } : {}),
     startTime: template.startTime,
     endTime: template.endTime,
     breakMinutes: template.breakMinutes,

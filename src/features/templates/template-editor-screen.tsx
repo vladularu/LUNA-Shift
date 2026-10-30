@@ -1,3 +1,5 @@
+import { SpecialDutyFields } from "@/features/day-editor/special-duty-fields";
+import { plannedSpecialDuty, type SpecialDuty } from "@/domain/special-duty";
 import { SelectionChip } from "@/ui/selection-option";
 import { Text, TextInput } from "@/ui/text";
 import Ionicons from "@/ui/icon";
@@ -349,6 +351,7 @@ function TemplateEditorForm({
   const [name, setName] = useState(existing?.name ?? "Neuer Dienst");
   const [type, setType] = useState<ShiftType>(existing?.type ?? "CUSTOM");
   const [allDay, setAllDay] = useState(existing?.allDay ?? false);
+  const [specialDuty, setSpecialDuty] = useState<SpecialDuty | null>(existing?.specialDuty ?? null);
   const [startTime, setStartTime] = useState(existing?.startTime ?? "08:00");
   const [endTime, setEndTime] = useState(existing?.endTime ?? "16:00");
   const [breakMinutes, setBreakMinutes] = useState(String(existing?.breakMinutes ?? 30));
@@ -455,6 +458,7 @@ function TemplateEditorForm({
           name,
           type,
           allDay: absence || allDay,
+          specialDuty: absence || allDay ? null : plannedSpecialDuty(specialDuty),
           startTime: absence ? null : startTime,
           endTime: absence ? null : endTime,
           breakMinutes: absence ? 0 : Number(breakMinutes),
@@ -666,6 +670,19 @@ function TemplateEditorForm({
       </View>
 
       <View style={{ gap: SPACING.md }}>
+        {!absence && !allDay && type !== "TRAINING" ? (
+          <SpecialDutyFields
+            template
+            value={specialDuty}
+            startTime={startTime}
+            endTime={endTime}
+            timeZone="Europe/Berlin"
+            onChange={(next) => {
+              setSpecialDuty(next);
+              if (next?.kind === "ON_CALL") setBreakMinutes("0");
+            }}
+          />
+        ) : null}
         {!absence && !allDay ? (
           <CompactPausePicker onChange={setBreakMinutes} value={breakMinutes} />
         ) : null}

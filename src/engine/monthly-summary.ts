@@ -1,3 +1,4 @@
+import { projectDutyCalendarDays, specialDutyOpenItems } from "./special-duty";
 import type {
   MonthlySummary,
   MonthlySummaryCategory,
@@ -61,12 +62,26 @@ export function* calculateMonthlySummarySteps(
   MonthlySummary & { readonly targetCalculation?: MonthlyWorkingTimeTarget },
   void
 > {
+  const specialDutyNotes = specialDutyOpenItems(
+    entries.filter(
+      (entry) =>
+        !(
+          entry.specialDuty?.kind === "ON_CALL" &&
+          entry.specialDuty.calloutsComplete &&
+          entry.specialDuty.callouts.length === 0 &&
+          entry.specialDuty.settlement !== "TIME_OFF"
+        ),
+    ),
+    month,
+  );
+  entries = projectDutyCalendarDays(entries);
   const work = category();
   const training = category();
   const vacation = category();
   const sick = category();
   const free = category();
   const entriesByDate = new Map<string, ShiftEntry[]>();
+  const counted = new Set<string>();
 
   for (const entry of entries) {
     if (!entry.date.startsWith(`${month}-`) || entry.deletedAt !== null) {
@@ -76,6 +91,8 @@ export function* calculateMonthlySummarySteps(
     const dayEntries = entriesByDate.get(entry.date) ?? [];
     dayEntries.push(entry);
     entriesByDate.set(entry.date, dayEntries);
+    if (counted.has(entry.id)) continue;
+    counted.add(entry.id);
     if (entry.type === "FREE") free.entryCount += 1;
     else if (entry.type === "VACATION") vacation.entryCount += 1;
     else if (entry.type === "SICK") sick.entryCount += 1;
@@ -105,6 +122,7 @@ export function* calculateMonthlySummarySteps(
 
   return Object.freeze({
     month,
+    ...(specialDutyNotes.length ? { specialDutyNotes } : {}),
     targetMinutes,
     ...(targetContext === undefined && !profile.workingTimeTarget ? {} : { targetCalculation }),
     actualMinutes,

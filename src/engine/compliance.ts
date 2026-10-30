@@ -1,3 +1,5 @@
+import { specialDutyComplianceIssues } from "./special-duty-compliance";
+import { projectDutyShifts } from "./special-duty";
 import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
 import { Temporal } from "@js-temporal/polyfill";
 import { finishMonthlyCompliance } from "./compliance-result";
@@ -602,6 +604,8 @@ function* calculateMonthlyComplianceCoreSteps(
   timeZone: string,
   options: ComplianceOptions = {},
 ): Generator<number, MonthlyComplianceResult, void> {
+  const dutyIssues = specialDutyComplianceIssues(shifts, month);
+  shifts = projectDutyShifts(shifts);
   const ruleResolver = options.ruleResolver ?? bundledRuleResolver;
   const referenceDate = Temporal.PlainDate.from(
     options.referenceDate ?? Temporal.Now.plainDateISO(timeZone).toString(),
@@ -661,6 +665,7 @@ function* calculateMonthlyComplianceCoreSteps(
   );
   if (options.youthProtection === true) {
     return calculateSimpleYouthCompliance(month, intervals, options, [
+      ...dutyIssues,
       ...checkDuplicates(assessmentIntervals),
       ...checkOverlaps(assessmentIntervals),
       ...checkPlanningSeries(assessmentIntervals, rules),
@@ -669,7 +674,7 @@ function* calculateMonthlyComplianceCoreSteps(
   if (shifts.length === 0) {
     // No duty-dependent finding is possible without any entry in the entire loaded horizon.
     // Catalog coverage and calendar-year notices still use the authoritative helper.
-    const issues = checkEvidenceCompleteness(month, [], options, rules);
+    const issues = [...dutyIssues, ...checkEvidenceCompleteness(month, [], options, rules)];
     issues.push(
       ...(yield* checkSundayHolidayRestIncrementally(
         month,
@@ -704,7 +709,7 @@ function* calculateMonthlyComplianceCoreSteps(
     yield step.value;
   }
   yield 1;
-  const issues: ComplianceIssue[] = [];
+  const issues: ComplianceIssue[] = [...dutyIssues];
   issues.push(
     ...checkEvidenceCompleteness(
       month,

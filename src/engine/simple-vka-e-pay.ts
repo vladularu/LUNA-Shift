@@ -465,3 +465,31 @@ export function calculateVkaEMonth(
     confirmedAllowance: decision?.allowanceStatus ?? null,
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getVkaEDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const ctx = eContext(date, profile, resolver);
+  return ctx
+    ? roundRemunerationCents(ctx.monthlyCents * 60000, ctx.fullTimeWeeklyMinutes * 4348)
+    : null;
+}
+
+export function getVkaEDutyOvertimeRates(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): import("@/domain/special-duty-pay").DutyOvertimeRates | null {
+  const ctx = eContext(date, profile, resolver);
+  if (!ctx) return null;
+  const denominator =
+    ctx.fullTimeWeeklyMinutes * ctx.rulePackage.rules.hourlyCalculation!.monthlyFactorThousandths;
+  return {
+    baseHourlyCents: roundRemunerationCents(ctx.overtimeBaseCents * 60000, denominator),
+    premiumHourlyCents: roundRemunerationCents(ctx.premiumCents * 60000, denominator),
+    premiumBasisPoints: ctx.overtimePercentageBasisPoints,
+  };
+}

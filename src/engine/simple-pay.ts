@@ -1,3 +1,5 @@
+import { projectRegularPayShifts } from "./special-duty";
+import { calculateSpecialDutyPay } from "./special-duty-pay";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
 import { employmentWorkPatternAt, employmentProfileAt } from "@/domain/employment-history";
 import {
@@ -580,6 +582,61 @@ export function calculateShiftPremiumBreakdown(
 const cachedMonthlyPay = createSimpleMonthlyPayCache();
 
 export function calculateMonthlyPayEstimate(
+  month: string,
+  shifts: readonly ShiftEntry[],
+  profile: UserProfile,
+  decision: MonthlyTariffDecision | null,
+  assessmentShifts: readonly ShiftEntry[] = shifts,
+  workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+  ruleResolver: RuleResolver = bundledRuleResolver,
+): MonthlyPayEstimate {
+  if (
+    !shifts.some((shift) => shift.specialDuty) &&
+    !assessmentShifts.some((shift) => shift.specialDuty)
+  )
+    return calculateRegularMonthlyPayEstimate(
+      month,
+      shifts,
+      profile,
+      decision,
+      assessmentShifts,
+      workPatternSettings,
+      ruleResolver,
+    );
+  const specialDutyBreakdowns = calculateSpecialDutyPay(month, shifts, profile, ruleResolver);
+  const notes = [...new Set(specialDutyBreakdowns.flatMap((line) => line.notes))];
+  const estimate = calculateRegularMonthlyPayEstimate(
+    month,
+    projectRegularPayShifts(shifts),
+    profile,
+    decision,
+    assessmentShifts.filter((shift) => !shift.specialDuty),
+    workPatternSettings,
+    ruleResolver,
+  );
+  if (!specialDutyBreakdowns.length) return estimate;
+  const specialDutyAmount =
+    specialDutyBreakdowns.reduce(
+      (sum, line) =>
+        sum +
+        (line.baseAmountCents ?? 0) +
+        (line.calloutPay?.baseAmountCents ?? 0) +
+        (line.calloutPay?.overtimePremiumCents ?? 0),
+      0,
+    ) / 100;
+  const result = { ...estimate, specialDutyBreakdowns, specialDutyAmount };
+  return specialDutyBreakdowns.some((line) => !line.complete)
+    ? { ...result, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }
+    : {
+        ...result,
+        estimatedGrossAmount:
+          estimate.estimatedGrossAmount === null
+            ? null
+            : roundMoney(estimate.estimatedGrossAmount + specialDutyAmount),
+      };
+}
+
+function calculateRegularMonthlyPayEstimate(
   month: string,
   shifts: readonly ShiftEntry[],
   profile: UserProfile,

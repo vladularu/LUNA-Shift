@@ -103,7 +103,13 @@ export function WorktimeDetailsScreen() {
           summary.ok ? summary.value.actualMinutes : shiftTypeAnalysis.totalMinutes,
         )}
         target={summary.ok ? formatMinutes(summary.value.targetMinutes) : "Nicht verfügbar"}
-        balance={summary.ok ? formatSignedMinutes(summary.value.balanceMinutes) : "Nicht verfügbar"}
+        balance={
+          summary.ok
+            ? summary.value.specialDutyNotes?.length
+              ? "Noch offen"
+              : formatSignedMinutes(summary.value.balanceMinutes)
+            : "Nicht verfügbar"
+        }
         balanceAccent={
           summary.ok
             ? summary.value.balanceMinutes < 0
@@ -112,6 +118,9 @@ export function WorktimeDetailsScreen() {
             : palette.textMuted
         }
       />
+      {summary.ok && summary.value.specialDutyNotes?.length ? (
+        <AnalysisCoverageNote message={summary.value.specialDutyNotes.join(" ")} />
+      ) : null}
       {!summary.ok ? (
         <AnalysisCoverageNote message="Für Soll, Saldo und Abwesenheitsgutschriften fehlen Berechnungsgrundlagen." />
       ) : null}

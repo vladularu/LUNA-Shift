@@ -69,6 +69,8 @@ function SalaryMonthPage({
   else if (!ready || !profile || !calculation) content = <LoadingView />;
   else {
     const { pay, monthShifts } = calculation.value;
+    const specialDutyLines = pay.specialDutyBreakdowns ?? [];
+    const specialDutiesOpen = specialDutyLines.some((line) => !line.complete);
     const manual = profile.tariff === null && profile.manualMonthlyGrossCents != null;
     const salaryReady = !!(
       profile.tariff ||
@@ -89,10 +91,14 @@ function SalaryMonthPage({
         ) : !pay.available ? (
           <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.xs }}>
             <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>
-              Für diesen Monat nicht verfügbar
+              {specialDutiesOpen
+                ? "Gehaltsprognose noch offen"
+                : "Für diesen Monat nicht verfügbar"}
             </Text>
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-              Für diesen Zeitraum fehlen Tarifdaten.
+              {specialDutiesOpen
+                ? "Bei mindestens einer Bereitschaft sind noch Beträge offen. Prüfe die Angaben unter Gehaltsbestandteile → Bereitschaften."
+                : (pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten.")}
             </Text>
           </SurfaceCard>
         ) : !manual && !monthShifts.length ? (

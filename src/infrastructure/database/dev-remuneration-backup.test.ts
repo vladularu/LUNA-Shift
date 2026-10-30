@@ -153,7 +153,7 @@ describe("test-lab remuneration snapshot v4", () => {
     await generate();
     const payload = await savedPayload();
     const parsed = parseDevBackupPayload(payload, "2026-09");
-    expect(parsed.version).toBe(16);
+    expect(parsed.version).toBe(17);
     expect(parsed.remuneration.overtimeAllocations).toHaveLength(1);
     expect(parsed.remuneration.overtimeAllocations[0].allocations_json).toContain("2026-10-01");
     expect(adapter.database.prepare("SELECT month FROM scoped_allowance_decisions").all()).toEqual([

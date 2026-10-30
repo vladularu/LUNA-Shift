@@ -1,3 +1,4 @@
+import type { SpecialDuty } from "./special-duty";
 import type { TvalPflegeTariff } from "./tval-pflege-tariff";
 import type { TvhKrTariff } from "./tvh-kr-tariff";
 import type { TvUkNursingTariff } from "./tvuk-nursing-tariff";
@@ -253,6 +254,7 @@ export interface GeocodedEntryLocation extends EntryLocation {
 }
 
 export interface ShiftTemplate {
+  readonly specialDuty?: SpecialDuty | null;
   readonly id: string;
   readonly name: string;
   readonly type: ShiftType;
@@ -272,6 +274,7 @@ export interface ShiftTemplate {
 }
 
 export interface ShiftEntry {
+  readonly specialDuty?: SpecialDuty | null;
   readonly kind: "SHIFT";
   readonly id: string;
   readonly date: string;
@@ -339,6 +342,7 @@ export interface MonthlySummaryCategory {
 }
 
 export interface MonthlySummary {
+  readonly specialDutyNotes?: readonly string[];
   readonly month: string;
   readonly targetMinutes: number;
   readonly actualMinutes: number;
@@ -352,6 +356,7 @@ export interface MonthlySummary {
 }
 
 export interface SaveShiftTemplateInput {
+  readonly specialDuty?: SpecialDuty | null;
   readonly id?: string;
   readonly expectedRevision?: number;
   readonly name: string;
@@ -368,6 +373,7 @@ export interface SaveShiftTemplateInput {
 }
 
 export interface SaveShiftInput {
+  readonly specialDuty?: SpecialDuty | null;
   readonly id?: string;
   readonly expectedRevision?: number;
   readonly date: string;
@@ -529,6 +535,9 @@ export interface TvoedAssessmentCriterion {
 }
 
 export interface MonthlyPayEstimate {
+  readonly specialDutyAmount?: number;
+  readonly specialDutyBreakdowns?: readonly import("./special-duty-pay").SpecialDutyPayLine[];
+  readonly specialDutyNotes?: readonly string[];
   /** TV-UK compulsory time credit; excluded from the salary estimate. */
   readonly nightCompensatoryMinutes?: number;
   readonly month: string;

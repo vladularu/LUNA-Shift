@@ -530,7 +530,9 @@ export function* buildAnnualAvailableReportSteps(
         targetMinutes: available.summary?.targetMinutes ?? null,
         targetStatus: available.summary?.targetCalculation?.status,
         actualMinutes: available.summary?.actualMinutes ?? coreMonth.actualMinutes,
-        balanceMinutes: available.summary?.balanceMinutes ?? null,
+        balanceMinutes: available.summary?.specialDutyNotes?.length
+          ? null
+          : (available.summary?.balanceMinutes ?? null),
         estimatedGrossAmount: payAvailable ? (available.pay?.estimatedGrossAmount ?? null) : null,
         premiumAmount: payAvailable
           ? (available.pay?.timePremiumAmount ?? 0) +
@@ -581,7 +583,10 @@ export function* buildAnnualAvailableReportSteps(
           ? "FINAL"
           : undefined,
     actualMinutes,
-    balanceMinutes: worktimeCoverageComplete ? actualMinutes - targetMinutes : null,
+    balanceMinutes:
+      worktimeCoverageComplete && months.every((item) => item.balanceMinutes !== null)
+        ? actualMinutes - targetMinutes
+        : null,
     availablePayMonthCount,
     estimatedGrossAmount: roundMoney(estimatedGrossAmount),
     premiumAmount: roundMoney(premiumAmount),

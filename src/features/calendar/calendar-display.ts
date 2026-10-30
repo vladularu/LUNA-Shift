@@ -1,3 +1,4 @@
+import { specialDutyDescription } from "@/engine/special-duty";
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { calculateTimedShiftMinutes, formatMinutes } from "@/engine/working-time";
 
@@ -75,6 +76,7 @@ export function calendarShiftDetail(
     readonly timeZone: string;
   },
 ): string | null {
+  if (entry.specialDuty) return specialDutyDescription(entry);
   if (isAllDayShift(entry)) {
     return options.showShiftTimes || options.showShiftDuration ? "GT" : null;
   }

@@ -38,7 +38,7 @@ import { withImmediateTransaction } from "@/infrastructure/database/transaction"
 import { REMUNERATION_PROFILE_COLUMNS } from "./remuneration-profile-repository";
 
 export const LOCAL_BACKUP_FORMAT = "lunashift-local-backup";
-export const LOCAL_BACKUP_VERSION = 21;
+export const LOCAL_BACKUP_VERSION = 23;
 
 type BackupScalar = string | number | null;
 type BackupRow = Readonly<Record<string, BackupScalar>>;
@@ -96,6 +96,8 @@ interface UnsignedLocalBackupDocument {
     | 18
     | 19
     | 20
+    | 21
+    | 22
     | typeof LOCAL_BACKUP_VERSION;
   readonly createdAt: string;
   readonly appVersion: string | null;
@@ -268,14 +270,14 @@ export async function readLocalBackupSnapshotInTransaction(
   drkTrainingMonthConfirmations.forEach(mapDrkTrainingMonthConfirmationRow);
   const templates = await transaction.getAllAsync<BackupRow>(
     `SELECT id,name,type,start_time,end_time,break_minutes,color,symbol,sort_order,
-              all_day,notification_json,location_json,revision,created_at,updated_at,deleted_at
+              all_day,notification_json,location_json,special_duty_json,revision,created_at,updated_at,deleted_at
          FROM shift_templates
         ORDER BY sort_order,id`,
   );
   const shifts = await transaction.getAllAsync<BackupRow>(
     `SELECT id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,
               color,symbol,note,notification_json,alarm_enabled,location_json,
-              overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,
+              overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,
               revision,created_at,updated_at,deleted_at
          FROM shift_entries
         ORDER BY date,id`,

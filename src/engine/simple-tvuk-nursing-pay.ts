@@ -338,3 +338,14 @@ export function calculateTvUkNursingMonth(
     nightCompensatoryMinutes: breakdowns.reduce((sum, b) => sum + b.nightCompensatoryMinutes, 0),
   };
 }
+
+/** Individual table rate; no part-time reduction and no special-duty premiums. */
+export function getTvUkDutyHourlyCents(
+  date: string,
+  profile: UserProfile,
+  resolver: RuleResolver,
+): number | null {
+  const selected = profile.tvUkNursingTariff;
+  const ctx = selected ? context(date, selected, profile.weeklyMinutes, resolver) : null;
+  return ctx ? ctx.hourlyCents : null;
+}

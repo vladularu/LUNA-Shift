@@ -638,7 +638,7 @@ describe("remuneration history persistence and backup", () => {
       reopened.database.close();
     }
     const exported = await backup(db);
-    expect(exported.document.version).toBe(21);
+    expect(exported.document.version).toBe(23);
     const verified = await validateLocalBackup(exported.serialized, {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       sha256,
@@ -860,7 +860,7 @@ describe("remuneration history persistence and backup", () => {
     });
     const original = await listRemunerationProfiles(db);
     const exported = await backup(db);
-    expect(exported.document.version).toBe(21);
+    expect(exported.document.version).toBe(23);
     const validated = await validateLocalBackup(exported.serialized, {
       maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
       sha256,

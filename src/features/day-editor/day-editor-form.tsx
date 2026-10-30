@@ -1,3 +1,10 @@
+import {
+  changeEditorDuty,
+  editorDutyDuration,
+  editorDutyTariff,
+} from "./special-duty-editor-state";
+import { calculateTimedShiftMinutes } from "@/engine/working-time";
+import { SpecialDutyFields } from "./special-duty-fields";
 import { TextInput } from "@/ui/text";
 import { router, Stack, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,7 +19,6 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import { type CalendarEntry, type EntryLocation, type ShiftType } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import { ValidationError } from "@/domain/validation";
-import { calculateTimedShiftMinutes } from "@/engine/working-time";
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
 import { resolveShiftTypePreset } from "@/features/day-editor/shift-type-preset";
 import { ShiftEditOverlay } from "@/features/day-editor/shift-edit-overlay";
@@ -57,6 +63,7 @@ export function DayEditorForm({
   const initialShift = existing?.kind === "SHIFT" ? existing : null;
   const initialAppointment = existing?.kind === "APPOINTMENT" ? existing : null;
   const draftState = useEntryEditorDraft(initialShift, initialAppointment, mode);
+  const [specialDuty, setSpecialDuty] = draftState.specialDuty;
   const [shiftType, setShiftType] = draftState.shiftType;
   const [shiftAllDay, setShiftAllDay] = draftState.shiftAllDay;
   const [selectedTemplateId, setSelectedTemplateId] = draftState.selectedTemplateId;
@@ -114,6 +121,7 @@ export function DayEditorForm({
 
   function chooseType(type: ShiftType) {
     const preset = resolveShiftTypePreset(type, templates);
+    setSpecialDuty(null);
     setShiftType(type);
     setShiftAllDay(preset.allDay ?? ["VACATION", "SICK", "FREE"].includes(type));
     setSelectedTemplateId(preset.templateId);
@@ -197,7 +205,8 @@ export function DayEditorForm({
         }
         const saved = await upsertShift({
           ...(initialShift ? { id: initialShift.id, expectedRevision: initialShift.revision } : {}),
-          date,
+          date: initialShift?.date ?? date,
+          specialDuty,
           templateId: shiftIsTimed ? selectedTemplateId : null,
           title: shiftTitle,
           type: shiftType,
@@ -293,26 +302,39 @@ export function DayEditorForm({
   }, [exit, navigation]);
 
   if (mode === "SHIFT") {
-    const durationMinutes = shiftIsTimed
-      ? calculateTimedShiftMinutes(
-          {
-            date,
-            startTime,
-            endTime,
-            breakMinutes: Number(breakMinutes) || 0,
-            allDay: false,
-          },
-          profile?.timeZone ?? "Europe/Berlin",
-        )
-      : null;
+    const durationMinutes = editorDutyDuration(
+      shiftIsTimed,
+      {
+        date: initialShift?.date ?? date,
+        startTime,
+        endTime,
+        breakMinutes: Number(breakMinutes) || 0,
+        allDay: false,
+        specialDuty,
+      },
+      profile?.timeZone ?? "Europe/Berlin",
+    );
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <ShiftEditOverlay
+          specialDutyActive={specialDuty !== null && specialDuty.kind !== "SPLIT"}
+          specialDutyFields={
+            shiftIsTimed && shiftType !== "TRAINING" ? (
+              <SpecialDutyFields
+                tariffFamily={editorDutyTariff(profile, initialShift?.date ?? date)}
+                value={specialDuty}
+                startTime={startTime}
+                endTime={endTime}
+                timeZone={profile?.timeZone ?? "Europe/Berlin"}
+                onChange={(next) => changeEditorDuty(draftState, next)}
+              />
+            ) : undefined
+          }
           alarmEnabled={shiftAlarmEnabled}
           breakMinutes={breakMinutes}
           busy={saving}
-          date={date}
+          date={initialShift?.date ?? date}
           durationMinutes={durationMinutes}
           endTime={endTime}
           error={error}

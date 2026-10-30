@@ -99,7 +99,8 @@ export function analysisPeriodRoute(month: string, period: "MONTH" | "YEAR") {
   };
 }
 
-export type SalaryDetailSection = "components" | "deductions" | "premiums" | "services" | "basis";
+export type SalaryDetailSection =
+  "components" | "deductions" | "premiums" | "services" | "basis" | "special-duties";
 
 export function salaryDetailsRoute(month: string, section: SalaryDetailSection) {
   return {

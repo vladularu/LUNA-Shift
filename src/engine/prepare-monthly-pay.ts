@@ -1,3 +1,4 @@
+import { projectRegularPayShifts } from "./special-duty";
 import { employmentWorkPatternAt } from "@/domain/employment-history";
 import type {
   MonthlyTariffDecision,
@@ -27,6 +28,8 @@ export function* prepareMonthlyPaySteps(
   settings: TvoedWorkPatternSettings | undefined,
   resolver: RuleResolver,
 ): Generator<number, void, void> {
+  shifts = projectRegularPayShifts(shifts);
+  assessmentShifts = assessmentShifts.filter((shift) => !shift.specialDuty);
   try {
     const periods = payrollEmploymentPeriods(profile, month, month + "-31");
     if (periods.length !== 1) return;

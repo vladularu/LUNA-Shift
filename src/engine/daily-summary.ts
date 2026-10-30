@@ -1,3 +1,4 @@
+import { projectDutyCalendarDays } from "./special-duty";
 import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 
@@ -147,7 +148,9 @@ export function calculateDailyWorkCredit(
   ruleResolver: RuleResolver = bundledRuleResolver,
 ): DailyWorkCredit {
   if (profile.employmentTimeline) profile = employmentProfileAt(profile as UserProfile, date);
-  const active = entries.filter((entry) => entry.deletedAt === null && entry.date === date);
+  const active = projectDutyCalendarDays(entries).filter(
+    (entry) => entry.deletedAt === null && entry.date === date,
+  );
   const timed = calculateTimedDailyWorkCredit(date, active, profile);
   const targetMinutes = calculateDailyTargetMinutes(date, profile, ruleResolver);
   // Preserve the established absence-credit rule. Target rounding or a tariff
@@ -201,7 +204,9 @@ export function calculateTimedDailyWorkCredit(
   entries: readonly ShiftEntry[],
   profile: Pick<ProfileForTime, "timeZone">,
 ): TimedDailyWorkCredit {
-  const active = entries.filter((entry) => entry.deletedAt === null && entry.date === date);
+  const active = projectDutyCalendarDays(entries).filter(
+    (entry) => entry.deletedAt === null && entry.date === date,
+  );
   const workEntries = active.filter(
     (entry) => !["TRAINING", "VACATION", "SICK", "FREE"].includes(entry.type),
   );
