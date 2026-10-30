@@ -1,11 +1,10 @@
 import { Text } from "@/ui/text";
-import { SpecialDutyPayCard } from "./special-duty-pay-card";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { router, useLocalSearchParams } from "expo-router";
 import { Pressable } from "react-native";
 import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
-import { dayEditorRoute, settingsEditorRoute } from "@/navigation/routes";
+import { settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
 import { usePalette } from "@/theme/palette";
@@ -98,7 +97,7 @@ function SalaryMonthPage({
             </Text>
             <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
               {specialDutiesOpen
-                ? "Bei mindestens einer Bereitschaft sind noch Beträge offen. Öffne den jeweiligen Dienst unten und prüfe die Angaben."
+                ? "Bei mindestens einer Bereitschaft sind noch Beträge offen. Prüfe die Angaben unter Gehaltsbestandteile → Bereitschaften."
                 : (pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten.")}
             </Text>
           </SurfaceCard>
@@ -113,10 +112,6 @@ function SalaryMonthPage({
             </Text>
           </SurfaceCard>
         ) : null}
-        <SpecialDutyPayCard
-          lines={specialDutyLines}
-          onOpenDuty={(line) => router.push(dayEditorRoute(line.date, "SHIFT", line.shiftId))}
-        />
         <NetPayAutomaticEntryCard
           key={month}
           month={month}

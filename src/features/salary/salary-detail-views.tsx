@@ -11,9 +11,9 @@ import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { settingsInfoRoute } from "@/navigation/routes";
+import { salaryDetailsRoute, settingsInfoRoute } from "@/navigation/routes";
 import { salaryComposition } from "./salary-composition";
-import { SalaryAmountRow, SalarySectionCard } from "./salary-ui";
+import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salary-ui";
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
 import { NetPayPremiumExplanation } from "./net-pay-premium-details";
 import type { SalaryClassification } from "./salary-service-presentation";
@@ -42,6 +42,8 @@ export function SalaryComponentsView({
   const palette = usePalette();
   const { width } = useWindowDimensions();
   const { caption, compositionRows } = salaryComposition(profile, pay);
+  const hasSpecialDuties = !!pay.specialDutyBreakdowns?.length;
+  const specialDutiesOpen = pay.specialDutyBreakdowns?.some((line) => !line.complete);
   const extra = settings?.automation?.additionalRecurringGrossCents ?? 0;
   const annualGross = annualSalaryGrossCents(
     month,
@@ -80,6 +82,13 @@ export function SalaryComponentsView({
               <SalaryAmountRow label={row.label} value={row.value} subtitle={row.subtitle} quiet />
             </View>
           ))
+        ) : specialDutiesOpen ? (
+          <SalaryAmountRow
+            label="Bereitschaftsvergütung"
+            value="Noch offen"
+            subtitle="Prüfe die fehlenden Angaben unter Bereitschaften."
+            quiet
+          />
         ) : (
           <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted, padding: SPACING.lg }}>
             Für diesen Monat fehlen Tarifdaten.
@@ -102,6 +111,15 @@ export function SalaryComponentsView({
           </>
         ) : null}
       </SalarySectionCard>
+      {hasSpecialDuties ? (
+        <SalarySectionCard title="Details">
+          <SalaryNavigationRow
+            title="Bereitschaften"
+            subtitle={specialDutiesOpen ? "Angaben noch offen" : "Beträge und Dienste ansehen"}
+            onPress={() => router.push(salaryDetailsRoute(month, "special-duties"))}
+          />
+        </SalarySectionCard>
+      ) : null}
       {(pay.nightCompensatoryMinutes ?? 0) > 0 ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
           Zusätzlich{" "}

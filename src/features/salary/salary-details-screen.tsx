@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
-import { salaryDetailsRoute, type SalaryDetailSection } from "@/navigation/routes";
+import { dayEditorRoute, salaryDetailsRoute, type SalaryDetailSection } from "@/navigation/routes";
 import { CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
@@ -31,6 +31,7 @@ import { NetPayServiceDetails } from "./net-pay-service-details";
 import { netPayEuro, netPayForecastLabel } from "./net-pay-format";
 import { SecondaryButton } from "@/ui/form-controls";
 import { FormStatus } from "@/ui/form-layout";
+import { SpecialDutyPayCard } from "./special-duty-pay-card";
 
 export const SALARY_DETAIL_TITLES: Readonly<Record<SalaryDetailSection, string>> = {
   components: "Gehaltsbestandteile",
@@ -38,6 +39,7 @@ export const SALARY_DETAIL_TITLES: Readonly<Record<SalaryDetailSection, string>>
   premiums: "Zeitzuschläge",
   services: "Zuschläge je Dienst",
   basis: "Berechnungsgrundlagen",
+  "special-duties": "Bereitschaften",
 };
 
 export function SalaryDetailsScreen() {
@@ -172,6 +174,19 @@ function SalaryDetailsMonthPage({
         annualPayment={forecast?.annualPayment}
         annualPayments={annual.payments}
       />
+    );
+  else if (section === "special-duties")
+    content = pay.specialDutyBreakdowns?.length ? (
+      <SpecialDutyPayCard
+        lines={pay.specialDutyBreakdowns}
+        onOpenDuty={(line) => router.push(dayEditorRoute(line.date, "SHIFT", line.shiftId))}
+      />
+    ) : (
+      <SurfaceCard style={{ padding: SPACING.lg }}>
+        <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
+          Keine Bereitschaften in diesem Monat.
+        </Text>
+      </SurfaceCard>
     );
   else if (section === "deductions")
     content = available ? (
