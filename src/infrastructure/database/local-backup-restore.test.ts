@@ -257,6 +257,43 @@ describe("local backup restore", () => {
     });
   });
 
+  it.each(["true", "false"])(
+    "round-trips pastel setting %s and rejects non-boolean backup values",
+    async (value) => {
+      await sourceDb.runAsync(
+        "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)",
+        "calendar_pastel_colors",
+        value,
+        new Date().toISOString(),
+      );
+      const exported = await createLocalBackupDocument(await loadLocalBackupSnapshot(sourceDb), {
+        appVersion: "test",
+        createdAt: new Date(),
+        sha256,
+      });
+      const backup = await validateLocalBackup(exported.serialized, {
+        maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
+        sha256,
+      });
+      await restoreLocalBackup(destinationDb, backup);
+      expect(
+        await destinationDb.getFirstAsync(
+          "SELECT value FROM app_preferences WHERE key='calendar_pastel_colors'",
+        ),
+      ).toEqual({ value });
+      const malformed = await signedSerialized(exported.document, (unsigned) => {
+        const data = unsigned.data as { preferences: Record<string, unknown>[] };
+        data.preferences.find((row) => row.key === "calendar_pastel_colors")!.value = "yes";
+      });
+      await expect(
+        validateLocalBackup(malformed, {
+          maxDatabaseSchemaVersion: LATEST_DATABASE_SCHEMA_VERSION,
+          sha256,
+        }),
+      ).rejects.toThrow(LocalBackupValidationError);
+    },
+  );
+
   it("round-trips the holiday color and rejects unsupported color values", async () => {
     await sourceDb.runAsync(
       "INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)",

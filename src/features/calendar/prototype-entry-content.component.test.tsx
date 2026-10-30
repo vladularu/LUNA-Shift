@@ -26,6 +26,51 @@ const shift: ShiftEntry = {
   deletedAt: null,
 };
 describe("prototype real shift content", () => {
+  it.each([false, true])(
+    "follows later preset and custom edits in pastel mode, dark=%s",
+    async (dark) => {
+      const scheme = jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(dark ? "dark" : "light");
+      const display = {
+        labelMode: "FULL",
+        showShiftTimes: true,
+        showShiftDuration: false,
+        pastelColors: true,
+      } as const;
+      const content = (color: string, pastelColors = true) => (
+        <PrototypeEntryContent
+          entry={Object.freeze({ ...shift, color })}
+          display={{ ...display, pastelColors }}
+          timeZone="Europe/Berlin"
+        />
+      );
+      const screen = await render(content("#59CA50"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#DDF4D9" });
+      expect(screen.getByText("Früh")).toHaveStyle({ color: "#171719" });
+      await screen.rerender(content("#4FCB68"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#DDF4E2" });
+      await screen.rerender(content("#F05C68"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#F9DDE0" });
+      await screen.rerender(content("#e74c55"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#F8D8DA" });
+      await screen.rerender(content("#123456"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#E1E6EA" });
+      expect(screen.getByText("Früh")).toHaveStyle({ color: "#171719" });
+      await screen.rerender(content("#F1EECE"));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#F4F1D7" });
+      expect(screen.getByText("Früh")).toHaveStyle({ color: "#171719" });
+      await screen.rerender(content("#FFFFFF"));
+      expect(screen.getByText("Früh")).toHaveStyle({ color: "#171719" });
+      await screen.rerender(content("#123456", false));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#123456" });
+      expect(screen.getByText("Früh")).toHaveStyle({ color: "#FFFFFF" });
+      await screen.rerender(content("#E74C55", false));
+      expect(screen.getByText("Früh").parent).toHaveStyle({ backgroundColor: "#E74C55" });
+      scheme.mockRestore();
+    },
+  );
+
   it("uses a compact separate dot and the full appointment title for width-based truncation", async () => {
     const screen = await render(
       <PrototypeEntryContent

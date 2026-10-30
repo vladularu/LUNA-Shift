@@ -744,6 +744,7 @@ function validatePreferenceValue(key: string, value: string): void {
     "calendar_show_holidays",
     "calendar_show_shift_times",
     "calendar_show_shift_duration",
+    "calendar_pastel_colors",
   ];
   if (booleans.includes(key) && value !== "true" && value !== "false") return invalid();
   if (key === "calendar_view_mode" && value !== "MONTH" && value !== "YEAR") return invalid();

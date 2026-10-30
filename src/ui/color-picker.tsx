@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { SHIFT_COLOR_PAIRS, usePalette } from "@/theme/palette";
+import { SHIFT_PRESET_COLOR_PAIRS } from "@/theme/shift-colors";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
 import { ShiftColorPickerSheet } from "@/ui/shift-color-picker-sheet";
@@ -18,7 +19,7 @@ export function ColorPicker({
 }) {
   const palette = usePalette();
   const [open, setOpen] = useState(false);
-  const presets = SHIFT_COLOR_PAIRS.slice(0, 14);
+  const presets = SHIFT_PRESET_COLOR_PAIRS;
   const presetSelected = presets.some(({ main }) => main === value);
   return (
     <View style={styles.container}>
