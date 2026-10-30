@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { SharingCalendarView, SharingController } from "@/domain/sharing-ui-contract";
+import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-context";
 import { MINIMUM_TOUCH_TARGET } from "@/theme/tokens";
 import { SharedCalendarFilters } from "./shared-calendar-filters";
 
@@ -34,6 +35,93 @@ beforeEach(() => {
     setVisible: mockSetVisible,
   };
 });
+
+function AccountFilters({
+  accountId = "account-a",
+  name = "Vlad Ularu",
+  ready = true,
+  photoUri = null,
+}: {
+  readonly accountId?: string | null;
+  readonly name?: string;
+  readonly ready?: boolean;
+  readonly photoUri?: string | null;
+}) {
+  return (
+    <PrivateCloudContext
+      value={
+        {
+          user: accountId ? { id: accountId, displayName: name } : null,
+          ready,
+          photo: { uri: photoUri },
+        } as never
+      }
+    >
+      <SharedCalendarFilters ownVisible onOwnVisible={jest.fn()} />
+    </PrivateCloudContext>
+  );
+}
+
+it("replaces names with initials while keeping full names and selection accessible", async () => {
+  mockController = {
+    ...mockController,
+    calendars: [
+      foreign,
+      { ...foreign, id: "laura", name: "Laura Trost", visible: false },
+      { ...foreign, id: "elodie", name: "  élodie   Grün  " },
+    ],
+  };
+  const screen = await render(<AccountFilters />);
+  for (const initials of ["VU", "SM", "LT", "ÉG"])
+    expect(screen.getByText(initials, { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.queryByText("Selena Müller")).toBeNull();
+  expect(screen.queryByText("Laura Trost")).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Selena Müller anzeigen", selected: true }),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("button", { name: "Laura Trost anzeigen", selected: false }),
+  ).toBeTruthy();
+  for (const button of screen.getAllByRole("button"))
+    expect(button).toHaveStyle({
+      minWidth: MINIMUM_TOUCH_TARGET,
+      minHeight: MINIMUM_TOUCH_TARGET,
+    });
+});
+
+it("shows only the ready signed-in account photo and clears it during account changes", async () => {
+  mockController = { ...mockController, calendars: [foreign] };
+  const photoUri = "data:image/jpeg;base64,/9j/AAAA";
+  const screen = await render(<AccountFilters photoUri={photoUri} />);
+  expect(
+    screen.getByTestId("calendar-person-photo", { includeHiddenElements: true }).props.source.uri,
+  ).toBe(photoUri);
+  expect(screen.queryByText("VU", { includeHiddenElements: true })).toBeNull();
+  expect(screen.getByText("SM", { includeHiddenElements: true })).toBeTruthy();
+  await screen.rerender(<AccountFilters photoUri={photoUri} ready={false} />);
+  expect(screen.queryByTestId("calendar-person-photo", { includeHiddenElements: true })).toBeNull();
+  await screen.rerender(<AccountFilters accountId="account-b" name="Alex Sommer" />);
+  expect(screen.getByText("AS", { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.queryByText("VU", { includeHiddenElements: true })).toBeNull();
+  await screen.rerender(<AccountFilters accountId={null} photoUri={photoUri} />);
+  expect(screen.queryByTestId("calendar-person-photo", { includeHiddenElements: true })).toBeNull();
+  expect(screen.getByRole("button", { name: "Du anzeigen" })).toBeTruthy();
+});
+
+it("falls back to initials after an image error and tries a replacement photo", async () => {
+  const screen = await render(<AccountFilters photoUri="file:///old-photo.jpg" />);
+  await fireEvent(
+    screen.getByTestId("calendar-person-photo", { includeHiddenElements: true }),
+    "error",
+  );
+  expect(screen.queryByTestId("calendar-person-photo", { includeHiddenElements: true })).toBeNull();
+  expect(screen.getByText("VU", { includeHiddenElements: true })).toBeTruthy();
+  await screen.rerender(<AccountFilters photoUri="file:///new-photo.jpg" />);
+  expect(
+    screen.getByTestId("calendar-person-photo", { includeHiddenElements: true }).props.source.uri,
+  ).toBe("file:///new-photo.jpg");
+});
+
 it("keeps the first filter viewport and own button while startup hydrates and sharing changes", async () => {
   const onOwnVisible = jest.fn();
   const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
