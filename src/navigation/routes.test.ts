@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   TAB_ROUTES,
+  netPaySettingsRoute,
   analysisRoute,
   annualDetailsRoute,
   calendarRoute,
@@ -32,6 +33,14 @@ import {
 } from "@/navigation/route-params";
 
 describe("navigation contracts", () => {
+  it("opens net settings with the selected valid month", () => {
+    expect(netPaySettingsRoute("2026-10")).toEqual({
+      pathname: "/net-pay-settings",
+      params: { month: "2026-10" },
+    });
+    for (const month of ["", "2026-13", "2026-7", "not-a-month"])
+      expect(() => netPaySettingsRoute(month)).toThrow();
+  });
   it("exposes the four stable tab destinations", () => {
     expect(TAB_ROUTES.map((tab) => tab.route)).toEqual(["/", "/analysis", "/templates", "/more"]);
   });

@@ -1,16 +1,19 @@
-import { useState } from "react";
 import { router } from "expo-router";
 import { Text } from "@/ui/text";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
+import Ionicons from "@/ui/icon";
+import { NET_PAY_PENSION_LABELS } from "@/domain/net-pay-pension-schemes";
+import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { usePflegeShiftProfile, usePflegeShiftTestData } from "@/application/pflegeshift-provider";
 import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
 import {
   dayEditorRoute,
+  netPaySettingsRoute,
   salaryDetailsRoute,
   settingsEditorRoute,
   tariffAssessmentRoute,
 } from "@/navigation/routes";
-import { SPACING } from "@/theme/tokens";
+import { RADII, SPACING } from "@/theme/tokens";
 import { usePalette } from "@/theme/palette";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, SurfaceCard } from "@/ui/design-system";
@@ -20,18 +23,10 @@ import { NetPayText } from "./net-pay-controls";
 import { NetPaySalarySummary, NetPaySummaryMetric } from "./net-pay-salary-summary";
 import { AnnualSalaryPaymentEditor } from "./annual-salary-payment-editor";
 import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
-import { NetPaySheet } from "./net-pay-sheet";
-import { NetPaySetupForm } from "./net-pay-setup-form";
 import { useNetPayProfile } from "./use-net-pay-profile";
 import { useAutomaticNetPay } from "./use-automatic-net-pay";
 import { NetPayWorkflowAction, NetPayWorkflowText } from "./net-pay-workflow-controls";
 import { SalaryNavigationRow, SalaryPremiumCard, SalarySectionCard } from "./salary-ui";
-
-type Dialog = "setup" | "settings";
-const TITLES: Record<Dialog, string> = {
-  setup: "Netto einrichten",
-  settings: "Meine Netto-Angaben",
-};
 
 export function NetPayAutomaticEntryCard({
   month,
@@ -67,20 +62,13 @@ export function NetPayAutomaticEntryCard({
     testMonths,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
-  const [dialog, setDialog] = useState<{ month: string; view: Dialog } | null>(null);
-  const view = dialog?.month === month && !blocked && data.status === "ready" ? dialog.view : null;
-  function open(next: Dialog) {
-    setDialog({ month, view: next });
-  }
-  function close() {
-    if (!data.busy) setDialog(null);
-  }
+  const openSettings = () => router.push(netPaySettingsRoute(month));
   const components = () => router.push(salaryDetailsRoute(month, "components"));
   const premiums = () => router.push(salaryDetailsRoute(month, "premiums"));
   const showServices = available !== null || showPremiumDetails;
   const showComponentsLink = available === null && proposedGrossCents === null;
   const showPremiumsLink = available === null && showServices && premiumCents === undefined;
-  const showSettingsLink = configured && !blocked && data.status === "ready";
+  const showSettingsEntry = configured && !blocked && data.status === "ready";
   const showAllowanceLink =
     !blocked &&
     !!(
@@ -102,18 +90,15 @@ export function NetPayAutomaticEntryCard({
     if (recovery?.kind === "entry")
       router.push(dayEditorRoute(recovery.date, "SHIFT", recovery.entryId));
     else if (recovery?.kind === "profile") router.push(settingsEditorRoute(recovery.section));
-    else if (recovery?.kind === "net-settings") open("settings");
+    else if (recovery?.kind === "net-settings") openSettings();
   }
-  const summary = configured
-    ? `Steuerklasse ${settings.profile.taxClass} · ${settings.profile.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer${forecast?.pensionOmitted ? " · Zusatzversorgung nicht berücksichtigt" : ""}`
-    : "Einmal einrichten · danach automatisch";
+  const settingsEntry =
+    showSettingsEntry && settings ? (
+      <NetPaySettingsEntry settings={settings} disabled={data.busy} onPress={openSettings} />
+    ) : null;
   return (
     <>
-      <View
-        accessibilityElementsHidden={view !== null}
-        importantForAccessibility={view !== null ? "no-hide-descendants" : "auto"}
-        style={{ gap: SPACING.lg }}
-      >
+      <View style={{ gap: SPACING.lg }}>
         {available ? (
           <NetPaySalarySummary
             pay={available.pay}
@@ -124,6 +109,7 @@ export function NetPayAutomaticEntryCard({
             onGross={components}
             onDeductions={() => router.push(salaryDetailsRoute(month, "deductions"))}
             onPremiums={premiums}
+            afterSummary={settingsEntry}
           />
         ) : (
           <>
@@ -157,10 +143,12 @@ export function NetPayAutomaticEntryCard({
                   <NetPayWorkflowText>
                     Gehalt und Dienste sind übernommen. Richte dein Netto einmalig ein.
                   </NetPayWorkflowText>
-                  <NetPayWorkflowAction onPress={() => open("setup")} disabled={data.busy}>
+                  <NetPayWorkflowAction onPress={openSettings} disabled={data.busy}>
                     Netto einmal einrichten
                   </NetPayWorkflowAction>
-                  <NetPayWorkflowText>Drei kurze Schritte – danach automatisch.</NetPayWorkflowText>
+                  <NetPayWorkflowText>
+                    Alle Angaben auf einer Seite – danach automatisch.
+                  </NetPayWorkflowText>
                 </>
               ) : (
                 <>
@@ -183,6 +171,7 @@ export function NetPayAutomaticEntryCard({
                 </>
               )}
             </SurfaceCard>
+            {settingsEntry}
             {showServices && premiumCents !== undefined ? (
               <SalaryPremiumCard
                 totalCents={premiumCents}
@@ -207,11 +196,7 @@ export function NetPayAutomaticEntryCard({
             onResetAutomatic={data.resetAnnualPayments}
           />
         ) : null}
-        {showComponentsLink ||
-        showPremiumsLink ||
-        showSettingsLink ||
-        showAllowanceLink ||
-        showBasisLink ? (
+        {showComponentsLink || showPremiumsLink || showAllowanceLink || showBasisLink ? (
           <SalarySectionCard title="Details">
             {showComponentsLink ? (
               <SalaryNavigationRow title="Gehaltsbestandteile" onPress={components} />
@@ -222,22 +207,9 @@ export function NetPayAutomaticEntryCard({
                 <SalaryNavigationRow title="Zeitzuschläge" onPress={premiums} />
               </>
             ) : null}
-            {showSettingsLink ? (
-              <>
-                {showComponentsLink || showPremiumsLink ? <CardSeparator /> : null}
-                <SalaryNavigationRow
-                  title="Netto-Angaben"
-                  subtitle={summary}
-                  onPress={() => open("settings")}
-                  disabled={data.busy}
-                />
-              </>
-            ) : null}
             {showAllowanceLink ? (
               <>
-                {showComponentsLink || showPremiumsLink || showSettingsLink ? (
-                  <CardSeparator />
-                ) : null}
+                {showComponentsLink || showPremiumsLink ? <CardSeparator /> : null}
                 <SalaryNavigationRow
                   title="Zulage prüfen"
                   onPress={() => router.push(tariffAssessmentRoute(month))}
@@ -246,7 +218,7 @@ export function NetPayAutomaticEntryCard({
             ) : null}
             {showBasisLink ? (
               <>
-                {showComponentsLink || showPremiumsLink || showSettingsLink || showAllowanceLink ? (
+                {showComponentsLink || showPremiumsLink || showAllowanceLink ? (
                   <CardSeparator />
                 ) : null}
                 <SalaryNavigationRow
@@ -261,47 +233,71 @@ export function NetPayAutomaticEntryCard({
           Prognose aus deinem geplanten Dienstplan.
         </Text>
       </View>
-      {view ? (
-        <NetPaySetupForm
-          key={`${month}:${view}`}
-          month={month}
-          initial={settings}
-          firstSetup={data.timeline.length === 0}
-          allowSectionSwitch={view === "settings"}
-          worksInSaxony={profile?.federalState === "SN"}
-          churchTaxDefaultPercent={
-            profile?.federalState === "BY" || profile?.federalState === "BW" ? 8 : 9
-          }
-          busy={data.busy}
-          renderLayout={({ content, footer, onBack, locked, editing, page }) => (
-            <NetPaySheet
-              title={editing ? "Angaben ändern" : TITLES[view]}
-              visible
-              busy={locked}
-              onClose={close}
-              onBack={onBack}
-              backLabel={
-                view === "settings" ? "Zurück zur Angaben-Übersicht" : "Vorheriger Schritt"
-              }
-              footer={footer}
-              contentKey={`${view}:${page}`}
-            >
-              {settings?.version === 1 && view === "setup" ? (
-                <NetPayText>
-                  Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden
-                  sie auch für folgende Monate übernommen.
-                </NetPayText>
-              ) : null}
-              {content}
-            </NetPaySheet>
-          )}
-          onSave={async (value, effectiveMonth) => {
-            await data.save(value, effectiveMonth);
-            if (view === "setup")
-              setDialog((current) => (current?.month === value.month ? null : current));
-          }}
-        />
-      ) : null}
     </>
+  );
+}
+
+function NetPaySettingsEntry({
+  settings,
+  disabled,
+  onPress,
+}: {
+  readonly settings: MonthlyNetPaySettings;
+  readonly disabled: boolean;
+  readonly onPress: () => void;
+}) {
+  const palette = usePalette();
+  const p = settings.profile;
+  const family = p.isParent
+    ? p.childrenUnder25 === 0
+      ? "Kinder · keine unter 25"
+      : `${p.childrenUnder25} ${p.childrenUnder25 === 1 ? "Kind" : "Kinder"} unter 25`
+    : "Keine Kinder";
+  const insurance = settings.specialCases?.includes("PRIVATE_INSURANCE")
+    ? "privat versichert"
+    : settings.specialCases?.includes("OTHER_INSURANCE_STATUS")
+      ? "abweichender Versicherungsstatus"
+      : "gesetzlich versichert";
+  const pension = NET_PAY_PENSION_LABELS[settings.automation?.pensionScheme ?? "UNKNOWN"];
+  return (
+    <Pressable
+      testID="net-pay-settings-entry"
+      accessibilityRole="button"
+      accessibilityLabel={`Netto-Einstellungen. Steuerklasse ${p.taxClass} · ${p.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer. ${family} · ${insurance}. ${pension}. Angaben ansehen und ändern.`}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        padding: SPACING.lg,
+        gap: SPACING.sm,
+        borderWidth: 1,
+        borderColor: palette.primary,
+        borderRadius: RADII.card,
+        borderCurve: "continuous",
+        backgroundColor: palette.primarySoft,
+        opacity: disabled ? 0.5 : pressed ? 0.75 : 1,
+      })}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.md }}>
+        <Text style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.sectionTitle }}>
+          Netto-Einstellungen
+        </Text>
+        <Ionicons
+          accessibilityElementsHidden
+          name="chevron-forward"
+          size={20}
+          color={palette.primary}
+        />
+      </View>
+      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
+        Klasse {p.taxClass}
+        {p.factorPermille === null ? "" : " mit Faktor"} · {p.churchTaxRatePercent ? "mit" : "ohne"}{" "}
+        Kirchensteuer
+      </Text>
+      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
+        {family} · {insurance}
+      </Text>
+      <Text style={{ color: palette.primary, ...TYPOGRAPHY.label }}>Angaben ansehen & ändern</Text>
+    </Pressable>
   );
 }

@@ -9,7 +9,7 @@ describe("horizontal card back gestures", () => {
     const cards = Array.from(layout.matchAll(/<Stack\.Screen\b([\s\S]*?)\/>/g))
       .map((match) => match[1])
       .filter((screen) => screen.includes('presentation: "card"'));
-    expect(cards.length).toBe(21);
+    expect(cards.length).toBe(22);
     for (const card of cards) {
       const name = /name="([^"]+)"/.exec(card)?.[1];
       expect(name).toBeDefined();
@@ -56,13 +56,17 @@ describe("horizontal card back gestures", () => {
     expect(horizontalBackGestureOptions(route)).toBeUndefined();
   });
 
-  it.each(["check-profile", "check-settings", "private-cloud", "widget-day", "calendar-prototype"])(
-    "also enables the back gesture for the automatically registered card %s",
-    (route) => {
-      expect(horizontalBackGestureOptions(route)).toEqual({
-        gestureEnabled: true,
-        fullScreenGestureEnabled: true,
-      });
-    },
-  );
+  it.each([
+    "net-pay-settings",
+    "check-profile",
+    "check-settings",
+    "private-cloud",
+    "widget-day",
+    "calendar-prototype",
+  ])("also enables the back gesture for the automatically registered card %s", (route) => {
+    expect(horizontalBackGestureOptions(route)).toEqual({
+      gestureEnabled: true,
+      fullScreenGestureEnabled: true,
+    });
+  });
 });
