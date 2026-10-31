@@ -4,10 +4,11 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { usePalette } from "@/theme/palette";
 import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
+import { RowButton, SurfaceCard } from "@/ui/design-system";
 import Ionicons from "@/ui/icon";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { Text } from "@/ui/text";
+import { PersonAvatar } from "@/ui/person-avatar";
 
 export function SharingIconButton({
   label,
@@ -113,17 +114,25 @@ export function SharingSelection({
   label,
   selected,
   disabled = false,
+  pill = false,
   onPress,
 }: {
   readonly title: string;
   readonly label?: string;
   readonly selected: boolean;
   readonly disabled?: boolean;
+  readonly pill?: boolean;
   readonly onPress: () => void;
 }) {
   const palette = usePalette();
   return (
-    <SurfaceCard>
+    <SurfaceCard
+      style={
+        pill
+          ? { borderRadius: RADII.pill, borderWidth: 0, backgroundColor: palette.surfaceRaised }
+          : undefined
+      }
+    >
       <RowButton
         title={title}
         accessibilityLabel={label ?? title}
@@ -151,31 +160,40 @@ export function SharingSelection({
   );
 }
 
-export function SharingPerson({ name }: { readonly name: string }) {
+export function SharingPerson({
+  name,
+  compact = false,
+  photoUri,
+  color,
+}: {
+  readonly name: string;
+  readonly compact?: boolean;
+  readonly photoUri?: string | null;
+  readonly color?: string;
+}) {
   const palette = usePalette();
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => Array.from(part)[0])
-    .join("")
-    .toUpperCase();
   return (
-    <View style={{ alignItems: "center", gap: SPACING.lg, paddingVertical: SPACING.lg }}>
-      <View
-        accessible={false}
-        style={{
-          width: 96,
-          height: 96,
-          borderRadius: RADII.pill,
-          backgroundColor: palette.primary,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+    <View
+      style={{
+        alignItems: "center",
+        gap: compact ? SPACING.md : SPACING.xl,
+        paddingTop: compact ? SPACING.sm : SPACING.lg,
+        paddingBottom: SPACING.sm,
+      }}
+    >
+      <PersonAvatar
+        name={name}
+        photoUri={photoUri}
+        color={color ?? palette.primary}
+        size={compact ? 80 : 96}
+      />
+      <Text
+        accessibilityRole="header"
+        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+        style={{ ...TYPOGRAPHY.screenTitle, color: palette.text, textAlign: "center" }}
       >
-        <Text style={{ ...TYPOGRAPHY.hero, color: palette.onPrimary }}>{initials}</Text>
-      </View>
-      <SectionHeader title={name} />
+        {name}
+      </Text>
     </View>
   );
 }

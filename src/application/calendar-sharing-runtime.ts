@@ -1,4 +1,5 @@
 import { createSharingLocalVisibility, retainSharingCaches } from "./sharing-local-visibility";
+import { createSharingProfilePhotos } from "./sharing-profile-photos";
 import { sharingContentSignature, type SharingContentRights } from "@/domain/sharing-content";
 import type {
   SharingAuthPort,
@@ -127,6 +128,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
   let failed = false;
   let offline = false;
   let contentRightsAvailable = false;
+  let profilePhotosAvailable = false;
   let issuedInvitations: readonly SharingInvitation[] = [];
   let caches: readonly CachedSharedCalendar[] = [];
   let bindings: readonly LocalSharingBinding[] = [];
@@ -159,6 +161,16 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
   const check = (ticket: number, accountId?: string) => {
     if (!valid(ticket, accountId)) accountChanged();
   };
+  const profilePhotos = createSharingProfilePhotos({
+    read: (id, key) => cloud().getProfilePhoto!(id, key),
+    readable: (id) =>
+      status === "signedIn" &&
+      caches.some(
+        (item) =>
+          item.calendar.id === id && !item.calendar.isOwner && cacheUsable(item, options.now()),
+      ),
+    changed: emit,
+  });
   function queue<T>(job: () => Promise<T>): Promise<T> {
     const task = tail.then(job);
     tail = task.catch(() => {});
@@ -214,6 +226,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     caches = caches.filter((item) => item.calendar.id !== calendarId);
     bindings = bindings.filter((item) => item.calendarId !== calendarId);
     members.delete(calendarId);
+    profilePhotos.forget(calendarId);
   }
   async function pauseConflict(ticket: number, accountId: string, binding: LocalSharingBinding) {
     let revision = binding.serverRevision;
@@ -332,6 +345,12 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     const supported = (await cloud().supportsContentRights?.()) ?? false;
     check(ticket, accountId);
     contentRightsAvailable = supported && !!options.local.configureContent;
+    const photosSupported =
+      contentRightsAvailable && ((await cloud().supportsProfilePhotos?.()) ?? false);
+    check(ticket, accountId);
+    profilePhotosAvailable =
+      photosSupported && !!cloud().getProfilePhoto && !!cloud().setMemberProfilePhoto;
+    profilePhotos.activate(accountId, profilePhotosAvailable);
     const previous = caches;
     const remote = await cloud().listCalendars();
     check(ticket, accountId);
@@ -418,10 +437,13 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     check(ticket, accountId);
     offline = networkFailure;
     await localState(ticket, accountId);
+    void profilePhotos.refresh();
   }
   async function invalidateSession(ticket: number) {
     if (!valid(ticket)) return;
     const cleanupTicket = ++epoch;
+    profilePhotosAvailable = false;
+    profilePhotos.activate(null, false);
     prepared.clear();
     visibility.clear();
     busyTicket = cleanupTicket;
@@ -457,6 +479,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         return;
       }
       if (valid(ticket, accountId)) {
+        profilePhotos.drop();
         offline = errorCode(error) === "SHARE_NETWORK_FAILED";
         failed = !offline;
         await localState(ticket, accountId);
@@ -473,6 +496,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       return activation;
     }
     const ticket = ++epoch;
+    profilePhotosAvailable = false;
+    profilePhotos.activate(next?.id ?? null, false);
     const retainPresentation = next !== null && next.id === presentationAccountId;
     prepared.clear();
     visibility.clear();
@@ -546,6 +571,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     return entry.calendar;
   }
   const actions = {
+    loadProfilePhotos: (ids: readonly string[], viewId?: string) => profilePhotos.load(ids, viewId),
     async signIn(provider: "apple" | "google") {
       const ticket = epoch;
       if (busyTicket === epoch) throw new Error("SHARE_BUSY");
@@ -737,22 +763,32 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       const invitation = await actions.createInvitation(calendarId);
       await actions.shareInvitation(invitation);
     },
-    async createInvitation(calendarId: string, rights?: SharingContentRights) {
+    async createInvitation(
+      calendarId: string,
+      rights?: SharingContentRights,
+      shareProfilePhoto?: boolean,
+    ) {
       return run(async (ticket, accountId) => {
         requireCalendar(calendarId, true);
         if (rights && !contentRightsAvailable) throw new Error("SHARE_INVALID_ARGUMENT");
+        if (shareProfilePhoto !== undefined && (!rights || !profilePhotosAvailable))
+          throw new Error("SHARE_INVALID_ARGUMENT");
         await ensureSourceContent(ticket, accountId, calendarId, rights);
         const binding = (await options.local.listBindings(accountId)).find(
           (item) => item.calendarId === calendarId,
         );
         check(ticket, accountId);
         if (rights && binding) await publishBinding(ticket, accountId, binding);
-        let invite = await cloud().createInvite(calendarId, options.makeId(), rights);
+        const createInvite = () =>
+          shareProfilePhoto === undefined
+            ? cloud().createInvite(calendarId, options.makeId(), rights)
+            : cloud().createInvite(calendarId, options.makeId(), rights, shareProfilePhoto);
+        let invite = await createInvite();
         check(ticket, accountId);
         if (!invite.token) {
           await cloud().revokeInvite(calendarId, invite.inviteId);
           check(ticket, accountId);
-          invite = await cloud().createInvite(calendarId, options.makeId(), rights);
+          invite = await createInvite();
           check(ticket, accountId);
         }
         if (!invite.token) throw new Error("SHARE_INVITE_INVALID");
@@ -797,6 +833,16 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
           throw new Error("SHARE_INVALID_ARGUMENT");
         await ensureSourceContent(ticket, accountId, calendarId, rights);
         await cloud().setMemberRights!(calendarId, userId, rights);
+        check(ticket, accountId);
+        await refreshNow(ticket, accountId);
+      });
+    },
+    async setMemberProfilePhoto(calendarId: string, userId: string, allowed: boolean) {
+      await run(async (ticket, accountId) => {
+        requireCalendar(calendarId, true);
+        if (!profilePhotosAvailable || !cloud().setMemberProfilePhoto)
+          throw new Error("SHARE_INVALID_ARGUMENT");
+        await cloud().setMemberProfilePhoto!(calendarId, userId, allowed);
         check(ticket, accountId);
         await refreshNow(ticket, accountId);
       });
@@ -854,6 +900,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     },
     async signOut() {
       const cleanupTicket = ++epoch;
+      profilePhotosAvailable = false;
+      profilePhotos.activate(null, false);
       prepared.clear();
       visibility.clear();
       busyTicket = cleanupTicket;
@@ -903,6 +951,8 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         await options.forgetAuthProfile(accountId);
         check(ticket, accountId);
         const cleanupTicket = ++epoch;
+        profilePhotosAvailable = false;
+        profilePhotos.activate(null, false);
         prepared.clear();
         visibility.clear();
         busyTicket = cleanupTicket;
@@ -958,6 +1008,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
               : "current";
       return {
         id: item.calendar.id,
+        ownerId: item.calendar.ownerId,
         name: item.calendar.name,
         color: item.localColor ?? item.calendar.color,
         visibility: item.calendar.visibility,
@@ -969,6 +1020,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
         publicationPaused: !!binding && !binding.enabled && !otherDevice,
         publishedAt: item.calendar.publishedAt,
         syncState,
+        profilePhotoUri: profilePhotos.uri(item.calendar.id),
         members: members.get(item.calendar.id)?.members ?? [],
         invites: members.get(item.calendar.id)?.invites ?? [],
       };
@@ -985,6 +1037,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
       accountDeletionAvailable: !!options.cloud,
       directCopyAvailable: !!options.copyUrl,
       contentRightsAvailable: status === "signedIn" && contentRightsAvailable,
+      profilePhotosAvailable: status === "signedIn" && profilePhotosAvailable,
       issuedInvitations: status === "signedIn" ? issuedInvitations : [],
       availableAppointments: source
         .filter((entry) => entry.kind === "APPOINTMENT" && entry.deletedAt === null)
@@ -1110,6 +1163,7 @@ export function createCalendarSharingRuntime(options: CalendarSharingRuntimeOpti
     },
     stop() {
       stopped = true;
+      profilePhotos.activate(null, false);
       ++epoch;
       prepared.clear();
       visibility.clear();

@@ -174,6 +174,9 @@ function fixture({
     }),
   };
   const cloud: CloudSharingClient = {
+    supportsProfilePhotos: vi.fn(async () => false),
+    getProfilePhoto: vi.fn(),
+    setMemberProfilePhoto: vi.fn(),
     supportsContentRights: vi.fn(async () => false),
     setMemberRights: vi.fn(),
     saveProfile: vi.fn(async (_expectedAccountId, displayName) => ({
@@ -294,6 +297,58 @@ function deferred<T>() {
   });
   return { promise, resolve, reject };
 }
+it("loads shared photos separately from calendar caches and immediately discards them on sign-out", async () => {
+  const f = fixture();
+  vi.mocked(f.cloud.supportsContentRights).mockResolvedValue(true);
+  vi.mocked(f.cloud.supportsProfilePhotos).mockResolvedValue(true);
+  vi.mocked(f.cloud.getProfilePhoto).mockResolvedValue({
+    calendarId: calendar.id,
+    photoKey: "a".repeat(64),
+    image: "photo",
+    unchanged: false,
+  });
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  expect(f.cloud.getProfilePhoto).not.toHaveBeenCalled();
+  await runtime.getController().loadProfilePhotos!([calendar.id]);
+  expect(runtime.getController().calendars[0].ownerId).toBe(calendar.ownerId);
+  expect(runtime.getController().calendars[0].profilePhotoUri).toBe("data:image/jpeg;base64,photo");
+  expect(JSON.stringify(f.caches())).not.toContain("base64");
+  const request = deferred<Awaited<ReturnType<typeof f.cloud.getProfilePhoto>>>();
+  vi.mocked(f.cloud.getProfilePhoto).mockReturnValueOnce(request.promise);
+  const refreshing = runtime.backgroundRefresh();
+  await vi.waitFor(() => expect(f.cloud.getProfilePhoto).toHaveBeenCalledTimes(2));
+  await runtime.getController().signOut();
+  request.resolve({
+    calendarId: calendar.id,
+    photoKey: "a".repeat(64),
+    image: "late-photo",
+    unchanged: false,
+  });
+  await refreshing;
+  expect(runtime.getController().calendars).toEqual([]);
+});
+it("sends photo consent independently of content rights and permits changes only on owned calendars", async () => {
+  const f = fixture({ remote: [owner], bindings: [binding] });
+  vi.mocked(f.cloud.supportsContentRights).mockResolvedValue(true);
+  vi.mocked(f.cloud.supportsProfilePhotos).mockResolvedValue(true);
+  const runtime = createCalendarSharingRuntime(f.options);
+  await runtime.start();
+  const rights = { shifts: true, appointments: false, notes: false };
+  await runtime.getController().createInvitation(owner.id, rights, true);
+  expect(f.cloud.createInvite).toHaveBeenCalledWith(owner.id, expect.any(String), rights, true);
+  await runtime.getController().setMemberProfilePhoto!(owner.id, "member", false);
+  expect(f.cloud.setMemberProfilePhoto).toHaveBeenCalledWith(owner.id, "member", false);
+  const viewer = fixture();
+  vi.mocked(viewer.cloud.supportsContentRights).mockResolvedValue(true);
+  vi.mocked(viewer.cloud.supportsProfilePhotos).mockResolvedValue(true);
+  const received = createCalendarSharingRuntime(viewer.options);
+  await received.start();
+  await expect(
+    received.getController().setMemberProfilePhoto!(calendar.id, "member", true),
+  ).rejects.toThrow("SHARE_NOT_FOUND");
+  expect(viewer.cloud.setMemberProfilePhoto).not.toHaveBeenCalled();
+});
 
 describe("responsive local calendar visibility", () => {
   it("presents cached sharing while auth is pending and defers publication work until the first frame", async () => {

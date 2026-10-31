@@ -1,21 +1,23 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
-import { usePalette } from "@/theme/palette";
-import { SPACING } from "@/theme/tokens";
+import { Pressable } from "react-native";
+import { PersonAvatar } from "@/ui/person-avatar";
 import { ShiftColorPickerSheet } from "@/ui/shift-color-picker-sheet";
 
 export function SharingCalendarColorPicker({
   name,
   value,
   disabled,
+  photoUri,
+  visible = true,
   onChange,
 }: {
   readonly name: string;
   readonly value: string;
   readonly disabled: boolean;
+  readonly photoUri?: string | null;
+  readonly visible?: boolean;
   readonly onChange: (color: string) => void;
 }) {
-  const palette = usePalette();
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -36,15 +38,12 @@ export function SharingCalendarColorPicker({
           opacity: pressed ? 0.6 : 1,
         })}
       >
-        <View
-          style={{
-            width: SPACING.xl,
-            height: SPACING.xl,
-            borderRadius: SPACING.xl / 2,
-            backgroundColor: value,
-            borderWidth: 1,
-            borderColor: palette.border,
-          }}
+        <PersonAvatar
+          name={name}
+          color={value}
+          photoUri={photoUri}
+          selected={visible}
+          showSelectionBadge={false}
         />
       </Pressable>
       {open ? (

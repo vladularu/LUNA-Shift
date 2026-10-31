@@ -1,4 +1,5 @@
 import type { SharingContentRights } from "../../domain/sharing-content";
+import { isSharedProfilePhoto } from "../../domain/shared-profile-photo";
 import { Temporal } from "@js-temporal/polyfill";
 import type {
   CalendarSharingVisibility,
@@ -19,6 +20,7 @@ export interface SharingCloudTransport {
   };
 }
 export interface SharingCloudMember {
+  readonly shareProfilePhoto?: boolean;
   readonly rights?: SharingContentRights;
   readonly userId: string;
   readonly displayName: string;
@@ -41,6 +43,7 @@ export interface SharingCloudMembers {
     readonly revokedAt: string | null;
     readonly rights?: SharingContentRights;
     readonly joinedCount?: number;
+    readonly shareProfilePhoto?: boolean;
   }[];
 }
 export type SharingRevocationStatus =
@@ -345,9 +348,23 @@ function parseMemberV2(value: unknown): SharingCloudMember {
     ...(rights === null ? {} : { rights: parseRights(rights) }),
   });
 }
+function parseMemberV3(value: unknown): SharingCloudMember {
+  const r = object(value, [
+    "userId",
+    "displayName",
+    "status",
+    "requestedAt",
+    "updatedAt",
+    "rights",
+    "shareProfilePhoto",
+  ]);
+  const { shareProfilePhoto, ...base } = r;
+  return Object.freeze({ ...parseMemberV2(base), shareProfilePhoto: boolean(shareProfilePhoto) });
+}
 export function createCloudSharingClient(client: SharingCloudTransport) {
   let contentRights = false;
   let shiftDuration = false;
+  let profilePhotos = false;
   async function rpc<T>(
     name: string,
     args: Record<string, unknown>,
@@ -366,6 +383,70 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
     return input(() => id(value));
   }
   return {
+    async supportsProfilePhotos() {
+      profilePhotos = false;
+      const result = await client.rpc("sharing_profile_photo_capabilities", {});
+      if (missingRpc(result.error)) return false;
+      if (result.error) throw transportError(result.error);
+      const r = object(result.data, ["profilePhotoVersion"]);
+      if (r.profilePhotoVersion !== 1) return fail();
+      profilePhotos = true;
+      return true;
+    },
+    async getProfilePhoto(value: string, knownKey: string | null) {
+      if (!profilePhotos) throw new SharingCloudError("SHARE_INVALID_ARGUMENT");
+      const requested = calendarId(value);
+      input(() => {
+        if (knownKey !== null && !HEX.test(knownKey)) return fail();
+      });
+      return rpc(
+        "sharing_get_profile_photo",
+        { p_calendar_id: requested, p_known_key: knownKey },
+        (value) => {
+          const r = object(value, ["calendarId", "photoKey", "image", "unchanged"]);
+          const calendar = id(r.calendarId);
+          // The deployed RPC compares a photo key with SQL NULL on the first request.
+          const unchanged =
+            r.unchanged === null && knownKey === null ? false : boolean(r.unchanged);
+          if (
+            calendar !== requested ||
+            (r.photoKey !== null && (typeof r.photoKey !== "string" || !HEX.test(r.photoKey)))
+          )
+            return fail();
+          if (
+            unchanged
+              ? r.photoKey === null || r.photoKey !== knownKey || r.image !== null
+              : r.photoKey === null
+                ? r.image !== null
+                : !isSharedProfilePhoto(r.image)
+          )
+            return fail();
+          return Object.freeze({
+            calendarId: calendar,
+            photoKey: r.photoKey as string | null,
+            image: r.image as string | null,
+            unchanged,
+          });
+        },
+      );
+    },
+    async setMemberProfilePhoto(value: string, userId: string, allowed: boolean) {
+      if (!profilePhotos) throw new SharingCloudError("SHARE_INVALID_ARGUMENT");
+      const requested = input(() => id(userId));
+      return rpc(
+        "sharing_set_member_profile_photo",
+        {
+          p_calendar_id: calendarId(value),
+          p_user_id: requested,
+          p_allowed: input(() => boolean(allowed)),
+        },
+        (result) => {
+          const member = parseMemberV3(result);
+          if (member.userId !== requested || member.shareProfilePhoto !== allowed) return fail();
+          return member;
+        },
+      );
+    },
     async supportsContentRights() {
       let result = await client.rpc("sharing_capabilities_v3", {});
       if (missingRpc(result.error)) result = await client.rpc("sharing_capabilities", {});
@@ -613,15 +694,25 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
       value: string,
       mutationId: string,
       rights?: SharingContentRights,
+      shareProfilePhoto?: boolean,
     ): Promise<SharingCloudInvite> {
       const requested = calendarId(value),
         mutation = input(() => id(mutationId));
+      if (shareProfilePhoto !== undefined && (!profilePhotos || !rights))
+        throw new SharingCloudError("SHARE_INVALID_ARGUMENT");
       return rpc(
-        rights ? "sharing_create_invite_v2" : "sharing_create_invite",
+        shareProfilePhoto !== undefined
+          ? "sharing_create_invite_v3"
+          : rights
+            ? "sharing_create_invite_v2"
+            : "sharing_create_invite",
         {
           p_calendar_id: requested,
           p_mutation_id: mutation,
           ...(rights ? { p_rights: input(() => parseRights(rights)) } : {}),
+          ...(shareProfilePhoto !== undefined
+            ? { p_share_profile_photo: input(() => boolean(shareProfilePhoto)) }
+            : {}),
         },
         (value) => {
           const r = object(value, ["inviteId", "calendarId", "token", "expiresAt"]);
@@ -660,13 +751,25 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
     },
     async listMembers(value: string): Promise<SharingCloudMembers> {
       return rpc(
-        contentRights ? "sharing_list_members_v2" : "sharing_list_members",
+        profilePhotos && contentRights
+          ? "sharing_list_members_v3"
+          : contentRights
+            ? "sharing_list_members_v2"
+            : "sharing_list_members",
         { p_calendar_id: calendarId(value) },
         (value) => {
           const r = object(value, ["members", "invites"]);
           return Object.freeze({
             members: unique(
-              list(r.members, 1000, contentRights ? parseMemberV2 : parseMember),
+              list(
+                r.members,
+                1000,
+                profilePhotos && contentRights
+                  ? parseMemberV3
+                  : contentRights
+                    ? parseMemberV2
+                    : parseMember,
+              ),
               (m) => m.userId,
             ),
             invites: unique(
@@ -677,6 +780,7 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
                   "consumedAt",
                   "revokedAt",
                   ...(contentRights ? ["rights", "joinedCount"] : []),
+                  ...(profilePhotos && contentRights ? ["shareProfilePhoto"] : []),
                 ]);
                 return Object.freeze({
                   id: id(i.id),
@@ -684,6 +788,9 @@ export function createCloudSharingClient(client: SharingCloudTransport) {
                   consumedAt: nullableInstant(i.consumedAt),
                   revokedAt: nullableInstant(i.revokedAt),
                   ...(contentRights ? { joinedCount: revision(i.joinedCount) } : {}),
+                  ...(profilePhotos && contentRights
+                    ? { shareProfilePhoto: boolean(i.shareProfilePhoto) }
+                    : {}),
                   ...(contentRights && i.rights !== null ? { rights: parseRights(i.rights) } : {}),
                 });
               }),

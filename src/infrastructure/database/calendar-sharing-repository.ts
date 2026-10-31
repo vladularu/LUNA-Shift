@@ -13,7 +13,7 @@ import type { SharingInvitation } from "@/domain/sharing-ui-contract";
 import { sharingProjectionSignature } from "@/engine/sharing-publication-confirmation";
 import { listCalendarEntries } from "@/infrastructure/database/calendar-entry-repository";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
-import { projectSharingEntries } from "@/engine/sharing-projection";
+import { expandSharingSourceEntries, projectSharingEntries } from "@/engine/sharing-projection";
 interface BindingRow {
   content_json: string | null;
   account_id: string;
@@ -317,7 +317,7 @@ async function persistSharingPublication(
   makeId: () => string,
 ): Promise<SharingPublication> {
   const ids = new Map<string, string>();
-  for (const entry of source) {
+  for (const entry of expandSharingSourceEntries(source)) {
     const key = entry.kind + ":" + entry.id;
     const saved = await tx.getFirstAsync<{ public_id: string }>(
       "SELECT public_id FROM sharing_entry_ids WHERE calendar_id=? AND local_key=?",

@@ -21,6 +21,7 @@ export interface SharingAuthPort {
   signOut(): Promise<void>;
 }
 export interface SharingCloudMember {
+  readonly shareProfilePhoto?: boolean;
   readonly rights?: SharingContentRights;
   readonly userId: string;
   readonly displayName: string;
@@ -43,11 +44,27 @@ export interface SharingCloudMembers {
     readonly revokedAt: string | null;
     readonly rights?: SharingContentRights;
     readonly joinedCount?: number;
+    readonly shareProfilePhoto?: boolean;
   }[];
 }
 export type SharingRevocationStatus =
   "not_applicable" | "revoked" | "manual_required" | "unconfirmed";
 export interface SharingCloudPort {
+  supportsProfilePhotos?(): Promise<boolean>;
+  getProfilePhoto?(
+    calendarId: string,
+    knownKey: string | null,
+  ): Promise<{
+    readonly calendarId: string;
+    readonly photoKey: string | null;
+    readonly image: string | null;
+    readonly unchanged: boolean;
+  }>;
+  setMemberProfilePhoto?(
+    calendarId: string,
+    userId: string,
+    allowed: boolean,
+  ): Promise<SharingCloudMember>;
   supportsContentRights?(): Promise<boolean>;
   setMemberRights?(
     calendarId: string,
@@ -85,6 +102,7 @@ export interface SharingCloudPort {
     calendarId: string,
     mutationId: string,
     rights?: SharingContentRights,
+    shareProfilePhoto?: boolean,
   ): Promise<SharingCloudInvite>;
   claimInvite(
     expectedAccountId: string,

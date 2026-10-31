@@ -222,6 +222,7 @@ type FormActionButtonProps = PropsWithChildren<{
   readonly busy?: boolean;
   readonly busyLabel?: string;
   readonly tone: "primary" | "danger" | "secondary";
+  readonly shape?: "rounded" | "pill";
 }>;
 
 function FormActionButton({
@@ -231,6 +232,7 @@ function FormActionButton({
   onPress,
   disabled = false,
   tone,
+  shape = "rounded",
 }: FormActionButtonProps) {
   const palette = usePalette();
   const pressMotion = usePressMotion();
@@ -252,12 +254,13 @@ function FormActionButton({
         hitSlop={2}
         style={({ pressed }: PressableStateCallbackType) => ({
           width: "100%",
-          minHeight: secondary ? CONTROL_HEIGHT.regular : CONTROL_HEIGHT.large,
+          minHeight:
+            shape === "pill" ? 48 : secondary ? CONTROL_HEIGHT.regular : CONTROL_HEIGHT.large,
           alignItems: "center",
           justifyContent: "center",
           borderWidth: secondary ? 1 : 0,
           borderColor: secondary ? palette.border : "transparent",
-          borderRadius: RADII.control,
+          borderRadius: shape === "pill" ? RADII.pill : RADII.control,
           borderCurve: CORNER_CURVE,
           backgroundColor: secondary
             ? pressed
@@ -296,10 +299,12 @@ export function PrimaryButton({
   danger = false,
   busy = false,
   busyLabel = "Wird gespeichert",
+  shape,
 }: PropsWithChildren<{
   readonly onPress: () => void;
   readonly disabled?: boolean;
   readonly danger?: boolean;
+  readonly shape?: "rounded" | "pill";
   readonly busy?: boolean;
   readonly busyLabel?: string;
 }>) {
@@ -310,6 +315,7 @@ export function PrimaryButton({
       disabled={disabled}
       onPress={onPress}
       tone={danger ? "danger" : "primary"}
+      shape={shape}
     >
       {children}
     </FormActionButton>
@@ -320,12 +326,14 @@ export function SecondaryButton({
   children,
   onPress,
   disabled = false,
+  shape,
 }: PropsWithChildren<{
   readonly onPress: () => void;
   readonly disabled?: boolean;
+  readonly shape?: "rounded" | "pill";
 }>) {
   return (
-    <FormActionButton disabled={disabled} onPress={onPress} tone="secondary">
+    <FormActionButton disabled={disabled} onPress={onPress} tone="secondary" shape={shape}>
       {children}
     </FormActionButton>
   );

@@ -1,116 +1,49 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render as renderNative } from "@testing-library/react-native";
+import { act, fireEvent } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-import type { ReactElement, ReactNode } from "react";
+import { router } from "expo-router";
 import { CalendarSharingScreen } from "./calendar-sharing-screen";
+import { CalendarAccessScreen } from "./calendar-access-screen";
+import { render, controller, own, foreign, confirmLastAlert } from "@/testing/sharing-fixtures";
 import { SharingInviteScreen } from "./sharing-invite-screen";
-import type { SharingCalendarView, SharingController } from "./sharing-ui-contract";
+import type { SharingController } from "./sharing-ui-contract";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 
-function render(ui: ReactElement) {
-  return renderNative(ui, {
-    wrapper: ({ children }: { children: ReactNode }) => (
-      <SafeAreaInsetsContext.Provider value={{ top: 0, bottom: 0, left: 0, right: 0 }}>
-        {children}
-      </SafeAreaInsetsContext.Provider>
-    ),
-  });
-}
-
-function controller(overrides: Partial<SharingController> = {}): SharingController {
-  const action = () => jest.fn<() => Promise<void>>().mockResolvedValue();
-  return {
-    status: "signedIn",
-    account: { displayName: "Alex" },
-    busy: false,
-    error: false,
-    calendars: [],
-    availableAppointments: [],
-    claimResult: null,
-    appleAvailable: true,
-    accountDeletionAvailable: true,
-    preview: jest.fn(() => ({
-      entryCount: 1,
-      entries: [{ title: "Spät", when: "12.10. · 13:00–21:00" }],
-    })),
-    signIn: action(),
-    refresh: action(),
-    createCalendar: jest.fn<SharingController["createCalendar"]>().mockResolvedValue("own"),
-    createInvitation: jest.fn<SharingController["createInvitation"]>().mockResolvedValue({
-      calendarId: "own",
-      id: "invite",
-      url: "https://luna.example/sharing-invite?token=" + "b".repeat(64),
-      expiresAt: "2099-10-19T12:30:00Z",
-    }),
-    shareInvitation: action(),
-    preparePublicationPreview: jest
-      .fn<SharingController["preparePublicationPreview"]>()
-      .mockResolvedValue({
-        confirmationId: "confirmation",
-        entryCount: 1,
-        entries: [{ title: "Spät", when: "12.10. · 13:00–21:00" }],
-      }),
-    publishCalendar: action(),
-    setVisible: action(),
-    setColor: action(),
-    invite: action(),
-    setMember: action(),
-    revokeInvite: action(),
-    deleteCalendar: action(),
-    leaveCalendar: action(),
-    claimInvite: action(),
-    signOut: action(),
-    deleteAccount: action(),
-    ...overrides,
-  };
-}
-const own: SharingCalendarView = {
-  id: "own",
-  name: "Mein Dienstplan",
-  color: "#527D92",
-  visibility: "DETAILS",
-  isOwner: true,
-  visible: true,
-  publishedAt: "2026-10-12T12:30:00Z",
-  syncState: "current",
-  members: [
-    { userId: "pending", displayName: "Sam", status: "PENDING" },
-    { userId: "active", displayName: "Kim", status: "ACTIVE" },
-  ],
-  invites: [{ id: "invite", expiresAt: "2099-10-19T12:30:00Z", consumedAt: null, revokedAt: null }],
-};
-const foreign: SharingCalendarView = {
-  ...own,
-  id: "foreign",
-  name: "Sams Plan",
-  isOwner: false,
-  members: [],
-  invites: [],
-};
 beforeEach(() => {
   jest.spyOn(Alert, "alert").mockImplementation(() => {});
 });
-async function confirmLastAlert() {
-  const calls = jest.mocked(Alert.alert).mock.calls;
-  const buttons = calls[calls.length - 1][2];
-  await act(async () => buttons?.find((button) => button.style === "destructive")?.onPress?.());
+function MemberAccess({
+  controller,
+  memberId = "active",
+  calendarId = "own",
+}: {
+  readonly controller: SharingController;
+  readonly memberId?: string;
+  readonly calendarId?: string;
+}) {
+  return (
+    <CalendarAccessScreen
+      controller={controller}
+      memberId={memberId}
+      calendarId={calendarId}
+      onBack={() => {}}
+    />
+  );
 }
 
 describe("Kalenderfreigabe", () => {
   it("describes a pending person as waiting until approval and updates with their actual status", async () => {
     const c = controller({ calendars: [own] });
-    const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Sam" }));
-    expect(
-      screen.getByText("Nach deiner Bestätigung kann Sam diese Inhalte ansehen."),
-    ).toBeTruthy();
+    const screen = await render(<MemberAccess memberId="pending" controller={c} />);
+    expect(screen.getByText("Erst nach deiner Bestätigung sichtbar.")).toBeTruthy();
     expect(c.setMember).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff erlauben" }));
     expect(c.setMember).toHaveBeenCalledWith("own", "pending", "APPROVE");
     await screen.rerender(
-      <CalendarSharingScreen
+      <MemberAccess
+        memberId="pending"
         controller={{
           ...c,
           calendars: [
@@ -119,7 +52,7 @@ describe("Kalenderfreigabe", () => {
         }}
       />,
     );
-    expect(screen.getByText("Sam kann diese Inhalte ansehen, aber nicht bearbeiten.")).toBeTruthy();
+    expect(screen.getByText("Nur ansehen. Bearbeiten ist nicht erlaubt.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Zugriff erlauben" })).toBeNull();
   });
   it("does not mistake an existing invitation for a person who has joined", async () => {
@@ -169,6 +102,11 @@ describe("Kalenderfreigabe", () => {
     const screen = await render(<CalendarSharingScreen controller={c} />);
     expect(screen.queryByRole("button", { name: "Freigabeaktionen" })).toBeNull();
     await fireEvent.press(screen.getAllByRole("button", { name: "Kalenderzugriff für Kim" })[1]);
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/calendar-access",
+      params: { calendarId: "second", memberId: "active" },
+    });
+    await screen.rerender(<MemberAccess controller={c} calendarId="second" />);
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff entfernen" }));
     expect(c.deleteCalendar).not.toHaveBeenCalled();
     await confirmLastAlert();
@@ -236,6 +174,60 @@ describe("Kalenderfreigabe", () => {
       notes: true,
     });
   });
+  it("offers photo sharing off by default in each new invitation and sends explicit consent", async () => {
+    const c = controller({
+      calendars: [own],
+      contentRightsAvailable: true,
+      profilePhotosAvailable: true,
+    });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(
+      screen.getByRole("switch", { name: "Profilbild teilen" }).props.accessibilityState.checked,
+    ).toBe(false);
+    await fireEvent(screen.getByRole("switch", { name: "Profilbild teilen" }), "valueChange", true);
+    await fireEvent.press(screen.getByRole("button", { name: "Einladung erstellen" }));
+    expect(c.createInvitation).toHaveBeenCalledWith(
+      "own",
+      { shifts: true, appointments: false, notes: false },
+      true,
+    );
+  });
+  it("edits photo consent only for the selected recipient in Kalenderzugriff", async () => {
+    const setMemberProfilePhoto = jest
+      .fn<NonNullable<SharingController["setMemberProfilePhoto"]>>()
+      .mockResolvedValue();
+    const c = controller({ calendars: [own], profilePhotosAvailable: true, setMemberProfilePhoto });
+    const screen = await render(<MemberAccess controller={c} />);
+    expect(
+      screen.getByRole("switch", { name: "Profilbild teilen" }).props.accessibilityState.checked,
+    ).toBe(false);
+    await fireEvent(screen.getByRole("switch", { name: "Profilbild teilen" }), "valueChange", true);
+    expect(setMemberProfilePhoto).toHaveBeenCalledWith("own", "active", true);
+    expect(c.setMember).not.toHaveBeenCalled();
+    await screen.rerender(
+      <MemberAccess
+        controller={{
+          ...c,
+          calendars: [
+            { ...own, members: own.members.map((m) => ({ ...m, shareProfilePhoto: true })) },
+          ],
+        }}
+      />,
+    );
+    await fireEvent(
+      screen.getByRole("switch", { name: "Profilbild teilen" }),
+      "valueChange",
+      false,
+    );
+    expect(setMemberProfilePhoto).toHaveBeenLastCalledWith("own", "active", false);
+  });
+  it("disables photo consent when the server does not support it", async () => {
+    const c = controller({ calendars: [own] });
+    const screen = await render(<CalendarSharingScreen controller={c} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Neue Einladung" }));
+    expect(screen.getByRole("switch", { name: "Profilbild teilen" })).toBeDisabled();
+  });
   it("changes only the selected person's content rights", async () => {
     const setMemberRights = jest
       .fn<NonNullable<SharingController["setMemberRights"]>>()
@@ -253,8 +245,7 @@ describe("Kalenderfreigabe", () => {
         },
       ],
     });
-    const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+    const screen = await render(<MemberAccess controller={c} />);
     await fireEvent(screen.getByRole("switch", { name: "Notizen freigeben" }), "valueChange", true);
     expect(setMemberRights).toHaveBeenCalledWith("own", "active", {
       shifts: true,
@@ -266,9 +257,8 @@ describe("Kalenderfreigabe", () => {
   });
   it("opens the selected person directly and revokes only that person's access", async () => {
     const c = controller({ calendars: [own] });
-    const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
-    expect(screen.getByText("Kalenderzugriff")).toBeTruthy();
+    const screen = await render(<MemberAccess controller={c} />);
+    expect(screen.getByTestId("back-footer-surface")).toBeTruthy();
     expect(screen.getByText("Kim")).toBeTruthy();
     expect(screen.queryByText("Sam")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff entfernen" }));
@@ -514,13 +504,12 @@ describe("Kalenderfreigabe", () => {
   });
   it("distinguishes requesting members and active readers with explicit control", async () => {
     const c = controller({ calendars: [own] });
-    const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Sam" }));
+    const screen = await render(<MemberAccess memberId="pending" controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff erlauben" }));
     expect(c.setMember).toHaveBeenCalledWith("own", "pending", "APPROVE");
     await fireEvent.press(screen.getByRole("button", { name: "Anfrage ablehnen" }));
     expect(c.setMember).toHaveBeenCalledWith("own", "pending", "REJECT");
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+    await screen.rerender(<MemberAccess controller={c} memberId="active" />);
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff entfernen" }));
     await confirmLastAlert();
     expect(c.setMember).toHaveBeenCalledWith("own", "active", "REVOKE");
@@ -536,8 +525,7 @@ describe("Kalenderfreigabe", () => {
   });
   it("keeps individual access until its explicit destructive confirmation", async () => {
     const c = controller({ calendars: [own] });
-    const screen = await render(<CalendarSharingScreen controller={c} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+    const screen = await render(<MemberAccess controller={c} />);
     await fireEvent.press(screen.getByRole("button", { name: "Zugriff entfernen" }));
     expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[2]?.[0]).toEqual({
       text: "Abbrechen",
@@ -636,4 +624,15 @@ it("keeps visibility switches enabled and the page free of a global spinner duri
   await fireEvent(screen.getByLabelText("Sams Plan anzeigen"), "valueChange", true);
   expect(c.setVisible).toHaveBeenCalledTimes(2);
   await act(async () => resolve());
+});
+
+it("opens member access as its own stack route and keeps the overview mounted", async () => {
+  const c = controller({ calendars: [own] });
+  const screen = await render(<CalendarSharingScreen controller={c} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Kalenderzugriff für Kim" }));
+  expect(router.push).toHaveBeenCalledWith({
+    pathname: "/calendar-access",
+    params: { calendarId: "own", memberId: "active" },
+  });
+  expect(screen.getByRole("button", { name: "Neue Einladung" })).toBeTruthy();
 });
