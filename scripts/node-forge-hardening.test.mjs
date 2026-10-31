@@ -6,20 +6,27 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import forge from "node-forge";
+import { spawnSync } from "node:child_process";
 import {
   applyNodeForgeHardening,
   verifyNodeForgeHardening,
   isVerifiedNodeForgeHardening,
-  NODE_FORGE_ORIGINAL_SHA256,
+  NODE_FORGE_SOURCE_SHA256,
   NODE_FORGE_PATCHED_SHA256,
 } from "./node-forge-hardening.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const patchedBytes = readFileSync(join(root, "node_modules/node-forge/lib/rsa.js"));
+const upstreamFiles = Object.fromEntries(
+  Object.keys(NODE_FORGE_SOURCE_SHA256).map((name) => [
+    name,
+    readFileSync(join(root, "node_modules/node-forge/lib", name)),
+  ]),
+);
+const patchedBytes = upstreamFiles["rsa.js"];
 const lockEntry = JSON.parse(readFileSync(join(root, "package-lock.json"))).packages[
   "node_modules/node-forge"
 ];
-function fixture({ source = patchedBytes, version = "1.4.0", entry = lockEntry, extra = {} } = {}) {
+function fixture({ source = patchedBytes, version = "1.4.2", entry = lockEntry, extra = {} } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "luna-forge-test-"));
   mkdirSync(join(directory, "node_modules/node-forge/lib"), { recursive: true });
   writeFileSync(
@@ -30,7 +37,11 @@ function fixture({ source = patchedBytes, version = "1.4.0", entry = lockEntry, 
     join(directory, "node_modules/node-forge/package.json"),
     JSON.stringify({ name: "node-forge", version }),
   );
-  writeFileSync(join(directory, "node_modules/node-forge/lib/rsa.js"), source);
+  for (const [name, bytes] of Object.entries(upstreamFiles))
+    writeFileSync(
+      join(directory, "node_modules/node-forge/lib", name),
+      name === "rsa.js" ? source : bytes,
+    );
   return directory;
 }
 
@@ -44,45 +55,29 @@ test("verifies the installed hash and creates only opaque registered proofs", ()
     assert.equal(isVerifiedNodeForgeHardening(fake), false);
 });
 
-test("applies the exact upstream postimage and is idempotent", () => {
-  const after = [
-    "          // validate DigestInfo structure and element counts (outer DigestInfo",
-    "          // and nested DigestAlgorithm). asn1.validate ignores extra children,",
-    "          // so length must be checked explicitly at each nesting level to",
-    "          // prevent low-exponent PKCS#1 v1.5 signature forgery (CVE-2026-85393).",
-    "          var capture = {};",
-    "          var errors = [];",
-    "          if(!asn1.validate(obj, digestInfoValidator, capture, errors) ||",
-    "            obj.value.length !== 2 ||",
-    "            obj.value[0].value.length !==",
-    "              (('parameters' in capture) ? 2 : 1)) {",
-  ].join("\n");
-  const before = [
-    "          // validate DigestInfo structure and element count",
-    "          var capture = {};",
-    "          var errors = [];",
-    "          if(!asn1.validate(obj, digestInfoValidator, capture, errors) ||",
-    "            obj.value.length !== 2) {",
-  ].join("\n");
-  const original = patchedBytes.toString("utf8").replace(after, before);
-  assert.equal(createHash("sha256").update(original).digest("hex"), NODE_FORGE_ORIGINAL_SHA256);
-  const directory = fixture({ source: original });
-  assert.throws(() => verifyNodeForgeHardening(directory), /NODE_FORGE_HARDENING_MISSING/);
-  assert.ok(isVerifiedNodeForgeHardening(applyNodeForgeHardening(directory)));
-  assert.deepEqual(
-    readFileSync(join(directory, "node_modules/node-forge/lib/rsa.js")),
-    patchedBytes,
-  );
-  applyNodeForgeHardening(directory);
-  assert.deepEqual(
-    readFileSync(join(directory, "node_modules/node-forge/lib/rsa.js")),
-    patchedBytes,
-  );
+test("verifies the exact upstream files idempotently without rewriting them", () => {
+  const directory = fixture();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    assert.ok(isVerifiedNodeForgeHardening(applyNodeForgeHardening(directory)));
+    for (const [name, bytes] of Object.entries(upstreamFiles))
+      assert.deepEqual(readFileSync(join(directory, "node_modules/node-forge/lib", name)), bytes);
+  }
+});
+
+test("rejects tampering in each verified upstream security module", () => {
+  for (const name of Object.keys(upstreamFiles)) {
+    const directory = fixture();
+    writeFileSync(
+      join(directory, "node_modules/node-forge/lib", name),
+      Buffer.concat([upstreamFiles[name], Buffer.from("\n// altered\n")]),
+    );
+    assert.throws(() => applyNodeForgeHardening(directory), /NODE_FORGE_HARDENING_MISSING/);
+  }
 });
 
 test("fails closed for version, archive identity, extra copies and altered source", () => {
   assert.throws(
-    () => applyNodeForgeHardening(fixture({ version: "1.4.1" })),
+    () => applyNodeForgeHardening(fixture({ version: "1.4.0" })),
     /NODE_FORGE_INSTALLED_VERSION/,
   );
   assert.throws(
@@ -97,7 +92,7 @@ test("fails closed for version, archive identity, extra copies and altered sourc
     /NODE_FORGE_LOCK_IDENTITY/,
   );
   const altered = fixture({ source: Buffer.concat([patchedBytes, Buffer.from("\n// changed\n")]) });
-  assert.throws(() => applyNodeForgeHardening(altered), /NODE_FORGE_UNEXPECTED_SOURCE/);
+  assert.throws(() => applyNodeForgeHardening(altered), /NODE_FORGE_HARDENING_MISSING/);
   assert.throws(() => verifyNodeForgeHardening(altered), /NODE_FORGE_HARDENING_MISSING/);
 });
 
@@ -193,4 +188,26 @@ test("rejects a dependency junction outside the checkout before writing", () => 
   );
   assert.throws(() => applyNodeForgeHardening(directory), /NODE_FORGE_TARGET_OUTSIDE_CHECKOUT/);
   assert.deepEqual(readFileSync(join(outside, "node_modules/node-forge/lib/rsa.js")), patchedBytes);
+});
+
+test("rejects adversarial PEM text within a bounded child process", () => {
+  const program = `const forge = require("node-forge"); const pem = " -----BEGIN I-----G-----END B".repeat(1000) + "\\x00"; try { forge.pki.certificateFromPem(pem); process.exit(2); } catch {} `;
+  const result = spawnSync(process.execPath, ["-e", program], {
+    cwd: root,
+    timeout: 3000,
+    encoding: "utf8",
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("rejects nonpositive PKCS12 iteration counts while retaining valid derivation", () => {
+  for (const count of [-1, 0])
+    assert.throws(
+      () => forge.pkcs12.generateKey("password", new forge.util.ByteBuffer("salt"), 3, count, 20),
+      /iteration count must be >= 1/,
+    );
+  const valid = forge.pkcs12.generateKey("password", new forge.util.ByteBuffer("salt"), 3, 1, 20);
+  assert.equal(valid.length(), 20);
+  assert.notEqual(valid.toHex(), "03".repeat(20));
 });
