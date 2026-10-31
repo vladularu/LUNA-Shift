@@ -40,6 +40,11 @@ const entry = (id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee") => ({
 });
 let db;
 const rpcNames = new Set([
+  "sharing_profile_photo_capabilities",
+  "sharing_create_invite_v3",
+  "sharing_list_members_v3",
+  "sharing_set_member_profile_photo",
+  "sharing_get_profile_photo",
   "sharing_capabilities_v3",
   "sharing_publish_calendar_v3",
   "sharing_fetch_calendar_v3",
@@ -136,9 +141,9 @@ const failure =
 before(async () => {
   db = new PGlite({ extensions: { pgcrypto } });
   await db.exec(`
-    create role anon nologin; create role authenticated nologin;
+    create role anon nologin; create role authenticated nologin; create role service_role nologin;
     create schema auth; create schema extensions;
-    create table auth.users (id uuid primary key, banned_until timestamptz, deleted_at timestamptz);
+    create table auth.users (id uuid primary key, banned_until timestamptz, deleted_at timestamptz, email_confirmed_at timestamptz default now());
     create table auth.sessions (id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade, not_after timestamptz);
     create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, provider text not null);
     create function auth.jwt() returns jsonb language sql stable as
@@ -168,6 +173,10 @@ before(async () => {
   await db.exec(
     await readFile("supabase/migrations/20261021134519_sharing_shift_duration.sql", "utf8"),
   );
+  await db.exec(await readFile("supabase/migrations/20261017211850_private_cloud.sql", "utf8"));
+  await db.exec(
+    await readFile("supabase/migrations/20261030071015_shared_profile_photo_consent.sql", "utf8"),
+  );
 });
 beforeEach(async () => {
   await db.exec("reset role; truncate realtime.messages");
@@ -184,6 +193,186 @@ const rights = (shifts = true, appointments = false, notes = false) => ({
   shifts,
   appointments,
   notes,
+});
+
+async function photoSnapshot(image = "/9j/AA==", revision = 1) {
+  await db.query(
+    "insert into luna_private_cloud.accounts(user_id,revision) values($1,$2) on conflict(user_id) do update set revision=excluded.revision",
+    [OWNER, revision],
+  );
+  await db.query(
+    "insert into luna_private_cloud.snapshots(user_id,revision,mutation_id,expected_revision,document) values($1,$2,$3,$4,$5)",
+    [
+      OWNER,
+      revision,
+      crypto.randomUUID(),
+      revision - 1,
+      JSON.stringify({ presentation: { accountPhoto: image }, data: { secret: "never shared" } }),
+    ],
+  );
+}
+const photoRead = (user = VIEWER, key = null) =>
+  rpc(user, "sharing_get_profile_photo", [CALENDAR, key]);
+async function joinWithPhoto(allowed = true, user = VIEWER, mutation = crypto.randomUUID()) {
+  const invitation = await rpc(OWNER, "sharing_create_invite_v3", [
+    CALENDAR,
+    mutation,
+    JSON.stringify(rights()),
+    allowed,
+  ]);
+  await rpc(user, "sharing_claim_invite", [invitation.token, "Leserin"]);
+  return invitation;
+}
+test("profile photo is opt-in for old invitations and recipients; legacy response keys stay unchanged", async () => {
+  await create();
+  await photoSnapshot();
+  await joinV2();
+  assert.deepEqual(await photoRead(), {
+    calendarId: CALENDAR,
+    photoKey: null,
+    image: null,
+    unchanged: false,
+  });
+  const current = await rpc(OWNER, "sharing_list_members_v3", [CALENDAR]);
+  assert.equal(current.members[0].shareProfilePhoto, false);
+  assert.equal(current.invites[0].shareProfilePhoto, false);
+  const legacy = await rpc(OWNER, "sharing_list_members_v2", [CALENDAR]);
+  assert.equal(Object.hasOwn(legacy.members[0], "shareProfilePhoto"), false);
+  assert.equal(Object.hasOwn(legacy.invites[0], "shareProfilePhoto"), false);
+  await assert.rejects(
+    rpc(VIEWER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, true]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+  await assert.rejects(
+    rpc(OTHER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, true]),
+    failure("SHARE_NOT_FOUND", "42501"),
+  );
+});
+test("photo consent travels with the invitation to each active join and returns only the bounded photo", async () => {
+  await create();
+  await photoSnapshot();
+  const invitation = await joinWithPhoto();
+  await rpc(OTHER, "sharing_claim_invite", [invitation.token, "Zweite Person"]);
+  const result = await photoRead();
+  assert.equal(result.image, "/9j/AA==");
+  assert.match(result.photoKey, /^[a-f0-9]{64}$/);
+  assert.deepEqual(Object.keys(result).sort(), ["calendarId", "image", "photoKey", "unchanged"]);
+  assert.equal((await photoRead(OTHER)).image, result.image);
+  assert.deepEqual(await photoRead(VIEWER, result.photoKey), {
+    calendarId: CALENDAR,
+    photoKey: result.photoKey,
+    image: null,
+    unchanged: true,
+  });
+  await rpc(OWNER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, false]);
+  assert.equal((await photoRead(VIEWER, result.photoKey)).photoKey, null);
+  assert.equal((await photoRead(OTHER)).image, result.image);
+  // Reopening an already used link must not silently re-enable the recipient's permission.
+  await rpc(VIEWER, "sharing_claim_invite", [invitation.token, "Leserin"]);
+  assert.equal((await photoRead()).image, null);
+});
+test("owner can explicitly change an existing recipient's photo permission, including pending approval", async () => {
+  await invited();
+  await photoSnapshot();
+  await rpc(OWNER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, true]);
+  await assert.rejects(photoRead(), failure("SHARE_NOT_FOUND", "42501"));
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "APPROVE"]);
+  assert.equal((await photoRead()).image, "/9j/AA==");
+  await rpc(OWNER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, false]);
+  assert.equal((await photoRead()).image, null);
+  await assert.rejects(
+    rpc(OWNER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, null]),
+    failure("SHARE_INVALID_ARGUMENT"),
+  );
+});
+test("photo RPC denies non-members, pending, revoked, departed, anonymous and expired sessions", async () => {
+  await create();
+  await photoSnapshot();
+  await joinWithPhoto();
+  await assert.rejects(photoRead(OTHER), failure("SHARE_NOT_FOUND", "42501"));
+  await assert.rejects(
+    rpc(VIEWER, "sharing_get_profile_photo", [CALENDAR, null], "anon"),
+    /permission denied/,
+  );
+  await assert.rejects(
+    rpc(VIEWER, "sharing_get_profile_photo", [CALENDAR, null], "authenticated", SESSIONS[OTHER]),
+    failure("SHARE_UNAUTHENTICATED", "42501"),
+  );
+  await rpc(OWNER, "sharing_set_member", [CALENDAR, VIEWER, "REVOKE"]);
+  await assert.rejects(photoRead(), failure("SHARE_NOT_FOUND", "42501"));
+  assert.equal(
+    (await rpc(OWNER, "sharing_list_members_v3", [CALENDAR])).members[0].shareProfilePhoto,
+    false,
+  );
+  await joinWithPhoto();
+  await rpc(VIEWER, "sharing_leave_calendar", [CALENDAR]);
+  await assert.rejects(photoRead(), failure("SHARE_NOT_FOUND", "42501"));
+});
+test("photo receipts bind explicit consent atomically, including false and retry after permission reduction", async () => {
+  await create();
+  const mutation = crypto.randomUUID();
+  const invitation = await joinWithPhoto(true, VIEWER, mutation);
+  const retry = await rpc(OWNER, "sharing_create_invite_v3", [
+    CALENDAR,
+    mutation,
+    JSON.stringify(rights()),
+    true,
+  ]);
+  assert.equal(retry.inviteId, invitation.inviteId);
+  assert.equal(retry.token, null);
+  await assert.rejects(
+    rpc(OWNER, "sharing_create_invite_v3", [CALENDAR, mutation, JSON.stringify(rights()), false]),
+    failure("SHARE_MUTATION_REUSED"),
+  );
+  await assert.rejects(
+    rpc(OWNER, "sharing_create_invite_v3", [
+      CALENDAR,
+      crypto.randomUUID(),
+      JSON.stringify(rights()),
+      null,
+    ]),
+    failure("SHARE_INVALID_ARGUMENT"),
+  );
+  await rpc(OWNER, "sharing_set_member_profile_photo", [CALENDAR, VIEWER, false]);
+  await rpc(OWNER, "sharing_create_invite_v3", [
+    CALENDAR,
+    mutation,
+    JSON.stringify(rights()),
+    true,
+  ]);
+  assert.equal(
+    (await rpc(OWNER, "sharing_list_members_v3", [CALENDAR])).members[0].shareProfilePhoto,
+    false,
+  );
+});
+test("photo updates/removal use the latest private snapshot only and never reveal earlier private images", async () => {
+  await create();
+  await joinWithPhoto();
+  assert.equal((await photoRead()).image, null);
+  await photoSnapshot();
+  const first = await photoRead();
+  await photoSnapshot("/9j/AAA=", 2);
+  const second = await photoRead(VIEWER, first.photoKey);
+  assert.equal(second.image, "/9j/AAA=");
+  assert.notEqual(second.photoKey, first.photoKey);
+  await photoSnapshot(null, 3);
+  assert.equal((await photoRead(VIEWER, second.photoKey)).image, null);
+  await photoSnapshot("/9j/" + "A".repeat(524288), 4);
+  assert.equal((await photoRead()).image, null);
+  await assert.rejects(
+    rpc(VIEWER, "sharing_get_profile_photo", [CALENDAR, "bad"]),
+    failure("SHARE_INVALID_ARGUMENT"),
+  );
+  await db.exec("set role authenticated");
+  await assert.rejects(
+    db.query("select luna_sharing.current_profile_photo($1)", [OWNER]),
+    /permission denied/,
+  );
+  await assert.rejects(
+    db.query("select document from luna_private_cloud.snapshots"),
+    /permission denied/,
+  );
+  await db.exec("reset role");
 });
 async function publishV2(
   entries,

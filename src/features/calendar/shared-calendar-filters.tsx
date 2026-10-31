@@ -1,101 +1,15 @@
-import { Image, Pressable, ScrollView, View } from "react-native";
-import { useContext, useRef, useState } from "react";
+import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { useContext, useEffect, useId, useRef, useState } from "react";
 import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-context";
 import { useSharingUiController } from "@/features/sharing/sharing-ui-provider";
 import { usePalette } from "@/theme/palette";
 import { Text } from "@/ui/text";
-import Ionicons from "@/ui/icon";
-import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
+import { PersonAvatar } from "@/ui/person-avatar";
+import { CALENDAR_PERSON_WIDTH, calendarPersonLabels } from "./calendar-person-labels";
+import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
 import { SharingStatus } from "@/features/sharing/sharing-ui-elements";
 import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharingController } from "@/domain/sharing-ui-contract";
-
-function PersonAvatar({
-  name,
-  color,
-  visible,
-  photoUri,
-}: {
-  readonly name: string;
-  readonly color: string;
-  readonly visible: boolean;
-  readonly photoUri?: string | null;
-}) {
-  const palette = usePalette();
-  const [failedUri, setFailedUri] = useState<string | null>(null);
-  const initials = name
-    .trim()
-    .split(/\s+/u)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => Array.from(part)[0])
-    .join("")
-    .toLocaleUpperCase("de-DE");
-  return (
-    <View
-      accessible={false}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: RADII.pill,
-        borderWidth: 2,
-        borderColor: visible ? color : palette.border,
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: visible ? 1 : 0.6,
-      }}
-    >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: RADII.pill,
-          overflow: "hidden",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: palette.surface,
-        }}
-      >
-        {photoUri && photoUri !== failedUri ? (
-          <Image
-            key={photoUri}
-            testID="calendar-person-photo"
-            source={{ uri: photoUri }}
-            resizeMode="cover"
-            accessible={false}
-            onError={() => setFailedUri(photoUri)}
-            style={{ width: 32, height: 32 }}
-          />
-        ) : initials ? (
-          <Text allowFontScaling={false} style={{ ...TYPOGRAPHY.label, color: palette.text }}>
-            {initials}
-          </Text>
-        ) : (
-          <Ionicons name="person-outline" size={18} color={palette.text} />
-        )}
-      </View>
-      {visible ? (
-        <View
-          style={{
-            position: "absolute",
-            right: -2,
-            bottom: -2,
-            width: 14,
-            height: 14,
-            borderRadius: RADII.pill,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: palette.text,
-          }}
-        >
-          <Ionicons name="checkmark" size={10} color={palette.surface} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
 
 export function SharedCalendarFilters(props: {
   readonly ownVisible: boolean;
@@ -115,11 +29,14 @@ function Filters({
   readonly onOwnVisible: (visible: boolean) => void;
 }) {
   const palette = usePalette();
+  const { fontScale } = useWindowDimensions();
   const cloud = useContext(PrivateCloudContext);
   const ownUser = cloud?.ready ? cloud.user : null;
   const ownPhotoUri = ownUser ? cloud?.photo?.uri : null;
   const [failed, setFailed] = useState(false);
   const requests = useRef(new Map<string, number>());
+  const photoViewId = useId();
+  const [viewport, setViewport] = useState({ width: 390, offset: 0 });
   const setVisible = (id: string, visible: boolean) => {
     const revision = (requests.current.get(id) ?? 0) + 1;
     requests.current.set(id, revision);
@@ -134,15 +51,58 @@ function Filters({
     });
   };
   const rows = [
-    { id: "own", name: "Du", color: palette.text, visible: ownVisible },
+    {
+      id: "own",
+      name: "Ich",
+      color: palette.text,
+      visible: ownVisible,
+      profilePhotoUri: ownPhotoUri,
+    },
     ...controller.calendars.filter((item) => !item.isOwner),
   ];
+  const labels = calendarPersonLabels(rows);
+  const first = Math.max(
+    0,
+    Math.floor((viewport.offset - SPACING.lg) / (CALENDAR_PERSON_WIDTH + SPACING.sm)),
+  );
+  const count = Math.ceil(viewport.width / (CALENDAR_PERSON_WIDTH + SPACING.sm)) + 1;
+  const photoIds = rows
+    .slice(first, first + Math.min(count, 8))
+    .filter((row) => row.id !== "own")
+    .map((row) => row.id)
+    .join(",");
+  const loadPhotos = controller.loadProfilePhotos;
+  useEffect(() => {
+    void loadPhotos?.(photoIds ? photoIds.split(",") : [], photoViewId).catch(() => {});
+  }, [photoIds, photoViewId, loadPhotos, controller.profilePhotosAvailable]);
+  useEffect(
+    () => () => {
+      void loadPhotos?.([], photoViewId).catch(() => {});
+    },
+    [loadPhotos, photoViewId],
+  );
   return (
     <View>
       <ScrollView
         testID="calendar-person-filter-viewport"
         horizontal
-        style={{ height: MINIMUM_TOUCH_TARGET, flexGrow: 0 }}
+        onLayout={(event) => {
+          // Native events are released before queued state updaters may run.
+          const width = event.nativeEvent.layout.width;
+          setViewport((old) => (old.width === width ? old : { ...old, width }));
+        }}
+        onScroll={(event) => {
+          const offset = event.nativeEvent.contentOffset.x;
+          setViewport((old) => (old.offset === offset ? old : { ...old, offset }));
+        }}
+        scrollEventThrottle={100}
+        style={{
+          height: Math.max(
+            MINIMUM_TOUCH_TARGET,
+            Math.ceil(TYPOGRAPHY.caption.lineHeight * fontScale * 2),
+          ),
+          flexGrow: 0,
+        }}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm }}
       >
@@ -150,7 +110,9 @@ function Filters({
           <Pressable
             key={row.id}
             accessibilityRole="button"
-            accessibilityLabel={`${row.name} anzeigen`}
+            accessibilityLabel={
+              row.id === "own" ? "Meinen Kalender anzeigen" : `${row.name} anzeigen`
+            }
             accessibilityHint="Tippen blendet die Dienste ein oder aus."
             accessibilityState={{ selected: row.visible }}
             onPress={() => {
@@ -158,19 +120,34 @@ function Filters({
               else setVisible(row.id, !row.visible);
             }}
             style={{
+              width: CALENDAR_PERSON_WIDTH,
               minWidth: MINIMUM_TOUCH_TARGET,
               minHeight: MINIMUM_TOUCH_TARGET,
+              flexDirection: "row",
+              gap: SPACING.xs,
               alignItems: "center",
-              justifyContent: "center",
+              justifyContent: "flex-start",
             }}
           >
             <PersonAvatar
               key={row.id === "own" ? (ownUser?.id ?? "guest") : row.id}
-              name={row.id === "own" ? ownUser?.displayName || "Du" : row.name}
+              name={row.id === "own" ? ownUser?.displayName || "Ich" : row.name}
               color={row.color}
-              visible={row.visible}
-              photoUri={row.id === "own" ? ownPhotoUri : null}
+              selected={row.visible}
+              photoUri={row.id === "own" ? ownPhotoUri : row.profilePhotoUri}
             />
+            <Text
+              accessible={false}
+              numberOfLines={2}
+              style={{
+                ...TYPOGRAPHY.caption,
+                color: palette.text,
+                flex: 1,
+                opacity: row.visible ? 1 : 0.6,
+              }}
+            >
+              {labels.get(row.id)}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>

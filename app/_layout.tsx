@@ -150,6 +150,10 @@ function ThemedApp() {
                               options={{ headerShown: false, presentation: "card" }}
                             />
                             <Stack.Screen
+                              name="calendar-access"
+                              options={{ title: "Kalenderzugriff", presentation: "card" }}
+                            />
+                            <Stack.Screen
                               name="sharing-invite"
                               options={{ headerShown: false, presentation: "card" }}
                             />

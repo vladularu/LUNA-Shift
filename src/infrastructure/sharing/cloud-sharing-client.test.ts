@@ -61,6 +61,50 @@ function fixture(data: unknown = calendar, error: unknown = null) {
   const transport = { rpc, functions: { invoke } } as SharingCloudTransport;
   return { rpc, invoke, api: createCloudSharingClient(transport) };
 }
+it("negotiates photos separately and leaves older servers on the existing contract", async () => {
+  const f = fixture(null, { code: "PGRST202" });
+  expect(await f.api.supportsProfilePhotos()).toBe(false);
+  await expect(
+    f.api.createInvite(ID, MUTATION, { shifts: true, appointments: false, notes: false }, true),
+  ).rejects.toThrow("SHARE_INVALID_ARGUMENT");
+  expect(f.rpc).toHaveBeenCalledTimes(1);
+});
+it("sends explicit photo consent only through v3 invitations and strictly decodes photo responses", async () => {
+  const f = fixture({ profilePhotoVersion: 1 });
+  expect(await f.api.supportsProfilePhotos()).toBe(true);
+  const rights = { shifts: true, appointments: false, notes: false };
+  f.rpc.mockResolvedValue({
+    data: { inviteId: MUTATION, calendarId: ID, token: SECRET, expiresAt: NOW },
+    error: null,
+  });
+  await f.api.createInvite(ID, MUTATION, rights, true);
+  expect(f.rpc).toHaveBeenLastCalledWith("sharing_create_invite_v3", {
+    p_calendar_id: ID,
+    p_mutation_id: MUTATION,
+    p_rights: rights,
+    p_share_profile_photo: true,
+  });
+  f.rpc.mockResolvedValue({
+    data: { calendarId: ID, photoKey: SECRET, image: null, unchanged: true },
+    error: null,
+  });
+  expect((await f.api.getProfilePhoto(ID, SECRET)).unchanged).toBe(true);
+  for (const response of [
+    { calendarId: USER, photoKey: null, image: null, unchanged: false },
+    { calendarId: ID, photoKey: SECRET, image: null, unchanged: true },
+    {
+      calendarId: ID,
+      photoKey: SECRET,
+      image: "https://example.invalid/photo.jpg",
+      unchanged: false,
+    },
+    { calendarId: ID, photoKey: SECRET, image: "/9j/AA==", unchanged: false },
+    { calendarId: ID, photoKey: null, image: null, unchanged: false, document: {} },
+  ]) {
+    f.rpc.mockResolvedValue({ data: response, error: null });
+    await expect(f.api.getProfilePhoto(ID, null)).rejects.toThrow("SHARE_INVALID_RESPONSE");
+  }
+});
 it("detects the additive server contract and uses v2 fetch without widening a legacy response parser", async () => {
   const f = fixture({ contentVersion: 2 });
   expect(await f.api.supportsContentRights()).toBe(true);
@@ -547,4 +591,33 @@ it("accepts exact48 elapsed hours and25hour DST availability day", async () => {
       }).api.fetch(ID, 0),
     ).resolves.toMatchObject({ entries: [bounded] });
   }
+});
+
+it("accepts a first opted-in photo when the deployed RPC returns SQL-null unchanged", async () => {
+  const f = fixture({ profilePhotoVersion: 1 });
+  await f.api.supportsProfilePhotos();
+  const image = Buffer.from([
+    255, 216, 255, 192, 0, 17, 8, 1, 0, 1, 0, 3, 1, 17, 0, 2, 17, 0, 3, 17, 0, 255, 217,
+  ]).toString("base64");
+  f.rpc.mockResolvedValue({
+    data: { calendarId: ID, photoKey: SECRET, image, unchanged: null },
+    error: null,
+  });
+  await expect(f.api.getProfilePhoto(ID, null)).resolves.toEqual({
+    calendarId: ID,
+    photoKey: SECRET,
+    image,
+    unchanged: false,
+  });
+  await expect(f.api.getProfilePhoto(ID, SECRET)).rejects.toThrow("SHARE_INVALID_RESPONSE");
+  f.rpc.mockResolvedValue({
+    data: {
+      calendarId: ID,
+      photoKey: SECRET,
+      image: "https://invalid.example/photo",
+      unchanged: null,
+    },
+    error: null,
+  });
+  await expect(f.api.getProfilePhoto(ID, null)).rejects.toThrow("SHARE_INVALID_RESPONSE");
 });

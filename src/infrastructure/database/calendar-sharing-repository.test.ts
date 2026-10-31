@@ -19,6 +19,7 @@ import {
   listSharingInvitations,
   setSharingCalendarColor,
 } from "@/infrastructure/database/calendar-sharing-repository";
+import { newSpecialDuty } from "@/domain/special-duty";
 import type { CloudSharedCalendar } from "@/domain/calendar-sharing";
 const account = "10000000-0000-4000-8000-000000000001";
 const calendarId = "20000000-0000-4000-8000-000000000001";
@@ -402,4 +403,48 @@ it("adds reader colors to a legacy cache without replacing the cached calendar",
   );
   await setSharingCalendarColor(test.db, account, calendarId, "#AA4455");
   expect((await listCachedSharingCalendars(test.db, account))[0].localColor).toBe("#AA4455");
+});
+
+it("stages every split-duty segment with distinct stable public IDs across retries and edits", async () => {
+  const specialDuty = {
+    ...newSpecialDuty("SPLIT", "07:00", "11:00", "Europe/Berlin"),
+    parts: [{ start: 900, end: 1140, breakMinutes: 15 }],
+  };
+  const input = {
+    ...shiftInput,
+    type: "CUSTOM" as const,
+    startTime: "07:00",
+    endTime: "11:00",
+    breakMinutes: 15,
+    specialDuty,
+  };
+  const saved = await saveShift(test.db, input);
+  const [binding] = await listSharingBindings(test.db, account);
+  const first = (await stageSharingPublication(test.db, binding, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(first.entries).toHaveLength(2);
+  const publicIds = first.entries.map((entry) => entry.id);
+  expect(new Set(publicIds).size).toBe(2);
+  for (const id of publicIds) expect(id).toMatch(/^[a-f0-9-]{36}$/);
+  expect(JSON.stringify(first.entries)).not.toContain(saved.id);
+  expect(first.entries.map((entry) => entry.startsAt)).toEqual([
+    "2026-10-01T05:00:00Z",
+    "2026-10-01T13:00:00Z",
+  ]);
+  expect(
+    await stageSharingPublication(test.db, binding, "Europe/Berlin", () => crypto.randomUUID()),
+  ).toEqual(first);
+  await acknowledgeSharingPublication(test.db, first, 1);
+  await saveShift(test.db, {
+    ...input,
+    id: saved.id,
+    expectedRevision: saved.revision,
+    note: "Updated locally",
+  });
+  const [updated] = await listSharingBindings(test.db, account);
+  const next = (await stageSharingPublication(test.db, updated, "Europe/Berlin", () =>
+    crypto.randomUUID(),
+  ))!;
+  expect(next.entries.map((entry) => entry.id)).toEqual(publicIds);
 });

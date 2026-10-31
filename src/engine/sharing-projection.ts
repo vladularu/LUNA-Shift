@@ -24,11 +24,11 @@ export interface SharingProjectionOptions {
   readonly selectedAppointmentIds?: readonly string[];
   readonly publicId: (entry: CalendarEntry) => string;
 }
-export function projectSharingEntries(
+/** Allocate and project the same source segments so each keeps a stable public identity. */
+export function expandSharingSourceEntries(
   entries: readonly CalendarEntry[],
-  options: SharingProjectionOptions,
-): readonly SharedCalendarEntry[] {
-  entries = entries.flatMap((entry): CalendarEntry[] => {
+): readonly CalendarEntry[] {
+  return entries.flatMap((entry): CalendarEntry[] => {
     if (entry.kind !== "SHIFT" || !entry.specialDuty) return [entry];
     if (entry.specialDuty.kind === "SPLIT")
       return projectDutyWork(entry).map((part, index) => ({
@@ -38,9 +38,15 @@ export function projectSharingEntries(
       }));
     return [{ ...entry, title: DUTY_LABELS[entry.specialDuty.kind] }];
   });
+}
+
+export function projectSharingEntries(
+  entries: readonly CalendarEntry[],
+  options: SharingProjectionOptions,
+): readonly SharedCalendarEntry[] {
   const selected = new Set(options.selectedAppointmentIds ?? []);
   const result: SharedCalendarEntry[] = [];
-  for (const entry of entries) {
+  for (const entry of expandSharingSourceEntries(entries)) {
     if (
       entry.deletedAt !== null ||
       (options.visibility === "AVAILABILITY" && entry.kind === "SHIFT" && entry.type === "FREE")

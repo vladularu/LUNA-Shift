@@ -2,13 +2,22 @@ import { beforeEach, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { SharingCalendarView, SharingController } from "@/domain/sharing-ui-contract";
 import { PrivateCloudContext } from "@/features/private-cloud/private-cloud-context";
+import { StyleSheet } from "react-native";
 import { MINIMUM_TOUCH_TARGET } from "@/theme/tokens";
 import { SharedCalendarFilters } from "./shared-calendar-filters";
+import { AppErrorBoundary } from "@/ui/app-error-boundary";
 
 const mockSetVisible = jest.fn<SharingController["setVisible"]>().mockResolvedValue();
 let mockController: Pick<
   SharingController,
-  "status" | "calendars" | "busy" | "error" | "offline" | "setVisible"
+  | "status"
+  | "calendars"
+  | "busy"
+  | "error"
+  | "offline"
+  | "setVisible"
+  | "loadProfilePhotos"
+  | "profilePhotosAvailable"
 >;
 jest.mock("@/features/sharing/sharing-ui-provider", () => ({
   useSharingUiController: () => mockController,
@@ -26,6 +35,9 @@ const foreign: SharingCalendarView = {
   invites: [],
 };
 beforeEach(() => {
+  jest
+    .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useWindowDimensions")
+    .mockReturnValue({ width: 390, height: 844, scale: 3, fontScale: 1 });
   mockSetVisible.mockReset().mockResolvedValue();
   mockController = {
     status: "loading",
@@ -34,6 +46,30 @@ beforeEach(() => {
     error: false,
     setVisible: mockSetVisible,
   };
+});
+it("shows an explicitly shared recipient photo and falls back after permission removal", async () => {
+  const uri = "data:image/jpeg;base64,/9j/AAAA";
+  const loadProfilePhotos = jest
+    .fn<NonNullable<SharingController["loadProfilePhotos"]>>()
+    .mockResolvedValue();
+  mockController = {
+    ...mockController,
+    profilePhotosAvailable: true,
+    calendars: [{ ...foreign, profilePhotoUri: uri }],
+    loadProfilePhotos,
+  };
+  const screen = await render(<AccountFilters />);
+  expect(loadProfilePhotos).toHaveBeenCalledWith([foreign.id], expect.any(String));
+  expect(
+    screen.getByTestId("calendar-person-photo", { includeHiddenElements: true }).props.source.uri,
+  ).toBe(uri);
+  expect(screen.queryByText("SM", { includeHiddenElements: true })).toBeNull();
+  mockController = { ...mockController, calendars: [foreign] };
+  await screen.rerender(<AccountFilters />);
+  expect(screen.queryByTestId("calendar-person-photo", { includeHiddenElements: true })).toBeNull();
+  expect(screen.getByText("SM", { includeHiddenElements: true })).toBeTruthy();
+  await screen.unmount();
+  expect(loadProfilePhotos).toHaveBeenLastCalledWith([], expect.any(String));
 });
 
 function AccountFilters({
@@ -62,7 +98,7 @@ function AccountFilters({
   );
 }
 
-it("replaces names with initials while keeping full names and selection accessible", async () => {
+it("shows stable short names beside avatars while keeping full names and selection accessible", async () => {
   mockController = {
     ...mockController,
     calendars: [
@@ -74,6 +110,8 @@ it("replaces names with initials while keeping full names and selection accessib
   const screen = await render(<AccountFilters />);
   for (const initials of ["VU", "SM", "LT", "ÉG"])
     expect(screen.getByText(initials, { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.getByText("Selena")).toBeTruthy();
+  expect(screen.getByText("Laura")).toBeTruthy();
   expect(screen.queryByText("Selena Müller")).toBeNull();
   expect(screen.queryByText("Laura Trost")).toBeNull();
   expect(
@@ -105,7 +143,7 @@ it("shows only the ready signed-in account photo and clears it during account ch
   expect(screen.queryByText("VU", { includeHiddenElements: true })).toBeNull();
   await screen.rerender(<AccountFilters accountId={null} photoUri={photoUri} />);
   expect(screen.queryByTestId("calendar-person-photo", { includeHiddenElements: true })).toBeNull();
-  expect(screen.getByRole("button", { name: "Du anzeigen" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Meinen Kalender anzeigen" })).toBeTruthy();
 });
 
 it("falls back to initials after an image error and tries a replacement photo", async () => {
@@ -125,7 +163,7 @@ it("falls back to initials after an image error and tries a replacement photo", 
 it("keeps the first filter viewport and own button while startup hydrates and sharing changes", async () => {
   const onOwnVisible = jest.fn();
   const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
-  const own = screen.getByRole("button", { name: "Du anzeigen" });
+  const own = screen.getByRole("button", { name: "Meinen Kalender anzeigen" });
   const viewport = screen.getByTestId("calendar-person-filter-viewport");
   for (const next of [
     { status: "signedIn" as const, calendars: [] },
@@ -137,7 +175,7 @@ it("keeps the first filter viewport and own button while startup hydrates and sh
   ]) {
     mockController = { ...mockController, ...next };
     await screen.rerender(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
-    expect(screen.getByRole("button", { name: "Du anzeigen" })).toBe(own);
+    expect(screen.getByRole("button", { name: "Meinen Kalender anzeigen" })).toBe(own);
     expect(screen.getByTestId("calendar-person-filter-viewport")).toBe(viewport);
     expect(viewport).toHaveStyle({ height: MINIMUM_TOUCH_TARGET });
     expect(Boolean(screen.queryByRole("button", { name: "Selena Müller anzeigen" }))).toBe(
@@ -151,11 +189,13 @@ it.each(["loading", "signedOut", "unavailable"] as const)(
     mockController = { ...mockController, status };
     const onOwnVisible = jest.fn();
     const screen = await render(<SharedCalendarFilters ownVisible onOwnVisible={onOwnVisible} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Du anzeigen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Meinen Kalender anzeigen" }));
     expect(onOwnVisible).toHaveBeenLastCalledWith(false);
     await screen.rerender(<SharedCalendarFilters ownVisible={false} onOwnVisible={onOwnVisible} />);
-    expect(screen.getByRole("button", { name: "Du anzeigen", selected: false })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Du anzeigen" }));
+    expect(
+      screen.getByRole("button", { name: "Meinen Kalender anzeigen", selected: false }),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Meinen Kalender anzeigen" }));
     expect(onOwnVisible).toHaveBeenLastCalledWith(true);
     expect(mockSetVisible).not.toHaveBeenCalled();
   },
@@ -191,7 +231,7 @@ it("keeps person controls responsive during cloud work and pending local saves",
   ).toBeEnabled();
   await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
   expect(mockSetVisible).toHaveBeenLastCalledWith("foreign", true);
-  await fireEvent.press(screen.getByRole("button", { name: "Du anzeigen" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Meinen Kalender anzeigen" }));
   expect(onOwnVisible).toHaveBeenCalledWith(false);
   await act(async () => {
     finish();
@@ -265,4 +305,82 @@ it("reports a failed person save even when another person was toggled afterwards
   expect(
     screen.getByText("Freigaben konnten nicht aktualisiert werden. Versuche es erneut."),
   ).toBeTruthy();
+});
+
+it.each(["layout", "scroll"] as const)(
+  "keeps the calendar mounted when batched %s updates outlive released native events",
+  async (kind) => {
+    const loadProfilePhotos = jest
+      .fn<NonNullable<SharingController["loadProfilePhotos"]>>()
+      .mockResolvedValue();
+    mockController = {
+      ...mockController,
+      profilePhotosAvailable: true,
+      calendars: Array.from({ length: 20 }, (_, index) => ({
+        ...foreign,
+        id: "person-" + index,
+      })),
+      loadProfilePhotos,
+    };
+    const errors = jest.spyOn(console, "error").mockImplementation(() => {});
+    const screen = await render(
+      <AppErrorBoundary>
+        <AccountFilters />
+      </AppErrorBoundary>,
+    );
+    const viewport = screen.getByTestId("calendar-person-filter-viewport");
+    await act(async () => {
+      // React Native releases synthetic events after dispatch, before queued updaters run.
+      for (const value of kind === "layout" ? [448, 224] : [224, 1096]) {
+        let released = false;
+        const event = {
+          get nativeEvent() {
+            return released ? null : { layout: { width: value }, contentOffset: { x: value } };
+          },
+        };
+        if (kind === "layout") viewport.props.onLayout(event);
+        else viewport.props.onScroll(event);
+        released = true;
+      }
+    });
+    expect(screen.getByTestId("calendar-person-filter-viewport")).toBeTruthy();
+    expect(screen.queryByText("Diagnosecode: APP_RENDER_FAILED")).toBeNull();
+    expect(loadProfilePhotos).toHaveBeenLastCalledWith(
+      kind === "layout"
+        ? ["person-0", "person-1"]
+        : Array.from({ length: 5 }, (_, index) => "person-" + (index + 8)),
+      expect.any(String),
+    );
+    expect(errors).not.toHaveBeenCalled();
+  },
+);
+
+it("allows larger text to expand the row without losing the named person controls", async () => {
+  jest
+    .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useWindowDimensions")
+    .mockReturnValue({ width: 390, height: 844, scale: 3, fontScale: 2 });
+  mockController = { ...mockController, calendars: [foreign] };
+  const screen = await render(<AccountFilters />);
+  expect(
+    StyleSheet.flatten(screen.getByTestId("calendar-person-filter-viewport").props.style).height,
+  ).toBeGreaterThan(MINIMUM_TOUCH_TARGET);
+  expect(screen.getByText("Selena")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Selena Müller anzeigen" })).toBeEnabled();
+});
+it("keeps the person's visible name when their photo changes", async () => {
+  mockController = {
+    ...mockController,
+    calendars: [{ ...foreign, profilePhotoUri: "data:image/jpeg;base64,first" }],
+  };
+  const screen = await render(<AccountFilters />);
+  expect(screen.getByText("Selena")).toBeTruthy();
+  mockController = {
+    ...mockController,
+    calendars: [{ ...foreign, profilePhotoUri: "data:image/jpeg;base64,replacement" }],
+  };
+  await screen.rerender(<AccountFilters />);
+  expect(screen.getByText("Selena")).toBeTruthy();
+  expect(
+    screen.getByTestId("calendar-person-photo", { includeHiddenElements: true }).props.source.uri,
+  ).toBe("data:image/jpeg;base64,replacement");
 });

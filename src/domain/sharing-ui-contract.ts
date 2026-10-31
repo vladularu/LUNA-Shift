@@ -5,12 +5,14 @@ export type SharingMemberAction = "APPROVE" | "REJECT" | "REVOKE";
 export type SharingDeliveryChannel =
   "messages" | "whatsapp" | "telegram" | "email" | "system" | "copy";
 export interface SharingMemberView {
+  readonly shareProfilePhoto?: boolean;
   readonly rights?: SharingContentRights;
   readonly userId: string;
   readonly displayName: string;
   readonly status: "PENDING" | "ACTIVE" | "REJECTED" | "REVOKED" | "LEFT";
 }
 export interface SharingInviteView {
+  readonly shareProfilePhoto?: boolean;
   readonly joinedCount?: number;
   readonly rights?: SharingContentRights;
   readonly id: string;
@@ -19,6 +21,9 @@ export interface SharingInviteView {
   readonly revokedAt: string | null;
 }
 export interface SharingCalendarView {
+  /** Used only to match an already shared person photo; never match by display name. */
+  readonly ownerId?: string;
+  readonly profilePhotoUri?: string | null;
   readonly id: string;
   readonly name: string;
   readonly color: string;
@@ -70,6 +75,9 @@ export interface SharingController {
   readonly accountDeletionAvailable: boolean;
   readonly directCopyAvailable?: boolean;
   readonly contentRightsAvailable?: boolean;
+  readonly profilePhotosAvailable?: boolean;
+  /** Session-only images for a bounded visible window; never part of calendar backups. */
+  loadProfilePhotos?(calendarIds: readonly string[], viewId?: string): Promise<void>;
   readonly issuedInvitations?: readonly SharingInvitation[];
   preview(
     visibility: SharingVisibility,
@@ -93,7 +101,12 @@ export interface SharingController {
   setColor(calendarId: string, color: string): Promise<void>;
   /** Creates one-use seven-day invitation then opens OS Share, only on explicit press. */
   invite(calendarId: string): Promise<void>;
-  createInvitation(calendarId: string, rights?: SharingContentRights): Promise<SharingInvitation>;
+  createInvitation(
+    calendarId: string,
+    rights?: SharingContentRights,
+    shareProfilePhoto?: boolean,
+  ): Promise<SharingInvitation>;
+  setMemberProfilePhoto?(calendarId: string, userId: string, allowed: boolean): Promise<void>;
   setMemberRights?(calendarId: string, userId: string, rights: SharingContentRights): Promise<void>;
   shareInvitation(invitation: SharingInvitation, channel?: SharingDeliveryChannel): Promise<void>;
   setMember(calendarId: string, userId: string, action: SharingMemberAction): Promise<void>;
