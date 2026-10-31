@@ -3,7 +3,8 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { useSharedValue } from "react-native-reanimated";
 
 import type { Appointment, CalendarLabelMode, ShiftEntry, UserProfile } from "@/domain/types";
-import { createMonthGrid, formatDateTitle, today } from "@/engine/calendar";
+import { createMonthGrid, formatDateTitle } from "@/engine/calendar";
+import * as calendar from "@/engine/calendar";
 import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
 import { work } from "@/engine/remuneration-test-fixtures";
 import { MonthCard } from "@/features/calendar/month-card";
@@ -342,37 +343,48 @@ describe("MonthCard", () => {
     }
   });
 
-  it("keeps today above the weekend and selection hierarchy", async () => {
-    const currentDate = today(PROFILE.timeZone);
-    const currentCell = createMonthGrid(currentDate.slice(0, 7)).find(
-      (cell) => cell.date === currentDate,
-    );
-    const screen = await render(
-      <MonthCard
-        bottomReserve={80}
-        entriesByDate={
-          new Map([[currentDate, [appointment(currentDate, "today", "Termin heute")]]])
-        }
-        month={currentDate.slice(0, 7)}
-        onSelectDate={jest.fn()}
-        pageHeight={700}
-        profile={PROFILE}
-        selectedDate={currentDate}
-      />,
-    );
+  it.each([
+    { currentDate: "2026-10-23", backgroundColor: "transparent" },
+    { currentDate: "2026-10-24", backgroundColor: LIGHT_PALETTE.text + "14" },
+    { currentDate: "2026-10-25", backgroundColor: LIGHT_PALETTE.text + "14" },
+  ])(
+    "keeps today above selection on $currentDate while preserving the day surface",
+    async ({ currentDate, backgroundColor }) => {
+      const todayMock = jest.spyOn(calendar, "today").mockReturnValue(currentDate);
+      try {
+        const currentCell = createMonthGrid(currentDate.slice(0, 7)).find(
+          (cell) => cell.date === currentDate,
+        );
+        const screen = await render(
+          <MonthCard
+            bottomReserve={80}
+            entriesByDate={
+              new Map([[currentDate, [appointment(currentDate, "today", "Termin heute")]]])
+            }
+            month={currentDate.slice(0, 7)}
+            onSelectDate={jest.fn()}
+            pageHeight={700}
+            profile={PROFILE}
+            selectedDate={currentDate}
+          />,
+        );
 
-    const currentDay = screen.getByRole("button", {
-      name: new RegExp(formatDateTitle(currentDate)),
-    });
-    const dateNumber = within(currentDay).getByText(String(Number(currentDate.slice(-2))));
-    const todayAppointment = within(currentDay).getByText("Termin heute");
+        const currentDay = screen.getByRole("button", {
+          name: new RegExp(formatDateTitle(currentDate)),
+        });
+        const dateNumber = within(currentDay).getByText(String(Number(currentDate.slice(-2))));
+        const todayAppointment = within(currentDay).getByText("Termin heute");
 
-    expect(currentCell).toBeDefined();
-    expect(currentDay).toHaveStyle({ backgroundColor: "transparent" });
-    expect(dateNumber.parent).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
-    expect(dateNumber).toHaveStyle({ color: LIGHT_PALETTE.onCalendarToday });
-    expect(todayAppointment).toHaveStyle({ color: LIGHT_PALETTE.text });
-  });
+        expect(currentCell).toBeDefined();
+        expect(currentDay).toHaveStyle({ backgroundColor });
+        expect(dateNumber.parent).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
+        expect(dateNumber).toHaveStyle({ color: LIGHT_PALETTE.onCalendarToday });
+        expect(todayAppointment).toHaveStyle({ color: LIGHT_PALETTE.text });
+      } finally {
+        todayMock.mockRestore();
+      }
+    },
+  );
 
   it("renders a muted sixth week for a five-week month", async () => {
     const screen = await render(
