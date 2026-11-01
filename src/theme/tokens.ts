@@ -68,12 +68,13 @@ export const SCREEN_LAYOUT = {
   headerAccessoryStackFontScale: 1.6,
 } as const;
 
-export const REPORT_CARD_GAP = 24;
+export const REPORT_CARD_GAP = 32;
 
-export const CARD_HEADER_INSET = 0;
+export const CARD_HEADER_INSET = 4;
 
 export const SHADOWS = {
   card: "0 0 0 rgba(0, 0, 0, 0)",
+  cardLight: "0 4px 14px rgba(24, 24, 27, 0.08)",
   raised: "0 4px 6px rgba(0, 0, 0, 0.09)",
   overlay: "0 4px 6px rgba(0, 0, 0, 0.09)",
 } as const;

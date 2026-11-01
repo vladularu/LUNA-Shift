@@ -32,11 +32,11 @@ export function SurfaceCard({
       style={{
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: palette.separator,
+        borderColor: palette.surface,
         borderRadius: RADII.card,
         borderCurve: CORNER_CURVE,
         backgroundColor: palette.surface,
-        boxShadow: SHADOWS.card,
+        boxShadow: palette.dark ? SHADOWS.card : SHADOWS.cardLight,
         ...style,
       }}
     >
@@ -64,7 +64,7 @@ export function CardHeader({
         flexDirection: "row",
         alignItems: "center",
         gap: SPACING.sm,
-        paddingHorizontal: SPACING.xl,
+        paddingHorizontal: palette.dark ? SPACING.xl : SPACING.xl - CARD_HEADER_INSET,
         paddingVertical: SPACING.lg,
         marginHorizontal: palette.dark ? 0 : CARD_HEADER_INSET,
         marginTop: palette.dark ? 0 : CARD_HEADER_INSET,

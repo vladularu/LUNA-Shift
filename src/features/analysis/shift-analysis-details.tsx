@@ -140,7 +140,7 @@ export function ShiftAnalysisDetails({
                   <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
                     <Text
                       style={{
-                        color: p.text,
+                        color: p.dark || row.total ? p.text : p.textMuted,
                         ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
                       }}
                     >

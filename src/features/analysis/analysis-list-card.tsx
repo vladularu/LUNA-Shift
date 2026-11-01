@@ -33,7 +33,7 @@ export function AnalysisCardHeader({
           textAlign: "left",
           color: p.text,
           ...TYPOGRAPHY.sectionTitle,
-          fontWeight: "500",
+          fontWeight: p.dark ? "500" : TYPOGRAPHY.sectionTitle.fontWeight,
         }}
       >
         {title}
@@ -55,7 +55,7 @@ export function AnalysisCardHeader({
     gap: SPACING.sm,
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    borderBottomWidth: 1,
+    borderBottomWidth: p.dark ? 1 : 0,
     borderBottomColor: p.cardSeparator,
     backgroundColor: p.cardHeader,
   };
@@ -220,8 +220,8 @@ export function AnalysisValueRow({
         <Text
           style={{
             flex: 1,
-            color: secondaryText,
-            ...TYPOGRAPHY.body,
+            color: total && !p.dark ? p.text : secondaryText,
+            ...(total && !p.dark ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
           }}
         >
           {label}
