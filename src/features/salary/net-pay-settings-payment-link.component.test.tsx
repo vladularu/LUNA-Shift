@@ -9,7 +9,12 @@ const mockSave = jest.fn();
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ month: "2027-01" }),
   router: { push: (route: unknown) => mockNavigate(route), canGoBack: () => true, back: jest.fn() },
-  Stack: { Screen: () => null },
+  Stack: {
+    Screen: () => null,
+    Toolbar: Object.assign(({ children }: { children: ReactNode }) => children, {
+      View: ({ children }: { children: ReactNode }) => children,
+    }),
+  },
 }));
 jest.mock("expo-router/react-navigation", () => ({
   useHeaderHeight: () => 0,
@@ -39,20 +44,29 @@ jest.mock("./net-pay-setup-form", () => ({
   NetPaySetupForm: ({
     renderLayout,
   }: {
-    renderLayout: (value: { content: ReactNode; footer: ReactNode; locked: boolean }) => ReactNode;
-  }) =>
-    renderLayout({
+    renderLayout: (value: {
+      content: ReactNode;
+      footer: ReactNode;
+      locked: boolean;
+      headerAction: ReactNode;
+    }) => ReactNode;
+  }) => {
+    const { HeaderSaveAction } =
+      jest.requireActual<typeof import("@/ui/form-layout")>("@/ui/form-layout");
+    return renderLayout({
       content: <MockText>Bestehendes Netto-Formular</MockText>,
       footer: <MockText>Netto speichern</MockText>,
       locked: false,
-    }),
+      headerAction: <HeaderSaveAction busy={false} label="Speichern" onPress={mockSave} />,
+    });
+  },
 }));
 
 describe("allowance timing entry from net settings", () => {
   it("retains the legacy net form without a hidden payout detour", async () => {
     const screen = await render(<NetPaySettingsScreen />);
     expect(screen.getByText("Bestehendes Netto-Formular")).toBeTruthy();
-    expect(screen.getByText("Netto speichern")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Speichern und schließen" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Auszahlung der Zulagen" })).toBeNull();
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(mockSave).not.toHaveBeenCalled();
