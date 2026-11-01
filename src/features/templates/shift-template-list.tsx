@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import type { ShiftTemplate } from "@/domain/types";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { ShiftSymbol } from "@/ui/shift-symbol";
@@ -105,13 +106,13 @@ export function ShiftTemplateListRow({
         <View style={styles.copy}>
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.title, compact && styles.compactTitle, { color: palette.text }]}
+            style={[styles.title, cardTextStyle(palette, "label")]}
           >
             {title}
           </Text>
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.subtitle, { color: palette.dark ? palette.text : palette.textMuted }]}
+            style={[styles.subtitle, cardTextStyle(palette, "note")]}
           >
             {subtitle}
           </Text>
@@ -129,7 +130,7 @@ export function ShiftTemplateListRow({
         >
           <Ionicons
             accessibilityElementsHidden
-            color={palette.dark ? palette.text : palette.textMuted}
+            color={palette.textMuted}
             name={sorting ? "reorder-three-outline" : "ellipsis-horizontal-circle"}
             size={sorting ? 26 : 22}
           />
@@ -179,7 +180,7 @@ export function ShiftTemplateAddRow({
       </View>
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.addText, { color: palette.textSecondary }]}
+        style={[styles.addText, cardTextStyle(palette, "action")]}
       >
         {label}
       </Text>
@@ -238,10 +239,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.body,
-    fontWeight: "600",
-  },
-  compactTitle: {
-    fontWeight: "500",
   },
   subtitle: {
     ...TYPOGRAPHY.caption,

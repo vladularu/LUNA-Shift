@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 
 import { usePalette } from "@/theme/palette";
+import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
 
 export default function CalendarStack() {
   const palette = usePalette();
@@ -9,7 +10,7 @@ export default function CalendarStack() {
       screenOptions={{
         contentStyle: { backgroundColor: palette.background },
         headerShown: false,
-        headerShadowVisible: false,
+        ...PAGE_HEADER_OPTIONS,
         headerStyle: { backgroundColor: palette.background },
         headerTintColor: palette.text,
         headerTitleStyle: { color: palette.text },

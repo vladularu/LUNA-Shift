@@ -46,6 +46,7 @@ export function AnnualSalaryPaymentEditor({
   proposal,
   automatic = false,
   onResetAutomatic,
+  embedded = false,
 }: {
   readonly month: string;
   readonly profile: UserProfile;
@@ -56,6 +57,7 @@ export function AnnualSalaryPaymentEditor({
   readonly proposal?: AnnualSalaryProposal | null;
   readonly automatic?: boolean;
   readonly onResetAutomatic?: () => Promise<void>;
+  readonly embedded?: boolean;
 }) {
   const year = month.slice(0, 4);
   const payments = settings.automation?.annualPayments ?? [];
@@ -190,6 +192,7 @@ export function AnnualSalaryPaymentEditor({
         <SalarySectionCard
           title="Jahressonderzahlung"
           amount={initial ? netPayEuro(initial.grossCents) : undefined}
+          embedded={embedded}
         >
           <SalaryNavigationRow
             title={initial ? "Anpassen" : "Betrag ergänzen"}

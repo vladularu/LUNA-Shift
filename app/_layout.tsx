@@ -18,6 +18,7 @@ import { ActiveMonthProvider } from "@/navigation/active-month";
 import { horizontalBackGestureOptions } from "@/navigation/horizontal-back-gesture";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
+import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { FeedbackProvider } from "@/ui/feedback";
 import {
@@ -27,6 +28,7 @@ import {
 import { LoadingView } from "@/ui/loading-view";
 import { CalendarBackgroundProvider } from "@/features/settings/calendar-background-preferences";
 import { INTER_FONTS } from "@/theme/shadcn";
+import { APP_FONT_FAMILY } from "@/theme/app-font";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
@@ -90,10 +92,10 @@ function ThemedApp() {
                     value={{
                       ...navigationTheme,
                       fonts: {
-                        regular: { fontFamily: INTER_FONTS.regular, fontWeight: "400" },
-                        medium: { fontFamily: INTER_FONTS.medium, fontWeight: "500" },
-                        bold: { fontFamily: INTER_FONTS.bold, fontWeight: "700" },
-                        heavy: { fontFamily: INTER_FONTS.extraBold, fontWeight: "800" },
+                        regular: { fontFamily: APP_FONT_FAMILY, fontWeight: "400" },
+                        medium: { fontFamily: APP_FONT_FAMILY, fontWeight: "500" },
+                        bold: { fontFamily: APP_FONT_FAMILY, fontWeight: "700" },
+                        heavy: { fontFamily: APP_FONT_FAMILY, fontWeight: "800" },
                       },
                       colors: {
                         ...navigationTheme.colors,
@@ -116,12 +118,12 @@ function ThemedApp() {
                             screenOptions={({ route }) => ({
                               ...horizontalBackGestureOptions(route.name),
                               headerBackButtonDisplayMode: "minimal",
-                              headerShadowVisible: false,
+                              ...PAGE_HEADER_OPTIONS,
                               headerStyle: { backgroundColor: palette.background },
                               headerTintColor: palette.text,
                               headerTitleStyle: {
                                 ...TYPOGRAPHY.sectionTitle,
-                                fontFamily: INTER_FONTS.semibold,
+                                fontFamily: APP_FONT_FAMILY,
                                 color: palette.text,
                               },
                               statusBarStyle: dark ? "light" : "dark",

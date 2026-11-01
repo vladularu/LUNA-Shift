@@ -1,13 +1,15 @@
 import { Text } from "@/ui/text";
-import { View, useWindowDimensions } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import type { SpecialDutyTimeCredit } from "@/domain/special-duty-pay";
 import { formatMinutes } from "@/engine/working-time";
 import type { MonthlyShiftTypeAnalysis } from "./analysis-metrics";
 import { AnalysisListCard } from "./analysis-list-card";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { SPACING } from "@/theme/tokens";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge, EmptyState } from "@/ui/design-system";
 import { timeCreditLabel } from "./special-duty-time-presentation";
@@ -118,12 +120,12 @@ export function ShiftAnalysisDetails({
                 accessibilityLabel={`${row.title}, Anzahl ${row.count}, Stunden ${row.hours}${row.subtitle ? ", " + row.subtitle : ""}`}
                 testID={`shift-detail-${row.key}`}
                 style={{
-                  minHeight: 56,
-                  paddingVertical: SPACING.md,
+                  minHeight: CARD_METRICS.rowMinHeight,
+                  paddingVertical: CARD_METRICS.rowPaddingVertical,
                   gap: SPACING.sm,
                   flexDirection: stacked ? "column" : "row",
                   alignItems: stacked ? "stretch" : "center",
-                  borderTopWidth: !stacked || index > 0 ? 1 : 0,
+                  borderTopWidth: !stacked || index > 0 ? StyleSheet.hairlineWidth : 0,
                   borderTopColor: p.separator,
                 }}
               >
@@ -136,12 +138,14 @@ export function ShiftAnalysisDetails({
                     gap: SPACING.sm,
                   }}
                 >
-                  {row.color ? <ColorBadge color={row.color} label={row.symbol} size={20} /> : null}
+                  {row.color ? (
+                    <ColorBadge color={row.color} label={row.symbol} size={CARD_METRICS.iconSize} />
+                  ) : null}
                   <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
                     <Text
                       style={{
-                        color: p.dark || row.total ? p.text : p.textMuted,
-                        ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                        ...TYPOGRAPHY.body,
+                        ...cardTextStyle(p, "label"),
                       }}
                     >
                       {row.title}

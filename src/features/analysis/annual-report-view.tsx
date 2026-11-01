@@ -46,6 +46,7 @@ import { MOTION } from "@/theme/motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardFooterLine, CardSeparator, SurfaceCard } from "@/ui/design-system";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { ReportPeriodContent, ReportScrollView } from "@/ui/report-layout";
 
 export type AnalysisPeriod = "MONTH" | "YEAR";
@@ -489,8 +490,8 @@ function AnnualSalaryDetails({
               accessibilityHint="Öffnet Gehalt und Zeitzuschläge für diesen Monat"
               onPress={() => onSelectMonth(item.month)}
               style={({ pressed }) => ({
-                minHeight: 56,
-                paddingVertical: SPACING.md,
+                minHeight: CARD_METRICS.rowMinHeight,
+                paddingVertical: CARD_METRICS.rowPaddingVertical,
                 flexDirection: "row",
                 alignItems: "center",
                 gap: SPACING.md,
@@ -554,9 +555,9 @@ function MonthlyBars({
               accessibilityRole="button"
               onPress={() => onSelectMonth(item.month)}
               style={({ pressed }) => ({
-                minHeight: 56,
+                minHeight: CARD_METRICS.rowMinHeight,
                 gap: SPACING.sm,
-                paddingVertical: SPACING.md,
+                paddingVertical: CARD_METRICS.rowPaddingVertical,
                 opacity: pressed ? 0.72 : 1,
               })}
             >

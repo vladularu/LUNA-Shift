@@ -6,6 +6,8 @@ import { AnalysisCardDetails } from "@/features/analysis/analysis-card-details";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { cardHeaderFrame } from "@/theme/card-layout";
+import { cardTextStyle } from "@/theme/card-typography";
 import { CardFooterLine, CardSeparator, SurfaceCard } from "@/ui/design-system";
 import { AnalysisCountBadge } from "./analysis-count-badge";
 
@@ -44,11 +46,11 @@ export function ExpandableHighlightCard({
           accessibilityState={{ expanded }}
           onPress={onToggle}
           style={({ pressed }) => ({
+            ...cardHeaderFrame(palette.dark, SPACING.xl),
             minHeight: 100,
             gap: SPACING.sm,
             backgroundColor: palette.cardHeader,
             opacity: pressed ? 0.78 : 1,
-            paddingHorizontal: SPACING.xl,
             paddingVertical: SPACING.md,
           })}
         >
@@ -123,8 +125,8 @@ export function ExpandableHighlightCard({
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
                 selectable
                 style={{
-                  color: palette.dark ? palette.text : palette.textMuted,
                   ...TYPOGRAPHY.highlightSummary,
+                  ...cardTextStyle(palette, "note"),
                 }}
               >
                 {summary}

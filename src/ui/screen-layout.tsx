@@ -12,6 +12,8 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
 
 import { usePalette } from "@/theme/palette";
+import { pageHeaderStyle } from "@/theme/page-header";
+import { APP_FONT_FAMILY } from "@/theme/app-font";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 
@@ -113,7 +115,7 @@ export function TabScreenHeader({
       pointerEvents={titleHidden ? "box-none" : "auto"}
       style={{
         minHeight: safeTop + SCREEN_LAYOUT.headerMinHeight,
-        backgroundColor: transparent ? "transparent" : palette[surface],
+        ...pageHeaderStyle(transparent ? "transparent" : palette[surface]),
         paddingTop: safeTop + SCREEN_LAYOUT.headerTopPadding,
         paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
         paddingBottom: SCREEN_LAYOUT.headerBottomPadding,
@@ -155,6 +157,7 @@ export function TabScreenHeader({
               flex: stackAccessory ? undefined : 1,
               color: titleColor ?? palette.text,
               ...TYPOGRAPHY.hero,
+              fontFamily: APP_FONT_FAMILY,
               height: titleHeightMode === "fixed" ? stableTitleHeight : undefined,
               minHeight: titleHeightMode === "content" ? stableTitleHeight : undefined,
             }}

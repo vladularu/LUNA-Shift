@@ -1,6 +1,7 @@
 import { Text } from "@/ui/text";
 
 import { usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
@@ -26,7 +27,7 @@ export function AnalysisDetailSummaryCard({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
+        style={{ ...TYPOGRAPHY.label, ...cardTextStyle(palette, "label") }}
       >
         {period}
       </Text>
@@ -47,7 +48,7 @@ export function AnalysisDetailSummaryCard({
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
-          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+          style={{ ...TYPOGRAPHY.caption, ...cardTextStyle(palette, "note") }}
         >
           {caption}
         </Text>

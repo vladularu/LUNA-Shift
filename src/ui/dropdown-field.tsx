@@ -56,7 +56,7 @@ export function DropdownField<T extends string | number>({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.text, ...TYPOGRAPHY.label }}
+        style={{ color: palette.textMuted, ...TYPOGRAPHY.label, fontWeight: "400" }}
       >
         {label}
       </Text>

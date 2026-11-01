@@ -258,10 +258,7 @@ export function SelectionSheet({
             ]}
           >
             <GestureDetector gesture={headerDrag}>
-              <View
-                collapsable={false}
-                style={{ borderBottomWidth: 1, borderBottomColor: palette.separator }}
-              >
+              <View collapsable={false} style={{ borderBottomWidth: 0 }}>
                 <View
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"

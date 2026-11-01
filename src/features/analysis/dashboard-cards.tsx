@@ -282,7 +282,6 @@ export function PayListCard({
       label={"Gehalt, " + (status ?? (loading ? "Wird berechnet …" : formatEuro(gross ?? null)))}
       onPress={onPress}
       caption={caption}
-      captionBelowFooter
       busy={loading}
       bodyMinHeight={
         !reserveLoadingSpace || status || fontScale > 1.2

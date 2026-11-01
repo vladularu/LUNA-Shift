@@ -21,7 +21,6 @@ export function EarnedPremiumsCard({
       label={`Zuschläge erarbeitet, ${status ?? formatEuro(amount === null ? null : amount + specialDutyAmount)}`}
       onPress={() => router.push(premiumDetailsRoute(month))}
       caption={`Für Dienste im ${formatMonthTitle(month)}`}
-      captionBelowFooter
     >
       <AnalysisValueRow
         first

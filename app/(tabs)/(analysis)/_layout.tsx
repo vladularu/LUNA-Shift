@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { usePalette } from "@/theme/palette";
+import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
 
 export default function AnalysisStack() {
   const palette = usePalette();
@@ -11,7 +12,7 @@ export default function AnalysisStack() {
         fullScreenGestureEnabled: false,
         contentStyle: { backgroundColor: palette.background },
         headerLargeTitle: false,
-        headerShadowVisible: false,
+        ...PAGE_HEADER_OPTIONS,
         headerStyle: { backgroundColor: palette.background },
         headerTintColor: palette.text,
         headerTitleStyle: { color: palette.text },

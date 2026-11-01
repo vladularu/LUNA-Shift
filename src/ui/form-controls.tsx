@@ -103,8 +103,8 @@ export function TimePickerField({
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={{
-            color: palette.textSecondary,
-            ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.bodyStrong),
+            color: palette.textMuted,
+            ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.body),
           }}
         >
           {label}
@@ -113,7 +113,7 @@ export function TimePickerField({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={{
             color: palette.primary,
-            ...TYPOGRAPHY.bodyStrong,
+            ...TYPOGRAPHY.body,
             fontVariant: ["tabular-nums"],
           }}
         >
@@ -135,8 +135,8 @@ export function TimePickerField({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{
-          color: palette.textSecondary,
-          ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.bodyStrong),
+          color: palette.textMuted,
+          ...(stacked ? TYPOGRAPHY.small : TYPOGRAPHY.body),
         }}
       >
         {label}
@@ -172,7 +172,7 @@ export function Field({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.text, ...TYPOGRAPHY.label }}
+        style={{ color: palette.textMuted, ...TYPOGRAPHY.label, fontWeight: "400" }}
       >
         {label}
       </Text>

@@ -57,7 +57,7 @@ export const CONTROL_HEIGHT = {
 } as const;
 
 export const SCREEN_LAYOUT = {
-  horizontalPadding: SPACING.xl,
+  horizontalPadding: SPACING.lg + SPACING.xxs,
   contentTopPadding: SPACING.md,
   contentBottomPadding: 48,
   contentGap: SPACING.xxl,
@@ -68,7 +68,7 @@ export const SCREEN_LAYOUT = {
   headerAccessoryStackFontScale: 1.6,
 } as const;
 
-export const REPORT_CARD_GAP = 32;
+export const REPORT_CARD_GAP = 36;
 
 export const CARD_HEADER_INSET = 4;
 

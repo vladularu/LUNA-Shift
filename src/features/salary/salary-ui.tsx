@@ -6,7 +6,17 @@ import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { SurfaceCard, CardSeparator, RowButton } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import {
+  CORNER_CURVE,
+  MINIMUM_TOUCH_TARGET,
+  RADII,
+  REPORT_CARD_GAP,
+  SCREEN_LAYOUT,
+  SPACING,
+} from "@/theme/tokens";
+import { CARD_METRICS, cardHeaderFrame } from "@/theme/card-layout";
+import { cardTextStyle } from "@/theme/card-typography";
+import { pageHeaderStyle } from "@/theme/page-header";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
@@ -67,6 +77,7 @@ export function SalaryPage({
       <View
         accessibilityRole="toolbar"
         style={{
+          ...pageHeaderStyle(palette.groupedBackground),
           flexDirection: "row",
           flexWrap: stacked ? "wrap" : "nowrap",
           alignItems: "center",
@@ -147,7 +158,7 @@ export function SalaryPage({
           <ScreenScrollView
             surface="groupedBackground"
             contentInsetAdjustmentBehavior="never"
-            contentGap={SPACING.lg}
+            contentGap={REPORT_CARD_GAP}
             contentContainerStyle={{ paddingTop: 0 }}
             bottomPadding={bottomPadding}
           >
@@ -225,22 +236,31 @@ export function SalaryMonthNavigator({
 export function SalarySectionCard({
   title,
   amount,
+  embedded = false,
   children,
-}: PropsWithChildren<{ readonly title: string; readonly amount?: string }>) {
+}: PropsWithChildren<{
+  readonly title: string;
+  readonly amount?: string;
+  readonly embedded?: boolean;
+}>) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = amount !== undefined && (width < 360 || fontScale >= 1.4);
+  const Container = embedded ? View : SurfaceCard;
   return (
-    <SurfaceCard>
+    <Container>
       <View
         style={{
+          ...(embedded
+            ? { paddingHorizontal: SPACING.lg }
+            : cardHeaderFrame(palette.dark, SPACING.lg)),
+          minHeight: embedded || palette.dark ? undefined : 50,
           flexDirection: stacked ? "column" : "row",
           alignItems: stacked ? "stretch" : "center",
-          paddingHorizontal: SPACING.lg,
           paddingVertical: SPACING.md,
           gap: SPACING.xs,
-          backgroundColor: palette.cardHeader,
-          borderBottomWidth: 1,
+          backgroundColor: embedded ? palette.surface : palette.cardHeader,
+          borderBottomWidth: !embedded && palette.dark ? 1 : 0,
           borderBottomColor: palette.separator,
         }}
       >
@@ -270,8 +290,8 @@ export function SalarySectionCard({
           </Text>
         ) : null}
       </View>
-      {children}
-    </SurfaceCard>
+      <View style={{ paddingTop: embedded ? 0 : CARD_METRICS.contentTopPadding }}>{children}</View>
+    </Container>
   );
 }
 
@@ -301,8 +321,8 @@ export function SalaryAmountRow({
     <Text
       selectable={!onPress}
       style={{
-        ...(quiet ? TYPOGRAPHY.body : TYPOGRAPHY.bodyStrong),
-        color: quiet ? palette.textMuted : palette.text,
+        ...TYPOGRAPHY.body,
+        ...cardTextStyle(palette, "label"),
       }}
     >
       {label}
@@ -352,8 +372,8 @@ export function SalaryAmountRow({
         <Text
           selectable={!onPress}
           style={{
-            ...(quiet && !emphasizeValue ? TYPOGRAPHY.body : TYPOGRAPHY.bodyStrong),
-            color: palette.text,
+            ...TYPOGRAPHY.body,
+            ...cardTextStyle(palette, emphasizeValue ? "total" : "value"),
             textAlign: "right",
             fontVariant: ["tabular-nums"],
             flexShrink: 1,
@@ -366,9 +386,9 @@ export function SalaryAmountRow({
     </View>
   );
   const style = {
-    minHeight: quiet ? 48 : 56,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    minHeight: CARD_METRICS.rowMinHeight + (quiet ? 0 : SPACING.xxs),
+    paddingHorizontal: CARD_METRICS.contentInset,
+    paddingVertical: CARD_METRICS.rowPaddingVertical,
   };
   return onPress ? (
     <Pressable
@@ -429,7 +449,7 @@ export function SalaryNavigationRow({
         })}
       >
         <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
-          <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>{title}</Text>
+          <Text style={{ ...TYPOGRAPHY.body, ...cardTextStyle(palette, "action") }}>{title}</Text>
           {subtitle ? (
             <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>{subtitle}</Text>
           ) : null}
