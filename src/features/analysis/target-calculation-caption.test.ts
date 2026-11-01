@@ -42,7 +42,7 @@ describe("target calculation wording", () => {
     ["LEGACY_WORK_MODEL_UNKNOWN", "5-Tage-Woche"],
     ["HOLIDAY_REGION_UNKNOWN", "Bundesland"],
     ["TARIFF_SCOPE_UNCONFIRMED", "Tarifzuordnung"],
-    ["SEVEN_DAY_PLAN_UNCONFIRMED", "Dienstplan"],
+    ["SEVEN_DAY_PLAN_UNCONFIRMED", "Grundlage: 5-Tage-Woche im Schichtdienst."],
     ["UNRECOGNIZED", "Berechnungsannahmen"],
   ])("retains the concrete open basis for %s", (code, expected) => {
     expect(

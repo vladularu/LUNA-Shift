@@ -9,7 +9,7 @@ const BASES: Readonly<Record<string, string>> = {
   TARIFF_SCOPE_UNCONFIRMED: "Tarifzuordnung noch nicht bestätigt.",
   TARIFF_VERSION_UNREVIEWED: "Tarifgrundlage noch nicht geprüft.",
   TARIFF_UNSUPPORTED: "Tarifgrundlage für die Sollzeit ergänzen.",
-  SEVEN_DAY_PLAN_UNCONFIRMED: "Dienstplan für die 7-Tage-Woche noch nicht bestätigt.",
+  SEVEN_DAY_PLAN_UNCONFIRMED: "Grundlage: 5-Tage-Woche im Schichtdienst.",
   CUSTOM_ROTATING_REFERENCE: "Mit der hinterlegten Referenz für dein Arbeitszeitmodell berechnet.",
   TARGET_RULE_FORECAST: "Mit der hinterlegten Sollzeitregel berechnet.",
   CONDITIONAL_ROSTER_FREE_FORECAST: "Dienstplanangaben für die Sollzeit ergänzen.",

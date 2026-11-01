@@ -11,7 +11,13 @@ export function redirectAppOpenIntent({
   try {
     const relative = path.startsWith("/");
     const url = new URL(path, "pflegeshift:///");
-    if (!relative && !["pflegeshift:", "lunashift:"].includes(url.protocol)) return path;
+    if (
+      !relative &&
+      !["pflegeshift:", "lunashift:", "pflegeshift-internal:", "lunashift-internal:"].includes(
+        url.protocol,
+      )
+    )
+      return path;
     const route =
       `${url.hostname ? "/" + url.hostname : ""}${url.pathname}`.replace(/\/$/, "") || "/";
     const keys = [...url.searchParams.keys()];

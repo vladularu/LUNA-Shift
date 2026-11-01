@@ -1,13 +1,58 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import configureApp from "../../app.config";
+import { buildCalendarWidgetTimeline } from "@/features/widgets/calendar-widget-data";
 import { redirectAppOpenIntent } from "./app-open-intent";
 
 import { appResumeStore } from "./app-resume-storage";
 vi.mock("./app-resume-storage", () => ({ appResumeStore: { load: vi.fn() } }));
 
 describe("app and widget resume intents", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     vi.mocked(appResumeStore.load).mockResolvedValue(null);
   });
+  it.each(["internal", "production"])(
+    "handles links actually produced by the %s widget configuration",
+    async (variant) => {
+      vi.stubEnv("APP_VARIANT", variant);
+      vi.stubEnv("LUNA_DESIGN_SANDBOX", "0");
+      const { scheme } = configureApp({
+        config: { name: "LUNA Shift", slug: "pflegeshift" },
+        projectRoot: process.cwd(),
+        staticConfigPath: null,
+        packageJsonPath: "package.json",
+      });
+      const schemes = typeof scheme === "string" ? [scheme] : scheme!;
+      vi.mocked(appResumeStore.load).mockResolvedValue({
+        version: 1,
+        href: "/analysis?month=2026-08&period=MONTH",
+        scrollY: 640,
+      });
+      for (const appScheme of schemes) {
+        const timeline = buildCalendarWidgetTimeline({
+          entries: [],
+          now: new Date("2026-11-01T12:00:00Z"),
+          timeZone: "Europe/Berlin",
+          scheme: appScheme,
+          hasProfile: true,
+        });
+        const link = timeline[0].props.url;
+        expect(redirectAppOpenIntent({ path: link, initial: false })).toBeNull();
+        expect(await redirectAppOpenIntent({ path: link, initial: true })).toBe(
+          "/analysis?month=2026-08&period=MONTH",
+        );
+        expect(
+          await redirectAppOpenIntent({
+            path: `${appScheme}:///widget-day?date=2026-11-01`,
+            initial: true,
+          }),
+        ).toBe("/analysis?month=2026-08&period=MONTH");
+        expect(
+          redirectAppOpenIntent({ path: `${appScheme}:///auth/callback?code=abc`, initial: false }),
+        ).toBe(`${appScheme}:///auth/callback?code=abc`);
+      }
+    },
+  );
   it.each([
     "pflegeshift:///",
     "lunashift:///?month=2026-07",
