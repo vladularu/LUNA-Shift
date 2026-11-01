@@ -83,22 +83,22 @@ export function WorktimeCard({
           </View>
         ))}
       </View>
+      {action ? (
+        <AnalysisValueRow first label={action.label} value="" onPress={action.onPress} />
+      ) : null}
+      <CardFooterLine />
       {caption ? (
         <Text
           style={{
             paddingHorizontal: SPACING.lg,
             paddingBottom: SPACING.md,
-            color: secondaryText,
-            ...TYPOGRAPHY.caption,
+            color: palette.textMuted,
+            ...TYPOGRAPHY.footnote,
           }}
         >
           {caption}
         </Text>
       ) : null}
-      {action ? (
-        <AnalysisValueRow first label={action.label} value="" onPress={action.onPress} />
-      ) : null}
-      <CardFooterLine />
     </SurfaceCard>
   );
 }

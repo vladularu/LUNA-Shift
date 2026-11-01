@@ -1258,17 +1258,16 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     const overview = await render(<AnalysisScreen />);
     expect(overview.queryByRole("button", { name: "Schichten: Details öffnen" })).toBeNull();
     expect(overview.getByRole("button", { name: /^Stunden,/ })).toBeTruthy();
-    expect(overview.getByLabelText("Gesamt: 7:30 h")).toBeTruthy();
+    expect(overview.getByLabelText("Gesamt, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
     expect(overview.getByText("D")).toBeTruthy();
-    expect(overview.getByLabelText("Sonntagsdienst: 7:30 h")).toBeTruthy();
-    await fireEvent.press(overview.getByRole("tab", { name: "Schichten: Anzahl" }));
-    expect(overview.getByLabelText("Gesamt: 1")).toBeTruthy();
+    expect(overview.getByLabelText("Sonntagsdienst, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
+    expect(overview.queryByRole("tab", { name: "Schichten: Anzahl" })).toBeNull();
     await overview.unmount();
     mockActiveMonthCoordinator.setMonth.mockClear();
     mockAnnualSection = "SHIFTS";
     const details = await render(<WorktimeDetailsScreen />);
     expect(details.getByText("Deine Schichten")).toBeTruthy();
-    expect(details.getByLabelText("Tag, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
+    expect(details.getByLabelText("Sonntagsdienst, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
     expect(details.queryByText("Arbeitszeit")).toBeNull();
     expect(details.queryByRole("tab", { name: "Schichten: Anzahl" })).toBeNull();
     expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
@@ -1278,7 +1277,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockAnnualSection = "SHIFTS";
     mockAnnualCoreValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
     const screen = await render(<AnnualDetailsScreen />);
-    expect(screen.getByLabelText("Tag, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
+    expect(screen.getByLabelText("Sonntagsdienst, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
     expect(screen.queryByText("Arbeitszeit")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Januar 2027: 7:30 h" }));
     expect(router.push).toHaveBeenLastCalledWith({

@@ -30,7 +30,21 @@ jest.mock("./monthly-analysis", () => ({
       ok: true,
       value: mockSummary,
     },
-    shiftTypeAnalysis: { totalCount: 0, totalMinutes: 0 },
+    shiftTypeAnalysis: {
+      items: [],
+      totalCount: mockSummary.specialDutyTimeCredits?.length ?? 0,
+      totalMinutes: mockSummary.actualMinutes,
+      groups: mockSummary.specialDutyTimeCredits?.map((line) => ({
+        key: line.shiftId,
+        title: line.title,
+        color: "#339966",
+        symbol: "moon",
+        types: ["CUSTOM"],
+        count: 1,
+        minutes: line.recordedMinutes,
+        entries: [{ id: line.shiftId, date: line.date, minutes: line.recordedMinutes }],
+      })),
+    },
   }),
 }));
 
@@ -56,11 +70,12 @@ describe("Stunden ohne Dienste", () => {
     const screen = await render(<WorktimeDetailsScreen />);
     expect(screen.getByLabelText("Zeitkonto: 5:37:30 h")).toBeTruthy();
     expect(screen.getByText(/Erfasst: 7:30 h/)).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: /09\.08\. · Bereitschaftsdienst/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: "2026-08-09", mode: "SHIFT", entryId: "standby" },
-    });
+    const row = screen.getByLabelText(
+      /Bereitschaftsdienst, Anzahl 1, Stunden 7:30 h, 5:37:30 h Zeitgutschrift/,
+    );
+    expect(row.props.onPress).toBeUndefined();
+    expect(screen.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("keeps an unconfirmed account visible as open without inventing zero credit", async () => {
     mockSummary = {

@@ -31,6 +31,7 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { StartupRoutePresentation } from "@/navigation/startup-route-presentation";
+import { AppResumeCheckpoint } from "@/navigation/app-resume-checkpoint";
 
 SplashScreen.setOptions({ duration: 300, fade: true });
 if (Platform.OS !== "web") {
@@ -110,6 +111,7 @@ function ThemedApp() {
                       <PrivateCloudProvider>
                         <ProfileSelectionProvider>
                           <StartupRoutePresentation />
+                          <AppResumeCheckpoint />
                           <Stack
                             screenOptions={({ route }) => ({
                               ...horizontalBackGestureOptions(route.name),

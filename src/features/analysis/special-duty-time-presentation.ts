@@ -38,7 +38,24 @@ export function timeAccountCaption(summary: TimeSummary): string | undefined {
       : pending.length > 1
         ? `${pending.length} Bereitschaften: Angaben zur Zeitgutschrift fehlen.`
         : "Für das Zeitkonto fehlen noch Bereitschaftsangaben.";
+  const paidMinutes =
+    summary.specialDutyTimeCredits?.reduce(
+      (sum, line) =>
+        sum + (line.settlement === "PAY" && line.creditedMinutes === 0 ? line.recordedMinutes : 0),
+      0,
+    ) ?? 0;
   return `Erfasst: ${formatPreciseMinutes(summary.actualMinutes)} h. ${
-    summary.timeAccountMinutes === null ? reason : "Zeitgutschrift laut vereinbartem Ausgleich."
+    summary.timeAccountMinutes === null
+      ? reason
+      : paidMinutes > 0
+        ? `${formatPreciseMinutes(paidMinutes)} h Bereitschaft mit Auszahlung.`
+        : "Zeitgutschrift aus deinem vereinbarten Ausgleich."
   }`;
+}
+
+export function timeCreditLabel(line: SpecialDutyTimeCredit): string {
+  if (line.creditedMinutes === null) return "Zeitgutschrift offen";
+  if (line.settlement === "PAY" && line.creditedMinutes === 0) return "Auszahlung";
+  const credit = `${formatPreciseMinutes(line.creditedMinutes)} h Zeitgutschrift`;
+  return line.settlement === "PAY" ? `Auszahlung · ${credit}` : credit;
 }

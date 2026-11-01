@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { MonthOverview } from "./month-overview";
@@ -12,6 +12,7 @@ import { newSpecialDuty } from "@/domain/special-duty";
 import { newStandbyAgreement } from "@/domain/standby-agreement";
 import type { ShiftEntry, MonthlyPayEstimate } from "@/domain/types";
 import { buildAnnualReport } from "./annual-report";
+import { buildMonthlyShiftTypeAnalysis } from "./analysis-metrics";
 import { formatEuro } from "./salary-summary-card";
 
 let mockCardOrder = ["WORK"];
@@ -41,6 +42,7 @@ const ordinary = ["01", "02", "03", "04", "07", "08", "10", "11"].map((day) =>
 const standby = (): ShiftEntry =>
   forecastShift({
     id: "standby",
+    title: "Bereitschaftsdienst",
     date: "2026-12-09",
     type: "CUSTOM",
     startTime: "08:00",
@@ -75,7 +77,7 @@ function overview(entries: readonly ShiftEntry[], pay: Partial<MonthlyPayEstimat
     },
     monthShifts: entries,
     complianceShifts: { ok: true, value: entries },
-    shiftTypeAnalysis: { items: [], totalCount: entries.length, totalMinutes: value.actualMinutes },
+    shiftTypeAnalysis: buildMonthlyShiftTypeAnalysis("2026-12", entries, forecastProfile, resolver),
   };
   return (
     <MonthOverview
@@ -118,17 +120,17 @@ describe("special-duty time account guidance", () => {
       ).toBeTruthy();
     },
   );
-  it("reproduces the photographed missing method and opens that duty directly", async () => {
+  it("shows the photographed missing method in the passive table", async () => {
+    mockCardOrder = ["WORK", "SHIFTS"];
     const view = await render(overview([...ordinary, standby()]));
     expect(view.getByLabelText("Zeitkonto: Noch offen")).toBeTruthy();
     expect(
       view.getByText(/Erfasst: 71:06 h\. 09\.12\.: Ergänze das vereinbarte Verfahren/),
     ).toBeTruthy();
-    await fireEvent.press(view.getByRole("button", { name: /09\.12\.: Angaben ergänzen/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: "2026-12-09", mode: "SHIFT", entryId: "standby" },
-    });
+    const row = view.getByLabelText(/Bereitschaftsdienst, Anzahl 1.*Zeitgutschrift offen/);
+    expect(row.props.onPress).toBeUndefined();
+    expect(view.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("labels paid account time clearly and retains the recorded hours", async () => {
     const entry = standby();
@@ -140,20 +142,18 @@ describe("special-duty time account guidance", () => {
     );
     expect(view.getByLabelText("Zeitkonto: 63:36 h")).toBeTruthy();
     expect(view.getByText(/Erfasst: 71:06 h/)).toBeTruthy();
-    await fireEvent.press(view.getByRole("button", { name: /Bereitschaften ansehen/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/worktime-details",
-      params: { month: "2026-12" },
-    });
+    expect(view.getByText(/7:30 h Bereitschaft mit Auszahlung/)).toBeTruthy();
+    expect(view.queryByText("Bereitschaften ansehen")).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
-  it("opens the month detail list when more than one duty needs attention", async () => {
+  it("shows several unresolved duties together without expanding the group", async () => {
+    mockCardOrder = ["WORK", "SHIFTS"];
     const first = standby();
     const view = await render(overview([first, { ...first, id: "second", date: "2026-12-12" }]));
-    await fireEvent.press(view.getByRole("button", { name: /2 Bereitschaften prüfen/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/worktime-details",
-      params: { month: "2026-12" },
-    });
+    const row = view.getByLabelText(/Bereitschaftsdienst, Anzahl 2.*Zeitgutschrift offen/);
+    expect(row.props.onPress).toBeUndefined();
+    expect(view.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("retains the existing Ist display for ordinary shifts", async () => {
     const view = await render(overview(ordinary));
