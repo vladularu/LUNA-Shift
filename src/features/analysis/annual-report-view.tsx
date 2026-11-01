@@ -57,6 +57,7 @@ export function AnnualReportScreen({
   testMonths,
   onBackToMonth,
   onMoveYear,
+  resumeKey,
 }: {
   readonly exportControl?: ReactNode;
   readonly report: AnnualReport;
@@ -64,6 +65,7 @@ export function AnnualReportScreen({
   readonly testMonths: readonly string[];
   readonly onBackToMonth: () => void;
   readonly onMoveYear: (delta: number) => void;
+  readonly resumeKey?: string | null;
 }) {
   const palette = usePalette();
   const preferences = useCheckPreferences();
@@ -81,7 +83,7 @@ export function AnnualReportScreen({
         onPrevious={() => onMoveYear(-1)}
         year={report.year}
       />
-      <ReportScrollView>
+      <ReportScrollView resumeKey={resumeKey}>
         <ReportPeriodContent>
           {testMonthCount > 0 ? <AnnualTestBadge count={testMonthCount} /> : null}
           {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}

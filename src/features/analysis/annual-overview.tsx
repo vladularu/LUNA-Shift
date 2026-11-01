@@ -84,7 +84,7 @@ export function AnnualOverview({
                   (!report.worktimeCoverageComplete
                     ? "Erfasste Zeiten · Soll und Saldo nicht berechenbar"
                     : report.targetStatus === "PROVISIONAL"
-                      ? "Sollzeit vorläufig · offene Angaben in einzelnen Monaten"
+                      ? "Aus den Arbeitszeitangaben der Monate berechnet."
                       : undefined))
             }
           />

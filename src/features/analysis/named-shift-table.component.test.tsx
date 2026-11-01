@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
@@ -18,7 +18,7 @@ jest.mock("@/ui/design-system", () => {
 });
 
 describe("named shift table", () => {
-  it("shows both metrics and original icons, with inline editing and payout instead of a zero credit", async () => {
+  it("shows both metrics and original icons, without expandable rows and with payout instead of a zero credit", async () => {
     const first = forecastShift({
       id: "one",
       date: "2026-07-08",
@@ -54,23 +54,18 @@ describe("named shift table", () => {
         ]}
       />,
     );
-    const row = screen.getByRole("button", {
-      name: "Mein Bereitschaftsdienst, Anzahl 1, Stunden 7:30 h, Auszahlung",
-    });
+    const row = screen.getByLabelText(
+      "Mein Bereitschaftsdienst, Anzahl 1, Stunden 7:30 h, Auszahlung",
+    );
     expect(screen.getByLabelText("Mein geteilter Dienst, Anzahl 1, Stunden 7:30 h")).toBeTruthy();
     expect(screen.getByLabelText("Gesamt, Anzahl 2, Stunden 15:00 h")).toBeTruthy();
     expect(screen.queryByText("0:00 h")).toBeNull();
     expect(screen.queryByRole("tab", { name: "Schichten: Anzahl" })).toBeNull();
     expect(screen.getByTestId("saved-icon-moon")).toHaveStyle({ color: "#339966" });
     expect(screen.getByTestId("saved-icon-sunny")).toHaveStyle({ color: "#663399" });
-    await fireEvent.press(row);
-    expect(row.props.accessibilityState).toEqual({ expanded: true });
-    await fireEvent.press(
-      screen.getByRole("button", { name: /Mein Bereitschaftsdienst, 08\.07\..*Dienst bearbeiten/ }),
-    );
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: first.date, mode: "SHIFT", entryId: first.id },
-    });
+    expect(row.props.onPress).toBeUndefined();
+    expect(row.props.accessibilityState).toBeUndefined();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(router.push).not.toHaveBeenCalled();
   });
 });

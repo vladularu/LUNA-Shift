@@ -1,3 +1,4 @@
+import { targetCalculationCaption } from "./target-calculation-caption";
 import { ShiftAnalysisDetails } from "./shift-analysis-details";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
@@ -109,9 +110,7 @@ export function WorktimeDetailsScreen() {
         caption={
           summary.ok
             ? (timeAccountCaption(summary.value) ??
-              (summary.value.targetCalculation?.status === "PROVISIONAL"
-                ? "Sollzeit vorläufig · aus deinen bisherigen Angaben berechnet."
-                : undefined))
+              targetCalculationCaption(summary.value.targetCalculation))
             : undefined
         }
         actual={

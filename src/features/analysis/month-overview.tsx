@@ -1,3 +1,4 @@
+import { targetCalculationCaption } from "./target-calculation-caption";
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
@@ -130,9 +131,7 @@ export function MonthOverview({
                 ? (timeAccountCaption(summary.value) ??
                   (summary.value.specialDutyNotes?.length
                     ? "Bereitschaften: Zeitgutschrift noch offen"
-                    : summary.value.targetCalculation?.status === "PROVISIONAL"
-                      ? "Sollzeit vorläufig · Tippe für die Berechnung"
-                      : undefined))
+                    : targetCalculationCaption(summary.value.targetCalculation)))
                 : "Soll und Zeitgutschriften sind noch offen. Tippe für die Berechnungsgrundlagen."
             }
           />

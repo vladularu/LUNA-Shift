@@ -7,6 +7,7 @@ import { useEffect, type ReactNode } from "react";
 import { View } from "react-native";
 
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
+import { appResumeHref } from "@/navigation/app-resume-state";
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { currentMonth } from "@/engine/calendar";
 import { AnalysisViewControls } from "./analysis-view-controls";
@@ -219,6 +220,7 @@ function AnalysisPage({
       );
     return retainScene(
       <AnnualReportScreen
+        resumeKey={active ? appResumeHref("/analysis", { month, period }) : null}
         exportControl={<ReportExportButton period={String(year)} />}
         report={visibleReport}
         pending={annualReport.report === null}
@@ -256,7 +258,9 @@ function AnalysisPage({
         {!ready || profile === null || monthlyData === null || calculationMonth !== month ? (
           <LoadingView />
         ) : (
-          <ReportScrollView>
+          <ReportScrollView
+            resumeKey={active ? appResumeHref("/analysis", { month, period }) : null}
+          >
             <ReportPeriodContent>
               {testMonths.includes(month) ? <ReportTestBadge /> : null}
               {checkPreferences.enabled === false ? (

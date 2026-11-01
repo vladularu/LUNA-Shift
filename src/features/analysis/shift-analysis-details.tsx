@@ -1,11 +1,8 @@
 import { Text } from "@/ui/text";
-import { Fragment, useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
-import { router } from "expo-router";
+import { View, useWindowDimensions } from "react-native";
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import type { SpecialDutyTimeCredit } from "@/domain/special-duty-pay";
 import { formatMinutes } from "@/engine/working-time";
-import { dayEditorRoute } from "@/navigation/routes";
 import type { MonthlyShiftTypeAnalysis } from "./analysis-metrics";
 import { AnalysisListCard } from "./analysis-list-card";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
@@ -31,7 +28,6 @@ export function ShiftAnalysisDetails({
   const p = usePalette();
   const { fontScale, width } = useWindowDimensions();
   const stacked = fontScale >= 1.3 || width < 360;
-  const [expanded, setExpanded] = useState<string | null>(null);
   const creditById = new Map(timeCredits.map((line) => [line.shiftId, line]));
   const groups =
     analysis.groups ??
@@ -115,114 +111,80 @@ export function ShiftAnalysisDetails({
             </View>
           ) : null}
           {rows.map((row, index) => {
-            const hasEntries = row.entries.length > 0;
-            const open = expanded === row.key;
             return (
-              <Fragment key={row.key}>
-                <Pressable
-                  accessible
-                  accessibilityRole={hasEntries ? "button" : undefined}
-                  accessibilityLabel={`${row.title}, Anzahl ${row.count}, Stunden ${row.hours}${row.subtitle ? ", " + row.subtitle : ""}`}
-                  accessibilityState={hasEntries ? { expanded: open } : undefined}
-                  onPress={hasEntries ? () => setExpanded(open ? null : row.key) : undefined}
-                  testID={`shift-detail-${row.key}`}
+              <View
+                key={row.key}
+                accessible
+                accessibilityLabel={`${row.title}, Anzahl ${row.count}, Stunden ${row.hours}${row.subtitle ? ", " + row.subtitle : ""}`}
+                testID={`shift-detail-${row.key}`}
+                style={{
+                  minHeight: 56,
+                  paddingVertical: SPACING.md,
+                  gap: SPACING.sm,
+                  flexDirection: stacked ? "column" : "row",
+                  alignItems: stacked ? "stretch" : "center",
+                  borderTopWidth: !stacked || index > 0 ? 1 : 0,
+                  borderTopColor: p.separator,
+                }}
+              >
+                <View
                   style={{
-                    minHeight: 56,
-                    paddingVertical: SPACING.md,
+                    flex: stacked ? undefined : 1,
+                    minWidth: 0,
+                    flexDirection: "row",
+                    alignItems: "center",
                     gap: SPACING.sm,
-                    flexDirection: stacked ? "column" : "row",
-                    alignItems: stacked ? "stretch" : "center",
-                    borderTopWidth: !stacked || index > 0 ? 1 : 0,
-                    borderTopColor: p.separator,
                   }}
                 >
-                  <View
-                    style={{
-                      flex: stacked ? undefined : 1,
-                      minWidth: 0,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: SPACING.sm,
-                    }}
-                  >
-                    {row.color ? (
-                      <ColorBadge color={row.color} label={row.symbol} size={20} />
+                  {row.color ? <ColorBadge color={row.color} label={row.symbol} size={20} /> : null}
+                  <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
+                    <Text
+                      style={{
+                        color: p.text,
+                        ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                      }}
+                    >
+                      {row.title}
+                    </Text>
+                    {row.subtitle ? (
+                      <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
+                        {row.subtitle}
+                      </Text>
                     ) : null}
-                    <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
+                  </View>
+                </View>
+                <View style={{ flexDirection: fontScale >= 2 ? "column" : "row", gap: SPACING.sm }}>
+                  {[
+                    { label: "Anzahl", value: String(row.count), width: 40 },
+                    { label: "Stunden", value: row.hours, width: 84 },
+                  ].map((metric) => (
+                    <View
+                      key={metric.label}
+                      style={{
+                        width: stacked ? undefined : metric.width,
+                        flex: stacked && fontScale < 2 ? 1 : undefined,
+                        gap: SPACING.xs,
+                      }}
+                    >
+                      {stacked ? (
+                        <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
+                          {metric.label}
+                        </Text>
+                      ) : null}
                       <Text
                         style={{
                           color: p.text,
+                          textAlign: stacked ? "left" : "right",
                           ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                          fontVariant: ["tabular-nums"],
                         }}
                       >
-                        {row.title}
+                        {metric.value}
                       </Text>
-                      {row.subtitle ? (
-                        <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-                          {row.subtitle}
-                        </Text>
-                      ) : null}
                     </View>
-                  </View>
-                  <View
-                    style={{ flexDirection: fontScale >= 2 ? "column" : "row", gap: SPACING.sm }}
-                  >
-                    {[
-                      { label: "Anzahl", value: String(row.count), width: 40 },
-                      { label: "Stunden", value: row.hours, width: 84 },
-                    ].map((metric) => (
-                      <View
-                        key={metric.label}
-                        style={{
-                          width: stacked ? undefined : metric.width,
-                          flex: stacked && fontScale < 2 ? 1 : undefined,
-                          gap: SPACING.xs,
-                        }}
-                      >
-                        {stacked ? (
-                          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-                            {metric.label}
-                          </Text>
-                        ) : null}
-                        <Text
-                          style={{
-                            color: p.text,
-                            textAlign: stacked ? "left" : "right",
-                            ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
-                            fontVariant: ["tabular-nums"],
-                          }}
-                        >
-                          {metric.value}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </Pressable>
-                {open
-                  ? row.entries.map((entry, entryIndex) => {
-                      const credit = creditById.get(entry.id);
-                      const label = `${entry.date.slice(8, 10)}.${entry.date.slice(5, 7)}. · ${formatMinutes(entry.minutes)} h${credit ? " · " + timeCreditLabel(credit) : ""}`;
-                      return (
-                        <Pressable
-                          key={`${entry.id}:${entryIndex}`}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.title}, ${label}, Dienst bearbeiten`}
-                          onPress={() => router.push(dayEditorRoute(entry.date, "SHIFT", entry.id))}
-                          style={{
-                            minHeight: 44,
-                            justifyContent: "center",
-                            paddingVertical: SPACING.sm,
-                            paddingLeft: SPACING.lg,
-                            borderTopWidth: 1,
-                            borderTopColor: p.separator,
-                          }}
-                        >
-                          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>{label}</Text>
-                        </Pressable>
-                      );
-                    })
-                  : null}
-              </Fragment>
+                  ))}
+                </View>
+              </View>
             );
           })}
         </>

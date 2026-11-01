@@ -70,16 +70,12 @@ describe("Stunden ohne Dienste", () => {
     const screen = await render(<WorktimeDetailsScreen />);
     expect(screen.getByLabelText("Zeitkonto: 5:37:30 h")).toBeTruthy();
     expect(screen.getByText(/Erfasst: 7:30 h/)).toBeTruthy();
-    await fireEvent.press(
-      screen.getByRole("button", {
-        name: /Bereitschaftsdienst, Anzahl 1, Stunden 7:30 h, 5:37:30 h Zeitgutschrift/,
-      }),
+    const row = screen.getByLabelText(
+      /Bereitschaftsdienst, Anzahl 1, Stunden 7:30 h, 5:37:30 h Zeitgutschrift/,
     );
-    await fireEvent.press(screen.getByRole("button", { name: /09\.08\..*Dienst bearbeiten/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: "2026-08-09", mode: "SHIFT", entryId: "standby" },
-    });
+    expect(row.props.onPress).toBeUndefined();
+    expect(screen.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("keeps an unconfirmed account visible as open without inventing zero credit", async () => {
     mockSummary = {

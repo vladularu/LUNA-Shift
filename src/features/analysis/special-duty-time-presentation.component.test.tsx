@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { MonthOverview } from "./month-overview";
@@ -120,21 +120,17 @@ describe("special-duty time account guidance", () => {
       ).toBeTruthy();
     },
   );
-  it("reproduces the photographed missing method and opens that duty directly", async () => {
+  it("shows the photographed missing method in the passive table", async () => {
     mockCardOrder = ["WORK", "SHIFTS"];
     const view = await render(overview([...ordinary, standby()]));
     expect(view.getByLabelText("Zeitkonto: Noch offen")).toBeTruthy();
     expect(
       view.getByText(/Erfasst: 71:06 h\. 09\.12\.: Ergänze das vereinbarte Verfahren/),
     ).toBeTruthy();
-    await fireEvent.press(
-      view.getByRole("button", { name: /Bereitschaftsdienst, Anzahl 1.*Zeitgutschrift offen/ }),
-    );
-    await fireEvent.press(view.getByRole("button", { name: /09\.12\..*Dienst bearbeiten/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: "2026-12-09", mode: "SHIFT", entryId: "standby" },
-    });
+    const row = view.getByLabelText(/Bereitschaftsdienst, Anzahl 1.*Zeitgutschrift offen/);
+    expect(row.props.onPress).toBeUndefined();
+    expect(view.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("labels paid account time clearly and retains the recorded hours", async () => {
     const entry = standby();
@@ -150,18 +146,14 @@ describe("special-duty time account guidance", () => {
     expect(view.queryByText("Bereitschaften ansehen")).toBeNull();
     expect(router.push).not.toHaveBeenCalled();
   });
-  it("keeps several unresolved duties editable in their inline group", async () => {
+  it("shows several unresolved duties together without expanding the group", async () => {
     mockCardOrder = ["WORK", "SHIFTS"];
     const first = standby();
     const view = await render(overview([first, { ...first, id: "second", date: "2026-12-12" }]));
-    await fireEvent.press(
-      view.getByRole("button", { name: /Bereitschaftsdienst, Anzahl 2.*Zeitgutschrift offen/ }),
-    );
-    await fireEvent.press(view.getByRole("button", { name: /12\.12\..*Dienst bearbeiten/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/shift-editor",
-      params: { date: "2026-12-12", mode: "SHIFT", entryId: "second" },
-    });
+    const row = view.getByLabelText(/Bereitschaftsdienst, Anzahl 2.*Zeitgutschrift offen/);
+    expect(row.props.onPress).toBeUndefined();
+    expect(view.queryByRole("button", { name: /Dienst bearbeiten/ })).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
   it("retains the existing Ist display for ordinary shifts", async () => {
     const view = await render(overview(ordinary));
