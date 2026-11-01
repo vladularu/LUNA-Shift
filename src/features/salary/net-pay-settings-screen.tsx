@@ -1,8 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { HeaderBackButton, useHeaderHeight } from "expo-router/react-navigation";
-import { useRef, type PropsWithChildren, type ReactNode } from "react";
-import { KeyboardAvoidingView, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRef, type PropsWithChildren } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 
 import {
   usePflegeShiftProfile,
@@ -89,10 +88,13 @@ export function NetPaySettingsScreen() {
         onSave={data.save}
         onSaved={backToSalary}
         onValidationFailure={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
-        renderLayout={({ content, footer }) => (
-          <NetPaySettingsLayout footer={footer} scrollRef={scrollRef}>
-            {content}
-          </NetPaySettingsLayout>
+        renderLayout={({ content, headerAction }) => (
+          <>
+            <Stack.Toolbar placement="right">
+              <Stack.Toolbar.View hidesSharedBackground>{headerAction}</Stack.Toolbar.View>
+            </Stack.Toolbar>
+            <NetPaySettingsLayout scrollRef={scrollRef}>{content}</NetPaySettingsLayout>
+          </>
         )}
       />
     </>
@@ -101,43 +103,28 @@ export function NetPaySettingsScreen() {
 
 function NetPaySettingsLayout({
   children,
-  footer,
   scrollRef,
 }: PropsWithChildren<{
-  readonly footer: ReactNode;
   readonly scrollRef: React.RefObject<ScrollView | null>;
 }>) {
   const palette = usePalette();
-  const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: palette.background }}
-      behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={headerHeight}
     >
       <ScreenScrollView
         testID="net-pay-settings-screen"
         scrollRef={scrollRef}
         style={{ flex: 1 }}
-        keyboardDismissMode={process.env.EXPO_OS === "ios" ? "interactive" : "on-drag"}
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         keyboardShouldPersistTaps="handled"
         bottomPadding={SPACING.xl}
       >
         {children}
       </ScreenScrollView>
-      <View
-        testID="net-pay-settings-footer"
-        style={{
-          borderTopWidth: 1,
-          borderTopColor: palette.separator,
-          paddingHorizontal: SPACING.lg,
-          paddingTop: SPACING.md,
-          paddingBottom: Math.max(insets.bottom, SPACING.md),
-        }}
-      >
-        {footer}
-      </View>
     </KeyboardAvoidingView>
   );
 }
