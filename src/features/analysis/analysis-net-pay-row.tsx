@@ -38,6 +38,7 @@ function StandaloneNetPayRow({ month }: { readonly month: string }) {
     settings,
     !blocked && data.status === "ready" && settings?.version === 2,
     testMonths,
+    data.timeline,
   );
   return <NetPayContent model={{ blocked, status: data.status, error: data.error, forecast }} />;
 }

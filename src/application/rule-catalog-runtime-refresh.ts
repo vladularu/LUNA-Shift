@@ -47,11 +47,17 @@ function selectsCompleteGeneration(
   minimumGeneration: number,
 ): boolean {
   const { diagnosis } = runtime;
+  if (diagnosis.fallbackReason !== null || diagnosis.activeGeneration === null) return false;
+  if (diagnosis.source === "APP_EMBEDDED") {
+    return (
+      diagnosis.activeGeneration >= minimumGeneration &&
+      (diagnosis.embeddedPreviewGeneration ?? 0) >= minimumGeneration
+    );
+  }
   return (
     diagnosis.source === "STORED" &&
-    diagnosis.fallbackReason === null &&
-    diagnosis.activeGeneration !== null &&
     diagnosis.activeGeneration === diagnosis.selectedGeneration &&
+    diagnosis.selectedGeneration !== null &&
     diagnosis.selectedGeneration >= minimumGeneration
   );
 }

@@ -11,7 +11,12 @@ import type {
   ShiftEntry,
 } from "@/domain/types";
 import { AnalysisCoverageNote } from "./analysis-coverage-note";
-import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
+import {
+  isCheckLimited,
+  PLANNING_HIDDEN_NOTICE,
+  selectVisibleCompliance,
+} from "./check-visibility";
+import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { CheckClearStatus } from "./check-summary-card";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import { usePalette } from "@/theme/palette";
@@ -113,7 +118,7 @@ export function ComplianceDetails({
   if (
     hideEmptyLegal &&
     legal.issues.length === 0 &&
-    !legal.prerequisiteCount &&
+    !isCheckLimited(legal) &&
     showPlanning &&
     planning.issues.length === 0
   )
@@ -140,6 +145,7 @@ export function ComplianceDetails({
           embedded={embedded}
         />
       ) : null}
+      <CheckScopeDisclosure issues={legal.scopeNotes} shifts={shifts} />
     </View>
   );
 }
@@ -164,7 +170,7 @@ function ComplianceIssueList({
       <DetailContainer embedded={embedded}>
         <CheckClearStatus
           title={heading ?? "Arbeitszeitregeln"}
-          limited={(compliance.prerequisiteCount ?? 0) > 0}
+          limited={isCheckLimited(compliance)}
         />
       </DetailContainer>
     );

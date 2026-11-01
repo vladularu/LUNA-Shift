@@ -18,7 +18,7 @@ import { calculateTimedShiftBounds } from "./working-time";
 export type AutomaticNetPayRecovery =
   | { readonly kind: "entry"; readonly date: string; readonly entryId: string }
   | { readonly kind: "profile"; readonly section: "WORK" | "TARIFF" }
-  | { readonly kind: "net-settings" };
+  | { readonly kind: "net-settings"; readonly month?: string };
 
 export interface AutomaticNetPayForecast {
   readonly result: SfnNetPayResult;
@@ -29,6 +29,12 @@ export interface AutomaticNetPayForecast {
   readonly pensionOmitted?: boolean;
   readonly recovery?: AutomaticNetPayRecovery;
   readonly annualPayment?: AnnualPaymentForecast;
+  /** Estimate using source-period marginal deductions; not a verified bank payout. */
+  readonly payrollTimingEstimate?: {
+    readonly method: "SOURCE_ADJUSTMENT";
+    readonly sourceMonth: string;
+    readonly lag: 1 | 2;
+  };
 }
 const unavailable = (reason: string): SfnNetPayResult => ({
   status: "unavailable",
@@ -51,6 +57,20 @@ export interface AutomaticNetPayInput {
   readonly pay: MonthlyPayEstimate;
 }
 
+export interface AutomaticSalaryProof {
+  readonly status: "available";
+  readonly profile: UserProfile;
+  readonly classification: Extract<SfnNetPayResult, { status: "available" }>["classification"];
+  readonly basicHourlyPayCents: number;
+  readonly regularGrossCents: number;
+  readonly regularShiftIds: readonly string[];
+  readonly specialDutyShiftIds: readonly string[];
+}
+
+export type AutomaticSalaryProofResult =
+  | AutomaticSalaryProof
+  | { readonly status: "unavailable"; readonly forecast: AutomaticNetPayForecast };
+
 export function calculateAutomaticNetPayForecast(
   input: AutomaticNetPayInput,
   resolver: RuleResolver,
@@ -66,13 +86,29 @@ export function* calculateAutomaticNetPayForecastSteps(
   input: AutomaticNetPayInput,
   resolver: RuleResolver,
 ): Generator<number, AutomaticNetPayForecast, void> {
+  const proof = yield* prepareAutomaticSalaryProofSteps(input, resolver);
+  if (proof.status !== "available") return proof.forecast;
+  return yield* finalizeAutomaticSalaryNetSteps(input, proof);
+}
+
+/** Validate SFN evidence in its earned month before any cash-month projection. */
+export function* prepareAutomaticSalaryProofSteps(
+  input: AutomaticNetPayInput,
+  resolver: RuleResolver,
+): Generator<number, AutomaticSalaryProofResult, void> {
   const { month, settings, pay } = input;
   const profile = employmentProfileAt(input.profile, month + "-01");
   const sourceMonth = settings.month;
-  const stop = (reason: string, recovery?: AutomaticNetPayRecovery): AutomaticNetPayForecast => ({
-    sourceMonth,
-    result: unavailable(reason),
-    ...(recovery ? { recovery } : {}),
+  const stop = (
+    reason: string,
+    recovery?: AutomaticNetPayRecovery,
+  ): AutomaticSalaryProofResult => ({
+    status: "unavailable",
+    forecast: {
+      sourceMonth,
+      result: unavailable(reason),
+      ...(recovery ? { recovery } : {}),
+    },
   });
   try {
     if (payrollEmploymentPeriods(input.profile, month, month + "-31").length > 1)
@@ -182,7 +218,9 @@ export function* calculateAutomaticNetPayForecastSteps(
     )
       return stop("Die Zuschlagssummen passen nicht zum Brutto.");
     yield 0;
-    traces.push(...specialDutyPayrollTraces(pay.specialDutyBreakdowns ?? []));
+    const regularShiftIds = traces.map((trace) => trace.id);
+    const specialDutyTraces = specialDutyPayrollTraces(pay.specialDutyBreakdowns ?? []);
+    traces.push(...specialDutyTraces);
     const classification = yield* classifySfnPayroll2026Steps(
       {
         month,
@@ -200,6 +238,32 @@ export function* calculateAutomaticNetPayForecastSteps(
     );
     if (classification.status !== "available") return stop(classification.reason);
     yield 0;
+    return {
+      status: "available",
+      profile,
+      classification,
+      basicHourlyPayCents,
+      regularGrossCents,
+      regularShiftIds,
+      specialDutyShiftIds: specialDutyTraces.map((trace) => trace.id),
+    };
+  } catch {
+    return stop(
+      "Tarif-, Arbeitszeit- oder Feiertagsdaten konnten nicht vollständig zugeordnet werden.",
+    );
+  }
+}
+
+/** A single payroll calculation after source-date SFN evidence has been classified. */
+export function* finalizeAutomaticSalaryNetSteps(
+  input: Pick<AutomaticNetPayInput, "month" | "settings">,
+  proof: AutomaticSalaryProof,
+): Generator<number, AutomaticNetPayForecast, void> {
+  const { month, settings } = input;
+  const { profile, classification, basicHourlyPayCents, regularGrossCents } = proof;
+  const sourceMonth = settings.month;
+  try {
+    const automation = settings.automation!;
     const pensionOmitted =
       ["UNKNOWN", "OTHER"].includes(automation.pensionScheme) ||
       (netPayPensionMaxOwnRate(automation.pensionScheme) !== null &&
@@ -257,8 +321,11 @@ export function* calculateAutomaticNetPayForecastSteps(
           : { status: "unavailable", stage: "net-pay", reason: result.reason },
     };
   } catch {
-    return stop(
-      "Tarif-, Arbeitszeit- oder Feiertagsdaten konnten nicht vollständig zugeordnet werden.",
-    );
+    return {
+      sourceMonth,
+      result: unavailable(
+        "Tarif-, Arbeitszeit- oder Feiertagsdaten konnten nicht vollständig zugeordnet werden.",
+      ),
+    };
   }
 }

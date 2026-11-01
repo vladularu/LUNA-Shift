@@ -1,21 +1,15 @@
-import { Text } from "@/ui/text";
 import { ReportExportButton } from "@/features/report-export/report-export-button";
 import { router, useLocalSearchParams } from "expo-router";
-import { Pressable } from "react-native";
+import { useState } from "react";
+import { Alert } from "react-native";
 import { addMonths, formatMonthTitle } from "@/engine/calendar";
 import { RuleComputationNotice } from "@/features/analysis/rule-computation";
-import { settingsEditorRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
-import { usePalette } from "@/theme/palette";
-import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
-import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ReportPeriodContent, ReportTestBadge } from "@/ui/report-layout";
-import { NetPayAutomaticEntryCard } from "./net-pay-automatic-entry-card";
+import { SalaryPayrollContent } from "./salary-payroll-content";
 import { useSalaryReport } from "./use-salary-report";
-import { salaryProfileCaption } from "./salary-composition";
 import { SalaryMonthNavigator, SalaryPage } from "./salary-ui";
 
 export function SalaryScreen() {
@@ -25,7 +19,7 @@ export function SalaryScreen() {
   const { month, selectMonth } = useReportMonth(routeMonth);
   if (parsed.status === "invalid")
     return (
-      <SalaryPage title="Gehalt" backLabel="Zurück zur Auswertung">
+      <SalaryPage title="Gehalt & Netto" backLabel="Zurück zur Auswertung" showBackFooter={false}>
         <LoadFailureView
           title="Gehalt kann nicht geöffnet werden"
           message="Der Link enthält keinen gültigen Monat."
@@ -46,18 +40,38 @@ function SalaryMonthPage({
   readonly month: string;
   readonly moveMonth: (delta: number) => void;
 }) {
-  const palette = usePalette();
+  const [draftDirty, setDraftDirty] = useState(false);
+  const [draftBusy, setDraftBusy] = useState(false);
   const { ready, error, reload, profile, calculation, retryRules, testMonths } =
     useSalaryReport(month);
+  function requestMonth(delta: number) {
+    if (draftBusy) return;
+    if (!draftDirty) {
+      moveMonth(delta);
+      return;
+    }
+    Alert.alert("Änderungen verwerfen?", "Deine Netto-Angaben sind noch nicht gespeichert.", [
+      { text: "Weiter bearbeiten", style: "cancel" },
+      {
+        text: "Änderungen verwerfen",
+        style: "destructive",
+        onPress: () => {
+          setDraftDirty(false);
+          moveMonth(delta);
+        },
+      },
+    ]);
+  }
   const navigation = (
     <SalaryMonthNavigator
       label={formatMonthTitle(month)}
-      onNext={() => moveMonth(1)}
-      onPrevious={() => moveMonth(-1)}
+      disabled={draftBusy}
+      onNext={() => requestMonth(1)}
+      onPrevious={() => requestMonth(-1)}
     />
   );
   let content;
-  if (ready && error) content = <LoadFailureView message={error} onRetry={() => void reload()} />;
+  if (error) content = <LoadFailureView message={error} onRetry={() => void reload()} />;
   else if (calculation !== null && !calculation.ok)
     content = (
       <RuleComputationNotice
@@ -68,115 +82,32 @@ function SalaryMonthPage({
     );
   else if (!ready || !profile || !calculation) content = <LoadingView />;
   else {
-    const { pay, monthShifts } = calculation.value;
-    const specialDutyLines = pay.specialDutyBreakdowns ?? [];
-    const specialDutiesOpen = specialDutyLines.some((line) => !line.complete);
-    const manual = profile.tariff === null && profile.manualMonthlyGrossCents != null;
-    const salaryReady = !!(
-      profile.tariff ||
-      profile.nursingTrainingTariff ||
-      profile.vkaETariff ||
-      profile.tvlKrTariff ||
-      profile.tvUkNursingTariff ||
-      profile.tvhKrTariff ||
-      profile.tvalPflegeTariff ||
-      manual
-    );
-    const caption = salaryProfileCaption(profile);
+    const { pay, projection } = calculation.value;
     content = (
       <ReportPeriodContent>
         {testMonths.includes(month) ? <ReportTestBadge /> : null}
-        {!salaryReady ? (
-          <SetupCard />
-        ) : !pay.available ? (
-          <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.xs }}>
-            <Text style={{ ...TYPOGRAPHY.sectionTitle, color: palette.text }}>
-              {specialDutiesOpen
-                ? "Gehaltsprognose noch offen"
-                : "Für diesen Monat nicht verfügbar"}
-            </Text>
-            <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
-              {specialDutiesOpen
-                ? "Bei mindestens einer Bereitschaft sind noch Beträge offen. Prüfe die Angaben unter Gehaltsbestandteile → Bereitschaften."
-                : (pay.specialDutyNotes?.join(" ") ?? "Für diesen Zeitraum fehlen Tarifdaten.")}
-            </Text>
-          </SurfaceCard>
-        ) : !manual && !monthShifts.length ? (
-          <SurfaceCard style={{ padding: SPACING.md, gap: SPACING.xs }}>
-            <Text style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}>
-              Noch keine Dienste in diesem Monat
-            </Text>
-            <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
-              Grundentgelt und feste Zulagen sind bereits enthalten. Variable Zeitzuschläge
-              erscheinen nach dem ersten Dienst.
-            </Text>
-          </SurfaceCard>
-        ) : null}
-        <NetPayAutomaticEntryCard
+        <SalaryPayrollContent
           key={month}
+          projection={projection}
           month={month}
-          caption={caption ?? undefined}
-          showPremiumDetails={salaryReady && pay.available && !manual}
+          profile={profile}
+          pay={pay}
           blocked={testMonths.includes(month)}
-          premiumCents={pay.available ? Math.round(pay.timePremiumAmount * 100) : undefined}
-          proposedGrossCents={
-            pay.available && pay.estimatedGrossAmount !== null
-              ? Math.round(pay.estimatedGrossAmount * 100)
-              : null
-          }
+          onDirtyChange={setDraftDirty}
+          onBusyChange={setDraftBusy}
         />
       </ReportPeriodContent>
     );
   }
   return (
     <SalaryPage
-      title="Gehalt"
+      title="Gehalt & Netto"
+      showBackFooter={false}
       backLabel="Zurück zur Auswertung"
       action={<ReportExportButton key={month} period={month} variant="icon" />}
     >
       {navigation}
       {content}
     </SalaryPage>
-  );
-}
-function SetupCard() {
-  const palette = usePalette();
-  return (
-    <SurfaceCard style={{ gap: SPACING.md, padding: SPACING.lg }}>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        selectable
-        style={{ color: palette.text, ...TYPOGRAPHY.screenTitle }}
-      >
-        Gehalt aktivieren
-      </Text>
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-      >
-        Wähle TVöD-P oder hinterlege dein Monatsbrutto.
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push(settingsEditorRoute("TARIFF"))}
-        style={({ pressed }) => ({
-          minHeight: CONTROL_HEIGHT.regular,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: RADII.control,
-          borderCurve: CORNER_CURVE,
-          backgroundColor: palette.primaryAction,
-          opacity: pressed ? 0.75 : 1,
-        })}
-      >
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.onPrimaryAction, ...TYPOGRAPHY.button }}
-        >
-          Gehalt einrichten
-        </Text>
-      </Pressable>
-    </SurfaceCard>
   );
 }

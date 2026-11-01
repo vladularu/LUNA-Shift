@@ -15,6 +15,7 @@ import { usePreparedMonthlyAnalysis } from "./use-prepared-monthly-analysis";
 import { useDeferredMonthlyCompliance } from "./use-monthly-compliance";
 import { analysisWorkPriority } from "./analysis-work-queue";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
+import { useSalaryPaymentPreferences } from "@/features/salary/salary-payment-preferences";
 const EMPTY_SHIFTS: readonly ShiftEntry[] = Object.freeze([]);
 
 function usePrepareMonth(month: string, active: boolean, enabled: boolean, distance: number) {
@@ -30,12 +31,14 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
   const storedResults = useAnalysisPersistentResults();
   const persistent = canPrepare && !testMonths.includes(month) ? storedResults : null;
   const salaryPayments = useAnalysisSalaryInputs(month, canPrepare && !testMonths.includes(month));
+  const payment = useSalaryPaymentPreferences();
   const salaryRequest = useMemo(() => {
     if (
       !canPrepare ||
       savedProfile === null ||
       testMonths.includes(month) ||
-      salaryPayments.status !== "ready"
+      salaryPayments.status !== "ready" ||
+      !payment.ready
     )
       return null;
     return {
@@ -43,6 +46,11 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
       profile: savedProfile,
       settings: salaryPayments.saved?.settings ?? null,
       annualPayments: salaryPayments.annualPayments,
+      payment: {
+        preferences: payment.preferences,
+        perspective: "PAYOUT" as const,
+        sourceSettings: salaryPayments.timeline,
+      },
       context: {
         entries,
         tariffDecisions,
@@ -59,6 +67,9 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
     salaryPayments.status,
     salaryPayments.saved,
     salaryPayments.annualPayments,
+    salaryPayments.timeline,
+    payment.ready,
+    payment.preferences,
     entries,
     tariffDecisions,
     workPatternSettings,
@@ -93,6 +104,7 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
     testMonths,
     ruleResolver,
     salaryPayments,
+    payment,
     salaryRequest,
     salary,
     monthlyData,

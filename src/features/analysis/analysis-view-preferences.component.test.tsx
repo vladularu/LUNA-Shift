@@ -80,7 +80,7 @@ describe("analysis view preferences", () => {
       </AnalysisViewProvider>,
     );
     await waitFor(() => expect(read(next).hidden).toEqual(["PAY"]));
-    expect(read(next).order).toEqual(["WORK", "CHECK", "SHIFTS", "PAY"]);
+    expect(read(next).order).toEqual(["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"]);
   });
   it("serializes rapid writes and preserves every newer change", async () => {
     let finish!: () => void;
@@ -103,7 +103,7 @@ describe("analysis view preferences", () => {
     await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(2));
     expect(mockSave.mock.calls[1][1]).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
     });
   });
   it("rolls back a failed write and retries the requested view", async () => {
@@ -237,14 +237,14 @@ describe("analysis view preferences", () => {
     });
     expect(read(screen)).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
     });
     expect(screen.queryByRole("button", { name: "Standard wiederherstellen" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Auswahl anzeigen" }));
     expect(screen.getByLabelText("Gehalt anzeigen")).toBeTruthy();
     expect(read(screen)).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
     });
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     expect(screen.queryByText("Deine Karten für Monat und Jahr.")).toBeNull();
@@ -270,23 +270,23 @@ describe("analysis view preferences", () => {
           fireGestureHandler(getByGestureTestId("analysis-sort-drag-WORK"), [
             { state: State.BEGAN },
             { state: State.ACTIVE, translationY: 0, translationX: 0 },
-            { state: State.ACTIVE, translationY: 220, translationX: 20 },
-            { state: State.END, translationY: 220, translationX: 20 },
+            { state: State.ACTIVE, translationY: 400, translationX: 20 },
+            { state: State.END, translationY: 400, translationX: 20 },
           ]);
           jest.advanceTimersByTime(500);
         });
         expect(mockSave).toHaveBeenCalledTimes(1);
         expect(mockSave.mock.calls[0][1]).toMatchObject({
-          order: ["CHECK", "PAY", "SHIFTS", "WORK"],
+          order: ["CHECK", "PREMIUM", "PAY", "SHIFTS", "WORK"],
           hidden: ["PAY"],
         });
         await waitFor(() =>
           expect(read(screen).order).toEqual(
-            fail ? initial.order : ["CHECK", "PAY", "SHIFTS", "WORK"],
+            fail ? initial.order : ["CHECK", "PREMIUM", "PAY", "SHIFTS", "WORK"],
           ),
         );
         expect(
-          screen.getByRole("adjustable", { name: `Arbeitszeit, Position ${fail ? 1 : 4} von 4` }),
+          screen.getByRole("adjustable", { name: `Arbeitszeit, Position ${fail ? 1 : 5} von 5` }),
         ).toBeTruthy();
         if (fail)
           expect(

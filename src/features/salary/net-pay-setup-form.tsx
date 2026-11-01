@@ -1,4 +1,4 @@
-import { useRef, useState, type PropsWithChildren, type ReactNode } from "react";
+import { useEffect, useRef, useState, type PropsWithChildren, type ReactNode } from "react";
 import { Keyboard, View } from "react-native";
 import { Text } from "@/ui/text";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -54,6 +54,8 @@ export function NetPaySetupForm({
   onSaved,
   onValidationFailure,
   renderLayout,
+  inline = false,
+  onDirtyChange,
 }: {
   readonly month: string;
   readonly initial: MonthlyNetPaySettings | null;
@@ -64,6 +66,8 @@ export function NetPaySetupForm({
   readonly firstSetup?: boolean;
   readonly onSaved?: () => void;
   readonly onValidationFailure?: () => void;
+  readonly inline?: boolean;
+  readonly onDirtyChange?: (dirty: boolean) => void;
   readonly renderLayout?: (layout: {
     readonly content: ReactNode;
     readonly footer: ReactNode;
@@ -109,8 +113,11 @@ export function NetPaySetupForm({
     additionalGross,
     additionalNet,
   });
-  const [baseline] = useState(draft);
+  const [baseline, setBaseline] = useState(draft);
+  const [expanded, setExpanded] = useState(initial === null || initial.version === 1);
   const leave = useProfileLeaveGuard(draft !== baseline, locked);
+  useEffect(() => onDirtyChange?.(draft !== baseline), [draft, baseline, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const specialInsurance =
     form.specialCases?.includes("PRIVATE_INSURANCE") ||
     form.specialCases?.includes("OTHER_INSURANCE_STATUS");
@@ -136,12 +143,16 @@ export function NetPaySetupForm({
       setSaving(true);
       if (effectiveMonth === month) await onSave(value);
       else await onSave(value, effectiveMonth);
-      leave.saved(onSaved);
+      if (inline) {
+        setBaseline(draft);
+        onSaved?.();
+      } else leave.saved(onSaved);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : "Die Angaben konnten nicht gesichert werden.",
       );
       onValidationFailure?.();
+      if (inline) setExpanded(true);
     } finally {
       submitting.current = false;
       setSaving(false);
@@ -149,48 +160,91 @@ export function NetPaySetupForm({
   }
   const content = (
     <View style={{ gap: SPACING.xl }}>
-      <FormSection>
-        <NetPayValidity
-          month={month}
-          firstSetup={firstSetup}
-          value={effectiveMonth}
-          onChange={setEffectiveMonth}
-          disabled={locked}
-        />
-        {initial?.version === 1 ? (
-          <NetPayText>
-            Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden sie auch
-            für folgende Monate übernommen.
-          </NetPayText>
-        ) : null}
-      </FormSection>
+      {!inline || expanded ? (
+        <FormSection>
+          <NetPayValidity
+            month={month}
+            firstSetup={firstSetup}
+            value={effectiveMonth}
+            onChange={setEffectiveMonth}
+            disabled={locked}
+          />
+          {initial?.version === 1 ? (
+            <NetPayText>
+              Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden sie
+              auch für folgende Monate übernommen.
+            </NetPayText>
+          ) : null}
+        </FormSection>
+      ) : null}
       <FormStatus error={error} />
       <NetPaySettingsSection title="Steuern">
         <View style={{ gap: SPACING.lg }}>
-          <NetPayChoice
-            label="Steuerklasse"
-            value={form.taxClass}
-            disabled={locked}
-            options={[1, 2, 3, 4, 5, 6].map((value) => ({ value, label: String(value) }))}
-            onChange={(value) => {
-              setForm((current) => ({
-                ...current,
-                taxClass: value,
-                factorMode: current.taxClass === value ? current.factorMode : "NONE",
-                factor: current.taxClass === value ? current.factor : "",
-                childAllowance: value >= 5 ? "0" : current.childAllowance,
-              }));
-              setError(null);
-            }}
-          />
-          <NetPayChoice
-            label="Zahlst du Kirchensteuer?"
-            value={form.churchTaxRate === null ? null : form.churchTaxRate !== 0}
-            disabled={locked}
-            options={YES_NO}
-            onChange={(yes) => change("churchTaxRate", yes ? churchRate : 0)}
-          />
-          {form.churchTaxRate ? (
+          {inline ? (
+            <NetPayWorkflowSelect
+              label="Steuerklasse"
+              value={form.taxClass === null ? null : String(form.taxClass)}
+              disabled={locked}
+              options={[1, 2, 3, 4, 5, 6].map((value) => ({
+                value: String(value),
+                label: String(value),
+              }))}
+              onChange={(choice) => {
+                const value = Number(choice) as NonNullable<NetPayFormValues["taxClass"]>;
+                setForm((current) => ({
+                  ...current,
+                  taxClass: value,
+                  factorMode: current.taxClass === value ? current.factorMode : "NONE",
+                  factor: current.taxClass === value ? current.factor : "",
+                  childAllowance: value >= 5 ? "0" : current.childAllowance,
+                }));
+                setError(null);
+              }}
+            />
+          ) : (
+            <NetPayChoice
+              label="Steuerklasse"
+              value={form.taxClass}
+              disabled={locked}
+              options={[1, 2, 3, 4, 5, 6].map((value) => ({ value, label: String(value) }))}
+              onChange={(value) => {
+                setForm((current) => ({
+                  ...current,
+                  taxClass: value,
+                  factorMode: current.taxClass === value ? current.factorMode : "NONE",
+                  factor: current.taxClass === value ? current.factor : "",
+                  childAllowance: value >= 5 ? "0" : current.childAllowance,
+                }));
+                setError(null);
+              }}
+            />
+          )}
+          {inline ? (
+            <NetPayWorkflowSelect
+              label="Kirchensteuer"
+              value={form.churchTaxRate === null ? null : String(form.churchTaxRate)}
+              disabled={locked}
+              options={[
+                { value: "0", label: "Keine" },
+                { value: "8", label: "8 %" },
+                { value: "9", label: "9 %" },
+              ]}
+              onChange={(choice) => {
+                const rate = Number(choice) as 0 | 8 | 9;
+                if (rate) setChurchRate(rate);
+                change("churchTaxRate", rate);
+              }}
+            />
+          ) : (
+            <NetPayChoice
+              label="Zahlst du Kirchensteuer?"
+              value={form.churchTaxRate === null ? null : form.churchTaxRate !== 0}
+              disabled={locked}
+              options={YES_NO}
+              onChange={(yes) => change("churchTaxRate", yes ? churchRate : 0)}
+            />
+          )}
+          {!inline && form.churchTaxRate ? (
             <>
               <NetPayChoice
                 label="Dein Wohnort"
@@ -207,54 +261,67 @@ export function NetPaySetupForm({
               />
             </>
           ) : null}
-          {form.taxClass !== null && form.taxClass <= 4 ? (
+          {!inline || expanded ? (
             <>
+              {form.taxClass !== null && form.taxClass <= 4 ? (
+                <>
+                  <Field
+                    label="Kinderfreibetrag laut Gehaltsabrechnung"
+                    value={form.childAllowance}
+                    onChangeText={(value) => change("childAllowance", value)}
+                    editable={!locked}
+                    keyboardType="decimal-pad"
+                  />
+                  <NetPayText>
+                    Ohne eigene Angabe verwenden wir 0. Der Kinderfreibetrag beeinflusst
+                    Kirchensteuer und Solidaritätszuschlag und ist von deiner Kinderzahl getrennt.
+                  </NetPayText>
+                </>
+              ) : null}
               <Field
-                label="Kinderfreibetrag laut Gehaltsabrechnung"
-                value={form.childAllowance}
-                onChangeText={(value) => change("childAllowance", value)}
+                label="Monatlicher Steuerfreibetrag (€)"
+                value={form.monthlyTaxAllowance}
+                onChangeText={(value) => change("monthlyTaxAllowance", value)}
                 editable={!locked}
                 keyboardType="decimal-pad"
               />
-              <NetPayText>
-                Ohne eigene Angabe verwenden wir 0. Der Kinderfreibetrag beeinflusst Kirchensteuer
-                und Solidaritätszuschlag und ist von deiner Kinderzahl getrennt.
-              </NetPayText>
-            </>
-          ) : null}
-          <Field
-            label="Monatlicher Steuerfreibetrag (€)"
-            value={form.monthlyTaxAllowance}
-            onChangeText={(value) => change("monthlyTaxAllowance", value)}
-            editable={!locked}
-            keyboardType="decimal-pad"
-          />
-          {form.taxClass === 4 ? (
-            <>
-              <NetPayChoice
-                label="Faktorverfahren"
-                value={form.factorMode}
-                disabled={locked}
-                options={[
-                  { value: "NONE", label: "Ohne Faktor" },
-                  { value: "FACTOR", label: "Mit Faktor" },
-                ]}
-                onChange={(value) => change("factorMode", value)}
-              />
-              {form.factorMode === "FACTOR" ? (
-                <Field
-                  label="Faktor laut Gehaltsabrechnung"
-                  value={form.factor}
-                  onChangeText={(value) => change("factor", value)}
-                  editable={!locked}
-                  keyboardType="decimal-pad"
-                />
+              {form.taxClass === 4 ? (
+                <>
+                  <NetPayChoice
+                    label="Faktorverfahren"
+                    value={form.factorMode}
+                    disabled={locked}
+                    options={[
+                      { value: "NONE", label: "Ohne Faktor" },
+                      { value: "FACTOR", label: "Mit Faktor" },
+                    ]}
+                    onChange={(value) => change("factorMode", value)}
+                  />
+                  {form.factorMode === "FACTOR" ? (
+                    <Field
+                      label="Faktor laut Gehaltsabrechnung"
+                      value={form.factor}
+                      onChangeText={(value) => change("factor", value)}
+                      editable={!locked}
+                      keyboardType="decimal-pad"
+                    />
+                  ) : null}
+                </>
               ) : null}
             </>
           ) : null}
         </View>
       </NetPaySettingsSection>
-      <NetPaySettingsSection title="Familie">
+      {inline ? (
+        <NetPayWorkflowLink
+          expanded={expanded}
+          disabled={locked}
+          onPress={() => setExpanded((value) => !value)}
+        >
+          Weitere Netto-Angaben
+        </NetPayWorkflowLink>
+      ) : null}
+      <NetPaySettingsSection title="Familie" hidden={inline && !expanded}>
         <View style={{ gap: SPACING.lg }}>
           <Field
             label="Geburtsdatum (TT.MM.JJJJ)"
@@ -306,7 +373,7 @@ export function NetPaySetupForm({
           ) : null}
         </View>
       </NetPaySettingsSection>
-      <NetPaySettingsSection title="Versicherung & Vorsorge">
+      <NetPaySettingsSection title="Versicherung & Vorsorge" hidden={inline && !expanded}>
         <View style={{ gap: SPACING.lg }}>
           <NetPayChoice
             label="Versicherungsart"
@@ -423,7 +490,7 @@ export function NetPaySetupForm({
           ) : null}
         </View>
       </NetPaySettingsSection>
-      <NetPaySettingsSection title="Weitere Angaben">
+      <NetPaySettingsSection title="Weitere Angaben" hidden={inline && !expanded}>
         <View style={{ gap: SPACING.lg }}>
           <NetPayWorkflowSelect
             label="Beschäftigungsfall"
@@ -506,7 +573,7 @@ export function NetPaySetupForm({
   );
   const footer = (
     <NetPayWorkflowAction onPress={() => void save()} disabled={locked} busy={locked}>
-      Änderungen speichern
+      {inline ? "Netto-Angaben speichern" : "Änderungen speichern"}
     </NetPayWorkflowAction>
   );
   return renderLayout ? (
@@ -519,8 +586,13 @@ export function NetPaySetupForm({
   );
 }
 
-function NetPaySettingsSection({ children, title }: PropsWithChildren<{ readonly title: string }>) {
+function NetPaySettingsSection({
+  children,
+  title,
+  hidden = false,
+}: PropsWithChildren<{ readonly title: string; readonly hidden?: boolean }>) {
   const palette = usePalette();
+  if (hidden) return null;
   return (
     <View style={{ gap: SPACING.sm }}>
       <Text

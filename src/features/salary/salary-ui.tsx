@@ -46,6 +46,7 @@ export function SalaryPage({
   action,
   backLabel = "Zurück zum Gehalt",
   largeTitle = false,
+  showBackFooter = true,
   children,
 }: PropsWithChildren<{
   readonly title: string;
@@ -53,13 +54,14 @@ export function SalaryPage({
   readonly action?: ReactNode;
   readonly backLabel?: string;
   readonly largeTitle?: boolean;
+  readonly showBackFooter?: boolean;
 }>) {
   const palette = usePalette();
   const { fontScale } = useWindowDimensions();
   const stacked = !largeTitle && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={showBackFooter ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
       style={{ flex: 1, backgroundColor: palette.groupedBackground }}
     >
       <View
@@ -137,6 +139,7 @@ export function SalaryPage({
       </View>
       <BackFooterLayout
         footerTestID="salary-back-footer"
+        showFooter={showBackFooter}
         label={backLabel}
         onPress={() => router.back()}
       >
@@ -160,10 +163,12 @@ export function SalaryMonthNavigator({
   label,
   onPrevious,
   onNext,
+  disabled = false,
 }: {
   readonly label: string;
   readonly onPrevious: () => void;
   readonly onNext: () => void;
+  readonly disabled?: boolean;
 }) {
   const palette = usePalette();
   return (
@@ -192,6 +197,8 @@ export function SalaryMonthNavigator({
             key={item}
             accessibilityRole="button"
             accessibilityLabel={`${item === "previous" ? "Vorheriger" : "Nächster"} Monat, aktuell ${label}`}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
             onPress={item === "previous" ? onPrevious : onNext}
             style={({ pressed }) => ({
               width: MINIMUM_TOUCH_TARGET,
@@ -276,6 +283,7 @@ export function SalaryAmountRow({
   expanded,
   quiet = false,
   emphasizeValue = false,
+  chevronPlacement = "value",
 }: {
   readonly label: string;
   readonly value: string;
@@ -284,10 +292,30 @@ export function SalaryAmountRow({
   readonly expanded?: boolean;
   readonly quiet?: boolean;
   readonly emphasizeValue?: boolean;
+  readonly chevronPlacement?: "value" | "label";
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale >= 1.4;
+  const labelContent = (
+    <Text
+      selectable={!onPress}
+      style={{
+        ...(quiet ? TYPOGRAPHY.body : TYPOGRAPHY.bodyStrong),
+        color: quiet ? palette.textMuted : palette.text,
+      }}
+    >
+      {label}
+    </Text>
+  );
+  const chevron = onPress ? (
+    <Ionicons
+      name={expanded === undefined ? "chevron-forward" : expanded ? "chevron-up" : "chevron-down"}
+      color={palette.textMuted}
+      size={18}
+      accessibilityElementsHidden
+    />
+  ) : null;
   const content = (
     <View
       style={{
@@ -299,15 +327,14 @@ export function SalaryAmountRow({
       }}
     >
       <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: SPACING.xxs }}>
-        <Text
-          selectable={!onPress}
-          style={{
-            ...(quiet ? TYPOGRAPHY.body : TYPOGRAPHY.bodyStrong),
-            color: quiet ? palette.textMuted : palette.text,
-          }}
-        >
-          {label}
-        </Text>
+        {onPress && chevronPlacement === "label" ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.xs }}>
+            <View style={{ flexShrink: 1 }}>{labelContent}</View>
+            {chevron}
+          </View>
+        ) : (
+          labelContent
+        )}
         {subtitle ? (
           <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>{subtitle}</Text>
         ) : null}
@@ -334,16 +361,7 @@ export function SalaryAmountRow({
         >
           {value}
         </Text>
-        {onPress ? (
-          <Ionicons
-            name={
-              expanded === undefined ? "chevron-forward" : expanded ? "chevron-up" : "chevron-down"
-            }
-            color={palette.textMuted}
-            size={18}
-            accessibilityElementsHidden
-          />
-        ) : null}
+        {chevronPlacement === "value" ? chevron : null}
       </View>
     </View>
   );
@@ -439,21 +457,24 @@ export function SalaryNavigationRow({
 export function SalaryPremiumCard({
   totalCents,
   taxFreeCents,
+  title = "Zeitzuschläge",
   onPress,
   grouped = false,
 }: {
-  readonly totalCents: number;
+  readonly totalCents: number | null;
   readonly taxFreeCents: number | null;
+  readonly title?: string;
   readonly onPress?: () => void;
   readonly grouped?: boolean;
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale >= 1.4;
+  const amount = totalCents === null ? "Noch offen" : netPayEuro(totalCents);
   if (grouped)
     return (
-      <SalarySectionCard title="Zeitzuschläge" amount={netPayEuro(totalCents)}>
-        {taxFreeCents === null ? (
+      <SalarySectionCard title={title} amount={amount}>
+        {taxFreeCents === null || totalCents === null ? (
           <Text style={{ ...TYPOGRAPHY.small, padding: SPACING.lg, color: palette.textMuted }}>
             Steuerliche Aufteilung noch nicht verfügbar.
           </Text>
@@ -477,7 +498,7 @@ export function SalaryPremiumCard({
       </SalarySectionCard>
     );
   return (
-    <SalarySectionCard title="Zeitzuschläge">
+    <SalarySectionCard title={title}>
       <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
         <View
           style={{
@@ -488,7 +509,7 @@ export function SalaryPremiumCard({
         >
           <Text
             accessible
-            accessibilityLabel={`Zeitzuschläge: ${netPayEuro(totalCents)}`}
+            accessibilityLabel={`${title}: ${amount}`}
             selectable
             style={{
               ...(stacked ? TYPOGRAPHY.highlightCount : TYPOGRAPHY.highlightValue),
@@ -498,11 +519,11 @@ export function SalaryPremiumCard({
               minWidth: 0,
             }}
           >
-            {netPayEuro(totalCents).replaceAll("\u00a0", " ")}
+            {amount.replaceAll("\u00a0", " ")}
           </Text>
         </View>
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
-          {taxFreeCents === null
+          {taxFreeCents === null || totalCents === null
             ? "Steuerliche Aufteilung noch nicht verfügbar."
             : `Steuerfrei ${netPayEuro(taxFreeCents)} · Steuerpflichtig ${netPayEuro(totalCents - taxFreeCents)}`}
         </Text>

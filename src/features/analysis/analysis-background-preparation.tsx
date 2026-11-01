@@ -12,6 +12,7 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import { useActiveMonth, useActiveMonthCoordinator } from "@/navigation/active-month";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
+import { useSalaryPaymentPreferences } from "@/features/salary/salary-payment-preferences";
 import { useLocalReferenceDate } from "./use-local-reference-date";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
 import { analysisSalaryInputStore } from "./analysis-salary-input-store";
@@ -26,6 +27,7 @@ export default function AnalysisBackgroundPreparation() {
   const { testMonths } = usePflegeShiftTestData();
   const { resolver } = useRuleCatalogRuntime();
   const { youthEnabled } = useCheckPreferences();
+  const payment = useSalaryPaymentPreferences();
   const referenceDate = useLocalReferenceDate(profile?.timeZone ?? "Europe/Berlin");
   const coordinator = useActiveMonthCoordinator();
   const calendarMonth = useActiveMonth();
@@ -90,6 +92,7 @@ export default function AnalysisBackgroundPreparation() {
       resolver,
       timeline: snapshot.status === "ready" ? snapshot.timeline : null,
       annualPayments: snapshot.status === "ready" ? snapshot.annualPayments : null,
+      payment: payment.ready ? { preferences: payment.preferences, perspective: "PAYOUT" } : null,
       referenceDate,
       youthProtection: youthEnabled ?? null,
     });
@@ -101,6 +104,8 @@ export default function AnalysisBackgroundPreparation() {
     profile,
     savedProfile,
     snapshot,
+    payment.ready,
+    payment.preferences,
     months,
     entries,
     tariffDecisions,

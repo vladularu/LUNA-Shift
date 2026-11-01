@@ -2,6 +2,7 @@ import type { ComplianceIssue, MonthlyComplianceResult } from "@/domain/types";
 import type { AnnualReport } from "./annual-report";
 
 export interface CheckCounts {
+  readonly scopeCount?: number;
   readonly criticalCount: number;
   readonly warningCount: number;
   readonly infoCount: number;
@@ -12,6 +13,14 @@ export interface ClassifiedCheckCounts {
   readonly planning: CheckCounts;
 }
 const emptyCounts = (): CheckCounts => ({ criticalCount: 0, warningCount: 0, infoCount: 0 });
+
+export function isCheckScopeNotice(issue: ComplianceIssue): boolean {
+  return issue.rule === "SPECIAL_DUTY_REVIEW" && issue.severity !== "critical";
+}
+
+export function isCheckLimited(counts: Pick<CheckCounts, "prerequisiteCount" | "scopeCount">) {
+  return (counts.prerequisiteCount ?? 0) > 0 || (counts.scopeCount ?? 0) > 0;
+}
 
 // Only known prerequisites are separated. Critical findings and unfamiliar rules stay visible.
 export function isCheckPrerequisite(issue: ComplianceIssue): boolean {
@@ -27,13 +36,17 @@ export function isCheckPrerequisite(issue: ComplianceIssue): boolean {
 }
 
 export function countChecks(issues: readonly ComplianceIssue[]): CheckCounts {
-  const findings = issues.filter((issue) => !isCheckPrerequisite(issue));
-  const prerequisiteCount = issues.length - findings.length;
+  const findings = issues.filter(
+    (issue) => !isCheckPrerequisite(issue) && !isCheckScopeNotice(issue),
+  );
+  const prerequisiteCount = issues.filter(isCheckPrerequisite).length;
+  const scopeCount = issues.some(isCheckScopeNotice) ? 1 : 0;
   return {
     criticalCount: findings.filter((issue) => issue.severity === "critical").length,
     warningCount: findings.filter((issue) => issue.severity === "warning").length,
     infoCount: findings.filter((issue) => issue.severity === "info").length,
     ...(prerequisiteCount ? { prerequisiteCount } : {}),
+    ...(scopeCount ? { scopeCount } : {}),
   };
 }
 export function classifyChecks(issues: readonly ComplianceIssue[]): ClassifiedCheckCounts {
@@ -44,32 +57,52 @@ export function classifyChecks(issues: readonly ComplianceIssue[]): ClassifiedCh
 }
 export function addCheckCounts(a: CheckCounts, b: CheckCounts): CheckCounts {
   const prerequisiteCount = (a.prerequisiteCount ?? 0) + (b.prerequisiteCount ?? 0);
+  const scopeCount = (a.scopeCount ?? 0) + (b.scopeCount ?? 0);
   return {
     criticalCount: a.criticalCount + b.criticalCount,
     warningCount: a.warningCount + b.warningCount,
     infoCount: a.infoCount + b.infoCount,
     ...(prerequisiteCount ? { prerequisiteCount } : {}),
+    ...(scopeCount ? { scopeCount } : {}),
   };
 }
 export function selectVisibleCompliance(
   result: MonthlyComplianceResult,
   showPlanning: boolean,
 ): MonthlyComplianceResult {
+  // Re-project safely even if a previously separate note becomes a real finding.
+  const originalIssues = [
+    ...new Map(
+      [...(result.scopeNotes ?? []), ...result.issues].map((issue) => [issue.id, issue]),
+    ).values(),
+  ];
+  const scopeNotes = [
+    ...new Map(
+      originalIssues.filter(isCheckScopeNotice).map((issue) => [issue.id, issue]),
+    ).values(),
+  ];
   const prerequisites = [
     ...new Map(
-      [...(result.prerequisites ?? []), ...result.issues.filter(isCheckPrerequisite)].map(
+      [...(result.prerequisites ?? []), ...originalIssues.filter(isCheckPrerequisite)].map(
         (issue) => [issue.id, issue],
       ),
     ).values(),
   ];
-  const issues = result.issues.filter(
-    (issue) => !isCheckPrerequisite(issue) && (showPlanning || issue.kind !== "PLANNING"),
+  const issues = originalIssues.filter(
+    (issue) =>
+      !isCheckPrerequisite(issue) &&
+      !isCheckScopeNotice(issue) &&
+      (showPlanning || issue.kind !== "PLANNING"),
   );
+  const base = { ...result };
+  delete base.scopeNotes;
+  delete base.scopeCount;
   return {
-    ...result,
+    ...base,
     issues,
     ...countChecks(issues),
     ...(prerequisites.length ? { prerequisites, prerequisiteCount: prerequisites.length } : {}),
+    ...(scopeNotes.length ? { scopeNotes, scopeCount: 1 } : {}),
     affectedDates: [...new Set(issues.map((issue) => issue.date))].sort(),
   };
 }

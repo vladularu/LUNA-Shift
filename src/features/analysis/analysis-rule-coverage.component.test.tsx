@@ -11,7 +11,12 @@ import holidayPackageValue from "../../../rules/packages/reviewed/de-holidays/20
 import futureHolidayPackageValue from "../../../rules/packages/reviewed/de-holidays/2027.json";
 import legalPackageValue from "../../../rules/packages/reviewed/de-arbzg-care/2026-01.json";
 import tariffPackageValue from "../../../rules/packages/reviewed/tvoed-vka-bt-k/2026-05.json";
-import type { MonthlyComplianceResult, ShiftEntry, UserProfile } from "@/domain/types";
+import type {
+  MonthlyComplianceResult,
+  MonthlyTariffDecision,
+  ShiftEntry,
+  UserProfile,
+} from "@/domain/types";
 import * as monthlyAnalysis from "./monthly-analysis";
 import { useDeferredMonthlyCompliance } from "./use-monthly-compliance";
 import { AnalysisScreen } from "@/features/analysis/analysis-screen";
@@ -28,7 +33,37 @@ import type {
 } from "@/rules/contracts.generated";
 import { createRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
-import { currentMonth } from "@/engine/calendar";
+import { currentMonth, formatMonthTitle } from "@/engine/calendar";
+import {
+  DEFAULT_SALARY_PAYMENT_PREFERENCES,
+  setSalaryPaymentPeriod,
+  type SalaryPerspective,
+} from "@/domain/salary-payment";
+
+// These rule/navigation scenarios use an explicitly confirmed same-month payment schedule.
+const mockPaymentPreferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
+  effectiveMonth: "2020-01",
+  delays: { PREMIUMS: 0, MONTHLY_ALLOWANCE: 0, HOURLY_ALLOWANCE: 0, OVERTIME: 0, SPECIAL_DUTY: 0 },
+});
+let mockSalaryPerspective: SalaryPerspective = "PAYOUT";
+jest.mock("@/features/salary/salary-payment-preferences", () => ({
+  useSalaryPaymentPreferences: () => {
+    const [perspective, setPerspective] = MockReact.useState(mockSalaryPerspective);
+    return {
+      preferences: mockPaymentPreferences,
+      perspective,
+      ready: true,
+      saving: false,
+      error: null,
+      setPerspective: (next: SalaryPerspective) => {
+        mockSalaryPerspective = next;
+        setPerspective(next);
+      },
+      save: jest.fn(),
+      reload: jest.fn(),
+    };
+  },
+}));
 const mockSaveEmployment = jest.fn();
 // These assertions exercise real rule results; cooperative scheduling has dedicated lifecycle tests.
 jest.mock("@/features/analysis/use-prepared-monthly-analysis", () => ({
@@ -65,6 +100,13 @@ jest.mock("@/features/analysis/use-prepared-monthly-analysis", () => ({
 }));
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
+}));
+// Form leave protection is covered separately; these scenarios exercise tariff results and routes.
+jest.mock("@/features/settings/use-profile-leave-guard", () => ({
+  useProfileLeaveGuard: () => ({
+    cancel: () => {},
+    saved: (onLeave?: () => void) => onLeave?.(),
+  }),
 }));
 
 // Native modal inset measurements are outside the JS renderer's layout coverage.
@@ -173,7 +215,7 @@ let mockAnnualRuleFailure: {
 } | null = null;
 
 let mockFocused = true;
-const mockTariffDecisions = Object.freeze([]);
+let mockTariffDecisions: readonly MonthlyTariffDecision[] = Object.freeze([]);
 const mockWorkPatternSettings = {
   workplaceCoverage: "UNKNOWN",
   assignment: "UNKNOWN",
@@ -201,6 +243,7 @@ jest.mock("./analysis-salary-inputs", () => ({
     status: "ready",
     saved: null,
     annualPayments: [],
+    timeline: [],
     error: null,
   }),
 }));
@@ -268,27 +311,33 @@ jest.mock("@/features/analysis/use-monthly-compliance", () => ({
 
 // Queue lifecycle is tested separately; keep rule-coverage assertions deterministic and real.
 jest.mock("@/features/analysis/use-prepared-analysis-salary", () => ({
-  usePreparedAnalysisSalary: (
-    request: import("./analysis-salary").AnalysisSalaryRequest | null,
-  ) => ({
-    result: request
-      ? {
-          annual: jest
-            .requireActual<typeof import("@/features/salary/annual-salary-forecast")>(
-              "@/features/salary/annual-salary-forecast",
-            )
-            .annualSalaryForecast(
-              Number(request.month.slice(0, 4)),
-              request.profile,
-              request.context,
-              request.annualPayments,
-            ),
-          forecast: null,
-        }
-      : null,
-    pending: false,
-    error: null,
-  }),
+  usePreparedAnalysisSalary: (request: import("./analysis-salary").AnalysisSalaryRequest | null) =>
+    MockReact.useMemo(() => {
+      const actual = jest.requireActual<typeof import("./analysis-salary")>("./analysis-salary");
+      let result: import("./analysis-salary").PreparedAnalysisSalary | null = null;
+      if (request) {
+        const { captureRuleComputation } =
+          jest.requireActual<typeof import("./rule-computation")>("./rule-computation");
+        const calculation = captureRuleComputation(() => {
+          const steps = actual.prepareAnalysisSalarySteps(
+            request,
+            actual.analysisSalaryKey(request),
+          );
+          while (true) {
+            const next = steps.next();
+            if (next.done) return next.value;
+          }
+        });
+        if (!calculation.ok)
+          return {
+            result: null,
+            pending: false,
+            error: "Die Gehaltsprognose konnte nicht berechnet werden.",
+          };
+        result = calculation.value;
+      }
+      return { result, pending: false, error: null };
+    }, [request]),
 }));
 
 jest.mock("@/features/analysis/use-annual-report-inputs", () => ({
@@ -394,6 +443,8 @@ async function openAnalysisMode(screen: Awaited<ReturnType<typeof render>>, labe
 
 describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   beforeEach(() => {
+    mockSalaryPerspective = "PAYOUT";
+    mockTariffDecisions = Object.freeze([]);
     mockComplianceResult = mockCompliance;
     mockCheckError = null;
     mockEntries = [];
@@ -606,6 +657,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
 
   it("opens time premiums for a tariff month without shifts", async () => {
     mockRouteMonth = "2026-09";
+    mockTariffDecisions = noMonthlyAllowance("2026-09");
     const screen = await render(<SalaryScreen />);
     await openSalaryComponents(screen, "2026-09");
     await openSalaryServicesFromOverview(screen, "2026-09");
@@ -619,7 +671,11 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   it("explains a direct premium link for manual salary without inventing zeros", async () => {
     mockProfile = { ...MOCK_TARIFF_PROFILE, tariff: null, manualMonthlyGrossCents: 320000 };
     const screen = await render(<PremiumDetailsScreen />);
-    expect(screen.getByText("Keine tarifliche Berechnung")).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeTruthy();
     expect(screen.queryByText("0,00 €")).toBeNull();
   });
 
@@ -631,13 +687,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       nursingTrainingTariff: { trainingYear: 1, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByText("Grundgehalt")).toBeTruthy();
-    expect(screen.getByLabelText(/^Grundgehalt: 1\.490,69/)).toBeTruthy();
-    expect(screen.getByText("Zeitzuschläge")).toBeTruthy();
+    expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Zuschläge erarbeitet,/ })).toBeTruthy();
+    expect(screen.getByText("Zeitzuschläge · brutto")).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.getByText("Unverbindliche Schätzung")).toBeTruthy();
     expect(screen.queryByText("Monatsbrutto")).toBeNull();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Ausbildungsentgelt", /^1\.490,69/);
   });
 
   it("opens calculated nursing trainee time premiums from the salary detail view", async () => {
@@ -664,8 +721,12 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(salary.getByText(/14,26/)).toBeTruthy();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/14,26/).length).toBeGreaterThan(0);
   });
 
@@ -678,8 +739,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       nursingTrainingTariff: { trainingYear: 1, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<PremiumDetailsScreen />);
-    expect(screen.getByText("Für diesen Zeitraum fehlen geprüfte Tarifdaten.")).toBeTruthy();
-    expect(screen.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      screen.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
+    ).toBeTruthy();
+    expect(
+      screen.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
     expect(screen.queryByText("0,00 €")).toBeNull();
   });
 
@@ -691,9 +758,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       tvalPflegeTariff: { trainingYear: 1, universityRegion: "WEST" },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByLabelText(/^Grundgehalt: 1\.440,70/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Ausbildungsentgelt", /^1\.440,70/);
   });
   it("keeps TVA-L training pay and grouped night premiums in the existing details", async () => {
     mockRouteMonth = "2026-10";
@@ -716,15 +784,19 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ];
     const salary = await render(<SalaryScreen />);
     await openSalaryComponents(salary, "2026-10");
-    expect(salary.getByText("TVA-L Pflege · 1. Ausbildungsjahr")).toBeTruthy();
+    expect(salary.getByText(/TVA-L Pflege · 1\. Ausbildungsjahr/)).toBeTruthy();
     expect(salary.getByText("Ausbildungsentgelt")).toBeTruthy();
     expect(salary.getByText(/13,76/)).toBeTruthy();
     expect(salary.queryByText(/Pflegezulage TVöD-P|TVöD-Zulage/)).toBeNull();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/13,76/).length).toBeGreaterThan(0);
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
   it("shows TV-H salary in the familiar overview as tariff pay", async () => {
     mockRouteMonth = "2026-10";
@@ -734,9 +806,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       tvhKrTariff: { payGroup: "KR8", payLevel: 4, fullTimeWeeklyMinutes: 2310 },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByLabelText(/^Grundgehalt: 4\.108,81/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Grundentgelt", /^4\.108,81/);
   });
   it("shows TV-UK salary in the familiar overview as tariff pay", async () => {
     mockRouteMonth = "2026-10";
@@ -746,9 +819,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       tvUkNursingTariff: { payGroup: "PUK8", payLevel: 4 },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByLabelText(/^Grundgehalt: 4\.352,00/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Grundentgelt", /^4\.352,00/);
   });
   it("shows TV-H pay and familiar grouped premiums", async () => {
     mockRouteMonth = "2026-10";
@@ -771,15 +845,19 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ];
     const salary = await render(<SalaryScreen />);
     await openSalaryComponents(salary, "2026-10");
-    expect(salary.getByText("TV-H KR8 · Stufe 4")).toBeTruthy();
+    expect(salary.getByText(/TV-H KR8 · Stufe 4/)).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-H")).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
     expect(salary.queryByRole("button", { name: /Pflegezulage TV-H/ })).toBeNull();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/41,85/).length).toBeGreaterThan(0);
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
   it("shows TV-UK cash, compulsory time credit and familiar grouped premiums", async () => {
     mockRouteMonth = "2026-10";
@@ -802,17 +880,20 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ];
     const salary = await render(<SalaryScreen />);
     await openSalaryComponents(salary, "2026-10");
-    expect(salary.getByText("TV-UK P-UK8 · Stufe 4")).toBeTruthy();
+    expect(salary.getByText(/TV-UK P-UK8 · Stufe 4/)).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-UK")).toBeTruthy();
-    expect(salary.getByText(/Zusätzlich 30 Min. Freizeitausgleich/)).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
     expect(salary.queryByRole("button", { name: /Pflegezulage TV-UK/ })).toBeNull();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/67,60/).length).toBeGreaterThan(0);
     expect(premiums.getByText(/Zusätzlich 30 Min. Freizeitausgleich/)).toBeTruthy();
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
   it("shows TV-L salary in the familiar overview without a manual caption", async () => {
     mockRouteMonth = "2026-10";
@@ -822,9 +903,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       tvlKrTariff: { payGroup: "KR8", payLevel: 4, universityRegion: "WEST" },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByLabelText(/^Grundgehalt: 4\.052,74/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Grundentgelt", /^4\.052,74/);
   });
   it("shows TV-L allowance read-only and opens grouped premiums from salary", async () => {
     mockRouteMonth = "2026-10";
@@ -846,16 +928,20 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ];
     const salary = await render(<SalaryScreen />);
     await openSalaryComponents(salary, "2026-10");
-    expect(salary.getByText("TV-L KR8 · Stufe 4")).toBeTruthy();
+    expect(salary.getByText(/TV-L KR8 · Stufe 4/)).toBeTruthy();
     expect(salary.getByText(/36,67/)).toBeTruthy();
     expect(salary.getByText("Pflegezulage TV-L")).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
     expect(salary.queryByRole("button", { name: /Pflegezulage TV-L/ })).toBeNull();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/36,67/).length).toBeGreaterThan(0);
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
   it("shows E salary composition in the familiar overview", async () => {
     mockRouteMonth = "2026-10";
@@ -865,10 +951,11 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       vkaETariff: { payGroup: "E9b", payLevel: 4, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByLabelText(/^Grundgehalt: 4\.690,55/)).toBeTruthy();
-    expect(screen.getByText("Zeitzuschläge")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
+    expect(screen.getByText("Zeitzuschläge · brutto")).toBeTruthy();
     expect(screen.getByText("Brutto geschätzt")).toBeTruthy();
     expect(screen.queryByText("Manuell hinterlegtes Monatsbrutto")).toBeNull();
+    await expectStatementBase(screen, "Grundentgelt", /^4\.690,55/);
   });
   it("navigates E salary to grouped calculated premium cards", async () => {
     mockRouteMonth = "2026-10";
@@ -890,14 +977,18 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ];
     const salary = await render(<SalaryScreen />);
     await openSalaryComponents(salary, "2026-10");
-    expect(salary.getByText("TVöD E9b · Stufe 4")).toBeTruthy();
+    expect(salary.getByText(/TVöD E9b · Stufe 4/)).toBeTruthy();
     expect(salary.getByText(/40,18/)).toBeTruthy();
     expect(salary.queryByText("Pflegezulage TVöD-P")).toBeNull();
     await openSalaryServicesFromOverview(salary, "2026-10");
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Nach Zuschlagsart")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(premiums.getAllByText(/40,18/).length).toBeGreaterThan(0);
-    expect(premiums.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      premiums.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
   it("keeps an uncovered E period unavailable without treating it as manual salary", async () => {
     mockRouteMonth = "2027-04";
@@ -908,8 +999,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       vkaETariff: { payGroup: "E12", payLevel: 4, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<PremiumDetailsScreen />);
-    expect(screen.getByText("Für diesen Zeitraum fehlen geprüfte Tarifdaten.")).toBeTruthy();
-    expect(screen.queryByText("Keine tarifliche Berechnung")).toBeNull();
+    expect(
+      screen.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
+    ).toBeTruthy();
+    expect(
+      screen.queryByLabelText(
+        "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+      ),
+    ).toBeNull();
   });
 
   it("keeps missing rule coverage local in ComplianceDetailsScreen", async () => {
@@ -917,6 +1014,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   });
 
   it("keeps January 2027 navigable and shows independent zero values without shifts", async () => {
+    mockTariffDecisions = noMonthlyAllowance("2027-01");
     const screen = await render(<AnalysisScreen />);
 
     expectPartialAnalysisShell(screen, false);
@@ -1105,7 +1203,9 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockEntries = [{ ...januaryShift(), id: "april-shift", date: "2027-04-04" }];
 
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(premiums.getByText("Für diesen Zeitraum fehlen geprüfte Tarifdaten.")).toBeTruthy();
+    expect(
+      premiums.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
+    ).toBeTruthy();
     expect(premiums.queryByText("0,00 €")).toBeNull();
 
     const assessment = await render(<TariffAssessmentScreen />);
@@ -1305,59 +1405,70 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   });
 });
 
-it("opens premiums only inside salary with the exact month", async () => {
+it("opens earned premiums directly from their own card with the exact month", async () => {
   mockRouteMonth = "2026-09";
   mockRuleResolver = GENERATION_ONE_REVIEWED_RESOLVER;
   mockEntries = [];
   mockProfile = MOCK_TARIFF_PROFILE;
+  mockTariffDecisions = noMonthlyAllowance("2026-09");
   const screen = await render(<AnalysisScreen />);
   expect(screen.queryByRole("button", { name: /^Zeitzuschläge:/ })).toBeNull();
-  await fireEvent.press(screen.getByRole("button", { name: /^Gehalt,/ }));
+  await fireEvent.press(screen.getByRole("button", { name: /^Zuschläge erarbeitet,/ }));
   expect(router.push).toHaveBeenLastCalledWith({
-    pathname: "/salary",
+    pathname: "/premium-details",
     params: { month: "2026-09" },
   });
-  await screen.unmount();
-  const salary = await render(<SalaryScreen />);
-  await openSalaryComponents(salary, "2026-09");
-  await openSalaryServicesFromOverview(salary, "2026-09");
+  await screen.rerender(<PremiumDetailsScreen />);
+  expect(
+    screen.getByLabelText(
+      "Keine Zeitzuschläge. In diesem Monat wurden keine Zeitzuschläge berechnet.",
+    ),
+  ).toBeTruthy();
 });
 
 async function openSalaryComponents(screen: Awaited<ReturnType<typeof render>>, month: string) {
-  await fireEvent.press(screen.getByRole("button", { name: /^Gesamtbrutto:/ }));
-  expect(router.push).toHaveBeenLastCalledWith({
-    pathname: "/salary-details",
-    params: { month, section: "components" },
-  });
-  mockAnnualSection = "components";
-  await screen.rerender(<SalaryDetailsScreen />);
-  expect(screen.getByRole("header", { name: "Gehaltsbestandteile" })).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Gehalt & Netto" })).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
+  expect(screen.getByText(formatMonthTitle(month))).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Gesamtbrutto:/ })).toBeNull();
+}
+
+async function expectStatementBase(
+  screen: Awaited<ReturnType<typeof render>>,
+  label: string,
+  amount: RegExp,
+) {
+  await screen.rerender(<SalaryScreen />);
+  expect(screen.getByText(label)).toBeTruthy();
+  expect(screen.getAllByText(amount).length).toBeGreaterThan(0);
+  expect(screen.getByTestId("salary-payroll-statement")).toBeTruthy();
+}
+
+/** A complete empty service month explicitly excludes a conditional monthly allowance. */
+function noMonthlyAllowance(month: string): readonly MonthlyTariffDecision[] {
+  return [
+    {
+      month,
+      allowanceStatus: "NONE",
+      revision: 1,
+      confirmedAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    },
+  ];
 }
 
 async function openSalaryServicesFromOverview(
   screen: Awaited<ReturnType<typeof render>>,
   month: string,
 ) {
-  expect(screen.queryByRole("button", { name: /^Zeitzuschläge:/ })).toBeNull();
-  await screen.rerender(<SalaryScreen />);
-  await fireEvent.press(screen.getByRole("button", { name: "Aufteilung ansehen" }));
+  await screen.rerender(<AnalysisScreen />);
+  await fireEvent.press(screen.getByRole("button", { name: /^Zuschläge erarbeitet,/ }));
   expect(router.push).toHaveBeenLastCalledWith({
-    pathname: "/salary-details",
-    params: { month, section: "premiums" },
+    pathname: "/premium-details",
+    params: { month },
   });
-  mockAnnualSection = "premiums";
-  await screen.rerender(<SalaryDetailsScreen />);
-  expect(screen.getAllByRole("header", { name: "Zeitzuschläge" }).length).toBeGreaterThan(0);
-  expect(screen.getByText("Netto-Aufteilung nicht verfügbar")).toBeTruthy();
-  await fireEvent.press(screen.getByRole("button", { name: "Zuschläge je Dienst" }));
-  expect(router.push).toHaveBeenLastCalledWith({
-    pathname: "/salary-details",
-    params: { month, section: "services" },
-  });
-  mockAnnualSection = "services";
-  await screen.rerender(<SalaryDetailsScreen />);
-  expect(screen.getByRole("header", { name: "Zuschläge je Dienst" })).toBeTruthy();
-  expect(screen.getByTestId("net-pay-service-details")).toBeTruthy();
+  await screen.rerender(<PremiumDetailsScreen />);
+  expect(screen.getAllByText(formatMonthTitle(month)).length).toBeGreaterThan(0);
 }
 
 async function expectShiftCount(count: number) {

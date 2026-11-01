@@ -12,6 +12,12 @@ import { ActiveMonthProvider, useActiveMonthCoordinator } from "@/navigation/act
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { loadNetPayProfileTimeline } from "@/infrastructure/database/net-pay-profile-repository";
 import { netPayProfilesChanged } from "@/infrastructure/database/net-pay-profile-events";
+import { loadSalaryPaymentPreferences } from "@/infrastructure/database/salary-payment-repository";
+import {
+  SalaryPaymentPreferencesProvider,
+  useSalaryPaymentPreferences,
+} from "@/features/salary/salary-payment-preferences";
+import { setSalaryPaymentPeriod, type SalaryPaymentPreferences } from "@/domain/salary-payment";
 import * as monthly from "./monthly-analysis";
 import * as salary from "./analysis-salary";
 import * as checks from "@/engine/compliance";
@@ -63,6 +69,10 @@ jest.mock("./use-local-reference-date", () => ({ useLocalReferenceDate: () => mo
 jest.mock("@/infrastructure/database/net-pay-profile-repository", () => ({
   loadNetPayProfileTimeline: jest.fn(),
 }));
+jest.mock("@/infrastructure/database/salary-payment-repository", () => ({
+  loadSalaryPaymentPreferences: jest.fn(),
+  saveSalaryPaymentPreferences: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+}));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftStatus: () => ({ ready: mockReady, error: null, reload: jest.fn() }),
   usePflegeShiftProfile: () => ({ profile: mockProfile, calculationProfile: null }),
@@ -89,6 +99,24 @@ jest.mock("./rule-computation", () => ({
 }));
 
 const load = jest.mocked(loadNetPayProfileTimeline);
+const loadPayment = jest.mocked(loadSalaryPaymentPreferences);
+const paymentPreferences = (): SalaryPaymentPreferences => ({
+  version: 1,
+  periods: [
+    {
+      effectiveMonth: "2026-01",
+      delays: {
+        PREMIUMS: 0,
+        MONTHLY_ALLOWANCE: 0,
+        HOURLY_ALLOWANCE: 0,
+        OVERTIME: 0,
+        SPECIAL_DUTY: 0,
+      },
+    },
+  ],
+  reviewedEmptyMonths: [],
+  socialInsuranceAttribution: "CASH_VARIABLE",
+});
 const row = (): SavedMonthlyNetPaySettings => ({
   settings: automatedSettings("2026-01"),
   revision: 1,
@@ -96,13 +124,18 @@ const row = (): SavedMonthlyNetPaySettings => ({
   updatedAt: "2026-01-01T00:00:00Z",
 });
 let coordinator: ReturnType<typeof useActiveMonthCoordinator>;
+let payment: ReturnType<typeof useSalaryPaymentPreferences>;
 let observed: ReturnType<typeof useAnalysisMonthData>;
 let frames: boolean[] = [];
 function Coordinator() {
   const value = useActiveMonthCoordinator();
+  const paymentValue = useSalaryPaymentPreferences();
   useLayoutEffect(() => {
     coordinator = value;
   }, [value]);
+  useLayoutEffect(() => {
+    payment = paymentValue;
+  }, [paymentValue]);
   return null;
 }
 function Probe() {
@@ -120,21 +153,23 @@ function Probe() {
 }
 function Scene({ show = false, month = "2026-10" }: { show?: boolean; month?: string }) {
   return (
-    <ActiveMonthProvider>
-      <>
-        <AnalysisBackgroundPreparation />
-        <Coordinator />
-        {show ? (
-          <AnalysisSalaryInputsProvider enabled profile={mockProfile}>
-            <AnalysisMonthDataProvider month={month} enabled active distance={0}>
-              <Probe />
-            </AnalysisMonthDataProvider>
-          </AnalysisSalaryInputsProvider>
-        ) : (
-          <Text>Kalender</Text>
-        )}
-      </>
-    </ActiveMonthProvider>
+    <SalaryPaymentPreferencesProvider>
+      <ActiveMonthProvider>
+        <>
+          <AnalysisBackgroundPreparation />
+          <Coordinator />
+          {show ? (
+            <AnalysisSalaryInputsProvider enabled profile={mockProfile}>
+              <AnalysisMonthDataProvider month={month} enabled active distance={0}>
+                <Probe />
+              </AnalysisMonthDataProvider>
+            </AnalysisSalaryInputsProvider>
+          ) : (
+            <Text>Kalender</Text>
+          )}
+        </>
+      </ActiveMonthProvider>
+    </SalaryPaymentPreferencesProvider>
   );
 }
 async function flush() {
@@ -165,6 +200,7 @@ beforeEach(() => {
   );
   frames = [];
   load.mockReset().mockResolvedValue([row()]);
+  loadPayment.mockReset().mockResolvedValue(paymentPreferences());
 });
 afterEach(() => {
   startupPresentation.complete();
@@ -172,7 +208,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 describe("calendar-first analysis preparation", () => {
-  it("hydrates saved results before opening the report after a simulated cold restart", async () => {
+  it("hydrates month/check results and recomputes payment salary before opening after a cold restart", async () => {
     const rows = new Map<string, unknown>();
     mockPersistent = {
       read: async (kind, month, key, _resolver, accept) => {
@@ -188,7 +224,8 @@ describe("calendar-first analysis preparation", () => {
     await flush();
     await first.rerender(<Scene show />);
     const expected = observed.salary.result;
-    expect(rows.size).toBe(3);
+    expect(rows.size).toBe(2);
+    expect([...rows.keys()].every((key) => !key.startsWith("salary:"))).toBe(true);
     await first.unmount();
     mockDb = {} as SQLiteDatabase;
     mockResolver = createRuleResolver();
@@ -204,7 +241,7 @@ describe("calendar-first analysis preparation", () => {
     expect(frames[0]).toBe(true);
     expect(observed.salary.result).toEqual(expected);
     expect(monthWork).not.toHaveBeenCalled();
-    expect(payWork).not.toHaveBeenCalled();
+    expect(payWork).toHaveBeenCalledTimes(1);
     expect(checkWork).not.toHaveBeenCalled();
   });
   it("keeps the calendar visible if optional preparation fails", async () => {
@@ -262,6 +299,98 @@ describe("calendar-first analysis preparation", () => {
     await screen.rerender(<Scene />);
     await flush();
     expect(monthWork).toHaveBeenCalledTimes(1);
+    expect(payWork).toHaveBeenCalledTimes(1);
+  });
+  it("opens the exact warmed cash projection using the same policy and source-settings timeline", async () => {
+    const preferences = paymentPreferences();
+    loadPayment.mockResolvedValue({
+      ...preferences,
+      periods: [
+        {
+          ...preferences.periods[0],
+          delays: { ...preferences.periods[0].delays, PREMIUMS: 2 },
+        },
+      ],
+    });
+    const payWork = jest.spyOn(salary, "prepareAnalysisSalarySteps");
+    const screen = await render(<Scene />);
+    await act(async () => startupPresentation.complete());
+    await flush();
+    expect(payWork).toHaveBeenCalledTimes(1);
+    expect(payWork.mock.calls[0][0].payment).toEqual({
+      preferences: payment.preferences,
+      perspective: "PAYOUT",
+      sourceSettings: [row()],
+    });
+    await screen.rerender(<Scene show />);
+    expect(frames[0]).toBe(true);
+    expect(observed.salary.result?.projection?.perspective).toBe("PAYOUT");
+    expect(
+      observed.salary.result?.projection?.contributions
+        .filter((part) => part.group === "PREMIUMS")
+        .map((part) => part.claimMonth),
+    ).toEqual(["2026-08"]);
+    await flush();
+    expect(payWork).toHaveBeenCalledTimes(1);
+  });
+  it("rewarms only salary when the allowance timing changes before opening the report", async () => {
+    const screen = await render(<Scene />);
+    await act(async () => startupPresentation.complete());
+    await flush();
+    const payWork = jest.spyOn(salary, "prepareAnalysisSalarySteps"),
+      monthWork = jest.spyOn(monthly, "calculateMonthlyAnalysisSteps"),
+      checkWork = jest.spyOn(checks, "calculateMonthlyComplianceSteps");
+    await act(async () =>
+      payment.save(
+        setSalaryPaymentPeriod(payment.preferences, {
+          effectiveMonth: "2026-08",
+          delays: {
+            PREMIUMS: 1,
+            MONTHLY_ALLOWANCE: 1,
+            HOURLY_ALLOWANCE: 1,
+            OVERTIME: 1,
+            SPECIAL_DUTY: 1,
+          },
+        }),
+      ),
+    );
+    await flush();
+    expect(payWork).toHaveBeenCalledTimes(1);
+    expect(monthWork).not.toHaveBeenCalled();
+    expect(checkWork).not.toHaveBeenCalled();
+    await screen.rerender(<Scene show />);
+    expect(frames[0]).toBe(true);
+    expect(observed.salary.result?.projection?.perspective).toBe("PAYOUT");
+    expect(
+      observed.salary.result?.projection?.contributions.find((part) => part.group === "PREMIUMS")
+        ?.claimMonth,
+    ).toBe("2026-09");
+    expect(observed.salary.result?.forecast?.result.status).toBe("available");
+    await flush();
+    expect(payWork).toHaveBeenCalledTimes(1);
+  });
+  it("warms month and checks while payment preferences load, then attaches the matching salary stage", async () => {
+    let resolve!: (preferences: SalaryPaymentPreferences) => void;
+    loadPayment.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    );
+    const monthWork = jest.spyOn(monthly, "calculateMonthlyAnalysisSteps"),
+      payWork = jest.spyOn(salary, "prepareAnalysisSalarySteps"),
+      checkWork = jest.spyOn(checks, "calculateMonthlyComplianceSteps");
+    const screen = await render(<Scene />);
+    await act(async () => startupPresentation.complete());
+    await flush();
+    expect(monthWork).toHaveBeenCalledTimes(1);
+    expect(checkWork).toHaveBeenCalledTimes(1);
+    expect(payWork).not.toHaveBeenCalled();
+    await act(async () => resolve(paymentPreferences()));
+    await flush();
+    expect(payWork).toHaveBeenCalledTimes(1);
+    await screen.rerender(<Scene show />);
+    expect(frames[0]).toBe(true);
     expect(payWork).toHaveBeenCalledTimes(1);
   });
   it("keeps startup free of analysis reads and opens warmed results on the first report frame", async () => {

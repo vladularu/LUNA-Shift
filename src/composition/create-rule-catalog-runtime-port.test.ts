@@ -11,6 +11,8 @@ import { PREVIEW_RULE_CATALOG_TRUST } from "@/composition/rule-catalog-preview-t
 import { PRODUCTION_RULE_CATALOG_TRUST } from "@/composition/rule-catalog-production-trust";
 import { RULE_CATALOG_SUPPORTED_ENGINE_CONTRACT_VERSIONS } from "@/rules/rule-catalog-engine-support";
 import type { ValidatedRuleCatalog } from "@/rules/validation";
+import { loadRuleCatalogRuntime } from "@/application/rule-catalog-runtime";
+import { getIndividualHourlyRate } from "@/engine/tariff";
 
 const catalogMocks = vi.hoisted(() => ({
   loadActiveRuleCatalog: vi.fn(),
@@ -113,6 +115,34 @@ describe("createRuleCatalogRuntimePort", () => {
     expect(cryptoMocks.verifyRuleCatalogArtifactsOnDevice).not.toHaveBeenCalled();
     expect(catalogMocks.activateRuleCatalog).not.toHaveBeenCalled();
     expect(syncMocks.synchronizeRuleCatalog).not.toHaveBeenCalled();
+  });
+
+  it("starts Production with the reviewed local tariff without constructing network or crypto ports", async () => {
+    catalogMocks.loadActiveRuleCatalog.mockResolvedValue(null);
+    const config = createRuleCatalogChannelConfig("production");
+    const port = createRuleCatalogRuntimePort({} as SQLiteDatabase, { config });
+    const { runtime } = await loadRuleCatalogRuntime(port.loadStoredCatalog);
+    expect(runtime.diagnosis.source).toBe("APP_EMBEDDED");
+    expect(
+      getIndividualHourlyRate(
+        {
+          payGroup: "P8",
+          payLevel: 4,
+          sector: "BT_K",
+          tariffRegion: "OTHER",
+          fullTimeWeeklyMinutes: 2310,
+        },
+        "2026-07-01",
+        runtime.resolver,
+      ),
+    ).toBe(24.35);
+    await expect(port.synchronizeCatalog(runtime.diagnosis.activeGeneration)).resolves.toEqual({
+      status: "DISABLED",
+    });
+    expect(config.remote).toBeNull();
+    expect(httpMocks.createRuleCatalogHttpClient).not.toHaveBeenCalled();
+    expect(cryptoMocks.verifyRuleManifestOnDevice).not.toHaveBeenCalled();
+    expect(catalogMocks.activateRuleCatalog).not.toHaveBeenCalled();
   });
 
   it("keeps unknown update channels without trust or network access", async () => {

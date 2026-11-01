@@ -473,6 +473,31 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
 });
 
 describe("vollständige Berichtsdaten", () => {
+  it.each(["2026-08", "2026"])(
+    "keeps routine readiness in the exported scope instead of warning totals (%s)",
+    (period) => {
+      const entries = [
+        shift("standby", "2026-08-03", {
+          startTime: "08:00",
+          endTime: "12:00",
+          breakMinutes: 0,
+          specialDuty: newSpecialDuty("STANDBY", "08:00", "12:00", "Europe/Berlin"),
+        }),
+      ];
+      const report = build({ period, entries });
+      const section = period.length === 4 ? "Jahresauswertung" : "Auswertung";
+      expect(Number(value(report, section, "warningCount", period))).toBe(0);
+      expect(Number(value(report, section, "scopeCount", period))).toBe(1);
+      expect(Number(value(report, section, "prerequisiteCount", period))).toBe(0);
+      const html = reportToHtml(report);
+      expect(html).toContain("Prüfumfang bei Bereitschaften eingeschränkt");
+      expect(html).not.toContain("Angaben in der App ergänzen");
+      if (period.length !== 4)
+        expect(
+          report.rows.some((row) => row.section === section && row.field.startsWith("scopeNotes.")),
+        ).toBe(true);
+    },
+  );
   it("enthält Arbeitszeit, Profil, Prognose und sämtliche gespeicherten Dienstfelder", () => {
     const entry = shift("a", "2026-08-03", {
       location: { name: "Klinik", address: "Straße 2", latitude: 51, longitude: 7 },

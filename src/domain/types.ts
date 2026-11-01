@@ -472,6 +472,9 @@ export interface ComplianceIssue {
 }
 
 export interface MonthlyComplianceResult {
+  /** General limits of the check, without a finding or a missing user input. */
+  readonly scopeNotes?: readonly ComplianceIssue[];
+  readonly scopeCount?: number;
   readonly prerequisites?: readonly ComplianceIssue[];
   readonly prerequisiteCount?: number;
   readonly month: string;

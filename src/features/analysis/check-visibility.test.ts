@@ -50,6 +50,67 @@ const monthly: MonthlyComplianceResult = {
 };
 
 describe("display-only check selection", () => {
+  it("keeps recurring special-duty scope out of findings, dates and warning counts", () => {
+    const notices = [1, 2, 3].map((day) => ({
+      ...issues[0],
+      id: `scope-${day}`,
+      date: `2026-09-0${day}`,
+      severity: "warning" as const,
+      rule: "SPECIAL_DUTY_REVIEW",
+    }));
+    const raw = { ...monthly, issues: [...notices, ...issues] };
+    const visible = selectVisibleCompliance(raw, false);
+    expect(visible.issues).toEqual(issues.slice(0, 2));
+    expect(visible.scopeNotes).toEqual(notices);
+    expect(visible.scopeCount).toBe(1);
+    expect(visible.prerequisiteCount).toBeUndefined();
+    expect(visible.warningCount).toBe(0);
+    expect(visible.affectedDates).toEqual(["2026-09-01", "2026-09-02"]);
+    expect(selectVisibleCompliance(visible, false)).toEqual(visible);
+    const categories = classifyChecks(notices);
+    expect(categories.legal).toMatchObject({ warningCount: 0, infoCount: 0, scopeCount: 1 });
+    expect(raw.issues).toHaveLength(6);
+  });
+  it("retains critical scope rules and incomplete callout findings", () => {
+    const critical = { ...issues[0], rule: "SPECIAL_DUTY_REVIEW" };
+    const incomplete = {
+      ...issues[0],
+      id: "callouts",
+      severity: "warning" as const,
+      rule: "SPECIAL_DUTY_CALLOUTS_INCOMPLETE",
+    };
+    const visible = selectVisibleCompliance({ ...monthly, issues: [critical, incomplete] }, false);
+    expect(visible.issues).toEqual([critical, incomplete]);
+    expect([visible.criticalCount, visible.warningCount]).toEqual([1, 1]);
+    expect(visible.scopeCount).toBeUndefined();
+    const restored = selectVisibleCompliance(
+      {
+        ...monthly,
+        issues: [],
+        scopeNotes: [critical, { ...incomplete, rule: "UNKNOWN_LEGAL_RULE" }],
+        scopeCount: 1,
+      },
+      false,
+    );
+    expect([restored.criticalCount, restored.warningCount]).toEqual([1, 1]);
+    expect(restored.scopeCount).toBeUndefined();
+  });
+  it("keeps annual scope distinct from missing inputs and warnings", () => {
+    const notice = { ...issues[0], rule: "SPECIAL_DUTY_REVIEW", severity: "info" as const };
+    const core = buildAnnualCoreReport(2026, [], { timeZone: "Europe/Berlin" });
+    const raw = {
+      ...core,
+      months: core.months.map((month, index) => ({
+        ...month,
+        checkCounts: classifyChecks(index === 8 ? [notice] : []),
+      })),
+    };
+    const visible = selectAnnualCheckDisplay(raw, false);
+    expect(visible.scopeCount).toBe(1);
+    expect(visible.months[8].scopeCount).toBe(1);
+    expect(visible.prerequisiteCount).toBeUndefined();
+    expect([visible.warningCount, visible.infoCount]).toEqual([0, 0]);
+  });
   it("separates known prerequisites, retains actual findings and is stable on repeated selection", () => {
     const open = {
       ...issues[0],

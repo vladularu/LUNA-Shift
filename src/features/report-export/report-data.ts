@@ -155,6 +155,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       warningCount: annual.complianceCoverageComplete ? annual.warningCount : null,
       infoCount: annual.complianceCoverageComplete ? annual.infoCount : null,
       prerequisiteCount: annual.complianceCoverageComplete ? (annual.prerequisiteCount ?? 0) : null,
+      scopeCount: annual.complianceCoverageComplete ? (annual.scopeCount ?? 0) : null,
       months: annual.months.map((item) => ({
         ...item,
         premiumAmount: item.estimatedGrossAmount === null ? null : item.premiumAmount,
@@ -162,6 +163,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
         warningCount: item.complianceComplete === false ? null : item.warningCount,
         infoCount: item.complianceComplete === false ? null : item.infoCount,
         prerequisiteCount: item.complianceComplete === false ? null : (item.prerequisiteCount ?? 0),
+        scopeCount: item.complianceComplete === false ? null : (item.scopeCount ?? 0),
       })),
       estimatedGrossAmount:
         annual.availablePayMonthCount === 0 ? null : annual.estimatedGrossAmount,

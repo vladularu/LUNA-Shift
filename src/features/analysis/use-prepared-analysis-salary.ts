@@ -21,6 +21,9 @@ export function usePreparedAnalysisSalary(
   distance = 1,
   persistent: PersistentAnalysisCache | null = null,
 ) {
+  // Payment projections contain dated source evidence. Keep them in memory until a
+  // complete persistent codec exists rather than trusting the legacy shallow codec.
+  const salaryPersistent = request?.payment ? null : persistent;
   const key = useMemo(() => {
     if (request === null) return null;
     const finish = calendarPerformance.span("analysis-prepare", {
@@ -52,7 +55,7 @@ export function usePreparedAnalysisSalary(
   const shared =
     key === null || resolver === null
       ? null
-      : readSharedAnalysisResult<PreparedAnalysisSalary>("salary", key, resolver, persistent);
+      : readSharedAnalysisResult<PreparedAnalysisSalary>("salary", key, resolver, salaryPersistent);
   const matching = state?.key === key && state?.resolver === resolver ? state : null;
   const result = cached ?? shared ?? matching?.result ?? null;
   const settled =
@@ -73,7 +76,7 @@ export function usePreparedAnalysisSalary(
       key,
       month: input.month,
       resolver: input.context.resolver,
-      persistent,
+      persistent: salaryPersistent,
       prepared: shared,
       priority: priority.current,
       accept: persistentSalaryValue,
@@ -106,7 +109,7 @@ export function usePreparedAnalysisSalary(
       task.current = null;
     };
     // Equal SQL/profile snapshots must not cancel or restart the same request.
-  }, [key, resolver, settled, persistent, shared]);
+  }, [key, resolver, settled, salaryPersistent, shared]);
   useEffect(
     () => task.current?.setPriority(analysisWorkPriority(3, active, distance)),
     [active, distance, key],

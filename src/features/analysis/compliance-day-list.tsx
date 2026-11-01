@@ -7,7 +7,12 @@ import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { AnalysisCoverageNote } from "./analysis-coverage-note";
-import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
+import {
+  isCheckLimited,
+  PLANNING_HIDDEN_NOTICE,
+  selectVisibleCompliance,
+} from "./check-visibility";
+import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { ComplianceIssueContent, checkDate, checkDayParts } from "./compliance-issue-content";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import { CheckRunnerEgg } from "./check-runner-egg";
@@ -28,7 +33,7 @@ export function ComplianceDayList({
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3 || width < 360;
   const visible = selectVisibleCompliance(compliance, showPlanning);
-  const limited = (visible.prerequisiteCount ?? 0) > 0;
+  const limited = isCheckLimited(visible);
   const issues = useMemo(
     () =>
       [...selectVisibleCompliance(compliance, showPlanning).issues].sort(
@@ -43,7 +48,7 @@ export function ComplianceDayList({
   return (
     <View style={{ gap: SPACING.lg, flexGrow: issues.length ? undefined : 1 }}>
       {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
-      {limited ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
+      {visible.prerequisiteCount ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
       {!issues.length ? (
         <View
           testID={limited ? "check-limited" : "check-complete"}
@@ -55,7 +60,9 @@ export function ComplianceDayList({
             gap: SPACING.md,
           }}
         >
-          {limited ? (
+          {limited && !visible.prerequisiteCount ? (
+            <CheckRunnerEgg title="Keine Auffälligkeiten" subtitle="In den geprüften Zeiten." />
+          ) : limited ? (
             <>
               <Ionicons
                 name="information-circle-outline"
@@ -133,6 +140,7 @@ export function ComplianceDayList({
           </View>
         );
       })}
+      <CheckScopeDisclosure issues={visible.scopeNotes} shifts={shifts} />
     </View>
   );
 }

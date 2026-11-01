@@ -33,7 +33,7 @@ export function CheckClearStatus({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
         >
-          {limited ? "Bisher keine Auffälligkeiten · Angaben fehlen noch" : "Keine Auffälligkeiten"}
+          {limited ? "Keine Auffälligkeiten in den geprüften Zeiten." : "Keine Auffälligkeiten"}
         </Text>
       </View>
     </View>

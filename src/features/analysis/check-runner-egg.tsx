@@ -8,9 +8,11 @@ import { DinoRunnerGame, DinoRunnerIcon } from "./dino-runner-game";
 
 export function CheckRunnerEgg({
   title,
+  subtitle = "Keine Auffälligkeiten",
   active = true,
 }: {
   readonly title: string;
+  readonly subtitle?: string;
   readonly active?: boolean;
 }) {
   const p = usePalette();
@@ -62,7 +64,7 @@ export function CheckRunnerEgg({
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{ color: p.textSecondary, textAlign: "center", ...TYPOGRAPHY.body }}
       >
-        Keine Auffälligkeiten
+        {subtitle}
       </Text>
     </View>
   );

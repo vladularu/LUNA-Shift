@@ -4,6 +4,8 @@ import { AppState, type AppStateStatus } from "react-native";
 import { CheckRunnerEgg } from "./check-runner-egg";
 import { createRunnerRun, emptyRunnerProgress } from "./dino-runner-engine";
 import { loadRunnerProgress, saveRunnerProgress } from "./dino-runner-storage";
+import { ComplianceDayList } from "./compliance-day-list";
+import type { ComplianceIssue, MonthlyComplianceResult } from "@/domain/types";
 
 const mockDb = {};
 let mockBlur: (() => void) | undefined;
@@ -36,6 +38,56 @@ async function unlock(screen: Awaited<ReturnType<typeof render>>) {
   await fireEvent.press(screen.getByRole("button", { name: "Prüfungs-Dino" }));
   await fireEvent.press(screen.getByRole("button", { name: "Prüfungs-Dino" }));
 }
+
+it("keeps the real Dino playable beside scope limits and removes it when an actual finding appears", async () => {
+  const scope: ComplianceIssue = {
+    id: "scope",
+    date: "2026-07-06",
+    kind: "LEGAL",
+    severity: "info",
+    rule: "SPECIAL_DUTY_REVIEW",
+    title: "Prüfumfang Bereitschaften",
+    description: "Besondere Voraussetzungen sind nicht abschließend geprüft.",
+    relatedShiftIds: [],
+  };
+  const compliance: MonthlyComplianceResult = {
+    month: "2026-07",
+    issues: [scope],
+    affectedDates: [],
+    criticalCount: 0,
+    warningCount: 0,
+    infoCount: 1,
+  };
+  const page = (value: MonthlyComplianceResult) => (
+    <ComplianceDayList compliance={value} shifts={[]} showPlanning timeZone="Europe/Berlin" />
+  );
+  const screen = await render(page(compliance));
+  expect(screen.getByTestId("check-limited")).toBeTruthy();
+  expect(screen.queryByTestId("check-complete")).toBeNull();
+  expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
+  expect(screen.getByRole("header", { name: "Keine Auffälligkeiten" })).toBeTruthy();
+  expect(screen.getByText("In den geprüften Zeiten.")).toBeTruthy();
+  await unlock(screen);
+  expect(screen.getByTestId("dino-runner")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Springen" })).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" }));
+  expect(screen.getByTestId("check-scope-details")).toBeTruthy();
+  expect(screen.getByTestId("dino-runner")).toBeTruthy();
+  const finding: ComplianceIssue = {
+    ...scope,
+    id: "pause",
+    rule: "ARBZG_4_BREAK",
+    severity: "critical",
+    title: "Pause zu kurz",
+    facts: { rule: "ARBZG_4_BREAK", recordedBreakMinutes: 0, requiredBreakMinutes: 30 },
+  };
+  await screen.rerender(page({ ...compliance, issues: [scope, finding], criticalCount: 1 }));
+  expect(screen.queryByTestId("dino-runner")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
+  expect(screen.getByTestId("check-details-pause")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" })).toBeTruthy();
+  expect(saveRunnerProgress).toHaveBeenCalled();
+});
 
 it("only opens on a fast double tap and runs without visible controls", async () => {
   const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);

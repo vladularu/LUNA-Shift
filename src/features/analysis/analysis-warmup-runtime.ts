@@ -21,8 +21,10 @@ import {
   prepareAnalysisSalarySteps,
   readAnalysisSalary,
   retainPreparedAnalysisSalary,
+  type AnalysisSalaryRequest,
   type PreparedAnalysisSalary,
 } from "./analysis-salary";
+import type { SalaryPaymentPreparation } from "@/features/salary/automatic-net-pay-preparation";
 import { completedMonthlyCompliance, monthlyComplianceKey } from "./analysis-compliance-cache";
 import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
@@ -43,6 +45,7 @@ export interface AnalysisWarmupInput {
   readonly resolver: RuleResolver;
   readonly timeline: readonly SavedMonthlyNetPaySettings[] | null;
   readonly annualPayments: readonly AnnualSalaryPayment[] | null;
+  readonly payment: Pick<SalaryPaymentPreparation, "preferences" | "perspective"> | null;
   readonly referenceDate: string;
   readonly youthProtection: boolean | null;
 }
@@ -214,7 +217,8 @@ export function createAnalysisWarmupRuntime(
         const [kind, month] = id.split(":");
         if (
           !months.includes(month) ||
-          (kind === "salary" && (input.timeline === null || input.annualPayments === null)) ||
+          (kind === "salary" &&
+            (!input.payment || input.timeline === null || input.annualPayments === null)) ||
           (kind === "checks" && input.youthProtection === null)
         )
           discard(id);
@@ -256,15 +260,17 @@ export function createAnalysisWarmupRuntime(
               yield 0;
               if (
                 current !== generation ||
+                !input.payment ||
                 input.timeline === null ||
                 input.annualPayments === null
               )
                 return;
-              const salary = {
+              const salary: AnalysisSalaryRequest = {
                 month,
                 profile: input.savedProfile,
                 settings: resolveNetPaySettings(month, input.timeline)?.settings ?? null,
                 annualPayments: input.annualPayments,
+                payment: { ...input.payment, sourceSettings: input.timeline },
                 context: {
                   entries: input.entries,
                   tariffDecisions: input.tariffDecisions,
@@ -281,7 +287,9 @@ export function createAnalysisWarmupRuntime(
                 key: salaryKey,
                 month,
                 resolver: input.resolver,
-                persistent,
+                // Payment projections require the same conservative persistence policy
+                // as the visible salary hook until a complete projection codec exists.
+                persistent: null,
                 priority,
                 prepared: readAnalysisSalary(salary, salaryKey),
                 accept: persistentSalaryValue,

@@ -4,6 +4,10 @@ import type { ComplianceIssue, MonthlyComplianceResult, ShiftEntry } from "@/dom
 import { Temporal } from "@js-temporal/polyfill";
 import { checkDate, checkDayParts } from "./compliance-issue-content";
 import { ComplianceDayList } from "./compliance-day-list";
+import { newSpecialDuty } from "@/domain/special-duty";
+import { specialDutyComplianceIssues } from "@/engine/special-duty-compliance";
+import * as Palette from "@/theme/palette";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 jest.mock(
   "react-native-safe-area-context",
   () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,
@@ -76,6 +80,99 @@ const list = (
 );
 
 describe("visible check timelines", () => {
+  it.each([LIGHT_PALETTE, DARK_PALETTE])(
+    "keeps scope neutral in both appearances",
+    async (palette) => {
+      const spy = jest.spyOn(Palette, "usePalette").mockReturnValue(palette);
+      try {
+        const scope = issue({ rule: "SPECIAL_DUTY_REVIEW", severity: "info" });
+        const screen = await render(list([scope]));
+        expect(screen.getByText("Prüfumfang eingeschränkt")).toHaveStyle({
+          color: palette.textMuted,
+        });
+        expect(screen.queryAllByTestId(/^check-details-/)).toHaveLength(0);
+      } finally {
+        spy.mockRestore();
+      }
+    },
+  );
+  it.each([
+    [390, 1],
+    [320, 1],
+    [390, 3.1],
+  ])(
+    "groups routine readiness into one collapsed scope at width %s and scale %s",
+    async (width, scale) => {
+      mockWindowWidth = width;
+      mockFontScale = scale;
+      const duties = ["STANDBY", "ON_CALL", "STANDBY"].map((kind, index) => ({
+        ...shift,
+        id: `scope-${index}`,
+        date: `2026-12-0${index + 2}`,
+        specialDuty: {
+          ...newSpecialDuty(
+            kind as "STANDBY" | "ON_CALL",
+            shift.startTime!,
+            shift.endTime!,
+            "Europe/Berlin",
+          ),
+          calloutsComplete: kind === "ON_CALL",
+        },
+      }));
+      const screen = await render(list(specialDutyComplianceIssues(duties, "2026-12"), duties));
+      expect(screen.queryAllByTestId(/^check-day-group-/)).toHaveLength(0);
+      expect(screen.queryAllByTestId(/^check-details-/)).toHaveLength(0);
+      expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+      expect(screen.queryByTestId("check-complete")).toBeNull();
+      expect(screen.getByRole("header", { name: "Keine Auffälligkeiten" })).toBeTruthy();
+      expect(screen.getByText("In den geprüften Zeiten.")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeTruthy();
+      expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
+      const button = screen.getByRole("button", { name: "Prüfumfang eingeschränkt" });
+      expect(button.props.accessibilityState.expanded).toBe(false);
+      expect(button).toHaveStyle({ minHeight: 44 });
+      expect(screen.queryByTestId("check-scope-details")).toBeNull();
+      await fireEvent.press(button);
+      expect(button.props.accessibilityState.expanded).toBe(true);
+      expect(screen.getAllByText(/^Bereitschaftsdienst wird/)).toHaveLength(1);
+      expect(screen.getAllByText(/^Bei Rufbereitschaft werden/)).toHaveLength(1);
+      await fireEvent.press(button);
+      expect(screen.queryByTestId("check-scope-details")).toBeNull();
+      await screen.rerender(list(specialDutyComplianceIssues(duties, "2026-12"), duties, false));
+      expect(screen.getAllByRole("button", { name: "Prüfumfang eingeschränkt" })).toHaveLength(1);
+    },
+  );
+  it("preserves pauses, rest and incomplete-callout findings beside scope", async () => {
+    const duty = {
+      ...shift,
+      id: "on-call",
+      date: "2026-12-01",
+      specialDuty: newSpecialDuty("ON_CALL", shift.startTime!, shift.endTime!, "Europe/Berlin"),
+    };
+    const findings = [
+      ...specialDutyComplianceIssues([duty], "2026-12"),
+      issue(),
+      issue({
+        id: "pause",
+        rule: "ARBZG_4_INTERRUPTION",
+        severity: "warning",
+        title: "Unterbrechung als Pause prüfen",
+      }),
+    ];
+    const screen = await render(list(findings, [early, shift, duty]));
+    expect(screen.getByText("Rufbereitschaft: Einsatzzeiten ergänzen")).toBeTruthy();
+    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
+    expect(screen.getByTestId("check-details-pause")).toBeTruthy();
+    expect(screen.getAllByTestId(/^check-details-/)).toHaveLength(3);
+    expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" })).toBeTruthy();
+    await fireEvent.press(
+      within(
+        screen.getByTestId("check-details-SPECIAL_DUTY_CALLOUTS_INCOMPLETE:on-call:2026-12"),
+      ).getByRole("button", { name: /Dienste ansehen/ }),
+    );
+    expect(screen.getByTestId("check-shift-on-call")).toBeTruthy();
+  });
   beforeEach(() => {
     mockFontScale = 1;
     mockWindowWidth = 390;

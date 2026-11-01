@@ -87,6 +87,7 @@ export function reportView(report: ReportDocument) {
   const critical = number(checkSection, "criticalCount");
   const info = number(checkSection, "infoCount") ?? 0;
   const prerequisites = number(checkSection, "prerequisiteCount") ?? 0;
+  const scopeCount = number(checkSection, "scopeCount") ?? 0;
   const net = annual ? number("Jahresauswertung", "netCents") : monthly[0].net;
   const issues = report.rows
     .filter(
@@ -190,7 +191,11 @@ export function reportView(report: ReportDocument) {
         ? "Prüfung eingeschränkt. Details siehe App."
         : `${critical} kritisch · ${warnings} ${warnings === 1 ? "Warnung" : "Warnungen"} · ${info} ${info === 1 ? "Hinweis" : "Hinweise"}. Details siehe App.`,
     checkPrerequisites:
-      prerequisites > 0 ? "Prüfgrundlagen unvollständig. Angaben in der App ergänzen." : null,
+      prerequisites > 0
+        ? "Prüfgrundlagen unvollständig. Angaben in der App ergänzen."
+        : scopeCount > 0
+          ? "Prüfumfang bei Bereitschaften eingeschränkt. Details siehe App."
+          : null,
     issues,
     entries: report.entries ?? [],
   };

@@ -8,6 +8,7 @@ import type {
   RuleTariffPackage,
 } from "./contracts.generated";
 import type { ValidatedRuleCatalog } from "./validation";
+import { canonicalizeRuleJson } from "./rule-catalog-verification";
 import {
   BUNDLED_HOLIDAY_RULES,
   BUNDLED_LEGAL_RULES,
@@ -40,6 +41,19 @@ export interface RuleResolverPackageIds {
   readonly tariff: string;
   readonly legal: string;
   readonly holiday: string;
+}
+
+export interface RuleResolverHistoricalCatalog {
+  readonly catalog: RuleResolverCatalog;
+  readonly packageIds: RuleResolverPackageIds;
+  readonly compatiblePackageIds: RuleResolverPackageIds;
+  /** Fixed end of historical fallback; a later catalog must never move it forward. */
+  readonly validBefore: RuleResolverPackageIds;
+}
+
+interface HistoricalDefault {
+  readonly beforeDate: string;
+  readonly packageId: string;
 }
 
 export interface SimpleTariffData {
@@ -167,12 +181,93 @@ export function serializeRuleResolverForCache(resolver: RuleResolver): string | 
   return cacheSources.get(resolver)?.() ?? null;
 }
 
+function historicalDefault(
+  kind: keyof RuleResolverPackageIds,
+  catalog: RuleResolverCatalog,
+  packageIds: RuleResolverPackageIds,
+  historical: RuleResolverHistoricalCatalog | undefined,
+): HistoricalDefault | undefined {
+  if (!historical || packageIds[kind] !== historical.compatiblePackageIds[kind]) return;
+  const firstCurrentDate = catalog[kind]
+    .filter((item) => item.packageId === packageIds[kind])
+    .map((item) => item.validFrom)
+    .sort()[0];
+  if (
+    !firstCurrentDate ||
+    !historical.catalog[kind].some((item) => item.packageId === historical.packageIds[kind])
+  )
+    return;
+  const beforeDate =
+    firstCurrentDate < historical.validBefore[kind]
+      ? firstCurrentDate
+      : historical.validBefore[kind];
+  return Object.freeze({ beforeDate, packageId: historical.packageIds[kind] });
+}
+
+function addHistoricalPackages<T extends RulePackage>(
+  current: readonly T[],
+  historical: readonly T[],
+  selection: HistoricalDefault | undefined,
+): readonly T[] {
+  if (!selection) return current;
+  const key = (item: T) => `${item.packageId}/${item.validFrom}/${item.versionId}`;
+  const currentKeys = new Set(current.map(key));
+  return Object.freeze(
+    [
+      ...current,
+      ...historical.filter(
+        (item) => item.packageId === selection.packageId && !currentKeys.has(key(item)),
+      ),
+    ].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)),
+  );
+}
+
+function resolveWithHistory<T extends RulePackage>(
+  packages: readonly T[],
+  kind: T["kind"],
+  defaultPackageId: string,
+  requestedPackageId: string,
+  effectiveDate: string,
+  historical: HistoricalDefault | undefined,
+): RuleResolution<T> {
+  let selected = requestedPackageId;
+  if (
+    historical &&
+    (requestedPackageId === defaultPackageId || requestedPackageId === historical.packageId)
+  ) {
+    selected =
+      effectiveDate < historical.beforeDate && isValidDate(effectiveDate)
+        ? historical.packageId
+        : defaultPackageId;
+  }
+  return resolvePackage(packages, kind, selected, effectiveDate);
+}
+
 export function createRuleResolver(
   catalog: RuleResolverCatalog = BUNDLED_RULE_CATALOG,
   packageIds: RuleResolverPackageIds = LEGACY_RULE_PACKAGE_IDS,
+  historical?: RuleResolverHistoricalCatalog,
 ): RuleResolver {
+  const history = {
+    tariff: historicalDefault("tariff", catalog, packageIds, historical),
+    legal: historicalDefault("legal", catalog, packageIds, historical),
+    holiday: historicalDefault("holiday", catalog, packageIds, historical),
+  };
+  const hasHistory = Object.values(history).some(Boolean);
+  const source =
+    historical && hasHistory
+      ? {
+          tariff: addHistoricalPackages(catalog.tariff, historical.catalog.tariff, history.tariff),
+          legal: addHistoricalPackages(catalog.legal, historical.catalog.legal, history.legal),
+          holiday: addHistoricalPackages(
+            catalog.holiday,
+            historical.catalog.holiday,
+            history.holiday,
+          ),
+        }
+      : catalog;
   // Every reviewed carrier contains a complete snapshot, including historical periods.
-  const carrier = catalog.tariff
+  const carrier = source.tariff
     .filter((item) => item.engineContractVersion === 19 && item.rules.simpleTariffTables)
     .sort((a, b) => b.validFrom.localeCompare(a.validFrom))[0];
   const resolver: RuleResolver = Object.freeze({
@@ -184,11 +279,11 @@ export function createRuleResolver(
           }),
         }
       : {}),
-    tariffPackageIds: Object.freeze([...new Set(catalog.tariff.map((item) => item.packageId))]),
+    tariffPackageIds: Object.freeze([...new Set(source.tariff.map((item) => item.packageId))]),
     annualTariffCandidates: (packageId: string, year: number) =>
       Object.freeze(
         Number.isInteger(year) && year >= 1900 && year <= 4099
-          ? catalog.tariff.filter(
+          ? source.tariff.filter(
               (item) =>
                 item.packageId === packageId &&
                 item.validFrom <= year + "-12-31" &&
@@ -197,18 +292,48 @@ export function createRuleResolver(
           : [],
       ),
     resolveTariff: (effectiveDate: string, packageId: string = packageIds.tariff) =>
-      resolvePackage(catalog.tariff, "TARIFF", packageId, effectiveDate),
+      resolveWithHistory(
+        source.tariff,
+        "TARIFF",
+        packageIds.tariff,
+        packageId,
+        effectiveDate,
+        history.tariff,
+      ),
     resolveLegal: (effectiveDate: string) =>
-      resolvePackage(catalog.legal, "LEGAL", packageIds.legal, effectiveDate),
+      resolveWithHistory(
+        source.legal,
+        "LEGAL",
+        packageIds.legal,
+        packageIds.legal,
+        effectiveDate,
+        history.legal,
+      ),
     resolveHoliday: (effectiveDate: string) =>
-      resolvePackage(catalog.holiday, "HOLIDAY", packageIds.holiday, effectiveDate),
+      resolveWithHistory(
+        source.holiday,
+        "HOLIDAY",
+        packageIds.holiday,
+        packageIds.holiday,
+        effectiveDate,
+        history.holiday,
+      ),
   });
   let serialized: string | null = null;
-  cacheSources.set(resolver, () => (serialized ??= JSON.stringify([packageIds, catalog])));
+  cacheSources.set(resolver, () => {
+    if (serialized !== null) return serialized;
+    serialized = hasHistory
+      ? canonicalizeRuleJson(["APP_HISTORICAL_DEFAULTS_V1", packageIds, source, history])
+      : JSON.stringify([packageIds, catalog]);
+    return serialized;
+  });
   return resolver;
 }
 
-export function createRuleResolverFromCatalog(catalog: ValidatedRuleCatalog): RuleResolver {
+export function createRuleResolverFromCatalog(
+  catalog: ValidatedRuleCatalog,
+  historical?: RuleResolverHistoricalCatalog,
+): RuleResolver {
   const packageIds = packageIdsFromManifest(catalog.manifest);
   if (packageIds === null) {
     throw new RuleCatalogCompatibilityError(
@@ -228,6 +353,7 @@ export function createRuleResolverFromCatalog(catalog: ValidatedRuleCatalog): Ru
       ),
     },
     packageIds,
+    historical,
   );
 }
 

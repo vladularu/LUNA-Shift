@@ -17,6 +17,8 @@ import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salar
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
 import { NetPayPremiumExplanation } from "./net-pay-premium-details";
 import type { SalaryClassification } from "./salary-service-presentation";
+import type { SalaryPaymentProjection } from "@/domain/salary-payment";
+import { formatMonthTitle } from "@/engine/calendar";
 
 type AvailablePay = Extract<NetPayResult, { status: "available" }>;
 
@@ -29,6 +31,7 @@ export function SalaryComponentsView({
   pensionOmitted,
   annualPayment,
   annualPayments,
+  projection,
 }: {
   readonly month: string;
   readonly profile: UserProfile;
@@ -38,10 +41,11 @@ export function SalaryComponentsView({
   readonly pensionOmitted: boolean;
   readonly annualPayment?: AnnualPaymentForecast;
   readonly annualPayments?: readonly AnnualSalaryPayment[];
+  readonly projection?: SalaryPaymentProjection;
 }) {
   const palette = usePalette();
   const { width } = useWindowDimensions();
-  const { caption, compositionRows } = salaryComposition(profile, pay);
+  const { caption, compositionRows } = salaryComposition(profile, pay, projection);
   const hasSpecialDuties = !!pay.specialDutyBreakdowns?.length;
   const specialDutiesOpen = pay.specialDutyBreakdowns?.some((line) => !line.complete);
   const extra = settings?.automation?.additionalRecurringGrossCents ?? 0;
@@ -184,6 +188,7 @@ export function SalaryBasisView({
   annualPayment,
   annualProposal,
   annualAutomatic = false,
+  payrollTimingEstimate,
 }: {
   readonly net: AvailablePay | null;
   readonly classification: SalaryClassification | null;
@@ -192,6 +197,11 @@ export function SalaryBasisView({
   readonly annualPayment?: AnnualPaymentForecast;
   readonly annualProposal?: import("./annual-salary-proposal").AnnualSalaryProposal | null;
   readonly annualAutomatic?: boolean;
+  readonly payrollTimingEstimate?: {
+    readonly method: "SOURCE_ADJUSTMENT";
+    readonly sourceMonth: string;
+    readonly lag: 1 | 2;
+  };
 }) {
   const palette = usePalette();
   return (
@@ -232,6 +242,12 @@ export function SalaryBasisView({
               Krankenversicherung einschließlich Zusatzbeitrag. Geschätzte Abzüge · Die tatsächliche
               Auszahlung kann abweichen.
             </Text>
+            {payrollTimingEstimate ? (
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+                Zulagen aus {formatMonthTitle(payrollTimingEstimate.sourceMonth)} nachberechnet.
+                Abzüge mit der Auszahlung angenommen; frühere Einbehalte sind nicht bekannt.
+              </Text>
+            ) : null}
             {pensionOmitted ? (
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
                 Beiträge zur Zusatzversorgung und ihre Auswirkungen auf Steuern und

@@ -4,6 +4,11 @@ import {
   type RuleResolver,
 } from "@/rules/rule-resolver";
 import type { ValidatedRuleCatalog } from "@/rules/validation";
+import {
+  APP_HISTORICAL_RULE_CATALOG,
+  EMBEDDED_REVIEWED_PREVIEW_GENERATION,
+  embeddedReviewedRuleResolver,
+} from "@/rules/embedded-reviewed-rules";
 
 export type RuleCatalogFallbackReason =
   "NO_STORED_CATALOG" | "ACTIVE_GENERATION_INVALID" | "NO_VALID_STORED_CATALOG";
@@ -16,7 +21,8 @@ export interface StoredRuleCatalogSnapshot {
 }
 
 export interface RuleCatalogRuntimeDiagnosis {
-  readonly source: "STORED" | "LEGACY_EMBEDDED";
+  readonly source: "STORED" | "LEGACY_EMBEDDED" | "APP_EMBEDDED";
+  readonly embeddedPreviewGeneration?: number;
   readonly activeGeneration: number | null;
   readonly selectedGeneration: number | null;
   readonly keyId: string | null;
@@ -64,12 +70,26 @@ export function legacyRuleCatalogRuntime(
 export function storedRuleCatalogRuntime(
   stored: StoredRuleCatalogSnapshot,
 ): RuleCatalogRuntimeSnapshot {
-  return freezeRuntime(createRuleResolverFromCatalog(stored.catalog), {
+  return freezeRuntime(createRuleResolverFromCatalog(stored.catalog, APP_HISTORICAL_RULE_CATALOG), {
     source: "STORED",
     activeGeneration: stored.activeGeneration,
     selectedGeneration: stored.generation,
     keyId: stored.catalog.manifest.signing.keyId,
     fallbackReason: stored.recoveredFromGeneration === null ? null : "ACTIVE_GENERATION_INVALID",
+  });
+}
+
+export function embeddedRuleCatalogRuntime(
+  fallbackReason: RuleCatalogFallbackReason | null,
+  activeGeneration: number | null = null,
+): RuleCatalogRuntimeSnapshot {
+  return freezeRuntime(embeddedReviewedRuleResolver, {
+    source: "APP_EMBEDDED",
+    embeddedPreviewGeneration: EMBEDDED_REVIEWED_PREVIEW_GENERATION,
+    activeGeneration,
+    selectedGeneration: null,
+    keyId: null,
+    fallbackReason,
   });
 }
 
@@ -80,16 +100,23 @@ export async function loadRuleCatalogRuntime(
   try {
     const stored = await loadStoredCatalog();
     observedActiveGeneration = stored?.activeGeneration ?? null;
+    const storedRuntime = stored === null ? null : storedRuleCatalogRuntime(stored);
     return Object.freeze({
       runtime:
         stored === null
-          ? legacyRuleCatalogRuntime("NO_STORED_CATALOG")
-          : storedRuleCatalogRuntime(stored),
+          ? embeddedRuleCatalogRuntime("NO_STORED_CATALOG")
+          : stored.catalog.manifest.channel === "PREVIEW" &&
+              stored.generation <= EMBEDDED_REVIEWED_PREVIEW_GENERATION
+            ? embeddedRuleCatalogRuntime(
+                stored.recoveredFromGeneration === null ? null : "ACTIVE_GENERATION_INVALID",
+                stored.activeGeneration,
+              )
+            : storedRuntime!,
       loadError: null,
     });
   } catch (loadError) {
     return Object.freeze({
-      runtime: legacyRuleCatalogRuntime(
+      runtime: embeddedRuleCatalogRuntime(
         "NO_VALID_STORED_CATALOG",
         activeGenerationFrom(loadError) ?? observedActiveGeneration,
       ),

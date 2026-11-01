@@ -1,4 +1,5 @@
 import { validateSpecialDuty } from "@/domain/special-duty";
+import { SALARY_PAYMENT_KEY, validateSalaryPaymentPreferences } from "@/domain/salary-payment";
 import { TVAL_PFLEGE_PREFERENCE_KEY, requireTvalPflegeTariff } from "@/domain/tval-pflege-tariff";
 import { TVH_KR_PREFERENCE_KEY, requireTvhKrTariff } from "@/domain/tvh-kr-tariff";
 import { mapWorkingTimeTargetRow } from "./working-time-target-repository";
@@ -687,6 +688,13 @@ function validateTariffDecisionRow(value: unknown): BackupRow {
 }
 
 function validatePreferenceValue(key: string, value: string): void {
+  if (key === SALARY_PAYMENT_KEY) {
+    try {
+      validateSalaryPaymentPreferences(JSON.parse(value));
+    } catch {
+      return invalid();
+    }
+  }
   if (key === TVAL_PFLEGE_PREFERENCE_KEY) {
     try {
       if (!requireTvalPflegeTariff(JSON.parse(value))) return invalid();

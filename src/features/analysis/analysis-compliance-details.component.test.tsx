@@ -100,6 +100,26 @@ const compliance: MonthlyComplianceResult = {
 };
 
 describe("analysis compliance details", () => {
+  it("shows scope without warning totals, completion or missing-input setup in the embedded view", async () => {
+    const scope = {
+      ...compliance.issues[0],
+      id: "scope",
+      rule: "SPECIAL_DUTY_REVIEW",
+      severity: "info" as const,
+    };
+    const limited = { ...compliance, issues: [scope] };
+    const screen = await render(
+      <AssessmentSummaryCard compliance={limited} shifts={shifts} expanded onToggle={jest.fn()} />,
+    );
+    expect(screen.queryByText("Meldung")).toBeNull();
+    expect(screen.queryByText("Meldungen")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Prüfumfang eingeschränkt" }).props.accessibilityState
+        .expanded,
+    ).toBe(false);
+    expect(screen.getByText("Keine Auffälligkeiten in den geprüften Zeiten.")).toBeTruthy();
+  });
   it("shows one neutral total whose color carries the severity", async () => {
     const mixedCompliance: MonthlyComplianceResult = {
       ...compliance,

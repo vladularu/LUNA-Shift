@@ -1,4 +1,5 @@
 import { calculateMonthlyCompliance } from "./compliance";
+import { specialDutyComplianceIssues } from "./special-duty-compliance";
 import { selectMonthlyAnalysisEntries } from "@/features/analysis/analysis-data";
 import {
   projectDutyCalendarDays,
@@ -46,6 +47,46 @@ const split = {
 };
 
 describe("special duty intervals", () => {
+  it("groups recurring standby and complete on-call duties into one neutral scope note", () => {
+    const duties = Array.from({ length: 10 }, (_, index) => ({
+      ...base,
+      id: `duty-${index}`,
+      date: `2026-10-${String(index + 1).padStart(2, "0")}`,
+      specialDuty: {
+        ...newSpecialDuty(index % 2 ? "ON_CALL" : "STANDBY", "06:00", "10:00", "Europe/Berlin"),
+        calloutsComplete: index % 2 === 1,
+      },
+    }));
+    const findings = specialDutyComplianceIssues(duties, "2026-10");
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({
+      rule: "SPECIAL_DUTY_REVIEW",
+      severity: "info",
+      relatedShiftIds: duties.map((duty) => duty.id),
+    });
+    expect(specialDutyComplianceIssues(duties, "2026-11")).toEqual([]);
+  });
+  it("keeps missing callout confirmation as an actionable service-specific warning", () => {
+    const duty = {
+      ...base,
+      specialDuty: newSpecialDuty("ON_CALL", "06:00", "10:00", "Europe/Berlin"),
+    };
+    expect(specialDutyComplianceIssues([duty], "2026-10")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rule: "SPECIAL_DUTY_CALLOUTS_INCOMPLETE",
+          severity: "warning",
+          relatedShiftIds: [duty.id],
+        }),
+      ]),
+    );
+    expect(
+      specialDutyComplianceIssues(
+        [{ ...duty, specialDuty: { ...duty.specialDuty, calloutsComplete: true } }],
+        "2026-10",
+      ).filter((issue) => issue.severity === "warning"),
+    ).toEqual([]);
+  });
   it("keeps on-call uncertainty visible even when no work has been entered", () => {
     const shift = {
       ...base,

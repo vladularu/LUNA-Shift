@@ -5,6 +5,7 @@ import legalPackageFixture from "../../rules/examples/legal-package.valid.json";
 import manifestFixture from "../../rules/examples/manifest.valid.json";
 import tariffPackageFixture from "../../rules/examples/tariff-package.valid.json";
 import {
+  embeddedRuleCatalogRuntime,
   legacyRuleCatalogRuntime,
   storedRuleCatalogRuntime,
   type StoredRuleCatalogSnapshot,
@@ -57,11 +58,11 @@ describe("rule catalog runtime refresh", () => {
 
   it("atomically replaces the legacy runtime after a newly activated generation is loaded", async () => {
     const current = legacyRuleCatalogRuntime("NO_STORED_CATALOG");
-    const next = storedCatalog(2);
+    const next = storedCatalog(8);
 
     const result = await reconcileRuleCatalogRuntimeAfterSync(
       current,
-      { status: "ACTIVATED", generation: 2, previousGeneration: null },
+      { status: "ACTIVATED", generation: 8, previousGeneration: null },
       async () => next,
     );
 
@@ -71,25 +72,25 @@ describe("rule catalog runtime refresh", () => {
     expect(result.runtime.resolver).not.toBe(current.resolver);
     expect(result.runtime.diagnosis).toMatchObject({
       source: "STORED",
-      activeGeneration: 2,
-      selectedGeneration: 2,
+      activeGeneration: 8,
+      selectedGeneration: 8,
       fallbackReason: null,
     });
   });
 
   it("repairs a stale last-known-good runtime when the active remote generation is up to date", async () => {
-    const current = storedRuleCatalogRuntime(storedCatalog(1, 2));
+    const current = storedRuleCatalogRuntime(storedCatalog(7, 8));
 
     const result = await reconcileRuleCatalogRuntimeAfterSync(
       current,
-      { status: "UP_TO_DATE", generation: 2 },
-      async () => storedCatalog(2),
+      { status: "UP_TO_DATE", generation: 8 },
+      async () => storedCatalog(8),
     );
 
     expect(result.status).toBe("REPLACED");
     expect(result.runtime.diagnosis).toMatchObject({
-      activeGeneration: 2,
-      selectedGeneration: 2,
+      activeGeneration: 8,
+      selectedGeneration: 8,
       fallbackReason: null,
     });
   });
@@ -125,5 +126,45 @@ describe("rule catalog runtime refresh", () => {
       code: "SYNCHRONIZED_GENERATION_NOT_SELECTED",
       expectedGeneration: 2,
     });
+  });
+
+  it("acknowledges a loaded Preview generation covered by the reviewed app basis", async () => {
+    const current = embeddedRuleCatalogRuntime("NO_STORED_CATALOG");
+    const result = await reconcileRuleCatalogRuntimeAfterSync(
+      current,
+      { status: "ACTIVATED", generation: 6, previousGeneration: null },
+      async () => storedCatalog(6),
+    );
+    expect(result.status).toBe("REPLACED");
+    expect(result.runtime.diagnosis).toMatchObject({
+      source: "APP_EMBEDDED",
+      activeGeneration: 6,
+      selectedGeneration: null,
+      embeddedPreviewGeneration: 6,
+      fallbackReason: null,
+    });
+    const loadStoredCatalog = vi.fn();
+    expect(
+      await reconcileRuleCatalogRuntimeAfterSync(
+        result.runtime,
+        { status: "UP_TO_DATE", generation: 6 },
+        loadStoredCatalog,
+      ),
+    ).toMatchObject({ status: "UNCHANGED" });
+    expect(loadStoredCatalog).not.toHaveBeenCalled();
+  });
+
+  it("does not acknowledge a missing pointer or an older stored generation from the app basis", async () => {
+    const current = embeddedRuleCatalogRuntime("NO_STORED_CATALOG");
+    for (const stored of [null, storedCatalog(5)]) {
+      const result = await reconcileRuleCatalogRuntimeAfterSync(
+        current,
+        { status: "UP_TO_DATE", generation: 6 },
+        async () => stored,
+      );
+      expect(result.status).toBe("FAILED");
+      expect(result.runtime).toBe(current);
+      expect(result.refreshError).toBeInstanceOf(RuleCatalogRuntimeRefreshError);
+    }
   });
 });

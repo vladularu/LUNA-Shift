@@ -59,6 +59,42 @@ jest.mock("@/features/settings/check-preferences", () => ({
 const props = { report, testMonths: [], onBackToMonth: jest.fn(), onMoveYear: jest.fn() };
 
 describe("annual report view", () => {
+  it("shows annual scope with access to its month and no missing-input action or warnings", async () => {
+    const scoped: AnnualReport = {
+      ...report,
+      months: report.months.map((month, index) => ({
+        ...month,
+        checkCounts: {
+          legal: {
+            criticalCount: 0,
+            warningCount: 0,
+            infoCount: 0,
+            ...(index === 7 ? { scopeCount: 1 } : {}),
+          },
+          planning: { criticalCount: 0, warningCount: 0, infoCount: 0 },
+        },
+      })),
+    };
+    const screen = await render(<AnnualReportScreen {...props} report={scoped} />);
+    expect(screen.getByRole("button", { name: "Prüfung, Prüfung eingeschränkt" })).toBeTruthy();
+    expect(screen.queryByText(/Warnungen/)).toBeNull();
+    const select = jest.fn();
+    await screen.rerender(
+      <AnnualReportDetails
+        report={scoped}
+        section="CHECK"
+        testMonths={[]}
+        onSelectMonth={select}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" }));
+    expect(screen.getByTestId("check-scope-details")).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^August 2026, Prüfung eingeschränkt/ }),
+    );
+    expect(select).toHaveBeenCalledWith("2026-08");
+  });
   it("keeps months with open prerequisites accessible without counting them as warnings", async () => {
     const limited: AnnualReport = {
       ...report,

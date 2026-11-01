@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import { Text } from "@/ui/text";
-import { Pressable, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
+import type { SalaryPaymentProjection } from "@/domain/salary-payment";
+import { formatMonthTitle } from "@/engine/calendar";
 import Ionicons from "@/ui/icon";
 import { NET_PAY_PENSION_LABELS } from "@/domain/net-pay-pension-schemes";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -35,6 +37,8 @@ export function NetPayAutomaticEntryCard({
   caption,
   showPremiumDetails = false,
   premiumCents,
+  projection,
+  allowanceMonth,
 }: {
   readonly month: string;
   readonly proposedGrossCents: number | null;
@@ -42,6 +46,8 @@ export function NetPayAutomaticEntryCard({
   readonly caption?: string;
   readonly showPremiumDetails?: boolean;
   readonly premiumCents?: number;
+  readonly projection?: SalaryPaymentProjection;
+  readonly allowanceMonth?: string | null;
 }) {
   const palette = usePalette();
   const { profile } = usePflegeShiftProfile();
@@ -60,6 +66,7 @@ export function NetPayAutomaticEntryCard({
     settings,
     configured && !blocked && data.status === "ready",
     testMonths,
+    data.timeline,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const openSettings = () => router.push(netPaySettingsRoute(month));
@@ -81,16 +88,43 @@ export function NetPayAutomaticEntryCard({
       profile?.nursingTrainingTariff
     );
   const showBasisLink = !blocked && (available !== null || proposedGrossCents !== null);
+  function checkAllowance() {
+    const months = projection
+      ? [
+          ...new Set(
+            projection.contributions
+              .filter((part) => {
+                if (part.group !== "MONTHLY_ALLOWANCE" && part.group !== "HOURLY_ALLOWANCE")
+                  return false;
+                const source = projection.sources.find((value) => value.month === part.claimMonth)!;
+                return part.amountCents > 0 || source.pay.confirmedAllowance === null;
+              })
+              .map((part) => part.claimMonth),
+          ),
+        ]
+      : [];
+    if (months.length <= 1)
+      router.push(tariffAssessmentRoute(months[0] ?? allowanceMonth ?? month));
+    else
+      Alert.alert("Anspruchsmonat wählen", "Welche Zulagenangabe möchtest du prüfen?", [
+        ...months.map((claimMonth) => ({
+          text: formatMonthTitle(claimMonth),
+          onPress: () => router.push(tariffAssessmentRoute(claimMonth)),
+        })),
+        { text: "Abbrechen", style: "cancel" },
+      ]);
+  }
   const recovery =
     forecast?.recovery ??
     (forecast?.result.status === "unavailable" && forecast.result.stage === "net-pay"
-      ? { kind: "net-settings" as const }
+      ? { kind: "net-settings" as const, month }
       : null);
   function recover() {
     if (recovery?.kind === "entry")
       router.push(dayEditorRoute(recovery.date, "SHIFT", recovery.entryId));
     else if (recovery?.kind === "profile") router.push(settingsEditorRoute(recovery.section));
-    else if (recovery?.kind === "net-settings") openSettings();
+    else if (recovery?.kind === "net-settings")
+      router.push(netPaySettingsRoute(recovery.month ?? month));
   }
   const settingsEntry =
     showSettingsEntry && settings ? (
@@ -210,10 +244,7 @@ export function NetPayAutomaticEntryCard({
             {showAllowanceLink ? (
               <>
                 {showComponentsLink || showPremiumsLink ? <CardSeparator /> : null}
-                <SalaryNavigationRow
-                  title="Zulage prüfen"
-                  onPress={() => router.push(tariffAssessmentRoute(month))}
-                />
+                <SalaryNavigationRow title="Zulage prüfen" onPress={checkAllowance} />
               </>
             ) : null}
             {showBasisLink ? (
@@ -237,7 +268,7 @@ export function NetPayAutomaticEntryCard({
   );
 }
 
-function NetPaySettingsEntry({
+export function NetPaySettingsEntry({
   settings,
   disabled,
   onPress,

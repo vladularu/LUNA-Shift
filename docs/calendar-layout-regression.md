@@ -7,8 +7,8 @@ Stand: 30.10.2026. Ausgangspunkt: `2c5e947`.
 Ziel: Die gemeldete optische Überlagerung zwischen Tageszahlen und Dienstzeilen
 verhindern und den Monatstitel lesbar halten.
 
-Zielplattform: iOS, zunächst Preview-Build 44 und anschließend TestFlight-Build 8.
-Preview-OTA, TestFlight-OTA und Git-Auslieferung wurden jeweils separat freigegeben.
+Zielplattform: iOS, bestehender Preview-Build 44. Änderungen und Preview-OTA sind
+freigegeben. Git-Auslieferung und TestFlight sind separate Schritte.
 
 Scope: Kalender-Canvas, Monatstitel, dessen Einbettung in die Kalenderszene,
 optionale Mindestskalierung im gemeinsamen Header und gezielte Regressionstests.
@@ -48,8 +48,7 @@ dem Testergerät ist nicht separat nachgewiesen.
 
 Ziel: Lesbarer, einzeiliger Monatstitel auch bei kleiner Systemschrift auf dem
 bestehenden TestFlight-Build 8. Die bereits erteilte TestFlight-OTA-Freigabe gilt
-für diese Fortsetzung. Commit, Push, PR und Merge wurden nach der Geräteabnahme
-am 30.10.2026 separat freigegeben. Kein neuer Build oder Store-Schritt.
+für diese Fortsetzung. Kein Commit, Push, neuer Build oder Store-Schritt.
 
 Zusätzlicher Dateiscope: `calendar-month-title.tsx`, dessen Komponententest,
 `src/ui/screen-layout.tsx`, `calendar-stable-pager.component.test.tsx` und diese
@@ -96,23 +95,3 @@ lesbar und korrekt ausgerichtet sein. Kalenderfoto und VoiceOver bleiben erhalte
   richtigen Datum erscheinen und beim Antippen zum richtigen Tag führen.
 
 Tests, Export und OTA-Metadaten ersetzen diese iPhone-Abnahme nicht.
-
-## Bestätigter Stand und Git-Auslieferung
-
-Nach der TestFlight-OTA `987c717d-0fe9-41b9-86d3-5ff84cf05ad7` bestätigt der
-Nutzer am 30.10.2026: „ja passt alles. commit push pr merge“.
-Damit sind die Abnahme des gemeldeten Kalenderfehlers und die Git-Auslieferung
-freigegeben. Die Rückmeldung ersetzt keine vollständige Geräteabnahme anderer
-App-Bereiche.
-
-Die OTA verwendet Update-ID `01a18a8d-700b-734e-8bf9-31e1ca9b1e31` und die zu
-Build 8 passende Runtime `ab053760e06bdf85a83f64fc65cfee0aab41fe12`.
-Manifest, CDN-Bundle, Assets und eingebettete Kalenderquellen wurden geprüft.
-
-Lokale Prüfungen: 512 Unit-Testdateien mit 9924 Tests; im ersten vollständigen
-Komponentenlauf 169 von 170 Suiten und 1607 von 1608 Tests erfolgreich.
-Nach der oben beschriebenen Testabfrage-Optimierung besteht die Pager-Suite
-alle 17 Tests bei unveränderten Prüfbedingungen und Zeitgrenzen. Die 14 weiteren
-Skriptprüfungen sowie Typ-, Lint-, Format- und Diff-Prüfungen sind erfolgreich.
-Vor dem Merge muss zusätzlich die PR-CI für den endgültigen Commit erfolgreich
-sein.
