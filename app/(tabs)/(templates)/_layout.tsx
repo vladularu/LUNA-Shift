@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 
 import { usePalette } from "@/theme/palette";
+import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
 
 export default function TemplatesStack() {
   const palette = usePalette();
@@ -9,9 +10,8 @@ export default function TemplatesStack() {
       screenOptions={{
         contentStyle: { backgroundColor: palette.background },
         headerLargeTitle: true,
-        headerLargeTitleShadowVisible: false,
         headerLargeTitleStyle: { color: palette.text },
-        headerShadowVisible: false,
+        ...PAGE_HEADER_OPTIONS,
         headerStyle: { backgroundColor: palette.background },
         headerTintColor: palette.text,
         headerTitleStyle: { color: palette.text },

@@ -110,11 +110,16 @@ describe("CalendarHeader", () => {
     const actions = screen.getAllByRole("button");
     expect(actions).toHaveLength(3);
     expect(screen.getByTestId("calendar-header-position")).toHaveStyle({
-      marginRight: -18,
+      marginRight: -14,
       transform: [{ translateY: 3.5 }],
     });
     expect(screen.getByTestId("calendar-header-position")).toHaveProp("pointerEvents", "box-none");
-    expect(screen.getByTestId("calendar-header")).toHaveStyle({ paddingHorizontal: 24 });
+    expect(screen.getByTestId("calendar-header")).toHaveStyle({ paddingHorizontal: 20 });
+    const headerStyle = StyleSheet.flatten(screen.getByTestId("calendar-header").props.style);
+    const positionStyle = StyleSheet.flatten(
+      screen.getByTestId("calendar-header-position").props.style,
+    );
+    expect(Number(headerStyle.paddingHorizontal) + Number(positionStyle.marginRight)).toBe(6);
     expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
       minHeight: 48,
       paddingHorizontal: 2,

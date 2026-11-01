@@ -75,7 +75,7 @@ export const LIGHT_PALETTE: Palette = {
   cardHeader: "#F3F2F8",
   text: "#18181B",
   textSecondary: "#3F3F46",
-  textMuted: "#5D5D66",
+  textMuted: "#6B6B73",
   border: "#D4D4D8",
   separator: "#E4E4E7",
   cardSeparator: "#E4E4E7",

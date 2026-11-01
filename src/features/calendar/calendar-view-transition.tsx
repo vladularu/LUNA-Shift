@@ -1,4 +1,4 @@
-import { INTER_FONTS } from "@/theme/shadcn";
+import { APP_FONT_FAMILY } from "@/theme/app-font";
 import {
   useCallback,
   useEffect,
@@ -126,7 +126,7 @@ function MorphDayView({
         allowFontScaling={false}
         style={[
           {
-            fontFamily: INTER_FONTS.regular,
+            fontFamily: APP_FONT_FAMILY,
             fontSize: day.toFont,
             fontWeight: day.background === "transparent" ? "500" : "700",
             fontVariant: ["tabular-nums"],

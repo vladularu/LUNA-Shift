@@ -11,6 +11,7 @@ import {
   salarySummaryPresentation,
 } from "@/features/analysis/salary-summary-state";
 import { usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
 import { CardSeparator } from "@/ui/design-system";
@@ -166,13 +167,12 @@ function SalaryDetailRowView({
   readonly row: SalaryDetailRow;
   readonly palette: ReturnType<typeof usePalette>;
 }) {
-  const secondaryText = palette.dark ? palette.text : palette.textMuted;
   const content = (
     <>
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ minWidth: 0, flex: 1, color: secondaryText, ...TYPOGRAPHY.label }}
+        style={{ minWidth: 0, flex: 1, ...TYPOGRAPHY.label, ...cardTextStyle(palette, "label") }}
       >
         {row.label}
       </Text>
@@ -181,8 +181,8 @@ function SalaryDetailRowView({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
           style={{
-            color: palette.text,
-            ...TYPOGRAPHY.bodyStrong,
+            ...TYPOGRAPHY.body,
+            ...cardTextStyle(palette, "value"),
             fontVariant: ["tabular-nums"],
           }}
         >

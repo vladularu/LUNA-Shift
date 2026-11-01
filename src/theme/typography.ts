@@ -6,11 +6,11 @@ export const TEXT_MAX_SCALE = 0;
 export const COMPACT_TEXT_MAX_SCALE = 2;
 
 export const TYPOGRAPHY = {
-  // Keep LUNA's original iPhone metrics; the text adapter supplies Inter.
+  // Shared metrics accompany the native system font across screens and submenus.
   hero: { fontSize: 34, lineHeight: 41, fontWeight: "700", letterSpacing: -0.8 },
   salaryHero: { fontSize: 40, lineHeight: 48, fontWeight: "700", letterSpacing: -0.8 },
   screenTitle: { fontSize: 22, lineHeight: 28, fontWeight: "600", letterSpacing: -0.2 },
-  sectionTitle: { fontSize: 17, lineHeight: 23, fontWeight: "600" },
+  sectionTitle: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
   value: { fontSize: 20, lineHeight: 26, fontWeight: "700", letterSpacing: -0.2 },
   pickerValue: { fontSize: 19, fontWeight: "400" },
   metricValue: { fontSize: 18, fontWeight: "700", letterSpacing: -0.3 },
@@ -19,14 +19,14 @@ export const TYPOGRAPHY = {
   highlightCount: { fontSize: 24, lineHeight: 29, fontWeight: "700", letterSpacing: -0.4 },
   highlightCountLabel: { fontSize: 22, lineHeight: 28, fontWeight: "600", letterSpacing: -0.3 },
   highlightSummary: { fontSize: 13, lineHeight: 18, fontWeight: "500" },
-  body: { fontSize: 16, lineHeight: 23, fontWeight: "400" },
-  bodyStrong: { fontSize: 16, lineHeight: 23, fontWeight: "600" },
+  body: { fontSize: 16, lineHeight: 22, fontWeight: "400" },
+  bodyStrong: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
   button: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
   label: { fontSize: 13, lineHeight: 18, fontWeight: "600" },
-  caption: { fontSize: 12, lineHeight: 17, fontWeight: "500" },
+  caption: { fontSize: 12, lineHeight: 17, fontWeight: "400" },
   footnote: { fontSize: 12, lineHeight: 17, fontWeight: "400" },
   overline: { fontSize: 11, lineHeight: 15, fontWeight: "600", letterSpacing: 0.4 },
-  input: { fontSize: 16, lineHeight: 23, fontWeight: "400" },
+  input: { fontSize: 16, lineHeight: 22, fontWeight: "400" },
   // Original compact calendar, editor and onboarding metrics.
   micro: { fontSize: 11, lineHeight: 14, fontWeight: "400" },
   small: { fontSize: 14, lineHeight: 20, fontWeight: "400" },

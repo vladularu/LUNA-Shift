@@ -3,13 +3,22 @@ import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
 import type { PropsWithChildren, ReactNode } from "react";
-import { Pressable, View, type PressableStateCallbackType, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type PressableStateCallbackType,
+  type ViewStyle,
+} from "react-native";
 import Animated from "react-native-reanimated";
 
 import { usePalette } from "@/theme/palette";
 
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, CARD_HEADER_INSET, RADII, SHADOWS, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SHADOWS, SPACING } from "@/theme/tokens";
+import { CARD_METRICS, cardHeaderFrame } from "@/theme/card-layout";
+import { cardTextStyle } from "@/theme/card-typography";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
 import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
 import { ShiftSymbol } from "@/ui/shift-symbol";
@@ -58,18 +67,13 @@ export function CardHeader({
   return (
     <View
       style={{
-        borderCurve: CORNER_CURVE,
+        ...cardHeaderFrame(palette.dark, SPACING.xl),
         minHeight: palette.dark ? 56 : 50,
         justifyContent: "center",
         flexDirection: "row",
         alignItems: "center",
         gap: SPACING.sm,
-        paddingHorizontal: palette.dark ? SPACING.xl : SPACING.xl - CARD_HEADER_INSET,
         paddingVertical: SPACING.lg,
-        marginHorizontal: palette.dark ? 0 : CARD_HEADER_INSET,
-        marginTop: palette.dark ? 0 : CARD_HEADER_INSET,
-        borderTopLeftRadius: palette.dark ? 0 : RADII.card - CARD_HEADER_INSET,
-        borderTopRightRadius: palette.dark ? 0 : RADII.card - CARD_HEADER_INSET,
         backgroundColor: palette.cardHeader,
         borderBottomWidth: 0,
         borderBottomColor: palette.cardSeparator,
@@ -80,7 +84,11 @@ export function CardHeader({
           accessibilityRole="header"
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
-          style={{ alignSelf: "stretch", color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+          style={{
+            alignSelf: "stretch",
+            ...TYPOGRAPHY.sectionTitle,
+            ...cardTextStyle(palette, "title"),
+          }}
         >
           {title}
         </Text>
@@ -88,8 +96,8 @@ export function CardHeader({
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             style={{
-              color: palette.dark ? palette.text : palette.textMuted,
               ...TYPOGRAPHY.caption,
+              ...cardTextStyle(palette, "note"),
             }}
           >
             {caption}
@@ -176,7 +184,7 @@ export function MetricCard({
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         selectable
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
+        style={{ ...TYPOGRAPHY.label, ...cardTextStyle(palette, "label") }}
       >
         {label}
       </Text>
@@ -236,8 +244,9 @@ export function RowButton({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
           style={{
-            color: destructive ? palette.danger : palette.text,
-            ...TYPOGRAPHY.bodyStrong,
+            ...TYPOGRAPHY.body,
+            ...cardTextStyle(palette, onPress || onLongPress ? "action" : "label"),
+            ...(destructive ? { color: palette.danger } : {}),
           }}
         >
           {title}
@@ -246,7 +255,7 @@ export function RowButton({
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             selectable
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+            style={{ ...TYPOGRAPHY.caption, ...cardTextStyle(palette, "note") }}
           >
             {subtitle}
           </Text>
@@ -273,7 +282,7 @@ export function RowButton({
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
-          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+          style={{ ...TYPOGRAPHY.caption, ...cardTextStyle(palette, "note") }}
         >
           {subtitle}
         </Text>
@@ -331,13 +340,44 @@ export function RowButton({
 
 export function CardSeparator({ inset = SPACING.lg }: { readonly inset?: number }) {
   const palette = usePalette();
-  return <View style={{ height: 1, backgroundColor: palette.cardSeparator, marginLeft: inset }} />;
+  return (
+    <View
+      style={{
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: palette.cardSeparator,
+        marginLeft: inset,
+      }}
+    />
+  );
 }
 
-export function CardFooterLine() {
+export function CardFooterLine({ caption }: { readonly caption?: string } = {}) {
+  const palette = usePalette();
+  const { fontScale } = useWindowDimensions();
+  const infoHeight = Math.max(
+    CARD_METRICS.infoMinHeight,
+    TYPOGRAPHY.footnote.lineHeight * fontScale + 2 * CARD_METRICS.infoPaddingVertical,
+  );
   return (
-    <View style={{ marginHorizontal: SPACING.lg, paddingBottom: SPACING.lg }}>
+    <View testID="card-footer" style={{ marginHorizontal: CARD_METRICS.contentInset }}>
       <CardSeparator inset={0} />
+      <View
+        testID="card-info-zone"
+        style={{
+          minHeight: infoHeight,
+          justifyContent: "center",
+          paddingVertical: CARD_METRICS.infoPaddingVertical,
+        }}
+      >
+        {caption ? (
+          <Text
+            testID="analysis-card-caption"
+            style={{ ...TYPOGRAPHY.footnote, ...cardTextStyle(palette, "note") }}
+          >
+            {caption}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 }

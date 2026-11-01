@@ -160,10 +160,7 @@ export function LocationPickerScreen() {
           style={[styles.container, { backgroundColor: palette.surface }]}
           testID="location-picker"
         >
-          <View
-            style={[styles.header, { borderBottomColor: palette.separator }]}
-            testID="location-picker-header"
-          >
+          <View style={styles.header} testID="location-picker-header">
             <Text
               accessibilityRole="header"
               maxFontSizeMultiplier={TEXT_MAX_SCALE}
@@ -257,7 +254,6 @@ const styles = StyleSheet.create({
     minHeight: 64,
     alignItems: "center",
     justifyContent: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 20,
   },
   title: {

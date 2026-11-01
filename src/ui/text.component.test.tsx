@@ -5,7 +5,7 @@ import { TextInput as NativeTextInput } from "react-native";
 
 import { Text, TextInput } from "@/ui/text";
 
-describe("Inter native text", () => {
+describe("System native text", () => {
   it("resolves the final style weight while retaining text and accessibility", async () => {
     await render(
       <Text
@@ -18,7 +18,7 @@ describe("Inter native text", () => {
       </Text>,
     );
     const heading = screen.getByRole("header");
-    expect(heading).toHaveStyle({ fontFamily: "Inter-SemiBold", fontSize: 18, fontWeight: "600" });
+    expect(heading).toHaveStyle({ fontFamily: "System", fontSize: 18, fontWeight: "600" });
     expect(heading.props.selectable).toBe(true);
     expect(heading.props.maxFontSizeMultiplier).toBe(0);
   });
@@ -38,8 +38,25 @@ describe("Inter native text", () => {
     const input = screen.getByLabelText("Notiz");
     await fireEvent.changeText(input, "Spätdienst");
     expect(onChangeText).toHaveBeenCalledWith("Spätdienst");
-    expect(input).toHaveStyle({ fontFamily: "Inter-Medium" });
+    expect(input).toHaveStyle({ fontFamily: "System", fontWeight: "500" });
     expect(inputRef.current).not.toBeNull();
     expect(TextInput.State).toBe(NativeTextInput.State);
+  });
+
+  it("replaces legacy Inter overrides while preserving italics and custom fonts", async () => {
+    await render(
+      <>
+        <Text style={{ fontFamily: "Inter-SemiBold", fontWeight: "600", fontStyle: "italic" }}>
+          Hinweis
+        </Text>
+        <Text style={{ fontFamily: "CustomSymbols" }}>Symbol</Text>
+      </>,
+    );
+    expect(screen.getByText("Hinweis")).toHaveStyle({
+      fontFamily: "System",
+      fontWeight: "600",
+      fontStyle: "italic",
+    });
+    expect(screen.getByText("Symbol")).toHaveStyle({ fontFamily: "CustomSymbols" });
   });
 });

@@ -16,7 +16,7 @@ import {
   tariffAssessmentRoute,
 } from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
-import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
+import { MINIMUM_TOUCH_TARGET, REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, InlineNotice, SurfaceCard } from "@/ui/design-system";
 import { SecondaryButton } from "@/ui/form-controls";
@@ -273,7 +273,7 @@ export function SalaryPayrollStatement({
           <PayrollNote>{netPayForecastLabel(available)}</PayrollNote>
         ) : null}
       </SurfaceCard>
-      <View testID="salary-payroll-statement" style={{ gap: SPACING.lg }}>
+      <View testID="salary-payroll-statement" style={{ gap: REPORT_CARD_GAP }}>
         <SalarySectionCard title="Zusammensetzung">
           <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.md }}>
             <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
@@ -580,6 +580,7 @@ export function SalaryPayrollContent({
           annualSalaryGrossCents(month, annual.payments) > 0 ? (
             <PayrollDisclosure label="Jahressonderzahlung bearbeiten">
               <AnnualSalaryPaymentEditor
+                embedded
                 key={`${month}:${settings.month}:${data.saved?.revision}`}
                 month={month}
                 profile={profile}

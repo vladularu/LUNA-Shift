@@ -131,7 +131,7 @@ function CompactActionRow({
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+          style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
         >
           {label}
         </Text>
@@ -139,7 +139,7 @@ function CompactActionRow({
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
             style={{
-              color: palette.textMuted,
+              color: palette.text,
               textAlign: stacked ? "left" : "right",
               ...TYPOGRAPHY.body,
             }}
@@ -186,7 +186,7 @@ function CompactSwitchRow({
     >
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+        style={{ flex: 1, color: palette.textMuted, ...TYPOGRAPHY.body }}
       >
         {label}
       </Text>

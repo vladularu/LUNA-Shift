@@ -3,7 +3,9 @@ import Ionicons from "@/ui/icon";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, CARD_HEADER_INSET, RADII, SPACING } from "@/theme/tokens";
+import { RADII, SPACING } from "@/theme/tokens";
+import { CARD_METRICS, cardHeaderFrame } from "@/theme/card-layout";
+import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardFooterLine, SurfaceCard } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
@@ -20,7 +22,7 @@ export function AnalysisCardHeader({
   readonly accessory?: ReactNode;
 }) {
   const p = usePalette();
-  const secondaryText = p.dark ? p.text : p.textMuted;
+  const secondaryText = p.textMuted;
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3 || width < 360;
   const heading = (
@@ -31,9 +33,8 @@ export function AnalysisCardHeader({
         style={{
           flex: 1,
           textAlign: "left",
-          color: p.text,
           ...TYPOGRAPHY.sectionTitle,
-          fontWeight: p.dark ? "500" : TYPOGRAPHY.sectionTitle.fontWeight,
+          ...cardTextStyle(p, "title"),
         }}
       >
         {title}
@@ -44,14 +45,9 @@ export function AnalysisCardHeader({
     </>
   );
   const headerStyle = {
-    borderCurve: CORNER_CURVE,
+    ...cardHeaderFrame(p.dark, SPACING.lg),
     minHeight: p.dark ? 56 : 50,
-    paddingHorizontal: p.dark ? SPACING.lg : SPACING.lg - CARD_HEADER_INSET,
     paddingVertical: accessory ? SPACING.xxs : p.dark ? SPACING.sm : SPACING.xs,
-    marginHorizontal: p.dark ? 0 : CARD_HEADER_INSET,
-    marginTop: p.dark ? 0 : CARD_HEADER_INSET,
-    borderTopLeftRadius: p.dark ? 0 : RADII.card - CARD_HEADER_INSET,
-    borderTopRightRadius: p.dark ? 0 : RADII.card - CARD_HEADER_INSET,
     gap: SPACING.sm,
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -113,7 +109,6 @@ export function AnalysisListCard({
   onPress,
   children,
   caption,
-  captionBelowFooter = false,
   headerAccessory,
   busy = false,
   bodyMinHeight,
@@ -122,26 +117,10 @@ export function AnalysisListCard({
   readonly label?: string;
   readonly onPress?: () => void;
   readonly caption?: string;
-  readonly captionBelowFooter?: boolean;
   readonly headerAccessory?: ReactNode;
   readonly busy?: boolean;
   readonly bodyMinHeight?: number;
 }>) {
-  const p = usePalette();
-  const secondaryText = p.dark ? p.text : p.textMuted;
-  const captionContent = caption ? (
-    <Text
-      testID="analysis-card-caption"
-      style={{
-        paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.md,
-        color: captionBelowFooter ? p.textMuted : secondaryText,
-        ...(captionBelowFooter ? TYPOGRAPHY.footnote : TYPOGRAPHY.caption),
-      }}
-    >
-      {caption}
-    </Text>
-  ) : null;
   return (
     <SurfaceCard>
       <AnalysisCardHeader
@@ -153,13 +132,15 @@ export function AnalysisListCard({
       <View
         testID={`analysis-card-body-${title}`}
         accessibilityState={{ busy }}
-        style={{ paddingHorizontal: SPACING.lg, minHeight: bodyMinHeight }}
+        style={{
+          paddingHorizontal: CARD_METRICS.contentInset,
+          paddingTop: CARD_METRICS.contentTopPadding,
+          minHeight: bodyMinHeight,
+        }}
       >
         {children}
       </View>
-      {captionBelowFooter ? null : captionContent}
-      <CardFooterLine />
-      {captionBelowFooter ? captionContent : null}
+      <CardFooterLine caption={caption} />
     </SurfaceCard>
   );
 }
@@ -174,7 +155,7 @@ export function AnalysisValueRow({
   leading,
   dot,
   reserveDisclosure = false,
-  minimumHeight = 47,
+  minimumHeight = CARD_METRICS.rowMinHeight,
 }: {
   readonly label: string;
   readonly value: string;
@@ -189,12 +170,12 @@ export function AnalysisValueRow({
   readonly minimumHeight?: number;
 }) {
   const p = usePalette();
-  const secondaryText = p.dark ? p.text : p.textMuted;
+  const secondaryText = p.textMuted;
   const { fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3;
   const style = {
     minHeight: minimumHeight,
-    paddingVertical: SPACING.sm + SPACING.xxs,
+    paddingVertical: CARD_METRICS.rowPaddingVertical,
     gap: SPACING.sm,
     borderTopWidth: first ? 0 : 1,
     borderTopColor: p.cardSeparator,
@@ -220,8 +201,8 @@ export function AnalysisValueRow({
         <Text
           style={{
             flex: 1,
-            color: total && !p.dark ? p.text : secondaryText,
-            ...(total && !p.dark ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+            ...TYPOGRAPHY.body,
+            ...cardTextStyle(p, "label"),
           }}
         >
           {label}
@@ -240,8 +221,8 @@ export function AnalysisValueRow({
           style={{
             flexShrink: 1,
             textAlign: "right",
-            color: p.text,
             ...(total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+            ...cardTextStyle(p, total ? "total" : "value"),
             fontVariant: ["tabular-nums"],
           }}
         >

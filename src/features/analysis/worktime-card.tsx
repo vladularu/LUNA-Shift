@@ -1,8 +1,10 @@
 import { Text } from "@/ui/text";
 import { View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { CardFooterLine, SurfaceCard } from "@/ui/design-system";
 import { AnalysisCardHeader, AnalysisValueRow } from "./analysis-list-card";
 
@@ -26,7 +28,6 @@ export function WorktimeCard({
   readonly action?: { readonly label: string; readonly onPress: () => void };
 }) {
   const palette = usePalette();
-  const secondaryText = palette.dark ? palette.text : palette.textMuted;
   const { fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3;
   const withUnit = (value: string) => (/[0-9]/u.test(value) ? value + " h" : value);
@@ -44,7 +45,11 @@ export function WorktimeCard({
       />
       <View
         testID="worktime-values"
-        style={{ flexDirection: stacked ? "column" : "row", paddingVertical: SPACING.md }}
+        style={{
+          flexDirection: stacked ? "column" : "row",
+          paddingTop: CARD_METRICS.contentTopPadding,
+          paddingBottom: CARD_METRICS.rowPaddingVertical,
+        }}
       >
         {values.map((item, index) => (
           <View
@@ -66,7 +71,7 @@ export function WorktimeCard({
             <Text
               maxFontSizeMultiplier={TEXT_MAX_SCALE}
               selectable
-              style={{ color: secondaryText, ...TYPOGRAPHY.caption }}
+              style={{ ...TYPOGRAPHY.caption, ...cardTextStyle(palette, "label") }}
             >
               {item.label}
             </Text>
@@ -86,19 +91,7 @@ export function WorktimeCard({
       {action ? (
         <AnalysisValueRow first label={action.label} value="" onPress={action.onPress} />
       ) : null}
-      <CardFooterLine />
-      {caption ? (
-        <Text
-          style={{
-            paddingHorizontal: SPACING.lg,
-            paddingBottom: SPACING.md,
-            color: palette.textMuted,
-            ...TYPOGRAPHY.footnote,
-          }}
-        >
-          {caption}
-        </Text>
-      ) : null}
+      <CardFooterLine caption={caption} />
     </SurfaceCard>
   );
 }

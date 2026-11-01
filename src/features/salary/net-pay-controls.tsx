@@ -109,7 +109,7 @@ export function NetPayCheck({
       </Text>
       <Text
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.body }}
+        style={{ flex: 1, color: palette.textMuted, ...TYPOGRAPHY.body }}
       >
         {label}
       </Text>

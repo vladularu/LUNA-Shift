@@ -47,7 +47,7 @@ export function CompactInputRow({
       >
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+          style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
         >
           {label}
         </Text>

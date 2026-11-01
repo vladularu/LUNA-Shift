@@ -5,9 +5,11 @@ import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import type { MonthlyShiftTypeAnalysis } from "@/features/analysis/analysis-metrics";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
+import { cardTextStyle } from "@/theme/card-typography";
 import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { CardFooterLine, CardSeparator, ColorBadge, SurfaceCard } from "@/ui/design-system";
 import { ReportCardTitle } from "./report-card-title";
 
@@ -31,7 +33,7 @@ function ShiftTypeReportCard({
   readonly title: string;
 }) {
   const palette = usePalette();
-  const secondaryText = palette.dark ? palette.text : palette.textMuted;
+  const secondaryText = palette.textMuted;
   const items = analysis.items.filter((item) => mode === "COUNT" || item.minutes > 0);
   const { fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3;
@@ -40,17 +42,22 @@ function ShiftTypeReportCard({
   return (
     <SurfaceCard accessibilityLabel={`${title}, Gesamt ${totalValue}`}>
       <ReportCardTitle title={title} />
-      <View style={{ paddingHorizontal: SPACING.lg }}>
+      <View
+        style={{
+          paddingHorizontal: CARD_METRICS.contentInset,
+          paddingTop: CARD_METRICS.contentTopPadding,
+        }}
+      >
         {items.map((item, index) => (
           <View key={item.type}>
-            {index > 0 ? <CardSeparator inset={40} /> : null}
+            {index > 0 ? <CardSeparator inset={0} /> : null}
             <View
               accessibilityLabel={`${SHIFT_TYPE_LABELS[item.type]}: ${
                 mode === "COUNT" ? item.count : `${formatMinutes(item.minutes)} Stunden`
               }`}
               accessible
               style={{
-                minHeight: 56,
+                minHeight: CARD_METRICS.rowMinHeight,
                 flexDirection: "row",
                 flexWrap: stacked ? "wrap" : "nowrap",
                 alignItems: "center",
@@ -62,7 +69,7 @@ function ShiftTypeReportCard({
               <ColorBadge
                 color={SHIFT_TYPE_COLORS[item.type]}
                 label={DEFAULT_SHIFT_SYMBOLS[item.type]}
-                size={24}
+                size={CARD_METRICS.iconSize}
               />
               <Text
                 maxFontSizeMultiplier={TEXT_MAX_SCALE}
@@ -92,12 +99,14 @@ function ShiftTypeReportCard({
           </View>
         ))}
       </View>
-      <CardSeparator inset={0} />
+      <View style={{ marginHorizontal: CARD_METRICS.contentInset }}>
+        <CardSeparator inset={0} />
+      </View>
       <View
         accessibilityLabel={`Gesamt: ${totalValue}`}
         accessible
         style={{
-          minHeight: 56,
+          minHeight: CARD_METRICS.rowMinHeight,
           flexDirection: stacked ? "column" : "row",
           alignItems: stacked ? "stretch" : "center",
           justifyContent: "space-between",
@@ -116,7 +125,11 @@ function ShiftTypeReportCard({
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
-          style={{ color: palette.text, ...TYPOGRAPHY.body, fontVariant: ["tabular-nums"] }}
+          style={{
+            ...TYPOGRAPHY.body,
+            ...cardTextStyle(palette, "total"),
+            fontVariant: ["tabular-nums"],
+          }}
         >
           {totalValue}
         </Text>

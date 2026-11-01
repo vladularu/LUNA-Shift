@@ -82,7 +82,7 @@ export function NetPaySettingField({
       }}
     >
       <View style={{ flex: stacked ? undefined : 1, gap: SPACING.xs }}>
-        <Text style={{ color: palette.text, ...TYPOGRAPHY.body }}>{title ?? label}</Text>
+        <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>{title ?? label}</Text>
         {caption ? (
           <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{caption}</Text>
         ) : null}
@@ -265,7 +265,7 @@ export function NetPaySettingAmount({
       }}
     >
       <View style={{ flex: stacked ? undefined : 1, gap: SPACING.xs }}>
-        <Text style={{ color: palette.text, ...TYPOGRAPHY.body }}>{title}</Text>
+        <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>{title}</Text>
         <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{caption}</Text>
       </View>
       <View style={{ alignItems: "flex-end" }}>
@@ -288,7 +288,7 @@ export function NetPaySettingAmount({
             onChangeText={onChangeText}
             style={{
               color: palette.text,
-              ...TYPOGRAPHY.bodyStrong,
+              ...TYPOGRAPHY.body,
               minHeight: CONTROL_HEIGHT.compact,
               minWidth: 68,
               maxWidth: stacked ? undefined : 120,
@@ -296,7 +296,7 @@ export function NetPaySettingAmount({
               padding: 0,
             }}
           />
-          <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>€</Text>
+          <Text style={{ color: palette.text, ...TYPOGRAPHY.body }}>€</Text>
         </View>
         <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>pro Monat</Text>
       </View>
@@ -353,7 +353,7 @@ export function NetPaySettingCheck({
           <Ionicons accessibilityElementsHidden name="checkmark" size={18} color={palette.text} />
         ) : null}
       </View>
-      <Text style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.body }}>{label}</Text>
+      <Text style={{ flex: 1, color: palette.textMuted, ...TYPOGRAPHY.body }}>{label}</Text>
     </Pressable>
   );
 }
