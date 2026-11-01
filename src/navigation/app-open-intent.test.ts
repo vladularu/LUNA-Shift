@@ -9,6 +9,7 @@ vi.mock("./app-resume-storage", () => ({ appResumeStore: { load: vi.fn() } }));
 describe("app and widget resume intents", () => {
   afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(appResumeStore.load).mockResolvedValue(null);
   });
   it.each(["internal", "production"])(
@@ -38,19 +39,18 @@ describe("app and widget resume intents", () => {
         });
         const link = timeline[0].props.url;
         expect(redirectAppOpenIntent({ path: link, initial: false })).toBeNull();
-        expect(await redirectAppOpenIntent({ path: link, initial: true })).toBe(
-          "/analysis?month=2026-08&period=MONTH",
-        );
+        expect(await redirectAppOpenIntent({ path: link, initial: true })).toBe("/");
         expect(
           await redirectAppOpenIntent({
             path: `${appScheme}:///widget-day?date=2026-11-01`,
             initial: true,
           }),
-        ).toBe("/analysis?month=2026-08&period=MONTH");
+        ).toBe("/");
         expect(
           redirectAppOpenIntent({ path: `${appScheme}:///auth/callback?code=abc`, initial: false }),
         ).toBe(`${appScheme}:///auth/callback?code=abc`);
       }
+      expect(appResumeStore.load).not.toHaveBeenCalled();
     },
   );
   it.each([
@@ -73,20 +73,20 @@ describe("app and widget resume intents", () => {
     "malformed://[",
   ])("preserves a targeted or unrecognized link %s", (path) => {
     expect(redirectAppOpenIntent({ path, initial: false })).toBe(path);
+    expect(redirectAppOpenIntent({ path, initial: true })).toBe(path);
   });
 });
 
 it.each(["pflegeshift:///", "lunashift:///?month=2026-07", "/widget-day?date=2026-07-08"])(
-  "restores the same last view after a cold launch from %s",
+  "opens the calendar after a cold launch from %s despite a saved analysis view",
   async (path) => {
     vi.mocked(appResumeStore.load).mockResolvedValue({
       version: 1,
       href: "/analysis?month=2026-11&period=YEAR",
       scrollY: 640,
     });
-    expect(await redirectAppOpenIntent({ path, initial: true })).toBe(
-      "/analysis?month=2026-11&period=YEAR",
-    );
+    expect(await redirectAppOpenIntent({ path, initial: true })).toBe("/");
     expect(redirectAppOpenIntent({ path, initial: false })).toBeNull();
+    expect(appResumeStore.load).not.toHaveBeenCalled();
   },
 );
