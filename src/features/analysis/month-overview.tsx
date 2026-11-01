@@ -3,12 +3,7 @@ import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
-import {
-  complianceDetailsRoute,
-  dayEditorRoute,
-  salaryRoute,
-  worktimeDetailsRoute,
-} from "@/navigation/routes";
+import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
 import { EarnedPremiumsCard } from "./salary-overview-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
@@ -19,7 +14,6 @@ import {
   timeAccountActual,
   timeAccountBalance,
   timeAccountCaption,
-  pendingTimeAccountDuties,
 } from "./special-duty-time-presentation";
 import type { SalaryPaymentProjection } from "@/domain/salary-payment";
 import { salaryPaymentHint } from "@/features/salary/salary-composition";
@@ -103,31 +97,12 @@ export function MonthOverview({
   const paymentHint = projection ? salaryPaymentHint(projection) : null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
   const hasAccount = summary.ok && summary.value.timeAccountMinutes !== undefined;
-  const pendingDuties = summary.ok ? pendingTimeAccountDuties(summary.value) : [];
   return (
     <AnalysisDashboard
       cards={{
         WORK: (
           <WorkListCard
             actualLabel={hasAccount ? "Zeitkonto" : undefined}
-            action={
-              hasAccount
-                ? {
-                    label:
-                      pendingDuties.length === 1
-                        ? `${pendingDuties[0].date.slice(8, 10)}.${pendingDuties[0].date.slice(5, 7)}.: Angaben ergänzen`
-                        : pendingDuties.length > 1
-                          ? `${pendingDuties.length} Bereitschaften prüfen`
-                          : "Bereitschaften ansehen",
-                    onPress: () =>
-                      router.push(
-                        pendingDuties.length === 1
-                          ? dayEditorRoute(pendingDuties[0].date, "SHIFT", pendingDuties[0].shiftId)
-                          : worktimeDetailsRoute(month),
-                      ),
-                  }
-                : undefined
-            }
             onPress={() =>
               router.push({
                 pathname: "/working-time-profile",
@@ -261,6 +236,8 @@ export function MonthOverview({
         SHIFTS: (
           <ShiftAnalysisCard
             analysis={shiftTypeAnalysis}
+            creditsAvailable={summary.ok}
+            timeCredits={summary.ok ? summary.value.specialDutyTimeCredits : undefined}
             caption={summary.ok ? undefined : "Stunden ohne Abwesenheitsgutschriften."}
           />
         ),

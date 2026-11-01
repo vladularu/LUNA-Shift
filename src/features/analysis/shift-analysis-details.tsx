@@ -1,52 +1,95 @@
 import { Text } from "@/ui/text";
-import { View, useWindowDimensions } from "react-native";
+import { Fragment, useState } from "react";
+import { Pressable, View, useWindowDimensions } from "react-native";
+import { router } from "expo-router";
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
+import type { SpecialDutyTimeCredit } from "@/domain/special-duty-pay";
 import { formatMinutes } from "@/engine/working-time";
+import { dayEditorRoute } from "@/navigation/routes";
 import type { MonthlyShiftTypeAnalysis } from "./analysis-metrics";
 import { AnalysisListCard } from "./analysis-list-card";
 import { SHIFT_TYPE_COLORS, usePalette } from "@/theme/palette";
-import { SPACING, RADII } from "@/theme/tokens";
+import { DEFAULT_SHIFT_SYMBOLS } from "@/theme/shift-symbols";
+import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { EmptyState } from "@/ui/design-system";
+import { ColorBadge, EmptyState } from "@/ui/design-system";
+import { timeCreditLabel } from "./special-duty-time-presentation";
 
 export function ShiftAnalysisDetails({
   analysis,
   creditsAvailable = true,
+  caption,
+  onPress,
+  timeCredits = [],
 }: {
   readonly analysis: MonthlyShiftTypeAnalysis;
   readonly creditsAvailable?: boolean;
+  readonly caption?: string;
+  readonly onPress?: () => void;
+  readonly timeCredits?: readonly SpecialDutyTimeCredit[];
 }) {
   const p = usePalette();
-  const { fontScale } = useWindowDimensions();
-  const stacked = fontScale >= 1.3;
-  const rows = [
-    ...analysis.items.map((item) => ({
-      id: item.type,
-      label: SHIFT_TYPE_LABELS[item.type],
-      count: item.count,
-      hours:
-        !creditsAvailable && (item.type === "VACATION" || item.type === "SICK")
-          ? "Nicht verfügbar"
-          : formatMinutes(item.minutes) + " h",
+  const { fontScale, width } = useWindowDimensions();
+  const stacked = fontScale >= 1.3 || width < 360;
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const creditById = new Map(timeCredits.map((line) => [line.shiftId, line]));
+  const groups =
+    analysis.groups ??
+    analysis.items.map((item) => ({
+      ...item,
+      key: item.type,
+      title: SHIFT_TYPE_LABELS[item.type],
       color: SHIFT_TYPE_COLORS[item.type],
-      total: false,
-    })),
+      symbol: DEFAULT_SHIFT_SYMBOLS[item.type],
+      types: [item.type],
+      entries: [],
+    }));
+  const rows = [
+    ...groups.map((group) => {
+      const labels = [
+        ...new Set(
+          group.entries.flatMap((entry) => {
+            const line = creditById.get(entry.id);
+            return line ? [timeCreditLabel(line)] : [];
+          }),
+        ),
+      ];
+      return {
+        ...group,
+        total: false,
+        hours:
+          !creditsAvailable && group.types.some((type) => type === "VACATION" || type === "SICK")
+            ? "Nicht verfügbar"
+            : formatMinutes(group.minutes) + " h",
+        subtitle:
+          labels.length === 1
+            ? labels[0]
+            : labels.length
+              ? "Unterschiedlicher Ausgleich"
+              : undefined,
+      };
+    }),
     {
-      id: "TOTAL",
-      label: "Gesamt",
+      key: "TOTAL",
+      title: "Gesamt",
       count: analysis.totalCount,
       hours: formatMinutes(analysis.totalMinutes) + " h",
-      color: undefined,
+      color: "",
+      symbol: "",
+      entries: [],
+      subtitle: undefined,
       total: true,
     },
   ];
   return (
     <AnalysisListCard
       title="Schichten"
+      onPress={onPress}
       caption={
-        creditsAvailable
+        caption ??
+        (creditsAvailable
           ? undefined
-          : "Ohne Feiertagsdaten fehlen die Zeitgutschriften für Urlaub und Krankheit."
+          : "Ohne Feiertagsdaten fehlen die Zeitgutschriften für Urlaub und Krankheit.")
       }
     >
       {analysis.totalCount === 0 ? (
@@ -58,102 +101,130 @@ export function ShiftAnalysisDetails({
         <>
           {!stacked ? (
             <View style={{ flexDirection: "row", gap: SPACING.sm, paddingVertical: SPACING.md }}>
-              <Text style={{ flex: 1, color: p.textMuted, ...TYPOGRAPHY.caption }}>Schicht</Text>
+              <Text style={{ flex: 1, color: p.textMuted, ...TYPOGRAPHY.caption }}>Dienstart</Text>
               <Text
-                style={{ width: 56, textAlign: "right", color: p.textMuted, ...TYPOGRAPHY.caption }}
+                style={{ width: 40, textAlign: "right", color: p.textMuted, ...TYPOGRAPHY.caption }}
               >
                 Anzahl
               </Text>
               <Text
-                style={{
-                  width: 108,
-                  textAlign: "right",
-                  color: p.textMuted,
-                  ...TYPOGRAPHY.caption,
-                }}
+                style={{ width: 84, textAlign: "right", color: p.textMuted, ...TYPOGRAPHY.caption }}
               >
                 Stunden
               </Text>
             </View>
           ) : null}
-          {rows.map((row, index) => (
-            <View
-              key={row.id}
-              accessible
-              accessibilityLabel={`${row.label}, Anzahl ${row.count}, Stunden ${row.hours}`}
-              testID={`shift-detail-${row.id}`}
-              style={{
-                minHeight: 56,
-                paddingVertical: SPACING.md,
-                gap: SPACING.sm,
-                flexDirection: stacked ? "column" : "row",
-                alignItems: stacked ? "stretch" : "center",
-                borderTopWidth: !stacked || index > 0 ? 1 : 0,
-                borderTopColor: p.separator,
-              }}
-            >
-              <View
-                style={{
-                  flex: stacked ? undefined : 1,
-                  minWidth: 0,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: SPACING.sm,
-                }}
-              >
-                {row.color ? (
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: RADII.pill,
-                      backgroundColor: row.color,
-                    }}
-                  />
-                ) : null}
-                <Text
+          {rows.map((row, index) => {
+            const hasEntries = row.entries.length > 0;
+            const open = expanded === row.key;
+            return (
+              <Fragment key={row.key}>
+                <Pressable
+                  accessible
+                  accessibilityRole={hasEntries ? "button" : undefined}
+                  accessibilityLabel={`${row.title}, Anzahl ${row.count}, Stunden ${row.hours}${row.subtitle ? ", " + row.subtitle : ""}`}
+                  accessibilityState={hasEntries ? { expanded: open } : undefined}
+                  onPress={hasEntries ? () => setExpanded(open ? null : row.key) : undefined}
+                  testID={`shift-detail-${row.key}`}
                   style={{
-                    flex: 1,
-                    color: row.total ? p.text : p.textMuted,
-                    ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                    minHeight: 56,
+                    paddingVertical: SPACING.md,
+                    gap: SPACING.sm,
+                    flexDirection: stacked ? "column" : "row",
+                    alignItems: stacked ? "stretch" : "center",
+                    borderTopWidth: !stacked || index > 0 ? 1 : 0,
+                    borderTopColor: p.separator,
                   }}
                 >
-                  {row.label}
-                </Text>
-              </View>
-              <View style={{ flexDirection: fontScale >= 2 ? "column" : "row", gap: SPACING.sm }}>
-                {[
-                  { label: "Anzahl", value: String(row.count), width: 56 },
-                  { label: "Stunden", value: row.hours, width: 108 },
-                ].map((metric) => (
                   <View
-                    key={metric.label}
                     style={{
-                      width: stacked ? undefined : metric.width,
-                      flex: stacked && fontScale < 2 ? 1 : undefined,
-                      gap: SPACING.xs,
+                      flex: stacked ? undefined : 1,
+                      minWidth: 0,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: SPACING.sm,
                     }}
                   >
-                    {stacked ? (
-                      <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-                        {metric.label}
-                      </Text>
+                    {row.color ? (
+                      <ColorBadge color={row.color} label={row.symbol} size={20} />
                     ) : null}
-                    <Text
-                      style={{
-                        color: p.text,
-                        textAlign: stacked ? "left" : "right",
-                        ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
-                        fontVariant: ["tabular-nums"],
-                      }}
-                    >
-                      {metric.value}
-                    </Text>
+                    <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
+                      <Text
+                        style={{
+                          color: p.text,
+                          ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                        }}
+                      >
+                        {row.title}
+                      </Text>
+                      {row.subtitle ? (
+                        <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
+                          {row.subtitle}
+                        </Text>
+                      ) : null}
+                    </View>
                   </View>
-                ))}
-              </View>
-            </View>
-          ))}
+                  <View
+                    style={{ flexDirection: fontScale >= 2 ? "column" : "row", gap: SPACING.sm }}
+                  >
+                    {[
+                      { label: "Anzahl", value: String(row.count), width: 40 },
+                      { label: "Stunden", value: row.hours, width: 84 },
+                    ].map((metric) => (
+                      <View
+                        key={metric.label}
+                        style={{
+                          width: stacked ? undefined : metric.width,
+                          flex: stacked && fontScale < 2 ? 1 : undefined,
+                          gap: SPACING.xs,
+                        }}
+                      >
+                        {stacked ? (
+                          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
+                            {metric.label}
+                          </Text>
+                        ) : null}
+                        <Text
+                          style={{
+                            color: p.text,
+                            textAlign: stacked ? "left" : "right",
+                            ...(row.total ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+                            fontVariant: ["tabular-nums"],
+                          }}
+                        >
+                          {metric.value}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </Pressable>
+                {open
+                  ? row.entries.map((entry, entryIndex) => {
+                      const credit = creditById.get(entry.id);
+                      const label = `${entry.date.slice(8, 10)}.${entry.date.slice(5, 7)}. · ${formatMinutes(entry.minutes)} h${credit ? " · " + timeCreditLabel(credit) : ""}`;
+                      return (
+                        <Pressable
+                          key={`${entry.id}:${entryIndex}`}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${row.title}, ${label}, Dienst bearbeiten`}
+                          onPress={() => router.push(dayEditorRoute(entry.date, "SHIFT", entry.id))}
+                          style={{
+                            minHeight: 44,
+                            justifyContent: "center",
+                            paddingVertical: SPACING.sm,
+                            paddingLeft: SPACING.lg,
+                            borderTopWidth: 1,
+                            borderTopColor: p.separator,
+                          }}
+                        >
+                          <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>{label}</Text>
+                        </Pressable>
+                      );
+                    })
+                  : null}
+              </Fragment>
+            );
+          })}
         </>
       )}
     </AnalysisListCard>

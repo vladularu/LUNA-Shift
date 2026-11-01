@@ -9,14 +9,14 @@ import {
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { currentMonth, formatMonthTitle } from "@/engine/calendar";
-import { formatMinutes, formatPreciseMinutes } from "@/engine/working-time";
+import { formatMinutes } from "@/engine/working-time";
 import {
   parseMonthRouteParam,
   parseEnumRouteParam,
   type RouteParam,
 } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
-import { calendarRoute, dayEditorRoute } from "@/navigation/routes";
+import { calendarRoute } from "@/navigation/routes";
 import { EmptyState, SurfaceCard } from "@/ui/design-system";
 import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -30,7 +30,6 @@ import {
   timeAccountBalance,
   timeAccountCaption,
 } from "./special-duty-time-presentation";
-import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 
 export function WorktimeDetailsScreen() {
   const palette = usePalette();
@@ -91,7 +90,11 @@ export function WorktimeDetailsScreen() {
             period={formatMonthTitle(month)}
             caption="Anzahl und Stunden pro Schichtart."
           />
-          <ShiftAnalysisDetails analysis={shiftTypeAnalysis} creditsAvailable={summary.ok} />
+          <ShiftAnalysisDetails
+            analysis={shiftTypeAnalysis}
+            creditsAvailable={summary.ok}
+            timeCredits={summary.ok ? summary.value.specialDutyTimeCredits : undefined}
+          />
         </ReportScrollView>
       </>
     );
@@ -132,26 +135,6 @@ export function WorktimeDetailsScreen() {
             : palette.textMuted
         }
       />
-      {summary.ok && summary.value.specialDutyTimeCredits?.length ? (
-        <AnalysisListCard
-          title="Bereitschaften im Zeitkonto"
-          caption="Geplante Gutschriften aus deiner vereinbarten Abgeltung."
-        >
-          {summary.value.specialDutyTimeCredits.map((line, index) => (
-            <AnalysisValueRow
-              key={line.shiftId}
-              first={index === 0}
-              label={`${line.date.slice(8, 10)}.${line.date.slice(5, 7)}. · ${line.title}\n${formatMinutes(line.recordedMinutes)} h geleistet · ${line.settlement === "TIME_OFF" ? "Freizeitausgleich" : line.settlement === "PAY" ? (line.creditedMinutes && line.creditedMinutes > 0 ? "Gesundheitlicher Ausgleich" : "Auszahlung") : "Abgeltung offen"}`}
-              value={
-                line.creditedMinutes === null
-                  ? "Noch offen"
-                  : `${formatPreciseMinutes(line.creditedMinutes)} h`
-              }
-              onPress={() => router.push(dayEditorRoute(line.date, "SHIFT", line.shiftId))}
-            />
-          ))}
-        </AnalysisListCard>
-      ) : null}
       {summary.ok && summary.value.specialDutyNotes?.length ? (
         <AnalysisCoverageNote message={summary.value.specialDutyNotes.join(" ")} />
       ) : null}
@@ -172,7 +155,11 @@ export function WorktimeDetailsScreen() {
         </SurfaceCard>
       ) : (
         <>
-          <ShiftAnalysisDetails analysis={shiftTypeAnalysis} creditsAvailable={summary.ok} />
+          <ShiftAnalysisDetails
+            analysis={shiftTypeAnalysis}
+            creditsAvailable={summary.ok}
+            timeCredits={summary.ok ? summary.value.specialDutyTimeCredits : undefined}
+          />
         </>
       )}
     </ReportScrollView>

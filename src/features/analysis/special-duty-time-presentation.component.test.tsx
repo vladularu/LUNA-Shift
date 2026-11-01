@@ -12,6 +12,7 @@ import { newSpecialDuty } from "@/domain/special-duty";
 import { newStandbyAgreement } from "@/domain/standby-agreement";
 import type { ShiftEntry, MonthlyPayEstimate } from "@/domain/types";
 import { buildAnnualReport } from "./annual-report";
+import { buildMonthlyShiftTypeAnalysis } from "./analysis-metrics";
 import { formatEuro } from "./salary-summary-card";
 
 let mockCardOrder = ["WORK"];
@@ -41,6 +42,7 @@ const ordinary = ["01", "02", "03", "04", "07", "08", "10", "11"].map((day) =>
 const standby = (): ShiftEntry =>
   forecastShift({
     id: "standby",
+    title: "Bereitschaftsdienst",
     date: "2026-12-09",
     type: "CUSTOM",
     startTime: "08:00",
@@ -75,7 +77,7 @@ function overview(entries: readonly ShiftEntry[], pay: Partial<MonthlyPayEstimat
     },
     monthShifts: entries,
     complianceShifts: { ok: true, value: entries },
-    shiftTypeAnalysis: { items: [], totalCount: entries.length, totalMinutes: value.actualMinutes },
+    shiftTypeAnalysis: buildMonthlyShiftTypeAnalysis("2026-12", entries, forecastProfile, resolver),
   };
   return (
     <MonthOverview
@@ -119,12 +121,16 @@ describe("special-duty time account guidance", () => {
     },
   );
   it("reproduces the photographed missing method and opens that duty directly", async () => {
+    mockCardOrder = ["WORK", "SHIFTS"];
     const view = await render(overview([...ordinary, standby()]));
     expect(view.getByLabelText("Zeitkonto: Noch offen")).toBeTruthy();
     expect(
       view.getByText(/Erfasst: 71:06 h\. 09\.12\.: Ergänze das vereinbarte Verfahren/),
     ).toBeTruthy();
-    await fireEvent.press(view.getByRole("button", { name: /09\.12\.: Angaben ergänzen/ }));
+    await fireEvent.press(
+      view.getByRole("button", { name: /Bereitschaftsdienst, Anzahl 1.*Zeitgutschrift offen/ }),
+    );
+    await fireEvent.press(view.getByRole("button", { name: /09\.12\..*Dienst bearbeiten/ }));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/shift-editor",
       params: { date: "2026-12-09", mode: "SHIFT", entryId: "standby" },
@@ -140,19 +146,21 @@ describe("special-duty time account guidance", () => {
     );
     expect(view.getByLabelText("Zeitkonto: 63:36 h")).toBeTruthy();
     expect(view.getByText(/Erfasst: 71:06 h/)).toBeTruthy();
-    await fireEvent.press(view.getByRole("button", { name: /Bereitschaften ansehen/ }));
-    expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/worktime-details",
-      params: { month: "2026-12" },
-    });
+    expect(view.getByText(/7:30 h Bereitschaft mit Auszahlung/)).toBeTruthy();
+    expect(view.queryByText("Bereitschaften ansehen")).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
   });
-  it("opens the month detail list when more than one duty needs attention", async () => {
+  it("keeps several unresolved duties editable in their inline group", async () => {
+    mockCardOrder = ["WORK", "SHIFTS"];
     const first = standby();
     const view = await render(overview([first, { ...first, id: "second", date: "2026-12-12" }]));
-    await fireEvent.press(view.getByRole("button", { name: /2 Bereitschaften prüfen/ }));
+    await fireEvent.press(
+      view.getByRole("button", { name: /Bereitschaftsdienst, Anzahl 2.*Zeitgutschrift offen/ }),
+    );
+    await fireEvent.press(view.getByRole("button", { name: /12\.12\..*Dienst bearbeiten/ }));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/worktime-details",
-      params: { month: "2026-12" },
+      pathname: "/shift-editor",
+      params: { date: "2026-12-12", mode: "SHIFT", entryId: "second" },
     });
   });
   it("retains the existing Ist display for ordinary shifts", async () => {

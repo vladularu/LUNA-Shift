@@ -19,6 +19,9 @@ interface MinuteInterval {
   readonly end: number;
 }
 
+/** Reporting may observe the existing allocation without recalculating groups independently. */
+export type WorkCreditObserver = (entry: ShiftEntry, minutes: number) => void;
+
 export interface DailyWorkCredit {
   readonly date: string;
   readonly targetMinutes: number;
@@ -91,6 +94,7 @@ function creditTimedEntries(
   entries: readonly ShiftEntry[],
   timeZone: string,
   initialCoverage: readonly MinuteInterval[] = [],
+  onCredit?: WorkCreditObserver,
 ): {
   readonly minutes: number;
   readonly overlapMinutes: number;
@@ -129,6 +133,7 @@ function creditTimedEntries(
     const creditedMinutes = Math.min(bounds.netMinutes, uncoveredGrossMinutes);
     minutes += creditedMinutes;
     minutesByType[entry.type] = (minutesByType[entry.type] ?? 0) + creditedMinutes;
+    onCredit?.(entry, creditedMinutes);
     overlapMinutes += bounds.netMinutes - creditedMinutes;
     coverage = [...mergeInterval(coverage, interval)];
   }
@@ -146,12 +151,13 @@ export function calculateDailyWorkCredit(
   entries: readonly ShiftEntry[],
   profile: ProfileForTime,
   ruleResolver: RuleResolver = bundledRuleResolver,
+  onCredit?: WorkCreditObserver,
 ): DailyWorkCredit {
   if (profile.employmentTimeline) profile = employmentProfileAt(profile as UserProfile, date);
   const active = projectDutyCalendarDays(entries).filter(
     (entry) => entry.deletedAt === null && entry.date === date,
   );
-  const timed = calculateTimedDailyWorkCredit(date, active, profile);
+  const timed = calculateTimedDailyWorkCredit(date, active, profile, onCredit);
   const targetMinutes = calculateDailyTargetMinutes(date, profile, ruleResolver);
   // Preserve the established absence-credit rule. Target rounding or a tariff
   // reduction is not a change to paid absence or to actually worked minutes.
@@ -184,6 +190,13 @@ export function calculateDailyWorkCredit(
   };
   if (sickMinutes > 0) minutesByType.SICK = sickMinutes;
   if (vacationMinutes > 0) minutesByType.VACATION = vacationMinutes;
+  if (absenceMinutes > 0 && onCredit) {
+    const absenceType = sickMinutes > 0 ? "SICK" : "VACATION";
+    const owner = active
+      .filter((entry) => entry.type === absenceType)
+      .sort((left, right) => left.id.localeCompare(right.id))[0];
+    if (owner) onCredit(owner, absenceMinutes);
+  }
 
   return Object.freeze({
     date,
@@ -203,6 +216,7 @@ export function calculateTimedDailyWorkCredit(
   date: string,
   entries: readonly ShiftEntry[],
   profile: Pick<ProfileForTime, "timeZone">,
+  onCredit?: WorkCreditObserver,
 ): TimedDailyWorkCredit {
   const active = projectDutyCalendarDays(entries).filter(
     (entry) => entry.deletedAt === null && entry.date === date,
@@ -211,8 +225,8 @@ export function calculateTimedDailyWorkCredit(
     (entry) => !["TRAINING", "VACATION", "SICK", "FREE"].includes(entry.type),
   );
   const trainingEntries = active.filter((entry) => entry.type === "TRAINING");
-  const work = creditTimedEntries(workEntries, profile.timeZone);
-  const training = creditTimedEntries(trainingEntries, profile.timeZone, work.coverage);
+  const work = creditTimedEntries(workEntries, profile.timeZone, [], onCredit);
+  const training = creditTimedEntries(trainingEntries, profile.timeZone, work.coverage, onCredit);
   const timedMinutes = work.minutes + training.minutes;
   const minutesByType: Partial<Record<ShiftType, number>> = {
     ...work.minutesByType,

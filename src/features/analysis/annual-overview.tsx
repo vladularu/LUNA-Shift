@@ -142,6 +142,7 @@ export function AnnualOverview({
         SHIFTS: report.shiftTypeAnalysis ? (
           <ShiftAnalysisCard
             analysis={report.shiftTypeAnalysis}
+            creditsAvailable={report.worktimeCoverageComplete}
             caption={
               pending || !report.worktimeCoverageComplete
                 ? "Stunden ohne Abwesenheitsgutschriften."
