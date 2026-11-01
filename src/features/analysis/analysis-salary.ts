@@ -1,14 +1,22 @@
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { UserProfile } from "@/domain/types";
+import { employmentProfileAt } from "@/domain/employment-history";
+import { addSalaryPaymentMonths, type SalaryPaymentProjection } from "@/domain/salary-payment";
+import { salaryPaymentRequiredMonths } from "@/engine/salary-payment";
+import { salaryPaymentInputSteps } from "@/features/salary/salary-payment-input";
 import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import {
   annualSalaryForecastSteps,
   type annualSalaryForecast,
 } from "@/features/salary/annual-salary-forecast";
-import { prepareAutomaticNetPaySteps } from "@/features/salary/automatic-net-pay-preparation";
+import {
+  prepareAutomaticNetPaySteps,
+  type SalaryPaymentPreparation,
+} from "@/features/salary/automatic-net-pay-preparation";
 import {
   salaryEntryDependencies,
+  selectSalaryMonthEntries,
   type SalaryMonthContext,
 } from "@/features/salary/salary-month-input";
 import { createAnalysisResultCache, isCurrentAnalysisMonth } from "./analysis-result-cache";
@@ -20,11 +28,13 @@ export interface AnalysisSalaryRequest {
   readonly settings: MonthlyNetPaySettings | null;
   readonly annualPayments: readonly AnnualSalaryPayment[];
   readonly context: SalaryMonthContext;
+  readonly payment?: Omit<SalaryPaymentPreparation, "projection">;
 }
 
 export interface PreparedAnalysisSalary {
   readonly annual: ReturnType<typeof annualSalaryForecast>;
   readonly forecast: AutomaticNetPayForecast | null;
+  readonly projection?: SalaryPaymentProjection;
 }
 
 const completed = createAnalysisResultCache<PreparedAnalysisSalary>();
@@ -34,16 +44,34 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
   const entryKeys = createAnalysisEntryKeys();
   let dependencies;
   try {
-    dependencies = salaryEntryDependencies(Number(month.slice(0, 4)), profile, context, month).map(
-      ({ shifts, assessment }) => ({
-        shifts: entryKeys.entries(shifts),
-        assessment: entryKeys.entries(assessment),
-      }),
-    );
+    const sources = request.payment
+      ? (request.payment.perspective === "PAYOUT"
+          ? [-2, -1, 0].map((delta) => addSalaryPaymentMonths(month, delta))
+          : salaryPaymentRequiredMonths(
+              month,
+              request.payment.preferences,
+              request.payment.perspective,
+            )
+        ).map((claimMonth) =>
+          selectSalaryMonthEntries(
+            claimMonth,
+            employmentProfileAt(profile, claimMonth + "-01"),
+            context,
+          ),
+        )
+      : [];
+    dependencies = [
+      ...salaryEntryDependencies(Number(month.slice(0, 4)), profile, context, month),
+      ...sources,
+    ].map(({ shifts, assessment }) => ({
+      shifts: entryKeys.entries(shifts),
+      assessment: entryKeys.entries(assessment),
+    }));
   } catch {
     dependencies = context.entries;
   }
   return entryKeys.stringify([
+    "salary-payment-v1",
     month,
     profile,
     settings,
@@ -52,6 +80,7 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
     context.tariffDecisions,
     context.workPatternSettings,
     context.testMonths,
+    request.payment,
   ]);
 }
 
@@ -95,11 +124,21 @@ export function* prepareAnalysisSalarySteps(
   );
   onAnnualReady?.(annual);
   yield 0;
+  const projection = request.payment
+    ? yield* salaryPaymentInputSteps(
+        month,
+        profile,
+        context,
+        request.payment.preferences,
+        request.payment.perspective,
+      )
+    : undefined;
+  const payment = request.payment ? { ...request.payment, projection } : undefined;
   const forecast =
-    settings?.version === 2
-      ? yield* prepareAutomaticNetPaySteps(month, settings, profile, context)
+    settings?.version === 2 && request.payment?.perspective !== "EARNED"
+      ? yield* prepareAutomaticNetPaySteps(month, settings, profile, context, payment)
       : null;
-  const result = { annual, forecast };
+  const result = { annual, forecast, ...(projection ? { projection } : {}) };
   // Unavailable calculations stay retryable when a page is mounted again.
   return annual.proposal !== null &&
     (forecast === null || forecast.result.status === "available") &&

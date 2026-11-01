@@ -7,17 +7,10 @@ import {
   usePflegeShiftTestData,
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
-import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
-import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
-import { selectTvlKrAssessmentShifts } from "@/engine/simple-tvl-kr-profile-pay";
-import { selectVkaEAssessmentShifts } from "@/engine/simple-vka-e-pay";
-import { selectNursingTrainingAssessmentShifts } from "@/engine/simple-nursing-training-pay";
-import {
-  selectAllowanceShifts,
-  selectMonthlyAnalysisEntries,
-} from "@/features/analysis/analysis-data";
 import { captureRuleComputation } from "@/features/analysis/rule-computation";
+import { salaryPaymentInput } from "./salary-payment-input";
+import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
+import { salaryPaymentHint } from "./salary-composition";
 
 export function useSalaryReport(month: string, enabled = true) {
   const { error, ready, reload } = usePflegeShiftStatus();
@@ -26,37 +19,43 @@ export function useSalaryReport(month: string, enabled = true) {
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
+  const payment = useSalaryPaymentPreferences();
+  const paymentReady = payment.ready;
   const [ruleRetryRevision, setRuleRetryRevision] = useState(0);
   const calculation = useMemo(() => {
     void ruleRetryRevision;
-    if (!enabled || !ready || error !== null || profile === null) return null;
+    if (!enabled || !ready || !paymentReady || error !== null || profile === null) return null;
     return captureRuleComputation(() => {
-      const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
-      const allowanceShifts = profile.tvhKrTariff
-        ? selectTvhKrAssessmentShifts(entries, month)
-        : profile.tvUkNursingTariff
-          ? selectTvUkAssessmentShifts(entries, month)
-          : profile.tvlKrTariff || profile.tvalPflegeTariff
-            ? selectTvlKrAssessmentShifts(entries, month)
-            : profile.vkaETariff
-              ? selectVkaEAssessmentShifts(entries, month)
-              : profile.nursingTrainingTariff
-                ? selectNursingTrainingAssessmentShifts(entries, month)
-                : profile.tariff === null
-                  ? monthlyEntries.monthShifts
-                  : selectAllowanceShifts(entries, month, ruleResolver);
-      const decision = tariffDecisions.find((item) => item.month === month) ?? null;
-      return {
-        monthShifts: monthlyEntries.monthShifts,
-        pay: calculateMonthlyPayEstimate(
-          month,
-          monthlyEntries.monthShifts,
-          profile,
-          decision,
-          allowanceShifts,
-          workPatternSettings,
-          ruleResolver,
+      const projection = salaryPaymentInput(
+        month,
+        profile,
+        { entries, tariffDecisions, workPatternSettings, resolver: ruleResolver, testMonths },
+        payment.preferences,
+        "PAYOUT",
+      );
+      const premiumMonths = new Set(
+        projection.contributions
+          .filter((part) => part.group === "PREMIUMS")
+          .map((part) => part.claimMonth),
+      );
+      const allowanceMonths = [
+        ...new Set(
+          projection.contributions
+            .filter(
+              (part) => part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE",
+            )
+            .map((part) => part.claimMonth),
         ),
+      ];
+      return {
+        monthShifts: projection.sources.find((source) => source.month === month)?.shifts ?? [],
+        premiumShifts: projection.sources
+          .filter((source) => premiumMonths.has(source.month))
+          .flatMap((source) => source.shifts),
+        pay: projection.pay,
+        projection,
+        paymentHint: salaryPaymentHint(projection),
+        allowanceMonth: allowanceMonths.length === 1 ? allowanceMonths[0] : null,
       };
     });
   }, [
@@ -66,20 +65,30 @@ export function useSalaryReport(month: string, enabled = true) {
     month,
     profile,
     ready,
+    paymentReady,
+    payment.preferences,
     ruleResolver,
     ruleRetryRevision,
     tariffDecisions,
     workPatternSettings,
+    testMonths,
   ]);
 
   return {
-    error,
-    ready,
-    reload,
-    profile,
+    // A failed inline write leaves the loaded preferences valid and must not discard form drafts.
+    error: error ?? (!paymentReady ? payment.error : null),
+    ready: ready && paymentReady,
+    reload: async () => {
+      await Promise.all([reload(), payment.reload()]);
+    },
+    profile: calculation?.ok
+      ? (calculation.value.projection.sources.find((source) => source.month === month)?.profile ??
+        profile)
+      : profile,
     entries,
     calculation,
     testMonths,
+    payment,
     retryRules: () => setRuleRetryRevision((value) => value + 1),
   };
 }

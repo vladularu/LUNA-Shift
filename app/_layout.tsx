@@ -1,6 +1,7 @@
 import { ProfileSelectionProvider } from "@/features/settings/profile-selection";
 import { PrivateCloudProvider } from "@/composition/private-cloud-provider";
 import { AnalysisViewProvider } from "@/features/analysis/analysis-view-preferences";
+import { SalaryPaymentPreferencesProvider } from "@/features/salary/salary-payment-preferences";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
@@ -59,7 +60,9 @@ export default function RootLayout() {
       <SecureDatabaseProvider>
         <AppearancePreferencesProvider>
           <CalendarBackgroundProvider>
-            <ThemedApp />
+            <SalaryPaymentPreferencesProvider>
+              <ThemedApp />
+            </SalaryPaymentPreferencesProvider>
           </CalendarBackgroundProvider>
         </AppearancePreferencesProvider>
       </SecureDatabaseProvider>
@@ -237,7 +240,8 @@ function ThemedApp() {
                             <Stack.Screen
                               name="premium-details"
                               options={{
-                                title: "Zeitzuschläge",
+                                title: "Zuschläge erarbeitet",
+                                headerShown: false,
                                 presentation: "card",
                                 contentStyle: { backgroundColor: palette.groupedBackground },
                               }}
@@ -317,6 +321,10 @@ function ThemedApp() {
                             <Stack.Screen
                               name="net-pay-settings"
                               options={{ title: "Netto-Einstellungen", presentation: "card" }}
+                            />
+                            <Stack.Screen
+                              name="salary-payment"
+                              options={{ presentation: "card", headerShown: false }}
                             />
                             <Stack.Screen
                               name="net-pay"

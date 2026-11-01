@@ -9,7 +9,8 @@ describe("horizontal card back gestures", () => {
     const cards = Array.from(layout.matchAll(/<Stack\.Screen\b([\s\S]*?)\/>/g))
       .map((match) => match[1])
       .filter((screen) => screen.includes('presentation: "card"'));
-    expect(cards.length).toBe(23);
+    expect(cards.length).toBe(24);
+    expect(cards.some((card) => /name="salary-payment"/.test(card))).toBe(true);
     expect(cards.some((card) => /name="calendar-access"/.test(card))).toBe(true);
     for (const card of cards) {
       const name = /name="([^"]+)"/.exec(card)?.[1];
@@ -59,6 +60,7 @@ describe("horizontal card back gestures", () => {
 
   it.each([
     "net-pay-settings",
+    "salary-payment",
     "check-profile",
     "check-settings",
     "private-cloud",

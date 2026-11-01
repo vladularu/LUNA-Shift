@@ -72,12 +72,13 @@ describe("empty month presentation", () => {
     expect(screen.queryByText("Wird geprüft …")).toBeNull();
     expect(screen.queryByLabelText("Gesetzliche Prüfung: Keine Auffälligkeiten")).toBeNull();
   });
-  it("keeps base pay, fixed allowances, annual payment and base net visible", async () => {
+  it("shows fixed pay and annual payment in the original salary rows", async () => {
     const screen = await render(view());
+    expect(screen.getByLabelText(/Brutto geschätzt:.*3.800,00/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
     expect(screen.getByLabelText(/Grundgehalt:.*3.200,00/)).toBeTruthy();
     expect(screen.getByLabelText(/Weitere Zulagen:.*100,00/)).toBeTruthy();
     expect(screen.getByLabelText(/Jahressonderzahlung:.*500,00/)).toBeTruthy();
-    expect(screen.getByLabelText(/Brutto geschätzt:.*3.800,00/)).toBeTruthy();
     expect(screen.getByText("Basis-Netto vorhanden")).toBeTruthy();
   });
   it("keeps cross-month findings and catalog warnings visible even without target-month shifts", async () => {

@@ -1,10 +1,10 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { useSharedValue } from "react-native-reanimated";
 
 import type { Appointment, CalendarLabelMode, ShiftEntry, UserProfile } from "@/domain/types";
 import { createMonthGrid, formatDateTitle } from "@/engine/calendar";
-import * as calendar from "@/engine/calendar";
 import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
 import { work } from "@/engine/remuneration-test-fixtures";
 import { MonthCard } from "@/features/calendar/month-card";
@@ -16,6 +16,7 @@ import {
 } from "@/rules/bundled-rules";
 import { createRuleResolver } from "@/rules/rule-resolver";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import { calendarDayTints } from "@/theme/calendar-day-tints";
 
 jest.mock("@/ui/shift-symbol", () => {
   const React = jest.requireActual<typeof import("react")>("react");
@@ -343,46 +344,44 @@ describe("MonthCard", () => {
     }
   });
 
-  it.each([
-    { currentDate: "2026-10-23", backgroundColor: "transparent" },
-    { currentDate: "2026-10-24", backgroundColor: LIGHT_PALETTE.text + "14" },
-    { currentDate: "2026-10-25", backgroundColor: LIGHT_PALETTE.text + "14" },
-  ])(
-    "keeps today above selection on $currentDate while preserving the day surface",
-    async ({ currentDate, backgroundColor }) => {
-      const todayMock = jest.spyOn(calendar, "today").mockReturnValue(currentDate);
-      try {
-        const currentCell = createMonthGrid(currentDate.slice(0, 7)).find(
-          (cell) => cell.date === currentDate,
-        );
-        const screen = await render(
-          <MonthCard
-            bottomReserve={80}
-            entriesByDate={
-              new Map([[currentDate, [appointment(currentDate, "today", "Termin heute")]]])
-            }
-            month={currentDate.slice(0, 7)}
-            onSelectDate={jest.fn()}
-            pageHeight={700}
-            profile={PROFILE}
-            selectedDate={currentDate}
-          />,
-        );
+  it.each(["2026-10-30", "2026-10-31", "2026-10-25"])(
+    "preserves the day tint and keeps today above selection on %s",
+    async (currentDate) => {
+      jest
+        .spyOn(Temporal.Now, "plainDateISO")
+        .mockReturnValue(Temporal.PlainDate.from(currentDate));
+      const currentCell = createMonthGrid(currentDate.slice(0, 7)).find(
+        (cell) => cell.date === currentDate,
+      );
+      const screen = await render(
+        <MonthCard
+          bottomReserve={80}
+          entriesByDate={
+            new Map([[currentDate, [appointment(currentDate, "today", "Termin heute")]]])
+          }
+          month={currentDate.slice(0, 7)}
+          onSelectDate={jest.fn()}
+          pageHeight={700}
+          profile={PROFILE}
+          selectedDate={currentDate}
+        />,
+      );
 
-        const currentDay = screen.getByRole("button", {
-          name: new RegExp(formatDateTitle(currentDate)),
-        });
-        const dateNumber = within(currentDay).getByText(String(Number(currentDate.slice(-2))));
-        const todayAppointment = within(currentDay).getByText("Termin heute");
+      const currentDay = screen.getByRole("button", {
+        name: new RegExp(formatDateTitle(currentDate)),
+      });
+      const dateNumber = within(currentDay).getByText(String(Number(currentDate.slice(-2))));
+      const todayAppointment = within(currentDay).getByText("Termin heute");
 
-        expect(currentCell).toBeDefined();
-        expect(currentDay).toHaveStyle({ backgroundColor });
-        expect(dateNumber.parent).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
-        expect(dateNumber).toHaveStyle({ color: LIGHT_PALETTE.onCalendarToday });
-        expect(todayAppointment).toHaveStyle({ color: LIGHT_PALETTE.text });
-      } finally {
-        todayMock.mockRestore();
-      }
+      expect(currentCell).toBeDefined();
+      expect(currentDay).toHaveStyle({
+        backgroundColor: currentCell!.weekend
+          ? calendarDayTints(LIGHT_PALETTE).weekend
+          : "transparent",
+      });
+      expect(dateNumber.parent).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
+      expect(dateNumber).toHaveStyle({ color: LIGHT_PALETTE.onCalendarToday });
+      expect(todayAppointment).toHaveStyle({ color: LIGHT_PALETTE.text });
     },
   );
 

@@ -134,12 +134,14 @@ function AnalysisPage({
     testMonths,
     ruleResolver,
     salaryPayments,
+    payment,
     salaryRequest,
     salary,
     monthlyData,
     monthlyCompliance,
   } = useAnalysisMonthData();
   const calculationMonth = month;
+  const paymentLoadError = payment.ready ? null : payment.error;
   const compliance = monthlyCompliance.result;
   useAnalysisCommit(
     month,
@@ -271,25 +273,42 @@ function AnalysisPage({
                 month={month}
                 data={monthlyData}
                 profile={profile}
+                projection={testMonths.includes(month) ? undefined : salary.result?.projection}
+                projectionPending={
+                  !testMonths.includes(month) && (!payment.ready || salary.pending)
+                }
                 annualPayments={
                   salary.annual?.payments ?? salaryPayments.annualPayments ?? EMPTY_PAYMENTS
                 }
+                additionalRecurringGrossCents={
+                  testMonths.includes(month)
+                    ? 0
+                    : (salaryPayments.saved?.settings.automation?.additionalRecurringGrossCents ??
+                      0)
+                }
                 salaryLoading={
                   !testMonths.includes(month) &&
-                  (salaryPayments.status === "loading" || salary.annualPending)
+                  (salaryPayments.status === "loading" || !payment.ready || salary.pending)
                 }
                 salaryError={
-                  testMonths.includes(month) ? null : (salaryPayments.error ?? salary.error)
+                  testMonths.includes(month)
+                    ? null
+                    : (paymentLoadError ?? salaryPayments.error ?? salary.error)
                 }
                 netPay={
                   <AnalysisNetPayRow
                     month={month}
                     model={{
                       blocked: testMonths.includes(month),
-                      status: salary.error ? "error" : salaryPayments.status,
-                      error: salaryPayments.error ?? salary.error,
+                      status:
+                        paymentLoadError || salary.error
+                          ? "error"
+                          : !payment.ready
+                            ? "loading"
+                            : salaryPayments.status,
+                      error: paymentLoadError ?? salaryPayments.error ?? salary.error,
                       forecast: salary.result?.forecast ?? null,
-                      pending: salary.pending,
+                      pending: !payment.ready || salary.pending,
                     }}
                   />
                 }
@@ -324,7 +343,7 @@ export function AssessmentSummaryCard({
   const palette = usePalette();
   const compliance = selectVisibleCompliance(sourceCompliance, showPlanning);
   const messageCount = compliance.criticalCount + compliance.warningCount + compliance.infoCount;
-  const limited = (compliance.prerequisiteCount ?? 0) > 0;
+  const limited = (compliance.prerequisiteCount ?? 0) > 0 || (compliance.scopeCount ?? 0) > 0;
   const clear = messageCount === 0 && !limited;
   const accent = clear
     ? palette.success

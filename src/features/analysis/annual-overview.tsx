@@ -96,6 +96,7 @@ export function AnnualOverview({
               warningCount: report.warningCount,
               infoCount: report.infoCount ?? 0,
               prerequisiteCount: report.prerequisiteCount,
+              scopeCount: report.scopeCount,
             }}
             categories={categories}
             showPlanning={checkPreferences.enabled !== false}

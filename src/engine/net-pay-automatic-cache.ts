@@ -16,9 +16,11 @@ function freeze<T>(value: T, visited = new WeakSet<object>()): T {
 }
 
 /** In-memory only. Content keys handle fresh SQL objects and edits without a revision change. */
-export function createAutomaticNetPayCache() {
+export function createAutomaticNetPayCache<T extends Input = Input>(
+  additionalKey?: (input: T) => unknown,
+) {
   const catalogs = new WeakMap<RuleResolver, Map<string, AutomaticNetPayForecast>>();
-  const keyFor = (input: Input) =>
+  const keyFor = (input: T) =>
     JSON.stringify([
       input.month,
       resolveNetPayCalculationBasis(input.month, "FORECAST"),
@@ -26,8 +28,9 @@ export function createAutomaticNetPayCache() {
       input.settings,
       input.shifts,
       input.pay,
+      additionalKey?.(input),
     ]);
-  const read = (input: Input, resolver: RuleResolver) => {
+  const read = (input: T, resolver: RuleResolver) => {
     const key = keyFor(input);
     const entries = catalogs.get(resolver);
     const cached = entries?.get(key);
@@ -38,7 +41,7 @@ export function createAutomaticNetPayCache() {
     }
     return null;
   };
-  const write = (input: Input, resolver: RuleResolver, forecast: AutomaticNetPayForecast) => {
+  const write = (input: T, resolver: RuleResolver, forecast: AutomaticNetPayForecast) => {
     // Failed or incomplete calculations must be retried when underlying data becomes available.
     if (forecast.result.status !== "available") return forecast;
     const key = keyFor(input);
@@ -50,7 +53,7 @@ export function createAutomaticNetPayCache() {
     return snapshot;
   };
   return Object.assign(
-    (input: Input, resolver: RuleResolver, calculate: () => AutomaticNetPayForecast) =>
+    (input: T, resolver: RuleResolver, calculate: () => AutomaticNetPayForecast) =>
       read(input, resolver) ?? write(input, resolver, calculate()),
     { read, write },
   );

@@ -46,7 +46,7 @@ export function salaryMonthInput(month: string, profile: UserProfile, context: S
 }
 
 /** The exact existing selectors, shared by the input and its content key. Profile is dated. */
-function selectSalaryMonthEntries(
+export function selectSalaryMonthEntries(
   month: string,
   profile: UserProfile,
   context: SalaryMonthContext,

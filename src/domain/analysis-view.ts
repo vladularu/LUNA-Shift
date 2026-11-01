@@ -1,5 +1,5 @@
 export const ANALYSIS_VIEW_KEY = "analysis_view_v1";
-export const ANALYSIS_CARDS = ["WORK", "CHECK", "PAY", "SHIFTS"] as const;
+export const ANALYSIS_CARDS = ["WORK", "CHECK", "PREMIUM", "PAY", "SHIFTS"] as const;
 export type AnalysisCardId = (typeof ANALYSIS_CARDS)[number];
 export type ShiftMetric = "COUNT" | "HOURS";
 export interface AnalysisViewPreferences {
@@ -17,6 +17,7 @@ export const DEFAULT_ANALYSIS_VIEW: AnalysisViewPreferences = Object.freeze({
 export const ANALYSIS_CARD_TITLES: Record<AnalysisCardId, string> = {
   WORK: "Arbeitszeit",
   CHECK: "Prüfung",
+  PREMIUM: "Zuschläge erarbeitet",
   PAY: "Gehalt",
   SHIFTS: "Schichten",
 };
@@ -29,20 +30,28 @@ export function parseAnalysisView(value: string): AnalysisViewPreferences {
     Array.isArray(ids) &&
     ids.every((id) => ANALYSIS_CARDS.includes(id)) &&
     new Set(ids).size === ids.length;
+  const legacyOrder = validIds(v.order) && v.order.length === 4 && !v.order.includes("PREMIUM");
   if (
     Object.keys(v).sort().join(",") !== "hidden,order,shiftMetric,version" ||
     v.version !== 1 ||
     !validIds(v.order) ||
-    v.order.length !== ANALYSIS_CARDS.length ||
+    (!legacyOrder && v.order.length !== ANALYSIS_CARDS.length) ||
     !validIds(v.hidden) ||
+    (legacyOrder && v.hidden.includes("PREMIUM")) ||
     (v.shiftMetric !== "COUNT" && v.shiftMetric !== "HOURS")
   ) {
     throw new Error("Ungültige Ansicht.");
   }
+  const order = [...v.order];
+  const hidden = [...v.hidden];
+  if (legacyOrder) {
+    order.splice(order.indexOf("PAY"), 0, "PREMIUM");
+    if (hidden.includes("PAY")) hidden.push("PREMIUM");
+  }
   return Object.freeze({
     version: 1,
-    order: Object.freeze([...v.order]),
-    hidden: Object.freeze([...v.hidden]),
+    order: Object.freeze(order),
+    hidden: Object.freeze(hidden),
     shiftMetric: v.shiftMetric,
   });
 }

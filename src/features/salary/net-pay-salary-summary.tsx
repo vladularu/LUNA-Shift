@@ -20,6 +20,7 @@ import {
 } from "./salary-ui";
 import { router } from "expo-router";
 import { settingsInfoRoute } from "@/navigation/routes";
+import { salaryDeductions, type SalaryDeductionRow } from "./salary-deductions";
 
 type AvailablePay = Extract<NetPayResult, { status: "available" }>;
 type Premiums = { readonly paidPremiumCents: number; readonly taxFreeCents: number };
@@ -220,34 +221,34 @@ export function NetPayDeductionDetails({
   pensionOmitted,
   month,
   compact = false,
+  basisNotes = [],
 }: {
   readonly pay: AvailablePay;
   readonly pensionOmitted: boolean;
   readonly month: string;
   readonly compact?: boolean;
+  readonly basisNotes?: readonly string[];
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const compactAmount = width < 360 || fontScale >= 1.4;
 
   const notice = netPayForecastLabel(pay);
-  const mainRows = [
-    ["Lohnsteuer", pay.tax.wageTaxCents],
-    ["Krankenversicherung", pay.socialInsurance.healthCents],
-    ["Pflegeversicherung", pay.socialInsurance.careCents],
-    ["Rentenversicherung", pay.socialInsurance.pensionCents],
-    ["Arbeitslosenversicherung", pay.socialInsurance.unemploymentCents],
-  ] as const;
-  const extraRows = [
-    ["Solidaritätszuschlag", pay.tax.solidarityCents],
-    ["Kirchensteuer", pay.tax.churchTaxCents],
-    ...(!pensionOmitted && pay.pension && pay.pension.scheme !== "NONE"
-      ? [["Zusatzversorgung", pay.pension.employeeCents] as const]
-      : []),
-    ...(pay.additionalNetDeductionCents
-      ? [["Weitere Netto-Abzüge", pay.additionalNetDeductionCents] as const]
-      : []),
-  ] as const;
+  const deductions = salaryDeductions(pay);
+  const order: readonly SalaryDeductionRow["id"][] = [
+    "wage-tax",
+    "health-insurance",
+    "care-insurance",
+    "pension-insurance",
+    "unemployment-insurance",
+    "solidarity",
+    "church-tax",
+    "supplementary-pension",
+    "other-net",
+  ];
+  const rows = [...deductions.rows].sort(
+    (first, second) => order.indexOf(first.id) - order.indexOf(second.id),
+  );
   return (
     <View style={{ gap: SPACING.lg }}>
       {compact ? (
@@ -262,7 +263,7 @@ export function NetPayDeductionDetails({
         <SalarySectionCard title="Abzüge insgesamt">
           <Text
             accessible
-            accessibilityLabel={`Abzüge insgesamt: ${netPayEuro(pay.amounts.grossCents - pay.netCents)}, ${formatMonthTitle(month)}`}
+            accessibilityLabel={`Abzüge insgesamt: ${netPayEuro(deductions.totalCents)}, ${formatMonthTitle(month)}`}
             selectable
             style={{
               ...(compactAmount ? TYPOGRAPHY.highlightCount : TYPOGRAPHY.highlightValue),
@@ -271,16 +272,16 @@ export function NetPayDeductionDetails({
               fontVariant: ["tabular-nums"],
             }}
           >
-            {netPayEuro(pay.amounts.grossCents - pay.netCents).replaceAll("\u00a0", " ")}
+            {netPayEuro(deductions.totalCents).replaceAll("\u00a0", " ")}
           </Text>
         </SalarySectionCard>
       )}
       {notice ? <NetPayText>{notice}</NetPayText> : null}
       <SalarySectionCard title="Steuern und Sozialversicherung">
-        {[...mainRows, ...extraRows].map(([label, cents], index) => (
-          <View key={label}>
+        {rows.map((row, index) => (
+          <View key={row.id}>
             {index ? <CardSeparator /> : null}
-            <SalaryAmountRow label={label} value={netPayEuro(cents)} quiet />
+            <SalaryAmountRow label={row.label} value={netPayEuro(row.amountCents)} quiet />
           </View>
         ))}
       </SalarySectionCard>
@@ -308,6 +309,11 @@ export function NetPayDeductionDetails({
         ) : null}
         <CardSeparator />
         <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+          {basisNotes.map((note) => (
+            <Text key={note} style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+              {note}
+            </Text>
+          ))}
           <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
             Krankenversicherung einschließlich Zusatzbeitrag.
           </Text>
@@ -318,8 +324,9 @@ export function NetPayDeductionDetails({
       </SalarySectionCard>
       {pensionOmitted ? (
         <NetPayText>
-          Beiträge zur Zusatzversorgung und ihre Auswirkungen auf Steuern und Sozialversicherung
-          fehlen noch.
+          {pay.pension && pay.pension.scheme !== "NONE"
+            ? "Zusatzversorgung teilweise berücksichtigt. Weitere Beiträge und ihre Auswirkungen auf Steuern und Sozialversicherung fehlen noch."
+            : "Beiträge zur Zusatzversorgung und ihre Auswirkungen auf Steuern und Sozialversicherung fehlen noch."}
         </NetPayText>
       ) : null}
       <SalarySectionCard title="Details">

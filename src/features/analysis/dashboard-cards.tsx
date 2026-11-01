@@ -8,17 +8,19 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { useAnalysisView } from "./analysis-view-preferences";
-import { type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
+import { isCheckLimited, type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
 import { formatEuro } from "./salary-summary-card";
 
 export function AnalysisDashboard({
   cards,
 }: {
-  readonly cards: Record<AnalysisCardId, ReactNode>;
+  readonly cards: Partial<Record<AnalysisCardId, ReactNode>>;
 }) {
   const { preferences } = useAnalysisView();
   const p = usePalette();
-  const shown = preferences.order.filter((id) => !preferences.hidden.includes(id));
+  const shown = preferences.order.filter(
+    (id) => !preferences.hidden.includes(id) && cards[id] != null,
+  );
   return shown.length ? (
     <View style={{ gap: REPORT_CARD_GAP }}>
       {shown.map((id) => (
@@ -84,7 +86,7 @@ export function checkCountLabel(counts: CheckCounts) {
         : "",
     ]
       .filter(Boolean)
-      .join(" · ") || (counts.prerequisiteCount ? "Prüfung eingeschränkt" : "Keine Auffälligkeiten")
+      .join(" · ") || (isCheckLimited(counts) ? "Prüfung eingeschränkt" : "Keine Auffälligkeiten")
   );
 }
 function CheckRow({
@@ -109,7 +111,7 @@ function CheckRow({
       icon={
         counts.criticalCount || counts.warningCount
           ? "warning-outline"
-          : total || counts.prerequisiteCount
+          : total || isCheckLimited(counts)
             ? "information-circle-outline"
             : "checkmark-circle-outline"
       }
@@ -118,7 +120,7 @@ function CheckRow({
           ? p.danger
           : counts.warningCount
             ? p.warning
-            : total || counts.prerequisiteCount
+            : total || isCheckLimited(counts)
               ? p.info
               : p.success
       }
@@ -156,7 +158,7 @@ export function CheckListCard({
     status ??
     (total
       ? total + (total === 1 ? " Meldung" : " Meldungen")
-      : counts.prerequisiteCount
+      : isCheckLimited(counts)
         ? "Prüfung eingeschränkt"
         : "Keine sichtbaren Auffälligkeiten");
   return (

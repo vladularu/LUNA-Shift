@@ -131,15 +131,15 @@ describe("RuleCatalogRuntimeProvider", () => {
       </RuleCatalogRuntimeProvider>,
     );
 
-    expect(screen.queryByText(/LEGACY_EMBEDDED/)).toBeNull();
+    expect(screen.queryByText(/APP_EMBEDDED/)).toBeNull();
     await act(async () => pending.resolve(null));
 
-    expect(screen.getByText("LEGACY_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy();
+    expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy();
     expect(synchronizeCatalog).toHaveBeenCalledWith(null);
     expect(recordDiagnostic).not.toHaveBeenCalled();
   });
 
-  it("records a failed stored-catalog load and still exposes the safe legacy snapshot", async () => {
+  it("records a failed stored-catalog load and still exposes the safe reviewed app snapshot", async () => {
     const error = Object.assign(new Error("catalog corrupt"), { activeGeneration: 4 });
     const recordDiagnostic = jest.fn();
     const synchronizeCatalog = jest.fn(async () => ({ status: "THROTTLED" as const }));
@@ -156,7 +156,7 @@ describe("RuleCatalogRuntimeProvider", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByText("LEGACY_EMBEDDED:NO_VALID_STORED_CATALOG")).toBeTruthy(),
+      expect(screen.getByText("APP_EMBEDDED:NO_VALID_STORED_CATALOG")).toBeTruthy(),
     );
     expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_LOAD_FAILED", error);
     expect(synchronizeCatalog).toHaveBeenCalledWith(4);
@@ -174,7 +174,7 @@ describe("RuleCatalogRuntimeProvider", () => {
       </RuleCatalogRuntimeProvider>,
     );
 
-    await waitFor(() => expect(screen.getByText("LEGACY_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
     expect(synchronizeCatalog).toHaveBeenCalledWith(null);
   });
 
@@ -196,18 +196,18 @@ describe("RuleCatalogRuntimeProvider", () => {
     await waitFor(() =>
       expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_SYNC_FAILED", error),
     );
-    expect(screen.getByText("LEGACY_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy();
+    expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy();
   });
 
   it("replaces every calculation consumer with one newly loaded resolver generation", async () => {
     const initial = storedCatalog({
-      generation: 1,
+      generation: 7,
       monthlyCents: 367_500,
       maxDailyMinutes: 600,
       newYearName: "Neujahr",
     });
     const next = storedCatalog({
-      generation: 2,
+      generation: 8,
       monthlyCents: 400_000,
       maxDailyMinutes: 540,
       newYearName: "Jahresbeginn",
@@ -227,24 +227,24 @@ describe("RuleCatalogRuntimeProvider", () => {
       </RuleCatalogRuntimeProvider>,
     );
 
-    await waitFor(() => expect(screen.getByText("1:3675:Neujahr:600")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("7:3675:Neujahr:600")).toBeTruthy());
     await act(async () =>
-      pending.resolve({ status: "ACTIVATED", generation: 2, previousGeneration: 1 }),
+      pending.resolve({ status: "ACTIVATED", generation: 8, previousGeneration: 7 }),
     );
 
-    await waitFor(() => expect(screen.getByText("2:4000:Jahresbeginn:540")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("8:4000:Jahresbeginn:540")).toBeTruthy());
     expect(loadStoredCatalog).toHaveBeenCalledTimes(2);
   });
 
   it("forces a manual check and replaces the mounted runtime without an app restart", async () => {
     const initial = storedCatalog({
-      generation: 1,
+      generation: 7,
       monthlyCents: 367_500,
       maxDailyMinutes: 600,
       newYearName: "Neujahr",
     });
     const next = storedCatalog({
-      generation: 2,
+      generation: 8,
       monthlyCents: 400_000,
       maxDailyMinutes: 540,
       newYearName: "Jahresbeginn",
@@ -256,7 +256,7 @@ describe("RuleCatalogRuntimeProvider", () => {
     const synchronizeCatalog = jest
       .fn<SynchronizeRuleCatalog>()
       .mockResolvedValueOnce({ status: "THROTTLED" })
-      .mockResolvedValueOnce({ status: "ACTIVATED", generation: 2, previousGeneration: 1 });
+      .mockResolvedValueOnce({ status: "ACTIVATED", generation: 8, previousGeneration: 7 });
     const screen = await render(
       <RuleCatalogRuntimeProvider
         loadStoredCatalog={loadStoredCatalog}
@@ -267,25 +267,25 @@ describe("RuleCatalogRuntimeProvider", () => {
       </RuleCatalogRuntimeProvider>,
     );
 
-    await waitFor(() => expect(screen.getByText("Generation 1")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Generation 7")).toBeTruthy());
     await act(async () => {
       fireEvent.press(screen.getByRole("button", { name: "Jetzt prüfen" }));
     });
 
-    await waitFor(() => expect(screen.getByText("Generation 2")).toBeTruthy());
-    expect(synchronizeCatalog).toHaveBeenNthCalledWith(2, 1, { force: true });
+    await waitFor(() => expect(screen.getByText("Generation 8")).toBeTruthy());
+    expect(synchronizeCatalog).toHaveBeenNthCalledWith(2, 7, { force: true });
     expect(loadStoredCatalog).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the mounted resolver when the activated generation cannot be reloaded", async () => {
     const initial = storedCatalog({
-      generation: 1,
+      generation: 7,
       monthlyCents: 367_500,
       maxDailyMinutes: 600,
       newYearName: "Neujahr",
     });
     const refreshError = Object.assign(new Error("catalog unavailable"), {
-      activeGeneration: 2,
+      activeGeneration: 8,
     });
     const loadStoredCatalog = jest
       .fn<() => Promise<StoredRuleCatalogSnapshot | null>>()
@@ -297,8 +297,8 @@ describe("RuleCatalogRuntimeProvider", () => {
         loadStoredCatalog={loadStoredCatalog}
         synchronizeCatalog={async () => ({
           status: "ACTIVATED",
-          generation: 2,
-          previousGeneration: 1,
+          generation: 8,
+          previousGeneration: 7,
         })}
         recordDiagnostic={recordDiagnostic}
       >
@@ -309,18 +309,18 @@ describe("RuleCatalogRuntimeProvider", () => {
     await waitFor(() =>
       expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_REFRESH_FAILED", refreshError),
     );
-    expect(screen.getByText("1:3675:Neujahr:600")).toBeTruthy();
+    expect(screen.getByText("7:3675:Neujahr:600")).toBeTruthy();
   });
 
   it("automatically activates a new generation when returning from the background", async () => {
     const initial = storedCatalog({
-      generation: 5,
+      generation: 7,
       monthlyCents: 367_500,
       maxDailyMinutes: 600,
       newYearName: "Neujahr",
     });
     const next = storedCatalog({
-      generation: 6,
+      generation: 8,
       monthlyCents: 400_000,
       maxDailyMinutes: 540,
       newYearName: "Jahresbeginn",
@@ -331,8 +331,8 @@ describe("RuleCatalogRuntimeProvider", () => {
       .mockResolvedValueOnce(next);
     const synchronizeCatalog = jest
       .fn<SynchronizeRuleCatalog>()
-      .mockResolvedValueOnce({ status: "UP_TO_DATE", generation: 5 })
-      .mockResolvedValueOnce({ status: "ACTIVATED", generation: 6, previousGeneration: 5 });
+      .mockResolvedValueOnce({ status: "UP_TO_DATE", generation: 7 })
+      .mockResolvedValueOnce({ status: "ACTIVATED", generation: 8, previousGeneration: 7 });
     const screen = await render(
       <RuleCatalogRuntimeProvider
         loadStoredCatalog={loadStoredCatalog}
@@ -342,20 +342,20 @@ describe("RuleCatalogRuntimeProvider", () => {
         <CalculationHarness />
       </RuleCatalogRuntimeProvider>,
     );
-    await waitFor(() => expect(screen.getByText("5:3675:Neujahr:600")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("7:3675:Neujahr:600")).toBeTruthy());
     await changeAppState("inactive");
     await changeAppState("background");
     expect(synchronizeCatalog).toHaveBeenCalledTimes(1);
     await changeAppState("active");
-    await waitFor(() => expect(screen.getByText("6:4000:Jahresbeginn:540")).toBeTruthy());
-    expect(synchronizeCatalog).toHaveBeenNthCalledWith(2, 5);
+    await waitFor(() => expect(screen.getByText("8:4000:Jahresbeginn:540")).toBeTruthy());
+    expect(synchronizeCatalog).toHaveBeenNthCalledWith(2, 7);
     await changeAppState("active");
     expect(synchronizeCatalog).toHaveBeenCalledTimes(2);
   });
 
   it("shares a pending startup check with foreground and manual checks", async () => {
     const initial = storedCatalog({
-      generation: 5,
+      generation: 7,
       monthlyCents: 367_500,
       maxDailyMinutes: 600,
       newYearName: "Neujahr",
@@ -371,20 +371,20 @@ describe("RuleCatalogRuntimeProvider", () => {
         <ManualRefreshHarness />
       </RuleCatalogRuntimeProvider>,
     );
-    await waitFor(() => expect(screen.getByText("Generation 5")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Generation 7")).toBeTruthy());
     await changeAppState("background");
     await changeAppState("active");
     await act(async () => {
       fireEvent.press(screen.getByRole("button", { name: "Jetzt prüfen" }));
     });
     expect(synchronizeCatalog).toHaveBeenCalledTimes(1);
-    await act(async () => pending.resolve({ status: "UP_TO_DATE", generation: 5 }));
-    expect(screen.getByText("Generation 5")).toBeTruthy();
+    await act(async () => pending.resolve({ status: "UP_TO_DATE", generation: 7 }));
+    expect(screen.getByText("Generation 7")).toBeTruthy();
   });
 
   it("keeps the offline resolver usable after a foreground download failure", async () => {
     const initial = storedCatalog({
-      generation: 6,
+      generation: 8,
       monthlyCents: 400_000,
       maxDailyMinutes: 540,
       newYearName: "Jahresbeginn",
@@ -393,7 +393,7 @@ describe("RuleCatalogRuntimeProvider", () => {
     const recordDiagnostic = jest.fn();
     const synchronizeCatalog = jest
       .fn<SynchronizeRuleCatalog>()
-      .mockResolvedValueOnce({ status: "UP_TO_DATE", generation: 6 })
+      .mockResolvedValueOnce({ status: "UP_TO_DATE", generation: 8 })
       .mockRejectedValueOnce(error);
     const screen = await render(
       <RuleCatalogRuntimeProvider
@@ -404,11 +404,11 @@ describe("RuleCatalogRuntimeProvider", () => {
         <CalculationHarness />
       </RuleCatalogRuntimeProvider>,
     );
-    await waitFor(() => expect(screen.getByText("6:4000:Jahresbeginn:540")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("8:4000:Jahresbeginn:540")).toBeTruthy());
     await changeAppState("background");
     await changeAppState("active");
     expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_SYNC_FAILED", error);
-    expect(screen.getByText("6:4000:Jahresbeginn:540")).toBeTruthy();
+    expect(screen.getByText("8:4000:Jahresbeginn:540")).toBeTruthy();
   });
 
   it("defers startup download while backgrounded and removes the lifecycle listener on unmount", async () => {
@@ -425,7 +425,7 @@ describe("RuleCatalogRuntimeProvider", () => {
         <Harness />
       </RuleCatalogRuntimeProvider>,
     );
-    await waitFor(() => expect(screen.getByText("LEGACY_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
     expect(synchronizeCatalog).not.toHaveBeenCalled();
     await changeAppState("active");
     expect(synchronizeCatalog).toHaveBeenCalledTimes(1);
@@ -451,10 +451,10 @@ describe("RuleCatalogRuntimeProvider", () => {
         <Harness />
       </RuleCatalogRuntimeProvider>,
     );
-    await waitFor(() => expect(screen.getByText("LEGACY_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy());
     await screen.unmount();
     await act(async () =>
-      pending.resolve({ status: "ACTIVATED", generation: 6, previousGeneration: null }),
+      pending.resolve({ status: "ACTIVATED", generation: 8, previousGeneration: null }),
     );
     expect(loadStoredCatalog).toHaveBeenCalledTimes(1);
     expect(recordDiagnostic).not.toHaveBeenCalled();

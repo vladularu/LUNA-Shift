@@ -26,6 +26,19 @@ function fixture() {
 }
 
 describe("automatic net forecast reuse between report and detail", () => {
+  it("includes adapter-specific source evidence in the cache identity", () => {
+    const { input, calculate } = fixture();
+    const extended = { ...input, sourceSettings: [{ month: "2026-01", revision: 1 }] };
+    const cache = createAutomaticNetPayCache<typeof extended>((value) => value.sourceSettings);
+    const first = cache(extended, bundledRuleResolver, calculate);
+    expect(cache(structuredClone(extended), bundledRuleResolver, calculate)).toBe(first);
+    cache(
+      { ...extended, sourceSettings: [{ month: "2026-01", revision: 2 }] },
+      bundledRuleResolver,
+      calculate,
+    );
+    expect(calculate).toHaveBeenCalledTimes(2);
+  });
   it("invalidates the cache when the deduction rule revision changes", () => {
     const cache = createAutomaticNetPayCache();
     const { input, calculate } = fixture();

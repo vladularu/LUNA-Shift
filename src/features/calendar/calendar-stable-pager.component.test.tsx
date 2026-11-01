@@ -22,6 +22,13 @@ const profile = {
   federalState: "HE",
   holidayRegion: "NONE",
 } as UserProfile;
+// Match the app's stable entry index and preferences while only the visible month changes.
+const emptyEntries: Parameters<typeof SharedCalendarMonth>[0]["entriesByDate"] = new Map();
+const display: Parameters<typeof SharedCalendarMonth>[0]["display"] = Object.freeze({
+  labelMode: "FULL",
+  showShiftTimes: true,
+  showShiftDuration: false,
+});
 const noop = () => {};
 const onDate = jest.fn();
 const flushIdleWork = () =>
@@ -139,8 +146,8 @@ function Harness() {
             <SharedCalendarMonth
               month={m}
               pageHeight={700}
-              entriesByDate={new Map()}
-              display={{ labelMode: "FULL", showShiftTimes: true, showShiftDuration: false }}
+              entriesByDate={emptyEntries}
+              display={display}
               profile={profile}
               ruleResolver={bundledRuleResolver}
               showHolidays

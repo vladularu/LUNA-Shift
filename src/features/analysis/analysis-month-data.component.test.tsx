@@ -21,6 +21,30 @@ let mockResolver = { ...bundledRuleResolver };
 let mockEntries = [forecastShift({ id: "january", date: "2027-01-05" })];
 const mockDecisions = Object.freeze([]),
   mockTestMonths = Object.freeze([]);
+const mockPaymentPreferences = Object.freeze({
+  version: 1 as const,
+  periods: [
+    {
+      effectiveMonth: "2026-01",
+      delays: {
+        PREMIUMS: 0 as const,
+        MONTHLY_ALLOWANCE: 0 as const,
+        HOURLY_ALLOWANCE: 0 as const,
+        OVERTIME: 0 as const,
+        SPECIAL_DUTY: 0 as const,
+      },
+    },
+  ],
+  reviewedEmptyMonths: [],
+});
+jest.mock("@/features/salary/salary-payment-preferences", () => ({
+  useSalaryPaymentPreferences: () => ({
+    preferences: mockPaymentPreferences,
+    perspective: "PAYOUT",
+    ready: true,
+    error: null,
+  }),
+}));
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("expo-router", () => ({
   useIsFocused: () => mockFocused,

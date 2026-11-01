@@ -95,6 +95,7 @@ function SalaryDetailsMonthPage({
     settings,
     valid && !blocked && data.status === "ready" && settings?.version === 2,
     report.testMonths,
+    data.timeline,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const palette = usePalette();
@@ -112,7 +113,7 @@ function SalaryDetailsMonthPage({
         onNext={() => moveMonth(1)}
       />
     ) : null;
-  if (report.ready && report.error)
+  if (report.error)
     return (
       <SalaryPage {...pageProps}>
         {navigation}
@@ -137,7 +138,18 @@ function SalaryDetailsMonthPage({
         <LoadingView />
       </SalaryPage>
     );
-  const { pay, monthShifts } = report.calculation.value;
+  const { pay, premiumShifts: monthShifts, projection } = report.calculation.value;
+  const premiumMonths = new Set(
+    projection.contributions
+      .filter((part) => part.group === "PREMIUMS")
+      .map((part) => part.claimMonth),
+  );
+  const premiumPay = {
+    ...pay,
+    shiftBreakdowns: projection.sources
+      .filter((source) => premiumMonths.has(source.month))
+      .flatMap((source) => source.pay.shiftBreakdowns),
+  };
   const unavailable = (
     <SurfaceCard style={{ padding: SPACING.lg, gap: SPACING.sm }}>
       <Text style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}>
@@ -173,6 +185,7 @@ function SalaryDetailsMonthPage({
         pensionOmitted={forecast?.pensionOmitted ?? false}
         annualPayment={forecast?.annualPayment}
         annualPayments={annual.payments}
+        projection={projection}
       />
     );
   else if (section === "special-duties")
@@ -194,6 +207,14 @@ function SalaryDetailsMonthPage({
         pay={available.pay}
         month={month}
         pensionOmitted={forecast?.pensionOmitted ?? false}
+        basisNotes={[
+          ...(forecast?.payrollTimingEstimate
+            ? [
+                `Netto-Schätzung auf Basis des Zulagenmonats ${formatMonthTitle(forecast.payrollTimingEstimate.sourceMonth)}.`,
+              ]
+            : []),
+          ...(forecast?.annualPayment ? [forecast.annualPayment.note] : []),
+        ]}
       />
     ) : (
       unavailable
@@ -207,6 +228,7 @@ function SalaryDetailsMonthPage({
         nightMinutes={pay.nightCompensatoryMinutes ?? 0}
         annualPayment={forecast?.annualPayment}
         annualAutomatic={annual.automatic}
+        payrollTimingEstimate={forecast?.payrollTimingEstimate}
         annualProposal={
           annual.payments.some((payment) => payment.payoutMonth === month) ? annual.proposal : null
         }
@@ -223,16 +245,10 @@ function SalaryDetailsMonthPage({
   else if (section === "services")
     content = (
       <>
-        <SalaryPremiumCard
-          totalCents={
-            available?.classification.paidPremiumCents ?? Math.round(pay.timePremiumAmount * 100)
-          }
-          taxFreeCents={available?.classification.taxFreeCents ?? null}
-        />
         <NetPayServiceDetails
           key={month}
           classification={available?.classification ?? null}
-          pay={pay}
+          pay={premiumPay}
           shifts={monthShifts}
         />
         {(pay.nightCompensatoryMinutes ?? 0) > 0 ? (
@@ -256,7 +272,7 @@ function SalaryDetailsMonthPage({
     );
   else {
     const categories = buildPremiumBreakdown(
-      pay.shiftBreakdowns,
+      premiumPay.shiftBreakdowns,
       monthShifts,
       null,
     ).categories.filter((row) => row.amount > 0);

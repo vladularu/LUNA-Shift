@@ -1,5 +1,11 @@
 import { specialDutyComplianceIssues } from "./special-duty-compliance";
 import { projectDutyShifts } from "./special-duty";
+import {
+  createSplitDutyBreakCheck,
+  interruptionMinutes,
+  workGroupsByRecordedDate,
+  type SplitDutyBreakCheck,
+} from "./compliance-split-breaks";
 import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
 import { Temporal } from "@js-temporal/polyfill";
 import { finishMonthlyCompliance } from "./compliance-result";
@@ -232,28 +238,6 @@ function checkOverlaps(intervals: readonly Interval[]): ComplianceIssue[] {
   return issues;
 }
 
-function workGroupsByRecordedDate(intervals: readonly Interval[]): Interval[][] {
-  const groups = new Map<string, Interval[]>();
-  for (const item of intervals) {
-    const entries = groups.get(item.shift.date) ?? [];
-    entries.push(item);
-    groups.set(item.shift.date, entries);
-  }
-  return [...groups.values()];
-}
-
-function interruptionMinutes(items: readonly Interval[], minimumSegmentMinutes: number): number {
-  let total = 0;
-  let latestEnd = items[0]?.end;
-  for (const item of items.slice(1)) {
-    if (!latestEnd) break;
-    const gap = minutesBetween(latestEnd, item.start);
-    if (gap >= minimumSegmentMinutes) total += gap;
-    if (Temporal.ZonedDateTime.compare(item.end, latestEnd) > 0) latestEnd = item.end;
-  }
-  return total;
-}
-
 function hasContinuousWorkOverBreakThreshold(
   items: readonly Interval[],
   rules: RuleLegalRules,
@@ -300,6 +284,7 @@ function* checkWorkingTime(
   rules: RuleLegalRules,
   engineContractVersion: number,
   nightWorkerQualified: boolean,
+  isPlannedSplitBreak: SplitDutyBreakCheck,
 ): Generator<number, ComplianceIssue[], void> {
   const issues: ComplianceIssue[] = [];
   for (const items of workGroupsByRecordedDate(intervals)) {
@@ -307,8 +292,15 @@ function* checkWorkingTime(
     const date = shifts.at(-1)!.date;
     const net = items.reduce((sum, item) => sum + item.netMinutes, 0);
     const containsNightWork = items.some((item) => isNightWork(item, rules));
-    const recordedBreak = shifts.reduce((sum, shift) => sum + shift.breakMinutes, 0);
-    const interruptions = interruptionMinutes(items, rules.breaks.minimumSegmentMinutes);
+    const interruptions = interruptionMinutes(
+      items,
+      rules.breaks.minimumSegmentMinutes,
+      isPlannedSplitBreak,
+      intervals,
+    );
+    // Split gaps are already outside net work. Credit them only for the break requirement.
+    const recordedBreak =
+      shifts.reduce((sum, shift) => sum + shift.breakMinutes, 0) + interruptions.planned;
 
     if (net > rules.workingTime.maxDailyMinutes) {
       issues.push(
@@ -348,17 +340,17 @@ function* checkWorkingTime(
 
     const requiredBreak = requiredBreakMinutes(net, rules);
     if (recordedBreak < requiredBreak) {
-      if (recordedBreak + interruptions >= requiredBreak) {
+      if (recordedBreak + interruptions.unconfirmed >= requiredBreak) {
         issues.push(
           issue(
             "warning",
             "LEGAL",
             "ARBZG_4_INTERRUPTION",
             "Unterbrechung als Pause prüfen",
-            `${interruptions} Minuten zwischen Diensten könnten die fehlende Pause abdecken. Bitte die tatsächliche Pausenlage prüfen.`,
+            `${interruptions.unconfirmed} Minuten zwischen Diensten könnten die fehlende Pause abdecken. Bitte die tatsächliche Pausenlage prüfen.`,
             shifts,
             date,
-            { rule: "ARBZG_4_INTERRUPTION", interruptionMinutes: interruptions },
+            { rule: "ARBZG_4_INTERRUPTION", interruptionMinutes: interruptions.unconfirmed },
           ),
         );
       } else {
@@ -368,7 +360,7 @@ function* checkWorkingTime(
             "LEGAL",
             "ARBZG_4_BREAK",
             "Pause zu kurz",
-            `Erfasst sind ${recordedBreak} Minuten Pause; erforderlich sind mindestens ${requiredBreak} Minuten.`,
+            `${interruptions.planned > 0 ? "Berücksichtigt" : "Erfasst"} sind ${recordedBreak} Minuten Pause; erforderlich sind mindestens ${requiredBreak} Minuten.`,
             shifts,
             date,
             {
@@ -605,6 +597,7 @@ function* calculateMonthlyComplianceCoreSteps(
   options: ComplianceOptions = {},
 ): Generator<number, MonthlyComplianceResult, void> {
   const dutyIssues = specialDutyComplianceIssues(shifts, month);
+  const isPlannedSplitBreak = createSplitDutyBreakCheck(shifts);
   shifts = projectDutyShifts(shifts);
   const ruleResolver = options.ruleResolver ?? bundledRuleResolver;
   const referenceDate = Temporal.PlainDate.from(
@@ -728,6 +721,7 @@ function* calculateMonthlyComplianceCoreSteps(
       rules,
       legalPackage.engineContractVersion,
       nightWorkerQualified,
+      isPlannedSplitBreak,
     )),
   );
   yield 4;

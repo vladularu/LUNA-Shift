@@ -86,7 +86,7 @@ const profile: UserProfile = {
 };
 
 describe("P5/P6 catalog revision", () => {
-  it("models the reported Preview generation 4 and a future contract-11 replacement", async () => {
+  it("models the reported Preview generation 4 and a contract-11 replacement newer than the embedded baseline", async () => {
     expect(previewGeneration4.packageSources).toContain(
       "rules/packages/reviewed/tvoed-vka-bt-k/2026-05.json",
     );
@@ -110,13 +110,13 @@ describe("P5/P6 catalog revision", () => {
     // The next generation is a synthetic upgrade fixture, not a published release.
     const replacement = await reconcileRuleCatalogRuntimeAfterSync(
       current,
-      { status: "ACTIVATED", generation: 5, previousGeneration: 4 },
-      async () => catalogSnapshot(annualValue, 5),
+      { status: "ACTIVATED", generation: 7, previousGeneration: 4 },
+      async () => catalogSnapshot(annualValue, 7),
     );
     expect(replacement.status).toBe("REPLACED");
     expect(replacement.runtime.diagnosis).toMatchObject({
       source: "STORED",
-      selectedGeneration: 5,
+      selectedGeneration: 7,
     });
     const resolved = replacement.runtime.resolver.resolveTariff("2026-09-01");
     expect(resolved.ok && resolved.value.versionId).toBe("2026-05-r3");
@@ -202,13 +202,13 @@ describe("P5/P6 catalog revision", () => {
       const oldRuntime = storedRuleCatalogRuntime(catalogSnapshot(previousValue, 3));
       const replacement = await reconcileRuleCatalogRuntimeAfterSync(
         oldRuntime,
-        { status: "ACTIVATED", generation: 4, previousGeneration: 3 },
-        async () => catalogSnapshot(annualValue, 4),
+        { status: "ACTIVATED", generation: 7, previousGeneration: 3 },
+        async () => catalogSnapshot(annualValue, 7),
       );
       expect(replacement.status).toBe("REPLACED");
       expect(replacement.runtime.diagnosis).toMatchObject({
         source: "STORED",
-        selectedGeneration: 4,
+        selectedGeneration: 7,
       });
       for (const payLevel of [1, 2, 3, 4, 5, 6] as const) {
         const selected = { ...profile, tariff: { ...profile.tariff!, payGroup, payLevel } };
@@ -286,7 +286,7 @@ describe("P5/P6 catalog revision", () => {
     const current = storedRuleCatalogRuntime(catalogSnapshot(previousValue, 3));
     const failed = await reconcileRuleCatalogRuntimeAfterSync(
       current,
-      { status: "ACTIVATED", generation: 4, previousGeneration: 3 },
+      { status: "ACTIVATED", generation: 7, previousGeneration: 3 },
       async () => {
         throw new Error("offline read failed");
       },
@@ -296,7 +296,7 @@ describe("P5/P6 catalog revision", () => {
   });
 
   it("rejects publishing both overlapping tariff revisions in one generation", () => {
-    const snapshot = catalogSnapshot(annualValue, 4);
+    const snapshot = catalogSnapshot(annualValue, 7);
     const old = catalogSnapshot(previousValue, 3);
     const descriptor = old.catalog.manifest.packages.find((entry) => entry.kind === "TARIFF")!;
     const manifest: RuleManifest = {

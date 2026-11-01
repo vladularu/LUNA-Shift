@@ -20,6 +20,7 @@ import { useAnalysisView } from "./analysis-view-preferences";
 const CARD_ICONS: Record<AnalysisCardId, ComponentProps<typeof Ionicons>["name"]> = {
   WORK: "time-outline",
   CHECK: "shield-checkmark-outline",
+  PREMIUM: "time-outline",
   PAY: "wallet-outline",
   SHIFTS: "calendar-outline",
 };

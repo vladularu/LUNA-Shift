@@ -20,6 +20,7 @@ interface Snapshot {
   readonly error: string | null;
 }
 const EMPTY_PAYMENTS: readonly AnnualSalaryPayment[] = Object.freeze([]);
+const EMPTY_TIMELINE: readonly SavedMonthlyNetPaySettings[] = Object.freeze([]);
 const SalaryInputs = createContext<Snapshot | null>(null);
 
 /** Background and visible months consume the same committed timeline; writes invalidate it immediately. */
@@ -52,6 +53,7 @@ export function useAnalysisSalaryInputs(month: string, enabled: boolean) {
       return {
         status: "loading" as const,
         saved: null,
+        timeline: EMPTY_TIMELINE,
         annualPayments: EMPTY_PAYMENTS,
         error: null,
       };
@@ -59,6 +61,7 @@ export function useAnalysisSalaryInputs(month: string, enabled: boolean) {
       return {
         status: "error" as const,
         saved: null,
+        timeline: EMPTY_TIMELINE,
         annualPayments: EMPTY_PAYMENTS,
         error: snapshot.error,
       };
@@ -66,6 +69,7 @@ export function useAnalysisSalaryInputs(month: string, enabled: boolean) {
       return {
         status: "ready" as const,
         saved: resolveNetPaySettings(month, snapshot.timeline),
+        timeline: snapshot.timeline,
         annualPayments: snapshot.annualPayments,
         error: null,
       };
@@ -73,6 +77,7 @@ export function useAnalysisSalaryInputs(month: string, enabled: boolean) {
       return {
         status: "error" as const,
         saved: null,
+        timeline: EMPTY_TIMELINE,
         annualPayments: EMPTY_PAYMENTS,
         error: "Die Netto-Angaben konnten nicht geladen werden.",
       };

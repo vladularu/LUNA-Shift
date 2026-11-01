@@ -11,6 +11,7 @@ import {
 } from "@/application/pflegeshift-provider";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { salaryRoute } from "@/navigation/routes";
+import { employmentProfileAt } from "@/domain/employment-history";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { LoadingView, LoadFailureView } from "@/ui/loading-view";
@@ -24,6 +25,7 @@ export function NetPaySettingsScreen() {
   const parsed = parseMonthRouteParam(params.month);
   const month = parsed.status === "valid" ? parsed.value : "2000-01";
   const { profile } = usePflegeShiftProfile();
+  const work = profile ? employmentProfileAt(profile, `${month}-01`) : null;
   const { ready, error, reload } = usePflegeShiftStatus();
   const { testMonths } = usePflegeShiftTestData();
   const blocked = testMonths.includes(month);
@@ -81,10 +83,8 @@ export function NetPaySettingsScreen() {
         month={month}
         initial={data.saved?.settings ?? null}
         firstSetup={data.timeline.length === 0}
-        worksInSaxony={profile.federalState === "SN"}
-        churchTaxDefaultPercent={
-          profile.federalState === "BY" || profile.federalState === "BW" ? 8 : 9
-        }
+        worksInSaxony={work?.federalState === "SN"}
+        churchTaxDefaultPercent={work?.federalState === "BY" || work?.federalState === "BW" ? 8 : 9}
         busy={data.busy}
         onSave={data.save}
         onSaved={backToSalary}

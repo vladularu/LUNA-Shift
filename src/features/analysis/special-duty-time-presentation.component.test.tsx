@@ -95,7 +95,7 @@ describe("special-duty time account guidance", () => {
     { dutyAmount: 155.36, expectedAllowances: 572.18, gross: 4815.1 },
     { dutyAmount: undefined, expectedAllowances: 416.82, gross: 4659.74 },
   ])(
-    "includes readiness pay $dutyAmount in the allowance row without changing gross",
+    "keeps readiness pay $dutyAmount in the original allowance row without adding it twice",
     async ({ dutyAmount, expectedAllowances, gross }) => {
       mockCardOrder = ["PAY"];
       const view = await render(
@@ -111,9 +111,11 @@ describe("special-duty time account guidance", () => {
           estimatedGrossAmount: gross,
         }),
       );
-      expect(view.getByText(formatEuro(expectedAllowances))).toBeTruthy();
-      expect(view.getByText(formatEuro(gross))).toBeTruthy();
-      expect(view.getByText("Weitere Zulagen")).toBeTruthy();
+      expect(view.getByLabelText(`Brutto geschätzt: ${formatEuro(gross)}`)).toBeTruthy();
+      expect(view.getByRole("button", { name: `Gehalt, ${formatEuro(gross)}` })).toBeTruthy();
+      expect(
+        view.getByLabelText(`Weitere Zulagen: ${formatEuro(expectedAllowances)}`),
+      ).toBeTruthy();
     },
   );
   it("reproduces the photographed missing method and opens that duty directly", async () => {

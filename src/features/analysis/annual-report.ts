@@ -29,6 +29,7 @@ import { classifyChecks, type ClassifiedCheckCounts } from "./check-visibility";
 import type { AnnualRemuneration } from "./annual-remuneration";
 
 export interface AnnualMonthReport {
+  readonly scopeCount?: number;
   readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;
@@ -52,6 +53,7 @@ export interface AnnualMonthReport {
 }
 
 export interface AnnualReport {
+  readonly scopeCount?: number;
   readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;

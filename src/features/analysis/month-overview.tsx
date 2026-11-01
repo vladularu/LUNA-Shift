@@ -5,11 +5,12 @@ import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import {
   complianceDetailsRoute,
-  salaryRoute,
   dayEditorRoute,
+  salaryRoute,
   worktimeDetailsRoute,
 } from "@/navigation/routes";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
+import { EarnedPremiumsCard } from "./salary-overview-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { annualSalaryGrossCents, type AnnualSalaryPayment } from "@/domain/annual-salary-payment";
@@ -20,6 +21,8 @@ import {
   timeAccountCaption,
   pendingTimeAccountDuties,
 } from "./special-duty-time-presentation";
+import type { SalaryPaymentProjection } from "@/domain/salary-payment";
+import { salaryPaymentHint } from "@/features/salary/salary-composition";
 import { annualPayoutMonths, salaryAnnualFamily } from "@/domain/salary-annual-schedule";
 
 export function MonthOverview({
@@ -33,6 +36,9 @@ export function MonthOverview({
   salaryLoading = false,
   salaryError,
   netPay,
+  projection,
+  projectionPending = false,
+  additionalRecurringGrossCents = 0,
 }: {
   readonly month: string;
   readonly data: MonthlyAnalysisCalculation;
@@ -44,6 +50,9 @@ export function MonthOverview({
   readonly salaryLoading?: boolean;
   readonly salaryError?: string | null;
   readonly netPay?: ReactNode;
+  readonly projection?: SalaryPaymentProjection;
+  readonly projectionPending?: boolean;
+  readonly additionalRecurringGrossCents?: number;
 }) {
   const { summary, pay, shiftTypeAnalysis } = data;
   const visible = compliance === null ? null : selectVisibleCompliance(compliance, showPlanning);
@@ -82,7 +91,16 @@ export function MonthOverview({
     profile.tvhKrTariff != null ||
     profile.tvalPflegeTariff != null ||
     profile.manualMonthlyGrossCents != null;
-  const estimate = pay.ok && pay.value.available ? pay.value : null;
+  const estimate = projectionPending
+    ? null
+    : projection
+      ? projection.pay.available
+        ? projection.pay
+        : null
+      : pay.ok && pay.value.available
+        ? pay.value
+        : null;
+  const paymentHint = projection ? salaryPaymentHint(projection) : null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
   const hasAccount = summary.ok && summary.value.timeAccountMinutes !== undefined;
   const pendingDuties = summary.ok ? pendingTimeAccountDuties(summary.value) : [];
@@ -165,6 +183,20 @@ export function MonthOverview({
             }
           />
         ),
+        PREMIUM: (
+          <EarnedPremiumsCard
+            month={month}
+            amount={pay.ok && pay.value.available ? pay.value.timePremiumAmount : null}
+            specialDutyAmount={pay.ok && pay.value.available ? pay.value.specialDutyAmount : 0}
+            status={
+              !salaryReady
+                ? "Tarif hinterlegen"
+                : !pay.ok || !pay.value.available
+                  ? "Nicht verfügbar"
+                  : undefined
+            }
+          />
+        ),
         PAY: (
           <PayListCard
             reserveLoadingSpace
@@ -172,12 +204,19 @@ export function MonthOverview({
             status={
               !salaryReady
                 ? "Gehalt einrichten"
-                : salaryError || !estimate
-                  ? "Nicht verfügbar"
-                  : undefined
+                : projectionPending
+                  ? "Wird berechnet …"
+                  : salaryError || !estimate
+                    ? "Nicht verfügbar"
+                    : undefined
             }
             loading={salaryLoading && estimate !== null && !salaryError}
-            base={estimate?.personalBaseAmount}
+            base={
+              estimate?.personalBaseAmount == null
+                ? estimate?.personalBaseAmount
+                : estimate.personalBaseAmount +
+                  (manualSalary ? additionalRecurringGrossCents / 100 : 0)
+            }
             premiums={estimate?.timePremiumAmount}
             overtime={estimate?.overtimeAmount}
             allowances={
@@ -185,13 +224,18 @@ export function MonthOverview({
                 ? estimate.allowanceAmount +
                   estimate.tvoedAllowanceAmount +
                   estimate.careAllowanceAmount +
-                  (estimate.specialDutyAmount ?? 0)
+                  (estimate.specialDutyAmount ?? 0) +
+                  (manualSalary ? 0 : additionalRecurringGrossCents / 100)
                 : undefined
             }
             gross={
               estimate?.estimatedGrossAmount == null
-                ? undefined
-                : Math.round(estimate.estimatedGrossAmount * 100 + annualGross * 100) / 100
+                ? null
+                : Math.round(
+                    estimate.estimatedGrossAmount * 100 +
+                      annualGross * 100 +
+                      additionalRecurringGrossCents,
+                  ) / 100
             }
             annualPayments={annualGross}
             annualPaymentPresent={annualPayments?.some((payment) => payment.payoutMonth === month)}
@@ -206,9 +250,11 @@ export function MonthOverview({
                 ? salaryError
                 : !salaryReady
                   ? "Tarif oder Monatsbrutto hinterlegen"
-                  : manualSalary
-                    ? "Manuell hinterlegtes Monatsbrutto"
-                    : "Unverbindliche Schätzung"
+                  : paymentHint
+                    ? paymentHint
+                    : manualSalary
+                      ? "Manuell hinterlegtes Monatsbrutto"
+                      : "Unverbindliche Schätzung"
             }
           />
         ),

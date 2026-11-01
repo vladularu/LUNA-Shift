@@ -1,5 +1,15 @@
 import { ANALYSIS_VIEW_KEY, DEFAULT_ANALYSIS_VIEW } from "@/domain/analysis-view";
 import { loadAnalysisView, saveAnalysisView } from "./analysis-view-repository";
+import {
+  DEFAULT_SALARY_PAYMENT_PREFERENCES,
+  SALARY_PAYMENT_KEY,
+  SUGGESTED_TVOED_PAYMENT_DELAYS,
+  setSalaryPaymentPeriod,
+} from "@/domain/salary-payment";
+import {
+  loadSalaryPaymentPreferences,
+  saveSalaryPaymentPreferences,
+} from "./salary-payment-repository";
 import { createHash } from "node:crypto";
 
 import canonicalize from "canonicalize";
@@ -140,10 +150,42 @@ async function signedSerialized(
 }
 
 describe("local backup restore", () => {
+  it("round-trips payment rules and rejects malformed rules in a signed backup", async () => {
+    const preferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
+      effectiveMonth: "2026-08",
+      delays: SUGGESTED_TVOED_PAYMENT_DELAYS,
+    });
+    await saveSalaryPaymentPreferences(sourceDb, preferences, DEFAULT_SALARY_PAYMENT_PREFERENCES);
+    const backup = await createLocalBackupDocument(await loadLocalBackupSnapshot(sourceDb), {
+      appVersion: "0.1.0",
+      createdAt: new Date("2026-10-31T12:00:00Z"),
+      sha256,
+    });
+    const validated = await validateLocalBackup(backup.serialized, {
+      maxDatabaseSchemaVersion: await loadCurrentDatabaseSchemaVersion(destinationDb),
+      sha256,
+    });
+    await restoreLocalBackup(destinationDb, validated);
+    expect(await loadSalaryPaymentPreferences(destinationDb)).toEqual(preferences);
+    const malformed = await signedSerialized(document, (unsigned) => {
+      const data = unsigned.data as { preferences: unknown[] };
+      data.preferences.push({
+        key: SALARY_PAYMENT_KEY,
+        value: '{"version":99}',
+        updated_at: new Date().toISOString(),
+      });
+    });
+    await expect(
+      validateLocalBackup(malformed, {
+        maxDatabaseSchemaVersion: await loadCurrentDatabaseSchemaVersion(destinationDb),
+        sha256,
+      }),
+    ).rejects.toThrow(LocalBackupValidationError);
+  });
   it("round-trips dashboard order, visibility and metric, and resets them for older backups", async () => {
     const view = {
       ...DEFAULT_ANALYSIS_VIEW,
-      order: ["PAY", "WORK", "CHECK", "SHIFTS"] as const,
+      order: ["PAY", "WORK", "PREMIUM", "CHECK", "SHIFTS"] as const,
       hidden: ["SHIFTS"] as const,
       shiftMetric: "COUNT" as const,
     };
@@ -187,6 +229,33 @@ describe("local backup restore", () => {
         }),
       ).rejects.toBeInstanceOf(LocalBackupValidationError);
     }
+  });
+
+  it("restores an older four-card layout without losing its order or hidden areas", async () => {
+    const serialized = await signedSerialized(document, (unsigned) => {
+      const data = unsigned.data as { preferences: unknown[] };
+      data.preferences.push({
+        key: ANALYSIS_VIEW_KEY,
+        value: JSON.stringify({
+          version: 1,
+          order: ["SHIFTS", "PAY", "WORK", "CHECK"],
+          hidden: ["PAY"],
+          shiftMetric: "COUNT",
+        }),
+        updated_at: "2026-09-21T10:00:00Z",
+      });
+    });
+    const validated = await validateLocalBackup(serialized, {
+      maxDatabaseSchemaVersion: await loadCurrentDatabaseSchemaVersion(destinationDb),
+      sha256,
+    });
+    await restoreLocalBackup(destinationDb, validated);
+    expect(await loadAnalysisView(destinationDb)).toEqual({
+      version: 1,
+      order: ["SHIFTS", "PREMIUM", "PAY", "WORK", "CHECK"],
+      hidden: ["PAY", "PREMIUM"],
+      shiftMetric: "COUNT",
+    });
   });
 
   let source: TestDatabase;

@@ -59,6 +59,10 @@ const fresh = (): AnalysisWarmupInput => ({
   resolver: createRuleResolver(),
   timeline: [],
   annualPayments: [],
+  payment: {
+    preferences: { version: 1, periods: [], reviewedEmptyMonths: [] },
+    perspective: "PAYOUT",
+  },
   referenceDate: "2026-10-28",
   youthProtection: false,
 });

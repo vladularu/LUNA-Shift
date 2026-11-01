@@ -14,7 +14,12 @@ import { buildAnnualDistributionSections } from "@/features/analysis/annual-dist
 import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
-import { PLANNING_HIDDEN_NOTICE, selectAnnualCheckDisplay } from "./check-visibility";
+import {
+  isCheckLimited,
+  PLANNING_HIDDEN_NOTICE,
+  selectAnnualCheckDisplay,
+} from "./check-visibility";
+import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import {
   AnalysisYearHeader,
   formatEuro,
@@ -298,7 +303,8 @@ function AnnualCheckDetails({
       item.criticalCount +
         item.warningCount +
         (item.infoCount ?? 0) +
-        (item.prerequisiteCount ?? 0) >
+        (item.prerequisiteCount ?? 0) +
+        (item.scopeCount ?? 0) >
       0,
   );
   if (issueMonths.length === 0)
@@ -313,7 +319,7 @@ function AnnualCheckDetails({
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
       >
-        {report.prerequisiteCount ? "Monate mit Hinweisen" : "Monate mit Meldungen"}
+        {isCheckLimited(report) ? "Monate mit Hinweisen" : "Monate mit Meldungen"}
       </Text>
       <SurfaceCard style={{ paddingHorizontal: SPACING.lg }}>
         {issueMonths.map((item, index) => {
@@ -327,7 +333,7 @@ function AnnualCheckDetails({
               ? "Kritische Meldung enthalten"
               : item.warningCount > 0
                 ? "Warnung enthalten"
-                : item.prerequisiteCount
+                : isCheckLimited(item)
                   ? "Prüfgrundlage unvollständig"
                   : "Hinweis enthalten";
           return (
@@ -397,6 +403,7 @@ function AnnualCheckDetails({
           <CardSeparator inset={0} />
         </View>
       </SurfaceCard>
+      <CheckScopeDisclosure scopeCount={report.scopeCount} />
     </View>
   );
 }

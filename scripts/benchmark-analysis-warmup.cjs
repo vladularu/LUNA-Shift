@@ -219,17 +219,48 @@ const resolver = createRuleResolver(),
       updatedAt: "2026-01-01T00:00:00Z",
     },
   ];
+const tariffDecisions = [
+  {
+    month,
+    allowanceStatus: "NONE",
+    revision: 1,
+    confirmedAt: "2026-10-01T00:00:00Z",
+    updatedAt: "2026-10-01T00:00:00Z",
+  },
+];
+// Explicit zero timing preserves the previous earned-month financial comparison.
+const payment = {
+  preferences: {
+    version: 1,
+    periods: [
+      {
+        effectiveMonth: "2026-01",
+        delays: {
+          PREMIUMS: 0,
+          MONTHLY_ALLOWANCE: 0,
+          HOURLY_ALLOWANCE: 0,
+          OVERTIME: 0,
+          SPECIAL_DUTY: 0,
+        },
+      },
+    ],
+    reviewedEmptyMonths: [],
+    socialInsuranceAttribution: "CASH_VARIABLE",
+  },
+  perspective: "PAYOUT",
+};
 const snapshot = () => ({
   months: [month],
   profile,
   savedProfile: profile,
   entries,
-  tariffDecisions: [],
+  tariffDecisions,
   workPatternSettings: pattern,
   testMonths: [],
   resolver,
   timeline,
   annualPayments: [],
+  payment,
   referenceDate,
   youthProtection: false,
 });
@@ -261,7 +292,7 @@ const request = {
   month,
   profile,
   entries,
-  tariffDecisions: [],
+  tariffDecisions,
   workPatternSettings: pattern,
   ruleResolver: resolver,
 };
@@ -270,7 +301,8 @@ const payInput = {
   profile,
   settings: timeline[0].settings,
   annualPayments: [],
-  context: { entries, tariffDecisions: [], workPatternSettings: pattern, resolver, testMonths: [] },
+  payment: { ...payment, sourceSettings: timeline },
+  context: { entries, tariffDecisions, workPatternSettings: pattern, resolver, testMonths: [] },
 };
 function getStage(options) {
   if (isBaseline) {
@@ -372,6 +404,29 @@ const preparedAt = now,
   readyAtOpen = !!(outcomes.overview && outcomes.checks && outcomes.salary);
 pump();
 assert.ok(outcomes.overview && outcomes.checks && outcomes.salary);
+if (!isBaseline) {
+  const projection = outcomes.salary.projection;
+  assert.ok(projection?.available, JSON.stringify(projection?.issues));
+  assert.equal(projection.perspective, "PAYOUT");
+  assert.equal(projection.month, month);
+  assert.deepEqual(
+    projection.sources.map((source) => source.month),
+    [month],
+  );
+  assert.ok(
+    projection.contributions.every(
+      (part) => part.claimMonth === month && part.paymentMonth === month,
+    ),
+  );
+  assert.equal(
+    projection.contributions.reduce((sum, part) => sum + part.amountCents, 0),
+    Math.round(projection.pay.estimatedGrossAmount * 100),
+  );
+  assert.equal(
+    projection.pay.estimatedGrossAmount,
+    outcomes.overview.pay.value.estimatedGrossAmount,
+  );
+}
 const result = {
   mode,
   entries: entries.length,
@@ -384,12 +439,15 @@ const result = {
   callbacks,
   maximumCallbackMs: maximumCallback,
   cpuMs: cpu,
+  paymentProjectionVerified: !isBaseline,
   digest: createHash("sha256")
     .update(
       JSON.stringify({
         overview: outcomes.overview,
         checks: outcomes.checks,
-        salary: outcomes.salary,
+        // Older published snapshots have no projection metadata. Compare the same
+        // financial values, with current projection invariants checked separately.
+        salary: { annual: outcomes.salary.annual, forecast: outcomes.salary.forecast },
       }),
     )
     .digest("hex"),
