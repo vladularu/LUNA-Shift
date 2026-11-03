@@ -20,6 +20,7 @@ import {
   saveAppearancePreferences,
 } from "@/infrastructure/database/appearance-repository";
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { AppearanceContext } from "@/theme/appearance-context";
 
 export function AppearancePreferencesProvider({ children }: PropsWithChildren) {
@@ -63,7 +64,9 @@ export function AppearancePreferencesProvider({ children }: PropsWithChildren) {
   }, [load]);
   useEffect(() => {
     if (ready)
-      Appearance.setColorScheme(preferences.mode === "system" ? "unspecified" : preferences.mode);
+      return startupPresentation.afterSplash(() =>
+        Appearance.setColorScheme(preferences.mode === "system" ? "unspecified" : preferences.mode),
+      );
   }, [preferences.mode, ready]);
   useEffect(() => () => Appearance.setColorScheme("unspecified"), []);
 

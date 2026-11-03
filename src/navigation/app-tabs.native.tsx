@@ -15,6 +15,7 @@ export function AppTabs() {
   const activeMonthCoordinator = useActiveMonthCoordinator();
   return (
     <NativeTabs
+      unstable_nativeProps={{ colorScheme: palette.dark ? "dark" : "light" }}
       backgroundColor={palette.tabBar}
       iconColor={{ default: palette.textMuted, selected: palette.accent }}
       labelStyle={{

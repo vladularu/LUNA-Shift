@@ -1,6 +1,7 @@
 import { act, fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import * as MockReact from "react";
 import {
   Pressable as MockPressable,
@@ -337,16 +338,65 @@ describe("CalendarScreen quick-entry navigation", () => {
     });
   });
 
-  it("reveals the first month only after its viewport and initial page are positioned", async () => {
+  it.each([0, 59.333])(
+    "reveals the measured first month with a safe top inset of %s",
+    async (safeTop) => {
+      startupPresentation.begin();
+      const calendar = () => (
+        <SafeAreaInsetsContext.Provider value={{ top: safeTop, left: 0, right: 0, bottom: 34 }}>
+          <CalendarScreen />
+        </SafeAreaInsetsContext.Provider>
+      );
+      const screen = await render(calendar());
+      expect(startupPresentation.isReady()).toBe(false);
+      await fireEvent(screen.getByTestId("calendar-screen"), "layout", {
+        nativeEvent: { layout: { height: 700, width: 400 } },
+      });
+      await fireEvent(screen.getByTestId("calendar-header-measure"), "layout", {
+        nativeEvent: { layout: { height: 120, width: 400 } },
+      });
+      await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+        nativeEvent: { layout: { height: 700 - safeTop, width: 400 } },
+      });
+      await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+        nativeEvent: { layout: { height: 700 - safeTop } },
+      });
+      expect(startupPresentation.isReady()).toBe(true);
+      mockPreferences.viewMode = "YEAR";
+      await screen.rerender(calendar());
+      expect(startupPresentation.isReady()).toBe(true);
+    },
+  );
+
+  it("keeps the splash while the header overlap still leaves a stale calendar height", async () => {
     startupPresentation.begin();
     const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-screen"), "layout", {
+      nativeEvent: { layout: { height: 820, width: 400 } },
+    });
+    await fireEvent(screen.getByTestId("calendar-header-measure"), "layout", {
+      nativeEvent: { layout: { height: 120, width: 400 } },
+    });
+    await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+      nativeEvent: { layout: { height: 700, width: 400 } },
+    });
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700, width: 400 } },
+    });
+    expect(startupPresentation.isReady()).toBe(false);
+    const pager = screen.getByTestId("calendar-month-pager");
+    const index = pager.props.contentOffset.y / 700;
+    await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+      nativeEvent: { layout: { height: 820, width: 400 } },
+    });
     expect(startupPresentation.isReady()).toBe(false);
     await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
-      nativeEvent: { layout: { height: 700 } },
+      nativeEvent: { layout: { height: 820, width: 400 } },
     });
-    expect(startupPresentation.isReady()).toBe(true);
-    mockPreferences.viewMode = "YEAR";
-    await screen.rerender(<CalendarScreen />);
+    expect(startupPresentation.isReady()).toBe(false);
+    await fireEvent(pager, "scroll", {
+      nativeEvent: { contentOffset: { y: index * 820 } },
+    });
     expect(startupPresentation.isReady()).toBe(true);
   });
 

@@ -3,11 +3,13 @@
 ## Sichtbare Marke
 
 Der Produktname lautet in App, Systemanzeigen, Benachrichtigungen und Dokumentation exakt
-`LUNA Shift`. Die Bildmarke ist die Mondsichel als `U` in Graphit `#111315`, warmem Creme
-`#F6F3EC` und Petrol `#2E766F`.
+`LUNA Shift`. Das Markenpaket vom 03.11.2026 ergänzt die LS-Bildmarke und die Wortmarke
+mit gelber Mondsichel. Transparente Varianten mit dunkler beziehungsweise weißer Schrift
+decken helle und dunkle Oberflächen ab.
 
-Die Laufzeitbilder werden reproduzierbar mit `npm.cmd run assets` erzeugt. Die verbindliche
-visuelle Referenz liegt unter `assets/brand/lunashift/lunashift-approved-reference.png`.
+Die Laufzeitbilder werden reproduzierbar mit `npm.cmd run assets` erzeugt. Quellen und
+Zuordnung stehen in `assets/brand/lunashift/README.md`. Für App-Icons gilt ausschließlich
+das separat gelieferte Final-20-Paket; seine hellen und dunklen Master bleiben bytegleich.
 
 ## Beibehaltene technische Identitäten
 

@@ -50,6 +50,7 @@ export function useCalendarHeaderOverlap() {
   const [height, setHeight] = useState(0);
   const top = process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : safeTop;
   return {
+    headerHeight: height,
     headerOverlap: Math.max(0, height - top),
     measureHeader: (event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height),
   };

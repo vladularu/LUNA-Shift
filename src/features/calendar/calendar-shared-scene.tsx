@@ -1,6 +1,15 @@
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
-import { createContext, memo, use, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  memo,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -54,6 +63,7 @@ type SharedCalendarSceneProps = {
   onSelectMonth: (month: string) => void;
   onTransitionStart?: (mode: CalendarViewMode) => void;
   onTransitionComplete?: () => void;
+  onViewportLayout?: (size: { width: number; height: number }) => void;
   children: ReactNode;
   controller?: CalendarController;
   referenceMonth?: string;
@@ -90,9 +100,13 @@ function CalendarSceneContent({
   referenceMonth,
   entriesByDate,
   pastelColors = false,
+  onViewportLayout,
 }: SharedCalendarSceneProps & { controller: CalendarController }) {
   const { month, mode: viewMode, progress, busy, yearVisible } = controller;
   const [size, setSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    onViewportLayout?.(size);
+  }, [onViewportLayout, size]);
   const height = Math.max(1, size.height - bottomReserve);
   const year = month.slice(0, 4);
   const layouts = useMemo(

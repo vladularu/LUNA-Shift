@@ -41,11 +41,14 @@ import {
 } from "@/domain/salary-payment";
 
 // These rule/navigation scenarios use an explicitly confirmed same-month payment schedule.
-const mockPaymentPreferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
+const mockSameMonthPaymentPreferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
   effectiveMonth: "2020-01",
   delays: { PREMIUMS: 0, MONTHLY_ALLOWANCE: 0, HOURLY_ALLOWANCE: 0, OVERTIME: 0, SPECIAL_DUTY: 0 },
 });
+let mockPaymentPreferences = mockSameMonthPaymentPreferences;
 let mockSalaryPerspective: SalaryPerspective = "PAYOUT";
+let mockSalaryInputsStatus: "ready" | "loading" | "error" = "ready";
+let mockPreparedSalaryPending = false;
 jest.mock("@/features/salary/salary-payment-preferences", () => ({
   useSalaryPaymentPreferences: () => {
     const [perspective, setPerspective] = MockReact.useState(mockSalaryPerspective);
@@ -240,11 +243,12 @@ jest.mock("./analysis-persistent-results", () => ({
 jest.mock("./analysis-salary-inputs", () => ({
   AnalysisSalaryInputsProvider: ({ children }: MockReact.PropsWithChildren) => children,
   useAnalysisSalaryInputs: () => ({
-    status: "ready",
+    status: mockSalaryInputsStatus,
     saved: null,
     annualPayments: [],
     timeline: [],
-    error: null,
+    error:
+      mockSalaryInputsStatus === "error" ? "Gehaltsangaben konnten nicht geladen werden." : null,
   }),
 }));
 const mockActiveMonthCoordinator = {
@@ -311,8 +315,10 @@ jest.mock("@/features/analysis/use-monthly-compliance", () => ({
 
 // Queue lifecycle is tested separately; keep rule-coverage assertions deterministic and real.
 jest.mock("@/features/analysis/use-prepared-analysis-salary", () => ({
-  usePreparedAnalysisSalary: (request: import("./analysis-salary").AnalysisSalaryRequest | null) =>
-    MockReact.useMemo(() => {
+  usePreparedAnalysisSalary: (
+    request: import("./analysis-salary").AnalysisSalaryRequest | null,
+  ) => {
+    const completed = MockReact.useMemo(() => {
       const actual = jest.requireActual<typeof import("./analysis-salary")>("./analysis-salary");
       let result: import("./analysis-salary").PreparedAnalysisSalary | null = null;
       if (request) {
@@ -337,7 +343,11 @@ jest.mock("@/features/analysis/use-prepared-analysis-salary", () => ({
         result = calculation.value;
       }
       return { result, pending: false, error: null };
-    }, [request]),
+    }, [request]);
+    return request && mockPreparedSalaryPending
+      ? { result: null, pending: true, error: null }
+      : completed;
+  },
 }));
 
 jest.mock("@/features/analysis/use-annual-report-inputs", () => ({
@@ -443,6 +453,9 @@ async function openAnalysisMode(screen: Awaited<ReturnType<typeof render>>, labe
 
 describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   beforeEach(() => {
+    mockPaymentPreferences = mockSameMonthPaymentPreferences;
+    mockSalaryInputsStatus = "ready";
+    mockPreparedSalaryPending = false;
     mockSalaryPerspective = "PAYOUT";
     mockTariffDecisions = Object.freeze([]);
     mockComplianceResult = mockCompliance;
@@ -464,6 +477,77 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockProfile = MOCK_TARIFF_PROFILE;
     mockActiveMonthCoordinator.setMonth.mockClear();
     mockActiveMonthCoordinator.analysisRequests.setMonth.mockClear();
+  });
+
+  it("retains the complete payout card through input loading and projection preparation after returning", async () => {
+    mockRouteMonth = "2026-10";
+    mockPaymentPreferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
+      effectiveMonth: "2020-01",
+      delays: {
+        PREMIUMS: 1,
+        MONTHLY_ALLOWANCE: 0,
+        HOURLY_ALLOWANCE: 1,
+        OVERTIME: 1,
+        SPECIAL_DUTY: 1,
+      },
+    });
+    mockEntries = [
+      { ...januaryShift(), id: "september-paid-shift", date: "2026-09-06" },
+      { ...januaryShift(), id: "october-earned-shift", date: "2026-10-04", endTime: "18:00" },
+    ];
+    const screen = await render(<AnalysisScreen />);
+    const salary = screen.getByRole("button", { name: /^Gehalt,/ });
+    const label = salary.props.accessibilityLabel;
+    expect(screen.getByText("Zulagen aus September 2026")).toBeTruthy();
+    mockFocused = false;
+    await screen.rerender(<AnalysisScreen />);
+    mockSalaryInputsStatus = "loading";
+    mockFocused = true;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByRole("button", { name: label })).toBeTruthy();
+    expect(screen.getByText("Zulagen aus September 2026")).toBeTruthy();
+    expect(screen.queryByText("Wird berechnet …")).toBeNull();
+    mockSalaryInputsStatus = "ready";
+    mockPreparedSalaryPending = true;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByRole("button", { name: label })).toBeTruthy();
+    expect(screen.queryByText("Wird berechnet …")).toBeNull();
+    mockPreparedSalaryPending = false;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByRole("button", { name: label })).toBeTruthy();
+    mockSalaryInputsStatus = "error";
+    await screen.rerender(<AnalysisScreen />);
+    expect(
+      screen.getAllByText("Gehaltsangaben konnten nicht geladen werden.").length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Gehalt, Nicht verfügbar" })).toBeTruthy();
+  });
+
+  it("does not reveal a newly selected month until its payout projection is complete", async () => {
+    mockRouteMonth = "2026-09";
+    const screen = await render(<AnalysisScreen />);
+    mockPreparedSalaryPending = true;
+    mockRouteMonth = "2026-10";
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByTestId("analysis-month-page-2026-09")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-month-page-2026-10")).toBeNull();
+    mockPreparedSalaryPending = false;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByTestId("analysis-month-page-2026-10")).toBeTruthy();
+  });
+
+  it("waits for payout inputs and the projection on the first visit instead of showing earned-month fallback values", async () => {
+    mockRouteMonth = "2026-10";
+    mockSalaryInputsStatus = "loading";
+    const screen = await render(<AnalysisScreen />);
+    expect(screen.queryByRole("button", { name: /^Gehalt,/ })).toBeNull();
+    mockSalaryInputsStatus = "ready";
+    mockPreparedSalaryPending = true;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.queryByRole("button", { name: /^Gehalt,/ })).toBeNull();
+    mockPreparedSalaryPending = false;
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
   });
 
   it("does not calculate a hidden month and uses the latest month when focused again", async () => {

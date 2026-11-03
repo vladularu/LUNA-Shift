@@ -21,10 +21,8 @@ import {
   FEDERAL_STATES,
   FEDERAL_STATE_LABELS,
   HOLIDAY_REGION_LABELS,
-  INDUSTRY_LABELS,
   type FederalState,
   type HolidayRegion,
-  type Industry,
 } from "@/domain/types";
 import {
   manualMonthlyGrossFieldError,
@@ -41,7 +39,7 @@ import { OnboardingWorkTime } from "./onboarding-work-time";
 import { SALARY_BASIS_OPTIONS } from "@/features/settings/salary-basis-options";
 import { OnboardingSalary, type OnboardingSalaryView } from "./onboarding-salary";
 import { OnboardingBrand } from "./onboarding-brand";
-import { OnboardingCheck, OnboardingIndustry } from "./onboarding-industry";
+import { OnboardingCheck } from "./onboarding-check";
 import { OnboardingReveal, useOnboardingReducedMotion } from "./onboarding-motion";
 import {
   EMPTY_TARIFF_SELECTION,
@@ -51,12 +49,11 @@ import {
   type OnboardingTariffSelection,
 } from "./onboarding-tariff-values";
 
-type Step = 2 | 3 | 4 | 5;
+type Step = 3 | 4 | 5;
 type SalaryMode = "MANUAL" | "TARIFF" | "LATER";
-const STEP_ORDER = [2, 4, 3, 5] as const;
+const STEP_ORDER = [4, 3, 5] as const;
 type Errors = Partial<
   Record<
-    | "industry"
     | "salary"
     | "gross"
     | "group"
@@ -90,7 +87,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   const { profile, updateProfile } = usePflegeShiftProfile();
   const testMode = preview || profile != null;
   const [step, setStep] = useState<Step>(STEP_ORDER[0]);
-  const [industry, setIndustry] = useState<Industry | null>(null);
   const [salaryMode, setSalaryMode] = useState<SalaryMode | null>(null);
   const [salaryView, setSalaryView] = useState<OnboardingSalaryView>("choice");
   const [gross, setGross] = useState("");
@@ -111,7 +107,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   const [editingSummary, setEditingSummary] = useState(false);
   function draft() {
     return {
-      industry,
       salaryMode,
       salaryView,
       gross,
@@ -174,7 +169,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     if (editingSummary) {
       const previous = editSnapshot.current;
       if (previous) {
-        setIndustry(previous.industry);
         setSalaryMode(previous.salaryMode);
         setSalaryView(previous.salaryView);
         setGross(previous.gross);
@@ -192,7 +186,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   function advance() {
     if (savingRef.current) return;
     const nextErrors: Errors = {};
-    if (step === 2 && !industry) nextErrors.industry = "Bitte wähle deinen Berufsbereich aus.";
     if (step === 3) {
       if (!salaryMode) nextErrors.salary = "Bitte wähle eine Gehaltsgrundlage aus.";
       if (salaryMode === "MANUAL")
@@ -239,7 +232,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
       router.back();
       return;
     }
-    if (!industry || !salaryMode || !federalState || holidayRegion === "UNKNOWN") return;
+    if (!salaryMode || !federalState || holidayRegion === "UNKNOWN") return;
     if (salaryMode === "TARIFF") {
       const tariffErrors = onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours));
       if (Object.values(tariffErrors).some(Boolean)) {
@@ -256,7 +249,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     setSaveError(undefined);
     try {
       await updateProfile({
-        industry,
+        industry: "HEALTHCARE",
         federalState,
         holidayRegion,
         weeklyMinutes: parseWeeklyHours(weeklyHours),
@@ -282,7 +275,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     }
   }
   const titles: Record<Step, string> = {
-    2: "Wo arbeitest du?",
     3: {
       choice: "Wie möchtest du dein Gehalt einrichten?",
       tariffs: "Welcher Tarif gilt für dich?",
@@ -293,7 +285,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
     5: "Passt alles?",
   };
   const copies: Record<Step, string> = {
-    2: "",
     3: salaryView === "choice" ? "Für deine Gehaltsprognose." : "",
     4: "",
     5: "Du kannst deine Angaben jederzeit ändern.",
@@ -388,9 +379,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                     <OnboardingCheck color={p.onHighlight} size={24} />
                   </View>
                 ) : null}
-                {step === 2 ? (
-                  <Text style={[s.caption, { color: p.muted }]}>Dein Bereich</Text>
-                ) : null}
                 <Text accessibilityRole="header" style={[s.title, { color: p.text }]}>
                   {titles[step]}
                 </Text>
@@ -398,17 +386,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                   <Text style={[s.body, { color: p.muted }]}>{copies[step]}</Text>
                 ) : null}
               </View>
-              {step === 2 ? (
-                <OnboardingIndustry
-                  value={industry}
-                  onChange={(value) => {
-                    setIndustry(value);
-                    clearError("industry");
-                  }}
-                  error={errors.industry}
-                  reduced={reduced}
-                />
-              ) : null}
               {step === 3 ? (
                 <OnboardingSalary
                   view={salaryView}
@@ -496,12 +473,6 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                   <View style={[s.summaryCard, { backgroundColor: p.canvas }]}>
                     {[
                       {
-                        label: "Berufsbereich",
-                        icon: "heart-pulse",
-                        value: industry ? INDUSTRY_LABELS[industry] : "",
-                        target: 2,
-                      },
-                      {
                         label: "Arbeitszeit",
                         value: `${weeklyHours} h / Woche`,
                         target: 4,
@@ -558,8 +529,8 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
               hitSlop={2}
               accessibilityRole="button"
               accessibilityLabel={saving ? "LUNA Shift wird eingerichtet" : undefined}
-              accessibilityState={{ busy: saving, disabled: saving || (step === 2 && !industry) }}
-              disabled={saving || (step === 2 && !industry)}
+              accessibilityState={{ busy: saving, disabled: saving }}
+              disabled={saving}
               onPress={() => {
                 if (step === 5) void finish();
                 else if (step === 3 && salaryView === "choice") skipSalary();
@@ -570,7 +541,7 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
                 s.primary,
                 {
                   backgroundColor: p.accent,
-                  opacity: saving || (step === 2 && !industry) ? 0.4 : 1,
+                  opacity: saving ? 0.4 : 1,
                 },
               ]}
             >
