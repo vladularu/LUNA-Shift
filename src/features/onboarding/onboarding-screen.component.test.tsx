@@ -56,12 +56,7 @@ async function select(screen: Screen, field: string, option: string) {
   await press(screen, new RegExp("^" + field + ":"));
   await fireEvent.press(screen.getByRole("radio", { name: option }));
 }
-async function work(screen: Screen, industry = "Pflege & Gesundheitswesen") {
-  await fireEvent.press(screen.getByRole("radio", { name: industry }));
-  await press(screen, "Weiter");
-}
-async function salary(screen: Screen, hours = "38,5", industry = "Pflege & Gesundheitswesen") {
-  await work(screen, industry);
+async function salary(screen: Screen, hours = "38,5") {
   await fireEvent.changeText(screen.getByTestId("onboarding-weekly-hours"), hours);
   await select(screen, "Bundesland deines Arbeitsorts", "Nordrhein-Westfalen");
   await press(screen, "Weiter");
@@ -73,10 +68,10 @@ async function summary(screen: Screen) {
       screen.queryByRole("button", { name: "Übernehmen" }) ? "Übernehmen" : "Weiter",
     );
   expect(screen.getByText("Passt alles?")).toBeTruthy();
-  expect(screen.getByRole("progressbar", { name: "Schritt 4 von 4" })).toHaveAccessibilityValue({
+  expect(screen.getByRole("progressbar", { name: "Schritt 3 von 3" })).toHaveAccessibilityValue({
     min: 1,
-    max: 4,
-    now: 4,
+    max: 3,
+    now: 3,
   });
 }
 async function pTariff(screen: Screen, group = "P8", level = "Stufe 4") {
@@ -103,16 +98,16 @@ it("offers existing cloud accounts before any local profile is created", async (
 });
 
 describe("short onboarding with contextual salary", () => {
-  it("places work before salary, keeps the action outside scrolling and requires deliberate choices", async () => {
+  it("starts with working time for hospital nursing and keeps the action outside scrolling", async () => {
     const screen = await render(onboarding());
-    expect(screen.getByRole("header", { name: "Wo arbeitest du?" })).toHaveStyle({
+    expect(screen.getByRole("header", { name: "Wie viel arbeitest du?" })).toHaveStyle({
       textAlign: "left",
     });
     expect(screen.getByText("Schichtdienst ist kompliziert genug.")).toBeTruthy();
     expect(screen.getByText("Dein Dienstplan sollte es nicht sein.")).toBeTruthy();
-    expect(screen.getByRole("progressbar", { name: "Schritt 1 von 4" })).toHaveAccessibilityValue({
+    expect(screen.getByRole("progressbar", { name: "Schritt 1 von 3" })).toHaveAccessibilityValue({
       min: 1,
-      max: 4,
+      max: 3,
       now: 1,
     });
     expect(screen.getByRole("button", { name: "Zurück" })).toBeDisabled();
@@ -127,19 +122,25 @@ describe("short onboarding with contextual salary", () => {
       }),
     ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Los geht’s" })).toBeNull();
-    screen.getAllByRole("radio").forEach((radio) => expect(radio).not.toBeChecked());
-    expect(screen.getByRole("button", { name: "Weiter" })).toBeDisabled();
+    expect(screen.queryByRole("header", { name: "Wo arbeitest du?" })).toBeNull();
+    expect(screen.queryByRole("radiogroup", { name: "Berufsbereich" })).toBeNull();
+    expect(screen.queryByRole("radio", { name: "Rettungsdienst" })).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
-    await fireEvent.press(screen.getByRole("radio", { name: "Rettungsdienst" }));
-    await press(screen, "Weiter");
-    expect(screen.getByText("2 / 4")).toBeTruthy();
     expect(screen.getByTestId("onboarding-weekly-hours")).toBeTruthy();
     await select(screen, "Bundesland deines Arbeitsorts", "Berlin");
     await press(screen, "Weiter");
-    expect(screen.getByText("3 / 4")).toBeTruthy();
+    expect(screen.getByText("2 / 3")).toBeTruthy();
     await press(screen, "Später einrichten");
     expect(screen.getByRole("header", { name: "Passt alles?" })).toBeTruthy();
+    expect(screen.getByText("3 / 3")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Berufsbereich bearbeiten" })).toBeNull();
     expect(mockUpdateProfile).not.toHaveBeenCalled();
+    await press(screen, "Zum Kalender");
+    await waitFor(() =>
+      expect(mockUpdateProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ industry: "HEALTHCARE", federalState: "BE" }),
+      ),
+    );
   });
   it("uses the same tariff options as settings and does not select a tariff automatically", async () => {
     const screen = await render(onboarding());
@@ -324,7 +325,6 @@ describe("short onboarding with contextual salary", () => {
   });
   it("requires a workplace and validates hours while retaining the existing 38.5 default", async () => {
     const screen = await render(onboarding());
-    await work(screen);
     expect(screen.getByTestId("onboarding-weekly-hours")).toHaveDisplayValue("38,5");
     expect(screen.getByTestId("onboarding-percentage-value")).toHaveTextContent("100 %");
     await press(screen, "Weiter");
@@ -340,7 +340,6 @@ describe("short onboarding with contextual salary", () => {
   });
   it("resets regional holidays when workplace changes and preserves summary editing", async () => {
     const screen = await render(onboarding());
-    await work(screen, "Soziale Dienste");
     await select(screen, "Bundesland deines Arbeitsorts", "Bayern");
     await press(screen, "Weiter");
     expect(screen.getByRole("alert")).toHaveTextContent(/Feiertagsregion/);
@@ -362,7 +361,7 @@ describe("short onboarding with contextual salary", () => {
     await waitFor(() =>
       expect(mockUpdateProfile).toHaveBeenCalledWith(
         expect.objectContaining({
-          industry: "SOCIAL_SERVICES",
+          industry: "HEALTHCARE",
           federalState: "SN",
           holidayRegion: "NONE",
           weeklyMinutes: 1200,
@@ -374,7 +373,6 @@ describe("short onboarding with contextual salary", () => {
   });
   it("retains the complete draft when going back through the input pages", async () => {
     const screen = await render(onboarding());
-    await work(screen, "Soziale Dienste");
     await fireEvent.changeText(screen.getByTestId("onboarding-weekly-hours"), "30");
     await select(screen, "Bundesland deines Arbeitsorts", "Bayern");
     await select(screen, "Regionale Feiertage am Arbeitsort", "Stadt Augsburg");
@@ -386,11 +384,8 @@ describe("short onboarding with contextual salary", () => {
     expect(
       screen.getByRole("button", { name: "Regionale Feiertage am Arbeitsort: Stadt Augsburg" }),
     ).toBeTruthy();
-    await press(screen, "Zurück");
-    expect(screen.getByRole("radio", { name: "Soziale Dienste" })).toBeChecked();
     expect(screen.getByRole("button", { name: "Zurück" })).toBeDisabled();
-    await press(screen, "Weiter");
-    expect(screen.getByTestId("onboarding-weekly-hours")).toHaveDisplayValue("30");
+    expect(screen.getByText("1 / 3")).toBeTruthy();
     await press(screen, "Weiter");
     expect(screen.getByRole("header", { name: "Wie hoch ist dein Monatsbrutto?" })).toBeTruthy();
     expect(screen.getByTestId("onboarding-manual-gross")).toHaveDisplayValue("3.450,50");
@@ -398,7 +393,7 @@ describe("short onboarding with contextual salary", () => {
     expect(screen.getByText("Bayern · Stadt Augsburg")).toBeTruthy();
     expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
-  it.each(["Berufsbereich", "Gehalt", "Arbeitszeit", "Arbeitsort"])(
+  it.each(["Gehalt", "Arbeitszeit", "Arbeitsort"])(
     "returns directly from the %s correction to the summary with the updated draft",
     async (field) => {
       const screen = await render(onboarding());
@@ -414,13 +409,7 @@ describe("short onboarding with contextual salary", () => {
         manualMonthlyGrossCents: 345050,
       };
       let expectedSummary = "";
-      if (field === "Berufsbereich") {
-        expect(screen.getByRole("radio", { name: "Pflege & Gesundheitswesen" })).toBeChecked();
-        expect(screen.getByRole("button", { name: "Zurück" })).not.toBeDisabled();
-        await fireEvent.press(screen.getByRole("radio", { name: "Rettungsdienst" }));
-        payload.industry = "EMERGENCY_SERVICES";
-        expectedSummary = "Rettungsdienst";
-      } else if (field === "Gehalt") {
+      if (field === "Gehalt") {
         expect(screen.getByTestId("onboarding-manual-gross")).toHaveDisplayValue("3.450,50");
         await fireEvent.changeText(screen.getByTestId("onboarding-manual-gross"), "4.000,00");
         payload.manualMonthlyGrossCents = 400000;
@@ -540,7 +529,6 @@ describe("short onboarding with contextual salary", () => {
   });
   it("preserves real hours, percentage baseline and values across live themes", async () => {
     const screen = await render(onboarding(true));
-    await work(screen);
     await select(screen, "100 % entsprechen", "40 h");
     const slider = screen.getByTestId("onboarding-percentage-slider");
     await fireEvent(slider, "layout", { nativeEvent: { layout: { width: 90 } } });

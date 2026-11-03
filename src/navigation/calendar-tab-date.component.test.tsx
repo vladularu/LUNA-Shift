@@ -1,6 +1,7 @@
 import { act, render } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { AppState, type AppStateStatus } from "react-native";
+import { Appearance, AppState, type AppStateStatus } from "react-native";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { AppTabs as NativeAppTabs } from "./app-tabs.native";
 import { AppTabs as JavaScriptAppTabs } from "./app-tabs-js";
 import { calendarTabIconSource } from "./calendar-tab-icon";
@@ -14,14 +15,20 @@ jest.mock("@/navigation/active-month", () => ({
 jest.mock("./analysis-period-navigation", () => ({
   requestAnalysisCurrentPeriodOnReselect: jest.fn(),
 }));
+let mockDark = false;
 jest.mock("@/theme/palette", () => ({
-  usePalette: () => ({ accent: "#FFEB3B", primary: "#007AFF", textMuted: "#808080" }),
+  usePalette: () => ({
+    dark: mockDark,
+    accent: "#FFEB3B",
+    primary: "#007AFF",
+    textMuted: "#808080",
+  }),
 }));
 jest.mock("expo-router/unstable-native-tabs", () => {
   const React = jest.requireActual<typeof import("react")>("react");
   const { View, Text } = jest.requireActual<typeof import("react-native")>("react-native");
-  const Root = ({ children }: { children?: import("react").ReactNode }) =>
-    React.createElement(View, null, children);
+  const Root = ({ children, ...props }: { children?: import("react").ReactNode }) =>
+    React.createElement(View, { ...props, testID: "native-tabs" }, children);
   const Trigger = (props: Record<string, unknown>) =>
     React.createElement(View, { ...props, testID: `tab-${props.name}` });
   const Icon = (props: Record<string, unknown>) =>
@@ -54,6 +61,9 @@ let changeState: (state: AppStateStatus) => void;
 const removeListener = jest.fn();
 
 beforeEach(() => {
+  mockDark = false;
+  startupPresentation.complete();
+  startupPresentation.finishSplash();
   jest.clearAllMocks();
   jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask"] });
   jest.setSystemTime(new Date(2026, 9, 8, 12));
@@ -64,12 +74,31 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  startupPresentation.complete();
+  startupPresentation.finishSplash();
   AppState.currentState = originalState;
   jest.useRealTimers();
   jest.restoreAllMocks();
 });
 
 describe("current calendar day in the tab bar", () => {
+  it.each([false, true])(
+    "uses LUNA dark=%s before the splash ends, even with the opposite system mode",
+    async (dark) => {
+      mockDark = dark;
+      jest.spyOn(Appearance, "getColorScheme").mockReturnValue(dark ? "light" : "dark");
+      startupPresentation.begin();
+      const screen = await render(<NativeAppTabs />);
+      const expected = { colorScheme: dark ? "dark" : "light" };
+      expect(screen.getByTestId("native-tabs").props.unstable_nativeProps).toEqual(expected);
+      await act(async () => {
+        startupPresentation.complete();
+        startupPresentation.finishSplash();
+      });
+      await screen.rerender(<NativeAppTabs />);
+      expect(screen.getByTestId("native-tabs").props.unstable_nativeProps).toEqual(expected);
+    },
+  );
   it.each([NativeAppTabs, JavaScriptAppTabs])(
     "forwards calendar focus so only an active-tab reselect can request Today",
     async (Tabs) => {

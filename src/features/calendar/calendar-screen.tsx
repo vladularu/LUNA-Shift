@@ -5,7 +5,7 @@ import { useSharedCalendarDays } from "./use-shared-calendar-days";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, View, type LayoutChangeEvent } from "react-native";
+import { AccessibilityInfo, View } from "react-native";
 import Animated, { useReducedMotion, useSharedValue } from "react-native-reanimated";
 
 import {
@@ -23,9 +23,9 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import type { CalendarEntry } from "@/domain/types";
 import { addMonths, currentMonth, today } from "@/engine/calendar";
 import { calendarPerformance } from "@/application/calendar-performance";
-import { useCalendarStartup } from "./use-calendar-startup";
+import { useCalendarStartup, useCalendarViewport } from "./use-calendar-startup";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
-import { CalendarHeader, useCalendarHeaderOverlap } from "@/features/calendar/calendar-header";
+import { CalendarHeader } from "@/features/calendar/calendar-header";
 import { CalendarMonthBackground } from "./calendar-background";
 import { SharedCalendarScene } from "./calendar-shared-scene";
 import { CalendarStablePager } from "./calendar-stable-pager";
@@ -104,8 +104,8 @@ export function CalendarScreen() {
   const [selectionVisible, setSelectionVisible] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(targetMonth);
   useCalendarPerformance(isFocused, visibleMonth, preferences.viewMode);
-  const [pageHeight, setPageHeight] = useState(0);
-  const { headerOverlap, measureHeader } = useCalendarHeaderOverlap();
+  const viewport = useCalendarViewport();
+  const { pageHeight, headerOverlap, measureHeader } = viewport;
   const [pagerResetRevision, setPagerResetRevision] = useState(0);
   const [positionedTarget, setPositionedTarget] = useState<string | null>(null);
   const monthPositioned =
@@ -131,7 +131,11 @@ export function CalendarScreen() {
       : calendarRangeCoversYear(calendarRange ?? null, Number(visibleMonth.slice(0, 4))));
   useCalendarStartup({
     active: isFocused,
-    ready: calendarReady && profile !== null && preferences.ready !== false,
+    ready:
+      calendarReady &&
+      profile !== null &&
+      preferences.ready !== false &&
+      (preferences.viewMode !== "MONTH" || viewport.ready),
     failed: error !== null || !!preferences.error,
     positioned: preferences.viewMode !== "MONTH" || monthPositioned,
   });
@@ -370,16 +374,6 @@ export function CalendarScreen() {
     selectionFeedback();
   }, [calendarReady, visibleHolidayResolution.status]);
 
-  const measurePager = useCallback(
-    (event: LayoutChangeEvent) => {
-      // Native iOS paging uses the exact viewport height, including subpixels.
-      const nextHeight = event.nativeEvent.layout.height;
-      calendarPerformance.record("pager-layout", { height: nextHeight });
-      if (nextHeight > 0 && nextHeight !== pageHeight) setPageHeight(nextHeight);
-    },
-    [pageHeight],
-  );
-
   const clearPopup = useCallback(() => setQuickPopup(null), []);
   const { finishPaging } = useCalendarPaging({
     months,
@@ -515,9 +509,18 @@ export function CalendarScreen() {
   if (profile === null) return <LoadingView />;
 
   return (
-    <View testID="calendar-screen" style={{ flex: 1, backgroundColor: palette.calendarBackground }}>
+    <View
+      testID="calendar-screen"
+      style={{ flex: 1, backgroundColor: palette.calendarBackground }}
+      onLayout={viewport.measureViewport}
+    >
       <CalendarMonthBackground progress={controller.progress} />
-      <View pointerEvents="box-none" style={{ zIndex: 1 }} onLayout={measureHeader}>
+      <View
+        testID="calendar-header-measure"
+        pointerEvents="box-none"
+        style={{ zIndex: 1 }}
+        onLayout={measureHeader}
+      >
         <CalendarHeader
           pageTitle
           synchronized
@@ -570,6 +573,7 @@ export function CalendarScreen() {
         ) : null}
       </View>
       <SharedCalendarScene
+        onViewportLayout={viewport.measureScene}
         headerOverlap={headerOverlap}
         showBackground={false}
         controller={controller}
@@ -588,7 +592,7 @@ export function CalendarScreen() {
           testID="calendar-month-scene"
         >
           <Animated.View
-            onLayout={measurePager}
+            onLayout={viewport.measurePager}
             testID="calendar-month-pager-shell"
             style={{ flex: 1 }}
           >

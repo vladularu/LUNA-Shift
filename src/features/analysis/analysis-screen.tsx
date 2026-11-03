@@ -143,6 +143,14 @@ function AnalysisPage({
   } = useAnalysisMonthData();
   const calculationMonth = month;
   const paymentLoadError = payment.ready ? null : payment.error;
+  const salarySettled =
+    testMonths.includes(month) ||
+    Boolean(paymentLoadError ?? salaryPayments.error ?? salary.error) ||
+    (salaryPayments.status === "ready" &&
+      payment.ready &&
+      salaryRequest !== null &&
+      salary.result !== null &&
+      !salary.pending);
   const compliance = monthlyCompliance.result;
   useAnalysisCommit(
     month,
@@ -235,12 +243,19 @@ function AnalysisPage({
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
       <AnalysisMonthTransition
         month={month}
-        available={ready && profile !== null && monthlyData !== null && calculationMonth === month}
+        available={
+          ready &&
+          profile !== null &&
+          monthlyData !== null &&
+          calculationMonth === month &&
+          salarySettled
+        }
         ready={
           ready &&
           profile !== null &&
           monthlyData !== null &&
           calculationMonth === month &&
+          salarySettled &&
           (!monthlyData.complianceShifts.ok ||
             compliance !== null ||
             monthlyCompliance.error !== null) &&
@@ -255,7 +270,11 @@ function AnalysisPage({
           />
         )}
       >
-        {!ready || profile === null || monthlyData === null || calculationMonth !== month ? (
+        {!ready ||
+        profile === null ||
+        monthlyData === null ||
+        calculationMonth !== month ||
+        !salarySettled ? (
           <LoadingView />
         ) : (
           <ReportScrollView

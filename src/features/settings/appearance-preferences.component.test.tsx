@@ -1,10 +1,11 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Appearance, Pressable, Text, View } from "react-native";
 import type { AppearancePreferences } from "@/domain/appearance";
 import { AppearancePreferencesProvider, useAppearancePreferences } from "./appearance-preferences";
 import { usePalette, useInversePalette } from "@/theme/palette";
 import { resolvePalette } from "@/theme/theme-catalog";
+import { startupPresentation } from "@/infrastructure/startup-presentation";
 
 let mockSystemScheme = "light";
 jest.mock("react-native/Libraries/Utilities/useColorScheme", () => ({
@@ -61,10 +62,42 @@ function Harness() {
 }
 describe("appearance preferences", () => {
   beforeEach(() => {
+    startupPresentation.complete();
+    startupPresentation.finishSplash();
     mockSystemScheme = "light";
     mockLoad.mockReset().mockResolvedValue({ themeId: "standard", mode: "system" });
     mockSave.mockReset().mockResolvedValue();
     jest.spyOn(Appearance, "setColorScheme").mockImplementation(() => {});
+  });
+  afterEach(async () => {
+    await act(async () => {
+      startupPresentation.complete();
+      startupPresentation.finishSplash();
+    });
+    jest.restoreAllMocks();
+  });
+  it("renders the saved light mode without recoloring the native launch logo", async () => {
+    mockSystemScheme = "dark";
+    mockLoad.mockResolvedValue({ themeId: "standard", mode: "light" });
+    startupPresentation.begin();
+    const screen = await render(
+      <AppearancePreferencesProvider>
+        <Harness />
+      </AppearancePreferencesProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("state").props.children).toContain('"ready":true'),
+    );
+    expect(screen.getByTestId("color")).toHaveStyle({
+      backgroundColor: resolvePalette("standard", false).background,
+    });
+    expect(Appearance.setColorScheme).not.toHaveBeenCalled();
+    await act(async () => startupPresentation.complete());
+    expect(Appearance.setColorScheme).not.toHaveBeenCalled();
+    await act(async () => startupPresentation.finishSplash());
+    expect(Appearance.setColorScheme).toHaveBeenCalledWith("light");
+    await fireEvent.press(screen.getByRole("button", { name: "Dunkel" }));
+    expect(Appearance.setColorScheme).toHaveBeenLastCalledWith("dark");
   });
   it("loads saved mode/theme and uses the same theme for inverse surfaces", async () => {
     mockLoad.mockResolvedValue({ themeId: "sea", mode: "dark" });

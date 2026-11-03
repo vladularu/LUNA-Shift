@@ -14,18 +14,21 @@ beforeEach(() => {
 });
 
 describe("theme-aware onboarding identity", () => {
-  it("keeps an accessible identity and switches blending with the theme colors", async () => {
+  it("keeps an accessible identity and selects the supplied logo for each theme", async () => {
     const screen = await render(<OnboardingBrand reduced />);
     expect(screen.getByRole("image", { name: "LUNA Shift" })).toBeTruthy();
     expect(screen.getByText("Schichtdienst ist kompliziert genug.")).toBeTruthy();
     expect(screen.getByText("Dein Dienstplan sollte es nicht sein.")).toBeTruthy();
-    expect(screen.getByTestId("onboarding-brand-blend")).toHaveStyle({ mixBlendMode: "multiply" });
+    const image = screen.getByTestId("onboarding-brand-image");
+    expect(image.props.source).toEqual(
+      require("../../../assets/brand/lunashift/logo-horizontal-light.png"),
+    );
+    expect(image.props.resizeMode).toBe("contain");
     mockPalette = DARK_PALETTE;
     await screen.rerender(<OnboardingBrand reduced />);
-    expect(screen.getByTestId("onboarding-brand-blend")).toHaveStyle({ mixBlendMode: "screen" });
-    expect(screen.getByTestId("onboarding-brand-symbol")).toHaveStyle({
-      backgroundColor: DARK_PALETTE.onboardingBackground,
-    });
+    expect(screen.getByTestId("onboarding-brand-image").props.source).toEqual(
+      require("../../../assets/brand/lunashift/logo-horizontal-dark.png"),
+    );
   });
   it("honors a live reduced-motion change without a stale initial read overriding it", async () => {
     let notify: (value: boolean) => void = () => {};

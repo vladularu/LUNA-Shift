@@ -31,16 +31,20 @@ import { INTER_FONTS } from "@/theme/shadcn";
 import { APP_FONT_FAMILY } from "@/theme/app-font";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
-import { startupPresentation } from "@/infrastructure/startup-presentation";
+import {
+  hideStartupSplash,
+  STARTUP_SPLASH_FADE_MS,
+  startupPresentation,
+} from "@/infrastructure/startup-presentation";
 import { StartupRoutePresentation } from "@/navigation/startup-route-presentation";
 import { AppResumeCheckpoint } from "@/navigation/app-resume-checkpoint";
 
-SplashScreen.setOptions({ duration: 300, fade: true });
+SplashScreen.setOptions({ duration: STARTUP_SPLASH_FADE_MS, fade: true });
 if (Platform.OS !== "web") {
   startupPresentation.begin();
   void SplashScreen.preventAutoHideAsync().catch(() => startupPresentation.complete());
   startupPresentation.after(() => {
-    void SplashScreen.hideAsync().catch(() => {});
+    void hideStartupSplash(() => SplashScreen.hideAsync());
   });
 }
 
