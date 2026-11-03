@@ -33,5 +33,7 @@ export async function deliverSharingInvitation(
       // Missing mail/messenger applications still leave a working system share action.
     }
   }
-  await Share.share({ message: `Ich möchte meinen LUNA-Kalender mit dir teilen. ${url}`, url });
+  const message = "Ich möchte meinen LUNA-Kalender mit dir teilen.";
+  // iOS shares the URL as its own item; repeating it in message duplicates it in messengers.
+  await Share.share(Platform.OS === "ios" ? { message, url } : { message: `${message}\n${url}` });
 }
