@@ -53,6 +53,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Preserve accepted TestFlight source
+        run: node scripts/verify-testflight-baseline.mjs
+      - name: Verify release guards and accepted user flows
+        run: |
+          node --test scripts/testflight-baseline.test.mjs scripts/publish-testflight-ota.test.mjs scripts/accept-testflight-baseline.test.mjs
+          node scripts/verify-testflight-baseline.mjs --contracts
       - run: npm run audit:production
       - run: npm run release:check
       - name: Compare iOS runtime before and after native prebuild

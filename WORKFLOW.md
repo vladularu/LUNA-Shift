@@ -41,6 +41,21 @@ Vor der Übernahme in die Beta stehen die Funktions- und Sichtprüfung auf dem i
 
 Bei einer späteren TestFlight-Veröffentlichung bleiben bestehende Gruppen, Detailtext und öffentlicher Link erhalten, sofern der Nutzer keine Änderung daran beauftragt.
 
+### Verbindlicher TestFlight-Abgleich
+
+Die Referenz unter `releases/testflight/` beschreibt die zuletzt auf dem iPhone abgenommene Build-9-OTA, ihre ausgelieferten Bytes sowie den eingefrorenen App-/Asset-Quellstand und Pflicht-Regressionstests. Der Vergleich läuft in `verify:fast` und unabhängig im CI-Job `production-safety`.
+
+Jede Abweichung muss in `build-9.reviewed-changes.json` mit exaktem Pfad, Art, Kandidaten-Hash und konkreter Begründung erklärt sein. Unbekannte Änderungen und veraltete Freigaben schlagen fehl. Keine Wildcards und kein automatisches Nachziehen aller aktuellen Hashes. Fachlogik, Darstellung und gespeicherte Daten sind dabei getrennt zu beurteilen.
+
+Vor einer ausdrücklich freigegebenen TestFlight-OTA:
+
+1. `node scripts/verify-testflight-baseline.mjs --live` ausführen und den identischen App-/Asset-Quellstand der Preview-Abnahme nachweisen. Kanalabhängige Umgebung und native Runtime bleiben eigene Prüfungen.
+2. `node scripts/publish-testflight-ota.mjs --dry-run` ausführen. Dies lädt die Production-Umgebung, prüft die Pflichtfälle und den tatsächlichen Fingerprint, veröffentlicht aber nichts.
+3. Erst mit bestehender Veröffentlichungsfreigabe `node scripts/publish-testflight-ota.mjs --publish --message "..."` ausführen. Kein unmittelbarer `eas update`-Aufruf. Quellstand und Live-Vorgänger werden vor der Veröffentlichung erneut geprüft; anschließend werden ausgeliefertes Bundle und alle Assets gegen den geprüften Export verifiziert.
+4. Die neue Update-ID mit dem Gerätefeedback verknüpfen. Eine Bestätigung einzelner Funktionen bestätigt nicht automatisch die übrigen Flows.
+
+Eine neue Baseline darf erst mit dem vollständigen Veröffentlichungsnachweis und der passenden Geräteabnahme über `node scripts/accept-testflight-baseline.mjs` erfasst werden. Dafür werden Plan, Ergebnis und ein gerätebezogener Nachweis für Kalender, Widgets, Netto und Einladungen benötigt. Eine bloß grüne CI oder ein gelungener Download genügt nicht. Ablauf und Nachweisformat: `docs/testflight-release-schutz.md`.
+
 ## 3. Prüfbefehle
 
 Für die normale Entwicklung:

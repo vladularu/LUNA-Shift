@@ -20,6 +20,9 @@ Aktueller Stand: Expo SDK 57. Referenz: https://docs.expo.dev/versions/v57.0.0/
 6. Native und visuelle Änderungen auf dem Zielgerät abnehmen. EAS-Metadaten, Exporte und Komponententests ersetzen keinen Screenshot- oder Gerätenachweis.
 7. Erst nach erfolgreicher Pull-Request-CI nach `master` mergen.
 8. Änderungen zuerst im bestehenden iOS-Preview-Kanal (`preview`, `APP_VARIANT=internal`) testen. Kleine Korrekturen werden zunächst dort geprüft und anschließend gesammelt nach separater Freigabe in die TestFlight-Beta übernommen; siehe `WORKFLOW.md`.
+9. Den versionierten TestFlight-Quellvergleich mit `node scripts/verify-testflight-baseline.mjs` bestehen lassen. Ungeklärte Änderungen, fehlende Dateien oder entfernte Pflicht-Regressionstests blockieren die Auslieferung. Die Baseline darf nur nach zugeordneter iPhone-Abnahme aktualisiert werden.
+
+Production-/TestFlight-OTAs werden nach bestehender Veröffentlichungsfreigabe ausschließlich über `node scripts/publish-testflight-ota.mjs --publish --message "..."` ausgeführt; vorher mit `--dry-run` prüfen. Der Einstieg prüft Quellstand, letzte abgenommene Live-OTA, Production-Umgebung, Pflichtfälle, tatsächliche Runtime und Export-Stabilität. Kein direkter `eas update`-Aufruf und keine manuelle Runtime-Überschreibung. Eine ausdrücklich beauftragte akute Wiederherstellung darf die exakt geprüfte, zuvor abgenommene Gruppe mit `eas update:republish` erneut ausliefern; dabei gelten Kanal-, Runtime-, Bundle- und Asset-Abgleich weiterhin.
 
 Commit, Push, EAS Build, EAS Update und Store-Veröffentlichung benötigen jeweils eine ausdrückliche Freigabe. Unabhängige Änderungen im Arbeitsverzeichnis bleiben unberührt.
 
