@@ -63,7 +63,7 @@ describe("isolated iPhone design build", () => {
     expect(configFor("internal", true)).toEqual(configFor("design", true));
   });
 
-  it("preserves Preview and Production identity and OTA routing", () => {
+  it("preserves Preview and Production routing while opening without an OTA download wait", () => {
     for (const [variant, name, scheme, id] of [
       ["internal", "LUNA Shift Internal", "pflegeshift-internal", "com.pflegeshift.app.internal"],
       ["production", "LUNA Shift", "pflegeshift", "com.lunashift.app"],
@@ -78,7 +78,7 @@ describe("isolated iPhone design build", () => {
       expect(config.updates).toEqual({
         ...original.updates,
         checkAutomatically: "ON_LOAD",
-        fallbackToCacheTimeout: 8000,
+        fallbackToCacheTimeout: 0,
       });
       const otherPlugins = (value: typeof config) =>
         value.plugins?.filter((plugin) => !(Array.isArray(plugin) && plugin[0] === "expo-widgets"));

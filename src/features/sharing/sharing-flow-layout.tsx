@@ -9,6 +9,7 @@ import Ionicons from "@/ui/icon";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { Text } from "@/ui/text";
 import { PersonAvatar } from "@/ui/person-avatar";
+import { GlassBackButton } from "@/ui/glass-back-button";
 
 export function SharingIconButton({
   label,
@@ -22,6 +23,9 @@ export function SharingIconButton({
   readonly onPress: () => void;
 }) {
   const palette = usePalette();
+  if (icon === "chevron-back") {
+    return <GlassBackButton label={label} onPress={onPress} disabled={disabled} />;
+  }
   return (
     <Pressable
       accessibilityRole="button"

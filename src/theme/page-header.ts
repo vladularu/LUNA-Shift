@@ -4,7 +4,12 @@ import type { ViewStyle } from "react-native";
 export const PAGE_HEADER_OPTIONS = {
   headerShadowVisible: false,
   headerLargeTitleShadowVisible: false,
+  headerTransparent: false,
 } as const;
+
+export function nativePageHeaderStyle(backgroundColor: string) {
+  return { backgroundColor };
+}
 
 // Custom headers use their page's own surface and never draw a separate frame.
 export function pageHeaderStyle(backgroundColor: string): ViewStyle {

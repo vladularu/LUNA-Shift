@@ -7,7 +7,6 @@ import { Text } from "@/ui/text";
 import { SurfaceCard, CardSeparator, RowButton } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import {
-  CORNER_CURVE,
   MINIMUM_TOUCH_TARGET,
   RADII,
   REPORT_CARD_GAP,
@@ -20,6 +19,7 @@ import { pageHeaderStyle } from "@/theme/page-header";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { GlassBackButton } from "@/ui/glass-back-button";
 import { netPayEuro } from "./net-pay-format";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -86,33 +86,7 @@ export function SalaryPage({
           paddingVertical: SPACING.md,
         }}
       >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Zurück"
-          onPress={() => router.back()}
-          style={({ pressed }) => ({
-            width: MINIMUM_TOUCH_TARGET,
-            minHeight: MINIMUM_TOUCH_TARGET,
-            borderRadius: RADII.pill,
-            borderCurve: CORNER_CURVE,
-            borderWidth: largeTitle ? 0 : 1,
-            borderColor: palette.separator,
-            backgroundColor: pressed
-              ? palette.surfaceMuted
-              : largeTitle
-                ? "transparent"
-                : palette.surface,
-            alignItems: "center",
-            justifyContent: "center",
-          })}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={largeTitle ? 29 : 25}
-            color={palette.text}
-            accessibilityElementsHidden
-          />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} />
         {stacked && action ? (
           <View style={{ width: MINIMUM_TOUCH_TARGET, marginLeft: "auto" }}>{action}</View>
         ) : null}

@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { HeaderBackButton, useHeaderHeight } from "expo-router/react-navigation";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useRef, type PropsWithChildren } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 
@@ -15,11 +15,11 @@ import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { LoadingView, LoadFailureView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { pageBackButtonOptions } from "@/ui/native-page-header";
 import { NetPaySetupForm } from "./net-pay-setup-form";
 import { useNetPayProfile } from "./use-net-pay-profile";
 
 export function NetPaySettingsScreen() {
-  const palette = usePalette();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const parsed = parseMonthRouteParam(params.month);
   const month = parsed.status === "valid" ? parsed.value : "2000-01";
@@ -68,13 +68,7 @@ export function NetPaySettingsScreen() {
       <Stack.Screen
         options={{
           title: "Netto-Einstellungen",
-          headerLeft: () => (
-            <HeaderBackButton
-              accessibilityLabel="Zurück zum Gehalt"
-              tintColor={palette.text}
-              onPress={backToSalary}
-            />
-          ),
+          ...pageBackButtonOptions(backToSalary, "Zurück zum Gehalt", true),
         }}
       />
       <NetPaySetupForm

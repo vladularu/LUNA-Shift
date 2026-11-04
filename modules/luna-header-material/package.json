@@ -1,0 +1,9 @@
+{
+  "name": "luna-header-material",
+  "version": "0.1.0",
+  "description": "Native fading header material for LUNA Shift.",
+  "license": "UNLICENSED",
+  "author": "LUNA Shift",
+  "homepage": "https://github.com/vladularu/PflegeShift",
+  "private": true
+}

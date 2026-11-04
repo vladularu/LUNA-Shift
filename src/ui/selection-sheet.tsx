@@ -29,6 +29,7 @@ import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
+import { GlassBackButton } from "@/ui/glass-back-button";
 
 // Mirror the opening curve so dismissal does not accelerate out of view immediately.
 const closingEasing = Easing.bezier(0.64, 0, 0.78, 0);
@@ -288,25 +289,11 @@ export function SelectionSheet({
                   }}
                 >
                   {onBack ? (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={backLabel}
+                    <GlassBackButton
+                      label={backLabel}
                       disabled={closing || disabled}
                       onPress={onBack}
-                      style={{
-                        minWidth: CONTROL_HEIGHT.regular,
-                        minHeight: CONTROL_HEIGHT.regular,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Ionicons
-                        accessibilityElementsHidden
-                        name="chevron-back"
-                        size={TYPOGRAPHY.screenTitle.lineHeight}
-                        color={palette.primary}
-                      />
-                    </Pressable>
+                    />
                   ) : null}
                   <View
                     ref={headingRef}

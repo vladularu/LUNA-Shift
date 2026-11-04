@@ -1,3 +1,4 @@
+import { nativePageHeaderStyle } from "@/theme/page-header";
 import { TVAL_WORKPLACE_OPTIONS, tvalWorkplaceFields } from "./tval-workplace-choice";
 import {
   useEmploymentSaveFlow,
@@ -799,8 +800,6 @@ function SettingsEditorForm({
             title: pageTitle,
             headerTitle: compactHeader ? "" : pageTitle,
             presentation: "card",
-            headerBackVisible: true,
-            headerLeft: undefined,
             headerRight: fromMore
               ? undefined
               : () => (
@@ -811,7 +810,7 @@ function SettingsEditorForm({
                     onPress={() => void submit()}
                   />
                 ),
-            headerStyle: { backgroundColor: palette.background },
+            headerStyle: nativePageHeaderStyle(palette.background),
             headerTintColor: palette.text,
             headerTitleStyle: { color: palette.text },
             statusBarStyle: palette.dark ? "light" : "dark",

@@ -144,6 +144,7 @@ function AnalysisPeriodHeader({
   );
   return (
     <TabScreenHeader
+      testID={`${testID}-header`}
       accessory={
         <View style={{ flexDirection: "row", gap: SPACING.sm }}>
           <AnalysisViewControls compact />
@@ -174,6 +175,7 @@ function AnalysisPeriodHeader({
       }
       surface="groupedBackground"
       title="Auswertung"
+      toolbarSpacing={largeText ? SPACING.xs : 0}
       toolbar={
         <View
           accessibilityRole="toolbar"
@@ -182,18 +184,20 @@ function AnalysisPeriodHeader({
             minHeight: MINIMUM_TOUCH_TARGET,
             flexDirection: "row",
             flexWrap: largeText ? "wrap" : "nowrap",
-            alignItems: "center",
+            alignItems: largeText ? "center" : "flex-start",
             marginHorizontal: -SPACING.sm,
           }}
         >
           {largeText ? periodLabel : null}
           <PeriodArrow
+            alignTop={!largeText}
             accessibilityLabel={previousAccessibilityLabel}
             direction="back"
             onPress={onPrevious}
           />
           {largeText ? <View style={{ flex: 1 }} /> : periodLabel}
           <PeriodArrow
+            alignTop={!largeText}
             accessibilityLabel={nextAccessibilityLabel}
             direction="forward"
             onPress={onNext}

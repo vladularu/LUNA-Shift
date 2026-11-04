@@ -61,6 +61,7 @@
     "test:decoder-hardening": "node --test scripts/decode-uri-component-hardening.test.mjs"
   },
   "dependencies": {
+    "@bsky.app/expo-scroll-edge-effect": "0.1.11",
     "@expo/ui": "~57.0.26",
     "@expo/vector-icons": "^15.0.3",
     "@js-temporal/polyfill": "^0.5.1",

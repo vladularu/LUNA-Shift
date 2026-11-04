@@ -30,7 +30,9 @@ export default function configureApp({ config }: ConfigContext): ExpoConfig {
       : {
           ...config.updates,
           checkAutomatically: "ON_LOAD",
-          fallbackToCacheTimeout: 8000,
+          // Open the local version without waiting for the network. Newly
+          // downloaded updates become available on the next cold start.
+          fallbackToCacheTimeout: 0,
         },
     plugins: (config.plugins ?? []).map((plugin) =>
       Array.isArray(plugin) && plugin[0] === "expo-widgets" && !design && !internal

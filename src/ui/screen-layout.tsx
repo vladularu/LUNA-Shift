@@ -15,7 +15,7 @@ import { usePalette } from "@/theme/palette";
 import { pageHeaderStyle } from "@/theme/page-header";
 import { APP_FONT_FAMILY } from "@/theme/app-font";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { MINIMUM_TOUCH_TARGET, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 
 export type ScreenSurface = "background" | "groupedBackground" | "calendarBackground";
 
@@ -75,6 +75,7 @@ export function TabScreenHeader({
   titleHeightMode = "fixed",
   transparent = false,
   toolbar,
+  toolbarSpacing = SPACING.xs,
   safeTopOverride,
   titleHidden = false,
 }: {
@@ -91,6 +92,7 @@ export function TabScreenHeader({
   readonly titleHeightMode?: "fixed" | "content";
   readonly transparent?: boolean;
   readonly toolbar?: ReactNode;
+  readonly toolbarSpacing?: number;
   readonly safeTopOverride?: number;
   readonly titleHidden?: boolean;
 }) {
@@ -104,17 +106,21 @@ export function TabScreenHeader({
     Boolean(accessory) && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
   const safeTop =
     safeTopOverride ?? (process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : topInset);
-  const titleAreaMinHeight =
-    SCREEN_LAYOUT.headerMinHeight -
-    SCREEN_LAYOUT.headerTopPadding -
-    SCREEN_LAYOUT.headerBottomPadding;
+  const preserveTitleGeometry = transparent || surface === "calendarBackground";
+  const titleAreaMinHeight = preserveTitleGeometry
+    ? SCREEN_LAYOUT.headerMinHeight -
+      SCREEN_LAYOUT.headerTopPadding -
+      SCREEN_LAYOUT.headerBottomPadding
+    : MINIMUM_TOUCH_TARGET;
+  const headerMinHeight =
+    titleAreaMinHeight + SCREEN_LAYOUT.headerTopPadding + SCREEN_LAYOUT.headerBottomPadding;
 
   return (
     <View
       testID={testID}
       pointerEvents={titleHidden ? "box-none" : "auto"}
       style={{
-        minHeight: safeTop + SCREEN_LAYOUT.headerMinHeight,
+        minHeight: safeTop + headerMinHeight,
         ...pageHeaderStyle(transparent ? "transparent" : palette[surface]),
         paddingTop: safeTop + SCREEN_LAYOUT.headerTopPadding,
         paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
@@ -137,33 +143,41 @@ export function TabScreenHeader({
             gap: SPACING.md,
           }}
         >
-          <Animated.Text
-            pointerEvents={titleHidden ? "none" : "auto"}
-            accessible={!titleHidden}
-            accessibilityElementsHidden={titleHidden}
-            importantForAccessibility={titleHidden ? "no-hide-descendants" : "auto"}
-            key={titleKey}
-            accessibilityRole="header"
-            dynamicTypeRamp="largeTitle"
-            entering={titleEntering}
-            exiting={titleExiting}
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            numberOfLines={stableTitle ? 1 : undefined}
-            adjustsFontSizeToFit={stableTitle}
-            minimumFontScale={stableTitle ? minimumTitleScale : undefined}
-            accessibilityLabel={title}
-            style={{
-              ...(titleHidden ? { opacity: 0 } : {}),
-              flex: stackAccessory ? undefined : 1,
-              color: titleColor ?? palette.text,
-              ...TYPOGRAPHY.hero,
-              fontFamily: APP_FONT_FAMILY,
-              height: titleHeightMode === "fixed" ? stableTitleHeight : undefined,
-              minHeight: titleHeightMode === "content" ? stableTitleHeight : undefined,
-            }}
-          >
-            {title}
-          </Animated.Text>
+          {titleHidden ? (
+            <View
+              testID={testID ? `${testID}-title-placeholder` : undefined}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={{
+                flex: stackAccessory ? undefined : 1,
+                height: stableTitleHeight ?? Math.ceil(TYPOGRAPHY.hero.lineHeight * fontScale),
+              }}
+            />
+          ) : (
+            <Animated.Text
+              key={titleKey}
+              accessibilityRole="header"
+              dynamicTypeRamp="largeTitle"
+              entering={titleEntering}
+              exiting={titleExiting}
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              numberOfLines={stableTitle ? 1 : undefined}
+              adjustsFontSizeToFit={stableTitle}
+              minimumFontScale={stableTitle ? minimumTitleScale : undefined}
+              accessibilityLabel={title}
+              style={{
+                flex: stackAccessory ? undefined : 1,
+                color: titleColor ?? palette.text,
+                ...TYPOGRAPHY.hero,
+                fontFamily: APP_FONT_FAMILY,
+                height: titleHeightMode === "fixed" ? stableTitleHeight : undefined,
+                minHeight: titleHeightMode === "content" ? stableTitleHeight : undefined,
+              }}
+            >
+              {title}
+            </Animated.Text>
+          )}
           {accessory ? (
             <View
               style={{
@@ -179,7 +193,7 @@ export function TabScreenHeader({
       {toolbar ? (
         <View
           testID={testID ? `${testID}-toolbar-area` : undefined}
-          style={{ marginTop: SPACING.xs }}
+          style={{ marginTop: toolbarSpacing }}
         >
           {toolbar}
         </View>
