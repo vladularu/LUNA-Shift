@@ -6,6 +6,7 @@ import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
 import type { SalaryPaymentContribution, SalaryPaymentProjection } from "@/domain/salary-payment";
 import type { AllowanceStatus, MonthlyPayEstimate, UserProfile } from "@/domain/types";
 import type { AnnualPaymentForecast } from "@/engine/net-pay-annual-payment";
+import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { formatMonthTitle } from "@/engine/calendar";
 import { usePflegeShiftTestData } from "@/application/pflegeshift-provider";
 import {
@@ -25,7 +26,12 @@ import { Text } from "@/ui/text";
 import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salary-ui";
 import { salaryProfileCaption } from "./salary-composition";
 import { salaryDeductions } from "./salary-deductions";
-import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
+import {
+  netPayEuro,
+  netPayForecastEuro,
+  netPayForecastLabel,
+  netPayCrossYearLabel,
+} from "./net-pay-format";
 import { SalaryPayrollSettings } from "./salary-payroll-settings";
 import { NetPaySettingsEntry } from "./net-pay-automatic-entry-card";
 import { useNetPayProfile } from "./use-net-pay-profile";
@@ -150,6 +156,7 @@ export function SalaryPayrollStatement({
   additionalGrossCents,
   annualPayment,
   pensionOmitted = false,
+  payrollTimingEstimate,
   blocked = false,
   onReviewAllowance,
   afterStatement,
@@ -163,6 +170,7 @@ export function SalaryPayrollStatement({
   readonly additionalGrossCents: number;
   readonly annualPayment?: AnnualPaymentForecast;
   readonly pensionOmitted?: boolean;
+  readonly payrollTimingEstimate?: AutomaticNetPayForecast["payrollTimingEstimate"];
   readonly blocked?: boolean;
   readonly onReviewAllowance: (months: readonly string[]) => void;
   readonly afterStatement?: ReactNode;
@@ -271,6 +279,9 @@ export function SalaryPayrollStatement({
         </View>
         {available && netPayForecastLabel(available) ? (
           <PayrollNote>{netPayForecastLabel(available)}</PayrollNote>
+        ) : null}
+        {available && netPayCrossYearLabel(payrollTimingEstimate) ? (
+          <PayrollNote>{netPayCrossYearLabel(payrollTimingEstimate)}</PayrollNote>
         ) : null}
       </SurfaceCard>
       <View testID="salary-payroll-statement" style={{ gap: REPORT_CARD_GAP }}>
@@ -571,6 +582,7 @@ export function SalaryPayrollContent({
         additionalGrossCents={settings?.automation?.additionalRecurringGrossCents ?? 0}
         annualPayment={forecast?.annualPayment}
         pensionOmitted={forecast?.pensionOmitted ?? false}
+        payrollTimingEstimate={forecast?.payrollTimingEstimate}
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
         afterStatement={

@@ -7,6 +7,7 @@ import type { NetPayResult } from "@/domain/net-pay";
 import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import type { AnnualPaymentForecast } from "@/engine/net-pay-annual-payment";
+import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -14,7 +15,12 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { salaryDetailsRoute, settingsInfoRoute } from "@/navigation/routes";
 import { salaryComposition } from "./salary-composition";
 import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salary-ui";
-import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
+import {
+  netPayEuro,
+  netPayForecastEuro,
+  netPayForecastLabel,
+  netPayCrossYearLabel,
+} from "./net-pay-format";
 import { NetPayPremiumExplanation } from "./net-pay-premium-details";
 import type { SalaryClassification } from "./salary-service-presentation";
 import type { SalaryPaymentProjection } from "@/domain/salary-payment";
@@ -197,11 +203,7 @@ export function SalaryBasisView({
   readonly annualPayment?: AnnualPaymentForecast;
   readonly annualProposal?: import("./annual-salary-proposal").AnnualSalaryProposal | null;
   readonly annualAutomatic?: boolean;
-  readonly payrollTimingEstimate?: {
-    readonly method: "SOURCE_ADJUSTMENT";
-    readonly sourceMonth: string;
-    readonly lag: 1 | 2;
-  };
+  readonly payrollTimingEstimate?: AutomaticNetPayForecast["payrollTimingEstimate"];
 }) {
   const palette = usePalette();
   return (
@@ -246,6 +248,11 @@ export function SalaryBasisView({
               <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
                 Zulagen aus {formatMonthTitle(payrollTimingEstimate.sourceMonth)} nachberechnet.
                 Abzüge mit der Auszahlung angenommen; frühere Einbehalte sind nicht bekannt.
+              </Text>
+            ) : null}
+            {netPayCrossYearLabel(payrollTimingEstimate) ? (
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+                {netPayCrossYearLabel(payrollTimingEstimate)}
               </Text>
             ) : null}
             {pensionOmitted ? (
