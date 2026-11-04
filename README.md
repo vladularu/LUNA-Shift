@@ -1,53 +1,117 @@
 # LUNA Shift
 
-Aktueller Paketstand, Restprüfungen und Prioritäten: [Roadmap und Abschlussstand](docs/roadmap.md).
+Stand: 04.11.2026. Diese Übersicht beschreibt die im aktuellen Master implementierten Funktionen. Die [Roadmap vom 21.09.2026](docs/roadmap.md) ist ein historischer Abschlussstand und bildet spätere Erweiterungen nicht vollständig ab.
 
-LUNA Shift ist ein lokaler, iPhone-first Dienstplaner für Schichtarbeit. Die App verbindet Kalender, Arbeitszeitauswertung und eine unverbindliche TVöD-P-Gehaltsberechnung in einer ruhigen, systemadaptiven Oberfläche.
+LUNA Shift ist ein iPhone-first Dienstplaner für Schichtarbeitende, besonders im Gesundheitswesen. Die App verbindet Kalender, Arbeitszeitauswertung, Gehalts- und Netto-Prognosen sowie optionale Kalenderfreigaben in einer systemadaptiven Oberfläche.
 
-LUNA Shift basiert auf Expo SDK 57, React Native und SQLite. Die Kernfunktionen benötigen weder Konto noch LUNA-Shift-Backend; persönliche Planungsdaten bleiben lokal auf dem Gerät. Die optionale Ortssuche und Kartenansicht verwenden auf iOS Apple-Dienste und auf Android den systemseitigen Geocoder sowie Google Maps. Suchtext, Kartenbereich und gespeicherte Koordinaten können dabei an den jeweiligen Anbieter übermittelt werden; LUNA Shift liest keine aktuelle GPS-Position und betreibt kein Standorttracking. Der genaue Vertrag steht in [`docs/location-data-flows.md`](docs/location-data-flows.md).
+LUNA Shift basiert auf Expo SDK 57, React Native und SQLite. Kalender, lokale Planung und Berechnungen sind ohne Konto nutzbar. Die lokale Datenbank bleibt die Grundlage; optionale Konten, privater Cloud-Abgleich und Kalenderfreigaben übertragen Daten an das konfigurierte Backend (siehe unten). Die optionale Ortssuche und Kartenansicht verwenden auf iOS Apple-Dienste und auf Android den systemseitigen Geocoder sowie Google Maps. Suchtext, Kartenbereich und gespeicherte Koordinaten können dabei an den jeweiligen Anbieter übermittelt werden; LUNA Shift liest keine aktuelle GPS-Position und betreibt kein Standorttracking. Der genaue Vertrag steht in [`docs/location-data-flows.md`](docs/location-data-flows.md).
 
-> **Veröffentlichungsstand:** Für LUNA Shift ist derzeit kein Beta-Tag als aktuelle Installations- oder Migrationsbasis freigegeben. [`v0.1.0-beta.1`](https://github.com/vladularu/PflegeShift/releases/tag/v0.1.0-beta.1) gehört noch zu MediShift und verwendet andere App- und Datenbank-IDs.
+> **Veröffentlichungsstand:** LUNA Shift befindet sich in der iOS-TestFlight-Beta. Der am 04.11.2026 auf dem iPhone bestätigte Build-9-/OTA-Stand wird durch den [TestFlight-Release-Schutz](docs/testflight-release-schutz.md) abgesichert. Ein Merge auf Master ist keine automatische Auslieferung oder Geräteabnahme. Android bleibt bis zur gesonderten technischen und realen Geräteabnahme pausiert; der Web-Export ersetzt keinen nativen iPhone-Build.
+>
+> Der alte Tag [`v0.1.0-beta.1`](https://github.com/vladularu/PflegeShift/releases/tag/v0.1.0-beta.1) gehört zu MediShift und ist wegen anderer App- und Datenbank-IDs keine aktuelle Installations- oder Migrationsbasis.
 
 Die sichtbare Marke und die absichtlich beibehaltenen technischen Kompatibilitätsnamen sind in [`docs/branding.md`](docs/branding.md) dokumentiert.
 
-## Hauptbereiche
+## Bereits implementierte Funktionen
 
 ### Kalender
 
 - Monats- und Jahresansicht ohne dauerhaft eingeblendete Kalenderwochen
 - vertikaler Monatswechsel und direkter Sprung zum heutigen Datum
 - Dienste und Abwesenheiten als kompakte Farbbalken, Termine als Punkt mit Kurztext
-- sichtbare Feiertagsnamen entsprechend dem gewählten Bundesland
+- gesetzliche Feiertage nach Arbeitsort und getrennt dargestellte tarifliche Sondertage
 - Tagesdetails mit Soll-, Ist- und Saldostunden
 - Schnelleingabe für vorhandene Dienstvorlagen, Urlaub, Krank und Frei
 - Stempelmodus zum Eintragen desselben Dienstes an mehreren Tagen
 - Terminserien, lokale Erinnerungen sowie optionale Orts- und Kartenangaben
-- native Zeitwahl auf iOS und Android
+- eigene Dienstvorlagen, Farben, Symbole und Kalenderhintergründe
+- geteilte Dienste, Bereitschaftsdienst und Rufbereitschaft mit erfassten Einsätzen
+- native Zeitwahl; aktuelle Geräteabnahme auf iOS
 
 ### Auswertung
 
 - Monats- und Jahresauswertung
-- Soll-, Ist- und Saldostunden
+- Soll-, erfasste Arbeits- und Saldostunden; bei Sonderdiensten getrennte bewertete Zeitkontoprognose
+- nachvollziehbare Sollzeit aus Arbeitsprofil, Arbeitsort und unterstützten Tarif-/Sondertagsregeln
 - Dienstverteilung
 - Arbeitszeit- und Planungshinweise
 - automatische Empfehlung für Schicht- und Wechselschichtzulagen
 - manuelle Bestätigung der tatsächlich anzuwendenden Zulage
+- Monats- und Jahresberichte als PDF und CSV; Berichte sind keine Datensicherung
 
-### Gehalt
+### Gehalt und Netto
 
-- unverbindliche monatliche Brutto-Schätzung
-- TVöD-P-Tabellenentgelt nach Bereich, Gruppe und Stufe
-- Zeit-, Überstunden-, Schicht- und Wechselschichtzuschläge
-- TVöD-Zulage und Pflegezulage
-- nachvollziehbare Aufschlüsselung einzelner Zeitzuschläge
+- monatliche Brutto- und Netto-Prognose mit aufgeschlüsselten Gehaltsbestandteilen und Abzügen
+- datierte Arbeits-, Gehalts- und Netto-Angaben für historische und geplante Änderungen
+- Tabellenentgelt, tarifabhängige Zulagen, Zeitzuschläge, bestätigte Überstunden und Jahressonderzahlung im unterstützten Umfang
+- getrennte Darstellung erarbeiteter Zuschläge und erwarteter Auszahlung
+- einstellbarer Auszahlungsversatz von 0, 1 oder 2 Monaten für variable Bestandteile; Herkunftsmonate bleiben nachvollziehbar
+- steuerpflichtige und begünstigte Zuschlagsanteile sowie persönliche Steuer-, Versicherungs- und Zusatzversorgungsangaben
+- offene oder fehlende Berechnungsgrundlagen werden gekennzeichnet
 
-### Mehr
+Die reguläre Gehaltsauswahl bietet sieben Tarifmodelle:
 
-- Bundesland und Wochenarbeitszeit
-- TVöD-Bereich, Entgeltgruppe und Stufe
+| Modell               | Bereich                                        |
+| -------------------- | ---------------------------------------------- |
+| TVöD-P               | Pflege; TVöD-Bereich BT-K/BT-B berücksichtigen |
+| TVöD VKA · E-Tabelle | kommunaler öffentlicher Dienst                 |
+| TV-L Pflege          | Pflege im Länderbereich                        |
+| TV-H Pflege          | Hessen                                         |
+| TV-UK Pflege         | Baden-Württemberg                              |
+| TVAöD Pflege         | Ausbildung                                     |
+| TVA-L Pflege         | Ausbildung im Länderbereich                    |
+
+Alternativ lässt sich ein Monatsbrutto selbst eintragen. Eine auswählbare Tabelle bedeutet keine vollständige Umsetzung aller tariflichen Ansprüche. Berechnungen hängen von Tarifbereich, Zeitraum und vollständigen persönlichen Angaben ab; weitere Regelpakete im Repository sind nicht automatisch produktiv verfügbar.
+
+### Bereitschaftsdienst und Rufbereitschaft
+
+- Bereitschaftszeiten, Einsätze und erforderliche Wegezeiten erfassen
+- tarifabhängige Pauschalen, Einsatzvergütung, Bereitschaftsbewertung und gesonderte Zeitzuschläge prognostizieren
+- Auszahlung und bestätigten Freizeitausgleich unterscheiden; tatsächliche Arbeitszeit bleibt getrennt von bewerteter Kontozeit
+- fehlende Vereinbarungen, unbestätigte Einsätze und nicht unterstützte Abrechnungsfälle ausdrücklich offenlassen
+
+Die geprüften Sonderdienstregeln sind auf 2026 begrenzt. Insbesondere mehrtägige beziehungsweise monatsübergreifende Rufbereitschaft wird nicht pauschal vollständig abgerechnet. Details und Grenzen: [Sonderdienste](docs/sonderdienste-f3.md).
+
+### Konto und Kalenderfreigaben
+
+- optionale Anmeldung mit Apple oder Google, abhängig von Plattform und eingerichteter Anbieterfreigabe
+- eigene Kalender per Einladung beziehungsweise QR-Code lesend freigeben und Zugriffe verwalten oder widerrufen
+- Dienste und Termine nach gewählten Inhaltsrechten teilen; Notizen sind standardmäßig nicht freigegeben
+- Profilbilder nur nach ausdrücklicher Einwilligung je Empfänger teilen; sonst Initialen anzeigen
+- eigene und empfangene Kalender getrennt ein-/ausblenden und Personen farblich zuordnen
+- fremde Kalender verändern weder eigene Arbeitszeit noch eigene Gehaltsberechnung
+
+Kalenderfreigaben sind keine gemeinsame Bearbeitung und keine Synchronisation mit Apple Kalender oder Google Kalender.
+
+### iPhone-Widgets und Darstellung
+
+- native Kalenderwidgets mit Tages-, Wochen- und Monatsdarstellungen
+- eigene und freigegebene Dienste sowie Termine, Feiertags-/Sondertagsnamen und Kalenderfarben
+- Kalenderhintergrund und Hell-/Dunkelmodus; ein Tipp öffnet den Kalender
+- Widgets übernehmen keine privaten Notizen oder Ortsangaben
+
+Widgets benötigen einen passenden nativen iOS-Build. Ihre Aktualisierung unterliegt zusätzlich der iOS-Widget-Laufzeit.
+
+### Einstellungen
+
+- Arbeitsort, Wochenarbeitszeit und datierte Arbeits-/Gehaltsgrundlagen
 - Verwaltung und Sortierung der Dienstvorlagen
-- lokale App- und Dateninformationen
-- systemabhängiger Hell-/Dunkelmodus
+- Themes, Hell-/Dunkelmodus und Kalenderdarstellung
+- lokale Datenverwaltung und JSON-Sicherung/Wiederherstellung
+
+## Experimentell oder vorläufig
+
+- **Privater Cloud-Abgleich:** implementiert, einschließlich automatischem Abgleich nach Anmeldung, Sicherungsständen und Konfliktbehandlung. Die dokumentierten realen Zwei-Geräte-/Offline-Prüfungen sind noch nicht vollständig abgeschlossen. Der Abgleich läuft auf geeigneten Seiten der aktiven iOS-App; dauerhafte Hintergrundsynchronisation wird nicht zugesagt. Siehe [Cloud-Ablauf](docs/cloud-account-simplification.md).
+- **Netto-Prognose 2027:** ausdrücklich vorläufige Fortschreibung der geprüften Abzugsgrundlagen von 2026. Fehlende oder abgelaufene Tariftabellen werden dadurch nicht ersetzt. Siehe [Berechnungsgrenzen 2027](docs/brutto-netto-vorlaeufig-2027.md).
+- **Testlabor:** internes Entwicklungswerkzeug; kein regulärer Nutzerbetrieb (siehe unten).
+
+## Geplante oder zurückgestellte Erweiterungen
+
+- weitere Geräte- und Plattformabnahmen, insbesondere Android
+- E-Mail-/Passwort-Anmeldung: vorbereitet, aber deaktiviert; Versand-/Recovery-Einrichtung pausiert
+- externe Kalender-Synchronisation und automatische Dienstrotationen: mögliche spätere Erweiterungen ohne zugesagten Veröffentlichungstermin
+
+Eine verbindliche Lohnabrechnung oder automatische rechtliche Anspruchsentscheidung gehört nicht zum Funktionsumfang.
 
 ## Fachliche Grundlagen
 
@@ -58,17 +122,15 @@ Die sichtbare Marke und die absichtlich beibehaltenen technischen Kompatibilitä
 - Die Schichtzulagen-Erkennung wertet Dienstwechsel und qualifizierende Nachtdienste aus. Eine manuell bestätigte Monatsentscheidung hat Vorrang.
 - Gehaltswerte sind Schätzungen und ersetzen weder Lohnabrechnung noch tarifliche oder rechtliche Prüfung.
 
-## Lokale Datenhaltung
+## Datenhaltung und Datenschutz
 
 LUNA Shift speichert Profileinstellungen, Dienstvorlagen, Einträge und Monatsentscheidungen in einer lokal mit SQLCipher verschlüsselten SQLite-Datenbank. Der Schlüssel liegt im nativen SecureStore. Änderungen verwenden Revisionen und Soft-Delete, damit Datensätze konsistent aktualisiert werden können.
 
-Nicht enthalten sind:
+Ohne Anmeldung bleiben die persönlichen Planungsdaten lokal. Nach optionaler Anmeldung kann der private Cloud-Abgleich automatisch starten und persönliche Sicherungsdaten einschließlich Arbeits-/Gehalts-/Netto-Angaben und Kalenderfoto übertragen. Bei widersprüchlichen Daten oder einem Kontowechsel ist eine Auswahl erforderlich. Abmelden beendet Cloud-Abgleich und Teilen auf diesem Gerät; eigene lokale Daten bleiben erhalten.
 
-- Benutzerkonten oder Cloud-Synchronisation
-- externe Kalender-Synchronisation
-- automatische Backups
-- automatische Dienstserien und Rotationsregeln
-- verbindliche Lohnabrechnungen
+Private Cloud-Sicherungen und Kalenderfreigaben sind getrennte Datenwege: Empfänger erhalten nur die freigegebenen Kalenderinhalte, keine privaten Gehalts- oder Steuerprofile. Notizen und Profilbilder benötigen eigene Freigaben. Die lokale SQLCipher-Verschlüsselung ist keine Zusage einer Ende-zu-Ende-Verschlüsselung der Cloud-Daten.
+
+JSON-Sicherungen und exportierte Berichte sind separate Dateien und entsprechend vertraulich zu behandeln. Ältere Clients können neuere Sicherungsformate sicher ablehnen; App-, Datenbank- und Sicherungsversionen dürfen nicht beliebig ausgetauscht werden. Details: [Datenaufbewahrung](docs/data-retention.md) und [Freigaberechte](docs/sharing-content-rights.md).
 
 ## Entwicklung starten
 
@@ -126,7 +188,7 @@ npx.cmd eas-cli@latest build --platform ios --profile preview
 
 Expo-, Apple- und Google-Zugangsdaten gehören nicht ins Repository. TestFlight-, Play-Console-, Datenschutz- und Store-Metadaten werden außerhalb des Quellcodes gepflegt.
 
-Die vollständige Abnahme steht in der [Release-Checkliste](docs/release-checklist.md).
+Die vollständige Abnahme steht in der [Release-Checkliste](docs/release-checklist.md). Für TestFlight gelten zusätzlich der [Release-Schutz](docs/testflight-release-schutz.md), die passende native Runtime und eine gesonderte Veröffentlichungsfreigabe. Gewöhnliche Dokumentation ist vom eingefrorenen App-Quellvergleich ausgenommen; reine README-Änderungen benötigen keine OTA und keinen neuen nativen Build.
 
 ## Testlabor
 
