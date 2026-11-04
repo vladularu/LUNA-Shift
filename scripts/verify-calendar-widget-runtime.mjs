@@ -119,7 +119,10 @@ for (const [family, count, rows] of [
       assert.ok(JSON.stringify(tree).includes("Heute"));
       assert.ok(JSON.stringify(tree).includes("am Folgetag"));
       assert.ok(JSON.stringify(tree).includes("Nacht"));
-      assert.ok(!JSON.stringify(tree).includes("+1"), "no hidden-entry counters in any family");
+      assert.ok(
+        JSON.stringify(tree).includes("+1"),
+        "additional own entries stay visible as a compact count",
+      );
       assert.ok(JSON.stringify(tree).includes(props.url));
       assert.ok(!JSON.stringify(tree).includes("widget-day"));
       const renderedDates = directRows
@@ -163,6 +166,48 @@ for (const [family, count, rows] of [
       assert.ok(JSON.stringify(sharedTree).includes("Fremder Dienst"));
       assert.ok(!JSON.stringify(sharedTree).includes("Weiterer Dienst"));
       assert.ok(!JSON.stringify(sharedTree).includes("+1"));
+      const withAppointments = structuredClone(props);
+      withAppointments.pastelColors = true;
+      const day = withAppointments.days[0];
+      day.shifts[0].light = {
+        main: "#F4B8C5",
+        detail: "#FCEBF0",
+        onMain: "#171719",
+        onDetail: "#171719",
+      };
+      day.shifts[0].dark = {
+        main: "#F4B8C5",
+        detail: "#67505B",
+        onMain: "#171719",
+        onDetail: "#FFFFFF",
+      };
+      day.appointments = [
+        { id: "appt", title: "Kontrolle", start: "10:00", end: "11:00", nextDay: false },
+        { id: "all", title: "Familientag", start: "", end: "", nextDay: false },
+      ];
+      day.dayLabel = "Silvester";
+      day.tint = { light: "#D39A4540", dark: "#D39A4540" };
+      withAppointments.weekDays[0] = day;
+      const appointmentTree = context.__expoWidgetRender(withAppointments, {
+        widgetFamily: family,
+        colorScheme,
+        widgetRenderingMode,
+      });
+      const text = JSON.stringify(appointmentTree);
+      assert.ok(
+        text.includes("Kontrolle") && text.includes("Familientag"),
+        "VoiceOver retains all appointments",
+      );
+      assert.ok(
+        text.includes("•") && text.includes("+2"),
+        "a shift and appointment fit together with overflow",
+      );
+      assert.ok(text.includes("Silvester"));
+      if (widgetRenderingMode === "fullColor") {
+        assert.ok(text.includes("#F4B8C5"), "pastel main color reaches the isolated renderer");
+        assert.ok(text.includes("#171719"), "pastel title uses a readable foreground");
+        assert.ok(text.includes("#D39A4540"), "calendar day tint reaches the isolated renderer");
+      }
       const serialized = JSON.parse(JSON.stringify(tree));
       assert.ok(serialized.props);
     }
@@ -192,7 +237,7 @@ assert.doesNotThrow(() =>
   ),
 );
 console.log(
-  "Widget isolated runtime: 6/14/28 days, 2/2/4 rows, calendar-only link, light/dark/tinted, empty/expired states passed.",
+  "Widget isolated runtime: 6/14/28 days, 2/2/4 rows, pastel contrast, appointments beside shifts, overflow, day tints, legacy snapshots, light/dark/tinted, calendar-only link and empty/expired states passed.",
 );
 
 const require = createRequire(import.meta.url);

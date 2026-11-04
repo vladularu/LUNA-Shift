@@ -1,6 +1,8 @@
 import Constants from "expo-constants";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
+import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
+import { widgetCalendarHighlights } from "./widget-calendar-highlights";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
 
@@ -34,7 +36,9 @@ export function CalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPorts
 
 function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPorts }) {
   const { ready, error } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
+  const { resolver } = useRuleCatalogRuntime();
   const { entries } = usePflegeShiftEntries();
   const { templates } = usePflegeShiftTemplates();
   const sharedCalendars = useVisibleSharedCalendars();
@@ -104,11 +108,19 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
               timeZone,
               scheme,
               hasProfile: profile !== null,
+              dayLabels:
+                profile && display.showHolidays
+                  ? widgetCalendarHighlights(currentRange, profile, resolver)
+                  : undefined,
               display: {
                 labelMode: display.labelMode,
                 showShiftTimes: display.showShiftTimes,
                 showShiftDuration: display.showShiftDuration,
                 showShifts: display.showShifts,
+                showAppointments: display.showAppointments,
+                pastelColors: display.pastelColors,
+                showHolidays: display.showHolidays,
+                holidayColor: display.holidayColor,
               },
               themeMode: appearance.mode,
               backgroundFileName,
@@ -166,6 +178,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
     ready,
     error,
     profile,
+    resolver,
     entries,
     templates,
     sharedCalendars,
@@ -174,6 +187,10 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
     display.showShiftTimes,
     display.showShiftDuration,
     display.showShifts,
+    display.showAppointments,
+    display.pastelColors,
+    display.showHolidays,
+    display.holidayColor,
     background.ready,
     background.uri,
     background.strength,

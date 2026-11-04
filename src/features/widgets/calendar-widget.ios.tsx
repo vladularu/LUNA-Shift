@@ -51,13 +51,26 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
     ? { type: "hierarchical" as const, style: "primary" as const }
     : colors.text;
   function dayCell(day: WidgetDay) {
-    const first = day.shifts.find((shift) => !shift.ownerName) ?? day.shifts[0];
+    const own = day.shifts.filter((shift) => !shift.ownerName);
+    const shifts = own.length ? own : day.shifts.slice(0, 1);
+    const first = shifts[0];
+    const appointment = day.appointments?.[0];
+    const overflow =
+      Math.max(0, shifts.length - 1) +
+      Math.max(0, (day.appointments?.length ?? 0) - (appointment ? 1 : 0));
+    const statusRow = !!appointment || overflow > 0;
     const today = day.date === (props.todayDate ?? props.days[0].date);
     const chip = dark ? first?.dark : first?.light;
-    const spoken = (first ? [first] : [])
+    const spoken = shifts
       .map(
         (shift) =>
           `${shift.ownerName ? shift.ownerName + ", nur ansehen, " : ""}${shift.title}, ${shift.start ? shift.start + " bis " + shift.end + (shift.nextDay ? " am Folgetag" : "") : "ganztägig"}`,
+      )
+      .concat(
+        (day.appointments ?? []).map(
+          (item) =>
+            `${item.ownerName ? item.ownerName + ", nur ansehen, " : "Termin, "}${item.title}, ${item.start ? item.start + (item.end ? " bis " + item.end : "") + (item.nextDay ? " am Folgetag" : "") : "ganztägig"}`,
+        ),
       )
       .join("; ");
     return (
@@ -70,8 +83,11 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
             maxHeight: Infinity,
             alignment: "top",
           }),
+          ...(day.tint
+            ? [background(tinted ? colors.surface : dark ? day.tint.dark : day.tint.light)]
+            : []),
           accessibilityLabel(
-            `${today ? "Heute, " : ""}${day.weekday}, ${day.shortDate}, ${spoken || "kein Eintrag"}`,
+            `${today ? "Heute, " : ""}${day.weekday}, ${day.shortDate}, ${day.dayLabel ? day.dayLabel + ", " : ""}${spoken || "kein Eintrag"}`,
           ),
         ]}
       >
@@ -92,7 +108,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
             {first.ownerColor ? (
               <VStack
                 modifiers={[
-                  frame({ width: 3, height: lineHeight * (first.detail ? 2 : 1) }),
+                  frame({ width: 3, height: lineHeight * (first.detail && !statusRow ? 2 : 1) }),
                   background(first.ownerColor),
                 ]}
               >
@@ -108,7 +124,9 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
                       ? primary
                       : first.ownerColor
                         ? (chip?.onDetail ?? first.textColor)
-                        : (props.chipStyle?.textColor ?? first.textColor),
+                        : props.pastelColors
+                          ? (chip?.onMain ?? first.textColor)
+                          : (props.chipStyle?.textColor ?? first.textColor),
                   ),
                   background((first.ownerColor ? chip?.detail : chip?.main) ?? first.color),
                   frame({ maxWidth: Infinity, minHeight: lineHeight }),
@@ -118,7 +136,7 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
               >
                 {first.displayLabel ?? first.title}
               </Text>
-              {first.detail ? (
+              {first.detail && !statusRow ? (
                 <Text
                   modifiers={[
                     font({ size: chipFont }),
@@ -132,6 +150,41 @@ export function CalendarWidget(props: CalendarWidgetProps, environment: WidgetEn
                 </Text>
               ) : null}
             </VStack>
+          </HStack>
+        ) : null}
+        {statusRow ? (
+          <HStack spacing={2} modifiers={[frame({ maxWidth: Infinity, minHeight: lineHeight })]}>
+            {appointment ? (
+              <Text
+                modifiers={[
+                  font({ size: chipFont }),
+                  foregroundStyle(tinted ? primary : (appointment.ownerColor ?? colors.muted)),
+                ]}
+              >
+                •
+              </Text>
+            ) : null}
+            {appointment ? (
+              <Text
+                modifiers={[
+                  font({ size: chipFont }),
+                  foregroundStyle(tinted ? primary : colors.muted),
+                  lineLimit(1),
+                  frame({ maxWidth: Infinity, alignment: "leading" }),
+                ]}
+              >
+                {appointment.title}
+              </Text>
+            ) : null}
+            {overflow > 0 ? (
+              <Text
+                modifiers={[
+                  font({ size: chipFont }),
+                  foregroundStyle(tinted ? primary : colors.muted),
+                  lineLimit(1),
+                ]}
+              >{`+${overflow}`}</Text>
+            ) : null}
           </HStack>
         ) : null}
       </VStack>
