@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Linking, Share } from "react-native";
+import { Linking, Platform, Share } from "react-native";
 import { deliverSharingInvitation, invitationDeliveryUrl } from "./invitation-delivery";
 
 const url = "https://luna.example/sharing-invite?token=" + "ab".repeat(32);
 beforeEach(() => {
+  jest.replaceProperty(Platform, "OS", "ios");
   jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   jest.spyOn(Share, "share").mockResolvedValue({ action: Share.sharedAction });
 });
@@ -33,4 +34,26 @@ describe("Einladungsversand", () => {
     expect(Share.share).toHaveBeenCalledTimes(1);
     expect(Share.share).toHaveBeenCalledWith(expect.objectContaining({ url }));
   });
+  it.each(["ios", "android"] as const)(
+    "shares the invitation exactly once on %s, including the messenger fallback",
+    async (platform) => {
+      jest.replaceProperty(Platform, "OS", platform);
+      jest.mocked(Linking.openURL).mockRejectedValueOnce(new Error("app unavailable"));
+      await deliverSharingInvitation(url, "whatsapp");
+      await deliverSharingInvitation(url);
+      for (const [content] of jest.mocked(Share.share).mock.calls) {
+        expect(Object.values(content).join("\n").split(url)).toHaveLength(2);
+        if (platform === "ios") {
+          expect(content).toEqual({
+            message: "Ich möchte meinen LUNA-Kalender mit dir teilen.",
+            url,
+          });
+        } else {
+          expect(content).toEqual({
+            message: `Ich möchte meinen LUNA-Kalender mit dir teilen.\n${url}`,
+          });
+        }
+      }
+    },
+  );
 });
