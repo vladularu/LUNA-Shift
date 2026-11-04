@@ -88,6 +88,21 @@ describe("CalendarHeader", () => {
     jest.mocked(isLiquidGlassAvailable).mockReturnValue(false);
   });
 
+  it("keeps the unwanted fixed month title absent after returning from the year", async () => {
+    const screen = await render(<PlannerHeader pageTitle month="2026-11" />);
+    expect(screen.queryAllByText("November", { includeHiddenElements: true })).toHaveLength(0);
+    expect(
+      screen.getByTestId("calendar-header-title-placeholder", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    await screen.rerender(<PlannerHeader pageTitle month="2026-11" viewMode="YEAR" />);
+    expect(screen.getByRole("header", { name: "2026", includeHiddenElements: true })).toBeTruthy();
+    await screen.rerender(<PlannerHeader pageTitle month="2026-11" viewMode="MONTH" />);
+    expect(screen.queryAllByText("November", { includeHiddenElements: true })).toHaveLength(0);
+    expect(
+      screen.getByTestId("calendar-header-title-placeholder", { includeHiddenElements: true }),
+    ).toBeTruthy();
+  });
+
   it("keeps all three actions compact with comfortable touch targets and preserves their destinations", async () => {
     jest
       .spyOn(

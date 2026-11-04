@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 
-import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { MINIMUM_TOUCH_TARGET, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
 import { ScreenScrollView, TabScreenHeader } from "@/ui/screen-layout";
 
 const SAFE_AREA_METRICS = {
@@ -24,12 +24,17 @@ describe("screen layout", () => {
         .mockReturnValue({ width: 430, height: 932, scale: 3, fontScale });
       try {
         const screen = await render(
-          <TabScreenHeader stableTitle title="September 2027" accessory={<Text>Buttons</Text>} />,
+          <TabScreenHeader
+            transparent
+            stableTitle
+            title="September 2027"
+            accessory={<Text>Buttons</Text>}
+          />,
         );
         const height = Math.ceil(41 * fontScale);
         expect(screen.getByRole("header", { name: "September 2027" })).toHaveStyle({ height });
         await screen.rerender(
-          <TabScreenHeader stableTitle title="2027" accessory={<Text>Buttons</Text>} />,
+          <TabScreenHeader transparent stableTitle title="2027" accessory={<Text>Buttons</Text>} />,
         );
         expect(screen.getByRole("header", { name: "2027" })).toHaveStyle({ height });
         await screen.unmount();
@@ -75,15 +80,12 @@ describe("screen layout", () => {
     );
 
     expect(screen.getByTestId("tab-screen-header")).toHaveStyle({
-      minHeight: SAFE_AREA_METRICS.insets.top + SCREEN_LAYOUT.headerMinHeight,
+      minHeight: SAFE_AREA_METRICS.insets.top + 68,
       paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
       paddingBottom: SCREEN_LAYOUT.headerBottomPadding,
     });
     expect(screen.getByTestId("tab-screen-header-title-area")).toHaveStyle({
-      minHeight:
-        SCREEN_LAYOUT.headerMinHeight -
-        SCREEN_LAYOUT.headerTopPadding -
-        SCREEN_LAYOUT.headerBottomPadding,
+      minHeight: MINIMUM_TOUCH_TARGET,
       justifyContent: "flex-end",
     });
     expect(screen.getByTestId("tab-screen-header-toolbar-area")).toHaveStyle({
@@ -94,6 +96,19 @@ describe("screen layout", () => {
       "largeTitle",
     );
     expect(screen.getByTestId("header-toolbar")).toHaveTextContent("Zeitraum");
+  });
+
+  it("keeps the paused calendar header geometry while raising ordinary page titles", async () => {
+    const screen = await render(
+      <SafeAreaProvider initialMetrics={SAFE_AREA_METRICS}>
+        <TabScreenHeader testID="page" title="Mehr" />
+        <TabScreenHeader transparent testID="calendar" title="November" />
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByTestId("page-title-area")).toHaveStyle({ minHeight: 44 });
+    expect(screen.getByTestId("page")).toHaveStyle({ minHeight: 115 });
+    expect(screen.getByTestId("calendar-title-area")).toHaveStyle({ minHeight: 60 });
+    expect(screen.getByTestId("calendar")).toHaveStyle({ minHeight: 131 });
   });
 
   it("keeps the title anchor identical with and without a toolbar", async () => {

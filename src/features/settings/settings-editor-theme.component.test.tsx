@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { SettingsEditorTestFlow } from "./settings-choice-test-helpers";
 
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import { pageBackButtonOptions } from "@/ui/native-page-header";
 
 let mockPalette = LIGHT_PALETTE;
 let mockSection = "WORK";
@@ -68,12 +69,15 @@ describe("settings native header theme", () => {
     jest.clearAllMocks();
   });
 
-  it.each(["WORK", "TARIFF"])(
+  it.each(["WORK", "TARIFF", "EMPLOYER"])(
     "updates %s header in both directions without saving",
     async (section) => {
       mockSection = section;
       const screen = await render(<SettingsEditorTestFlow />);
       expect(mockOptions.headerStyle).toEqual({ backgroundColor: LIGHT_PALETTE.background });
+      const inheritedOptions = { ...pageBackButtonOptions(), ...mockOptions };
+      expect(inheritedOptions.headerBackVisible).toBe(false);
+      expect(inheritedOptions.unstable_headerLeftItems({ canGoBack: true })).toHaveLength(1);
       for (const palette of [DARK_PALETTE, LIGHT_PALETTE]) {
         mockPalette = palette;
         await screen.rerender(<SettingsEditorTestFlow />);

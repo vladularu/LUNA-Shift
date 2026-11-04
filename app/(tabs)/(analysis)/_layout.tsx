@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { usePalette } from "@/theme/palette";
-import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
+import { PAGE_HEADER_OPTIONS, nativePageHeaderStyle } from "@/theme/page-header";
+import { pageBackButtonOptions } from "@/ui/native-page-header";
 
 export default function AnalysisStack() {
   const palette = usePalette();
@@ -13,7 +14,8 @@ export default function AnalysisStack() {
         contentStyle: { backgroundColor: palette.background },
         headerLargeTitle: false,
         ...PAGE_HEADER_OPTIONS,
-        headerStyle: { backgroundColor: palette.background },
+        ...pageBackButtonOptions(),
+        headerStyle: nativePageHeaderStyle(palette.background),
         headerTintColor: palette.text,
         headerTitleStyle: { color: palette.text },
         statusBarStyle: palette.dark ? "light" : "dark",

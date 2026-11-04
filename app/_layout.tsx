@@ -18,7 +18,8 @@ import { ActiveMonthProvider } from "@/navigation/active-month";
 import { horizontalBackGestureOptions } from "@/navigation/horizontal-back-gesture";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
-import { PAGE_HEADER_OPTIONS } from "@/theme/page-header";
+import { PAGE_HEADER_OPTIONS, nativePageHeaderStyle } from "@/theme/page-header";
+import { pageBackButtonOptions } from "@/ui/native-page-header";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { FeedbackProvider } from "@/ui/feedback";
 import {
@@ -123,7 +124,8 @@ function ThemedApp() {
                               ...horizontalBackGestureOptions(route.name),
                               headerBackButtonDisplayMode: "minimal",
                               ...PAGE_HEADER_OPTIONS,
-                              headerStyle: { backgroundColor: palette.background },
+                              ...pageBackButtonOptions(),
+                              headerStyle: nativePageHeaderStyle(palette.background),
                               headerTintColor: palette.text,
                               headerTitleStyle: {
                                 ...TYPOGRAPHY.sectionTitle,
@@ -131,7 +133,6 @@ function ThemedApp() {
                                 color: palette.text,
                               },
                               statusBarStyle: dark ? "light" : "dark",
-                              headerTransparent: false,
                             })}
                           >
                             <Stack.Screen
