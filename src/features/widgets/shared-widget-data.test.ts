@@ -280,3 +280,62 @@ describe("shared widget colors match the app calendar", () => {
     },
   );
 });
+
+it("keeps shared appointments separate from the shift fallback and respects visibility and expiry", () => {
+  const shared = {
+    ...cache,
+    entries: [
+      cache.entries[0],
+      {
+        ...cache.entries[0],
+        id: "appt",
+        kind: "APPOINTMENT" as const,
+        title: "Besprechung",
+        note: "SECRET",
+      },
+    ],
+  };
+  const result = timeline([shared], { entries: [ownShift] });
+  for (const grid of ["days", "weekDays", "monthDays"] as const) {
+    const day = result[0].props[grid].find((day) => day.date === ownShift.date)!;
+    expect(day.shifts.map((item) => item.id)).toEqual(["own"]);
+    expect(day.appointments).toEqual([
+      expect.objectContaining({
+        title: "Besprechung",
+        ownerName: "Loni",
+        ownerColor: "#0088CC",
+        start: "21:00",
+      }),
+    ]);
+  }
+  expect(JSON.stringify(result)).not.toMatch(/SECRET|PRIVATE/);
+  const hidden = timeline([shared], {
+    display: {
+      labelMode: "FULL",
+      showShifts: true,
+      showShiftTimes: true,
+      showShiftDuration: false,
+      showAppointments: false,
+    },
+  });
+  expect(hidden[0].props.days.flatMap((day) => day.appointments ?? [])).toEqual([]);
+  const expired = result.find((entry) => entry.date.toISOString() === "2026-11-01T11:00:00.000Z")!;
+  expect(expired.props.days.flatMap((day) => day.appointments ?? [])).toEqual([]);
+});
+it("uses the viewer's pastel palette for shared entries without recoloring the person", () => {
+  const props = timeline([cache], {
+    display: {
+      labelMode: "FULL",
+      showShifts: true,
+      showShiftTimes: true,
+      showShiftDuration: false,
+      pastelColors: true,
+    },
+  })[0].props;
+  for (const grid of [props.days, props.weekDays, props.monthDays]) {
+    const shift = grid.find((day) => day.date === ownShift.date)!.shifts[0];
+    expect(shift.light).toEqual(sharedCalendarChipPalette(shift.color, false, true));
+    expect(shift.dark).toEqual(sharedCalendarChipPalette(shift.color, true, true));
+    expect(shift.ownerColor).toBe(cache.calendar.color);
+  }
+});

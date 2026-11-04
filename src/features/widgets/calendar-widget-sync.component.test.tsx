@@ -7,9 +7,16 @@ import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
 import { CalendarWidgetSync } from "./calendar-widget-sync";
 import { calendarWidgetsAvailable, publishCalendarWidgetTimeline } from "./native-calendar-widget";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
+import type { CalendarEntry, CalendarHolidayColor } from "@/domain/types";
+import { work } from "@/engine/remuneration-test-fixtures";
+import { bundledRuleResolver } from "@/rules/rule-resolver";
+import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
+import { calendarChipPalette } from "@/theme/color-contrast";
 
 let mockStatus = { ready: true, error: null as string | null };
 let mockProfile: { timeZone: string } | null = { timeZone: "Europe/Berlin" };
+let mockCalculationProfile: ReturnType<typeof createWorkingTimeCalculationProfile> | null = null;
+const mockResolver = bundledRuleResolver;
 let mockEntries: object[] = [];
 let mockDisplay = {
   ready: true,
@@ -17,6 +24,10 @@ let mockDisplay = {
   showShiftTimes: true,
   showShiftDuration: false,
   showShifts: true,
+  showAppointments: true,
+  pastelColors: false,
+  showHolidays: false,
+  holidayColor: "ORANGE" as CalendarHolidayColor,
 };
 let mockBackground = { ready: true, uri: null as string | null, strength: "medium" };
 let mockAppearance = { ready: true, mode: "system" };
@@ -24,6 +35,9 @@ const mockPrepareBackground = jest.fn<(_uri: string | null) => Promise<string | 
 const mockPruneBackground = jest.fn();
 jest.mock("@/features/calendar/calendar-preferences", () => ({
   useCalendarPreferences: () => mockDisplay,
+}));
+jest.mock("@/application/rule-catalog-runtime-provider", () => ({
+  useRuleCatalogRuntime: () => ({ resolver: mockResolver }),
 }));
 jest.mock("@/features/settings/calendar-background-context", () => ({
   useCalendarBackground: () => mockBackground,
@@ -38,7 +52,10 @@ jest.mock("./calendar-widget-background", () => ({
 const mockTemplates: object[] = [];
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftStatus: () => mockStatus,
-  usePflegeShiftProfile: () => ({ profile: mockProfile }),
+  usePflegeShiftProfile: () => ({
+    profile: mockProfile,
+    calculationProfile: mockCalculationProfile,
+  }),
   usePflegeShiftEntries: () => ({ entries: mockEntries }),
   usePflegeShiftTemplates: () => ({ templates: mockTemplates }),
 }));
@@ -53,7 +70,7 @@ jest.mock("./native-calendar-widget", () => ({
 const publish = jest.mocked(publishCalendarWidgetTimeline);
 const available = jest.mocked(calendarWidgetsAvailable);
 
-type LoadEntries = (start: string, end: string) => Promise<readonly never[]>;
+type LoadEntries = (start: string, end: string) => Promise<readonly CalendarEntry[]>;
 function ports(load = jest.fn<LoadEntries>().mockResolvedValue([])) {
   const record = jest.fn();
   return {
@@ -74,6 +91,7 @@ beforeEach(() => {
   available.mockReturnValue(true);
   mockStatus = { ready: true, error: null };
   mockProfile = { timeZone: "Europe/Berlin" };
+  mockCalculationProfile = null;
   mockEntries = [];
   mockDisplay = {
     ready: true,
@@ -81,6 +99,10 @@ beforeEach(() => {
     showShiftTimes: true,
     showShiftDuration: false,
     showShifts: true,
+    showAppointments: true,
+    pastelColors: false,
+    showHolidays: false,
+    holidayColor: "ORANGE",
   };
   mockBackground = { ready: true, uri: null, strength: "medium" };
   mockAppearance = { ready: true, mode: "system" };
@@ -326,5 +348,77 @@ it("waits for the persisted display and background before replacing a widget", a
   const screen = await render(<CalendarWidgetSync ports={p.value} />);
   expect(p.load).not.toHaveBeenCalled();
   expect(publish).not.toHaveBeenCalled();
+  await screen.unmount();
+});
+
+it("refreshes pastel, appointment visibility and holiday colors independently", async () => {
+  mockCalculationProfile = createWorkingTimeCalculationProfile(
+    { ...work, federalState: "HE" },
+    null,
+    [],
+  );
+  const shift: CalendarEntry = {
+    kind: "SHIFT",
+    id: "own",
+    date: "2026-12-31",
+    title: "Früh",
+    color: "#FF526D",
+    symbol: "sun",
+    type: "EARLY",
+    templateId: null,
+    startTime: "06:00",
+    endTime: "14:00",
+    breakMinutes: 0,
+    note: null,
+    overtimeMinutes: 0,
+    holidayPremiumMode: "WITH_TIME_OFF",
+    revision: 1,
+    createdAt: "",
+    updatedAt: "",
+    deletedAt: null,
+  };
+  const appointment: CalendarEntry = {
+    kind: "APPOINTMENT",
+    id: "appt",
+    date: "2026-12-31",
+    title: "Kontrolle",
+    allDay: true,
+    startTime: null,
+    endTime: null,
+    color: "#FFFFFF",
+    note: "PRIVATE",
+    revision: 1,
+    createdAt: "",
+    updatedAt: "",
+    deletedAt: null,
+  };
+  const p = ports(jest.fn<LoadEntries>().mockResolvedValue([shift, appointment]));
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  await act(async () => {});
+  const first = () => publish.mock.calls.at(-1)![0][0].props;
+  expect(first().days[0].appointments).toHaveLength(1);
+  let count = publish.mock.calls.length;
+  for (const patch of [
+    { pastelColors: true },
+    { showAppointments: false },
+    { showHolidays: true },
+    { holidayColor: "BLUE" as const },
+  ]) {
+    mockDisplay = { ...mockDisplay, ...patch };
+    await screen.rerender(<CalendarWidgetSync ports={p.value} />);
+    await act(async () => {});
+    expect(publish).toHaveBeenCalledTimes(++count);
+  }
+  expect(first().pastelColors).toBe(true);
+  expect(first().days[0].shifts[0].light).toEqual(calendarChipPalette(shift.color, false, true));
+  expect(first().days[0].appointments).toEqual([]);
+  expect(first().days[0].dayLabel).toBe("Silvester (tariflicher Sondertag)");
+  expect(first().days[0].tint?.light).toBe("#3B82D040");
+  mockDisplay = { ...mockDisplay, showHolidays: false, showAppointments: true };
+  await screen.rerender(<CalendarWidgetSync ports={p.value} />);
+  await act(async () => {});
+  expect(first().days[0].dayLabel).toBeUndefined();
+  expect(first().days[0].appointments).toHaveLength(1);
+  expect(JSON.stringify(first())).not.toContain("PRIVATE");
   await screen.unmount();
 });

@@ -66,10 +66,27 @@ struct LUNAWidgetDay: Decodable, Identifiable, Sendable {
   let date, weekday, shortDate, url: String
   let shifts: [LUNAWidgetShift]
   let weekdayIndex: Int?
+  let appointments: [LUNAWidgetAppointment]?
+  let dayLabel: String?
+  let tint: LUNAWidgetTint?
   // Prefer own entries even when reading an older snapshot containing both sources.
-  var primaryShift: LUNAWidgetShift? { shifts.first(where: { $0.ownerName == nil }) ?? shifts.first }
+  var visibleShifts: [LUNAWidgetShift] {
+    let own = shifts.filter { $0.ownerName == nil }
+    return own.isEmpty ? Array(shifts.prefix(1)) : own
+  }
+  var primaryShift: LUNAWidgetShift? { visibleShifts.first }
   var id: String { date }
   var dayNumber: String { Int(date.suffix(2)).map { String($0) } ?? shortDate }
+}
+
+struct LUNAWidgetAppointment: Decodable, Sendable {
+  let id, title, start, end: String
+  let nextDay: Bool
+  let ownerName, ownerColor: String?
+}
+
+struct LUNAWidgetTint: Decodable, Sendable {
+  let light, dark: String
 }
 
 struct LUNAWidgetData: Decodable, Sendable {
@@ -81,10 +98,11 @@ struct LUNAWidgetData: Decodable, Sendable {
   let themeMode, backgroundFileName: String?
   let backgroundOpacity: Double?
   let chipStyle: LUNAChipStyle?
+  let pastelColors: Bool?
 
   static let empty = Self(days: [], weekDays: nil, monthDays: nil, todayDate: nil, month: nil, monthTitle: nil, state: "setup", url: lunaDefaultURL,
                           light: .fallback(dark: false), dark: .fallback(dark: true),
-                          themeMode: nil, backgroundFileName: nil, backgroundOpacity: nil, chipStyle: nil)
+                          themeMode: nil, backgroundFileName: nil, backgroundOpacity: nil, chipStyle: nil, pastelColors: nil)
   var destination: URL { URL(string: url) ?? URL(string: lunaDefaultURL)! }
   func usesDark(systemDark: Bool) -> Bool {
     themeMode == "dark" || (themeMode != "light" && systemDark)
@@ -252,7 +270,7 @@ struct LUNACalendarContent: View {
                 if month { monthCell(day, height: height) }
                 else {
                   Link(destination: URL(string: day.url) ?? data.destination) {
-                    serviceCell(day)
+                    serviceCell(day, height: height)
                   }.buttonStyle(.plain)
                 }
               }
@@ -282,14 +300,32 @@ struct LUNACalendarContent: View {
       .clipShape(Capsule())
   }
   private func weekend(_ day: LUNAWidgetDay) -> Color {
-    (["Sa", "So"].contains(day.weekday)) ? (tinted ? Color.secondary.opacity(0.08) : Color.lunaHex(palette.surface).opacity(0.18)) : .clear
+    if let tint = day.tint {
+      return tinted ? Color.secondary.opacity(0.08) : Color.lunaHex(dark ? tint.dark : tint.light)
+    }
+    return (["Sa", "So"].contains(day.weekday)) ? (tinted ? Color.secondary.opacity(0.08) : Color.lunaHex(palette.surface).opacity(0.18)) : .clear
   }
-  private func serviceCell(_ day: LUNAWidgetDay) -> some View {
+  private func serviceCell(_ day: LUNAWidgetDay, height: CGFloat) -> some View {
     let lineHeight = min(data.chipStyle?.rowHeight ?? 17, LUNAWidgetLayout.lineHeight)
+    let appointment = day.appointments?.first
+    let overflow = max(0, day.visibleShifts.count - 1) + max(0, (day.appointments?.count ?? 0) - (appointment == nil ? 0 : 1))
+    let hasStatusRow = appointment != nil || overflow > 0
+    let detailHeight = LUNAWidgetLayout.dayHeight + LUNAWidgetLayout.dateGap + CGFloat(lineHeight) * (hasStatusRow ? 3 : 2) + 4
+    let roomForDetail = height >= detailHeight
     return VStack(spacing: 2) {
       dayNumber(day).frame(maxWidth: .infinity)
         .padding(.bottom, LUNAWidgetLayout.dateGap - 2)
-      if let shift = day.primaryShift { shiftChip(shift, lineHeight: lineHeight) }
+      if let shift = day.primaryShift { shiftChip(shift, lineHeight: lineHeight, showDetail: roomForDetail) }
+      if hasStatusRow {
+        HStack(spacing: 2) {
+          if let appointment {
+            Text("•").foregroundStyle(tinted ? muted : Color.lunaHex(appointment.ownerColor ?? palette.muted))
+            Text(appointment.title).lineLimit(1).truncationMode(.tail).frame(maxWidth: .infinity, alignment: .leading)
+          }
+          if overflow > 0 { Text("+\(overflow)").fixedSize() }
+        }.font(.system(size: LUNAWidgetLayout.chipFont)).foregroundStyle(muted)
+          .frame(maxWidth: .infinity, minHeight: lineHeight, alignment: .leading)
+      }
       Spacer(minLength: 0)
     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background(weekend(day)).clipShape(RoundedRectangle(cornerRadius: 2))
@@ -300,33 +336,39 @@ struct LUNACalendarContent: View {
     let dateHeight = min(LUNAWidgetLayout.dayHeight, max(10, height - 5))
     return VStack(spacing: 2) {
       dayNumber(day, compactHeight: dateHeight)
-      Group {
+      HStack(spacing: 1) {
         if let shift = day.primaryShift {
           RoundedRectangle(cornerRadius: 1.5)
-            .fill(tinted ? primary : Color.lunaHex(shift.color))
+            .fill(tinted ? primary : Color.lunaHex((dark ? shift.dark : shift.light)?.main ?? shift.color))
             .overlay(alignment: .leading) {
               if let ownerColor = shift.ownerColor {
                 Rectangle().fill(tinted ? primary : Color.lunaHex(ownerColor)).frame(width: 2)
               }
-            }.clipShape(RoundedRectangle(cornerRadius: 1.5))
-        } else { Color.clear }
-      }.frame(width: 10, height: 3)
+            }.clipShape(RoundedRectangle(cornerRadius: 1.5)).frame(width: 10)
+        }
+        if !(day.appointments ?? []).isEmpty { Circle().fill(muted).frame(width: 3) }
+        if day.visibleShifts.count > 1 || (day.appointments?.count ?? 0) > 1 {
+          Circle().fill(muted).frame(width: 2)
+        }
+      }.frame(height: 3)
     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background(weekend(day)).clipShape(RoundedRectangle(cornerRadius: 2))
       .accessibilityElement(children: .ignore).accessibilityLabel(spokenLabel(day))
   }
-  private func shiftChip(_ shift: LUNAWidgetShift, lineHeight: Double) -> some View {
+  private func shiftChip(_ shift: LUNAWidgetShift, lineHeight: Double, showDetail: Bool) -> some View {
     let colors = dark ? shift.dark : shift.light
     let detail = shift.displayLabel == nil ? (shift.start.isEmpty ? "GT" : shift.start) : shift.detail
     let size = min(data.chipStyle?.fontSize ?? 12, LUNAWidgetLayout.chipFont)
+    let ownForeground = data.pastelColors == true ? (colors?.onMain ?? shift.textColor) : (data.chipStyle?.textColor ?? "#FFFFFF")
+    let titleForeground = shift.ownerColor == nil ? ownForeground : (colors?.onDetail ?? shift.textColor)
     return VStack(spacing: 0) {
       Group {
         if let symbol = shift.symbol { Image(systemName: symbol).font(.system(size: size, weight: .medium)) }
         else { Text(shift.displayLabel ?? shift.title).font(.system(size: size, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7) }
-      }.foregroundStyle(tinted ? primary : Color.lunaHex(shift.ownerColor == nil ? (data.chipStyle?.textColor ?? "#FFFFFF") : (colors?.onDetail ?? shift.textColor)))
+      }.foregroundStyle(tinted ? primary : Color.lunaHex(titleForeground))
         .frame(maxWidth: .infinity, minHeight: lineHeight)
         .background(Color.lunaHex(shift.ownerColor == nil ? (colors?.main ?? shift.color) : (colors?.detail ?? shift.color)))
-      if let detail, !detail.isEmpty {
+      if showDetail, let detail, !detail.isEmpty {
         Text(detail).font(.system(size: size, weight: .regular)).monospacedDigit()
           .lineLimit(1).minimumScaleFactor(0.7)
           .foregroundStyle(tinted ? primary : Color.lunaHex(colors?.onDetail ?? shift.textColor))
@@ -340,10 +382,14 @@ struct LUNACalendarContent: View {
     }.clipShape(RoundedRectangle(cornerRadius: data.chipStyle?.radius ?? 2, style: .continuous))
   }
   private func spokenLabel(_ day: LUNAWidgetDay) -> String {
-    let shifts = [day.primaryShift].compactMap { $0 }.map { shift in
+    let shifts = day.visibleShifts.map { shift in
       (shift.ownerName.map { "\($0), nur ansehen, " } ?? "Dein Dienst, ") + (shift.start.isEmpty ? "\(shift.title), ganztägig" : "\(shift.title), \(shift.start) bis \(shift.end)\(shift.nextDay ? " am Folgetag" : "")")
-    }.joined(separator: "; ")
-    return "\(day.date == todayDate ? "Heute, " : "")\(day.weekday), \(day.shortDate), \(shifts.isEmpty ? "kein Eintrag" : shifts)"
+    }
+    let appointments = (day.appointments ?? []).map { appointment in
+      (appointment.ownerName.map { "\($0), nur ansehen, " } ?? "Termin, ") + appointment.title + (appointment.start.isEmpty ? ", ganztägig" : ", \(appointment.start)\(appointment.end.isEmpty ? "" : " bis \(appointment.end)")\(appointment.nextDay ? " am Folgetag" : "")")
+    }
+    let entries = (shifts + appointments).joined(separator: "; ")
+    return "\(day.date == todayDate ? "Heute, " : "")\(day.weekday), \(day.shortDate), \(day.dayLabel.map { "\($0), " } ?? "")\(entries.isEmpty ? "kein Eintrag" : entries)"
   }
 }
 

@@ -19,6 +19,7 @@ import {
   sharedCalendarChipPalette,
 } from "@/theme/color-contrast";
 import { DARK_PALETTE, LIGHT_PALETTE, type Palette } from "@/theme/palette-values";
+import { calendarDayTints } from "@/theme/calendar-day-tints";
 
 export interface WidgetShift {
   readonly ownerName?: string;
@@ -44,7 +45,21 @@ export interface WidgetDay {
   readonly weekdayIndex: number;
   readonly shortDate: string;
   readonly shifts: readonly WidgetShift[];
+  // Optional additions keep stored timelines from older binaries readable.
+  readonly appointments?: readonly WidgetAppointment[];
+  readonly dayLabel?: string;
+  readonly tint?: { readonly light: string; readonly dark: string };
   readonly url: string;
+}
+
+export interface WidgetAppointment {
+  readonly id: string;
+  readonly title: string;
+  readonly start: string;
+  readonly end: string;
+  readonly nextDay: boolean;
+  readonly ownerName?: string;
+  readonly ownerColor?: string;
 }
 
 function widgetPalette(palette: Palette) {
@@ -60,6 +75,7 @@ function widgetPalette(palette: Palette) {
 }
 
 export interface CalendarWidgetProps {
+  readonly pastelColors?: boolean;
   readonly days: readonly WidgetDay[];
   readonly weekDays: readonly WidgetDay[];
   readonly monthDays: readonly WidgetDay[];
@@ -118,12 +134,19 @@ export function nextWidgetMidnight(now: Date, timeZone: string): Date {
 export type WidgetCalendarDisplay = Pick<
   CalendarPreferencesData,
   "labelMode" | "showShiftTimes" | "showShiftDuration" | "showShifts"
->;
+> &
+  Partial<
+    Pick<
+      CalendarPreferencesData,
+      "pastelColors" | "showAppointments" | "showHolidays" | "holidayColor"
+    >
+  >;
 const DEFAULT_WIDGET_DISPLAY: WidgetCalendarDisplay = {
   labelMode: "FULL",
   showShiftTimes: true,
   showShiftDuration: false,
   showShifts: true,
+  showAppointments: true,
 };
 
 function shiftData(
@@ -144,8 +167,8 @@ function shiftData(
           : entry.title,
     symbol: display.labelMode === "SYMBOL" ? widgetSymbol(entry.symbol) : null,
     detail: calendarShiftDetail(entry, { ...display, timeZone }),
-    light: calendarChipPalette(entry.color, false),
-    dark: calendarChipPalette(entry.color, true),
+    light: calendarChipPalette(entry.color, false, display.pastelColors),
+    dark: calendarChipPalette(entry.color, true, display.pastelColors),
     title: entry.title,
     start: timed ? entry.startTime! : "",
     end: timed ? entry.endTime! : "",
@@ -196,8 +219,10 @@ export function buildCalendarWidgetTimeline({
   backgroundFileName = null,
   backgroundStrength = "medium",
   sharedCalendars = [],
+  dayLabels = new Map(),
 }: {
   readonly sharedCalendars?: readonly CachedSharedCalendar[];
+  readonly dayLabels?: ReadonlyMap<string, string>;
   readonly entries: readonly CalendarEntry[];
   readonly now: Date;
   readonly timeZone: string;
@@ -210,8 +235,24 @@ export function buildCalendarWidgetTimeline({
 }): readonly CalendarWidgetTimelineEntry[] {
   const start = widgetToday(now, timeZone);
   const byDate = new Map<string, ShiftEntry[]>();
+  const appointmentsByDate = new Map<string, WidgetAppointment[]>();
   for (const entry of [...entries].sort(compareCalendarEntries)) {
-    if (entry.kind !== "SHIFT" || entry.deletedAt !== null) continue;
+    if (entry.deletedAt !== null) continue;
+    if (entry.kind === "APPOINTMENT") {
+      if (display.showAppointments !== false) {
+        const appointments = appointmentsByDate.get(entry.date) ?? [];
+        const timed = !entry.allDay && entry.startTime !== null;
+        appointments.push({
+          id: entry.id,
+          title: entry.title,
+          start: timed ? entry.startTime! : "",
+          end: timed ? (entry.endTime ?? "") : "",
+          nextDay: timed && entry.endTime !== null && entry.endTime <= entry.startTime!,
+        });
+        appointmentsByDate.set(entry.date, appointments);
+      }
+      continue;
+    }
     for (const date of dutyCalendarDates(entry)) {
       const bucket = byDate.get(date) ?? [];
       bucket.push(entry);
@@ -219,6 +260,7 @@ export function buildCalendarWidgetTimeline({
     }
   }
   const base = {
+    pastelColors: display.pastelColors ?? false,
     themeMode,
     backgroundFileName: hasProfile ? backgroundFileName : null,
     backgroundOpacity: calendarImageOverlayOpacity(backgroundStrength),
@@ -262,17 +304,47 @@ export function buildCalendarWidgetTimeline({
       const day = date.add({ days: index });
       const iso = day.toString();
       const own = byDate.get(iso) ?? [];
+      const sharedRows = [...(shared.get(iso) ?? [])].sort(
+        (a, b) =>
+          Date.parse(a.entry.startsAt) - Date.parse(b.entry.startsAt) ||
+          a.calendarId.localeCompare(b.calendarId) ||
+          a.entry.id.localeCompare(b.entry.id),
+      );
       // Sharing fills empty days only; hidden own shifts must not be replaced by another person's shift.
       const sharedFallback = own.length
         ? []
-        : [...(shared.get(iso) ?? [])]
-            .sort(
-              (a, b) =>
-                Date.parse(a.entry.startsAt) - Date.parse(b.entry.startsAt) ||
-                a.calendarId.localeCompare(b.calendarId) ||
-                a.entry.id.localeCompare(b.entry.id),
-            )
-            .slice(0, 1);
+        : sharedRows.filter((row) => row.entry.kind !== "APPOINTMENT").slice(0, 1);
+      const ownAppointments = appointmentsByDate.get(iso) ?? [];
+      const appointments =
+        display.showAppointments === false
+          ? []
+          : [
+              ...ownAppointments,
+              ...sharedRows
+                .filter((row) => row.entry.kind === "APPOINTMENT")
+                .map((row): WidgetAppointment => {
+                  const entry = row.entry;
+                  const from = Temporal.Instant.from(entry.startsAt).toZonedDateTimeISO(timeZone);
+                  const to = Temporal.Instant.from(entry.endsAt).toZonedDateTimeISO(timeZone);
+                  return {
+                    id: `shared:${row.calendarId}:${entry.id}`,
+                    title: entry.title,
+                    start: entry.allDay ? "" : from.toPlainTime().toString().slice(0, 5),
+                    end: entry.allDay ? "" : to.toPlainTime().toString().slice(0, 5),
+                    nextDay: !from.toPlainDate().equals(to.toPlainDate()),
+                    ownerName: row.calendarName,
+                    ownerColor: row.calendarColor,
+                  };
+                }),
+            ];
+      const dayLabel = display.showHolidays === false ? undefined : dayLabels.get(iso);
+      const lightTints = calendarDayTints(LIGHT_PALETTE, display.holidayColor);
+      const darkTints = calendarDayTints(DARK_PALETTE, display.holidayColor);
+      const tint = dayLabel
+        ? { light: lightTints.specialDay, dark: darkTints.specialDay }
+        : day.dayOfWeek >= 6
+          ? { light: lightTints.weekend, dark: darkTints.weekend }
+          : undefined;
       return {
         date: iso,
         weekday: WEEKDAYS[day.dayOfWeek - 1],
@@ -301,8 +373,8 @@ export function buildCalendarWidgetTimeline({
               nextDay: !from.toPlainDate().equals(to.toPlainDate()),
               color: entry.color,
               textColor: readableTextColor(entry.color),
-              light: sharedCalendarChipPalette(entry.color, false),
-              dark: sharedCalendarChipPalette(entry.color, true),
+              light: sharedCalendarChipPalette(entry.color, false, display.pastelColors),
+              dark: sharedCalendarChipPalette(entry.color, true, display.pastelColors),
               symbol: display.labelMode === "SYMBOL" ? widgetSymbol(entry.symbol) : null,
               detail: sharedShiftDetail(entry, startTime, display),
               ownerName: row.calendarName,
@@ -310,6 +382,9 @@ export function buildCalendarWidgetTimeline({
             };
           }),
         ],
+        appointments,
+        ...(dayLabel ? { dayLabel } : {}),
+        ...(tint ? { tint } : {}),
         url,
       };
     });

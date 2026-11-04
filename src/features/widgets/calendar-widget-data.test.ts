@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { calendarChipPalette, colorContrastRatio } from "@/theme/color-contrast";
+import { calendarDayTints } from "@/theme/calendar-day-tints";
+import { LIGHT_PALETTE, DARK_PALETTE } from "@/theme/palette-values";
 import type { Appointment, ShiftEntry } from "@/domain/types";
 import {
   buildCalendarWidgetTimeline,
@@ -106,7 +109,7 @@ describe("calendar widget timeline", () => {
     expect(JSON.stringify(result)).not.toContain("Private Notiz");
     expect(result[0].props.days[0].shifts[0]).not.toHaveProperty("location");
   });
-  it("omits deleted shifts and appointments", () => {
+  it("includes visible appointment titles but omits deleted shifts and private fields", () => {
     const appointment: Appointment = {
       kind: "APPOINTMENT",
       id: "appt",
@@ -130,7 +133,9 @@ describe("calendar widget timeline", () => {
       scheme: "pflegeshift",
     });
     expect(result[0].props.days[0].shifts).toEqual([]);
-    expect(JSON.stringify(result)).not.toContain("Private Termin");
+    expect(result[0].props.days[0].appointments).toEqual([
+      { id: "appt", title: "Private Termin", start: "", end: "", nextDay: false },
+    ]);
   });
   it("distinguishes an empty day from an explicit free or vacation entry", () => {
     expect(timeline()[0].props.days[0].shifts).toEqual([]);
@@ -176,6 +181,149 @@ describe("calendar widget timeline", () => {
     expect(timeline([])[0].props.days[0].shifts).toEqual([]);
     expect(timeline([shift()])[0].props.days[0].shifts).toHaveLength(1);
   });
+});
+
+function appointment(input: Partial<Appointment> = {}): Appointment {
+  return {
+    kind: "APPOINTMENT",
+    id: "appointment",
+    date: "2026-12-31",
+    title: "Zahnarzt",
+    allDay: false,
+    startTime: "10:00",
+    endTime: "11:00",
+    color: "#123456",
+    note: "SECRET_NOTE",
+    location: { name: "SECRET_LOCATION", latitude: 50, longitude: 8 },
+    revision: 1,
+    createdAt: "",
+    updatedAt: "",
+    deletedAt: null,
+    ...input,
+  };
+}
+
+describe("widget parity with calendar display settings", () => {
+  const options = { now: NOW, timeZone: "Europe/Berlin", scheme: "pflegeshift", hasProfile: true };
+  const display = {
+    labelMode: "FULL" as const,
+    showShifts: true,
+    showShiftTimes: true,
+    showShiftDuration: false,
+  };
+  it.each(["days", "weekDays", "monthDays"] as const)(
+    "keeps appointments beside shifts in %s",
+    (grid) => {
+      const entries = [
+        appointment({ id: "late", startTime: "15:00" }),
+        shift(),
+        appointment(),
+        appointment({ id: "deleted", deletedAt: "2026-12-31" }),
+      ];
+      const before = JSON.stringify(entries);
+      const props = buildCalendarWidgetTimeline({ ...options, entries })[0].props;
+      const day = props[grid].find((day) => day.date === "2026-12-31")!;
+      expect(day.shifts).toHaveLength(1);
+      expect(day.appointments?.map((entry) => entry.id)).toEqual(["appointment", "late"]);
+      expect(JSON.stringify(props)).not.toMatch(
+        /SECRET_NOTE|SECRET_LOCATION|latitude|longitude|notification|recurrence/,
+      );
+      expect(JSON.stringify(entries)).toBe(before);
+    },
+  );
+  it("uses independent visibility switches and removes changed/deleted appointments", () => {
+    const entries = [shift(), appointment()];
+    const hidden = buildCalendarWidgetTimeline({
+      ...options,
+      entries,
+      display: { ...display, showAppointments: false },
+    })[0].props.days[0];
+    expect(hidden.appointments).toEqual([]);
+    expect(hidden.shifts).toHaveLength(1);
+    const onlyAppointments = buildCalendarWidgetTimeline({
+      ...options,
+      entries,
+      display: { ...display, showShifts: false },
+    })[0].props.days[0];
+    expect(onlyAppointments.shifts).toEqual([]);
+    expect(onlyAppointments.appointments).toHaveLength(1);
+    expect(
+      buildCalendarWidgetTimeline({ ...options, entries: [appointment({ title: "Kontrolle" })] })[0]
+        .props.days[0].appointments?.[0].title,
+    ).toBe("Kontrolle");
+    expect(
+      buildCalendarWidgetTimeline({ ...options, entries: [] })[0].props.days[0].appointments,
+    ).toEqual([]);
+  });
+  it("keeps all-day, overnight and missing end times faithful to the calendar date", () => {
+    const entries = [
+      appointment({ startTime: "23:00", endTime: "01:00" }),
+      appointment({ id: "all", allDay: true }),
+      appointment({ id: "open", endTime: null }),
+    ];
+    const props = buildCalendarWidgetTimeline({ ...options, entries })[0].props;
+    expect(props.days[0].appointments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "appointment", start: "23:00", end: "01:00", nextDay: true }),
+        expect.objectContaining({ id: "all", start: "", end: "", nextDay: false }),
+        expect.objectContaining({ id: "open", end: "", nextDay: false }),
+      ]),
+    );
+    expect(props.days[1].appointments).toEqual([]);
+  });
+  it.each(["#FF526D", "#123456", "#67D56A"])(
+    "uses the central pastel mapping for %s in both themes and every grid",
+    (color) => {
+      const entries = [shift({ color })];
+      const props = buildCalendarWidgetTimeline({
+        ...options,
+        entries,
+        display: { ...display, pastelColors: true },
+      })[0].props;
+      expect(props.pastelColors).toBe(true);
+      for (const grid of [props.days, props.weekDays, props.monthDays]) {
+        const row = grid.find((day) => day.date === "2026-12-31")!.shifts[0];
+        for (const [mode, dark] of [
+          ["light", false],
+          ["dark", true],
+        ] as const) {
+          expect(row[mode]).toEqual(calendarChipPalette(color, dark, true));
+          expect(colorContrastRatio(row[mode].onMain, row[mode].main)).toBeGreaterThanOrEqual(4.5);
+        }
+        expect(row.color).toBe(color);
+      }
+      expect(entries[0].color).toBe(color);
+    },
+  );
+  it.each(["RED", "BLUE", "ORANGE"] as const)(
+    "uses %s special-day tints ahead of weekend tints without recoloring entries",
+    (holidayColor) => {
+      const dayLabels = new Map([["2027-01-02", "Sondertag"]]);
+      const props = buildCalendarWidgetTimeline({
+        ...options,
+        entries: [shift()],
+        dayLabels,
+        display: { ...display, holidayColor, pastelColors: true },
+      })[0].props;
+      const special = props.days.find((day) => day.date === "2027-01-02")!;
+      expect(special.dayLabel).toBe("Sondertag");
+      expect(special.tint).toEqual({
+        light: calendarDayTints(LIGHT_PALETTE, holidayColor).specialDay,
+        dark: calendarDayTints(DARK_PALETTE, holidayColor).specialDay,
+      });
+      const hidden = buildCalendarWidgetTimeline({
+        ...options,
+        entries: [],
+        dayLabels,
+        display: { ...display, showHolidays: false },
+      })[0].props.days.find((day) => day.date === "2027-01-02")!;
+      expect(hidden.dayLabel).toBeUndefined();
+      expect(hidden.tint).toEqual({
+        light: calendarDayTints(LIGHT_PALETTE).weekend,
+        dark: calendarDayTints(DARK_PALETTE).weekend,
+      });
+    },
+  );
 });
 
 it("uses the app's chip colors, dimensions and shift detail in both themes", () => {
