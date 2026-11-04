@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "baselineUpdateId": "01a1a4fe-ffeb-7cfd-bb3a-15efac9aa2f2",
+  "changes": [
+    {
+      "path": "scripts/runtime-policy.test.mjs",
+      "kind": "modified",
+      "sha256": "7d42622109f8517669d5e10a1a0dec98bb5ae7e8fd7f03ad8d1b0c5d595e9975",
+      "reason": "Integrate the mandatory source guard and release-regression tests through the existing verify:fast runtime-test entry, preserving the accepted npm-script fingerprint byte for byte."
+    },
+    {
+      "path": "src/application/rule-catalog-runtime-refresh.ts",
+      "kind": "modified",
+      "sha256": "f340d0b15ffa90a35aa6903a3c37015fcc9f4340a4662b3736dc859b75211b64",
+      "reason": "Preserve the already merged master recognition of the reviewed embedded catalog; do not revert current catalog behavior during the UI/widget restoration."
+    },
+    {
+      "path": "src/application/rule-catalog-runtime.ts",
+      "kind": "modified",
+      "sha256": "b997086f33d31c2b643e99a2488caa9e8c6c629c486e2decb9a0d90f2ec15d8b",
+      "reason": "Preserve the already merged master APP_EMBEDDED generation-6 selection and compatible historical fallback."
+    },
+    {
+      "path": "src/rules/embedded-reviewed-rules.ts",
+      "kind": "added",
+      "sha256": "0b43729b8efab568cbbf556b8f839d384153730b772fd398b921ca41c9e62149",
+      "reason": "Retain the reviewed packages already embedded on master; the restoration must not remove current tariff and holiday coverage."
+    },
+    {
+      "path": "src/rules/rule-resolver.ts",
+      "kind": "modified",
+      "sha256": "ae6cdd8f1fdb4d07256661bf68c05663043ecd3fcf8aa533be4e7ebf43202ab1",
+      "reason": "Preserve the already merged master resolver history and cache identity for the current reviewed tariff/legal/holiday tracks."
+    },
+    {
+      "path": "src/testing/reviewed-rule-catalog-fixtures.ts",
+      "kind": "added",
+      "sha256": "59c5dc451b1e62e3c5be7c4bcdc1ffdfad4779687201b5a45720e9318c2cd934",
+      "reason": "Retain the existing master fixture for reviewed-rule regression tests; this addition is test support rather than a changed production rule."
+    }
+  ]
+}

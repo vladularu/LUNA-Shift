@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
 import "./calendar-worklet-runtime.test.mjs";
+import "./testflight-baseline.test.mjs";
+import "./publish-testflight-ota.test.mjs";
+import "./accept-testflight-baseline.test.mjs";
+import { spawnSync } from "node:child_process";
+import { checkCandidate } from "./testflight-baseline.mjs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -8,6 +13,23 @@ import test from "node:test";
 import { validateIosRuntimePolicy, validateResolvedIosRuntimePolicies } from "./runtime-policy.mjs";
 
 const fingerprint = { policy: "fingerprint" };
+
+test("preserves the accepted TestFlight app sources and mandatory regression tests", () => {
+  assert.equal(checkCandidate(resolve(import.meta.dirname, "..")).report.ok, true);
+});
+
+test("preserves accepted widget data through the real timeline producer", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["--import", "tsx", "--test", "scripts/testflight-release-contract.test.mjs"],
+    {
+      cwd: resolve(import.meta.dirname, ".."),
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024,
+    },
+  );
+  assert.equal(result.status, 0, (result.stdout ?? "") + (result.stderr ?? ""));
+});
 
 test("accepts inherited and explicit iOS fingerprint policies", () => {
   assert.deepEqual(validateIosRuntimePolicy({ runtimeVersion: fingerprint }, "test"), []);

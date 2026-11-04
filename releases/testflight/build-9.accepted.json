@@ -1,0 +1,4836 @@
+{
+  "schemaVersion": 1,
+  "build": 9,
+  "platform": "ios",
+  "channel": "production",
+  "projectId": "010fe78f-de53-42b8-9635-a73ea099b5fc",
+  "buildId": "71067a78-f6a9-413d-89e6-5e25ff99f66d",
+  "runtime": "c223286c3cbf6ce5f7873c6e595d558028d9d8fb",
+  "updateId": "01a1a4fe-ffeb-7cfd-bb3a-15efac9aa2f2",
+  "group": "ac656e8a-0c56-4e5b-8229-ab34cfe1cdc3",
+  "bundleSha256": "a3dadbef8e72eb8d9359d2bd9c33862c06b951e9a4e5a011df28fc01a0cb9c8c",
+  "sourceManifestSha256": "6a9973e0a2b2adfb23e338be3396fed7a0a4c8d62f9d85646bd4a8f1c46a05d1",
+  "deviceAcceptance": {
+    "status": "accepted",
+    "date": "2026-11-04",
+    "quote": "Auf iPhone passt das, erledige die restliche Aufgaben wie beschrieben",
+    "flows": {
+      "calendar": "passed",
+      "widgets": "passed",
+      "netPay": "passed",
+      "invitation": "passed"
+    }
+  },
+  "assets": [
+    {
+      "key": "0a328cd9c1afd0afe8e3b1ec5165b1b4",
+      "sha256": "9adb8c5efca932e2b732b293da813bd2e31952263056bce9e2517fec0f0b6a76"
+    },
+    {
+      "key": "7d40544b395c5949f4646f5e150fe020",
+      "sha256": "2cdfeb8e5ccde7976f7012fb8cce73af2229029ee21d4f1509fed114871c6cd8"
+    },
+    {
+      "key": "a132ecc4ba5c1517ff83c0fb321bc7fc",
+      "sha256": "2b7443a9a58e92ca11a575bdc11598615a57dde305cd8ce70d602606b302cd98"
+    },
+    {
+      "key": "0ea69b5077e7c4696db85dbcba75b0e1",
+      "sha256": "3ddd0773ed27e23d25789f301731b3ac455ad8be5aa27a0a1b838f89c6d27225"
+    },
+    {
+      "key": "2d0a9133e39524f138be6d4db9f4851f",
+      "sha256": "92ed8176ac8cb44362a5fc6a3703626a0006ac6b7cb272ee99f5850262ec070e"
+    },
+    {
+      "key": "3cd68ccdb8938e3711da2e8831b85493",
+      "sha256": "c86bb485eee687e06c500fc4234f51a6784b4530c2ae11d0c76481110bce3105"
+    },
+    {
+      "key": "61ca7e64b7d605716c57706cef640b9a",
+      "sha256": "d03a5cd7a66ef10c5147916f9d5878b2d0a0a5ad46f405a31cd9967efaa55afd"
+    },
+    {
+      "key": "aff2c65b39a296d4f7e96d0f58169170",
+      "sha256": "ab5613d2ce70fa67c5926e831353664945199fc195fa6fe76c5fe3cec452e31a"
+    },
+    {
+      "key": "d8e7601e3df962f83c62371ac14964d8",
+      "sha256": "c4e54e6a0a7de636aa153378fbc62ea4a41695bfedf807f90df7b18ffd733f67"
+    },
+    {
+      "key": "0747a1317bbe9c6fc340b889ef8ab3ae",
+      "sha256": "2325c53a73e54c438cbbc60dffdd8b513d471ba42e2f56713ef404b95e0ca1fc"
+    },
+    {
+      "key": "d84e297c3b3e49a614248143d53e40ca",
+      "sha256": "b1bc1810ca23e2c38cd76971c43591d726161061240d8b792b05757196ddb528"
+    },
+    {
+      "key": "1190ab078c57159f4245a328118fcd9a",
+      "sha256": "cbdf9213e55f65c48d076acd8423b7c9aee4f1b81101ff6c95a38c4cd8a86461"
+    },
+    {
+      "key": "78c625386b4d0690b421eb0fc78f7b9c",
+      "sha256": "d05c9d30d79f45a78e5585a2e7ec67c6a06a883dd9137e1d5059e8c87b33ce76"
+    },
+    {
+      "key": "dad2fa9f4394a630f0f9a0d6dabd44bc",
+      "sha256": "dc56b976bd45638e1125f6689743525e6886ae0bef2c8f4651994833685a831f"
+    },
+    {
+      "key": "f3a81967828232c893d547162e922764",
+      "sha256": "ef13fc0dfc52ec23817585fd7e109fbdf593a3b2549c40ce71ac9b0eda12cc2c"
+    },
+    {
+      "key": "d62ddc38b69aff346c20a28774933d6a",
+      "sha256": "b434a7cf18c2d4ce747c70942ea2fee2d4412d93967ed92b372f810bb9261ea5"
+    },
+    {
+      "key": "d1ea1496f9057eb392d5bbf3732a61b7",
+      "sha256": "c15ec72a74d13957211808313d5c35deb7f7606c6d22dbddceb0000d4e0547ad"
+    },
+    {
+      "key": "19eeb73b9593a38f8e9f418337fc7d10",
+      "sha256": "a69a2edb5b6c60b8433d5b6d23c69f520ccd8a602f3f60e7996e489718bc175c"
+    },
+    {
+      "key": "ab19f4cbc543357183a20571f68380a3",
+      "sha256": "27f4d229d440925bf7212d5dfffa45d596b2c7b3bb2905c96b839b2081a1dbeb"
+    },
+    {
+      "key": "d8b800c443b8972542883e0b9de2bdc6",
+      "sha256": "708a79cf561b8a2a4850ce0254584d3a5231046be08fb7fadf4b6edfdb31178b"
+    },
+    {
+      "key": "412dd9275b6b48ad28f5e3d81bb1f626",
+      "sha256": "acf691957a3bcce7d195856dce98a5cf14dce10bea28aa5c10b3550c078e23b5"
+    },
+    {
+      "key": "017bc6ba3fc25503e5eb5e53826d48a8",
+      "sha256": "6deca32b56b97fa1fa87facd6996b46cc45190a553400e7febdf1d2093099b57"
+    },
+    {
+      "key": "20e71bdf79e3a97bf55fd9e164041578",
+      "sha256": "efc79da3c4c97dfb1571bff6202958ab0529c5aa31e8392600578b3e359d1447"
+    },
+    {
+      "key": "b4eb097d35f44ed943676fd56f6bdc51",
+      "sha256": "fa2ab7d2557819b2bfe5009e46844efa7170cf177be7735d43aa2ac1295f1d54"
+    },
+    {
+      "key": "51b6ad87261f18b6433ec52871ddfabc",
+      "sha256": "a414b48aa577ef2c62ebb135341ddeef33ee26a4f5dc9f787f93c1aab08ebb50"
+    },
+    {
+      "key": "137ab18bace28dd0bd83eb3b8ed2bc54",
+      "sha256": "f1738576525e86db1d5cf63a6c1b56e0a7e2a2898b499ac93db95f2e7a9f9cd5"
+    },
+    {
+      "key": "a5f35888d2da465de352e0dcfaf33324",
+      "sha256": "f30e9d2574c3bec5144347ff965f9841c8f06857f0b7383000f8c9489a161841"
+    },
+    {
+      "key": "6e237de4f1f413afa2fcc45c77ac343a",
+      "sha256": "fbe825cbfc749317f57a1433d3905aa9d3f388732fd29b8e8a36f34845e3bc3e"
+    },
+    {
+      "key": "6016034293c084aa0c056e83938bf1cc",
+      "sha256": "1b9fab96ffc7bca31a9d4cd4d660cce80b94695908ec7613afdece2b8cf803c2"
+    },
+    {
+      "key": "36cad9f97595b7759264b945d64502b4",
+      "sha256": "c8c09e4bd08de7b901b4561f16ce9bb1ab3ffa420cfaef9f2a40286e14300e75"
+    },
+    {
+      "key": "6d8a5c55ac4a332083270c966107e0e4",
+      "sha256": "f8f78f1bbc777ccdf05742fba1465e2589773508a43cb5ef9109d8608b435144"
+    },
+    {
+      "key": "181bc88c2b6b0d52f97a0da95dd8fbd5",
+      "sha256": "9e12c2906a74500d5e3194f0cd77a931ffe85e5d267a7b4536885dd88e168fa1"
+    },
+    {
+      "key": "daa14407edc490339365dfe9090f4eda",
+      "sha256": "84aa22a5dc91f9040e8bc8883778ea5f8198417f15ffc8032fa722041854056c"
+    },
+    {
+      "key": "0470b90cf0a25790c7405b3adc50748d",
+      "sha256": "b03d6b3f4287d9cf054a2d8b10b95a9f8622084c6eef56db50a0a66f1240d76c"
+    }
+  ],
+  "files": [
+    {
+      "path": "app.config.ts",
+      "sha256": "55fc54dc9a6c229036af9af9b2d1839f5005e1658ab1c47b5bc7e33b65fc8297"
+    },
+    {
+      "path": "app.json",
+      "sha256": "5c4c6008e9218e2a6327173cf20d1f0fa9eb0ee21bb5f6520f5a69f6a0de131a"
+    },
+    {
+      "path": "app/(tabs)/(analysis)/_layout.tsx",
+      "sha256": "de379a7647574ee8159b2e04bc2055ffaa31c57fd488feeb16be79f1de433d75"
+    },
+    {
+      "path": "app/(tabs)/(analysis)/analysis.tsx",
+      "sha256": "777a64e2637a76e7e922033356ab7343b8d4b41db9739c0d85559b9c3ea0f6ba"
+    },
+    {
+      "path": "app/(tabs)/(analysis)/period.tsx",
+      "sha256": "c47687c9cc9e2b880234265420ef762ee90c794fd576389624c3faacc3fc5754"
+    },
+    {
+      "path": "app/(tabs)/(calendar)/_layout.tsx",
+      "sha256": "000d23338f9dea0b0dedcbee708e3a60c074cdf22ff94c64395c116a83fcf10c"
+    },
+    {
+      "path": "app/(tabs)/(calendar)/index.tsx",
+      "sha256": "0a4138a6fe6fa382da596646a40a08cb4c42bb27802d9a9f1fdec0ac6cb9d839"
+    },
+    {
+      "path": "app/(tabs)/(more)/_layout.tsx",
+      "sha256": "ba5fa73a1589d61d7018b204e35586c7aec42e0b110083013a776f36d5ce1715"
+    },
+    {
+      "path": "app/(tabs)/(more)/more.tsx",
+      "sha256": "6a21c55383ea2d77f96dbad60fd8b4958b1c72f2dcdc98ed555ea218e1aa434c"
+    },
+    {
+      "path": "app/(tabs)/(templates)/_layout.tsx",
+      "sha256": "3520415e7d947e97395817187195d52cafdc05b5070e09464fc85d0d287a44ee"
+    },
+    {
+      "path": "app/(tabs)/(templates)/templates.tsx",
+      "sha256": "5b934780145a7bec383b9e7ab3476ae3f64e8916a3a97a95f32fe1bc5633a958"
+    },
+    {
+      "path": "app/(tabs)/_layout.tsx",
+      "sha256": "3ad60fde1558a3d13c440160b7bdb2e40fa6476145bd1af4849bfb918e23c9b9"
+    },
+    {
+      "path": "app/+native-intent.tsx",
+      "sha256": "0e786f877fed25007994948bf8a73b2f62cf822796931eca2d9fc84d7f399064"
+    },
+    {
+      "path": "app/_layout.tsx",
+      "sha256": "5febab2afb96ab17c7be5ef99ce654e021f66e908a6ce58daa4e39f273d6630a"
+    },
+    {
+      "path": "app/account-name.tsx",
+      "sha256": "8390374423de666b3b864db90c8e970ad6fe539b13e34b6f21a3c24bdab7593e"
+    },
+    {
+      "path": "app/account.tsx",
+      "sha256": "39d2bf214d417321e5029ca87af9f7ec440c231ebe7654b1339c88668835aa79"
+    },
+    {
+      "path": "app/annual-details.tsx",
+      "sha256": "63466bbfd45e9d4ef59c786d4f53b203f108202700efd36e8c2f4a249d9fd3fc"
+    },
+    {
+      "path": "app/appearance.tsx",
+      "sha256": "fa6e6261bccad4fe82749639c33fa4be457236514d303ba53079f718f5536737"
+    },
+    {
+      "path": "app/appointment-editor.tsx",
+      "sha256": "99efe8afcf378e29515a06321e9c96f60b8f5a37ee42039681d9fee7daf0f04d"
+    },
+    {
+      "path": "app/auth/callback.tsx",
+      "sha256": "53f8557040cc1c1934fdc24d6460cbfdeed04fcdfcdc236bea80deae4d8c0160"
+    },
+    {
+      "path": "app/calendar-access.tsx",
+      "sha256": "14b483987d5b6718e2c5696658808087e692f093117b259dc84df2580c08fcf8"
+    },
+    {
+      "path": "app/calendar-design.tsx",
+      "sha256": "16865fd7485d72bcb826b828c20ca07a1d385e61296ce4389ebd80142ff1888a"
+    },
+    {
+      "path": "app/calendar-prototype.tsx",
+      "sha256": "74a6708fe038e821a324bdbf3857d749fb96159bfa2561f5eaa943eb17fd6575"
+    },
+    {
+      "path": "app/calendar-sharing.tsx",
+      "sha256": "00ceefc164dd466d6ae00b7f2cb8683b371955c3c900b07fc64a7d5ff4f32688"
+    },
+    {
+      "path": "app/calendar-view.tsx",
+      "sha256": "9b3295728dfdae591cac714d3c9a51af034aab46ec67a6d9e4d589ecf7ebd11d"
+    },
+    {
+      "path": "app/check-profile.tsx",
+      "sha256": "79f13a7974d3957231b096dc25a36bd6d05170c972430dc94f0bd88476a98010"
+    },
+    {
+      "path": "app/check-settings.tsx",
+      "sha256": "bef3a026743a6e3cd19505b7a387569f4ec3a499f9a2a480ede13c84e092de23"
+    },
+    {
+      "path": "app/compliance-details.tsx",
+      "sha256": "5c09aab6e779c8601785e8836516b9a4d92166becf52846c1e0c9dc775d3bac0"
+    },
+    {
+      "path": "app/data-backup.tsx",
+      "sha256": "be492989fed06a1da5ecd46fa4c36fc272ada15c39b04ab1f4bd6a787408d0f7"
+    },
+    {
+      "path": "app/day-details.tsx",
+      "sha256": "326144a3215a3e1f7f0f46c9ce88ce64838df939b8ff08aa2b8ec38f016a9723"
+    },
+    {
+      "path": "app/day-editor.tsx",
+      "sha256": "5ed9da45484faf349e9c370bbb929483b016d6d827e8906f14e71e1fe1eb9653"
+    },
+    {
+      "path": "app/dev-tools.tsx",
+      "sha256": "8144a744f6fd9d92dad7633247ea7b2495db638501aacc37cad98655082cc626"
+    },
+    {
+      "path": "app/info-details.tsx",
+      "sha256": "d48cd9562ac00e7e2425268536d2fbdcd4549906146bcbdc453469038e6113f4"
+    },
+    {
+      "path": "app/location-picker.tsx",
+      "sha256": "2ca64a996e4c0265edaf6e3bdea4607cfbbaac9d3558e0bb37856c4c27ae6374"
+    },
+    {
+      "path": "app/net-pay-settings.tsx",
+      "sha256": "05b3f2bcc4f09c2d8a5ff25c45b299d87dfce7d73336c3e3cc6dfc18f267b951"
+    },
+    {
+      "path": "app/net-pay.tsx",
+      "sha256": "3a3890cc631db99f0401c5ebc30c6ffc5635b1a887ab88278f3ac11a6bdd9fc2"
+    },
+    {
+      "path": "app/onboarding.tsx",
+      "sha256": "9a59fa9a6c0a11484ec54c46f09a44a105a8a93b7fe6dbfd2db28beed31efd23"
+    },
+    {
+      "path": "app/premium-details.tsx",
+      "sha256": "3b76455829a2022d78da8c12cec9b019eea272396bebebfe173e0bb8b59fb2ab"
+    },
+    {
+      "path": "app/private-cloud.tsx",
+      "sha256": "fa2f6f4e5cf9fb4a24d3a2a66be8b8467d3d225b46933ad03bcdfb26b40267d5"
+    },
+    {
+      "path": "app/profile-selection.tsx",
+      "sha256": "f2beec7bea12229e16b1b6f98d4ab65282b51b98d7423f4ae24b536e5ef32b9c"
+    },
+    {
+      "path": "app/quick-add.tsx",
+      "sha256": "7e46af51df39eff39f76c436731fc4b55777748951ecddda1c37c3a7ff299299"
+    },
+    {
+      "path": "app/salary-details.tsx",
+      "sha256": "c21920d2f03385bcda72413cc7e9f265d65dd5674afa7081c37b8b2d702d962d"
+    },
+    {
+      "path": "app/salary-payment.tsx",
+      "sha256": "19164f0dcfe624490ce0886162d5b30f74b44ef60f3899f59d8c46e09a9e5d73"
+    },
+    {
+      "path": "app/salary.tsx",
+      "sha256": "cbf401a31a3a15963b3071faa5e9508c93576377fd66a643175595466a49897c"
+    },
+    {
+      "path": "app/settings-editor.tsx",
+      "sha256": "10b0a5f9d140e64500f7e29a676ef732c9df2aef00d1be7d52010b4587c33376"
+    },
+    {
+      "path": "app/sharing-invite.tsx",
+      "sha256": "67a1be1a47e0ac18cdde8c83a5f32cd47449ab9883fab1369398f371325f8d58"
+    },
+    {
+      "path": "app/shift-editor.tsx",
+      "sha256": "99efe8afcf378e29515a06321e9c96f60b8f5a37ee42039681d9fee7daf0f04d"
+    },
+    {
+      "path": "app/shift-selection.tsx",
+      "sha256": "3de21ef2de47d31044e2ca4195c6c4e473c57b67e1b8629bcd8e30e15516e04b"
+    },
+    {
+      "path": "app/tariff-assessment.tsx",
+      "sha256": "90c8608f7d7fe953e192f9ca01bbaa8a57bf4f8108924575bd8c30d1884de285"
+    },
+    {
+      "path": "app/template-editor.tsx",
+      "sha256": "e518a54646b932b7fe9e409888ffbb5fafeed3a13765ec93d8a5e32a974e5037"
+    },
+    {
+      "path": "app/widget-day.tsx",
+      "sha256": "798185ae9e3b89f6c1a45a73e3ebcfe59343cf497aaeacf699b35e69c7617db2"
+    },
+    {
+      "path": "app/work-profile.tsx",
+      "sha256": "13e042486b20d4216a34958dd03a107a85764e002febb7ce90a39fc0b97172db"
+    },
+    {
+      "path": "app/working-time-profile.tsx",
+      "sha256": "08ad5f3e6504f0c909851d17fbacbfa34049ab773a25e82f5d197e12254b7af0"
+    },
+    {
+      "path": "app/worktime-details.tsx",
+      "sha256": "73748e79b9e71db9023d04d752aa4641b264f7abea1e92ceab9445659d2a0d74"
+    },
+    {
+      "path": "assets/brand/lunashift/app-icon-final-20-dark.png",
+      "sha256": "981240d1bec56d9feb630fd50f4002b0fdae11f072564027f3e7a40bfa26b8f5"
+    },
+    {
+      "path": "assets/brand/lunashift/app-icon-final-20-light.png",
+      "sha256": "40d7cb4cceaca7f8d9d254cd4dddca40ed70e362d2b4b25116b67595e1c6058c"
+    },
+    {
+      "path": "assets/brand/lunashift/app-icon-user.png",
+      "sha256": "fe29fe95f4f7045978bef353d6221d150b2db04b1c4bb9b883a87673d183da78"
+    },
+    {
+      "path": "assets/brand/lunashift/logo-horizontal-dark.png",
+      "sha256": "b03d6b3f4287d9cf054a2d8b10b95a9f8622084c6eef56db50a0a66f1240d76c"
+    },
+    {
+      "path": "assets/brand/lunashift/logo-horizontal-light.png",
+      "sha256": "84aa22a5dc91f9040e8bc8883778ea5f8198417f15ffc8032fa722041854056c"
+    },
+    {
+      "path": "assets/brand/lunashift/logo-stacked-dark.png",
+      "sha256": "6b7477b74950c73908f68788ebd9ce622e9e5ab91acc27b9d716e3cc5eb1cfeb"
+    },
+    {
+      "path": "assets/brand/lunashift/logo-stacked-light.png",
+      "sha256": "c42e576a141df3a801bfc4fa55319ebde459fcb4110a3fc373116ed626b84040"
+    },
+    {
+      "path": "assets/brand/lunashift/lunashift-approved-reference.png",
+      "sha256": "cde5828a3574965b33a019ccad1112688577ebe005aa912758453a97cbfcadf7"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-icon-red.png",
+      "sha256": "a521140abaade7ac709dc9c629f9648264af4e4aef15255043bf3a04a2312cc9"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-logo-user.png",
+      "sha256": "3db1b31c0fd494deda7cf913367e8625654fd3344511726155f0094e89c515d1"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-symbol-dark.png",
+      "sha256": "2394e4f55f60896fdcce94a92fa046c4a88427785f699bfd736f2bf45c38d0a5"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-symbol-light.png",
+      "sha256": "6bf3d513246608edcdfea34a698a59f8bf91281bf214abadb7ab3a9970e69aed"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-tdl.png",
+      "sha256": "9e12c2906a74500d5e3194f0cd77a931ffe85e5d267a7b4536885dd88e168fa1"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-vka.svg",
+      "sha256": "f8f78f1bbc777ccdf05742fba1465e2589773508a43cb5ef9109d8608b435144"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-wordmark-dark.png",
+      "sha256": "712c1db3877272d1675633cf2faf2a4c0bf1152c005415fc26c2e919160db83c"
+    },
+    {
+      "path": "assets/brand/lunashift/onboarding-wordmark-light.png",
+      "sha256": "1bf9558ea135c17b5b40a357c729068ffa912c498c39241325f8d5102758760e"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-Bold.ttf",
+      "sha256": "fbe825cbfc749317f57a1433d3905aa9d3f388732fd29b8e8a36f34845e3bc3e"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-ExtraBold.ttf",
+      "sha256": "1b9fab96ffc7bca31a9d4cd4d660cce80b94695908ec7613afdece2b8cf803c2"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-Italic.ttf",
+      "sha256": "c8c09e4bd08de7b901b4561f16ce9bb1ab3ffa420cfaef9f2a40286e14300e75"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-Medium.ttf",
+      "sha256": "f1738576525e86db1d5cf63a6c1b56e0a7e2a2898b499ac93db95f2e7a9f9cd5"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-Regular.ttf",
+      "sha256": "a414b48aa577ef2c62ebb135341ddeef33ee26a4f5dc9f787f93c1aab08ebb50"
+    },
+    {
+      "path": "assets/fonts/inter/Inter-SemiBold.ttf",
+      "sha256": "f30e9d2574c3bec5144347ff965f9841c8f06857f0b7383000f8c9489a161841"
+    },
+    {
+      "path": "assets/fonts/inter/LICENSE.txt",
+      "sha256": "5dd548d31a85f756e01d63e00d7faf1e324103ed3e9102fcbbabf2cc2db6dd39"
+    },
+    {
+      "path": "assets/images/android-icon-background.png",
+      "sha256": "64f9566041e88937eb5fcf07a7c7bc240390bb47b18937b7b1dac03e497b78ff"
+    },
+    {
+      "path": "assets/images/android-icon-foreground.png",
+      "sha256": "20b1c69da56714b1829fcbc0efc83b657fbe28d13531556c2998da22745fe3e0"
+    },
+    {
+      "path": "assets/images/android-icon-monochrome.png",
+      "sha256": "238a240b5a4275a9294ef31ccb7556c8347d77ced8d138d02af1355ce8b685ae"
+    },
+    {
+      "path": "assets/images/favicon.png",
+      "sha256": "e4423d6e63cb417d4803e9cadc065e866dd435d0b0c4ae1feee1c205a869a9d7"
+    },
+    {
+      "path": "assets/images/icon-dark.png",
+      "sha256": "981240d1bec56d9feb630fd50f4002b0fdae11f072564027f3e7a40bfa26b8f5"
+    },
+    {
+      "path": "assets/images/icon-tinted.png",
+      "sha256": "1c201bb828140fa992d395dfcf0fee50ecb342cd361c5d3f422e6b151f95658d"
+    },
+    {
+      "path": "assets/images/icon.png",
+      "sha256": "40d7cb4cceaca7f8d9d254cd4dddca40ed70e362d2b4b25116b67595e1c6058c"
+    },
+    {
+      "path": "assets/images/splash-icon-dark.png",
+      "sha256": "e438c9af1973ef27a911288bf8788e9a98513c83366b5bf4d82a98600348dc99"
+    },
+    {
+      "path": "assets/images/splash-icon.png",
+      "sha256": "2a78a2936f2b41a0ef91675fd898fa004958d43b79c98ebaa432183b192d3896"
+    },
+    {
+      "path": "eas.json",
+      "sha256": "05ae13bd8389aee0f7913345e5a68b7aec89c7c3421868cf683e4e3093c7df3f"
+    },
+    {
+      "path": "fingerprint.config.js",
+      "sha256": "02e9d6f77fb8122f30a87e9cfb539ab468a873c1a576bd086298e17a7c956aaf"
+    },
+    {
+      "path": "metro.config.js",
+      "sha256": "30ca075002a7952c08508c82765b50f41560f07ede8c11ab1705663d62ee6ca7"
+    },
+    {
+      "path": "modules/luna-header-material/expo-module.config.json",
+      "sha256": "376aeaafc4bf1b1e86b54f5e48feec38d1c9227d6eb75697c6d09ee533f2fcbb"
+    },
+    {
+      "path": "modules/luna-header-material/ios/LunaHeaderMaterial.podspec",
+      "sha256": "1e68f39fb1de5eeed70197b532132b07b8c2fdf529bee96caf8037db2118f5ba"
+    },
+    {
+      "path": "modules/luna-header-material/ios/LunaHeaderMaterialModule.swift",
+      "sha256": "200022f874124d78a3135dc769bf4c29aef77d97dfb613cb435ccffcca3b643d"
+    },
+    {
+      "path": "modules/luna-header-material/package.json",
+      "sha256": "14708317e95cb8669bb3371fca49cdadffa5a80a60ef739d906d9cdd5e82c609"
+    },
+    {
+      "path": "modules/pflegeshift-map-search/expo-module.config.json",
+      "sha256": "0f12200981bceea9a96aa40e8cd8ef9e94826f383f8f01d94d57e6ad24b6add0"
+    },
+    {
+      "path": "modules/pflegeshift-map-search/index.ts",
+      "sha256": "5ac872af68da34a8c8703932baae093337974fce2c7dc5e5dba93e0ad1b5e97c"
+    },
+    {
+      "path": "modules/pflegeshift-map-search/ios/PflegeShiftMapSearch.podspec",
+      "sha256": "12053fcc92d09e4e1a8ae1e5f1558ff55eebc174c342fe72093266ae7c6015e9"
+    },
+    {
+      "path": "modules/pflegeshift-map-search/ios/PflegeShiftMapSearchModule.swift",
+      "sha256": "d093ae22698360763d3cc5b25938e19bd9598bdd2186f256eb2d9c50342d46e7"
+    },
+    {
+      "path": "modules/pflegeshift-map-search/package.json",
+      "sha256": "82b2b89c12cb5b0b83053ab939418ca221cde710e4b888bada9b2d7b829b6084"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "99afd0886a23d387d3ef8171c524f7c79282cba1035e3846e3dc0c5dd5d00086"
+    },
+    {
+      "path": "package.json",
+      "sha256": "ce12f8b9859d526d2349f51d373aca3a6dbc719a3bc6188e9fa1e2f77ce31385"
+    },
+    {
+      "path": "plugins/luna-calendar-widget/LUNAShiftCalendar.swift",
+      "sha256": "2e798dad91e752ec326821ee9726daa5c5d77b45e2640974056ee328de86ba16"
+    },
+    {
+      "path": "plugins/luna-calendar-widget/LUNAShiftMonth.swift",
+      "sha256": "bb753f49d5ec58042ecb3784bbc472293a572342d08d31e3498406d9a6d806ef"
+    },
+    {
+      "path": "plugins/with-local-notifications-only.js",
+      "sha256": "63c2354e0d8bc0e56cb793ee71018e7bd08ee2621dcdd5cdfcd0f66c8f3fe012"
+    },
+    {
+      "path": "plugins/with-native-calendar-widget.js",
+      "sha256": "d039e410f565b1694c6f350455c0e47dd9f1c31c7b1f3d10524a2712ab0b931f"
+    },
+    {
+      "path": "plugins/with-native-tab-transitions.js",
+      "sha256": "be276de0aeda1d29b8e8819d3be8662b9a6904b1016bf44efd6bdccb5e90170f"
+    },
+    {
+      "path": "rules/config/production-channel.json",
+      "sha256": "fa201425e4f01381bbb8cfb7c1e3f4695ac9f07f0c36198bb8859a439c27c53e"
+    },
+    {
+      "path": "rules/data/caritas-legacy-augmentation.json",
+      "sha256": "c2cee52e4f3d87fcfe3438243c27c239432a1fd1e802050f4407b5d52cc48d2e"
+    },
+    {
+      "path": "rules/examples/holiday-package.valid.json",
+      "sha256": "c3550cec2b52bb8a7272b5f3b28e79de35408f1f11a166dbc739631793cca839"
+    },
+    {
+      "path": "rules/examples/legal-package.valid.json",
+      "sha256": "c3b7b3b8f35e9c152b9f947f82e2d59375930b87363c532ec92645db64e78a75"
+    },
+    {
+      "path": "rules/examples/manifest.valid.json",
+      "sha256": "fd71ee5b923847df315507379b5a8410b8264fb23063e34e6fed9564ae378a32"
+    },
+    {
+      "path": "rules/examples/publication-request.valid.json",
+      "sha256": "dc8dfd9435fc60188a2493ce3e8e4697f18ebf24c9a9c5f27dad77102587a13a"
+    },
+    {
+      "path": "rules/examples/tariff-package.valid.json",
+      "sha256": "217599c7252e91634dd428ff47a05cd8c1fcf44b60bdbaef3bb62e7753e6dfdc"
+    },
+    {
+      "path": "rules/packages/legacy/de-arbzg-care.json",
+      "sha256": "048a906152d2f6577fb4dece58af8bcd252ca9f4038e9e7b86698a487e379a0f"
+    },
+    {
+      "path": "rules/packages/legacy/de-holidays.json",
+      "sha256": "3e25c3707749984b5c28d64583e614ac2ba975643d51bec8fdf1bd7901a5e778"
+    },
+    {
+      "path": "rules/packages/legacy/tvoed-p-vka-2025-04.json",
+      "sha256": "c4be908e64239df8b5f6870b77eae40b9a54cf2c71ef2e23760f3e13448c1631"
+    },
+    {
+      "path": "rules/packages/legacy/tvoed-p-vka-2026-05.json",
+      "sha256": "935afc178c223f165f2c036facd8a5eaefce06b56aade80acf5e37887fe56900"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-bayern/2025-07-01-draft1.json",
+      "sha256": "18660405b4c22bc78742e1d626aab5b62e648810cc962c2b3a3b6461bad77613"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-bayern/2026-02-01-draft1.json",
+      "sha256": "89fd25e3e2bb0482228db1d787a0e0a9bc5e28ebff729a3fa596a3d108aba72b"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-bw/2025-07-01-draft1.json",
+      "sha256": "f9d5564abc17c61c401489f86cc317bedfe3f1cc360959a5d5d05b97a91eba94"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-bw/2026-02-01-draft1.json",
+      "sha256": "74d5eed0b6d6779cf636de5be5552733641f70475a50afbdd4fa32f6af2231a2"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-mitte/2025-07-01-draft1.json",
+      "sha256": "05afc9075cfea5c8944a4caf0e90ac3a2a35a1fa7d7be75224537ff8c25308b7"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-mitte/2026-02-01-draft1.json",
+      "sha256": "efe773318992bbcda5c342efb4a6e86676ae2ff8b4c69f3b6ea84ca74c9f79bb"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-nord/2025-07-01-draft1.json",
+      "sha256": "c6081d15c9b879edc0b1ec098c7a1928c35a03c7af283ab68298da2721786ca2"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-nord/2026-02-01-draft1.json",
+      "sha256": "41aae36d8cccbcfef7be2d69a90e2e5c03ac67360b9dd4c948b414eef30b1db5"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-nrw/2025-07-01-draft1.json",
+      "sha256": "85505d0d9149fecc68962ec029b16cda41c9c7e7792a29ea0f4a72fb9ebec8ca"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-nrw/2026-02-01-draft1.json",
+      "sha256": "27c573ba2ba99a051b6e1810c9b14a763ad41a1ca0426291e0a0fcde15c71470"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-ost/2025-01-draft1.json",
+      "sha256": "6c43dea67855f31e50725a828058cd2f2dcc4732cc41574892a7ca7c83af17a4"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-caritas-p-ost/2026-01-draft1.json",
+      "sha256": "9cdd4c9210533879303335b3797273df480eed352963837eb41995f2886b3c98"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-dd-anlage-1/2025-03-01-draft1.json",
+      "sha256": "7f8b34fce30a3e98b5f18cfcc8c542ee2943c668a50b2a38be268954ad6fb3d4"
+    },
+    {
+      "path": "rules/packages/reviewed/avr-dd-anlage-1/2026-09-01-draft1.json",
+      "sha256": "82a59b7fcb37c64f6f73438a4af3615211967b81a3915dbb3534972b20951cd1"
+    },
+    {
+      "path": "rules/packages/reviewed/de-arbzg-care/2026-01-youth-r1.json",
+      "sha256": "c65eab56a2dbe3562d878abfddd0d8093622cb7bd566c765232eaa5e266200bc"
+    },
+    {
+      "path": "rules/packages/reviewed/de-arbzg-care/2026-01-youth-r2.json",
+      "sha256": "0b680236aa4ac5b22bea106e3a54cb5a159362bf8d25c77e5faf2406d8b77989"
+    },
+    {
+      "path": "rules/packages/reviewed/de-arbzg-care/2026-01.json",
+      "sha256": "4f7b45a59a45de362efff81d43c91e334d1368f4ac49fdaa783f023847af4bef"
+    },
+    {
+      "path": "rules/packages/reviewed/de-holidays/2026.json",
+      "sha256": "f72173427925e869744cd831e6895ce82bf8f86ca301820f571c8ad53527f96c"
+    },
+    {
+      "path": "rules/packages/reviewed/de-holidays/2027.json",
+      "sha256": "82c8f944933b15d70394ab90277c3c1671c76ea419fc1f1b003b0f27cc0632e3"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-e/2024-06-01-draft1.json",
+      "sha256": "73eac9e8b1964c4022fa8ddb0fba5d3088c5cff438d27f2c7dd6da923a230f50"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-e/2025-09-01-draft1.json",
+      "sha256": "48ff224aaf57ef0de46fb3b2a4f26dca643f53357ac94f10a8a5a041a493a386"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-e/2026-10-01-draft1.json",
+      "sha256": "b181731cc3a9320664343750ba09a5a972bdb40ee1fbf2f5bd1776984c8c804b"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-e/2027-10-01-draft1.json",
+      "sha256": "39bf5c6c9576ca71a3e1d83a15d1af24ee7c115f10cdbca28329ed71850cd2dd"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-p/2024-06-01-draft1.json",
+      "sha256": "d26b51f0decb2d87c46937a7ecb36cdcbfddb6f2badcc9e9021caafb9c468c49"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-p/2025-09-01-draft1.json",
+      "sha256": "d1c6d2e98e55222c97aba99d4f02b155d6445265552045d10b478a4aa94823da"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-p/2026-10-01-draft1.json",
+      "sha256": "24b4687e1b519aa15a87ca15f5d728371c128ff29524f62e34f761e49c3ca90e"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-s/2024-10-01-draft1.json",
+      "sha256": "66d8c563c2a9682276f0b9b5f9bc7ae0fee1473dde0493a420ce8c1654434285"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-s/2025-09-01-draft1.json",
+      "sha256": "06f754d62fcce7b38897b3abec638280ac6d3d17d0b889562b00061cb23f64a8"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-s/2026-10-01-draft1.json",
+      "sha256": "fea843b133429d89b41f1466b99e6832ab772798c951e1c5331bdeefeea8df54"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-training/2024-06-01-draft1.json",
+      "sha256": "3681654f70923b41ced357b00b70170277ff05d91ea5606a23a09bdb3a8e812d"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-training/2025-09-01-draft1.json",
+      "sha256": "a5696ab63f3fb325a8027ea00d34b476f93bed71ae4182ceb8775ded33f5b352"
+    },
+    {
+      "path": "rules/packages/reviewed/drk-rtv-training/2026-10-01-draft1.json",
+      "sha256": "cd710b3d4b2a6970f3770a6a29bc93254ac2079a41641e6d844c2d75ae103f63"
+    },
+    {
+      "path": "rules/packages/reviewed/tval-pflege-tdl/2025-11.json",
+      "sha256": "19cdacb6461c2ca29d09a3e6bf69f952e2c2a1a22d3659815e6e82d58dc48415"
+    },
+    {
+      "path": "rules/packages/reviewed/tval-pflege-tdl/2026-04.json",
+      "sha256": "12507917747b0c7d9805b7c5683d0332d0f4cf509f51753b958feb83ca2489f2"
+    },
+    {
+      "path": "rules/packages/reviewed/tval-pflege-tdl/2027-01.json",
+      "sha256": "d549b19899197b4252ee968e64c45c82a9b9eb59aadadfd9e5d9803bbdca979c"
+    },
+    {
+      "path": "rules/packages/reviewed/tval-pflege-tdl/2027-03.json",
+      "sha256": "932417237c1e4d6ae47d1b48e8a339f17f40bdccd84f599c1360a7c9973c27bc"
+    },
+    {
+      "path": "rules/packages/reviewed/tval-pflege-tdl/2028-01.json",
+      "sha256": "3ace5e37ec9e9410991642af5aba7f4a6beefac3f61c0498035889dcfd51b49a"
+    },
+    {
+      "path": "rules/packages/reviewed/tvaoed-pflege-vka/2025-04-r1.json",
+      "sha256": "0a74f2d7c9d00008799fbba54e6d57b85b9971cd357716b0cc7286be43143906"
+    },
+    {
+      "path": "rules/packages/reviewed/tvaoed-pflege-vka/2025-04.json",
+      "sha256": "d7ef86040d22444c9afb7f27d2a03aa5ccc62684504d615ce50f17c6c9e62fb6"
+    },
+    {
+      "path": "rules/packages/reviewed/tvaoed-pflege-vka/2026-05-r1.json",
+      "sha256": "2fe9d99637e0955271a7629a9a6cdbfcbf84262e15a5f779bc1e7b3d27e46561"
+    },
+    {
+      "path": "rules/packages/reviewed/tvaoed-pflege-vka/2026-05.json",
+      "sha256": "18ec11ba4d2f5075a5b0ab5e2aff667dfa6f4e2c351584fffe75695d5e1a5e65"
+    },
+    {
+      "path": "rules/packages/reviewed/tvl-kr-tdl/2025-11.json",
+      "sha256": "37147d2e0cd166bba71703e0f45f1e08e78260e21e43af3e1f57c9e42dfa53f7"
+    },
+    {
+      "path": "rules/packages/reviewed/tvl-kr-tdl/2026-04.json",
+      "sha256": "509e3fbfa79a5fb8c179e0146a74ce762ef099bd00b4fdfc4e7fd91c381e2bf9"
+    },
+    {
+      "path": "rules/packages/reviewed/tvl-kr-tdl/2027-03.json",
+      "sha256": "2610c67a400b96c56ba8b0678b3f16573906c105ebac587ef2761153493aade5"
+    },
+    {
+      "path": "rules/packages/reviewed/tvl-kr-tdl/2028-01.json",
+      "sha256": "596d456406c1e9979ac318e5ab8e7c1bbc9ced24b8fd810c5c9d416a1c81de8a"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-anlage-a/2025-04-01-draft1.json",
+      "sha256": "80b62f060b4ecaf7c1af7007b83106aae69f51247b4edda5d5e9ed5b3d53ffb8"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-anlage-a/2026-05-01-draft1.json",
+      "sha256": "898b8c38a60ec4500bbb88bfdb330f67a1f72dbff02e9db216f74694543cae52"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-bt-k/2026-05-r3.json",
+      "sha256": "d8e896ace9ee6a190177289486a5c16c9b15730e8d0a3a0ea32c0e011d7157c9"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-bt-k/2026-05-r4.json",
+      "sha256": "e48bcf23f147152c6ebef72c8dff180f0af5fa7dc588276febaca94321a7613a"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-bt-k/2026-05.json",
+      "sha256": "4e60625313d3eecc1499b081dfebad9f865794441335c54d909626cd96cfb0b1"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-sue-bt-b/2025-04-01-draft1.json",
+      "sha256": "b75120211028011370eb6d2542681e931ca64e15a0ae5d28a79d82f1f927df38"
+    },
+    {
+      "path": "rules/packages/reviewed/tvoed-vka-sue-bt-b/2026-05-01-draft1.json",
+      "sha256": "e6e1e72cf6b3efb2dcf81538015154a4a192d5e46a18c7c3467ed48e0b094674"
+    },
+    {
+      "path": "rules/releases/preview-generation-1.json",
+      "sha256": "427db31f5401014299a6a8b4adc5a53953a979e3121067780453e140f5aa4883"
+    },
+    {
+      "path": "rules/releases/preview-generation-2.json",
+      "sha256": "95da051300d6d0f13f65893825b503c129c55a3d73d3b80d5a1df2999b24208e"
+    },
+    {
+      "path": "rules/releases/preview-generation-3.json",
+      "sha256": "509cfbb82c7e55a72beeffaf132d8ee322d540021f1a24c6e40fb755bd420e87"
+    },
+    {
+      "path": "rules/releases/preview-generation-4.json",
+      "sha256": "5aa8c0f3891e4ff60a3a31c54600794ac6eafc37e9acddf07d093893ee762264"
+    },
+    {
+      "path": "rules/releases/preview-generation-5.json",
+      "sha256": "647af7a2ba87713b3150ed64f5c63969a0c9e043178a81f0ea4fefeb842b3573"
+    },
+    {
+      "path": "rules/releases/preview-generation-6.json",
+      "sha256": "c700c93684e09cf9ad8e5dff87ffa54db868827fe3f1d7d70f563fb43abe4cd9"
+    },
+    {
+      "path": "rules/schema/manifest.schema.json",
+      "sha256": "e9f420473cb778b7ef541ab00b56809f0830600f1f532e80b1e8d9c40360b0b8"
+    },
+    {
+      "path": "rules/schema/production-channel-config.schema.json",
+      "sha256": "9c635cb895bb66c76ecff80c9ee135743883208f00193b367618df525dc9083a"
+    },
+    {
+      "path": "rules/schema/publication-request.schema.json",
+      "sha256": "cfb33770d2463ab1722621b93d2b5089c947737fea9114abf21db27ee8544a03"
+    },
+    {
+      "path": "rules/schema/rule-package.schema.json",
+      "sha256": "0d3d22c0e77acb250e089d84bd16667838aa0d454bc380e02d9d759fcd2f6319"
+    },
+    {
+      "path": "rules/source-extracts/caritas-annual-payment-p-bands.csv",
+      "sha256": "f0fe94cb279ecc9049a6a34b4d6f7de9e7b641d1c5dc679b5c3ccca2b94e6baf"
+    },
+    {
+      "path": "rules/sources/de-by-ftg-art-1-2026.txt",
+      "sha256": "f2f3399db3e6b45da553406a9b9ad7cc37ee12fb9fe3901cf4e49ad97ac0561a"
+    },
+    {
+      "path": "rules/sources/de-hb-feiertg-2-2026.txt",
+      "sha256": "281c937f92181a7eb4cc245d2c1a3e5639b88336a8409c2ae14d66c8042bcba6"
+    },
+    {
+      "path": "rules/sources/de-he-holidays-2026.txt",
+      "sha256": "58dbd23b04cd4e1b08b9f0c3f2e8d2edfbc4ba30a9ba3d75f1e3d7ecbb668077"
+    },
+    {
+      "path": "rules/sources/de-hh-feiertg-1-2026.txt",
+      "sha256": "161f840654299c2b0d7de00ad074fc2c21317b58852764cd8e6f8e08d045f93f"
+    },
+    {
+      "path": "rules/sources/de-mv-ftg-2-2026.txt",
+      "sha256": "3ab802f7ca83a6a2d0efbfe9f42a36274834128117c1ffc4f1276d5702d49ecc"
+    },
+    {
+      "path": "rules/sources/de-ni-nfeiertagsg-2-2026.txt",
+      "sha256": "0be2c47a1791bd7d8285be2f409644022cdc6cee72a7ddb6e785ca844c24e71d"
+    },
+    {
+      "path": "rules/sources/de-nw-feiertg-2-2026.txt",
+      "sha256": "402fd4095ed04c4947f4c8d8f9adc3184976ac5345d110a0962ee7f5f1fa0573"
+    },
+    {
+      "path": "rules/sources/de-rp-holidays-2026.txt",
+      "sha256": "eee33b53ac51d77e07d58c56ce614480a532e115ec659ed26bb59a561a6e0e35"
+    },
+    {
+      "path": "rules/sources/de-sh-sftg-2-2018.txt",
+      "sha256": "4e2b43bd057506376565d81f0aaaa2404eb95f66de8a837f7e601b053059202a"
+    },
+    {
+      "path": "rules/sources/de-sl-sfg-2-2026.txt",
+      "sha256": "0dd5d25001588bcc86b1123ef6fb9bde085f58c2723f352e0fd7f5c1765f2bde"
+    },
+    {
+      "path": "rules/sources/de-sn-saechssfg-1-2026.txt",
+      "sha256": "96ea9cccf5a6e0e761fe056f317f0124e0f25ed362ccdfcaf76c1ef0077e3d7e"
+    },
+    {
+      "path": "rules/sources/de-th-thuerfgtg-2-2026.txt",
+      "sha256": "9dc073ccf167b8f748ee42cad546c53100b172166139a612e2d5b25a5b88ee36"
+    },
+    {
+      "path": "rules/sources/drk-rtv-anlage-3-training-tables.json",
+      "sha256": "cd7435a61982584c1dbabdd918cdbe5e689973a5f88bbd73d869cd9f1ed12086"
+    },
+    {
+      "path": "rules/sources/drk-rtv-anlage-a1-e-tables.json",
+      "sha256": "fcb40c7012538a87cd199865d0a61f504e839f84ca9af00ec6448ab60412ccd7"
+    },
+    {
+      "path": "rules/sources/drk-rtv-anlage-a2-p-tables.json",
+      "sha256": "6c89f8276506d231497caf17ec257f3c4dc3548361d5cc3e0161c55e34266d34"
+    },
+    {
+      "path": "rules/sources/drk-rtv-anlage-a3-s-tables.json",
+      "sha256": "301baebac871cea29eeed64721d60b4c6074ebf98d48d2d988807f89d50b6bda"
+    },
+    {
+      "path": "scripts/runtime-policy.test.mjs",
+      "sha256": "82a39acbb54701d68e0b44065900e553beda4e8af7209287abdb25fda891bec8"
+    },
+    {
+      "path": "scripts/verify-calendar-widget-runtime.mjs",
+      "sha256": "b249a5c614c7fc0490a36503d0861a0f9ad79cc38f5e1646816ace73f8b74aea"
+    },
+    {
+      "path": "src/application/calendar-entry-loading.ts",
+      "sha256": "5ce1a31a29eed648b2e5241bf7bf2ec017854d70999c397aacf989a754125a5b"
+    },
+    {
+      "path": "src/application/calendar-performance.ts",
+      "sha256": "4c8d41edaf2c9a973bd2ceb2734f028df5cd5c7c92895dc0f3b9641c53dfed94"
+    },
+    {
+      "path": "src/application/calendar-sharing-invite-url.ts",
+      "sha256": "5cd03ef327e11b054e7cb9292cc89b23a36c89bdf306bf8e36b18cb03ea5fce9"
+    },
+    {
+      "path": "src/application/calendar-sharing-runtime.ts",
+      "sha256": "7cbe4c4ab197012008983ac61cd98d437ee9678408ffa58d5da12a83be5f6c0a"
+    },
+    {
+      "path": "src/application/dated-work-pattern.ts",
+      "sha256": "2e9368a25fb164e1e85b556dd51698b635dbcaa46b374a84d167f163c6557c89"
+    },
+    {
+      "path": "src/application/entry-notification-queue.ts",
+      "sha256": "a449a6631e2add8dafedffe0b82df80b988eed49961fcddd120dbaaed5e36e04"
+    },
+    {
+      "path": "src/application/pflegeshift-notifications.ts",
+      "sha256": "78002e61403211f6bf968c8d9fd282f8d912ee769c2866a3645c777739bc2902"
+    },
+    {
+      "path": "src/application/pflegeshift-ports.ts",
+      "sha256": "59e7c3508a03cb51ca3cebaab00b0680661c9e831b73b4ecea3de301c0217472"
+    },
+    {
+      "path": "src/application/pflegeshift-provider.tsx",
+      "sha256": "54a8dc90b60617c5dff8c92bd872a6441c76309eab187835adedce5cd52145c0"
+    },
+    {
+      "path": "src/application/pflegeshift-snapshot-reader.ts",
+      "sha256": "0e60a5432b18e5ae71da14609fa359ce285c94c0926640450a4276f4a6c362d8"
+    },
+    {
+      "path": "src/application/pflegeshift-snapshot.ts",
+      "sha256": "35e7c33100e900bfdf4df26f105e5b52a6b44a8baad26f8682611d79495052fd"
+    },
+    {
+      "path": "src/application/private-cloud-runtime.ts",
+      "sha256": "9ca633d6d3717f4b3e2485089084c26e961df2262262b4dadaba6ba10420ef32"
+    },
+    {
+      "path": "src/application/remuneration-provider.tsx",
+      "sha256": "98449cadc286229d10650229e967162912fce40cc17790ae4c3795db489002a0"
+    },
+    {
+      "path": "src/application/rule-catalog-runtime-provider.tsx",
+      "sha256": "fd1c468e4dbe0f46390f31b95ec1cea8dd1e485de5479249aa44d6eea00b39b4"
+    },
+    {
+      "path": "src/application/rule-catalog-runtime-refresh.ts",
+      "sha256": "7a922a33a60eee2e2b030933944d807c3a15c47e01d4e347d6846b254a2d5389"
+    },
+    {
+      "path": "src/application/rule-catalog-runtime.ts",
+      "sha256": "461b08755f61e561114d84c6f3b11924857580c2876c8158c6de6158405c1dbb"
+    },
+    {
+      "path": "src/application/rule-catalog-sync.ts",
+      "sha256": "1241f7b1853812e957a9ac747bc5a0ee6eba99ee508b666637f75e3340a7c442"
+    },
+    {
+      "path": "src/application/save-account-name.ts",
+      "sha256": "a4f6f187ad0c6b19dbfceafacee07b77d5691866e620b5bc8c6d9c9520e26850"
+    },
+    {
+      "path": "src/application/shared-calendars-context.tsx",
+      "sha256": "2585969ba31a55ddc9cf63cde11859ada639609b94a07d01f9a8bd20732e3b6c"
+    },
+    {
+      "path": "src/application/sharing-local-visibility.ts",
+      "sha256": "8f5f1510838105f945eb9bda3d3fd504e1e63f0fedda328d7bf240243476f352"
+    },
+    {
+      "path": "src/application/sharing-profile-photos.ts",
+      "sha256": "836ed6188f37bf62ad7ae21a56a006704562f75a847b27a6e1c58a4f5080b76a"
+    },
+    {
+      "path": "src/application/sharing-startup-cache.ts",
+      "sha256": "5cadfd47cae2030edfe62751d40615023aa7a6177e4005206387631916de4bfd"
+    },
+    {
+      "path": "src/application/training-ports.ts",
+      "sha256": "d0b9e611d85c6595cc7924610abb5a8ca4ad300968eb3a52f92c4d05078bf86f"
+    },
+    {
+      "path": "src/application/training-provider.tsx",
+      "sha256": "35030a736ce47fc859cf30616519d1f5f7077299a4da5cb9b1ed330162d3323b"
+    },
+    {
+      "path": "src/application/use-pflegeshift-loading.ts",
+      "sha256": "bb969d27abb07bc1d73fde609051e0dff40d3293a0e1c475a5f98e80a48a54c6"
+    },
+    {
+      "path": "src/application/use-template-order.ts",
+      "sha256": "948851fa0a6b34a2bba8969e5ce80b79b13fe220d2a6f4bd0d4c8b25f3e50b2f"
+    },
+    {
+      "path": "src/application/working-time-provider.tsx",
+      "sha256": "2016a0d442aa3271b3634be70c8762afe2c332b5dcbceee122f01578bb2d89dc"
+    },
+    {
+      "path": "src/brand.ts",
+      "sha256": "4af8774b98a597df5f817d18b0359cb590a5054e0d295e78ea9613c6dbf2467d"
+    },
+    {
+      "path": "src/composition/calendar-sharing-provider.tsx",
+      "sha256": "1577fb9599f56565c4cff07dbf33c9bc604f81963bd37c37665da64fd19838ac"
+    },
+    {
+      "path": "src/composition/caritas-draft-candidate.ts",
+      "sha256": "5a80314b5fe2f9606be66b818ccd0404a774cde6781058f6a31e3d5fc13d8169"
+    },
+    {
+      "path": "src/composition/create-pflegeshift-ports.ts",
+      "sha256": "5429e8b9b8eec4a1f70173710ff95fd993c3db4cd9b289e3e35e5a25b495d400"
+    },
+    {
+      "path": "src/composition/create-profile-ports.ts",
+      "sha256": "9d8135952906b88e197139c80933624771eb628d4d53821afde3128e2988278f"
+    },
+    {
+      "path": "src/composition/create-rule-catalog-runtime-port.ts",
+      "sha256": "293a85e97e63dcca38547ac29cf0ba83942b655f6604a40e15250554c327f6b5"
+    },
+    {
+      "path": "src/composition/create-simple-profile-ports.ts",
+      "sha256": "09ac54761b4491ffe20bb67bd251e80c6de21e06253d57780644d67e939448bb"
+    },
+    {
+      "path": "src/composition/create-template-ports.ts",
+      "sha256": "dcb1e61e4c9bd46167ab29f8d4a0bcc871169aeab1eba8ce2ab9cdf2f3c1d722"
+    },
+    {
+      "path": "src/composition/pflegeshift-runtime-provider.tsx",
+      "sha256": "652967957394ec0a689fd6db9bab8d78b2b73a356eac5032677d687b9e92893c"
+    },
+    {
+      "path": "src/composition/private-cloud-provider.tsx",
+      "sha256": "b9523583063511bac2395672159e10ef4e6b3d6ede3165cc1813ef2e03e261cd"
+    },
+    {
+      "path": "src/composition/rule-catalog-channel-config.ts",
+      "sha256": "135b1cf8c4b1c61af0578e7f9529543f3d179dfba570de056bbae824e31cce13"
+    },
+    {
+      "path": "src/composition/rule-catalog-preview-trust.ts",
+      "sha256": "be8ba64f2c21a867df076093a9b979cf66defb1b75dd1686e913a3a86ae18ab1"
+    },
+    {
+      "path": "src/composition/rule-catalog-production-trust.ts",
+      "sha256": "68e8d3f99b5f8a94b85b5efc35a84fa037bc06a7bc38f28c00618086858ba19a"
+    },
+    {
+      "path": "src/composition/rule-catalog-runtime-port-factory.ts",
+      "sha256": "094216162c912c6d5dbeeb23f4ee0312c35de8fd2ff3f6018923b8e139ae2800"
+    },
+    {
+      "path": "src/composition/use-sharing-startup.ts",
+      "sha256": "5edc8b3bf8bea9fca2069cc04dc779e42f92016ce98a8f98b9bcc5e492b92754"
+    },
+    {
+      "path": "src/domain/account-photo.ts",
+      "sha256": "c9f096ee0db6180ad1a7c8ea4ed9042f1440a47f8671ad71c1d383d7165fcc50"
+    },
+    {
+      "path": "src/domain/allowance-decisions.ts",
+      "sha256": "15ae1cecd332a53646b1a2613980620d0fe06ad14d1d13ea5311278f1f3b3249"
+    },
+    {
+      "path": "src/domain/analysis-view.ts",
+      "sha256": "9cb686d5d80848c5877ffb59c992e6babefc17d0e74784d92293b54d24adcb30"
+    },
+    {
+      "path": "src/domain/annual-payment.ts",
+      "sha256": "d3707568cf932219a3fe21d7381afe7441db1679044cb5bc824e63dc9b2475d9"
+    },
+    {
+      "path": "src/domain/annual-salary-payment.ts",
+      "sha256": "c4a05c578437461a0f5373a995d067a7ab16b727db22df460861881d5f1aa5a6"
+    },
+    {
+      "path": "src/domain/appearance.ts",
+      "sha256": "8d97ff39e69ddf6ffd22456843dd5adbc5ab88962a7dd850d57a7050ece5d96c"
+    },
+    {
+      "path": "src/domain/calendar-sharing-ports.ts",
+      "sha256": "4e22ab7f4fc02e2002fb5d6dded6c4203d678f5a8801285e915c2ffb5fdb9cd6"
+    },
+    {
+      "path": "src/domain/calendar-sharing.ts",
+      "sha256": "7cc15d01bc0d14e929458f584a5c96bfc96ef34f6e43d91406c3319dc1a5e9d6"
+    },
+    {
+      "path": "src/domain/compliance-issue-facts.ts",
+      "sha256": "f6020863876b2a59dffc6799c3f795fe147c52b3631579207bb00e67c6a4d3d3"
+    },
+    {
+      "path": "src/domain/confirmation-test-fixtures.ts",
+      "sha256": "e238b3f87ed71b91c2c234e0c09ccbcca1a0aa7b0d8923bebfacffc9e98bc3f6"
+    },
+    {
+      "path": "src/domain/data-load-failure.ts",
+      "sha256": "acaefc7ad3f376b5d3785bc41b0c39b636fd8022dffb39f866cc708c37594c7d"
+    },
+    {
+      "path": "src/domain/employment-history.ts",
+      "sha256": "2d2476e5dd9500105bec64fd742b73c40c09baacaee0efc9d782901e3aeeeecc"
+    },
+    {
+      "path": "src/domain/employment-profile.ts",
+      "sha256": "23330f7bc266a27ee7eec421d37b05230bf191a786dcfc2056c4c0f083cd8c12"
+    },
+    {
+      "path": "src/domain/errors.ts",
+      "sha256": "82387bf723e3421543646d60391300a14943d700757c804265146023b0abdfa5"
+    },
+    {
+      "path": "src/domain/net-pay-automation-test-fixtures.ts",
+      "sha256": "9e2cbbc232024f013a391f1f0527925557220e1f234887d5729092cca12dbab3"
+    },
+    {
+      "path": "src/domain/net-pay-automation.ts",
+      "sha256": "472e91b2caf6b409c5a6032b76fd73602aaf4e4a26568330994eb61877298256"
+    },
+    {
+      "path": "src/domain/net-pay-pension-schemes.ts",
+      "sha256": "ff669d5cfcec8740863004b097984b6d86c2c91263ef85ddd48e8598223b44a7"
+    },
+    {
+      "path": "src/domain/net-pay-profile-test-fixtures.ts",
+      "sha256": "5e3bbac6a20713e4c7bcfd3cc2c38f40efc8c1aed4e75a03d3bbb900eec09666"
+    },
+    {
+      "path": "src/domain/net-pay-profile.ts",
+      "sha256": "c8bacdbb2e6b407ad4abe789263a003a4c6f1653f935dad5c32605dd5bc3f5ac"
+    },
+    {
+      "path": "src/domain/net-pay-sfn.ts",
+      "sha256": "489f6f0c4adc5e47fe898035b52e9c691619ab541dd358188e389cdd96078644"
+    },
+    {
+      "path": "src/domain/net-pay.ts",
+      "sha256": "f321e767263a252516cb10838e17ecfcac296c47af65d93ea9d86fb485baa9f9"
+    },
+    {
+      "path": "src/domain/nursing-training.ts",
+      "sha256": "87a4158f4ee7a722944d8025300e35c92f8237b5380476283af916d3be8f65c5"
+    },
+    {
+      "path": "src/domain/overtime-allocation.ts",
+      "sha256": "64ed1458e4947c07025488fe3196418b16e29e1135cdeb1579bc288491235b48"
+    },
+    {
+      "path": "src/domain/own-remuneration-test-fixtures.ts",
+      "sha256": "dd5b1201c1bce5c1d297d69d6df7824bf89b500cfd8dccb770b8b94e1c9fc160"
+    },
+    {
+      "path": "src/domain/own-remuneration.ts",
+      "sha256": "f99a57e66a70a479cb67ca30fd9a44eab971196521f1e1ed78f20eeb87e5b1fd"
+    },
+    {
+      "path": "src/domain/paid-absence.ts",
+      "sha256": "5176c4cf0749e77b3ce3e38e570ce73576298f1213045bde65a04ad9bf4a82bb"
+    },
+    {
+      "path": "src/domain/private-cloud-merge.ts",
+      "sha256": "bcb8aa2d1cdc8fc733120b57a99a143a814f477042ceea32d5f56f35fdca411b"
+    },
+    {
+      "path": "src/domain/private-cloud.ts",
+      "sha256": "dcb74d4f58a2dd2510c879fc9f7b5e1a92be93cb6e8cfbae7d5bc73e7fbd3d1c"
+    },
+    {
+      "path": "src/domain/remuneration-assessment.ts",
+      "sha256": "516393c8db095223f74e7a24bde5d234298c8fbe27d3518f061faa0e02d3c36b"
+    },
+    {
+      "path": "src/domain/remuneration-profile.ts",
+      "sha256": "4bbe6e2945f38d025fb584d9ec2a4e84c76de30e82d7b0b1747ec030aa601b1f"
+    },
+    {
+      "path": "src/domain/remuneration-result.ts",
+      "sha256": "ec226b7fde4487dda0e14730934662302668e13d3ef5864e779005eeaa207cef"
+    },
+    {
+      "path": "src/domain/remuneration-supplement.ts",
+      "sha256": "588954eb9b96fbb137b73fbde6285dc38922dbd4a3cf3d1257b98a001f6efed8"
+    },
+    {
+      "path": "src/domain/reorder.ts",
+      "sha256": "4c0371cdc02c08df8edff9b28fd648eead2e838c978ae64cea40559d0d3963b3"
+    },
+    {
+      "path": "src/domain/salary-annual-schedule.ts",
+      "sha256": "f28a523a897eff8b303d64cce4e3bcc17eeedf855187f104a416bd677a873327"
+    },
+    {
+      "path": "src/domain/salary-basis-conflict.ts",
+      "sha256": "31fdf6b61e4c34e9d3d10b301f2ecfe46d4fdb971f7718ccceedcea1697d2195"
+    },
+    {
+      "path": "src/domain/salary-payment.ts",
+      "sha256": "1417946675c6619c94e67593aa137289f7d41ccfeac85ab950c452b5590059a9"
+    },
+    {
+      "path": "src/domain/saved-annual-payment.ts",
+      "sha256": "f7f563154c5d435183b4cb550a5c3d94e4f141811e7248488c0653765a503dad"
+    },
+    {
+      "path": "src/domain/saved-caritas-month-facts.ts",
+      "sha256": "f3219a963ce8c6ad13649dde32d70bc3c8b13073a647d2777c66afc92e0c5ca1"
+    },
+    {
+      "path": "src/domain/saved-caritas-overtime.ts",
+      "sha256": "9366af33b4c892f86cc8dbed7cbf05649caf37c9870cdd7e9237a85817a641e0"
+    },
+    {
+      "path": "src/domain/saved-caritas-work-day.ts",
+      "sha256": "2ee2241dbda9a8ec03f5e06aa4f33693c91612dc22f3d6b6b43664e3fbf88688"
+    },
+    {
+      "path": "src/domain/saved-drk-employee-month-confirmation.ts",
+      "sha256": "bdeb662aa9f88136a6dd972fbf5dfe752cfce554c7cd4e1488bfb741ae4bb1d1"
+    },
+    {
+      "path": "src/domain/saved-drk-training-month-confirmation.ts",
+      "sha256": "40d8ae2154f2c746a2904f62a1b4a778c4e9d65bfcb5386749ac1acfda5fede5"
+    },
+    {
+      "path": "src/domain/saved-tariff-annual-claim.ts",
+      "sha256": "02e95fc971dd7b3eadc2b403878cc8e599c8aa4df7bc2ae87c9908589fd9419c"
+    },
+    {
+      "path": "src/domain/saved-tvl-shift-work.ts",
+      "sha256": "15dd96e3d1223244b472fa9fc7af95fab62507f9f9d29104d9f2041a7c4f87f4"
+    },
+    {
+      "path": "src/domain/saved-tvoed-annex-a-month-confirmation.ts",
+      "sha256": "bd3d5ebae19b9b0f5177d97694d61a5b6dd78293ba0d55c827a61430f6830811"
+    },
+    {
+      "path": "src/domain/saved-tvoed-annex-a-premium-facts.ts",
+      "sha256": "c1c0f2b73ed85162d19480984ed14b2b8803baeafcec7fb85fa8ba1d70ed25e4"
+    },
+    {
+      "path": "src/domain/saved-tvoed-sue-allowance-confirmation.ts",
+      "sha256": "5b4955baa5e45dfc365e39e973b6328fcb2f89e409d774f5b7643ee58caa3fd5"
+    },
+    {
+      "path": "src/domain/saved-tvoed-sue-month-confirmation.ts",
+      "sha256": "2cd840c505e470c30c4ebd5a0230a8b71bab94d75019df023b430efe0820e963"
+    },
+    {
+      "path": "src/domain/saved-working-time-target.ts",
+      "sha256": "eb4fdd42d5d99dd946a357b3022041fcd79e7a513afa833a1b30dea3ee46163b"
+    },
+    {
+      "path": "src/domain/shared-profile-photo.ts",
+      "sha256": "896e87b1c2fcb571911249ccd11b48552f04e4a80f96f01ab684dfbf98330a9f"
+    },
+    {
+      "path": "src/domain/sharing-content.ts",
+      "sha256": "a84c4ccffd77e4c42a6d8bdb5bf7e172db56b4e5f778054af71e2f57f36ec1aa"
+    },
+    {
+      "path": "src/domain/sharing-ui-contract.ts",
+      "sha256": "76ecf16fa3dfbd486ae491a3b6933a862a14c1ca6fc62476389c07133f486d21"
+    },
+    {
+      "path": "src/domain/special-duty-pay.ts",
+      "sha256": "2305d261dfe6bc67e347bc2311788072daa4e0c284e90d42332b1e68d9d883e8"
+    },
+    {
+      "path": "src/domain/special-duty.ts",
+      "sha256": "1d8fd0f003dc2a5c6f2ee1707ae1649878969013758587a107a587ee0a38b0aa"
+    },
+    {
+      "path": "src/domain/standby-agreement.ts",
+      "sha256": "d6869584ba75c6cf6fdfcfa84359c9f68979dfbb57742d4b7640cc44daad48d9"
+    },
+    {
+      "path": "src/domain/tariff-annual-claim.ts",
+      "sha256": "69252c5eb32194100b11b1113f308aa790e41116d2096e31f3ca35df3999ff0e"
+    },
+    {
+      "path": "src/domain/training-data.ts",
+      "sha256": "a401b63ea1330a3fff0b3687da76e96f714eb9872be6532ba874f47c1f480de0"
+    },
+    {
+      "path": "src/domain/training-test-fixtures.ts",
+      "sha256": "b0c08fb47b396ff1ec33237aa81154f7bb2ef044b538218cdb622b62131cae72"
+    },
+    {
+      "path": "src/domain/tval-care-allowances.ts",
+      "sha256": "18a2003a1e9bfcf79d608bd052e0cb2f2b6683e79c2f364c894cfd4aa61b0f8a"
+    },
+    {
+      "path": "src/domain/tval-pflege-tariff.ts",
+      "sha256": "a814545bb09e6f43b8ecf1a341b12dcc6b249045c922d444755ac59f393acb2c"
+    },
+    {
+      "path": "src/domain/tvh-kr-tariff.ts",
+      "sha256": "e74e840916fe2ff885147017a2bdf475c7cbb6dd90be2d76279e6d9dbd335e63"
+    },
+    {
+      "path": "src/domain/tvl-burn-care.ts",
+      "sha256": "ef84e26f2cf8b7379443162ce5eae57cd92ac1c89ac9cba3f4637e007701c712"
+    },
+    {
+      "path": "src/domain/tvl-care-allowances.ts",
+      "sha256": "f2d08ef83a9a7110bbdd425753926c7b5edb14ed117f32147ca7a72e6b80fde9"
+    },
+    {
+      "path": "src/domain/tvl-kr-tariff.ts",
+      "sha256": "4ed58bc7fbedd52015e92006ecd343e57b049876f1a6f7edb716db2d73ec66ed"
+    },
+    {
+      "path": "src/domain/tvuk-nursing-tariff.ts",
+      "sha256": "f1eee163444c2d22b4da825cdbaa14a53bc32816cb2613240e9fa1e7d219c473"
+    },
+    {
+      "path": "src/domain/types.ts",
+      "sha256": "4b71a9acfe53dcb15c2f589752000f99a1b90a67e7a5f465a20a10311a786252"
+    },
+    {
+      "path": "src/domain/validation.ts",
+      "sha256": "e30a553d2fe36ade5069a0289cdf1c125ae334c916e84827631496f311ee3d00"
+    },
+    {
+      "path": "src/domain/vka-e-tariff.ts",
+      "sha256": "979dc5eeb872a1c779e734defaf5f0035c42a9b6f338012be8908bd3bca4ac43"
+    },
+    {
+      "path": "src/domain/working-time-target-test-fixtures.ts",
+      "sha256": "9a2e02e64c0b55c40fc580e69190719673898ff8d790edeb39152c2fd5995ce3"
+    },
+    {
+      "path": "src/domain/working-time-target-validation.ts",
+      "sha256": "5b7e3f8e5d842429b8342bf122196a45fdef3d52158dc03f8d09d3963c726db5"
+    },
+    {
+      "path": "src/domain/working-time-target.ts",
+      "sha256": "4d35a5d6070254051d44fa160bcc76089619f2c92433b44d030e10e9a2af52b2"
+    },
+    {
+      "path": "src/domain/youth-block-binding.ts",
+      "sha256": "91b853d16a6dd4189e2ec62e2e8eae654c8ad1095f093acf3c28c55befad6fcd"
+    },
+    {
+      "path": "src/domain/youth-context.ts",
+      "sha256": "7bad58267b6a3054d4ec02aaddcb3c0fc0b67c8ed52cda055fb372e1f9c4fadf"
+    },
+    {
+      "path": "src/engine/adult-training.ts",
+      "sha256": "569315f55a64fa33b16bf135d260868b434889cb668fc707808e88d63dfd0193"
+    },
+    {
+      "path": "src/engine/annual-core-test-fixtures.ts",
+      "sha256": "016becde78c6e6d1bdf16064470afb5f31b8c734b649712f91d4748b44c562ec"
+    },
+    {
+      "path": "src/engine/avrdd-draft-advanced-allowances.ts",
+      "sha256": "2e3170c4c37462bfe443cdaf7aa263b2c9cc1384682992f4a4b53520da45b64c"
+    },
+    {
+      "path": "src/engine/avrdd-draft-base.ts",
+      "sha256": "7e56652566f637015c095f976ff5c473ee652ba269210ebf0f99edb329e468ba"
+    },
+    {
+      "path": "src/engine/avrdd-draft-care-allowance.ts",
+      "sha256": "116357116e8d74c0ee07ab8ed8f123f4513197100dcc8d69f640bad8ec42e9a3"
+    },
+    {
+      "path": "src/engine/avrdd-draft-overtime.ts",
+      "sha256": "bf5f61bdafc1208c4f7312de3688fea0b406681621d0209add68da8987477580"
+    },
+    {
+      "path": "src/engine/avrdd-draft-shift-allowance.ts",
+      "sha256": "0e275ead0a3ae71c2f08ea7a090fa3da19a3fd3b5af16d32f38cdedaf3bed955"
+    },
+    {
+      "path": "src/engine/avrdd-draft-time-premiums.ts",
+      "sha256": "7879604be9efc5bd53b7c7e159579d116a412bdd6de5208bf7eeba44f870854a"
+    },
+    {
+      "path": "src/engine/calendar-entry-order.ts",
+      "sha256": "515b80dd92ba34f02f1702ef5d9fd98cf9d53bfd71bd8876a39782a207d25e91"
+    },
+    {
+      "path": "src/engine/calendar.ts",
+      "sha256": "eedab2c528c7e0acc60eb9056a27dc8a5c31e80289f4100d61d356f9e9b4ac92"
+    },
+    {
+      "path": "src/engine/caritas-annual-draft.ts",
+      "sha256": "c1e84c5a56b8cc3b4718cfc47169cbff36142b5f9d3db3e73727019ff03d96c9"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-amount-rounding.ts",
+      "sha256": "a29801c13535bd498bdb0c166c8a0cbd269c4c65779670ced7b16090efcaceef"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-early-exit-amount.ts",
+      "sha256": "2c24a52b707c8d63fa2817b35caffe9e9db46dd3c125e489a5f68f2e169822d3"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-entitlement.ts",
+      "sha256": "23cbb4d34bfa4de4785eed7af03210bae602692ad87be668e35364f674f758bd"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-fallback-amount.ts",
+      "sha256": "7028b50fe6c65e594a7ef97a0ba23c7390cf6b6c72d87848fee178e6dccd4d68"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-fallback-basis.ts",
+      "sha256": "66bda99332f883d743affd26b553eb8977bef1f385b9554205e710a9889b215e"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-late-entry-assessment.ts",
+      "sha256": "1633be7f640e6db29f7a3895f620bcea4c2d17805fc8107449b86dbc0af242c5"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-late-entry-basis.ts",
+      "sha256": "e3d9db2dd290ec653a659b15ed1e299d2e9026cb545b1eaa6d93431aa7051a43"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-parental-part-time-amount.ts",
+      "sha256": "f1fc466b04c95d54ce3b293b5f2136165ac9ef8d496653295d01fb03effdbf3d"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-partial-amount.ts",
+      "sha256": "89662a9d1240872e83c57fc6bcfe20c136140edefc8d76c04ea1cf4e56364daa"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-partial-basis.ts",
+      "sha256": "08de864e6eb23f38e1c6938895f2dbae24ac3bcefc8d24a8c068f740a4f401e8"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-regular-amount.ts",
+      "sha256": "e7276b0d68506fa43c8ac0c80395216afa441aff93abdba81e25101aefd85867"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-regular-basis.ts",
+      "sha256": "9e7f3cb64384448f440ab5a866f9da5f94d9ba33a38d0bf7cc6d6ef4c7e54e30"
+    },
+    {
+      "path": "src/engine/caritas-annual-payment-rule.ts",
+      "sha256": "4912f1282035197c965d5470032f0c198e6eafb626d89181d4159e7c233a074f"
+    },
+    {
+      "path": "src/engine/caritas-annual-payout-month.ts",
+      "sha256": "be4a694b6ce82168afa8b54d9a761dc1c9945e177a266b107dfeed4d7fae0413"
+    },
+    {
+      "path": "src/engine/caritas-care-allowance-rate.ts",
+      "sha256": "ae984e433af293c49219175ab957d15c631383859e818671ade07cc711ef786f"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-allowance.ts",
+      "sha256": "e9e0c5212c4aeec183399f3afbe0afb19bd4d29cd9a485f9ff5967c86ef633e2"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-base.ts",
+      "sha256": "f9aeb2a79f0cd5ffc77359d7637462d9e1de86581479d1ca0b1652ab33432676"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-entitlements.ts",
+      "sha256": "712023f08903a692b52005bbdbbe0adec3a777f2afdd307e4edcb3186186ffd1"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-from-saved.ts",
+      "sha256": "ecd7656bc639743d4450ed677d470a18c6742e3d0ad14c5968a1ad588cf42d74"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-month.ts",
+      "sha256": "c399c51f1148f083950831314055b0e31ffde3c87dd2957498dfa0e7ca8344bb"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-components-with-shift.ts",
+      "sha256": "c0df76642a0876a76ef2f32fb1a95bf83f1a7a7d57c0cf58cea04b57f5f36682"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-components.ts",
+      "sha256": "fd27496bbc295fbca0053abe2c7adb16f2444b595ea1154cff59ffe812d657f8"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-composition.ts",
+      "sha256": "9d39c1d8a48e3aaee8ee11cbb54336bafafeb344a6cf7dd8a623aee7882e9ea3"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-with-hourly-shift.ts",
+      "sha256": "b5476ece26fe21ea46ca557a1547043a8a6fb44378e436008716c813f60c6e4d"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-with-overtime.ts",
+      "sha256": "74307f626f3cc3fd6cfa2a14f50c2bc8896d1e8cc36a027dc50a1a8d29679712"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-monthly-with-time-premiums.ts",
+      "sha256": "e8e536c0a3e8fecd27339c2200823d5cf3df51e692d6b3e3808d063fdad3c773"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-original-base.ts",
+      "sha256": "1d7e5e5b10d061533155c873f92fd2934e8b97af9eabbb7119460a5b6189715b"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-overtime-payout.ts",
+      "sha256": "f38943189f257f5ff567fe8efbd2a9322f405d5b182ad60b345bf3d3db791079"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-overtime.ts",
+      "sha256": "7d06254345f556ec1adefe32877c855650facc8bc408490c43b47a8d13270421"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-personal-allowance.ts",
+      "sha256": "ad4283817ae9f6a4b7929f942bb69f6024dfff44e8a8f9cb5e2d16e479cda77c"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-personal-hourly-shift.ts",
+      "sha256": "2e3805ac4d29894f72cf15d812f511b6133283d6493f76f7b8d23c4fad748d83"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-personal-monthly-shift.ts",
+      "sha256": "2100aa82bd70255deebf91fe994f4a526ba3c12a160e06f1d2c7b27b4f16bd52"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-personal-overtime.ts",
+      "sha256": "e9f79d2aec0ac5041decaadc7922d0b7613b1d637e45f02a1fc90f1911e31f6a"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-personal-time-premium.ts",
+      "sha256": "5ea30a837f8f627e441996b8596d430ad5afcd2c2ba93372d101efdd87f09963"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-shift-allowance.ts",
+      "sha256": "9c1a6577a2cec7e9bb2fee2fba04a7d6034790b3850dc4f5c88636f629980ada"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-time-premiums.ts",
+      "sha256": "b8fdf2fa478c126cd1ec91ec27792281ee3287430e92e4e6ed0dcaaaff0387bc"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-work-facts.ts",
+      "sha256": "d3a2f10b0af32eaecbbfb897639027fd8b49bb8c67122e969740eda032006d15"
+    },
+    {
+      "path": "src/engine/caritas-care-draft-work-slices.ts",
+      "sha256": "820d64be9d9c3791699ad67ed9de9c755582a81a879d3d39ce9353e9d3eea28c"
+    },
+    {
+      "path": "src/engine/caritas-care-table.ts",
+      "sha256": "883e79a414517663d828541459c26ab192678483f698248cc052b556cf98c433"
+    },
+    {
+      "path": "src/engine/caritas-overtime-hourly-base.ts",
+      "sha256": "78c2d53013b0b415cad562d198156c02acf5ee9a8e2fe5280f9eed326232769c"
+    },
+    {
+      "path": "src/engine/caritas-overtime-hourly-premium.ts",
+      "sha256": "8992cb55f97096e25d6a4fa6e6b3ff3287c120b6acab93e527737a25f9894c74"
+    },
+    {
+      "path": "src/engine/caritas-overtime-hourly-values.ts",
+      "sha256": "b595a5606b5215fc284926d8b752a3b1fc74fe9da2146f2e81568810e377d9c9"
+    },
+    {
+      "path": "src/engine/caritas-shift-allowance-rate.ts",
+      "sha256": "e12e2637b773a8a31daee8fe1de2d95405f4bdacfa52644d67397277c82b2000"
+    },
+    {
+      "path": "src/engine/caritas-time-premium-hourly-ratio.ts",
+      "sha256": "1aa8530b5da43a1837a116717eec7281e4d8f227d7de745258a7318404cc7d2e"
+    },
+    {
+      "path": "src/engine/caritas-time-premium-hourly-values.ts",
+      "sha256": "12782af6c179f206183a82b868ea52fd966093159834c44e2049519221470a6a"
+    },
+    {
+      "path": "src/engine/caritas-time-premium-rate.ts",
+      "sha256": "b3af016d4ce0eae6cbca0446d1e666430867a8b21cd28a60137d3de3b1871bf0"
+    },
+    {
+      "path": "src/engine/caritas-time-premium-reference.ts",
+      "sha256": "810b920944f9d408f3caa7e0f809fa1c28322e29b1d2b776ea926b7cb7ccd868"
+    },
+    {
+      "path": "src/engine/caritas-working-time.ts",
+      "sha256": "7addb0b75a79ba14cb1e1809e4c4f82584ec9858a680860077de16ccd830cbd3"
+    },
+    {
+      "path": "src/engine/compliance-evidence.ts",
+      "sha256": "5191e0dfca34ad0fa29a1b6acf9a459525ee7469a59d6b013f4a6a77c8bea135"
+    },
+    {
+      "path": "src/engine/compliance-issue.ts",
+      "sha256": "0a5f16296713dc0856c4b244b1eecdff5036011c2405c2f58bd78db3aa2401c1"
+    },
+    {
+      "path": "src/engine/compliance-night-work.ts",
+      "sha256": "5ec449422886793868111575a9f83eda79d16044bd846968937ff889d2fa0e5f"
+    },
+    {
+      "path": "src/engine/compliance-result.ts",
+      "sha256": "58036a6b74957401cc3c092e90a314d2943e3eeb4d2ae468a2d46efebc98ff61"
+    },
+    {
+      "path": "src/engine/compliance-sequences.ts",
+      "sha256": "8f4ba92bd89531277d8f418fffb26ec4d093b0c0da4c81b1ba418bb7c91cfa34"
+    },
+    {
+      "path": "src/engine/compliance-split-breaks.ts",
+      "sha256": "796a63f61a78f57d6e5234ad318da0915cec4ccfc96a698826e1ffb03e4241f5"
+    },
+    {
+      "path": "src/engine/compliance-sunday-holiday-rest.ts",
+      "sha256": "1cf213816c016ab427cf72eaa00c166ecc4675b8095c99bf44a254d74fe2406f"
+    },
+    {
+      "path": "src/engine/compliance-working-time-average.ts",
+      "sha256": "5c5f7dd2de4fdd2ed63010f07a5f2a30a11c66641c50e437c0e3de67a9c05f76"
+    },
+    {
+      "path": "src/engine/compliance.ts",
+      "sha256": "3b3af8b567cc9b39ad25ca2d8278ac1094a2b8d590ee38f4fd39a4d52c878418"
+    },
+    {
+      "path": "src/engine/daily-summary.ts",
+      "sha256": "9e5033c52476ea06f9c093384432a408a87b29a106fbb67782e515b0d0d87829"
+    },
+    {
+      "path": "src/engine/dated-compliance.ts",
+      "sha256": "a99dafa563d56b2ca9b992f718a402d93d8048d73b9f2ee21aa2b18d3ce49d3c"
+    },
+    {
+      "path": "src/engine/drk-employee-draft-base.ts",
+      "sha256": "83f08fa358e9b38dd214594d95d1f1dc93fa07625adc70efb9f247f598a4080c"
+    },
+    {
+      "path": "src/engine/drk-employee-draft-from-profile.ts",
+      "sha256": "842a433a43443555e5d2e70ac09bc0b0b29912c467a386013a9361badd645d40"
+    },
+    {
+      "path": "src/engine/drk-employee-draft-from-saved.ts",
+      "sha256": "edb45e05367822fa4aff626853d0c671009e5b7a22d5a3b585db83cdf065c40e"
+    },
+    {
+      "path": "src/engine/drk-training-draft-base.ts",
+      "sha256": "0d7a83e3768fbf926449846bc17f2f20be37e456154a6246a6bfb1040c117af2"
+    },
+    {
+      "path": "src/engine/drk-training-draft-from-profile.ts",
+      "sha256": "18a9af3a0ec195107bae7e6826f613a751713bdae4550bda6cd60f6141bcfcbb"
+    },
+    {
+      "path": "src/engine/drk-training-draft-from-saved.ts",
+      "sha256": "08e2b8cd5555c05d547f3d72d66e063264f36d60594737fe00b840d653c03587"
+    },
+    {
+      "path": "src/engine/holidays.ts",
+      "sha256": "7079125e7b952ebea3b7d364ab2db1542496691f93d7e309b2778a8cf4d67b56"
+    },
+    {
+      "path": "src/engine/monthly-summary.ts",
+      "sha256": "85b76ab33dccf3071dec8081a8695cc77336793b90434f5ae4525d4c70533517"
+    },
+    {
+      "path": "src/engine/net-pay-annual-payment.ts",
+      "sha256": "b804644a730dbdb522e3e27dbadcbb7c5e71100ae462a99d2db157fa51a1c0af"
+    },
+    {
+      "path": "src/engine/net-pay-automatic-cache.ts",
+      "sha256": "4e7a74334b64bbf2490f0b48f086156ae34aa352516d30f249198704ddb85ecb"
+    },
+    {
+      "path": "src/engine/net-pay-automatic-forecast.ts",
+      "sha256": "fffbd35e186cbf213f890fd073e68e3f4d80ea4615f42c1c5903b9b8c956ae77"
+    },
+    {
+      "path": "src/engine/net-pay-calculation-basis.ts",
+      "sha256": "b75015ae4e80cc6e6c848e287669ae5e8bcb480f395f5237fd2d4ec4b754019c"
+    },
+    {
+      "path": "src/engine/net-pay-cross-year-tax.ts",
+      "sha256": "3941be57ca26a8b1567c3b8598248f7af8b586d4de66d1c0b05552dbe556d6da"
+    },
+    {
+      "path": "src/engine/net-pay-payment-forecast.test.ts",
+      "sha256": "39ec7fc6d76654c55ac107b2ba7c47f994fe403773044aa6e59905ce082f7fd1"
+    },
+    {
+      "path": "src/engine/net-pay-payment-forecast.ts",
+      "sha256": "903f5ab728002540df82a61cadf25a7a61cd7c7a1a517edeb60a39556dd1096e"
+    },
+    {
+      "path": "src/engine/net-pay-pension-rules-2026.ts",
+      "sha256": "2b94b140a097591d2f43610848db2659b40527b794a2f1ef87f29afaa16f81fe"
+    },
+    {
+      "path": "src/engine/net-pay-pension.ts",
+      "sha256": "afa1f7bd8043e74783dba2aac535afd55953d1bbe5b131566ec3ce2f044db579"
+    },
+    {
+      "path": "src/engine/net-pay-premium-trace.ts",
+      "sha256": "eddb69966a6ae4fe5840e1a77a465464ee4d3fad34df89230c3b84d7d37247db"
+    },
+    {
+      "path": "src/engine/net-pay-sfn.ts",
+      "sha256": "f3c60885bf35da3ed2a4e3b188201cb9d4bf232cd7f81fed3266a46a273ebfa2"
+    },
+    {
+      "path": "src/engine/net-pay-social-insurance.ts",
+      "sha256": "c0722c2562742f9eb0f39b4d5f3c5b0b1cb2df15572dc79244f85a1812abd249"
+    },
+    {
+      "path": "src/engine/net-pay-tvoed-forecast-test-fixtures.ts",
+      "sha256": "4bc571bd89ea7fff47b6138d08e4678365e62c9fbafe1e9fc0636a010364bb5b"
+    },
+    {
+      "path": "src/engine/net-pay-tvoed-forecast.ts",
+      "sha256": "42c212f8e140aca304739bdf9316a887b0231a4c79bdcd07546ef839ca0e04b8"
+    },
+    {
+      "path": "src/engine/net-pay-with-sfn.ts",
+      "sha256": "e79c45e1f43c16607c3a0d6972249594ed975601f48f110fce285345e08433d6"
+    },
+    {
+      "path": "src/engine/net-pay.ts",
+      "sha256": "cd876b94be965920c123434c42f6cc0ea9449dd0a696656907c3b6bfe84fd76e"
+    },
+    {
+      "path": "src/engine/pay-allowances.ts",
+      "sha256": "e335f19a96997a9ae779bf350e467863b8142bf7e84976a8e05cd5cce904b3b8"
+    },
+    {
+      "path": "src/engine/pay-conditions.ts",
+      "sha256": "899c30289835b16aba9fcadc136d5a016f721166091b8f62a800c1fa31d67eec"
+    },
+    {
+      "path": "src/engine/pay-fallback.ts",
+      "sha256": "6be76ec99a5a7e74dc9695a8924343aa08a6f15c8e76b572bd8e5ef563e318cd"
+    },
+    {
+      "path": "src/engine/pay-premium-minutes.ts",
+      "sha256": "6d24646f6072ff96b26fa4b262ddf6aa7f88a8f95f96ebed02c95ed5cc9f5ecd"
+    },
+    {
+      "path": "src/engine/pay.ts",
+      "sha256": "a0b1d62442ad92f2ae0e6fb43dda03b5cfabd9fb8fd5d87333739806d4a81e2d"
+    },
+    {
+      "path": "src/engine/payroll-employment-periods.ts",
+      "sha256": "428f4a7206684243ad560bd80f74ae26e3d5b7ab4e601773ce6ebd3235ac2047"
+    },
+    {
+      "path": "src/engine/prepare-monthly-pay.ts",
+      "sha256": "8ea81c8a15817220343e80610f915e0b64a864e25d517c2f8b0f76de39394fd7"
+    },
+    {
+      "path": "src/engine/recurrence.ts",
+      "sha256": "94f3ae17b5a4f7b0df0abc3123a2e63dc09a12353330dd0aec49ee28366bf092"
+    },
+    {
+      "path": "src/engine/remuneration-allowances.ts",
+      "sha256": "5190a6772d70f01c0e5b0c15f0b13a02bceeeda09fe584c6bbb6cf714e10732e"
+    },
+    {
+      "path": "src/engine/remuneration-annual-coverage.ts",
+      "sha256": "20776790658e5f074325ee4702ab8233971c2a961fcaf8a977d6e0f82e31ba5d"
+    },
+    {
+      "path": "src/engine/remuneration-annual-payment.ts",
+      "sha256": "a0f31a81e0db14c6dba524ab1c00e20809f2a6b70806be7b09a0dd04d4c2394b"
+    },
+    {
+      "path": "src/engine/remuneration-assessment.ts",
+      "sha256": "e2c7b12aee9c7f764936e34119e17aaf144b3f1ef9d2a8a54a78fb5ec655cdfa"
+    },
+    {
+      "path": "src/engine/remuneration-base.ts",
+      "sha256": "ea34340c3c5f07121a87baec4616904835bdaff6370dab81e5d875d6ca3fa8d9"
+    },
+    {
+      "path": "src/engine/remuneration-context.ts",
+      "sha256": "da4b7365fa9aad1382137e7380a60b20a771f1034ad89ca7c7e53551d9ffcb61"
+    },
+    {
+      "path": "src/engine/remuneration-money.ts",
+      "sha256": "54a1d18f03e4664630d4e035bc3316fa3cec2ddf3932ae21835112914b1d58b2"
+    },
+    {
+      "path": "src/engine/remuneration-month.ts",
+      "sha256": "3b25b2fe034776d5770b373244b678464ff88ce2f7321181b7a9c755291b2694"
+    },
+    {
+      "path": "src/engine/remuneration-overtime.ts",
+      "sha256": "2294b6b8644f2b9e6f149eb97a2300e01763ef18bb8cd799fd7727ae3ea17b8a"
+    },
+    {
+      "path": "src/engine/remuneration-own-allowances.ts",
+      "sha256": "8ae067ea44b057b676de82301a801c9b358a6be2d74a827e2b321c4e8ebea3a5"
+    },
+    {
+      "path": "src/engine/remuneration-own-hourly.ts",
+      "sha256": "744de9b417290f61f7fdf48e484d377ad508bd6f164d34ae06a1910e21502e34"
+    },
+    {
+      "path": "src/engine/remuneration-own-overtime.ts",
+      "sha256": "ddb26087b8268ce3fc2405edab22a6c282fb1d594501381d64f9923f73b59847"
+    },
+    {
+      "path": "src/engine/remuneration-own-premiums.ts",
+      "sha256": "3980f14d471872dc0473045bc533d32efa077783425e93814f08ef15cadb0b40"
+    },
+    {
+      "path": "src/engine/remuneration-premiums.ts",
+      "sha256": "7299f852482b804b6b3786c621a9ec1e88a8f9ac0dbbf3998ca16e915412b8a3"
+    },
+    {
+      "path": "src/engine/remuneration-shift-days.ts",
+      "sha256": "57c88f5ca68a9ddc231862190a8421e4b4dac823c9d6ee340745ab488aaf6f83"
+    },
+    {
+      "path": "src/engine/remuneration-supplement-result.ts",
+      "sha256": "c6ca50545e473836bf91eb66e6ecf65943d71e2b651a8079a02adf74497787f1"
+    },
+    {
+      "path": "src/engine/remuneration-tariff-adapter.ts",
+      "sha256": "e1c5fb5e4a270651eba11ff7a528494debccd613763c0a227587bc4920b812e3"
+    },
+    {
+      "path": "src/engine/remuneration-tariff-annual.ts",
+      "sha256": "607a65528af925ec63ae38d329ff61ea5f993f76db1acc1d889aa527040f09d7"
+    },
+    {
+      "path": "src/engine/remuneration-test-fixtures.ts",
+      "sha256": "7be63dc1572aad6ed503a597b775e3e8b3486d837baff12ebac728979b585d05"
+    },
+    {
+      "path": "src/engine/remuneration-training-allowances.ts",
+      "sha256": "06ce6cd09c9c3b519d62b7d5c6ccf3e8c16d72d25b789c3f5aef25846ef04bac"
+    },
+    {
+      "path": "src/engine/remuneration-training-context.ts",
+      "sha256": "28bc2d1ea05f22347807bcf059f646b4e2b97915171c72b5cc42d1de7303e17b"
+    },
+    {
+      "path": "src/engine/remuneration-training-overtime.ts",
+      "sha256": "1e03ae2160fd70f3cfe1f78cb914dfda34a4f62176f3f7b94345d73f5e93724c"
+    },
+    {
+      "path": "src/engine/remuneration-training-premiums.ts",
+      "sha256": "35009f29eb32b47144651a986833c51915ec6619acd52f0e217245f1ba5f9f5c"
+    },
+    {
+      "path": "src/engine/remuneration-tval-allowances.ts",
+      "sha256": "8c646b114948ed6fab131610c272882aa49587017a2051c1059595eeee54f343"
+    },
+    {
+      "path": "src/engine/remuneration-tval-care.ts",
+      "sha256": "72b6827376a98b4d9b467fb5e3ebeb5f67867225892dc86df45727763bfce0bf"
+    },
+    {
+      "path": "src/engine/remuneration-tval-context.ts",
+      "sha256": "f4e0d876216bb8e6c2cd4a2165c3e7367afd6c620194e0e697daf294a8919239"
+    },
+    {
+      "path": "src/engine/remuneration-tval-overtime.ts",
+      "sha256": "68c22ec26cac271add2d5d6089e3916fe88d56e34b54b6e0226d3a3fc2a577e7"
+    },
+    {
+      "path": "src/engine/remuneration-tval-premiums.ts",
+      "sha256": "27651d5e1996612430f84cd6058acefb2fbea616c90fdd55818371b69577f858"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-allowances.ts",
+      "sha256": "97a27cd21e58fa9cb5a0362985907f0dccdba1ed603f5ef7594c21ee22094e01"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-burn.ts",
+      "sha256": "85239cdbfeef6ed21a09824da03aab817219196c24e717880b1bca3f3b3c3d0a"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-care.ts",
+      "sha256": "eaa60adbbb61e012a3432acefe84f4dffbd2a663d3d4d42df5aa4081dafd770c"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-context.ts",
+      "sha256": "d4fe4e0bddace4f21b3fb4b57d9af103c53131f4a4e0a3ff39a0f272780eaeb0"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-overtime.ts",
+      "sha256": "678cc2a5fe9f3ab99defaf81bb0b543aa6c04f680748f12a7470e7372380aa05"
+    },
+    {
+      "path": "src/engine/remuneration-tvl-premiums.ts",
+      "sha256": "6825edca6da6b5d84f657aa71455f15ebd1fbd891a463e08d244addf534119ef"
+    },
+    {
+      "path": "src/engine/salary-payment.ts",
+      "sha256": "356e9ffff10d60d6a59171d7993c966c7aca41cc4e5ad6e7c2b14e0b7002cbe5"
+    },
+    {
+      "path": "src/engine/sharing-projection.ts",
+      "sha256": "c4cfebe1fdcf1cec13baaf31249b649d09e0666b7e6cfb32e943015507b3dc69"
+    },
+    {
+      "path": "src/engine/sharing-publication-confirmation.ts",
+      "sha256": "50e70926d72c3667a8a85fc3c6c0d49776540b87a4763acd9293dcd78b6c9637"
+    },
+    {
+      "path": "src/engine/simple-monthly-pay-cache.ts",
+      "sha256": "783b60450336b9f2f08a70395253c3b0f76e049588891dd18b2541fc4b4bc02e"
+    },
+    {
+      "path": "src/engine/simple-nursing-training-pay.ts",
+      "sha256": "15d3b4d90421714c72fcf4512f557396ae0bf643c873f1db3b55e7c8bae8e88a"
+    },
+    {
+      "path": "src/engine/simple-pay.ts",
+      "sha256": "fe6b21de207e8eae6d124e6fb6dece28cc2a4624f444024ad81351d5b09bc73c"
+    },
+    {
+      "path": "src/engine/simple-shift-pay-cache.ts",
+      "sha256": "ff917a9c8b8ec8a04ecd86b7dd573aac48abca3f6884e03c2ff7e8e5814f068f"
+    },
+    {
+      "path": "src/engine/simple-tariff-table-overlay.ts",
+      "sha256": "61e9699c7057965089b2067a50bb3e3ea16e830e20ebee013b27102d818cb66f"
+    },
+    {
+      "path": "src/engine/simple-tval-pflege-pay.ts",
+      "sha256": "bf241803434d11bcd2b1cd66593d5fdb82abaaa4224efd9dfe2a646b19fbd0a3"
+    },
+    {
+      "path": "src/engine/simple-tval-pflege-profile-pay.ts",
+      "sha256": "1d63dbaf866cf2c976aead878fa0d3b04e3e2f102ac9356ba272dff4290e7ea0"
+    },
+    {
+      "path": "src/engine/simple-tval-table-reference.json",
+      "sha256": "806f0f40b120c398a8cb49d4c6853e5ecf25f0218a89ab3f689d30660e68b1e3"
+    },
+    {
+      "path": "src/engine/simple-tvh-kr-pay.ts",
+      "sha256": "4d0909c0529f8b63ab75de4a6693fd16935ed9043354cc032203990a4f07c9e0"
+    },
+    {
+      "path": "src/engine/simple-tvh-kr-profile-pay.ts",
+      "sha256": "a4ae2a859e55a24debb3516b699f2d96216d8eed24c96628e317508cafd27adf"
+    },
+    {
+      "path": "src/engine/simple-tvh-kr-reference.json",
+      "sha256": "472f9af275fd32b449d3359739466d53f78ee4f9c972ce57a42b75937b63c0da"
+    },
+    {
+      "path": "src/engine/simple-tvh-kr-tables.json",
+      "sha256": "ebffa440f885253ac8329f75c1bf757e1e8a1d6b2dd5f01204ae5627dec015ba"
+    },
+    {
+      "path": "src/engine/simple-tvl-family-shift.ts",
+      "sha256": "df48ca4fd9e7e2ee33a95a0b32abef943a49c957a2b23aee702ed302955591d9"
+    },
+    {
+      "path": "src/engine/simple-tvl-kr-pay.ts",
+      "sha256": "746dd0c648e88c1dcff527696bc4a3dc9f8780d15b10db927d94f54f4206d850"
+    },
+    {
+      "path": "src/engine/simple-tvl-kr-profile-pay.ts",
+      "sha256": "cba9e40c78d494e67c20803e8d9c2bee9196da8970f0148feb5fa6d5c45220a9"
+    },
+    {
+      "path": "src/engine/simple-tvl-kr-table-reference.json",
+      "sha256": "ce4b7f6101b5d8bf4852c2add2dfa477873a44f9d141faa324397a02c1ca6531"
+    },
+    {
+      "path": "src/engine/simple-tvuk-nursing-pay.ts",
+      "sha256": "de9b9052b1ed1349921b8314803c5bc9fee025e39909cc9eae29516616b50e2f"
+    },
+    {
+      "path": "src/engine/simple-tvuk-nursing-profile-pay.ts",
+      "sha256": "801cfd494ca6476617c703ef5df30c567ad8b8dd0765f5363970dd4753e9eebd"
+    },
+    {
+      "path": "src/engine/simple-tvuk-nursing-tables.json",
+      "sha256": "1efbfe1985457bd3505d7dbcb5fee97f93f2e01f0ea32fd0bbc114f7fa5e2dc8"
+    },
+    {
+      "path": "src/engine/simple-vka-e-pay.ts",
+      "sha256": "e9d022a4d9b19536808c2722b8aed730fbe69dd65328a9b74a2c79e407c600f6"
+    },
+    {
+      "path": "src/engine/simple-youth-duty-time.ts",
+      "sha256": "c615be43b3c3c10e1fab1b88c2ef9489863546f1901ea4d792b71a2c86342df5"
+    },
+    {
+      "path": "src/engine/simple-youth-duty-week.ts",
+      "sha256": "032f3e5e618cdf8e9a6f5246b79c3599f43eb4608debc0dc28c24e795807999d"
+    },
+    {
+      "path": "src/engine/special-duty-callout-pay.ts",
+      "sha256": "77c7041190a78d9b78cf798c89348345edd2192b472d43fa59ef74c811e9a2f8"
+    },
+    {
+      "path": "src/engine/special-duty-compliance.ts",
+      "sha256": "bb114ad3b2346e2f62ef6cfdf2cbd6945e58b81eb49dfc69b2621ee6563c6dea"
+    },
+    {
+      "path": "src/engine/special-duty-hourly-rate.ts",
+      "sha256": "d67abdb194d0f49a07cd4b6c91693982dfbbe5a654cb1782dda6cf6489cddde1"
+    },
+    {
+      "path": "src/engine/special-duty-overtime-rate.ts",
+      "sha256": "6adc7414ee1cac1a8d93de25c231e37f89cffd32c6fc6132498a618efb698ca9"
+    },
+    {
+      "path": "src/engine/special-duty-pay.ts",
+      "sha256": "805653c11152288bc7c8ca5fc06306eafd587f872a4815865b810c6122b34ca6"
+    },
+    {
+      "path": "src/engine/special-duty-payroll-trace.ts",
+      "sha256": "a935f700c15f90539c24e21c20de84e62c5a5f0263da5acdd9a4d213518ba876"
+    },
+    {
+      "path": "src/engine/special-duty-tariff.ts",
+      "sha256": "47e7675cc7220d44bc21ad76230cb549913ace75ecf65835bd2fea86828cd960"
+    },
+    {
+      "path": "src/engine/special-duty-time-account.ts",
+      "sha256": "c562a31daeb39234ff68676984109115711e6ee8d25aba13a4026e1297b7a641"
+    },
+    {
+      "path": "src/engine/special-duty.ts",
+      "sha256": "5d75725c28b04c5fabc06dc53d560d2cbe3bc193fb682d97cd9169b8559727d5"
+    },
+    {
+      "path": "src/engine/standby-hourly-rate.ts",
+      "sha256": "c0230aa015f66cde7abc4ce9427f5c02eef7b82c2b60730b51fe4a12d6826b10"
+    },
+    {
+      "path": "src/engine/standby-pay.ts",
+      "sha256": "c379117d7889f86769be4f61e8ce206602f2cb6945b7c89b9870daf3b9904b88"
+    },
+    {
+      "path": "src/engine/standby-tables.json",
+      "sha256": "923fe293f4bbb6119b14a9d83eb665346e7fe8f6b3e0abd4ded112bbcb2f3c4f"
+    },
+    {
+      "path": "src/engine/tariff-annual-basis.ts",
+      "sha256": "cfd9e60112d14009131bba07a16daa7e131b0fd986c62d723ff1a9db056e1199"
+    },
+    {
+      "path": "src/engine/tariff-annual-eligibility.ts",
+      "sha256": "acbeb1a1ad0595ca297eba3e417c14a1ee720750ebb860c5629bfdb761210762"
+    },
+    {
+      "path": "src/engine/tariff-annual-payment.ts",
+      "sha256": "0cfb73c6c52603b92b4f7186cac804c9554fb937b2ed02e3858a2ccdda27312c"
+    },
+    {
+      "path": "src/engine/tariff-annual-test-fixtures.ts",
+      "sha256": "786a3644bfd76ae7706ff248869c60f4e24f93976abee93c3d1e8171515970ad"
+    },
+    {
+      "path": "src/engine/tariff-payroll-trace.ts",
+      "sha256": "1358f4c8bc625b99db75c23dcacf8a4871d4c6761997cbecbeb177524a1ea4a7"
+    },
+    {
+      "path": "src/engine/tariff.ts",
+      "sha256": "3b33b185acc57dfdc7aaef736a6c926194d5700f46f3047364f90524a2227a82"
+    },
+    {
+      "path": "src/engine/test-data-generator.ts",
+      "sha256": "d513d100653851640e9e49c9fb7466ae27ca6d0531d0369f12e14a4fea64c8db"
+    },
+    {
+      "path": "src/engine/tvl-burn-care-intervals.ts",
+      "sha256": "717204ae3a665011ce21de73b2b2d3d527a125d9ad533f63a851d7cfc7b156f6"
+    },
+    {
+      "path": "src/engine/tvl-shift-work-test-fixtures.ts",
+      "sha256": "7bea50fe1da7a80df31d794e4de244839aa4f131dcdbe4eb46b9ddbc0e12161d"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-draft-base.ts",
+      "sha256": "e386d2d328afd308e4a69062b30503f54b50c3af84c36df0811c7d29cbca0acb"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-draft-from-work.ts",
+      "sha256": "e51e4255a6a6e11500d6b47c48cda4f3e038bafe2e5f0e748f50f69f5bed49d2"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-draft-overtime.ts",
+      "sha256": "d5cc2f383f6c86525a076d835e92b5e12a145bfd7ef4d3f2a03091ee1664dd03"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-draft-time-premiums.ts",
+      "sha256": "d0e2ce15ad9ee0ed558bc4d95b01e3bd9bb26e4c05c7cabe7806219ae7a60b30"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-saved-confirmation.ts",
+      "sha256": "1db135d469b52e560e2bede698d364416131c5f8ba77384f9493762426583800"
+    },
+    {
+      "path": "src/engine/tvoed-annex-a-saved-premiums.ts",
+      "sha256": "86b613e4627a5daa6ab72d83551d47abe89f15e501ba6e4dd6d169f847b73ff2"
+    },
+    {
+      "path": "src/engine/tvoed-k-calendar-assessment.ts",
+      "sha256": "1b6bf115066f492ae2fbaad1247083f5d557f39bc77a19f0b6994bfac799f8d9"
+    },
+    {
+      "path": "src/engine/tvoed-k-calendar-nights.ts",
+      "sha256": "981ec183d6ede762c17c275c6ed457657d7fa64d6bd5ab7198d98157b67bd00a"
+    },
+    {
+      "path": "src/engine/tvoed-k-month-evidence.ts",
+      "sha256": "8d320bae119a7cccd8df00cd8caae67cf682909f380350a79e3e6b3ba5c8e54e"
+    },
+    {
+      "path": "src/engine/tvoed-k-night-reference.ts",
+      "sha256": "785433db6b11c30b0a5cf3f980eff624b5def49e765dee3792348a2ec0ea8309"
+    },
+    {
+      "path": "src/engine/tvoed-pattern.ts",
+      "sha256": "6189cedc5e028cba61d24a37681d8c72a7c3f723e7e514dd427684162a353844"
+    },
+    {
+      "path": "src/engine/tvoed-sue-draft-allowance.ts",
+      "sha256": "53195625182217d8ea2a6f769f7f7eac43f27b52b944db72a23b2e58357d1918"
+    },
+    {
+      "path": "src/engine/tvoed-sue-draft-base.ts",
+      "sha256": "8187dea8f097b7ed01dfc1d76a3700b0eca412fff00d33e35f6e2d967713ac71"
+    },
+    {
+      "path": "src/engine/tvoed-sue-saved-allowance.ts",
+      "sha256": "5d122384fa07e163bfdbc49bfacfbc674a76e4716a64c17923871d3850c6a1a3"
+    },
+    {
+      "path": "src/engine/tvoed-sue-saved-confirmation.ts",
+      "sha256": "ef950c34a6f0a7a399d40c1473c2b16e7f2d31f08d4e3f098f1c15abb91aaba8"
+    },
+    {
+      "path": "src/engine/working-time-calculation-profile.ts",
+      "sha256": "e378e98ac83930e92d4ec71c2cf009fa873a23c72aa568bd3cae35a29de37471"
+    },
+    {
+      "path": "src/engine/working-time-target-cache.ts",
+      "sha256": "024d1f48bffaa15a2c843e8f53fa09146bbc174d4a0f5ee572383d50cd90543f"
+    },
+    {
+      "path": "src/engine/working-time-target-input.ts",
+      "sha256": "0267103f0466eecf1a453e350b045df5ff5264f1f573a5f7d1743de6e8ce2442"
+    },
+    {
+      "path": "src/engine/working-time-target-rules.ts",
+      "sha256": "5ff6488c079d3d3def143805e57b6cdb648925f4556d93dc08cc201da5a127d6"
+    },
+    {
+      "path": "src/engine/working-time-target-tval-day.ts",
+      "sha256": "1f8ed3baba81047490b24d3cfd0eb1ea83e23f2043713598bf19abc2dd545929"
+    },
+    {
+      "path": "src/engine/working-time-target-tvuk-day.ts",
+      "sha256": "5123be3e3ced55c136a816176a2593c7a422925ca734b191692b9ee7398877ec"
+    },
+    {
+      "path": "src/engine/working-time-target.ts",
+      "sha256": "0e2e753bac80a8420da7347bdde1fc5dc6e4283516884c8dbc2c310772d5f574"
+    },
+    {
+      "path": "src/engine/working-time.ts",
+      "sha256": "c2b600555f40b0dc6e5293e348eaaebf3c79f3e6fc1b84bf011cd3a815774371"
+    },
+    {
+      "path": "src/engine/youth-compliance.ts",
+      "sha256": "a03e16faf3b740ec3fd1c7c409a2b24f2e363bc33239797a1ac88c93280e97e4"
+    },
+    {
+      "path": "src/engine/youth-daily.ts",
+      "sha256": "17037e969c4b60ce37f8bb6bf3ce400cb14b5a49d93068f82102fc52f405df64"
+    },
+    {
+      "path": "src/engine/youth-exam.ts",
+      "sha256": "b08322cf9ef0224db5ce6d1784cd3ce04075387df4c7d5850a3aea81e6e616f0"
+    },
+    {
+      "path": "src/engine/youth-intervals.ts",
+      "sha256": "89f0e8705df2f4c28f039448f18ba41380fa4c09eabbe2a773cf1f7cabd8cd9a"
+    },
+    {
+      "path": "src/engine/youth-school-travel.ts",
+      "sha256": "fd12f39dc7f7160be45f231787861333d3b2a5a0034a9058437d4e8825f3c8d4"
+    },
+    {
+      "path": "src/engine/youth-school.ts",
+      "sha256": "ea03be9920d2a845767c6bb295129c006d311aa931eeb15b1a1c9b5588fd31cb"
+    },
+    {
+      "path": "src/engine/youth-test-fixtures.ts",
+      "sha256": "071c8ec8294c5355e2375a2e17c4ccfb91a70919158b32e1b2fa25d0c1a370c5"
+    },
+    {
+      "path": "src/engine/youth-types.ts",
+      "sha256": "01746c292dff687fee3f49556b1d9449e50dafe2ad39d3a9aeee064d3bedcd91"
+    },
+    {
+      "path": "src/engine/youth-weekly.ts",
+      "sha256": "2527705409deeb93d60ff86b0cc4688ed2a6dc138a7ec94ee8c94f52403d1eb3"
+    },
+    {
+      "path": "src/features/account/account-name-screen.tsx",
+      "sha256": "896049e022408235c4fdf6fcf208a7f08ae36229bc7b223dcc0837b624191307"
+    },
+    {
+      "path": "src/features/account/account-screen.tsx",
+      "sha256": "067e9e18819b696b1514375b983a5e2eeb04a757d789d93ccca2278c3a55fb1a"
+    },
+    {
+      "path": "src/features/account/account-status.tsx",
+      "sha256": "df3f01dfc724b3209145c134ad30c1159dd06435d07bbc09ee845221bbbdc1ad"
+    },
+    {
+      "path": "src/features/account/account-summary-card.tsx",
+      "sha256": "0e062be9538d7575fa58d036cf7998d6d15d14475bfc1318f2dc10dc9068c529"
+    },
+    {
+      "path": "src/features/account/use-account-photo.ts",
+      "sha256": "6ffcacdce4e03c098f3ab5f3d101a14f3604fdd07de9089c8055a4d5c9c49080"
+    },
+    {
+      "path": "src/features/analysis/allowance-confirmation-model.ts",
+      "sha256": "38d4ccf808e8e7ebeb3f9da86a2eedc43f2f2a229a0e6f76867416586d3ab9ee"
+    },
+    {
+      "path": "src/features/analysis/analysis-background-preparation.tsx",
+      "sha256": "91e8125aa6a467b4e7db707a6ca8ebb92ceda3e0ce536a172d8a60a167f7cd26"
+    },
+    {
+      "path": "src/features/analysis/analysis-card-details.tsx",
+      "sha256": "e990bac901c4ae38e6d38681cdbe1de9c6ed7087fa1d5d4304be326f526e2fa8"
+    },
+    {
+      "path": "src/features/analysis/analysis-compliance-cache.ts",
+      "sha256": "8cfcda73a850eb62d2a96e4bc7dd7cfed6e93c0e8c6bb8eee392810e3bd124cf"
+    },
+    {
+      "path": "src/features/analysis/analysis-count-badge.tsx",
+      "sha256": "7e62f65c695badb48f624d8cfcfd74273c22c2f8f43625599c84522b307e8d24"
+    },
+    {
+      "path": "src/features/analysis/analysis-coverage-note.tsx",
+      "sha256": "4244a379ceb93b228684d3453172a6557d43e058d4fc14da21936acf34eb0dfe"
+    },
+    {
+      "path": "src/features/analysis/analysis-data.ts",
+      "sha256": "36b9c12c33d3143969fee8b3db67ae4488db73a08618344bcee9b3f60a09e50e"
+    },
+    {
+      "path": "src/features/analysis/analysis-detail-layout.tsx",
+      "sha256": "1049efee551ff9c8f0e5d66dbc2fd0fe7791ecc6aa9844ee1b0b2ed4d5fb7c9c"
+    },
+    {
+      "path": "src/features/analysis/analysis-entry-keys.ts",
+      "sha256": "8adab35924c577c1aedf03fab8e560ece4376fec423c9849f68ec46979fa095c"
+    },
+    {
+      "path": "src/features/analysis/analysis-header-spacing.component.test.tsx",
+      "sha256": "f0805437637fc3cf520f135863528b8a929c7cf9e83a507850651352209297f4"
+    },
+    {
+      "path": "src/features/analysis/analysis-list-card.tsx",
+      "sha256": "f8e1b8ac947155b8d6eaa6ca6c3d656442a956cff9cd69f896dbc693f204db0f"
+    },
+    {
+      "path": "src/features/analysis/analysis-metrics.ts",
+      "sha256": "9c32aa3f9b29ebc0632a88b1e588d1a06f3d75b61c45cf192ea46c42fd3bafbe"
+    },
+    {
+      "path": "src/features/analysis/analysis-month-data.tsx",
+      "sha256": "00b83d09f89da4a26ed00f2d2dda4fd95eb8abf6357b72aac105c37f6e5252ef"
+    },
+    {
+      "path": "src/features/analysis/analysis-month-transition.tsx",
+      "sha256": "f1347bbc72da60aae1ca5fdf7593e2f37d05934c0aa2a4aa9040b6bbb215a093"
+    },
+    {
+      "path": "src/features/analysis/analysis-net-pay-row.tsx",
+      "sha256": "3e80001abb69351384ae0f7e465d201dc94fe5bd36ef5e14acac601b596cd222"
+    },
+    {
+      "path": "src/features/analysis/analysis-overview-card.tsx",
+      "sha256": "37f687da26be090ce0ed2e59acff0a35ecc983c00bf5d5ccf75c686e6f9181f3"
+    },
+    {
+      "path": "src/features/analysis/analysis-overview-cards.tsx",
+      "sha256": "60e3076715ba2bfe2c527f56af2345a87f170d6e63cfeb9e995f6fbb65d0955a"
+    },
+    {
+      "path": "src/features/analysis/analysis-period-arrow.tsx",
+      "sha256": "c3c3a97656fc12343492e6dedf8fe66ede3ce0b979495c65eab044a9897517fe"
+    },
+    {
+      "path": "src/features/analysis/analysis-period-header.tsx",
+      "sha256": "e2be2e4336fb79a423c78e1937509ed553d0848fed1aef604769ed1ea04fe344"
+    },
+    {
+      "path": "src/features/analysis/analysis-persistent-results.tsx",
+      "sha256": "bd429b668e971757fca10c3af5ae6e41a2ca384ee959e11168875f33dacc6cc4"
+    },
+    {
+      "path": "src/features/analysis/analysis-report-cards.tsx",
+      "sha256": "e93abe10c6337d2e9c69310440bacc937fc904abd0011036c15c45550c044c9e"
+    },
+    {
+      "path": "src/features/analysis/analysis-result-cache.ts",
+      "sha256": "a19b179c5ef16e2d0c558906bcd88e4b3982a45171fa8099a9f4d1cf0bebc005"
+    },
+    {
+      "path": "src/features/analysis/analysis-salary-input-store.ts",
+      "sha256": "57a88ba303dce820aa0057efc4a2d21a0281f427d9034b5c3dbd4d27397f42b0"
+    },
+    {
+      "path": "src/features/analysis/analysis-salary-inputs.tsx",
+      "sha256": "472921c423eaf7b9705fd5585ce3340e776e1b29683ae1b7fbea5d3dbee24d84"
+    },
+    {
+      "path": "src/features/analysis/analysis-salary.ts",
+      "sha256": "80d82b886c83e609a9da41d6bfcf5f2785f6511afa9b48cce30a44c583eef810"
+    },
+    {
+      "path": "src/features/analysis/analysis-scene.tsx",
+      "sha256": "cf2112ca5443cce21fba71959285384232e52d6a1cef52f40049d64c4ace34cc"
+    },
+    {
+      "path": "src/features/analysis/analysis-screen.tsx",
+      "sha256": "cf222d47e0c24df928822687f42eacbcab115b068f316c326178835beb99f664"
+    },
+    {
+      "path": "src/features/analysis/analysis-view-controls.tsx",
+      "sha256": "2410209363d10f941e19533b984d8d71266d01115f38847e0b31edbc825dea42"
+    },
+    {
+      "path": "src/features/analysis/analysis-view-preferences.tsx",
+      "sha256": "cb28429351c955898b557119b81399d446f808b83d3911ee747c047ffc925b08"
+    },
+    {
+      "path": "src/features/analysis/analysis-warmup-provider.tsx",
+      "sha256": "34dce7366cddcfce206b52142bf5ac535d3f243fbdafb2ec398a58c2542df4e7"
+    },
+    {
+      "path": "src/features/analysis/analysis-warmup-runtime.ts",
+      "sha256": "57798eb484be56063ccc25bd3118e9b8040a6cd4a005c43933badf4bcf86b4b3"
+    },
+    {
+      "path": "src/features/analysis/analysis-work-queue.ts",
+      "sha256": "279c7f1fdfeb4ef6e13c7c1adda16455a9a403670ff76afe813c1e7af7e87463"
+    },
+    {
+      "path": "src/features/analysis/annual-analysis-background-preparation.tsx",
+      "sha256": "b36c64d4225fd954042139d3eb4f1ce436aec9b302218564ee59a21b9e3a5762"
+    },
+    {
+      "path": "src/features/analysis/annual-analysis-warmup.ts",
+      "sha256": "0ca992e1b20ce50d66a03c2c8e56c9aae4fc5df7a2f107e5c11ee1fc6ba2b839"
+    },
+    {
+      "path": "src/features/analysis/annual-analysis.ts",
+      "sha256": "8a3296c73dd6034077eb9f8ee3f56553e3521025c9df9c373cd7a3c4ee3fa30d"
+    },
+    {
+      "path": "src/features/analysis/annual-core-report.ts",
+      "sha256": "4779c6f6df0a0efa45313ed7f5f58129276b511ac2b3fa4125277f1010ddbd2b"
+    },
+    {
+      "path": "src/features/analysis/annual-details-screen.tsx",
+      "sha256": "1c5e66e6a6d96e397e3ea25805e224265ceba28a9ab57fce68a27477677b5d22"
+    },
+    {
+      "path": "src/features/analysis/annual-distribution.ts",
+      "sha256": "8b13abaabab9854818f14b5edd4d28314110b0f755a266739d2f0e4aa7a4c188"
+    },
+    {
+      "path": "src/features/analysis/annual-overview.tsx",
+      "sha256": "a7d19348bd9807f8f4128667d4c536ace1ae2f95a8385a33f0e19506c66397b0"
+    },
+    {
+      "path": "src/features/analysis/annual-premium-report.tsx",
+      "sha256": "d590ed6581e3d730303206d30a8723cb5b5e62b7830cf764277faa57e067c058"
+    },
+    {
+      "path": "src/features/analysis/annual-remuneration.ts",
+      "sha256": "0f42843331a71ac21c18843798a1bff7e5d0cb6d3cd3a744bd27b1fab4a81fca"
+    },
+    {
+      "path": "src/features/analysis/annual-report-failure.tsx",
+      "sha256": "69cae9e6b235647186c21b12723fb9b1bc9c91293478d310c3b360a41ecc4589"
+    },
+    {
+      "path": "src/features/analysis/annual-report-inputs.ts",
+      "sha256": "f80538c3b2234639536dec0095c751627c56e549076b3505ebf86a2c5bb45f4c"
+    },
+    {
+      "path": "src/features/analysis/annual-report-view.tsx",
+      "sha256": "3817deb91c4d495ce2a84c82976ac5141dc543a9bea289defdcca91892cea191"
+    },
+    {
+      "path": "src/features/analysis/annual-report.ts",
+      "sha256": "0c76dca2f0153f51753641ffbedb6feaad53c2045f901ae2882001d406b87417"
+    },
+    {
+      "path": "src/features/analysis/annual-salary-payments.ts",
+      "sha256": "db504d9561a9f7ca5c016a9a597dc3121b9c450bce81a678a370072926fd673b"
+    },
+    {
+      "path": "src/features/analysis/check-prerequisites-card.tsx",
+      "sha256": "ce7e676e96ef62d197c78db1575209d708f7b1ad42e94e016751550d143a6343"
+    },
+    {
+      "path": "src/features/analysis/check-runner-egg.tsx",
+      "sha256": "08ccb55edbfdb346d85fb18c8761b616493cbbda1cd557efb8d9b15f86feb2ea"
+    },
+    {
+      "path": "src/features/analysis/check-scope-disclosure.tsx",
+      "sha256": "674c968911c1d69a196610ef5362ee39775572bfa02b52c2400863c433ef7bb5"
+    },
+    {
+      "path": "src/features/analysis/check-summary-card.tsx",
+      "sha256": "027c615494c411c79ce1628f1ad37a5a14111c9bd513f2f8a1cd42a2f31e76e9"
+    },
+    {
+      "path": "src/features/analysis/check-visibility.ts",
+      "sha256": "be07bb2f7d038e1d4bae5940fdbca5019f496574056acee5fba5dd009055d097"
+    },
+    {
+      "path": "src/features/analysis/compliance-day-list.tsx",
+      "sha256": "1528de1282e02b95c9ef50eaa51f262c1fc7fcf7979644bc4efcac8092dcfe8d"
+    },
+    {
+      "path": "src/features/analysis/compliance-details-screen.tsx",
+      "sha256": "1a0b345e6943883bcb9fa80afb407d6afa1c6c44f0899ac875f6cb72774f70e1"
+    },
+    {
+      "path": "src/features/analysis/compliance-details.tsx",
+      "sha256": "08da617f45e73294ac8c5afa3fce7d625040f054ad8f124d11f6748190db772a"
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-content.tsx",
+      "sha256": "b13bd7fc3bdcd3040b105de4facd20cfe751b2204c37e1690ae54c1c94338431"
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-legacy.ts",
+      "sha256": "9d3c289f5f10b8bbcd35a52d4c89b21e33aacaf0068917c28fc4bc0a843e4024"
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-summary.ts",
+      "sha256": "cfe6dd9e28aaf3f67050b554611faed985a1e5e17090a539fd2e91c0f5ba9857"
+    },
+    {
+      "path": "src/features/analysis/compliance-timeline.ts",
+      "sha256": "af5058fb0ed980174780649af012303d51dac537bc9b3cc112b60666b0b2aa09"
+    },
+    {
+      "path": "src/features/analysis/dashboard-cards.tsx",
+      "sha256": "8a9531590bc91f3d2fddc05dd29f3125499a9495064d69cfeb4d6496b00d0cc6"
+    },
+    {
+      "path": "src/features/analysis/dino-runner-engine.ts",
+      "sha256": "c105aceef7070b240eaf542be3c31bd4a89f13bea175c4aa3d6d4b4bdefe9adb"
+    },
+    {
+      "path": "src/features/analysis/dino-runner-game.tsx",
+      "sha256": "a26118dd0eb3491049409ea2e9a618f000b06a215736d192706fab78ec60db8d"
+    },
+    {
+      "path": "src/features/analysis/dino-runner-storage.ts",
+      "sha256": "62a3fe38e35640d17aa52d88624fee7d61a7a1d445e292a6de4217b345039be1"
+    },
+    {
+      "path": "src/features/analysis/expandable-highlight-card.tsx",
+      "sha256": "8b29c786695e37c46533dae2170db58073b7a51c2f99adc187f16eba77a009a9"
+    },
+    {
+      "path": "src/features/analysis/insight-section.ts",
+      "sha256": "ebf90c1b69faddcf27a5ac7ece303e318c50aa50d794ef87faea71003ed9feb9"
+    },
+    {
+      "path": "src/features/analysis/insights-screen.tsx",
+      "sha256": "53cebd1faa278d00652511a07b70ab67ad1e15be583b494b9338ea3c41edb5fa"
+    },
+    {
+      "path": "src/features/analysis/month-overview.tsx",
+      "sha256": "2ad207cb7803f09abee42a5e40e18cc0e99c3341228b532868e52433bebcfcd4"
+    },
+    {
+      "path": "src/features/analysis/monthly-analysis.ts",
+      "sha256": "c84b8eb8138f007775ccb8237fcc8c1a08b22ae7dc9e85e90d3b01daff5f6aa3"
+    },
+    {
+      "path": "src/features/analysis/night-sequence-explanation-card.tsx",
+      "sha256": "e41ee3e5bcb5618abb357c379dac98a501f5ba5a994fc7aa67396fdb1dd00f30"
+    },
+    {
+      "path": "src/features/analysis/night-sequence-explanation.ts",
+      "sha256": "11300f5ff36debfef355c57190d88bdc3a13ff13e79f270bf7d95fbd6af943be"
+    },
+    {
+      "path": "src/features/analysis/persistent-analysis-cache.ts",
+      "sha256": "86d36c6f620b200bce3f2dc6324a41fdfcba3e67c4f023468c6ae9a153257ac6"
+    },
+    {
+      "path": "src/features/analysis/persistent-analysis-values.ts",
+      "sha256": "ab4e600d561e00881b27c817b436a79cc2a6a4c530d75ebc7bfc64fcbdaf9aa7"
+    },
+    {
+      "path": "src/features/analysis/premium-breakdown-list.tsx",
+      "sha256": "56a341376cd837b639e5a994dc2cfedab05dc93ca1453555ade006eb074b6d14"
+    },
+    {
+      "path": "src/features/analysis/premium-breakdown.ts",
+      "sha256": "932dccf26c0ff359e8e461c88264eb35f97489a8fbce9e830afd0c5a354a295f"
+    },
+    {
+      "path": "src/features/analysis/premium-details-screen.tsx",
+      "sha256": "56b0f04a2e007b4f7be4b410da953ff22023fef67214a3a94213608081f82cd9"
+    },
+    {
+      "path": "src/features/analysis/report-card-title.tsx",
+      "sha256": "e8b30f37a30d719528de8d5b2555c2133437a2bb9372efd619cc8cbfc5b8e334"
+    },
+    {
+      "path": "src/features/analysis/rule-computation.tsx",
+      "sha256": "ea197bb03212260f8712705938e664f52040c14ab221b6dc39b9300ab22b6d60"
+    },
+    {
+      "path": "src/features/analysis/salary-estimate-caption.tsx",
+      "sha256": "9e6dbe01320e2fc3c3f5450e91dfe6694117705d34675032068a57cbf72d4e7b"
+    },
+    {
+      "path": "src/features/analysis/salary-overview-cards.tsx",
+      "sha256": "8ed940d77fee47aa3fca4e894dae60ed77586bdeef7c621de18ab9e17350b508"
+    },
+    {
+      "path": "src/features/analysis/salary-summary-card.tsx",
+      "sha256": "4d9ac8eddad54ef15a353657e3656d38df8c733441372dc816d386981c5a1e02"
+    },
+    {
+      "path": "src/features/analysis/salary-summary-state.tsx",
+      "sha256": "c45f21b43db9b63ecc98afaee08bdafec7d43f29d48ebb9ed68bfc07409e2bcf"
+    },
+    {
+      "path": "src/features/analysis/shared-analysis-tasks.ts",
+      "sha256": "bdfead4ee5e0ddf3233bd44cd1b87ede0a8e0f2abc0650b802659dec327ef3e8"
+    },
+    {
+      "path": "src/features/analysis/shift-analysis-card.tsx",
+      "sha256": "48e84ee008cff2d9108955e4b8cc2cc698490d94851937d4e8b1af777bc6c166"
+    },
+    {
+      "path": "src/features/analysis/shift-analysis-details.tsx",
+      "sha256": "bf1b940de3e515c83f46bd0c6716ae436433e02efb5f3097b41b749f1d1e8f7a"
+    },
+    {
+      "path": "src/features/analysis/special-duty-time-presentation.ts",
+      "sha256": "e94026089da0c4c5acc8b5c9f6bfa7c43be558b0f92f9aeb479880ee718c90e8"
+    },
+    {
+      "path": "src/features/analysis/target-calculation-caption.ts",
+      "sha256": "2b81390d792b68fe9f9b2f2b1b02d8fc8963866d2cc09ad63773653bbde45571"
+    },
+    {
+      "path": "src/features/analysis/tariff-assessment-screen.tsx",
+      "sha256": "655e1be5f2ca7d83f93754e16adbafb4ed8874cf5767819ed303aa578fdc8f22"
+    },
+    {
+      "path": "src/features/analysis/tariff-question.tsx",
+      "sha256": "2b42e12ab69f7cc17bf140d634371b78f6752c817e414b9ff1bb4541eeff5fc2"
+    },
+    {
+      "path": "src/features/analysis/training-adult-findings.ts",
+      "sha256": "ceb91749cc6ca18d4ea305c8e468d8d53f52a3a5cccc151d528ce34e12d24a46"
+    },
+    {
+      "path": "src/features/analysis/training-compliance.ts",
+      "sha256": "b5d0b37fba7c63f80d3c401ec4ab61f18228646381e8813ae91fca2073304309"
+    },
+    {
+      "path": "src/features/analysis/use-analysis-navigation.ts",
+      "sha256": "2b4eda616b718bbd59884eff980e9f76f2f5811173ab4fe42e084f73734d8bf5"
+    },
+    {
+      "path": "src/features/analysis/use-analysis-performance.ts",
+      "sha256": "699b2bd648ac8d34f1f0d7f86d9a6a36872eb6e9c06a066552190304fb42a3f0"
+    },
+    {
+      "path": "src/features/analysis/use-annual-report-inputs.ts",
+      "sha256": "e8757f2f5242133b3e65c14da04383306b5172c0af0530a0bc07ea81fe8c446e"
+    },
+    {
+      "path": "src/features/analysis/use-annual-report.ts",
+      "sha256": "db7f50d4450ebbf9feacb93830f6adcf7472e9fb05c94f18889776fe7b0cd137"
+    },
+    {
+      "path": "src/features/analysis/use-annual-salary-payments.ts",
+      "sha256": "8ec7dd853224bdbe73c50da373931938411ada17b7937ed5eeaf8d52770c3e51"
+    },
+    {
+      "path": "src/features/analysis/use-dino-runner.ts",
+      "sha256": "3992e2ae3923e373fe4612e37260a66973850815880b2dd093b9e5cfaf765830"
+    },
+    {
+      "path": "src/features/analysis/use-local-reference-date.ts",
+      "sha256": "418bf040a4b6ff76dbcfd296e4f9df5de39a1dfa24e9bef5e86284f45f097b8b"
+    },
+    {
+      "path": "src/features/analysis/use-monthly-compliance.ts",
+      "sha256": "d5f564fc460469b310e07593493755999e164f862c28dea693b80a21917eacac"
+    },
+    {
+      "path": "src/features/analysis/use-monthly-remuneration.ts",
+      "sha256": "2885673ea68d2766e301815f6b307d1a73c60ee23e588680232d564518d860ce"
+    },
+    {
+      "path": "src/features/analysis/use-prepared-analysis-salary.ts",
+      "sha256": "8d2757aa9f1efce2f6dd1ff1e751adf2e7abd8e3780bd9af8d581334191a0ca8"
+    },
+    {
+      "path": "src/features/analysis/use-prepared-monthly-analysis.ts",
+      "sha256": "ae3f6557a70cd09f0d6d7d19ea4d7d1190c6c4553d31b4b4585472c711fce48d"
+    },
+    {
+      "path": "src/features/analysis/use-simple-annual-report.ts",
+      "sha256": "95caf0c0652e61c168ed5bf2ac44ee02690a2e71899d4384a5afedf720525167"
+    },
+    {
+      "path": "src/features/analysis/use-training-compliance.ts",
+      "sha256": "a9d9c7827271797998a2201b0047cf7cb3debb2e752719ec469913483a68be69"
+    },
+    {
+      "path": "src/features/analysis/worktime-card.tsx",
+      "sha256": "72f4aa679e11e1424c8218c805e0e34350d8503ceaefd942dccf1586eefde11f"
+    },
+    {
+      "path": "src/features/analysis/worktime-details-screen.tsx",
+      "sha256": "26ab6cdb3efd734454bafeed1f70f692a35d8955c4ae9f90ec4b1c7f5d761aa3"
+    },
+    {
+      "path": "src/features/calendar/calendar-appointment-label.tsx",
+      "sha256": "909562106170088158525095dfc3d749b14eb1fe9f2946bd2203f536a335a765"
+    },
+    {
+      "path": "src/features/calendar/calendar-background.tsx",
+      "sha256": "a91f00410928f8b7076cf59ee2051fd694c342b5541531fd6bc3cdbd4798f886"
+    },
+    {
+      "path": "src/features/calendar/calendar-display.ts",
+      "sha256": "7114e90b784ecdaebcf3db4d1b2ffcad4d8e0d5e51252bc2448938ab7022f0fa"
+    },
+    {
+      "path": "src/features/calendar/calendar-entry-index.ts",
+      "sha256": "5779af44ed93f4eeb8d35eac556839b0c54606605b186d247cf8baf6a81b06b2"
+    },
+    {
+      "path": "src/features/calendar/calendar-header.component.test.tsx",
+      "sha256": "ff35c3955a2ade50bd12df1fe70ac8926fc51c313a2872993df60c47b5647118"
+    },
+    {
+      "path": "src/features/calendar/calendar-header.tsx",
+      "sha256": "0d0a393e277fab0321072ab53b5ef05c453982aeafef481b33839409db40ecea"
+    },
+    {
+      "path": "src/features/calendar/calendar-holidays.tsx",
+      "sha256": "9d6a6b9b8e1d9ccf6bf89c298bce2e868984904ae87ab19d5718e84941dc5606"
+    },
+    {
+      "path": "src/features/calendar/calendar-layout.ts",
+      "sha256": "a16596eddb885c86e4d07087fc1f04a9b8d3169c0a85a758e8ef28fccdd5733f"
+    },
+    {
+      "path": "src/features/calendar/calendar-metrics.ts",
+      "sha256": "04a48b36326c96b7bed5d6e2bc072b421aa2ae462f017553676f969c88c4edfc"
+    },
+    {
+      "path": "src/features/calendar/calendar-month-title.tsx",
+      "sha256": "633ac285b90691e71c02e091ec7cc61e67edc49a975a26a75c4cb034eaa447dc"
+    },
+    {
+      "path": "src/features/calendar/calendar-morph-geometry.ts",
+      "sha256": "49445412c2c61cbf830a9e3f45bce3c092a2ae52e41f4dba52922475df875192"
+    },
+    {
+      "path": "src/features/calendar/calendar-morph-measurement.tsx",
+      "sha256": "12982a0f5fc126a71682eb018616ea3bfd693a6d7704504ef9662276dfd8f001"
+    },
+    {
+      "path": "src/features/calendar/calendar-morph-phases.ts",
+      "sha256": "09dfe8507dabd37c9b9d20bb6f59c2c40c795f58c84d4e060f51bbb632f8891b"
+    },
+    {
+      "path": "src/features/calendar/calendar-overflow-dots.tsx",
+      "sha256": "143f432cc6995a9fc0c8a87c0a2bf0afd88f0227a141dfe9bc8cd205afc69ec8"
+    },
+    {
+      "path": "src/features/calendar/calendar-page-window.ts",
+      "sha256": "66b28b3a2feabd11c7b7093b5ccd7275463f4f1cfa4378c7bfa8c7246fe8df14"
+    },
+    {
+      "path": "src/features/calendar/calendar-performance-controls.tsx",
+      "sha256": "59efcdacb8569fe8f5c4cf865f7ad8b68da72be6f128ef45810fcab362b1cd20"
+    },
+    {
+      "path": "src/features/calendar/calendar-person-labels.ts",
+      "sha256": "39c53b926a241e2d0e779fdc522db6dd97d97c15eb0a701ea153c2bed6762523"
+    },
+    {
+      "path": "src/features/calendar/calendar-preferences.tsx",
+      "sha256": "f4b099946f1694d5dc5557841b7bf7f3f452bcab03e0d72c5ed7d76f98292405"
+    },
+    {
+      "path": "src/features/calendar/calendar-prototype-canvas.tsx",
+      "sha256": "47b7b8b6eceb534d6f6956896776083052933e87ab1b32af0e4834aec1128898"
+    },
+    {
+      "path": "src/features/calendar/calendar-prototype-layout.ts",
+      "sha256": "6885e098df9017b989102416accc6857b261442b42a775719ea96c7e34d8c7a1"
+    },
+    {
+      "path": "src/features/calendar/calendar-prototype-screen.tsx",
+      "sha256": "f09f54d833ffcd2a5a1ae82b74873ae756c0ead9ae92a175f3d553b1e38bccbc"
+    },
+    {
+      "path": "src/features/calendar/calendar-quick-overlay.tsx",
+      "sha256": "3c2ed7c36502d15c7915be85894ddaa5aa359638c86f532ccbf5a579a014ee17"
+    },
+    {
+      "path": "src/features/calendar/calendar-render-data.ts",
+      "sha256": "a43c73f307351dce18f0a9d90e4af90977ff8bd5289dd57bf63a06cc7ade9086"
+    },
+    {
+      "path": "src/features/calendar/calendar-rendering.ts",
+      "sha256": "e78ebd533967c1e656feb1db4dc21f119400f87a30e147fc1f404390e8fbd959"
+    },
+    {
+      "path": "src/features/calendar/calendar-screen.tsx",
+      "sha256": "269e3fbefb6f0bcca6ee0d6120cd762e39b7c938da3a3cfd2111431a2908ae92"
+    },
+    {
+      "path": "src/features/calendar/calendar-shared-scene.tsx",
+      "sha256": "a1699517ec46177f4468e7d56cc9e2b9c5e0061e1cbf1a749dc82efa663d6684"
+    },
+    {
+      "path": "src/features/calendar/calendar-special-days.ts",
+      "sha256": "7b9d05e67bdb3382901a23730d736efbc270ce9029c08c45e3b04ca8ae2bcb71"
+    },
+    {
+      "path": "src/features/calendar/calendar-stable-pager.tsx",
+      "sha256": "90f2f57a6d3ed70c84741b3f727c5f99585d9126ba185413d550263f05e010fc"
+    },
+    {
+      "path": "src/features/calendar/calendar-view-screen.tsx",
+      "sha256": "66d502f15d11fa1116709d21824abfd472b1edd3709217e23115c9d5d5a57af3"
+    },
+    {
+      "path": "src/features/calendar/calendar-view-transition.tsx",
+      "sha256": "3f93ac712005cc0561e0fa14261bfa958899ef0da6267bf7209b912ad8ea2be8"
+    },
+    {
+      "path": "src/features/calendar/combined-calendar-preview.ts",
+      "sha256": "e2268729b8dea97a8c75818fe6923190bc0b83dbe45cf41c2ba070fdc2ce2f91"
+    },
+    {
+      "path": "src/features/calendar/holiday-label.ts",
+      "sha256": "e4b0401cb5ee8545b0bee613cba3023cd11793b2bf9810929b573d14ec0a6fed"
+    },
+    {
+      "path": "src/features/calendar/month-card.tsx",
+      "sha256": "eec16b102040b9888e3aebf0498ac054890a58bbf5da0d7944f9d0c9dbc89f40"
+    },
+    {
+      "path": "src/features/calendar/month-window.ts",
+      "sha256": "785011e8ce34eec9791f4d145ef3803e2ff68ba3ebdd8e1c0682511f84b615f1"
+    },
+    {
+      "path": "src/features/calendar/prototype-entry-content.tsx",
+      "sha256": "af511ce3f5cc07ca1c3a0453e571e51935815ab18e066483abcbcc673fd586a9"
+    },
+    {
+      "path": "src/features/calendar/prototype-entry-preview.ts",
+      "sha256": "e021edae266ee73b63cceab4b8faa133f6dd7a054877e54501b4fa4a18e01c1a"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-action-strip.tsx",
+      "sha256": "4537c6c1fff659d774aed78b840bcf2de27e0a3174b9a0f05b5d5742f5cda193"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-action-tile.tsx",
+      "sha256": "cff7b18ddb8b0fbca1b88be07a0994dc359998f095d61b3b0d071ead52457c37"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-actions.ts",
+      "sha256": "9a25d89ddad76a342a276bbaf9a00b26fa06ba6d00d628651c3ca49c4be6a777"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-delete-confirmation.tsx",
+      "sha256": "a6e50a23257c3a9ec75e68f43ed8e3d601175ffba9d6619d816fbc7827411080"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-motion.ts",
+      "sha256": "9eb550612ff0e4d177faa7ead200f0c561d070454243f931251bfdf30d5e2f91"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-navigation.ts",
+      "sha256": "98d88b671e574dfcc7135c91569fd6c8d0d78429dc80dbeea1cf47f0784f23ad"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-popup.tsx",
+      "sha256": "3d7fb8a856e8d503fbf559333016eda20f991e40999b570260f2d03c16ed9f63"
+    },
+    {
+      "path": "src/features/calendar/quick-entry-swipe-row.tsx",
+      "sha256": "9bd3e351a8dee5f601d8083f0c0eb6ea7b265b8df18b25beab6e9d9a8c435747"
+    },
+    {
+      "path": "src/features/calendar/quick-planner-appearance.ts",
+      "sha256": "1b7b81c007e509deac2ecc30cd16266be3995a348222c17e62acf602502291ea"
+    },
+    {
+      "path": "src/features/calendar/quick-planner-control-motion.ts",
+      "sha256": "fe163065314a2af410be12e5b50bdbdd8567caf16c9ffaf1894dce0be586b9d1"
+    },
+    {
+      "path": "src/features/calendar/quick-planner-dock.tsx",
+      "sha256": "0cc427e754c860e6a89bd4e0ba28b1e6f649bb78cb8bb960292ae5f41d1ada81"
+    },
+    {
+      "path": "src/features/calendar/quick-stamp-motion.ts",
+      "sha256": "c42a793b6618f9e01b2260610e885245e7bdf173314054b92af0e02f5db8fe48"
+    },
+    {
+      "path": "src/features/calendar/quick-stamp-queue.ts",
+      "sha256": "51330edae1d1d0fa9419eaeb376cdf505b9e7cfd0149d968ac133124fef7a0e4"
+    },
+    {
+      "path": "src/features/calendar/share-calendar-performance.ts",
+      "sha256": "8803744f6601cce2d16d72bec869d2a4d6ed78b6987b51aa14c452d321ab9ef1"
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-day.tsx",
+      "sha256": "cf59f9bc9c22d06f05d15f25787fd29e62cc3dd1b03aaebdbdf2c0723c4ceb5f"
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-display.ts",
+      "sha256": "0d72859ef5647cf0d22ea93a21b1c159bc8932b6f8d4e2cf0af1fbdabf4ad2d9"
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-entry-content.tsx",
+      "sha256": "8210ddfff7b293ff0cd79e430ec1290ee944c7a5b41edc5055641a6a913e7d2d"
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-filters.tsx",
+      "sha256": "e1a5ad90eff2899fc6fab4e9d511cc5752eb3689a395e47d246fe9fa2e949773"
+    },
+    {
+      "path": "src/features/calendar/shared-shift-detail.ts",
+      "sha256": "183ba7b8b7f7db5b5eb2c6ff5f624ba3957acd4410b0f4743c84ab1bcf848842"
+    },
+    {
+      "path": "src/features/calendar/shift-selection-panel.tsx",
+      "sha256": "28a53e322cb8959409bd8969703d2aa46b211ebb0f282239134b3e676317f2e2"
+    },
+    {
+      "path": "src/features/calendar/shift-selection-screen.tsx",
+      "sha256": "200a2dd6aeb68fe5d5b065671a71285e4480a866a75dd959277ef683b2f732c9"
+    },
+    {
+      "path": "src/features/calendar/stamp-accessibility.ts",
+      "sha256": "fdcf111ee4a250db1854bfd47d00f7e1af423c32feafc2d1e6d7c2e2b92e5ceb"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-controller.ts",
+      "sha256": "774cfac63421ff9224ecee159035007bb870a809034ff5459fa2d8d00d1caf9b"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-month-renderer.tsx",
+      "sha256": "601d8b9d54851818edc7a97e7a9d792f2bcc6c3eaf9c8f3f9075998682987009"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-paging.ts",
+      "sha256": "0b41a12d11a0d03822b5be75c9ba039e63ad0d120c0962887ee5e84b767f2b5c"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-performance.ts",
+      "sha256": "ddb72840f498c52b402b6376b065949aa1311e3ea8733300931289298301907d"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-startup.ts",
+      "sha256": "6a6eb9288c6bd8bd9871b5041ee93dd2144bdb5e66fd3fb35e02cc96d200c0b4"
+    },
+    {
+      "path": "src/features/calendar/use-calendar-today-scroll.ts",
+      "sha256": "a7f4788ee2c9745a1773785159961e1fe074d0da5bbf66b4b3d1c9269d48537f"
+    },
+    {
+      "path": "src/features/calendar/use-open-shift-selection.ts",
+      "sha256": "f2a13a7eb5d9c77d99f2f9081caecdb81fe14cb07c38124ef4242d722da9c8d1"
+    },
+    {
+      "path": "src/features/calendar/use-popup-entry-deletion.ts",
+      "sha256": "87363dc8d52fad5d8490fc92fabb399f5d80a1a80efa8f87127bfeced747728d"
+    },
+    {
+      "path": "src/features/calendar/use-prototype-entries.ts",
+      "sha256": "a51f3a44bc166d8694ee2d62181ba14290513ba0c60316ed270d2c219ef93841"
+    },
+    {
+      "path": "src/features/calendar/use-quick-entry-popup-motion.ts",
+      "sha256": "e4d61147da35075862e51b41e78e4a6131e219aaf05403871efc96c01aa39a2e"
+    },
+    {
+      "path": "src/features/calendar/use-quick-entry-selection.ts",
+      "sha256": "fcb8925b40c531913292d12b41d1657639504ea03a64002254ab76b848797155"
+    },
+    {
+      "path": "src/features/calendar/use-quick-stamp-action.ts",
+      "sha256": "9855242cd0b94b39bcc0cbd4833dc207e8bcda9d7c818c4d45fade84e2eafa10"
+    },
+    {
+      "path": "src/features/calendar/use-shared-calendar-days.tsx",
+      "sha256": "840ce993caba288511c7aa2f40bba8c5db09d45141d5380f82aa99d40d8cf568"
+    },
+    {
+      "path": "src/features/calendar/year-overview.tsx",
+      "sha256": "e8ed99512ca59a96253ae4bc9423f106dedc3ae4a435d13c43f5265d1dff42d1"
+    },
+    {
+      "path": "src/features/data-backup/backup-temp-file.ts",
+      "sha256": "0434322091c5cd40c7a8b19fd387f52aa21cceb8493f4b5ad384b8d72bb89e9a"
+    },
+    {
+      "path": "src/features/data-backup/data-backup-screen.tsx",
+      "sha256": "0ac1c44031f317dcde0bc035ab7641dd2a8c21039d1ed223d60ff9fda0c04287"
+    },
+    {
+      "path": "src/features/data-backup/local-backup-export.ts",
+      "sha256": "3eb0943f431b7403aec0894d5c8d95713d96d1487db5b5315e9a93e95c9aa4ef"
+    },
+    {
+      "path": "src/features/data-backup/local-backup-restore-errors.ts",
+      "sha256": "d7682993b16427ff71aca37a047453a48281e87fac6bbf0fc54b550cb37d37e7"
+    },
+    {
+      "path": "src/features/data-backup/local-backup-restore-flow.ts",
+      "sha256": "0be5baf0945c9534e225b4847c0effcadfa59d0f1da12346dbc8477ff7788a85"
+    },
+    {
+      "path": "src/features/data-backup/use-local-backup-export.ts",
+      "sha256": "f4bf9278b1447da4262efa533cd33138e85f156e6329c146e09a14d0bff117ee"
+    },
+    {
+      "path": "src/features/data-backup/use-local-backup-restore.ts",
+      "sha256": "a5531a1e79739f23f5a383a814b21a1399f108ac773de66989c64c14e5073c07"
+    },
+    {
+      "path": "src/features/day-details/day-details-screen.tsx",
+      "sha256": "ffc082a7353a676c801b9f0201561a3464b37375a3a79e799bd12a505d202133"
+    },
+    {
+      "path": "src/features/day-editor/appointment-edit-overlay.tsx",
+      "sha256": "a165999a9f9ed7d0b3b4ed7b37e4117e4e58f339573ddc5e0cc4a79723aa6f20"
+    },
+    {
+      "path": "src/features/day-editor/appointment-recurrence-overlay.tsx",
+      "sha256": "6726bf3ce4b613d90d3f84c24c96bccd92a588298bab6f2643c23bf7550b4101"
+    },
+    {
+      "path": "src/features/day-editor/day-editor-components.tsx",
+      "sha256": "a500424dbdbe8d1859cbfc049ba2a99ffa6030dd4a30163ac81367e8738463d9"
+    },
+    {
+      "path": "src/features/day-editor/day-editor-form.tsx",
+      "sha256": "00c9e3dd7ff908e5222fbba36edf637ea53367150fc6f0a8e12fffdec5098af0"
+    },
+    {
+      "path": "src/features/day-editor/day-editor-layout.ts",
+      "sha256": "e441afd6714a5a779aa912f99769597cd895ddd68822a2d5a53eb00906b256b4"
+    },
+    {
+      "path": "src/features/day-editor/day-editor-screen.tsx",
+      "sha256": "282b0182fea08d86b4b6661da2def7b8193a979aa2aec8a0d6c18b240423311b"
+    },
+    {
+      "path": "src/features/day-editor/day-editor-special-duty.tsx",
+      "sha256": "9eb09686c753f8809d238c525176f8f2cc19efc7c2caa6b96898f29911995782"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-fields.tsx",
+      "sha256": "aa0d8cdccd5e862ec69244cd95bc599aaece9f8e74616c8c651331d5d12a87fb"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-header.tsx",
+      "sha256": "f76e69d2bc9af5b3f60f65ecfae16dada6a38cc96ba5da4dbe0e5a0bf780c34a"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
+      "sha256": "397564f22a2c6a8364e531bc198daa81ca1505a725605d7121b5dc64b71eab36"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-overlay-motion.ts",
+      "sha256": "fed08e2b19814240365bf5ea0922fa64bb862dd6385ca05283e714980680606f"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-overlay-pattern.ts",
+      "sha256": "5b5405d92f38d83934b1a24584f3d5a14851954ce867c20c929298180c87fc46"
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-presentation.ts",
+      "sha256": "2fe1f02a9d7d5f84ea53f4d6c89cb77873bd74e028a339de4c25a9c0bdd230bd"
+    },
+    {
+      "path": "src/features/day-editor/entry-editor-error-boundary.tsx",
+      "sha256": "7c89ae09ef7c11e7a1c0e76b0cc7012aab9b4c56a116b06302b667de6b64ce00"
+    },
+    {
+      "path": "src/features/day-editor/entry-options.tsx",
+      "sha256": "6d5d203bda47299d651840c0f33f9f6fe521ea02d1a2d3165b317a45b21e7926"
+    },
+    {
+      "path": "src/features/day-editor/holiday-premium.ts",
+      "sha256": "8ac28c6b097979a66d3b1cfc5d6ad6bb519f5c70ad1d23d3a9911b0c1bbc4910"
+    },
+    {
+      "path": "src/features/day-editor/quick-add-screen.tsx",
+      "sha256": "cf911da7f58f86a4e4de3f961266ec77772022ed343f2584cfc68ccb8a575b83"
+    },
+    {
+      "path": "src/features/day-editor/saved-shift-compliance.ts",
+      "sha256": "fd3adf81c139b20c15a6646a07b699663096916408cda20072f6f9a36ee5c979"
+    },
+    {
+      "path": "src/features/day-editor/shared-entry-editor-view.tsx",
+      "sha256": "093cf967e4201b18257599acd45179ea286cb639331b60c7dfa51532a8c1f869"
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overlay.tsx",
+      "sha256": "866a8aabbdcc2a0b704ce7f32088b37901571325dfea0997fa9c62bcdbaa3a23"
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overlay.types.ts",
+      "sha256": "fc6641160819ae42f4e5395388b7c3e19f489afb7cff5503f83e7267259b988d"
+    },
+    {
+      "path": "src/features/day-editor/shift-notification-overlay.tsx",
+      "sha256": "07fc02c37aac66e7686de9ee9f7b497e5c3312cca6002058f4d0a33cf94b2170"
+    },
+    {
+      "path": "src/features/day-editor/shift-overtime-fields.tsx",
+      "sha256": "f3cb7dd6de535716e73afe318df7138ddadf622b6aa96e09ff490b5220764a46"
+    },
+    {
+      "path": "src/features/day-editor/shift-type-preset.ts",
+      "sha256": "1abbc29d493f20139d57f722bbdaeb62e14983724584a312d01eff63e6af7090"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-choice.tsx",
+      "sha256": "793555fb8d11deb9f19de19e267522f969d8980047f6a53c9b23f08c6c00aeaf"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-controls.tsx",
+      "sha256": "8fb85b9dca2d7afc068fbeb8fe3a8a4259d3263b7e371d82513301242595a9d8"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-editor-state.ts",
+      "sha256": "0df67c187d6359b16418647e195071965ff6ebb4981df739f85faa0c134bf746"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-fields.tsx",
+      "sha256": "90c33a82ddb05dec0f21e2453f936c36422852265d250f3d817d5fb6d8383c71"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-form-state.ts",
+      "sha256": "4384dcdce595eb17b9dcddfd93da1c3c5e92b0d27bbb79646078b3f643aa4f27"
+    },
+    {
+      "path": "src/features/day-editor/special-duty-time-block.tsx",
+      "sha256": "cd010671a26839e0adc5a873bba74e9f5d915214f1a51a3c02ab758239fc96e8"
+    },
+    {
+      "path": "src/features/day-editor/standby-agreement-fields.tsx",
+      "sha256": "e4a67e07360b904389c20c94090dd0b8897db972de8636450958e045a68a0fbf"
+    },
+    {
+      "path": "src/features/day-editor/standby-break-fields.tsx",
+      "sha256": "fb9f814f535e5e4e6732819db1d521f3ba9bb1cbc90dd2d0113b1fd464336298"
+    },
+    {
+      "path": "src/features/day-editor/standby-time-off-fields.tsx",
+      "sha256": "b420cbcb97bc853b77471928715ac06e85cb9a3e359392e5b0f8c6871bf9e356"
+    },
+    {
+      "path": "src/features/day-editor/use-entry-deletion.ts",
+      "sha256": "e845c5587f4fff661fad78a0f78033bf15ff1a2d63e29336e1631a9e338feac9"
+    },
+    {
+      "path": "src/features/day-editor/use-entry-editor-draft.ts",
+      "sha256": "f379d650118076fbdc33ba518ccbb508e7da13064cbbe47f633259486f972ae0"
+    },
+    {
+      "path": "src/features/dev-tools/dev-tools-screen.tsx",
+      "sha256": "6b795722acb76e811d2748ba42303710aaca237597f53072562ff6933510766d"
+    },
+    {
+      "path": "src/features/editor-session.ts",
+      "sha256": "36eb0d340fc35745cfe91a69a490987db6fad74c8fe467cff4d430a5696c9c5a"
+    },
+    {
+      "path": "src/features/location/location-map.native.tsx",
+      "sha256": "881bf4d22084f6bd0f51eb55d516a01e4c5ef1bc8ff4165f8e4edf59f3ab7795"
+    },
+    {
+      "path": "src/features/location/location-map.tsx",
+      "sha256": "5da9ccb8fa422e864ff4cf0c754c606495a954d315d81697a2c19b5ff3d175ef"
+    },
+    {
+      "path": "src/features/location/location-picker-screen.tsx",
+      "sha256": "bd7211e26f3ec5e30e2fe5429c576c3dd38046b1e07ae32cab2852d9cf9212e9"
+    },
+    {
+      "path": "src/features/location/location-preview.tsx",
+      "sha256": "93ad0ed7dbe1047efa7783a112db1ab07877f8c401318fad94e480fc8e541a5b"
+    },
+    {
+      "path": "src/features/location/location-selection.ts",
+      "sha256": "65a71434fbe9c29868cbb8c08cc8f299121f768060f922eaff039997d4cf333a"
+    },
+    {
+      "path": "src/features/location/native-map-search.ts",
+      "sha256": "5aadff50f4f66609a68cd5e1a68111f796ed05fa344810039ff3c6e62bd50b18"
+    },
+    {
+      "path": "src/features/location/use-location-search.ts",
+      "sha256": "3cc4c9acce99c1656004ff1f1379529d36a466ce55ec3a83f583991a75593834"
+    },
+    {
+      "path": "src/features/notifications/notification-feedback-bridge.tsx",
+      "sha256": "beacfe31001128736e41ba209c8babd7dd8e387b432c9517f901faf158191c32"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-brand.tsx",
+      "sha256": "5568da16c401b6989b0cf7d434750dbcb747256fa21f78fe3d1dd6eb7ccb97ec"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-check.tsx",
+      "sha256": "c323c8e779bae102d7677c26b680a5862f5e40d75084594e53fee30f875f6519"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-controls.tsx",
+      "sha256": "07aade3e5194ae1849936e61c4463c5b5fb3bb9a87121c5c4cd8c6c762264c3d"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-motion.tsx",
+      "sha256": "a3f9be3141302c4417b200c339551e28abb3ceb10b96ad49edb264a478ce8a0b"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-salary.tsx",
+      "sha256": "807927ee79c3f86320b2d43ec89d41c5580fa944329c4efd1840817e9ded1efd"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-screen.styles.ts",
+      "sha256": "30da4ad00ce6ccc6c4eb2ae61745452d1b6ed30d2144ad0531132d70ca509ad2"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-screen.tsx",
+      "sha256": "579ecbf8a9ae4d48f2f90810163769d7a17e070106f3841e6ccb6d2bbcbde588"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-tariff-fields.tsx",
+      "sha256": "c84d6b25805d79b0671171e6af58d242c670713736ea5bb429991973da83c3eb"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-tariff-picker.tsx",
+      "sha256": "0818103ca091b1f06289de9bc9b64b703d5cb5a5768ced17f05f60502cd64a64"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-tariff-values.ts",
+      "sha256": "b7e20c3f30df9196f02789e603ae848a827efa447b02bf486006e6b2bdda2d5d"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-vka-logo.tsx",
+      "sha256": "f95d99676eb48a57c461455368d6f5b68288a3b5688efa85889acceddd59f77a"
+    },
+    {
+      "path": "src/features/onboarding/onboarding-work-time.tsx",
+      "sha256": "4c3e0d6bcded58868d57892f16e9d642f45304ca3ba45d9af039e983cfc56764"
+    },
+    {
+      "path": "src/features/onboarding/percentage-slider.tsx",
+      "sha256": "6908063ba1f5ca3ecf0ca64fd311719294ffc3801fac5998d6d550c636ec7914"
+    },
+    {
+      "path": "src/features/private-cloud/cloud-media.ts",
+      "sha256": "92e0a5de185f3c1f2b89a1291acde237ac6228124b38e48fe7859e960f0d73cd"
+    },
+    {
+      "path": "src/features/private-cloud/private-cloud-context.ts",
+      "sha256": "ebfcca6b067faeb6789f560714a8099bd01981fc1f912baea17d8b6ae5901ca8"
+    },
+    {
+      "path": "src/features/private-cloud/private-cloud-screen.tsx",
+      "sha256": "293e85595eda235128b64c1f8ecd4db108843ea93e14319e6e8933f407398a9f"
+    },
+    {
+      "path": "src/features/report-export/report-data.ts",
+      "sha256": "56527c051c1867a0253c7601714fbadc3da2bfa7cfd63fd841d58c4706250e36"
+    },
+    {
+      "path": "src/features/report-export/report-document.ts",
+      "sha256": "c2c954b5c9fe2f035ab4862553648770575b02103d98bf7dd412f8d0fe0f09bf"
+    },
+    {
+      "path": "src/features/report-export/report-entry-data.ts",
+      "sha256": "7dda76fc9cb7e988a569c74462aaf92d4d36f180bcd742565b58f1775ed24ba9"
+    },
+    {
+      "path": "src/features/report-export/report-export-action.tsx",
+      "sha256": "33e7e39f4b6d1aab781fda06e317816381d4fe2a264c5b225f68c02a4df79d6d"
+    },
+    {
+      "path": "src/features/report-export/report-export-button.tsx",
+      "sha256": "cdc41e3789b86d59a24777d94439cabbdbe948e9637037ff5378a8b42b720577"
+    },
+    {
+      "path": "src/features/report-export/report-export-error.ts",
+      "sha256": "5911673e027a926082428a27e152208fdf7bae6470d92363b69c07aaca473410"
+    },
+    {
+      "path": "src/features/report-export/report-export-options.tsx",
+      "sha256": "d33905add51a3c0df3eef371c1c6d779d3e69514ebd382917a60bab49054a4eb"
+    },
+    {
+      "path": "src/features/report-export/report-formats.ts",
+      "sha256": "c6ab221c67eb53327306998472ae6591770aeccd13daa904f0b70948d0709f29"
+    },
+    {
+      "path": "src/features/report-export/report-pdf.ts",
+      "sha256": "8aaf79eeb6667e739da4e165b4d5a11a92a1a4f972006c9544d12788b5b0d45d"
+    },
+    {
+      "path": "src/features/report-export/report-print-layout.ts",
+      "sha256": "99122cebe7e04e71d9196f5170adb982ae355ade1ed05a4b96f7b666cd092c34"
+    },
+    {
+      "path": "src/features/report-export/report-view-data.ts",
+      "sha256": "38ca4b29c3d13a58d6f70155733bb44d300e0a5bd7624bba001abceac9d6934c"
+    },
+    {
+      "path": "src/features/report-export/share-report.native.ts",
+      "sha256": "8ad63d4360bf28e2455c532e2591809a6b616082da4da423e80c739754161372"
+    },
+    {
+      "path": "src/features/report-export/share-report.ts",
+      "sha256": "417f85b508d633915d4590b94fe1e8f8dce5727acb0acc1ef23a3f88e316d242"
+    },
+    {
+      "path": "src/features/salary/annex-a-premium-facts-model.ts",
+      "sha256": "2356082ae1cd1d1c75cfb858f178b4afbecaa929e5930f680d0bd031ce75a54e"
+    },
+    {
+      "path": "src/features/salary/annual-payment-model.ts",
+      "sha256": "ba51a9ecb6cfba9bf7353b265f2efec785defb715bc4265fcdefe13ce15536dd"
+    },
+    {
+      "path": "src/features/salary/annual-salary-forecast.ts",
+      "sha256": "a8ff6e7fc030eac423a1e291767ccf8468ced014de6204eb80401b4ddc660edc"
+    },
+    {
+      "path": "src/features/salary/annual-salary-payment-editor.tsx",
+      "sha256": "7f51deea47624dce7b9c9869e9ef1bc0b03b6bb65ed63d195cee0178d58f53ab"
+    },
+    {
+      "path": "src/features/salary/annual-salary-proposal-cache.ts",
+      "sha256": "63306f84e33cdffb39e6b0dbfbfcbe824d63657c4fb328faca4c8b784a5dcd5f"
+    },
+    {
+      "path": "src/features/salary/annual-salary-proposal.ts",
+      "sha256": "a55f27046a9d0afc1ffdbe88bfa5839cf3485585020f03d3619b4e9afb59677a"
+    },
+    {
+      "path": "src/features/salary/automatic-net-pay-preparation.ts",
+      "sha256": "71b70581dba784e3d7785d64548c83d4f039c695f19d693d8b56041ed69f47be"
+    },
+    {
+      "path": "src/features/salary/earned-service-pay.ts",
+      "sha256": "02969478184404d982bf1411f6e9ac04edf856f2a909b419172beffd42ae90bf"
+    },
+    {
+      "path": "src/features/salary/net-pay-amount-row.tsx",
+      "sha256": "e10587808c4d3c17a8ca4b61c55ca19cc7dabc177c896d6303922b17e5b1b0bd"
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-entry-card.tsx",
+      "sha256": "6f71c36f6dbd9fe9c2b8ea328045fefaa53426bb1625f1e7a854816535551f98"
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
+      "sha256": "77e5f24439479fc27e3049ece4f75ea0758b9a4747270d5c7d3c926a985ca040"
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.tsx",
+      "sha256": "e2d300394315994d547a3215de93474a777202e6e0f0e07f25a7dabd25dcbc59"
+    },
+    {
+      "path": "src/features/salary/net-pay-controls.tsx",
+      "sha256": "54ea5e1cc096c7d56840b9385558faa3c9f79e025a794504c3198c49c467336c"
+    },
+    {
+      "path": "src/features/salary/net-pay-form-values.ts",
+      "sha256": "96d462fec9c8e6d11d0fbb25eb0d3cd7728993c5fe0c8c2052546a2bab429be2"
+    },
+    {
+      "path": "src/features/salary/net-pay-format.ts",
+      "sha256": "8bb3c8c082f5a9fed46f4eb18ba5bf987df74a11e58820c147bf3c6cf706debf"
+    },
+    {
+      "path": "src/features/salary/net-pay-premium-details.tsx",
+      "sha256": "ea558ad12a469f13f76de37eb7fee48633d9ca509e3b98790d5edb2f672d54c7"
+    },
+    {
+      "path": "src/features/salary/net-pay-salary-summary.tsx",
+      "sha256": "816b53e7c1123ffb7382c7d0fa5d90294911f77da2e96ae2e27474739fe5930a"
+    },
+    {
+      "path": "src/features/salary/net-pay-screen.tsx",
+      "sha256": "110c64ed4b22bac1a5b1bf47d1229e05ca06ae1b040e0d146e9cff396d42491d"
+    },
+    {
+      "path": "src/features/salary/net-pay-service-details.tsx",
+      "sha256": "db133a3b88cdf6c90e23006e8ba6c6ac4a22878bb5ec080b87e9df0c1466d33a"
+    },
+    {
+      "path": "src/features/salary/net-pay-setting-date.tsx",
+      "sha256": "aeb6d8fe4d0d2a2bf103c4aedcb775c0c5caf0b7338d5c957364d40bd2cbc507"
+    },
+    {
+      "path": "src/features/salary/net-pay-setting-rows.tsx",
+      "sha256": "0029f6e5f63c9970e142decc39b285420cd14be1e86d999d88df4853ca7d95a1"
+    },
+    {
+      "path": "src/features/salary/net-pay-settings-screen.tsx",
+      "sha256": "877b5fe31fd8fe1c59df49cdeb21f0db3ab5bb404d2c0e3186874b25958ad3ca"
+    },
+    {
+      "path": "src/features/salary/net-pay-setup-form.tsx",
+      "sha256": "5225ae97e4a9db3113eed8d72609d41245002d50b2726501ce37d03b59a37b7e"
+    },
+    {
+      "path": "src/features/salary/net-pay-setup-values.ts",
+      "sha256": "829de2fd5f13315be45d039d677535e77a217af5d5db84cfd033d3c22973f0ee"
+    },
+    {
+      "path": "src/features/salary/net-pay-sheet.tsx",
+      "sha256": "760747ca9959d8333dd9498c9370cf53e3b6850f25705969518883a207d4bb18"
+    },
+    {
+      "path": "src/features/salary/net-pay-validity.tsx",
+      "sha256": "0d4ca9e90e112e125226f6649eae6cc632b8528b3d5e0bfaa434f31df91bd487"
+    },
+    {
+      "path": "src/features/salary/net-pay-workflow-controls.tsx",
+      "sha256": "9567aa700dd9079a2c276814a9cf11a716f63d95d60c3ba6355d4b065929e870"
+    },
+    {
+      "path": "src/features/salary/overtime-allocation-model.ts",
+      "sha256": "d7b6f2f8baaed867dc91fd30f014442e3a36490efc7ae21fb9c4a352ed354115"
+    },
+    {
+      "path": "src/features/salary/paid-absence-model.ts",
+      "sha256": "850404a00bfa6df07a6e98a38ce427311af76ae98ca324b7b2bf21f76bec17af"
+    },
+    {
+      "path": "src/features/salary/remuneration-positions.tsx",
+      "sha256": "bf7bd54c53206e0ee457cd4cc701a9a90b5cbbef6114ee4a7d9490bfd75602cd"
+    },
+    {
+      "path": "src/features/salary/remuneration-presentation.ts",
+      "sha256": "106cf2cb955d95771ee4c5dfe94d3b484862a1ed71691373ed5b0b5f17811db0"
+    },
+    {
+      "path": "src/features/salary/salary-composition.ts",
+      "sha256": "b0ed0dc3326f48816b2e8ede3f8b9554070d56d5c309c967754f5951b0c6f38e"
+    },
+    {
+      "path": "src/features/salary/salary-deductions.ts",
+      "sha256": "0e84435a8818ac83e1c937478554173c6442459f48d3a27a7f324ca7e77f019a"
+    },
+    {
+      "path": "src/features/salary/salary-detail-views.tsx",
+      "sha256": "a9c466e0a9860cddd12bdfdb332f6977db218c21d2d86d1f2df7b94d03ca92e8"
+    },
+    {
+      "path": "src/features/salary/salary-details-screen.tsx",
+      "sha256": "805f3a3a38301bbcdfe7aa09deda7122bdbf79b1f2ba4bbba5fbc42520872286"
+    },
+    {
+      "path": "src/features/salary/salary-month-input.ts",
+      "sha256": "7e38683713c4f7d7bada0af0ffff85d7626e829a92ff1591afb994f7997c697e"
+    },
+    {
+      "path": "src/features/salary/salary-payment-input.ts",
+      "sha256": "761e99488794a62ac6a182e0e0526b773052783d8c8d68c7c6e1dae8b6be3760"
+    },
+    {
+      "path": "src/features/salary/salary-payment-preferences.tsx",
+      "sha256": "e503cc41b04a96bce264c08cc846c1e8d49e4cdc0ee1840ef6e665b46b2907ce"
+    },
+    {
+      "path": "src/features/salary/salary-payment-settings-screen.tsx",
+      "sha256": "f1654fa5ad9946e23564fdfb4ab9f84dfdabdfc13686c9cd3f9625c68eac4250"
+    },
+    {
+      "path": "src/features/salary/salary-payroll-content.tsx",
+      "sha256": "7b98f793c9c7481d2433dcf909c462ce0a27d93a3abdcd0bab6e33bead3a016e"
+    },
+    {
+      "path": "src/features/salary/salary-payroll-settings.tsx",
+      "sha256": "4f5a807a2d7ef78979b09e935c59507c74cbbb70187c7d897c4061258f2a23fe"
+    },
+    {
+      "path": "src/features/salary/salary-screen.tsx",
+      "sha256": "f5de70cbe0e12d54a82eee1ac39dbe1205514d9dabde50aea8f41a617fb5a068"
+    },
+    {
+      "path": "src/features/salary/salary-service-presentation.ts",
+      "sha256": "e6bf625a22a38f65c2d89bb7f93b3c80bb42711bf4429def02a47e5c3d09a431"
+    },
+    {
+      "path": "src/features/salary/salary-ui.tsx",
+      "sha256": "24c7fda9dae0b3aaac1eba1d724612c9075635c698b2a0e2b4889d3a2a28a818"
+    },
+    {
+      "path": "src/features/salary/special-duty-pay-card.tsx",
+      "sha256": "75d7ff428e65ba36ed9e3209c9ecdd322ad68a1bebbfda3d8111fa7c81ee195d"
+    },
+    {
+      "path": "src/features/salary/tariff-annual-model.ts",
+      "sha256": "3860702b39fcccf3a4e6d05753eef834891b11d1ad812eaf79b16de8bd9df2b5"
+    },
+    {
+      "path": "src/features/salary/tvl-shift-work-model.ts",
+      "sha256": "7336faa4e4e171b5e21f24968c445be3c1784dfc5464367837c7d9b5437a5370"
+    },
+    {
+      "path": "src/features/salary/use-annual-salary-forecast.ts",
+      "sha256": "9b0ae7d7b55491259ff65aaee7ae248217483441d467d4bcdfba6c7815dae9f1"
+    },
+    {
+      "path": "src/features/salary/use-automatic-net-pay.ts",
+      "sha256": "2f0714ffab0dd6b5e3200fd86fa81e438c6429b4c87736ed2d8b7416a00e3251"
+    },
+    {
+      "path": "src/features/salary/use-net-pay-profile.ts",
+      "sha256": "f083f8e180dd7e8a1c89669a350cb4e9d80c055310544be7877d8476097fc627"
+    },
+    {
+      "path": "src/features/salary/use-salary-report.ts",
+      "sha256": "6c55b4b7aee4e3b112f3ae8c59b3def89bbbf35b8e961f30a8a0d07aaf3b8354"
+    },
+    {
+      "path": "src/features/settings/appearance-calendar-preview.tsx",
+      "sha256": "360154bb48952940c028a8fa581962f7afae70303160004a30e7be0563c1d85b"
+    },
+    {
+      "path": "src/features/settings/appearance-mode-control.tsx",
+      "sha256": "57721cf785c40f5ab9e57ea097bf8c8d95f25653edb5042b53eb4f68b999311f"
+    },
+    {
+      "path": "src/features/settings/appearance-preferences.tsx",
+      "sha256": "7d76cbba3e2ef513a014b2a83756796a98ba8125590ca0db2216fbbcb00b414e"
+    },
+    {
+      "path": "src/features/settings/appearance-screen.tsx",
+      "sha256": "23dd9e6d9c0f7198f4123d80be7ee4dcb8dafa01e698fd8d551012fd90313eca"
+    },
+    {
+      "path": "src/features/settings/calendar-background-context.ts",
+      "sha256": "21ce5d7b8fa901bfc2933e18d759a14ee57611a508b2963835fa1d35db206433"
+    },
+    {
+      "path": "src/features/settings/calendar-background-control.tsx",
+      "sha256": "35df198ee0f2354879c9466ab66735f38a9acb403d844428cf927ff9266b92f1"
+    },
+    {
+      "path": "src/features/settings/calendar-background-preferences.tsx",
+      "sha256": "cf54759f5533249a342bc5abd65d5c75e403480d9567c3aaa51472cfa6233319"
+    },
+    {
+      "path": "src/features/settings/calendar-background-storage.ts",
+      "sha256": "15b22dfb91d5f941851cc7e7c4fa0e74595d6284d3f4a87f38ee80567847a535"
+    },
+    {
+      "path": "src/features/settings/calendar-design-preview-data.ts",
+      "sha256": "fdd19dd5367424df4418299f65c9147a512d7f509e5747e62ae11d1907a26bd9"
+    },
+    {
+      "path": "src/features/settings/calendar-design-screen.tsx",
+      "sha256": "c52dbc8cac8e96dc6a793eef6cc155c00c074750d981e2d84e1bb70323bd7457"
+    },
+    {
+      "path": "src/features/settings/calendar-display-controls.tsx",
+      "sha256": "5a26966b753706c75d717db6926b46d6f0cd86b8aba0f1f137b43c12c3726dfb"
+    },
+    {
+      "path": "src/features/settings/calendar-image-opacity-control.tsx",
+      "sha256": "71d471ad7e0154bc68a1b5ca63fcd1387c34044c86b938d39157f9a5599c7e23"
+    },
+    {
+      "path": "src/features/settings/check-preferences.tsx",
+      "sha256": "a5153e959ef9cee2abc901459b14966ca5b30a39f9ace4b9da07c8316c107d08"
+    },
+    {
+      "path": "src/features/settings/check-profile-screen.tsx",
+      "sha256": "a5e9b5f946120a33136b2e140fed568c8f03617c874688fc0fb851a8a22b21c3"
+    },
+    {
+      "path": "src/features/settings/check-settings-screen.tsx",
+      "sha256": "fbb11b080ed5e1cab2dfd4b6c145245b53a67e2d4937aa8e8946dedef518269f"
+    },
+    {
+      "path": "src/features/settings/employment-change.ts",
+      "sha256": "91b2b47f71876f942aaa99d1ae8a2759726be35f55382cec87f5a83ce89f30a8"
+    },
+    {
+      "path": "src/features/settings/employment-model-fields.tsx",
+      "sha256": "552e44031cbf27ab60906d5e229f237cd5d8f55896062e00e38dbebac5fd4835"
+    },
+    {
+      "path": "src/features/settings/own-remuneration-form.ts",
+      "sha256": "a2d762d06919b57648753cd66f8ee7aec5de27981855c81cacd898ab151f9999"
+    },
+    {
+      "path": "src/features/settings/profile-date-field.tsx",
+      "sha256": "0e8b4c6ac86cc2868c78d265b13e2a3dfbd33c964ee800b0617ef3eb8280ff40"
+    },
+    {
+      "path": "src/features/settings/profile-page.tsx",
+      "sha256": "df691a4d04f274bad1f4eeaaf73f3edfe6fd2cf8d028712ed537fd9af29159c3"
+    },
+    {
+      "path": "src/features/settings/profile-selection.tsx",
+      "sha256": "1d39b656980082d8cee9e9d716c9e2fccd706a59dc345cca3f25539385f83b6a"
+    },
+    {
+      "path": "src/features/settings/profile-update.ts",
+      "sha256": "5df4338e3334af72fa79d28a0060594ec8cb57f72ae42995b44316c50af72d68"
+    },
+    {
+      "path": "src/features/settings/profile-validity.tsx",
+      "sha256": "f9a2718d2ee21e949382d107b26c781bb831172bfdfa51274efa79f1f41b0435"
+    },
+    {
+      "path": "src/features/settings/remuneration-editor-values.ts",
+      "sha256": "24b19e151ce65bb47b56574f8c146fbe79bf1959d12d5957b80fab4dbdbc7cc7"
+    },
+    {
+      "path": "src/features/settings/remuneration-tariff-options.ts",
+      "sha256": "94d48929210b4ab5e81289087792a1170a928876810f9f832bb2213d9a915439"
+    },
+    {
+      "path": "src/features/settings/salary-basis-options.ts",
+      "sha256": "b3cd2f0f300fbfe966ebb507fd2c6271a007bdded4a78b7a4dab9921040cef98"
+    },
+    {
+      "path": "src/features/settings/settings-choice-test-helpers.tsx",
+      "sha256": "72f50f06391b4428714349d8957b1df9b99c10f3104004582fa76124e417bc68"
+    },
+    {
+      "path": "src/features/settings/settings-editor-screen.tsx",
+      "sha256": "ea8a476d7b9e2ff1d3fa665b6e47fb894e6b35c19279b41ffb5dd14ae24a2193"
+    },
+    {
+      "path": "src/features/settings/settings-form-values.ts",
+      "sha256": "64ef94ece8d55f9794b12a0c847612055b6aeb3793b3361028b4dab65fab8abc"
+    },
+    {
+      "path": "src/features/settings/settings-info-details-screen.tsx",
+      "sha256": "ed095c97ca1135063c7dbb5f146a4437f58362239e385b468467a90b802fc119"
+    },
+    {
+      "path": "src/features/settings/settings-screen.tsx",
+      "sha256": "7151b635ed4a5808469311163b2e9b7867353adeea0efbcfb3dffc673399a1d3"
+    },
+    {
+      "path": "src/features/settings/shift-color-scheme-picker.tsx",
+      "sha256": "eb48b4bd11775240e3a8474d7915bfa679cabe820bf0d0c6aee5c49a9434a7aa"
+    },
+    {
+      "path": "src/features/settings/tval-workplace-choice.ts",
+      "sha256": "e0ac516986a9f299f3ece575ad5b9d32eb44cdcdad751ec406587c96fdf2fed9"
+    },
+    {
+      "path": "src/features/settings/use-profile-leave-guard.ts",
+      "sha256": "398cee84a183a88fcbe84536c3e5072646418251e9d00a968cc7f418736736ac"
+    },
+    {
+      "path": "src/features/settings/use-working-time-target-settings.ts",
+      "sha256": "7eadc6f9d6915c64d04eb1f0f6788edc514ceb44ae19b29ae0572acf86a5d26c"
+    },
+    {
+      "path": "src/features/settings/work-profile-card.tsx",
+      "sha256": "d94f7843da432ff4654c1283b0c1aa135f0413a2bc7f3021cd8514a89beeca45"
+    },
+    {
+      "path": "src/features/settings/work-profile-screen.tsx",
+      "sha256": "086a385dd10ae0945f0fb16c375fdd4114ab342407fc18afb0b7763a48dd2226"
+    },
+    {
+      "path": "src/features/settings/work-profile-summary.ts",
+      "sha256": "69f4f098dbc3ec32f2353132cb4410fa33bf2902e887b4ac97f9b85700242fe8"
+    },
+    {
+      "path": "src/features/settings/working-time-profile-screen.tsx",
+      "sha256": "b85d49655663a2a2c8c1075a434553898e65426c953ae769e700d2d2f363fdca"
+    },
+    {
+      "path": "src/features/settings/working-time-target-form-model.ts",
+      "sha256": "f1156ee2d98785afce0d64c0406ed01092253a4a3a36d0025a6d29cb24976df4"
+    },
+    {
+      "path": "src/features/settings/working-time-target-overview.tsx",
+      "sha256": "8b505fa7d3c9950a67d2a0f476ba78bde5ee96e3a3f5ff9c4c23a8353fa403e5"
+    },
+    {
+      "path": "src/features/sharing/calendar-access-screen.tsx",
+      "sha256": "185935452538ce0fb3dac9d9d1013a38bdb40902308e424c1a686d915dbc4cb6"
+    },
+    {
+      "path": "src/features/sharing/calendar-sharing-screen.tsx",
+      "sha256": "665cd6512f60af0fe3aab536e79d09874a5fc568857fd51d4971758a4c0efcd9"
+    },
+    {
+      "path": "src/features/sharing/sharing-active-invitation-card.tsx",
+      "sha256": "77409041a9bb5e915600e311817ebcad0693fe6c9e66eac6f66ef473b9b05a32"
+    },
+    {
+      "path": "src/features/sharing/sharing-calendar-color-picker.tsx",
+      "sha256": "e5307c7b7bd766ba8281b7572b3db615e9d249ff386a2cc7cf35869709d86a78"
+    },
+    {
+      "path": "src/features/sharing/sharing-flow-layout.tsx",
+      "sha256": "ad4c300e30f4a7aaabb9ba6554d82c1fc432d5502480b7d5d3f615c36938801a"
+    },
+    {
+      "path": "src/features/sharing/sharing-invitation-send.tsx",
+      "sha256": "1c67e5ea9e82181fd337d853f965b63016d9768f70324847220aae31e07d9114"
+    },
+    {
+      "path": "src/features/sharing/sharing-invite-screen.tsx",
+      "sha256": "4bf34643ac2eb97543db571e277fc57c3eb16964a4bb8dbabb599fac1fa54286"
+    },
+    {
+      "path": "src/features/sharing/sharing-person-photos.ts",
+      "sha256": "068ffdd5012da1dba6ad068a986b156741000f85d732dd4af4cfe1625de15b8b"
+    },
+    {
+      "path": "src/features/sharing/sharing-publication-recovery.tsx",
+      "sha256": "e1ca2d1fb2ed40427dbf4dbe21be1d48cbbd5c003072df75cfeddd112b017a7b"
+    },
+    {
+      "path": "src/features/sharing/sharing-qr-data.ts",
+      "sha256": "9e2c7ce0e87f26fddea8c88cb6db5a5db0b045c2d6544cccb7c7aca3688a96eb"
+    },
+    {
+      "path": "src/features/sharing/sharing-qr.tsx",
+      "sha256": "74fd7455adb2f966cdcac29a29f9368b6f1f6488b4479ecf9d03298c740218fa"
+    },
+    {
+      "path": "src/features/sharing/sharing-ui-contract.ts",
+      "sha256": "50af97748ff5dad78bf3aceaf1f9525db73e8d58a07fc3a1105618342a78e221"
+    },
+    {
+      "path": "src/features/sharing/sharing-ui-elements.tsx",
+      "sha256": "9a8167aa97903c984b21bd290de82ca12311863397e98668d25f3251bb9f83f5"
+    },
+    {
+      "path": "src/features/sharing/sharing-ui-provider.tsx",
+      "sha256": "95092c653e6614f1cd4dddcbe6e76721b8563e2e9cff091437f8c7e125beee2d"
+    },
+    {
+      "path": "src/features/templates/compact-input-row.tsx",
+      "sha256": "db1d42c04c6a406906db14334aaba3fcc406bcf19df9920c67ed6a4c72b7d03c"
+    },
+    {
+      "path": "src/features/templates/shift-template-list.tsx",
+      "sha256": "40c4f1d53fc8fde40749b505726797df371a7fa74e65ad217fd8bee53b4a1fe2"
+    },
+    {
+      "path": "src/features/templates/template-editor-save.ts",
+      "sha256": "110727f845778c3984a202df208c1c84664eacb1e160ee67279ea61a92319b4b"
+    },
+    {
+      "path": "src/features/templates/template-editor-screen.tsx",
+      "sha256": "ec28fffe5314cbb32688621292c4bc7689d641ec5f22128a12aba2039834125b"
+    },
+    {
+      "path": "src/features/templates/templates-manager-screen.tsx",
+      "sha256": "b168410c8ecb08a7bf4d8f3a16e9b7268132cfaa55787f5bed3183c81b47eb22"
+    },
+    {
+      "path": "src/features/training/training-profile-model.ts",
+      "sha256": "a0a4fb8877744383f5ee51a3d3f0ead8dfe9a3534faa02cd1b3abae0864c1371"
+    },
+    {
+      "path": "src/features/training/training-times-model.ts",
+      "sha256": "b68ae98f941d2f093f7257a1592f443019f851c22ca4c0b5ab448890f0837b08"
+    },
+    {
+      "path": "src/features/training/youth-block-choices.ts",
+      "sha256": "f8f8859e930739b83630cd0177b7ff995dacce572bdc5b638eb67623f4d96a34"
+    },
+    {
+      "path": "src/features/training/youth-context-model.ts",
+      "sha256": "2f7e9d91fcdca07db558611993a546e1bbc416056ce4c1ec9a0691c348c6e9fb"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-background.ios.ts",
+      "sha256": "2ec0c7694fdb63d79c08f9fc6de7df71ffc19db80c2af6a4f8eb922fac1797f3"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-background.ts",
+      "sha256": "e8ec7d376d2722c6d49a4e4e7211987d692a8a5cd93323a37cd41fc7c442a4bc"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-data.test.ts",
+      "sha256": "4f9fb8cd00e229ac30983659afd695d928cafb19fbdd0143a5a6a4105c5fb994"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-data.ts",
+      "sha256": "c66aa0bc0e91cfcf4a9a6a22fa842a9c3bd8347e14991cbad7d07e40a87ba797"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-diagnostics-card.tsx",
+      "sha256": "b1bbbbb2ff7241a9e58ae34f4a410fa6595294b7bc216175addbdb220560a358"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-diagnostics.ts",
+      "sha256": "c7c94c84af75a80cf7928bae44fa86fc372cd15d3b8d53501bf181c381468d88"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-sync.component.test.tsx",
+      "sha256": "a856c454caff50589852861618988f4e03330c5a39a6e37d4d1d385e54541e55"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-sync.tsx",
+      "sha256": "646e487035ec9400ef6471851c4b6bf5364c1ab4f60f80222c0979ac47ec74d4"
+    },
+    {
+      "path": "src/features/widgets/calendar-widget.ios.tsx",
+      "sha256": "d854f8089c1c71447b58cc14881c090416293f678cff7738da55c0dd2a5b541e"
+    },
+    {
+      "path": "src/features/widgets/native-calendar-widget.component.test.tsx",
+      "sha256": "cb7c7a58f32709dc5400cbb45fd089a613ffae73472646ad0de9c94e5312b325"
+    },
+    {
+      "path": "src/features/widgets/native-calendar-widget.ios.ts",
+      "sha256": "89d692db43fcd107b13a38846ee6c73f4a023af23a70935eab72af619fcdb6e2"
+    },
+    {
+      "path": "src/features/widgets/native-calendar-widget.ts",
+      "sha256": "3b55ce5cf5f013c1b602e3371504f497514e2c480a091b9915a6899e667456db"
+    },
+    {
+      "path": "src/features/widgets/shared-widget-data.test.ts",
+      "sha256": "d9ae6f87de286589704df84ce30f8050540086a3cb2a6031d5616ecba81088bb"
+    },
+    {
+      "path": "src/features/widgets/widget-calendar-highlights.test.ts",
+      "sha256": "5a3497de660cd7ec3db66ed5b5361de6b31bd0fa7187500fa584f7a479418478"
+    },
+    {
+      "path": "src/features/widgets/widget-calendar-highlights.ts",
+      "sha256": "b3e24dbb0cce23cd4d1f4f68eb86c6e64d99900f2c5505b99b15a32815275519"
+    },
+    {
+      "path": "src/features/widgets/widget-day-screen.tsx",
+      "sha256": "7b1b2f6bc70bd541fc2dbfd82497d8b5f57a8be03838e1caec5f00dd1484c1bb"
+    },
+    {
+      "path": "src/infrastructure/app-version-label.ts",
+      "sha256": "80bb8ee173079f2d3b4afdb84e57eebe994e7e104483a7febf79a1d614c4907e"
+    },
+    {
+      "path": "src/infrastructure/app-version.ts",
+      "sha256": "f5112ab77170c237453a8c86d98ecca63b623a34fefbb8d9b7401a642ac53b8b"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-auth-config.ts",
+      "sha256": "5341a3099e06484c142df9e9457123634b21116855ddc227d62bbd5ec845e4ba"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-auth-core.ts",
+      "sha256": "491b0934673fa4937a8ae1eab3e3f9ef8fdd730a0aa36d1f5281e87697a1b186"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-auth-refresh.ts",
+      "sha256": "7ae01c78e9bc6f10580c6351aef0284792c6574632a733584a981e77f3bdfefe"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-auth-storage.ts",
+      "sha256": "724e2d2056cfce2859adc056e3758aca790643832d6971152704d5db4466fe77"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-auth.ts",
+      "sha256": "fd6c03f830db5c4aca305b24758b7233ebceaca3db05cbff81bcd61fb6c286cf"
+    },
+    {
+      "path": "src/infrastructure/auth/sharing-stored-user.ts",
+      "sha256": "ae9884fb558ab5afb36969caf572d75d1b2cec02c2d4c2a3fb81aae40dfc168b"
+    },
+    {
+      "path": "src/infrastructure/database/account-photo-repository.ts",
+      "sha256": "22d60bb92bce57415965c243960118ce6b14bcf02e1bef7a8651675ce9e94359"
+    },
+    {
+      "path": "src/infrastructure/database/allowance-decision-repository.ts",
+      "sha256": "ca2d7113b3429d1dda52f854c749c47084cb6e43ff78fe56e9baf0a483c30749"
+    },
+    {
+      "path": "src/infrastructure/database/analysis-result-repository.ts",
+      "sha256": "2eb209da8e93893be87409b56a848a5cb85f137b2a6b678de96d5b6c3b2130e0"
+    },
+    {
+      "path": "src/infrastructure/database/analysis-view-repository.ts",
+      "sha256": "bcc4e7d799ea6ee68a197051efc782da967328409e4380be838c8f0ad25ef0e0"
+    },
+    {
+      "path": "src/infrastructure/database/annual-payment-repository.ts",
+      "sha256": "6b920ec2477824ebb8ec1fe66ae696be9343c0b7500ac1cbf477d96331951b26"
+    },
+    {
+      "path": "src/infrastructure/database/appearance-repository.ts",
+      "sha256": "a6adfc677d918d17f23ac450d9d99fdd4f5ddea5b5f987eeda993b232b2f412a"
+    },
+    {
+      "path": "src/infrastructure/database/calendar-entry-repository.ts",
+      "sha256": "7c204c9814fade56b798f58262e22eea2513ae0646427c508f16010b0e6d5c29"
+    },
+    {
+      "path": "src/infrastructure/database/calendar-entry-row.ts",
+      "sha256": "e34495541bbcfc4e1d8db12d18e7d662f9246995eff28980de648e42bd6a70c7"
+    },
+    {
+      "path": "src/infrastructure/database/calendar-sharing-repository.ts",
+      "sha256": "f5850ad7e430f3a5a0c9afbbbb44e651f0614c3f17b123962755c778c5678e02"
+    },
+    {
+      "path": "src/infrastructure/database/caritas-draft-snapshot.ts",
+      "sha256": "f24809238752475420fa8e02a94205257ebd6ed7c5a1b864ca0ec89a689debac"
+    },
+    {
+      "path": "src/infrastructure/database/caritas-month-facts-repository.ts",
+      "sha256": "c25070954bdc9a9f75cc2702fbdf21d5fa37b123749ed67c676f6d46cde2a98f"
+    },
+    {
+      "path": "src/infrastructure/database/caritas-overtime-repository.ts",
+      "sha256": "161f8a697cd3a2c490479efb3453463d0835ee83d035a6c99b4c9be33a7350c1"
+    },
+    {
+      "path": "src/infrastructure/database/caritas-work-day-repository.ts",
+      "sha256": "34c155846a193b22ddb5a373ae30c3bc057f019304dd68b9ef038f8e0faf4166"
+    },
+    {
+      "path": "src/infrastructure/database/database-bootstrap.ts",
+      "sha256": "82e9534d768b1cf0c1f7477af16a14cbdaad8bdebd8d1e9b07b40111b883bee9"
+    },
+    {
+      "path": "src/infrastructure/database/database-copy-verification.ts",
+      "sha256": "bc1c7c14814bf2145f37618bc7a6b3c62f5743b4494c4aac9a205642ac7d56b7"
+    },
+    {
+      "path": "src/infrastructure/database/database-key.ts",
+      "sha256": "ddb3b65d65a710d86ba571f2053046cf6f7974f69c3b71c7f85a596b48e2664d"
+    },
+    {
+      "path": "src/infrastructure/database/database-migration-marker.ts",
+      "sha256": "76356d3bbf5f9d0627e81daf49c38bc75c2f845fdbe1cb8e6d8f70337556651a"
+    },
+    {
+      "path": "src/infrastructure/database/database-promotion.ts",
+      "sha256": "e49650ef8cc5ff59d36ece50c45c0c33435e82e11e8277a8e1a2697b2a97c37c"
+    },
+    {
+      "path": "src/infrastructure/database/database-security-error.ts",
+      "sha256": "95260ba5052cf5e7add796460350ee16be1f4e0c60f30ce372588c1ab8eb95c7"
+    },
+    {
+      "path": "src/infrastructure/database/dev-backup-payload.ts",
+      "sha256": "1fccd8d0089134c027095c5a3f44736ab0532cfc3cee4a9d71ae31b9b64a6095"
+    },
+    {
+      "path": "src/infrastructure/database/dev-remuneration-backup.ts",
+      "sha256": "fac42a15da3c71a488fd83ac764fe3e80aaa98362293a8003afcd7e5e351680a"
+    },
+    {
+      "path": "src/infrastructure/database/dev-tools-repository.ts",
+      "sha256": "6de21507cf497e22e9310640d16cd7e233be3ac615db8669e9cc6a3c0612b716"
+    },
+    {
+      "path": "src/infrastructure/database/dev-training-backup.ts",
+      "sha256": "7c4c033d82b476e9ebb357b6cc243a4aa6cd1a246de8539807fbd13cee12066d"
+    },
+    {
+      "path": "src/infrastructure/database/drk-employee-month-confirmation-repository.ts",
+      "sha256": "9368317800feeb7416d3da542803a4fadecd1576fae2482ba7d1850048a00ebf"
+    },
+    {
+      "path": "src/infrastructure/database/drk-training-month-confirmation-repository.ts",
+      "sha256": "258c579f4e10ec7fc10ac71b306c1eb0447f1e6a7d62261ef624ad41fc30bd78"
+    },
+    {
+      "path": "src/infrastructure/database/employment-profile-repository.ts",
+      "sha256": "8a85024ea226bda31d1283854cbcbf8734933a1d766e0f112fe323d0d54596e9"
+    },
+    {
+      "path": "src/infrastructure/database/local-backup-restore.ts",
+      "sha256": "bbb8e8e2d0394835e590260d911ed5e5c31e11afe68990bdb99d91e147b69ce5"
+    },
+    {
+      "path": "src/infrastructure/database/local-backup-validation.ts",
+      "sha256": "1663cbd0a568b0b1695029f3a0042f4b279653ef36d19bf8f5b6809fd026ac4b"
+    },
+    {
+      "path": "src/infrastructure/database/local-backup.ts",
+      "sha256": "19444ceeaf15edd43f61141768981d79d782c512bd20588249e12b61ef58bfc2"
+    },
+    {
+      "path": "src/infrastructure/database/migration-21-tariff-annual-claims.ts",
+      "sha256": "b3ca9a6663692815ccbeab4cd8d9bb9b79ecefb0e9542edc3a41bc4f7260bcb6"
+    },
+    {
+      "path": "src/infrastructure/database/migration-22-tvl-shift-work.ts",
+      "sha256": "81facee54ecf47a8f09b42a08fbbaba9487685ccdc0e93c433296ed2394b4e8b"
+    },
+    {
+      "path": "src/infrastructure/database/migration-23-caritas-work-day.ts",
+      "sha256": "666d2d7bd5af1d53336e05e59749578d31d775b6c538bcd84140a0affc4fdff5"
+    },
+    {
+      "path": "src/infrastructure/database/migration-24-caritas-month-facts.ts",
+      "sha256": "3a68eaf1b4c26f989a9a6266388bd605cfdc6e2e9418d1d11a8c0905bed5134c"
+    },
+    {
+      "path": "src/infrastructure/database/migration-25-caritas-overtime.ts",
+      "sha256": "22c32dd057802423ba3a64f9c081c14413dbbbcd97834e53b33385b3a30b18b0"
+    },
+    {
+      "path": "src/infrastructure/database/migration-26-tvoed-annex-a-month-confirmations.ts",
+      "sha256": "1dca385161e0af818306c496df3c36d6d67b7378491cd12690be814d8929b936"
+    },
+    {
+      "path": "src/infrastructure/database/migration-27-tvoed-sue-month-confirmations.ts",
+      "sha256": "c86adbd21e9d12a59b9efb1619c97b66af1a6d088431cc03b5498b4f4f39b1b2"
+    },
+    {
+      "path": "src/infrastructure/database/migration-28-tvoed-sue-allowance-confirmations.ts",
+      "sha256": "24acd1a2b71a842b601d3aaf2573e3f463239af79df5714138be56424b91dbe6"
+    },
+    {
+      "path": "src/infrastructure/database/migration-29-tvoed-annex-a-premium-facts.ts",
+      "sha256": "321a101706e913690bbe18bb204f0d62aea44e39841c63efd67d64aa1d4bc3b4"
+    },
+    {
+      "path": "src/infrastructure/database/migration-30-drk-employee-month-confirmations.ts",
+      "sha256": "1d66665466408300711f91273ad42e6ff77469e3029680f26c0ab2541eba6363"
+    },
+    {
+      "path": "src/infrastructure/database/migration-31-drk-training-month-confirmations.ts",
+      "sha256": "9fc62fa331f3cce832c60c9ae0faa9b865005ebc1a3c18e318e018fda5d7f7b7"
+    },
+    {
+      "path": "src/infrastructure/database/migration-32-net-pay-profiles.ts",
+      "sha256": "0fbd34ea8e8925ba942f366606cd1a1d087e8ab6e28f45e60b61d9ca71fa42a8"
+    },
+    {
+      "path": "src/infrastructure/database/migration-34-working-time-target.ts",
+      "sha256": "ad64862694544a9a182554fdd45d6894bf89ebb54b07261ff6a6d2ed61cbe924"
+    },
+    {
+      "path": "src/infrastructure/database/migration-35-special-duties.ts",
+      "sha256": "d0a23f8678d01656b233d2561cd080e51ee456832f60fc359db49ab71d28add2"
+    },
+    {
+      "path": "src/infrastructure/database/migrations.ts",
+      "sha256": "cab1de9ea1b13f143cade95dbf933dc46677fc519192bfc34556d72ab00e1b22"
+    },
+    {
+      "path": "src/infrastructure/database/net-pay-profile-events.ts",
+      "sha256": "b1462c715576423ebe64e6e7fab960becc58d18f2da1718fff40e29daacb8e4a"
+    },
+    {
+      "path": "src/infrastructure/database/net-pay-profile-repository.ts",
+      "sha256": "b785e76cc2134ebd057c6727d55acd504a9f912b3917459409ed6394cb6048e2"
+    },
+    {
+      "path": "src/infrastructure/database/overtime-allocation-repository.ts",
+      "sha256": "697c40a6b4809a699b2a46ffed2b9a6b1070175743dd5bf36bc174379c794ef0"
+    },
+    {
+      "path": "src/infrastructure/database/paid-absence-repository.ts",
+      "sha256": "3f36ca8278643c9ce028727f81f8b8f2400ffe63fd4d2030160ce576831c0a50"
+    },
+    {
+      "path": "src/infrastructure/database/preferences-repository.ts",
+      "sha256": "82d05f451811b749549ea5811dd722e5bf6ce87e071dd3187453ad88b791afda"
+    },
+    {
+      "path": "src/infrastructure/database/private-cloud-repository.ts",
+      "sha256": "1669222da208c87efd292aff2b7055a23030fb02d138f379cebdc77dbb7e0523"
+    },
+    {
+      "path": "src/infrastructure/database/profile-repository.ts",
+      "sha256": "6304a9fc152207ac87936b462dc0f1c4fa73c465510a4aed1b8539e73f1898d1"
+    },
+    {
+      "path": "src/infrastructure/database/profile-row.ts",
+      "sha256": "ebcdc27a3cbcc9960c8fe0054dff4e038e648424e806f9735223aa5d0e7a208a"
+    },
+    {
+      "path": "src/infrastructure/database/profile-write.ts",
+      "sha256": "453f8324e0a72489a6ee120237c991ce2871923da366af2c8166cf2c5b1fb095"
+    },
+    {
+      "path": "src/infrastructure/database/remuneration-migration-test-fixture.ts",
+      "sha256": "a6066cee3126a8e111e7de2fb54d4c3eee6d835006af0fa3900db1bea251289b"
+    },
+    {
+      "path": "src/infrastructure/database/remuneration-profile-repository.ts",
+      "sha256": "bad97ed42b7b46e893b755c238ed6f115e3c1821af088fa35370cac98d8f9f49"
+    },
+    {
+      "path": "src/infrastructure/database/remuneration-snapshot-repository.ts",
+      "sha256": "25f8bfb85c5b6930ec94ba58f7118b9139aaaad8db75c5b3f9411bbc0eaaf03a"
+    },
+    {
+      "path": "src/infrastructure/database/repository-core.ts",
+      "sha256": "15d0791703c6f5290720ed256a9c62618a35bf57fa3254a683f91b2bc6358989"
+    },
+    {
+      "path": "src/infrastructure/database/repository-restore.ts",
+      "sha256": "b01703f61a0af8b3719cc1d4b0f89ecb9f077bddde4832dcabf9b9f7870503ea"
+    },
+    {
+      "path": "src/infrastructure/database/repository-shared.ts",
+      "sha256": "ca03c62c8d4e05a3b3abb4d17d2365bcf456a35ba906d21ee4b709f29e37a8a1"
+    },
+    {
+      "path": "src/infrastructure/database/repository.ts",
+      "sha256": "11cc189252dfe6e5f184d705b3b570566c0d7a6709d48ea1feff431080292d1b"
+    },
+    {
+      "path": "src/infrastructure/database/rule-catalog-repository.ts",
+      "sha256": "5b0be725986ecbde2aef0ac4ba26d9d1e24eafc2b9c299aabaf9555b7ddb7633"
+    },
+    {
+      "path": "src/infrastructure/database/rule-catalog-sync-state.ts",
+      "sha256": "71d0e957ba9b2b388cbff25edf97dde3361cb20c052510e0772805c776cfbd9c"
+    },
+    {
+      "path": "src/infrastructure/database/salary-payment-repository.ts",
+      "sha256": "1a9de94a8390cc5e0aa15b50a54fabf6f36d46670888a51a013bd64a3007fb7b"
+    },
+    {
+      "path": "src/infrastructure/database/secure-database-provider.native.tsx",
+      "sha256": "ac869c984d20c28f562ea9cf12b504f75161e1ff61c3c64b9df1013a69e2ed32"
+    },
+    {
+      "path": "src/infrastructure/database/secure-database-provider.tsx",
+      "sha256": "a20cf9f5290e01a223668fee77d99d2c1e61959373b08c3c2ca4365bcdaf41b1"
+    },
+    {
+      "path": "src/infrastructure/database/secure-database.native.ts",
+      "sha256": "cd09999e25d5d69f1035081b0f9571066e0f2db958370e8b978062db08c9aa9b"
+    },
+    {
+      "path": "src/infrastructure/database/shift-template-order-repository.ts",
+      "sha256": "405582db911c7cbfb742e3500f780101ab2e2e83499a36674f5b4b7aef35718b"
+    },
+    {
+      "path": "src/infrastructure/database/shift-template-repository.ts",
+      "sha256": "b1241b4660c47a1a9e4101129abb8cfd1e33be0b58b6e600bd701dc8f6f39623"
+    },
+    {
+      "path": "src/infrastructure/database/shift-template-row.ts",
+      "sha256": "761305635a51e192e9cd517512186f626ef8ce7a5786df62e185af48e5644b97"
+    },
+    {
+      "path": "src/infrastructure/database/simple-app-profile.ts",
+      "sha256": "3bb5f8ea1e5a7b8eaf9be60ff82262330e8393977045a77577b68332a409e5d8"
+    },
+    {
+      "path": "src/infrastructure/database/simple-salary-profile.ts",
+      "sha256": "58ac0f74037937f92f2495f6a5df50501857ac16a53993128f85ac70c546f3d6"
+    },
+    {
+      "path": "src/infrastructure/database/sqlcipher.ts",
+      "sha256": "0fdfbb77d559b5c989d97447221d91f9815f4844d61327994120e99d00bf496a"
+    },
+    {
+      "path": "src/infrastructure/database/tariff-annual-claim-repository.ts",
+      "sha256": "fd8be25d29fbab930a8132c82d76d25f706e29605e5f036129b2a906c4303176"
+    },
+    {
+      "path": "src/infrastructure/database/tariff-annual-test-database.ts",
+      "sha256": "26d738af28c8267125ad0032278c03d4f2f7e3c557d8437fc2d5d5c3ce4cbf15"
+    },
+    {
+      "path": "src/infrastructure/database/tariff-decisions-repository.ts",
+      "sha256": "d237fb6e49ebd85bbf87f4841a82e40b82e25ebeeb50b72bb459a908decdc107"
+    },
+    {
+      "path": "src/infrastructure/database/test-backup-status-repository.ts",
+      "sha256": "81550fb670ef236998e86dd3a9cd4b335411f8cda89f96d395473787e10f5fa1"
+    },
+    {
+      "path": "src/infrastructure/database/tombstone-retention.ts",
+      "sha256": "b1c7a6dfb8452ecc0d5b0d23a1566b0a1633321904062ab95560e73a13dc51a3"
+    },
+    {
+      "path": "src/infrastructure/database/training-repository.ts",
+      "sha256": "a06427f637e87030845000cc109715a0d5b2310159717761e5142455e1c29ec1"
+    },
+    {
+      "path": "src/infrastructure/database/transaction.ts",
+      "sha256": "8128dff927f2502e60e5468018c611dddcb5ecca3f61eaa67096450c66b00b3e"
+    },
+    {
+      "path": "src/infrastructure/database/tvl-shift-work-repository.ts",
+      "sha256": "3f9030cf5201b05180c60d16a758a80f94e4983d06ad555c31bf5e2e6f51d22d"
+    },
+    {
+      "path": "src/infrastructure/database/tvl-shift-work-test-fixtures.ts",
+      "sha256": "387859c6b5d9279e6d24965e27a7ac87d6db33675d1ee81856441ce26a80c865"
+    },
+    {
+      "path": "src/infrastructure/database/tvoed-annex-a-month-confirmation-repository.ts",
+      "sha256": "0f0ce3af69cd5b53f3f36efd53cbf2dcf2b74f525c1c80d8d14d99acb67972da"
+    },
+    {
+      "path": "src/infrastructure/database/tvoed-annex-a-premium-facts-repository.ts",
+      "sha256": "174ef97ae3e46052fdc5d428f506c4197cc8f803e84b1814337f8a7b18eef4f6"
+    },
+    {
+      "path": "src/infrastructure/database/tvoed-sue-allowance-confirmation-repository.ts",
+      "sha256": "adf86a8af79166d2e2220c01642e628ed0e699763d6ea4784b4cef2dab513a64"
+    },
+    {
+      "path": "src/infrastructure/database/tvoed-sue-month-confirmation-repository.ts",
+      "sha256": "04b847cbe7ab28e756bbd76109df597162d98dfaad8c0197a2e237f9962b7a07"
+    },
+    {
+      "path": "src/infrastructure/database/working-time-target-repository.ts",
+      "sha256": "da832bea6445e3ef3cd7d3061dccec4040f1b3b5861a4382f51199becd6d2b27"
+    },
+    {
+      "path": "src/infrastructure/dev-tools-policy.ts",
+      "sha256": "779736e98eef0912226b9e853a4bc1655a8d7b375a036d7be07df35e2b93076b"
+    },
+    {
+      "path": "src/infrastructure/dev-tools-runtime-channel.native.ts",
+      "sha256": "8774b427ab79c8a8c7232a3eb1ce969e7e7c124b6312d6aa1ca6bf43412f2e36"
+    },
+    {
+      "path": "src/infrastructure/dev-tools-runtime-channel.ts",
+      "sha256": "0dfaaa6d3a02dadca51482e3c1ca395f26ac91f30fbe842b4062133c017553c6"
+    },
+    {
+      "path": "src/infrastructure/diagnostics.ts",
+      "sha256": "e81e59ef7b3bd47548989ddf5fda435a0ecd3e54f0370b60fd234d5403d9cdc6"
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.native.ts",
+      "sha256": "d8f38b60c0bea4229bd980936e9f0525bf524089d0e6780c84a7d388be63986f"
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.ts",
+      "sha256": "0612988401f3f7c85441509f766049b8f782ac10bb21d17f18f0ea980fd90df4"
+    },
+    {
+      "path": "src/infrastructure/notifications/notification-permissions.native.ts",
+      "sha256": "abcb2cf1d17e80f10faa0dbda6c25755d25b47596b594f5eea2c985564d824bc"
+    },
+    {
+      "path": "src/infrastructure/notifications/notification-permissions.ts",
+      "sha256": "f29a83e32cbedce7beb9bd64084c00a59977a7ee80beddd102cb09bf1e47834f"
+    },
+    {
+      "path": "src/infrastructure/notifications/notification-schedule-repository.ts",
+      "sha256": "9db7fbb7f656d696bfc7dbaca5bf87c5f8ecc76fe1652c3f2360006dc20e11cc"
+    },
+    {
+      "path": "src/infrastructure/private-cloud/cloud-client.ts",
+      "sha256": "663f742552082a822d8fbb0f40271c951a0c1d60b18e0824fe9b8f1179d30527"
+    },
+    {
+      "path": "src/infrastructure/private-cloud/cloud-document.ts",
+      "sha256": "d1d7d1d7f5236e58dde9b2c47fc85d818e9bd4169a704ad10fa8a9815c0f3aff"
+    },
+    {
+      "path": "src/infrastructure/rule-catalog-cryptography.ts",
+      "sha256": "68852fa5b7de8a05489775c2c2dbf0dc8288029268cdcb82a06077cc2eaff1ae"
+    },
+    {
+      "path": "src/infrastructure/rule-catalog-http-client.ts",
+      "sha256": "e257a1cc09a0115f7492ee45976809a2852c08edd43baccc589f23185fbdb61f"
+    },
+    {
+      "path": "src/infrastructure/sharing/cloud-sharing-client.ts",
+      "sha256": "d7d0b97d94eada046df6b5c0dfaa69b7ede6664663d1eb0edb953c53c4d84951"
+    },
+    {
+      "path": "src/infrastructure/sharing/invitation-delivery.component.test.tsx",
+      "sha256": "5899babcfe2d33be4d6c8984b8f81e35483e883e0b36c2454c98b5fcb7b40c1f"
+    },
+    {
+      "path": "src/infrastructure/sharing/invitation-delivery.ts",
+      "sha256": "c6090b39348adb873cc966b2101622f6072b6c2a7494a2628a9bf2f72bde5b77"
+    },
+    {
+      "path": "src/infrastructure/sharing/sharing-realtime.ts",
+      "sha256": "c965f7b063d2a40366e251e9bf62c83ecff7cfadef9904de425d56a9b3acb42d"
+    },
+    {
+      "path": "src/infrastructure/startup-presentation.ts",
+      "sha256": "29eab2d86d3aeb39cb17ee7b94270e1f05d1d982896abbf165af8385f1e8fc1b"
+    },
+    {
+      "path": "src/navigation/active-month.tsx",
+      "sha256": "46bd26c9782a685b4ab7f14b05f402bc4217c5d640a91432b0f0f42da840290e"
+    },
+    {
+      "path": "src/navigation/analysis-period-navigation.ts",
+      "sha256": "1e31f05abb2bbf3a644c80c72c072f76bd4520023f2032c47bf69b646aef05c2"
+    },
+    {
+      "path": "src/navigation/app-open-intent.ts",
+      "sha256": "c60a8501238ab97833a7b53154849f6e3f7f7763041496070064c9216b088224"
+    },
+    {
+      "path": "src/navigation/app-resume-checkpoint.tsx",
+      "sha256": "f320727b5383fae1af18af7f098b93b3e903c5151b8def07f06cc249edf13f2f"
+    },
+    {
+      "path": "src/navigation/app-resume-state.ts",
+      "sha256": "e32954575ccbd124e2f627e2641c8b23b36c5340ba30e49b3f594be932e259c5"
+    },
+    {
+      "path": "src/navigation/app-resume-storage.native.ts",
+      "sha256": "c75d9ea0ad780072d50188c85d6a29eed2b090cbf16b75cdcbd271d69300f2ca"
+    },
+    {
+      "path": "src/navigation/app-resume-storage.ts",
+      "sha256": "f195cc157a2861eeade9cd01b8569940f2c3534e001e64352928feddb62929c2"
+    },
+    {
+      "path": "src/navigation/app-tabs-js.tsx",
+      "sha256": "e3dd33462f7c33f00aad5d51efee30248bca6ac2cec7c62e696e587f878abf47"
+    },
+    {
+      "path": "src/navigation/app-tabs-motion.ts",
+      "sha256": "35b4dc87218d80fdaee6d3baaaf54882b5d76b186c764078a4fe937d8db37402"
+    },
+    {
+      "path": "src/navigation/app-tabs.native.tsx",
+      "sha256": "ff449d719cf234ce31e1c0c85e518544802f9b5b5c8d808428b8a9b9995a70d3"
+    },
+    {
+      "path": "src/navigation/app-tabs.tsx",
+      "sha256": "16ed2345f74de2f2de8de7f544e9ce5f546e2fcde64342cfb148f1aafd060882"
+    },
+    {
+      "path": "src/navigation/calendar-design-route.ts",
+      "sha256": "7b196bc5cf642c2cb2b906e2b7b154d7ca42a77cadc78af73df9fdcb76e738d3"
+    },
+    {
+      "path": "src/navigation/calendar-tab-date.ts",
+      "sha256": "20916dfd3694056b54ed0b2eab87ecd17aeda0f343795fb03b645c623d9bcfb7"
+    },
+    {
+      "path": "src/navigation/calendar-tab-icon.tsx",
+      "sha256": "508c01b550f7e3263f47a39cd9143822b34e29f5c8f7c74ac9edc8839cbe8d53"
+    },
+    {
+      "path": "src/navigation/calendar-tab-icons.json",
+      "sha256": "2abf157cbc77ef121bd028e56ccd30099860658ef22205782b8b36abb6d8aae7"
+    },
+    {
+      "path": "src/navigation/horizontal-back-gesture.ts",
+      "sha256": "5e2d24efcf1e3ab5eeaed509b0012b04db692c27c66b6869cffd7a0824222dc3"
+    },
+    {
+      "path": "src/navigation/route-params.ts",
+      "sha256": "f22dd2053a56f813db847e50dd0abf92e3e8609fcb7138459d8d91b14a2a9a52"
+    },
+    {
+      "path": "src/navigation/routes.ts",
+      "sha256": "40ed2758cd22ef176be2c14304d7e8355f435bc0a23df80492409952121e0355"
+    },
+    {
+      "path": "src/navigation/startup-route-presentation.tsx",
+      "sha256": "06c42361e508eb16f1a1c6cca8a64c458ea6e63272219579d8988c0c5066b7fc"
+    },
+    {
+      "path": "src/navigation/use-data-month.ts",
+      "sha256": "deac87b491f254d312b2523821ae228a68c990501e055cc4ceaa7aaf0b13a868"
+    },
+    {
+      "path": "src/navigation/use-report-month.ts",
+      "sha256": "c947ecc921627804c39ea4026557b8b8596295e7318b2640c9cab57a6b29672d"
+    },
+    {
+      "path": "src/rules/__fixtures__/original-tvoed-selection-r2.json",
+      "sha256": "40a1578879250d3f6c3f7efca8a2261269368eb96a701c472f62dcc0ece2d5b5"
+    },
+    {
+      "path": "src/rules/annual-payment-rule-validation.ts",
+      "sha256": "61f618501a87f29675f301d814a20a4ea8c2f871151f94287370b9c55af0d7c0"
+    },
+    {
+      "path": "src/rules/annual-payment-test-fixtures.ts",
+      "sha256": "86e0e369a7ff91a6547d4be34ed0c55f553764998f972b4754a92cf0d02f0600"
+    },
+    {
+      "path": "src/rules/avrdd-validation.ts",
+      "sha256": "f23018a4aab8a6f900243a1056cc72c7e9f8dbead338d55b6bb9dfedded7a9f3"
+    },
+    {
+      "path": "src/rules/bundled-rules.ts",
+      "sha256": "f5c98cb920b01d83c69f0d79adefbb543f456b07175b951a8be84af2760e784c"
+    },
+    {
+      "path": "src/rules/calculation-windows.ts",
+      "sha256": "a8e1352abe4825a72ab0adb1f3393f93e4984def1ec2efe79d66ab8ea01d69e9"
+    },
+    {
+      "path": "src/rules/caritas-annual-payment-validation.ts",
+      "sha256": "f23f8b42b8934f74dd45c414e7ba18a7b1b603abb9d2965ed8c82765a246bab4"
+    },
+    {
+      "path": "src/rules/caritas-care-validation.ts",
+      "sha256": "92285823a17cb46b7ee35559342c8fc65b1f1fb59b1c138cc292ab940dc05fb9"
+    },
+    {
+      "path": "src/rules/caritas-table-validation.ts",
+      "sha256": "0cf75feed07426e040b21dca26a6b02cc17fd0cd2c9e2ff28018c2a97cfa66ff"
+    },
+    {
+      "path": "src/rules/contracts.generated.ts",
+      "sha256": "36559b6934a42dbab53d8b92726428aa11bd825810e906ef1cff50d9df1e4ba7"
+    },
+    {
+      "path": "src/rules/drk-table-validation.ts",
+      "sha256": "77c95422bba21628cb649020e60689d68dd3d6e4534fe782660ca7eb65cec9ab"
+    },
+    {
+      "path": "src/rules/drk-training-table-validation.ts",
+      "sha256": "7a3cb9be8c9a41ce6057c8147d133e909020af92cd79b0f6799253bd2dc2e01a"
+    },
+    {
+      "path": "src/rules/original-tariff-selection-test-fixtures.ts",
+      "sha256": "50b6a8203e03bdcde146777b2c3726e74f44d738a1df1797564c5c152b39027a"
+    },
+    {
+      "path": "src/rules/rule-catalog-engine-support.ts",
+      "sha256": "f3bb573ebee16ebccc8f49b74733d6e6853b69c1fbf883988d23f2de450acd7b"
+    },
+    {
+      "path": "src/rules/rule-catalog-publication.ts",
+      "sha256": "0b9f914f84b8dcfc537a1d2bd2a9c9364adcf5803d6fd81af196032c216cb4ff"
+    },
+    {
+      "path": "src/rules/rule-catalog-verification.ts",
+      "sha256": "7fd899c54c8ecf8383ee069ed44450a2593f760e1e1f51dc4a78f534ff762ab4"
+    },
+    {
+      "path": "src/rules/rule-resolver.ts",
+      "sha256": "05711d6d28689b6b23528efb8cc1a49abef3c9e3cf4978031c5fdaf2251e27ff"
+    },
+    {
+      "path": "src/rules/schema-validators.generated.js",
+      "sha256": "6ded18849ff751eb975edbfc3da81793eb4986215cf4e5ea60d50472a23fb121"
+    },
+    {
+      "path": "src/rules/simple-tariff-table-layout.json",
+      "sha256": "d0d551c27625665012cdd2a94f00b3dd943e35b56159fde15e5a3d0aefd27d2c"
+    },
+    {
+      "path": "src/rules/simple-tariff-table-validation.ts",
+      "sha256": "e9b1f56cadf2cd21059301103cd19ea42a0f775adbb311be84fbb24d6972e5c2"
+    },
+    {
+      "path": "src/rules/tariff-annual-selection.ts",
+      "sha256": "628d366710d722ec0798d1699a2a5ccba45edd53e92d162db458851a71f5f938"
+    },
+    {
+      "path": "src/rules/tariff-selection-test-fixtures.ts",
+      "sha256": "50b6a8203e03bdcde146777b2c3726e74f44d738a1df1797564c5c152b39027a"
+    },
+    {
+      "path": "src/rules/tariff-selection.ts",
+      "sha256": "3f5a646f017be2c7aff4d0ac8df5fc2214c035ee49fdd2278063be0a3a0a04a3"
+    },
+    {
+      "path": "src/rules/training-contract-test-fixtures.ts",
+      "sha256": "f7b61d8cf39e029bc3fb95f4ced51a417c76b95d33325a376e278981717a5f92"
+    },
+    {
+      "path": "src/rules/training-pay-validation.ts",
+      "sha256": "469dfb8098d5a2aefcb1b151aa933edba901e634f68d03f577b4243fe631a268"
+    },
+    {
+      "path": "src/rules/tval-care-allowance-validation.ts",
+      "sha256": "70e83bd61825ea497352241396e43a0560e71641a589a7b06403241eae5a8cba"
+    },
+    {
+      "path": "src/rules/tval-overtime-validation.ts",
+      "sha256": "7258dd226c5e6b36893337eae4380ec0d05bc53dcb136ed270834ac4b57f914d"
+    },
+    {
+      "path": "src/rules/tval-shift-allowance-validation.ts",
+      "sha256": "8bca41e756fc5a9b07893df63dc5bc44afcab8a6cafaafb8a19fc1e98d206d54"
+    },
+    {
+      "path": "src/rules/tval-time-premium-validation.ts",
+      "sha256": "9be998bce32ea0bfdf836d8c03c3d547e814703f4318276d1ff1df7e1c8529e8"
+    },
+    {
+      "path": "src/rules/tval-training-validation.ts",
+      "sha256": "6e0104f2d7f601b902b8b68562e36d5e6eedc15c81cbda02ea6b293ce79995e6"
+    },
+    {
+      "path": "src/rules/tvl-care-allowance-validation.ts",
+      "sha256": "932e951516455f0d61a32f61d648d41589e5ba01c2fa89dda1e9da10b3df7a5b"
+    },
+    {
+      "path": "src/rules/tvl-kr-validation.ts",
+      "sha256": "e1e03134d4f47b8dea3bc9e6a2bd109100497bc769de4ef9f4ed417de6159e55"
+    },
+    {
+      "path": "src/rules/tvoed-annex-a-validation.ts",
+      "sha256": "cd3db0589e7546d6b12685b164812a6ef3236bea865985aa84771a14eef24de0"
+    },
+    {
+      "path": "src/rules/tvoed-sue-validation.ts",
+      "sha256": "3cecb9e2947b13c67e3caf713fb5898301faea86efa551dab63f0e2d2185f755"
+    },
+    {
+      "path": "src/rules/validation.ts",
+      "sha256": "f04c5eb34592b388b1fd4012f1e5f15a9e5281eac8dea8b30088502cf9278b1d"
+    },
+    {
+      "path": "src/rules/youth-rule-validation.ts",
+      "sha256": "a34f927ec1d78a539029c182e00b70472ed2bd860cd33104e52fdcc1e99334aa"
+    },
+    {
+      "path": "src/testing/caritas-annual-payment-fixture.ts",
+      "sha256": "29467000221edf56a70761946a994da3428d16299dd67d9f621e34c5183ec238"
+    },
+    {
+      "path": "src/testing/fixtures/caritas-care-policies-2026.json",
+      "sha256": "81711f448ebf14a5a081272916c01149d5f11d662ccc5eeefed4d4d065c67641"
+    },
+    {
+      "path": "src/testing/fixtures/tvoed-vka-bt-k-2026-05-before-annual.json",
+      "sha256": "40a1578879250d3f6c3f7efca8a2261269368eb96a701c472f62dcc0ece2d5b5"
+    },
+    {
+      "path": "src/testing/fixtures/tvoed-vka-bt-k-2026-05-original-annual-draft.json",
+      "sha256": "f9ca6e31a7e5496cffd05d2110fba2a9e57f0fd197f6c8cabe237f5ef6024465"
+    },
+    {
+      "path": "src/testing/ionicons-mock.tsx",
+      "sha256": "5255331da28e48345c0e94b5dc009dedf50503decef384157f5d430945255f27"
+    },
+    {
+      "path": "src/testing/react-native-maps-mock.tsx",
+      "sha256": "d4fe67955b4a890c6c5b6a51a882e47e3a044839d8eb494c3e29d85e249c5482"
+    },
+    {
+      "path": "src/testing/sharing-fixtures.tsx",
+      "sha256": "9719cd1016911e373f113fa9d538b782d9d1d3275261b06efa24e0fa4fb3ff41"
+    },
+    {
+      "path": "src/theme/app-font.ts",
+      "sha256": "8ec88111a9f87da31ecca46dbb4f268daa1805cc61df17d798004b64f1bddaf3"
+    },
+    {
+      "path": "src/theme/appearance-context.ts",
+      "sha256": "68ac7d56eb8fd09e22e9bdf1c4f39945747b54cc8fdaa3c63095c37f026ba89b"
+    },
+    {
+      "path": "src/theme/calendar-day-tints.ts",
+      "sha256": "85fd0b126bf89a0db1698a6f3e7a2fb445ecce3799333373689388c272e09bfb"
+    },
+    {
+      "path": "src/theme/calendar-image.ts",
+      "sha256": "cddbc9a6cc715b31d55ae5877f1053f7b410b78938cbaf1098c8767b2156aea2"
+    },
+    {
+      "path": "src/theme/card-layout.ts",
+      "sha256": "16ef2e151a7c93ec9041e1ed5f2a59cf0fec7bd23dec2d36e7e7a5c443a8b06f"
+    },
+    {
+      "path": "src/theme/card-typography.ts",
+      "sha256": "59b93d07722da453486aeab500190bb6b931e117febecb29892143e16fbba0fc"
+    },
+    {
+      "path": "src/theme/color-contrast.ts",
+      "sha256": "b70b43d06b50853e59eae8d3bcc53320f620881dff0e4a0752b38314a841d4af"
+    },
+    {
+      "path": "src/theme/color-grid.ts",
+      "sha256": "a5041758d4b4a9cbc3dec16c0eb48745da4acb74df2eac55e06fff90b6e7c91b"
+    },
+    {
+      "path": "src/theme/motion.ts",
+      "sha256": "715578e405b1212d915befc11a7e88c3e1b911de18a90b62692a72c942da30b0"
+    },
+    {
+      "path": "src/theme/onboarding.ts",
+      "sha256": "24f6923757da7dbd6e5b0a8178e40bf56a3f550f72a9133fbec885cabbbfd12c"
+    },
+    {
+      "path": "src/theme/page-header.ts",
+      "sha256": "79fc863014f78b501db9e1a09914a0abff245bd1d77f85e6ca65e0cd9b414892"
+    },
+    {
+      "path": "src/theme/palette-values.ts",
+      "sha256": "7c0eaf50ffc67425dfc5e1a91743dea891cfc4a7d63820f4ce1420db28b1a029"
+    },
+    {
+      "path": "src/theme/palette.ts",
+      "sha256": "cfb98c8c9aa88544d0077bda2c8770fee1f6647794d7cb7dcd096fcc76964d13"
+    },
+    {
+      "path": "src/theme/shadcn.ts",
+      "sha256": "4e2a48529ddbf29488ef9bc874e08a79147b4829fa561539f7560b5df4d3d5f6"
+    },
+    {
+      "path": "src/theme/shift-colors.ts",
+      "sha256": "3290d51e5e7ff7478e276b0aa4efe94c2b4b8ad745ab7fa57303aaf8fa190d7a"
+    },
+    {
+      "path": "src/theme/shift-symbols.ts",
+      "sha256": "4505d31765c7250bdadfded08a0f56d322dbbcd18cfecbf10b127020ccc7707e"
+    },
+    {
+      "path": "src/theme/theme-catalog.ts",
+      "sha256": "dfca3c99c1c4fb31cd446f8f4b9ae9d40280c0d79f83b9af2c17b29106ae2637"
+    },
+    {
+      "path": "src/theme/tokens.ts",
+      "sha256": "0639d1639ea8f65d59f61792bfac4b0c582215338ce69c273ebc80cfd6d58eb3"
+    },
+    {
+      "path": "src/theme/typography.ts",
+      "sha256": "d5daee1f8faefd2337db9536f756569c019254117412030650fa3e634bd1344b"
+    },
+    {
+      "path": "src/ui/accessibility-focus.ts",
+      "sha256": "0d03246e84c95950dd6f2b4d25112bd69332b934a70f06c74e158563088b22ba"
+    },
+    {
+      "path": "src/ui/accessible-tab-screen.tsx",
+      "sha256": "c1916eb42bccb733ec198c32e929d2688b48e1dd32e143f5587401716d9934f4"
+    },
+    {
+      "path": "src/ui/app-error-boundary.tsx",
+      "sha256": "357c52943c871e24bcdeae5a3bc276311ab67f3e865e48b9048a3bd01b1ffeca"
+    },
+    {
+      "path": "src/ui/back-footer-layout.tsx",
+      "sha256": "bb53e363b85afcbac4bef60c84bbd0dab2d8ddb85b5424e1e3fd5efd58bb8df4"
+    },
+    {
+      "path": "src/ui/color-picker.tsx",
+      "sha256": "0be5b8e2567581940759418cff40ed121c98900fbffa5c5e8040977d29bc9342"
+    },
+    {
+      "path": "src/ui/confirm-action.ts",
+      "sha256": "3e892964f02a08384d327cce5da78b03b4e3851baca60cebfdb4070b7d1bfd68"
+    },
+    {
+      "path": "src/ui/design-system.tsx",
+      "sha256": "6af39cb4836df037368439d3a9d8dc997e74ef8c89eb26b5c703bea18de37a28"
+    },
+    {
+      "path": "src/ui/dropdown-field.tsx",
+      "sha256": "58451449799fda8caf18444e894ad719b4658fac2482fe252cdf91abfb93e1eb"
+    },
+    {
+      "path": "src/ui/feedback.tsx",
+      "sha256": "be38a59aeebd67fc6e984787e333d67f81cfc81113dc1d962a4f68db32feb761"
+    },
+    {
+      "path": "src/ui/form-controls.tsx",
+      "sha256": "5ec1afeee6d019e44a348b0e42226af576122803ea8028fdae5bb22b59f2283a"
+    },
+    {
+      "path": "src/ui/form-layout.tsx",
+      "sha256": "7701b91ba6e27cf6a6b04cd31513fae3590e5d8ea161e309c605f05abad20134"
+    },
+    {
+      "path": "src/ui/form-validation.ts",
+      "sha256": "66624a2ac6106b404afe49d0bb20d0b7aafa80919c58987a39de0e5992afd265"
+    },
+    {
+      "path": "src/ui/glass-appearance.ts",
+      "sha256": "11bcd8513cd1bfab881a2f506cba3705e68d552784d33a5b6c369c2ef1fbd81e"
+    },
+    {
+      "path": "src/ui/glass-back-button.component.test.tsx",
+      "sha256": "8e965bb365290b7dacb1922b5914cc184697b78b0f39dfa83ed4885f67e84552"
+    },
+    {
+      "path": "src/ui/glass-back-button.tsx",
+      "sha256": "f4f1c4f85373921cab81a6772e3d1f87e659b5b54bc95eb9e2f9caa730176536"
+    },
+    {
+      "path": "src/ui/haptics.ts",
+      "sha256": "1c4d5922634ba36ee0ba468294ae41c7d39da2537c14a924ed6807fb46b4a164"
+    },
+    {
+      "path": "src/ui/icon.tsx",
+      "sha256": "eb8262eac24f4f78ee969f7b2403e86c38c5b267abcb3c340cddd21186b3c0b3"
+    },
+    {
+      "path": "src/ui/info-disclosure.tsx",
+      "sha256": "316d37e4d1276bde7f34d258fbda43964b5ec1e6039d4fd75edeaae09db6083d"
+    },
+    {
+      "path": "src/ui/labeled-switch.tsx",
+      "sha256": "30c1af3dcfcb0fca9ae71c03f4c13eb7ac18ce3a27dd6bc25fc1e6cf8a8d2230"
+    },
+    {
+      "path": "src/ui/loading-view.tsx",
+      "sha256": "123eba94435cd80f504c2834c639380cf696616ed4e15b42174a4a263e2cd747"
+    },
+    {
+      "path": "src/ui/month-navigator.tsx",
+      "sha256": "a76c573734f5cf55b49126c0083596f96de0d4606384923eb2d510f0bfb876bc"
+    },
+    {
+      "path": "src/ui/native-page-header.tsx",
+      "sha256": "7aee4bd0f8aaa80d9f934c61288878d294f06d616c97fbe1cf17a8e336d788c1"
+    },
+    {
+      "path": "src/ui/pause-picker.tsx",
+      "sha256": "8128224c0d32316d7343b99ffe57756e4e9c43f7e77b5ffa936e1c680f2fff8f"
+    },
+    {
+      "path": "src/ui/pause-wheel.tsx",
+      "sha256": "4d3b2e54deb57463fd9b7bbc6ed113a9bab095709f45db6641ce007fa350733a"
+    },
+    {
+      "path": "src/ui/period-swipe-scroll.tsx",
+      "sha256": "eae64b874cd6cc934a6cbf208dcdd80e72944d19c7b35b1a0e97ae3e5ee55f59"
+    },
+    {
+      "path": "src/ui/person-avatar.tsx",
+      "sha256": "a4b4196b4341e7434c0d010c4905bbfc336b5adb604d0aa09e7d63d5805ea6c4"
+    },
+    {
+      "path": "src/ui/press-motion.ts",
+      "sha256": "e23dfa8f2ebfa243976076d6a8eafdf3ae94d8ca68a6b3004e02dc4821d648e8"
+    },
+    {
+      "path": "src/ui/reorder-geometry.ts",
+      "sha256": "b882a82d30d585346b05aa81c730969de858d5f8c73576e310ec3d3b26c82127"
+    },
+    {
+      "path": "src/ui/reorderable-list.tsx",
+      "sha256": "04f74413aeb3cf4761484da4df0dbbc588f12dc5d1a93994f393e1d291061278"
+    },
+    {
+      "path": "src/ui/reorderable-row.tsx",
+      "sha256": "04b0f94d946c0e7a5e4e8a1002cf37d10fb9be56f163bceaad283a227bc520bb"
+    },
+    {
+      "path": "src/ui/report-layout.tsx",
+      "sha256": "ad402015a914a52c0e4539decb9daa2e4d68c4c0d4ded37313d7122cfdd47880"
+    },
+    {
+      "path": "src/ui/report-period-pager.tsx",
+      "sha256": "d975347e557c83988809eb998b568a6d0a9b86e0a2dded91dcfa0e01598efa5e"
+    },
+    {
+      "path": "src/ui/schedule-idle-work.ts",
+      "sha256": "d22873d19eaf591fbeffb56c6ca21a9b476182f3170673dbd3644365b6d01e39"
+    },
+    {
+      "path": "src/ui/screen-layout.component.test.tsx",
+      "sha256": "584108f73421ec9d8e1ec62075cb513edb20886c41e8d7e20552f97a0ee3ad9b"
+    },
+    {
+      "path": "src/ui/screen-layout.tsx",
+      "sha256": "dcb6767e4311c8b6c8e2286abf09194a95ad3226793a97456621bae7a7fa6542"
+    },
+    {
+      "path": "src/ui/segmented-button.tsx",
+      "sha256": "18719b1a4751f984010dc7c1eddbe978d73fa36a4fa16993cc1f7fdcfa0db2ac"
+    },
+    {
+      "path": "src/ui/selection-control.tsx",
+      "sha256": "9ce1ccdd0aa6a5d65c64452a2092b77c2174c8b9333b4c40ed5cc02300eb9471"
+    },
+    {
+      "path": "src/ui/selection-group.tsx",
+      "sha256": "2fc8f0fd1a2ff1b62aa3dbbd2d6fb8e564dc38f06d8b40f26be7be10573f0696"
+    },
+    {
+      "path": "src/ui/selection-option.tsx",
+      "sha256": "ecb0ca8acd12bbeea88e5e3f4022413707265ed5e35ef665a93fb0bbd8d8c481"
+    },
+    {
+      "path": "src/ui/selection-sheet.tsx",
+      "sha256": "4900fc939373de4ede46783b25359a0836837932ff28052744be5e211150aae1"
+    },
+    {
+      "path": "src/ui/shared-shift-symbol.tsx",
+      "sha256": "25c3584a7b22535ebfca129005f78e00451ee9912daa8f9160356d45ba8f2522"
+    },
+    {
+      "path": "src/ui/sheet-back-footer.tsx",
+      "sha256": "d1c1d9b61f96e9d5776496f189b468edfd122caf69c3d1529313cc33923c2a00"
+    },
+    {
+      "path": "src/ui/shift-color-picker-sheet.tsx",
+      "sha256": "4ce8152b76f9cb421e68600ecf96a954fe7e11763e7a09521551ccb7cb7ce660"
+    },
+    {
+      "path": "src/ui/shift-symbol-picker.tsx",
+      "sha256": "ee4118e2a0de2290ba6a3982a3e5899f78c2eec57a4f5528449cdad12c61322c"
+    },
+    {
+      "path": "src/ui/shift-symbol.tsx",
+      "sha256": "376550a261f1c29723d9772943a5f06a0b8c34af24a3c879e86334605143d0b1"
+    },
+    {
+      "path": "src/ui/switch.tsx",
+      "sha256": "9aa68a15d1106b04ca7b4a351b9f71f701f75cea6f25fecead4c0037a3dd2aeb"
+    },
+    {
+      "path": "src/ui/tab-root-header.tsx",
+      "sha256": "d9bc9d2b80c7b0700b642c3ec107fea3422ab1408f711e2e780a6d4089d9c092"
+    },
+    {
+      "path": "src/ui/text.tsx",
+      "sha256": "00673e8ffd116ce1f2519e20800a42fede205642aa244fc6b2e31b2a758e02a6"
+    },
+    {
+      "path": "src/ui/use-reorder-scroll.ts",
+      "sha256": "8028383f8188b7d6ef3be796d39d24aa186876dacc162d070422c5c2f6d690d1"
+    },
+    {
+      "path": "src/ui/use-theme-status-bar.ts",
+      "sha256": "46d13d7d07b85fb536cacfdc99a0b4ff95680b8962f9b80239253e0c91302dfa"
+    },
+    {
+      "path": "src/vendor/bmf/LICENSE-LstGen.txt",
+      "sha256": "68f6d290175e047fb6c743f1f2cf7fb192cb054d70119e8a56c762d6073a99f6"
+    },
+    {
+      "path": "src/vendor/bmf/lohnsteuer2026.ts",
+      "sha256": "638ec3b4fe8b4531169af5a0fac1158ddcb267774cc2773b11829a05e1c20cd8"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "d02ae4c401dd6d630d1de35d687602a32d73d191bc7d8b705103eb8d80cdf6d4"
+    }
+  ]
+}
