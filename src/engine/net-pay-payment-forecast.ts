@@ -16,6 +16,7 @@ import type { MonthlyPayEstimate, UserProfile } from "@/domain/types";
 import type { NetPayResult } from "@/domain/net-pay";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { resolveNetPayCalculationBasis } from "./net-pay-calculation-basis";
+import { estimateCrossYearArrearsTax } from "./net-pay-cross-year-tax";
 import {
   calculateAutomaticNetPayForecastSteps,
   finalizeAutomaticSalaryNetSteps,
@@ -137,12 +138,14 @@ function baseProof(
   proof: AutomaticSalaryProof,
   pay: MonthlyPayEstimate,
   settings: MonthlyNetPaySettings,
+  includeMonthlyAllowance = false,
 ): AutomaticSalaryProof {
   const grossCents =
     cents(pay.personalBaseAmount!) +
     cents(pay.careAllowanceAmount) +
     cents(pay.tvoedAllowanceAmount) +
-    settings.automation!.additionalRecurringGrossCents;
+    settings.automation!.additionalRecurringGrossCents +
+    (includeMonthlyAllowance ? groupAmount(pay, "MONTHLY_ALLOWANCE") : 0);
   return {
     ...proof,
     classification: Object.freeze({
@@ -174,8 +177,7 @@ function addDifference<T extends object>(
         const plus = added[key as keyof T],
           minus = removed[key as keyof T];
         if (typeof value !== "number") {
-          if (value !== plus || value !== minus)
-            throw new Error("Unterschiedliche Berechnungsgrundlagen.");
+          if (plus !== minus) throw new Error("Unterschiedliche Berechnungsgrundlagen.");
           return [key, value];
         }
         if (typeof plus !== "number" || typeof minus !== "number")
@@ -196,6 +198,12 @@ function addPayrollDifference(
 ): AvailablePay {
   if (!!base.pension !== !!added.pension || !!base.pension !== !!removed.pension)
     throw new Error("Unterschiedliche Zusatzversorgungsgrundlagen.");
+  const pension = base.pension
+    ? addDifference(base.pension, added.pension!, removed.pension!, [
+        "taxableAdjustmentCents",
+        "socialInsuranceAdjustmentCents",
+      ])
+    : undefined;
   const pay = Object.freeze({
     ...base,
     amounts: addDifference(base.amounts, added.amounts, removed.amounts),
@@ -205,12 +213,14 @@ function addPayrollDifference(
       added.socialInsurance,
       removed.socialInsurance,
     ),
-    ...(base.pension
+    ...(pension
       ? {
-          pension: addDifference(base.pension, added.pension!, removed.pension!, [
-            "taxableAdjustmentCents",
-            "socialInsuranceAdjustmentCents",
-          ]),
+          // The UI presents one aggregate supplementary-pension deduction. Retain a
+          // contributing scheme when the current month no longer has a scheme.
+          pension: Object.freeze({
+            ...pension,
+            scheme: pension.scheme === "NONE" ? added.pension!.scheme : pension.scheme,
+          }),
         }
       : {}),
     netCents: base.netCents + added.netCents - removed.netCents,
@@ -244,10 +254,7 @@ function* sourceAdjustmentEstimateSteps(
     result: { status: "unavailable", stage: "net-pay", reason },
     ...(recovery ? { recovery } : {}),
   });
-  if (source.month.slice(0, 4) !== month.slice(0, 4))
-    return stop(
-      "Für verzögerte Zulagen über den Kalenderjahreswechsel fehlen die erforderlichen Abrechnungsgrundlagen.",
-    );
+  const crossYear = source.month.slice(0, 4) !== month.slice(0, 4);
   const sourceSettings = resolveNetPaySettings(source.month, input.sourceSettings)?.settings;
   if (sourceSettings?.version !== 2 || !sourceSettings.automation)
     return stop(`Für den Anspruchsmonat ${source.month} fehlen fortgeltende Netto-Grundlagen.`, {
@@ -275,33 +282,8 @@ function* sourceAdjustmentEstimateSteps(
     return stop(
       "Für uneinheitlich verschobene Zulagen ist diese Netto-Schätzung noch nicht verfügbar.",
     );
-  const currentMonthly = groupAmount(current.pay, "MONTHLY_ALLOWANCE");
-  const sourceMonthly = groupAmount(source.pay, "MONTHLY_ALLOWANCE");
   const currentOrdinary = ordinarySettings(settings, month);
   const sourceOrdinary = ordinarySettings(sourceSettings, source.month);
-  const fingerprint = (value: MonthlyNetPaySettings) =>
-    canonical({
-      profile: value.profile,
-      specialCases: value.specialCases,
-      pensionScheme: value.automation!.pensionScheme,
-      pensionEmployeeRateBps: value.automation!.pensionEmployeeRateBps,
-      additionalRecurringGrossCents: value.automation!.additionalRecurringGrossCents,
-    });
-  if (
-    canonical(captureEmploymentProfile(currentProof.profile)) !==
-      canonical(captureEmploymentProfile(sourceResult.profile)) ||
-    // A roster-derived monthly allowance may legitimately change. Compare only the
-    // fixed endpoints that will cancel; retain each original month's allowance and
-    // regular gross in its SFN/pension proof rather than rewriting either claim.
-    currentProof.regularGrossCents - currentMonthly !==
-      sourceResult.regularGrossCents - sourceMonthly ||
-    canonical(currentProof.classification.calculationBasis) !==
-      canonical(sourceResult.classification.calculationBasis) ||
-    fingerprint(currentOrdinary) !== fingerprint(sourceOrdinary)
-  )
-    return stop(
-      "Bei geänderten Beschäftigungs-, Steuer- oder Versicherungsgrundlagen ist die verzögerte Netto-Schätzung noch nicht verfügbar.",
-    );
   const currentBase = yield* finalizeAutomaticSalaryNetSteps(
     { month, settings: currentOrdinary },
     baseProof(currentProof, current.pay, settings),
@@ -323,13 +305,6 @@ function* sourceAdjustmentEstimateSteps(
       recovery: { kind: "net-settings", month: source.month },
     };
   }
-  // Catches dated PV/age changes even when the saved settings rows are identical.
-  const deductions = (pay: AvailablePay) =>
-    canonical({ tax: pay.tax, socialInsurance: pay.socialInsurance, pension: pay.pension });
-  if (deductions(currentBase.result.pay) !== deductions(sourceBase.result.pay))
-    return stop(
-      "Die Steuer- oder Versicherungsgrundlagen unterscheiden sich zwischen Dienst- und Auszahlungsmonat.",
-    );
   const bundleGross = selected
     .filter((line) => line.claimMonth === source.month)
     .reduce((sum, line) => sum + line.amountCents, 0);
@@ -352,6 +327,7 @@ function* sourceAdjustmentEstimateSteps(
     settings.automation!.additionalRecurringGrossCents;
   const classification = Object.freeze({
     ...sourceResult.classification,
+    calculationBasis: currentProof.classification.calculationBasis,
     amounts: Object.freeze({
       grossCents,
       taxableGrossCents: grossCents - sourceResult.classification.taxFreeCents,
@@ -389,13 +365,38 @@ function* sourceAdjustmentEstimateSteps(
     pay = addPayrollDifference(pay, withAnnual.result.pay, nominal.result.pay);
     annualPayment = withAnnual.annualPayment;
   }
+  let crossYearTaxEstimate: NonNullable<
+    AutomaticNetPayForecast["payrollTimingEstimate"]
+  >["crossYearTaxEstimate"];
+  if (crossYear) {
+    const regular = yield* finalizeAutomaticSalaryNetSteps(
+      { month, settings: currentOrdinary },
+      baseProof(currentProof, current.pay, settings, true),
+    );
+    if (regular.result.status !== "available") return regular;
+    const estimate = estimateCrossYearArrearsTax(
+      currentBase.result.pay,
+      regular.result.pay,
+      { ...settings.profile, worksInSaxony: currentProof.profile.federalState === "SN" },
+      settings,
+      sourceFull.result.pay.amounts.taxableGrossCents -
+        sourceBase.result.pay.amounts.taxableGrossCents,
+      annualPayment?.netIncluded ? annualPayment.grossCents : 0,
+    );
+    pay = Object.freeze({
+      ...pay,
+      tax: estimate.tax,
+      netCents: pay.netCents + pay.tax.totalCents - estimate.tax.totalCents,
+    });
+    crossYearTaxEstimate = estimate.estimate;
+  }
   if (
     pay.amounts.grossCents !==
     grossCents + (annualPayment?.netIncluded ? annualPayment.grossCents : 0)
   )
     return stop("Die Netto-Schätzung passt nicht zum Auszahlungsbrutto.");
   const personalDeduction = settings.automation!.additionalNetDeductionCents;
-  if (pay.netCents < personalDeduction)
+  if (!Number.isSafeInteger(pay.netCents) || pay.netCents < personalDeduction)
     return stop("Die persönlichen Netto-Abzüge übersteigen die geschätzte Auszahlung.", {
       kind: "net-settings",
     });
@@ -415,6 +416,7 @@ function* sourceAdjustmentEstimateSteps(
       method: "SOURCE_ADJUSTMENT",
       sourceMonth: source.month,
       lag,
+      ...(crossYearTaxEstimate ? { crossYearTaxEstimate } : {}),
     }),
     result: { status: "available", classification, pay },
   };

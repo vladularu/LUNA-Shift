@@ -18,6 +18,7 @@ import { bundledRuleResolver as resolver } from "@/rules/rule-resolver";
 import { calculateMonthlyPayEstimate } from "./simple-pay";
 import { projectSalaryPayment } from "./salary-payment";
 import { calculateAutomaticNetPayForecast } from "./net-pay-automatic-forecast";
+import { calculateTax2026 } from "./net-pay";
 import {
   calculateAutomaticPaymentNetPayForecast,
   calculateAutomaticPaymentNetPayForecastSteps,
@@ -705,21 +706,128 @@ describe("source-period adjustment estimate for one complete shifted bundle", ()
     },
   );
 
-  it("keeps current tax/SV profile changes outside the neutral estimate", () => {
-    const { cash } = screenshotMonths();
-    const initial = automatedSettings("2026-10");
-    const current = { ...initial, profile: { ...initial.profile, healthAdditionalRateBps: 350 } };
-    expect(calculate(cash, current).result.status).toBe("unavailable");
+  it.each([
+    { healthAdditionalRateBps: 350 },
+    { taxClass: 3 as const, churchTaxRatePercent: 9 as const },
+    { isParent: true, childrenUnder25: 2, childAllowanceHalfUnits: 2 },
+  ])("uses each month's own tax/SV profile after a change: %j", (changes) => {
+    const { claim, current, cash } = screenshotMonths();
+    const previous = automatedSettings("2026-01");
+    const settings = {
+      ...previous,
+      month: current.month,
+      profile: { ...previous.profile, ...changes },
+    };
+    const actual = calculate(cash, settings, [saved(previous), saved(settings)]);
+    const currentBase = calculateAutomaticNetPayForecast(
+      { ...source(current.month, forecastProfile), settings },
+      resolver,
+    );
+    const sourceBase = calculateAutomaticNetPayForecast(
+      { ...source(claim.month, forecastProfile), settings: previous },
+      resolver,
+    );
+    const sourceFull = calculateAutomaticNetPayForecast({ ...claim, settings: previous }, resolver);
+    if (
+      actual.result.status !== "available" ||
+      currentBase.result.status !== "available" ||
+      sourceBase.result.status !== "available" ||
+      sourceFull.result.status !== "available"
+    )
+      throw new Error("changed monthly payroll must remain available");
+    expect(actual.result.pay.netCents).toBe(
+      currentBase.result.pay.netCents +
+        sourceFull.result.pay.netCents -
+        sourceBase.result.pay.netCents,
+    );
+    expect(actual.result.pay.tax.totalCents).toBe(
+      currentBase.result.pay.tax.totalCents +
+        sourceFull.result.pay.tax.totalCents -
+        sourceBase.result.pay.tax.totalCents,
+    );
+    expect(actual.result.classification.shifts).toEqual(sourceFull.result.classification.shifts);
   });
 
-  it("detects the dated childless PV change despite identical saved settings", () => {
+  it("attributes the dated childless PV change to the correct month", () => {
     const { cash } = screenshotMonths();
     const initial = automatedSettings("2026-01");
     const settings = { ...initial, profile: { ...initial.profile, birthDate: "2003-09-15" } };
     expect(calculate(cash, settings, [saved(settings)]).result).toMatchObject({
-      status: "unavailable",
-      reason: expect.stringContaining("grundlagen"),
+      status: "available",
     });
+  });
+
+  it.each([1, 2] as const)(
+    "supports employment, regular pay and pension changes at lag %s",
+    (lag) => {
+      const { claim } = screenshotMonths();
+      const month = lag === 1 ? "2026-10" : "2026-11";
+      const profile = { ...forecastProfile, weeklyMinutes: 1800 };
+      const current = source(month, profile);
+      const previous = automatedSettings("2026-01");
+      const settings = {
+        ...previous,
+        month,
+        automation: {
+          ...previous.automation!,
+          additionalRecurringGrossCents: 12000,
+          pensionScheme: "VBL_WEST" as const,
+          additionalNetDeductionCents: 8000,
+        },
+      };
+      const actual = calculate(shiftedBundle(claim, current, lag), settings, [
+        saved(previous),
+        saved(settings),
+      ]);
+      expect(actual.result.status).toBe("available");
+      if (actual.result.status !== "available") throw new Error(actual.result.reason);
+      const baseSettings = {
+        ...settings,
+        automation: { ...settings.automation!, additionalNetDeductionCents: 0 },
+      };
+      const base = calculateAutomaticNetPayForecast(
+        { ...current, settings: baseSettings },
+        resolver,
+      );
+      const full = calculateAutomaticNetPayForecast({ ...claim, settings: previous }, resolver);
+      const oldBase = calculateAutomaticNetPayForecast(
+        { ...source(claim.month, forecastProfile), settings: previous },
+        resolver,
+      );
+      if (
+        base.result.status !== "available" ||
+        full.result.status !== "available" ||
+        oldBase.result.status !== "available"
+      )
+        throw new Error("fixture payroll unavailable");
+      expect(actual.result.pay.netCents).toBe(
+        base.result.pay.netCents + full.result.pay.netCents - oldBase.result.pay.netCents - 8000,
+      );
+      expect(actual.result.pay.additionalNetDeductionCents).toBe(8000);
+      expect(actual.result.pay.pension!.employeeCents).toBe(base.result.pay.pension!.employeeCents);
+    },
+  );
+
+  it("retains source supplementary-pension deductions after the scheme ends", () => {
+    const { cash } = screenshotMonths();
+    const initial = automatedSettings("2026-01");
+    const previous = {
+      ...initial,
+      automation: { ...initial.automation!, pensionScheme: "VBL_WEST" as const },
+    };
+    const actual = calculate(cash, initial, [saved(previous)]);
+    if (actual.result.status !== "available") throw new Error(actual.result.reason);
+    expect(actual.result.pay.pension).toMatchObject({
+      scheme: "VBL_WEST",
+      employeeCents: expect.any(Number),
+    });
+    expect(actual.result.pay.pension!.employeeCents).toBeGreaterThan(0);
+    expect(actual.result.pay.netCents).toBe(
+      actual.result.pay.amounts.grossCents -
+        actual.result.pay.tax.totalCents -
+        actual.result.pay.socialInsurance.totalCents -
+        actual.result.pay.pension!.employeeCents,
+    );
   });
 
   it("keeps partial employment changes unsupported", () => {
@@ -745,10 +853,166 @@ describe("source-period adjustment estimate for one complete shifted bundle", ()
     });
   });
 
-  it("does not apply same-year arrears treatment across calendar years", () => {
-    const claim = source("2026-12", forecastProfile, [], true);
-    const current = source("2027-01", forecastProfile, [], true);
-    expect(calculate(shiftedBundle(claim, current)).result.status).toBe("unavailable");
+  it.each([
+    ["2026-12", "2027-01", 1],
+    ["2026-11", "2027-01", 2],
+    ["2026-12", "2027-02", 2],
+  ] as const)(
+    "estimates %s supplements paid in %s as prior-year arrears",
+    (claimMonth, month, lag) => {
+      const claim = source(
+        claimMonth,
+        forecastProfile,
+        [forecastShift({ date: `${claimMonth}-06` })],
+        true,
+      );
+      const current = source(month, forecastProfile, [], true);
+      const settings = automatedSettings("2026-01");
+      const actual = calculate(shiftedBundle(claim, current, lag), settings);
+      if (actual.result.status !== "available") throw new Error(actual.result.reason);
+      const base = calculateAutomaticNetPayForecast(
+        { ...source(month, forecastProfile), settings },
+        resolver,
+      );
+      const regular = calculateAutomaticNetPayForecast({ ...current, settings }, resolver);
+      const full = calculateAutomaticNetPayForecast({ ...claim, settings }, resolver);
+      const oldBase = calculateAutomaticNetPayForecast(
+        { ...source(claimMonth, forecastProfile), settings },
+        resolver,
+      );
+      if (
+        base.result.status !== "available" ||
+        regular.result.status !== "available" ||
+        full.result.status !== "available" ||
+        oldBase.result.status !== "available"
+      )
+        throw new Error("fixture payroll unavailable");
+      const priorYearTaxable =
+        full.result.pay.amounts.taxableGrossCents - oldBase.result.pay.amounts.taxableGrossCents;
+      const annualTaxableGrossCents = regular.result.pay.amounts.taxableGrossCents * 12;
+      expect(actual.result.pay.tax).toEqual(
+        calculateTax2026(base.result.pay.amounts.taxableGrossCents, settings.profile, true, {
+          grossCents: priorYearTaxable,
+          annualTaxableGrossCents,
+        }),
+      );
+      expect(actual.result.pay.socialInsurance.totalCents).toBe(
+        base.result.pay.socialInsurance.totalCents +
+          full.result.pay.socialInsurance.totalCents -
+          oldBase.result.pay.socialInsurance.totalCents,
+      );
+      expect(actual.result.pay.calculationBasis).toMatchObject({
+        payrollYear: 2027,
+        status: "PREVIOUS_YEAR_ESTIMATE",
+      });
+      expect(actual.result.classification.calculationBasis).toEqual(
+        actual.result.pay.calculationBasis,
+      );
+      expect(actual.payrollTimingEstimate?.crossYearTaxEstimate).toEqual({
+        assumedPayment: "MONTH_END",
+        annualTaxableGrossCents,
+        annualBasis: "CURRENT_REGULAR_PAY",
+      });
+      expect(actual.result.pay.netCents).toBe(
+        actual.result.pay.amounts.grossCents -
+          actual.result.pay.tax.totalCents -
+          actual.result.pay.socialInsurance.totalCents -
+          (actual.result.pay.pension?.employeeCents ?? 0),
+      );
+    },
+  );
+
+  it.each([false, true])(
+    "combines prior-year arrears and a current annual payment once (payroll annual basis: %s)",
+    (explicit) => {
+      const claim = source("2026-12", forecastProfile, [], true);
+      const current = source("2027-01", { ...forecastProfile, weeklyMinutes: 1800 });
+      const previous = automatedSettings("2026-01");
+      const regular = calculateAutomaticNetPayForecast(
+        { ...current, settings: previous },
+        resolver,
+      );
+      if (regular.result.status !== "available") throw new Error("fixture unavailable");
+      const annualTaxableGrossCents = explicit
+        ? 5_000_000
+        : regular.result.pay.amounts.taxableGrossCents * 12;
+      const payment = {
+        revision: 1,
+        payoutMonth: current.month,
+        grossCents: 60000,
+        netBasis: explicit
+          ? {
+              kind: "PAYROLL" as const,
+              annualTaxableGrossCents,
+              socialInsuranceDays: 30,
+              healthAssessedCents: regular.result.pay.socialInsurance.healthBasisCents + 25000,
+              pensionAssessedCents: regular.result.pay.socialInsurance.pensionBasisCents + 25000,
+            }
+          : { kind: "CONSTANT_PAY" as const },
+      };
+      const settings = {
+        ...previous,
+        month: current.month,
+        automation: {
+          ...previous.automation!,
+          annualPayments: [payment],
+          additionalNetDeductionCents: 5000,
+        },
+      };
+      const actual = calculate(shiftedBundle(claim, current), settings, [saved(previous)]);
+      if (actual.result.status !== "available") throw new Error(actual.result.reason);
+      expect(actual.annualPayment).toMatchObject({ grossCents: 60000, netIncluded: true });
+      expect(actual.result.pay.tax).toEqual(
+        calculateTax2026(regular.result.pay.amounts.taxableGrossCents, settings.profile, true, {
+          grossCents: 85000,
+          annualTaxableGrossCents,
+        }),
+      );
+      expect(actual.result.pay.amounts.grossCents).toBe(
+        toCents(current.pay.estimatedGrossAmount!) + 85000,
+      );
+      expect(actual.result.pay.additionalNetDeductionCents).toBe(5000);
+      expect(actual.result.pay.netCents).toBe(
+        actual.result.pay.amounts.grossCents -
+          actual.result.pay.tax.totalCents -
+          actual.result.pay.socialInsurance.totalCents -
+          5000,
+      );
+      expect(actual.payrollTimingEstimate?.crossYearTaxEstimate?.annualBasis).toBe(
+        explicit ? "PAYROLL" : "CURRENT_REGULAR_PAY",
+      );
+    },
+  );
+
+  it("uses the original SV cap when pay falls between service and payout months", () => {
+    const highProfile = {
+      ...forecastProfile,
+      tariff: { ...forecastProfile.tariff!, payGroup: "P16" as const, payLevel: 6 as const },
+    };
+    const lowProfile = { ...forecastProfile, weeklyMinutes: 1800 };
+    const claim = source("2026-09", highProfile, [], true);
+    const current = source("2026-10", lowProfile);
+    const settings = automatedSettings("2026-01");
+    const actual = calculate(shiftedBundle(claim, current), settings);
+    const full = calculateAutomaticNetPayForecast({ ...claim, settings }, resolver);
+    const base = calculateAutomaticNetPayForecast(
+      { ...source(claim.month, highProfile), settings },
+      resolver,
+    );
+    const currentBase = calculateAutomaticNetPayForecast({ ...current, settings }, resolver);
+    if (
+      actual.result.status !== "available" ||
+      full.result.status !== "available" ||
+      base.result.status !== "available" ||
+      currentBase.result.status !== "available"
+    )
+      throw new Error("capped payroll fixture unavailable");
+    expect(full.result.pay.socialInsurance.healthBasisCents).toBe(
+      base.result.pay.socialInsurance.healthBasisCents,
+    );
+    expect(actual.result.pay.socialInsurance.healthCents).toBe(
+      currentBase.result.pay.socialInsurance.healthCents,
+    );
   });
 });
 

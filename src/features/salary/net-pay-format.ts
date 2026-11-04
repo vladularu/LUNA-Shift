@@ -1,4 +1,5 @@
 import type { NetPayResult } from "@/domain/net-pay";
+import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 
 export function netPayEuro(cents: number) {
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -22,4 +23,12 @@ export function netPayForecastLabel(result: AvailableNetPay) {
   return basis?.status === "PREVIOUS_YEAR_ESTIMATE"
     ? `${basis.payrollYear} vorläufig · Abzüge nach Stand ${basis.rulesYear}`
     : null;
+}
+
+export function netPayCrossYearLabel(timing: AutomaticNetPayForecast["payrollTimingEstimate"]) {
+  const estimate = timing?.crossYearTaxEstimate;
+  if (!estimate) return null;
+  return estimate.annualBasis === "PAYROLL"
+    ? "Jahreswechsel geschätzt · Auszahlung zum Monatsende, mit deinen Jahreswerten."
+    : "Jahreswechsel geschätzt · Auszahlung zum Monatsende, Jahresbrutto hochgerechnet.";
 }

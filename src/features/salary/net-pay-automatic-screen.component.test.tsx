@@ -1618,6 +1618,40 @@ describe("integrated salary-to-net workflow", () => {
     }
     expect(mockSave).not.toHaveBeenCalled();
   });
+  it("shows a real year-boundary net estimate and its assumptions on all payroll views", async () => {
+    mockPaymentPreferences = setSalaryPaymentPeriod(DEFAULT_SALARY_PAYMENT_PREFERENCES, {
+      effectiveMonth: "2025-01",
+      delays: {
+        PREMIUMS: 1,
+        MONTHLY_ALLOWANCE: 1,
+        HOURLY_ALLOWANCE: 1,
+        OVERTIME: 1,
+        SPECIAL_DUTY: 1,
+      },
+    });
+    mockSettings = automatedSettings("2026-06");
+    mockEntries = [forecastShift({ id: "previous-year-night", date: "2026-12-06" })];
+    mockTariffDecisions = ["2026-12", "2027-01"].map((month) => ({
+      month,
+      allowanceStatus: "ALTERNATING_MONTHLY",
+      revision: 1,
+      confirmedAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+    }));
+    const notice =
+      "Jahreswechsel geschätzt · Auszahlung zum Monatsende, Jahresbrutto hochgerechnet.";
+    const screen = await overview("2027-01");
+    expect(totals(screen).getByLabelText(/^Netto geschätzt: [\d.]+\s€$/)).toBeTruthy();
+    expect(screen.getByText(notice)).toBeTruthy();
+    expect(screen.getByText("2027 vorläufig · Abzüge nach Stand 2026")).toBeTruthy();
+    expect(screen.queryByText("Noch offen")).toBeNull();
+    await screen.unmount();
+    for (const section of ["deductions", "basis"] as const) {
+      const detail = await details(section, "2027-01");
+      expect(detail.getByText(notice)).toBeTruthy();
+      await detail.unmount();
+    }
+  });
   it("updates the displayed net when calendar work changes", async () => {
     const screen = await overview();
     const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;

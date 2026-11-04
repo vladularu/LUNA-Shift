@@ -34,6 +34,12 @@ export interface AutomaticNetPayForecast {
     readonly method: "SOURCE_ADJUSTMENT";
     readonly sourceMonth: string;
     readonly lag: 1 | 2;
+    /** Prior-year arrears taxed as other remuneration at the assumed month-end payout. */
+    readonly crossYearTaxEstimate?: {
+      readonly assumedPayment: "MONTH_END";
+      readonly annualTaxableGrossCents: number;
+      readonly annualBasis: "PAYROLL" | "CURRENT_REGULAR_PAY";
+    };
   };
 }
 const unavailable = (reason: string): SfnNetPayResult => ({

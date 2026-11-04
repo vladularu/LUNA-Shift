@@ -28,7 +28,7 @@ import { SalaryComponentsView, SalaryBasisView } from "./salary-detail-views";
 import { NetPayDeductionDetails } from "./net-pay-salary-summary";
 import { NetPayPremiumDetails } from "./net-pay-premium-details";
 import { NetPayServiceDetails } from "./net-pay-service-details";
-import { netPayEuro, netPayForecastLabel } from "./net-pay-format";
+import { netPayEuro, netPayForecastLabel, netPayCrossYearLabel } from "./net-pay-format";
 import { SecondaryButton } from "@/ui/form-controls";
 import { FormStatus } from "@/ui/form-layout";
 import { SpecialDutyPayCard } from "./special-duty-pay-card";
@@ -210,7 +210,8 @@ function SalaryDetailsMonthPage({
         basisNotes={[
           ...(forecast?.payrollTimingEstimate
             ? [
-                `Netto-Schätzung auf Basis des Zulagenmonats ${formatMonthTitle(forecast.payrollTimingEstimate.sourceMonth)}.`,
+                netPayCrossYearLabel(forecast.payrollTimingEstimate) ??
+                  `Netto-Schätzung auf Basis des Zulagenmonats ${formatMonthTitle(forecast.payrollTimingEstimate.sourceMonth)}.`,
               ]
             : []),
           ...(forecast?.annualPayment ? [forecast.annualPayment.note] : []),
