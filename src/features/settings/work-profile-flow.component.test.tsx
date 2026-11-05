@@ -26,6 +26,8 @@ type MockHeaderOptions = {
   headerRight?: () => React.ReactNode;
 };
 let mockHeaderOptions: MockHeaderOptions;
+let mockToolbarPlacement: string | undefined;
+let mockToolbarHidesSharedBackground: boolean | undefined;
 let mockGuard: {
   active: boolean;
   callback: (event: { data: { action: NavigationAction } }) => void;
@@ -40,6 +42,21 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ section: mockSection, origin: mockOrigin }),
   useNavigation: () => mockNavigation,
   Stack: {
+    Toolbar: Object.assign(
+      ({ children, placement }: React.PropsWithChildren<{ placement?: string }>) => {
+        mockToolbarPlacement = placement;
+        return children;
+      },
+      {
+        View: ({
+          children,
+          hidesSharedBackground,
+        }: React.PropsWithChildren<{ hidesSharedBackground?: boolean }>) => {
+          mockToolbarHidesSharedBackground = hidesSharedBackground;
+          return children;
+        },
+      },
+    ),
     Screen: ({ options }: { options: MockHeaderOptions }) => {
       mockHeaderOptions = { ...mockHeaderOptions, ...options };
       return (
@@ -63,6 +80,8 @@ describe("work profile draft flow", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockHeaderOptions = {};
+    mockToolbarPlacement = undefined;
+    mockToolbarHidesSharedBackground = undefined;
     mockSection = "WORK";
     mockOrigin = undefined;
     mockPalette = LIGHT_PALETTE;
@@ -94,7 +113,7 @@ describe("work profile draft flow", () => {
   });
 
   async function openSave(screen: Awaited<ReturnType<typeof render>>) {
-    await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
+    await fireEvent.press(saveButton(screen));
   }
   async function whole(screen: Awaited<ReturnType<typeof render>>) {
     await fireEvent.press(screen.getByRole("radio", { name: "Für den gesamten Zeitraum" }));
@@ -107,6 +126,34 @@ describe("work profile draft flow", () => {
     await fireEvent.press(saveButton(screen));
     expect(mockUpdate).not.toHaveBeenCalled();
   });
+  it.each(["WORK", "TARIFF", "EMPLOYMENT", "MODEL"])(
+    "uses one header save for %s from More and preserves draft state",
+    async (section) => {
+      mockSection = section;
+      mockOrigin = "settings";
+      const screen = await render(<SettingsEditorTestFlow />);
+      expect(mockHeaderOptions.headerRight).toBeUndefined();
+      expect(mockToolbarPlacement).toBe("right");
+      expect(mockToolbarHidesSharedBackground).toBe(true);
+      expect(screen.getAllByRole("button", { name: "Speichern" })).toHaveLength(1);
+      expect(screen.queryByText("Änderungen speichern")).toBeNull();
+      expect(saveButton(screen)).toBeDisabled();
+      if (section === "TARIFF") {
+        await select(screen, "Stufe", "Stufe 2");
+      } else if (section === "MODEL") {
+        await select(screen, "Sonn- und Feiertagsarbeit", "Ja");
+      } else {
+        await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+      }
+      expect(saveButton(screen)).toBeEnabled();
+      await openSave(screen);
+      expect(screen.getByText("Seit wann gelten diese Angaben?")).toBeTruthy();
+      expect(mockUpdate).not.toHaveBeenCalled();
+      await whole(screen);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(saveButton(screen)).toBeDisabled();
+    },
+  );
   it("asks for the period only after saving a changed value", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
@@ -166,6 +213,7 @@ describe("work profile draft flow", () => {
     const screen = await render(<SettingsEditorTestFlow />);
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
     await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "38,5");
+    expect(saveButton(screen)).toBeDisabled();
     await fireEvent.press(saveButton(screen));
     expect(mockUpdate).not.toHaveBeenCalled();
     expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();

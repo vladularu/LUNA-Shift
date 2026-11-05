@@ -9,6 +9,7 @@ import { REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { useAnalysisView } from "./analysis-view-preferences";
 import { isCheckLimited, type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { formatEuro } from "./salary-summary-card";
 
 export function AnalysisDashboard({
@@ -286,7 +287,7 @@ export function PayListCard({
       bodyMinHeight={
         !reserveLoadingSpace || status || fontScale > 1.2
           ? undefined
-          : rows * 47 + (hasAnnualRow && netRow ? 32 : 0)
+          : rows * CARD_METRICS.rowMinHeight + (hasAnnualRow && netRow ? 32 : 0)
       }
     >
       {status ? (

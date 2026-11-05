@@ -2,7 +2,7 @@ import { SelectionControl, type SelectionControlProps } from "@/ui/selection-con
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
-import type { PropsWithChildren, ReactNode } from "react";
+import { type PropsWithChildren, type ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -41,7 +41,7 @@ export function SurfaceCard({
       style={{
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: palette.surface,
+        borderColor: palette.dark ? palette.border : palette.surface,
         borderRadius: RADII.card,
         borderCurve: CORNER_CURVE,
         backgroundColor: palette.surface,
@@ -74,7 +74,7 @@ export function CardHeader({
         alignItems: "center",
         gap: SPACING.sm,
         paddingVertical: SPACING.lg,
-        backgroundColor: palette.cardHeader,
+        backgroundColor: "transparent",
         borderBottomWidth: 0,
         borderBottomColor: palette.cardSeparator,
       }}
@@ -133,7 +133,7 @@ export function SectionHeader({
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           selectable
-          style={{ color: palette.textSecondary, ...TYPOGRAPHY.sectionTitle }}
+          style={{ color: palette.text, ...TYPOGRAPHY.screenTitle }}
         >
           {title}
         </Text>
@@ -338,12 +338,18 @@ export function RowButton({
   );
 }
 
-export function CardSeparator({ inset = SPACING.lg }: { readonly inset?: number }) {
+export function CardSeparator({
+  inset = SPACING.lg,
+  visible = false,
+}: {
+  readonly inset?: number;
+  readonly visible?: boolean;
+}) {
   const palette = usePalette();
   return (
     <View
       style={{
-        height: StyleSheet.hairlineWidth,
+        height: visible ? StyleSheet.hairlineWidth : 0,
         backgroundColor: palette.cardSeparator,
         marginLeft: inset,
       }}
@@ -360,7 +366,7 @@ export function CardFooterLine({ caption }: { readonly caption?: string } = {}) 
   );
   return (
     <View testID="card-footer" style={{ marginHorizontal: CARD_METRICS.contentInset }}>
-      <CardSeparator inset={0} />
+      <CardSeparator inset={0} visible />
       <View
         testID="card-info-zone"
         style={{

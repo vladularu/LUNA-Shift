@@ -285,12 +285,12 @@ describe("appearance controls", () => {
         const group = screen.getByLabelText(label);
         expect(group).toHaveStyle({
           backgroundColor: palette.selectionTrack,
-          borderRadius: 12,
+          borderRadius: 16,
         });
         expect(within(group).getByRole("radio", { checked: true })).toBeTruthy();
         expect(within(group).getByTestId(`${label}:active-surface`)).toHaveStyle({
           backgroundColor: palette.selectionActiveSurface,
-          borderRadius: 8,
+          borderRadius: 12,
         });
         expect(ReactNative.StyleSheet.flatten(group.parent?.props.style)).not.toHaveProperty(
           "backgroundColor",

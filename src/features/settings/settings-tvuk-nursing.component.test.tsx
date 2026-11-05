@@ -36,6 +36,9 @@ jest.mock("expo-router", () => ({
   useNavigation: () => ({ dispatch: jest.fn() }),
   useLocalSearchParams: () => ({ section: mockSection }),
   Stack: {
+    Toolbar: Object.assign(({ children }: React.PropsWithChildren) => children, {
+      View: ({ children }: React.PropsWithChildren) => children,
+    }),
     Screen: ({ options }: { options: { headerRight?: () => React.ReactNode } }) =>
       options.headerRight?.() ?? null,
   },

@@ -800,22 +800,37 @@ function SettingsEditorForm({
             title: pageTitle,
             headerTitle: compactHeader ? "" : pageTitle,
             presentation: "card",
-            headerRight: fromMore
-              ? undefined
-              : () => (
-                  <HeaderSaveAction
-                    closes={!employment}
-                    busy={saving}
-                    label="Speichern"
-                    onPress={() => void submit()}
-                  />
-                ),
+            headerRight:
+              fromMore || employment
+                ? undefined
+                : () => (
+                    <HeaderSaveAction
+                      closes={!employment}
+                      busy={saving}
+                      disabled={employment && !dirty}
+                      label="Speichern"
+                      onPress={() => void submit()}
+                    />
+                  ),
             headerStyle: nativePageHeaderStyle(palette.background),
             headerTintColor: palette.text,
             headerTitleStyle: { color: palette.text },
             statusBarStyle: palette.dark ? "light" : "dark",
           }}
         />
+        {employment ? (
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.View hidesSharedBackground>
+              <HeaderSaveAction
+                closes={false}
+                busy={saving}
+                disabled={!dirty}
+                label="Speichern"
+                onPress={() => void submit()}
+              />
+            </Stack.Toolbar.View>
+          </Stack.Toolbar>
+        ) : null}
         {compactHeader ? <SectionHeader title={pageTitle} /> : null}
         {flow.editingFrom ? (
           <SectionHeader
@@ -985,9 +1000,9 @@ function SettingsEditorForm({
           </>
         ) : null}
         {editModel ? <EmploymentModelFields value={model} onChange={setModel} /> : null}
-        {fromMore || employment ? (
+        {fromMore && !employment ? (
           <PrimaryButton busy={saving} disabled={saving || !dirty} onPress={() => void submit()}>
-            {employment ? "Änderungen speichern" : "Speichern"}
+            Speichern
           </PrimaryButton>
         ) : null}
         {employment && dirty ? (

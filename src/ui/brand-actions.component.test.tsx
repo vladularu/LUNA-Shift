@@ -10,6 +10,22 @@ let mockPalette = LIGHT_PALETTE;
 jest.mock("@/theme/palette", () => ({ usePalette: () => mockPalette }));
 
 describe("shared brand actions", () => {
+  it("disables an unchanged header save without reporting a pending write", async () => {
+    const save = jest.fn();
+    const screen = await render(
+      <HeaderSaveAction busy={false} disabled closes={false} label="Speichern" onPress={save} />,
+    );
+    const action = screen.getByRole("button", { name: "Speichern" });
+    expect(action).toBeDisabled();
+    expect(action.props.accessibilityState.busy).toBe(false);
+    await fireEvent.press(action);
+    expect(save).not.toHaveBeenCalled();
+    await screen.rerender(
+      <HeaderSaveAction busy={false} closes={false} label="Speichern" onPress={save} />,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
+    expect(save).toHaveBeenCalledTimes(1);
+  });
   it.each([LIGHT_PALETTE, DARK_PALETTE])(
     "keeps theme fills, readable labels and secondary text in dark=$dark",
     async (palette) => {

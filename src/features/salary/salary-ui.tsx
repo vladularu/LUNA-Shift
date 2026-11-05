@@ -233,8 +233,8 @@ export function SalarySectionCard({
           alignItems: stacked ? "stretch" : "center",
           paddingVertical: SPACING.md,
           gap: SPACING.xs,
-          backgroundColor: embedded ? palette.surface : palette.cardHeader,
-          borderBottomWidth: !embedded && palette.dark ? 1 : 0,
+          backgroundColor: "transparent",
+          borderBottomWidth: 0,
           borderBottomColor: palette.separator,
         }}
       >

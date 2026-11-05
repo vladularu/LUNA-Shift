@@ -195,7 +195,7 @@ export function AdvancedDisclosure({
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
-        borderTopWidth: 1,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
         backgroundColor: pressed ? palette.surfaceMuted : "transparent",
         opacity: pressed ? 0.78 : 1,
