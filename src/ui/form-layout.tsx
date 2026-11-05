@@ -52,11 +52,13 @@ export function FormSection({
 
 export function HeaderSaveAction({
   busy,
+  disabled = false,
   onPress,
   label = "Sichern",
   closes = true,
 }: {
   readonly busy: boolean;
+  readonly disabled?: boolean;
   readonly onPress: () => void;
   readonly label?: string;
   readonly closes?: boolean;
@@ -68,8 +70,8 @@ export function HeaderSaveAction({
         busy ? "Änderungen werden gespeichert" : closes ? `${label} und schließen` : label
       }
       accessibilityRole="button"
-      accessibilityState={{ busy, disabled: busy }}
-      disabled={busy}
+      accessibilityState={{ busy, disabled: busy || disabled }}
+      disabled={busy || disabled}
       hitSlop={8}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -80,7 +82,7 @@ export function HeaderSaveAction({
         borderRadius: RADII.pill,
         borderCurve: CORNER_CURVE,
         backgroundColor: palette.primaryAction,
-        opacity: busy ? 0.55 : pressed ? 0.65 : 1,
+        opacity: busy || disabled ? 0.55 : pressed ? 0.65 : 1,
         paddingHorizontal: SPACING.md,
       })}
     >

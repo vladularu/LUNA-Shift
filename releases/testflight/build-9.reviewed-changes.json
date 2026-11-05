@@ -37,6 +37,18 @@
       "kind": "added",
       "sha256": "59c5dc451b1e62e3c5be7c4bcdc1ffdfad4779687201b5a45720e9318c2cd934",
       "reason": "Retain the existing master fixture for reviewed-rule regression tests; this addition is test support rather than a changed production rule."
+    },
+    {
+      "path": "src/features/settings/settings-editor-screen.tsx",
+      "kind": "modified",
+      "sha256": "666e6f314423eb09befea63784c5530bdf0ea2b7d316d3377affb86a327cac6c",
+      "reason": "Paket 1: one disabled-aware header save for employment editors including More entry; remove duplicate bottom save. R2 follows iPhone screenshot feedback: use the existing template-editor Stack.Toolbar.View hidesSharedBackground pattern to remove the extra iOS glass backing. Existing save validation, period choice, persistence and identity editors are preserved. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+    },
+    {
+      "path": "src/ui/form-layout.tsx",
+      "kind": "modified",
+      "sha256": "f9e26f4513ee452c8f76484a5fdca3a210775b929507c8c04f9e80eaaf7a970f",
+      "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
     }
   ]
 }
