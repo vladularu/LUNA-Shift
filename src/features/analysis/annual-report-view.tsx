@@ -31,6 +31,7 @@ import { ShiftAnalysisDetails } from "./shift-analysis-details";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { AnnualPremiumReport } from "./annual-premium-report";
 import { AnnualOverview } from "./annual-overview";
+import { AnnualNetPayDetails } from "./annual-net-pay-view";
 import { useAnnualSalaryPayments } from "./use-annual-salary-payments";
 import {
   timeAccountActual,
@@ -98,6 +99,7 @@ export function AnnualReportScreen({
             pending={pending}
             salaryPending={salaryData.loading}
             salaryError={salaryData.error}
+            net={salaryData.net}
           />
           <AnalysisViewControls />
           {exportControl}
@@ -125,9 +127,13 @@ export function AnnualReportDetails({
   const palette = usePalette();
   const preferences = useCheckPreferences();
   const showPlanning = preferences.enabled !== false;
-  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths);
+  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths, section === "NET");
   const report = selectAnnualCheckDisplay(salaryData.report, showPlanning);
   const testMonthCount = report.months.filter((item) => testMonths.includes(item.month)).length;
+  if (section === "NET")
+    return (
+      <AnnualNetPayDetails year={report.year} data={salaryData.net} onSelectMonth={onSelectMonth} />
+    );
   if (section === "PAY" && (salaryData.loading || salaryData.error))
     return (
       <AnalysisCoverageNote

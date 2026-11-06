@@ -39,6 +39,8 @@ import { useAutomaticNetPay } from "./use-automatic-net-pay";
 import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
 import { AnnualSalaryPaymentEditor } from "./annual-salary-payment-editor";
 
+export type PayrollView = "salary" | "net";
+
 type AvailablePay = Extract<NetPayResult, { status: "available" }>;
 const ALLOWANCE_LABELS: Readonly<Record<AllowanceStatus, string>> = {
   NONE: "Schicht-/Wechselschichtzulage",
@@ -147,6 +149,7 @@ function contributionLabel(part: SalaryPaymentContribution, projection: SalaryPa
 }
 
 export function SalaryPayrollStatement({
+  view = "salary",
   month,
   profile,
   pay,
@@ -161,6 +164,7 @@ export function SalaryPayrollStatement({
   onReviewAllowance,
   afterStatement,
 }: {
+  readonly view?: PayrollView;
   readonly month: string;
   readonly profile: UserProfile;
   readonly pay: MonthlyPayEstimate;
@@ -249,10 +253,10 @@ export function SalaryPayrollStatement({
             padding: SPACING.lg,
           }}
         >
-          {[
-            { label: "Gesamtbrutto", amount: gross },
-            { label: netLabel, amount: available?.netCents ?? null },
-          ].map((total) => (
+          {(view === "salary"
+            ? [{ label: "Gesamtbrutto", amount: gross }]
+            : [{ label: netLabel, amount: available?.netCents ?? null }]
+          ).map((total) => (
             <View
               key={total.label}
               accessible
@@ -277,161 +281,172 @@ export function SalaryPayrollStatement({
             </View>
           ))}
         </View>
-        {available && netPayForecastLabel(available) ? (
+        {view === "net" && available && netPayForecastLabel(available) ? (
           <PayrollNote>{netPayForecastLabel(available)}</PayrollNote>
         ) : null}
-        {available && netPayCrossYearLabel(payrollTimingEstimate) ? (
+        {view === "net" && available && netPayCrossYearLabel(payrollTimingEstimate) ? (
           <PayrollNote>{netPayCrossYearLabel(payrollTimingEstimate)}</PayrollNote>
         ) : null}
       </SurfaceCard>
       <View testID="salary-payroll-statement" style={{ gap: REPORT_CARD_GAP }}>
-        <SalarySectionCard title="Zusammensetzung">
-          <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.md }}>
-            <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
-              {formatMonthTitle(month)}
-              {salaryProfileCaption(profile) ? ` · ${salaryProfileCaption(profile)}` : ""}
-            </Text>
-          </View>
-          {fixed.map((row, index) => (
-            <View key={row.label}>
-              {index ? <CardSeparator /> : null}
-              <SalaryAmountRow
-                label={row.label}
-                value={row.value === null ? "Noch offen" : netPayEuro(row.value)}
-                quiet
-              />
+        {view === "salary" ? (
+          <SalarySectionCard title="Zusammensetzung">
+            <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.md }}>
+              <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>
+                {formatMonthTitle(month)}
+                {salaryProfileCaption(profile) ? ` · ${salaryProfileCaption(profile)}` : ""}
+              </Text>
             </View>
-          ))}
-          {months.map((claimMonth) => {
-            const source = projection.sources.find((value) => value.month === claimMonth)!;
-            const sourceParts = parts.filter((part) => part.claimMonth === claimMonth);
-            const open = sourceParts.some((part) =>
-              projection.issues.some(
-                (issue) => issue.month === claimMonth && issue.group === part.group,
-              ),
-            );
-            const visible = sourceParts.filter((part) => part.amountCents > 0);
-            const openRemainder = sourceParts.some(
-              (part) =>
-                part.amountCents === 0 &&
+            {fixed.map((row, index) => (
+              <View key={row.label}>
+                {index ? <CardSeparator /> : null}
+                <SalaryAmountRow
+                  label={row.label}
+                  value={row.value === null ? "Noch offen" : netPayEuro(row.value)}
+                  quiet
+                />
+              </View>
+            ))}
+            {months.map((claimMonth) => {
+              const source = projection.sources.find((value) => value.month === claimMonth)!;
+              const sourceParts = parts.filter((part) => part.claimMonth === claimMonth);
+              const open = sourceParts.some((part) =>
                 projection.issues.some(
                   (issue) => issue.month === claimMonth && issue.group === part.group,
                 ),
-            );
-            if (!visible.length && !open) return null;
-            return (
-              <View key={claimMonth}>
+              );
+              const visible = sourceParts.filter((part) => part.amountCents > 0);
+              const openRemainder = sourceParts.some(
+                (part) =>
+                  part.amountCents === 0 &&
+                  projection.issues.some(
+                    (issue) => issue.month === claimMonth && issue.group === part.group,
+                  ),
+              );
+              if (!visible.length && !open) return null;
+              return (
+                <View key={claimMonth}>
+                  <CardSeparator />
+                  <Text
+                    style={{
+                      ...TYPOGRAPHY.small,
+                      color: palette.textMuted,
+                      paddingHorizontal: SPACING.lg,
+                      paddingTop: SPACING.lg,
+                    }}
+                  >
+                    Zulagen aus {formatMonthTitle(claimMonth)}
+                  </Text>
+                  {visible.map((part, index) => (
+                    <View key={part.group}>
+                      {index ? <CardSeparator /> : null}
+                      <SalaryAmountRow
+                        label={contributionLabel(part, projection)}
+                        value={netPayEuro(part.amountCents)}
+                        subtitle={
+                          part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE"
+                            ? projection.issues.some(
+                                (issue) => issue.month === claimMonth && issue.group === part.group,
+                              )
+                              ? "Prüfung offen"
+                              : source.pay.confirmedAllowance === null
+                                ? "Geschätzt"
+                                : "Monatsangabe gespeichert"
+                            : undefined
+                        }
+                        quiet
+                      />
+                    </View>
+                  ))}
+                  {openRemainder ? (
+                    <>
+                      {visible.length ? <CardSeparator /> : null}
+                      <SalaryAmountRow label="Weitere Zulagen" value="Noch offen" quiet />
+                    </>
+                  ) : null}
+                </View>
+              );
+            })}
+            {!blocked && hasTariff(profile) ? (
+              <>
                 <CardSeparator />
-                <Text
-                  style={{
-                    ...TYPOGRAPHY.small,
-                    color: palette.textMuted,
-                    paddingHorizontal: SPACING.lg,
-                    paddingTop: SPACING.lg,
-                  }}
-                >
-                  Zulagen aus {formatMonthTitle(claimMonth)}
-                </Text>
-                {visible.map((part, index) => (
-                  <View key={part.group}>
-                    {index ? <CardSeparator /> : null}
-                    <SalaryAmountRow
-                      label={contributionLabel(part, projection)}
-                      value={netPayEuro(part.amountCents)}
-                      subtitle={
-                        part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE"
-                          ? projection.issues.some(
-                              (issue) => issue.month === claimMonth && issue.group === part.group,
-                            )
-                            ? "Prüfung offen"
-                            : source.pay.confirmedAllowance === null
-                              ? "Geschätzt"
-                              : "Monatsangabe gespeichert"
-                          : undefined
-                      }
-                      quiet
-                    />
-                  </View>
-                ))}
-                {openRemainder ? (
-                  <>
-                    {visible.length ? <CardSeparator /> : null}
-                    <SalaryAmountRow label="Weitere Zulagen" value="Noch offen" quiet />
-                  </>
-                ) : null}
-              </View>
-            );
-          })}
-          {!blocked && hasTariff(profile) ? (
-            <>
-              <CardSeparator />
-              <SalaryNavigationRow
-                title="Zulage prüfen"
-                subtitle={
-                  allowanceMonths.length === 1
-                    ? `Anspruch ${formatMonthTitle(allowanceMonths[0])}`
-                    : "Anspruchsmonat auswählen"
-                }
-                onPress={() =>
-                  onReviewAllowance(allowanceMonths.length ? allowanceMonths : [month])
-                }
-              />
-            </>
-          ) : null}
-          {fullAnnual > 0 ? (
-            <>
-              <CardSeparator />
-              <SalaryAmountRow label="Jahressonderzahlung" value={netPayEuro(fullAnnual)} quiet />
-            </>
-          ) : null}
-          <CardSeparator />
-          <SalaryAmountRow
-            label="Gesamtbrutto"
-            value={gross === null ? "Noch offen" : netPayEuro(gross)}
-            quiet
-            emphasizeValue
-          />
-          {annualPayment && !annualPayment.netIncluded && available ? (
-            <>
-              <PayrollNote>
-                Jahressonderzahlung im Brutto enthalten; die Netto-Berechnung dafür ist noch offen.
-              </PayrollNote>
-              <SalaryAmountRow
-                label="Brutto für Netto-Prognose"
-                value={netPayEuro(available.amounts.grossCents)}
-                quiet
-              />
-            </>
-          ) : null}
-        </SalarySectionCard>
-        <SalarySectionCard title="Netto-Berechnung">
-          {deductions ? (
+                <SalaryNavigationRow
+                  title="Zulage prüfen"
+                  subtitle={
+                    allowanceMonths.length === 1
+                      ? `Anspruch ${formatMonthTitle(allowanceMonths[0])}`
+                      : "Anspruchsmonat auswählen"
+                  }
+                  onPress={() =>
+                    onReviewAllowance(allowanceMonths.length ? allowanceMonths : [month])
+                  }
+                />
+              </>
+            ) : null}
+            {fullAnnual > 0 ? (
+              <>
+                <CardSeparator />
+                <SalaryAmountRow label="Jahressonderzahlung" value={netPayEuro(fullAnnual)} quiet />
+              </>
+            ) : null}
+            <CardSeparator />
             <SalaryAmountRow
-              label="Abzüge"
-              value={deductionEuro(deductions.totalCents)}
-              onPress={() => router.push(salaryDetailsRoute(month, "deductions"))}
-              chevronPlacement="label"
+              label="Gesamtbrutto"
+              value={gross === null ? "Noch offen" : netPayEuro(gross)}
+              quiet
+              emphasizeValue
+            />
+          </SalarySectionCard>
+        ) : null}
+        {view === "net" ? (
+          <SalarySectionCard title="Netto-Berechnung">
+            <SalaryAmountRow
+              label="Gesamtbrutto"
+              value={gross === null ? "Noch offen" : netPayEuro(gross)}
               quiet
             />
-          ) : (
-            <SalaryAmountRow label="Abzüge" value="Nicht verfügbar" quiet />
-          )}
-          <CardSeparator />
-          <SalaryAmountRow
-            label={netLabel}
-            value={available ? netPayForecastEuro(available) : "Nicht verfügbar"}
-            quiet
-            emphasizeValue
-          />
-          {pensionOmitted ? (
-            <PayrollNote>Zusatzversorgung nicht berücksichtigt.</PayrollNote>
-          ) : null}
-          {annualPayment?.pensionOmitted ? (
-            <PayrollNote>
-              Zusatzversorgung auf die Jahressonderzahlung nicht berücksichtigt.
-            </PayrollNote>
-          ) : null}
-        </SalarySectionCard>
+            <CardSeparator />
+            {annualPayment && !annualPayment.netIncluded && available ? (
+              <>
+                <PayrollNote>
+                  Jahressonderzahlung im Brutto enthalten; die Netto-Berechnung dafür ist noch
+                  offen.
+                </PayrollNote>
+                <SalaryAmountRow
+                  label="Brutto für Netto-Prognose"
+                  value={netPayEuro(available.amounts.grossCents)}
+                  quiet
+                />
+              </>
+            ) : null}
+            {deductions ? (
+              <SalaryAmountRow
+                label="Abzüge"
+                value={deductionEuro(deductions.totalCents)}
+                onPress={() => router.push(salaryDetailsRoute(month, "deductions"))}
+                chevronPlacement="label"
+                quiet
+              />
+            ) : (
+              <SalaryAmountRow label="Abzüge" value="Nicht verfügbar" quiet />
+            )}
+            <CardSeparator />
+            <SalaryAmountRow
+              label={netLabel}
+              value={available ? netPayForecastEuro(available) : "Nicht verfügbar"}
+              quiet
+              emphasizeValue
+            />
+            {pensionOmitted ? (
+              <PayrollNote>Zusatzversorgung nicht berücksichtigt.</PayrollNote>
+            ) : null}
+            {annualPayment?.pensionOmitted ? (
+              <PayrollNote>
+                Zusatzversorgung auf die Jahressonderzahlung nicht berücksichtigt.
+              </PayrollNote>
+            ) : null}
+          </SalarySectionCard>
+        ) : null}
         {afterStatement ? <SurfaceCard>{afterStatement}</SurfaceCard> : null}
       </View>
     </>
@@ -439,6 +454,7 @@ export function SalaryPayrollStatement({
 }
 
 export function SalaryPayrollContent({
+  view = "salary",
   month,
   blocked,
   profile,
@@ -447,6 +463,7 @@ export function SalaryPayrollContent({
   onDirtyChange,
   onBusyChange,
 }: {
+  readonly view?: PayrollView;
   readonly month: string;
   readonly blocked: boolean;
   readonly profile: UserProfile;
@@ -502,7 +519,7 @@ export function SalaryPayrollContent({
     profile.tvalPflegeTariff ||
     profile.manualMonthlyGrossCents != null
   );
-  const notice = blocked
+  const netNotice = blocked
     ? "Für Testdaten gibt es keine Netto-Prognose."
     : data.status === "loading"
       ? "Netto-Angaben werden geladen …"
@@ -513,9 +530,19 @@ export function SalaryPayrollContent({
           : forecast?.result.status === "unavailable"
             ? forecast.result.reason
             : null;
+  const notice =
+    view === "net"
+      ? netNotice
+      : blocked
+        ? null
+        : data.status === "loading"
+          ? "Weitere Bezüge werden geladen …"
+          : data.status === "error"
+            ? "Weitere Bezüge konnten nicht geladen werden. Die Gehaltsübersicht ist unvollständig."
+            : null;
   return (
     <>
-      {!blocked && data.status === "ready" ? (
+      {view === "net" && !blocked && data.status === "ready" ? (
         settings ? (
           <NetPaySettingsEntry
             settings={settings}
@@ -530,14 +557,16 @@ export function SalaryPayrollContent({
           />
         )
       ) : null}
-      <SalaryPayrollSettings
-        timingOnly
-        month={month}
-        blocked={blocked}
-        onChanged={data.reload}
-        onDirtyChange={onDirtyChange}
-        onBusyChange={onBusyChange}
-      />
+      {view === "salary" ? (
+        <SalaryPayrollSettings
+          timingOnly
+          month={month}
+          blocked={blocked}
+          onChanged={data.reload}
+          onDirtyChange={onDirtyChange}
+          onBusyChange={onBusyChange}
+        />
+      ) : null}
       {!hasBasis ? (
         <>
           <InlineNotice message="Hinterlege einen Tarif oder dein Monatsbrutto." />
@@ -546,7 +575,8 @@ export function SalaryPayrollContent({
           </SecondaryButton>
         </>
       ) : null}
-      {hasBasis &&
+      {view === "salary" &&
+      hasBasis &&
       pay.available &&
       hasTariff(profile) &&
       projection.sources.every((source) => source.shifts.length === 0) ? (
@@ -561,7 +591,7 @@ export function SalaryPayrollContent({
           {data.status === "error" ? (
             <SecondaryButton onPress={data.reload}>Erneut laden</SecondaryButton>
           ) : null}
-          {recovery && !blocked ? (
+          {view === "net" && recovery && !blocked ? (
             <SecondaryButton onPress={recover}>
               {recovery.kind === "entry"
                 ? "Dienstzeiten prüfen"
@@ -573,6 +603,7 @@ export function SalaryPayrollContent({
         </View>
       ) : null}
       <SalaryPayrollStatement
+        view={view}
         month={month}
         profile={profile}
         pay={pay}
@@ -586,6 +617,7 @@ export function SalaryPayrollContent({
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
         afterStatement={
+          view === "net" &&
           configured &&
           settings &&
           !blocked &&

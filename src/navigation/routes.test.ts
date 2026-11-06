@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   TAB_ROUTES,
   netPaySettingsRoute,
+  netPayForecastRoute,
   analysisRoute,
   annualDetailsRoute,
   calendarRoute,
@@ -33,6 +34,14 @@ import {
 } from "@/navigation/route-params";
 
 describe("navigation contracts", () => {
+  it("opens the separate net forecast with the selected valid month", () => {
+    expect(netPayForecastRoute("2026-11")).toEqual({
+      pathname: "/net-pay",
+      params: { month: "2026-11" },
+    });
+    for (const month of ["", "2026-13", "2026-7", "bad"])
+      expect(() => netPayForecastRoute(month)).toThrow();
+  });
   it("opens net settings with the selected valid month", () => {
     expect(netPaySettingsRoute("2026-10")).toEqual({
       pathname: "/net-pay-settings",
@@ -60,6 +69,10 @@ describe("navigation contracts", () => {
     expect(annualDetailsRoute(2027, "CHECK")).toEqual({
       pathname: "/annual-details",
       params: { month: "2027-01", section: "CHECK" },
+    });
+    expect(annualDetailsRoute(2027, "NET")).toEqual({
+      pathname: "/annual-details",
+      params: { month: "2027-01", section: "NET" },
     });
     expect(() => annualDetailsRoute(2027.5, "WORK")).toThrow();
     expect(() => annualDetailsRoute(99, "PAY")).toThrow();

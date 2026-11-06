@@ -235,6 +235,26 @@ jest.mock("@/features/salary/use-net-pay-profile", () => ({
     error: null,
   }),
 }));
+jest.mock("./use-annual-net-pay", () => ({
+  useAnnualNetPay: (year: number) => ({
+    loading: false,
+    error: null,
+    report: {
+      year,
+      netCents: null,
+      availableMonthCount: 0,
+      preliminary: false,
+      notes: [],
+      months: Array.from({ length: 12 }, (_, index) => ({
+        month: `${year}-${String(index + 1).padStart(2, "0")}`,
+        netCents: null,
+        status: "Noch nicht eingerichtet",
+        notes: [],
+        preliminary: false,
+      })),
+    },
+  }),
+}));
 // Input freshness and cross-month sharing are exercised with the real provider in its lifecycle tests.
 jest.mock("./analysis-persistent-results", () => ({
   AnalysisPersistentResultsProvider: ({ children }: MockReact.PropsWithChildren) => children,
@@ -1325,6 +1345,18 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     },
   );
 
+  it("opens annual net months in the independent net route", async () => {
+    mockAnnualSection = "NET";
+    mockAnnualReportValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
+    const screen = await render(<AnnualDetailsScreen />);
+    await fireEvent.press(screen.getByRole("button", { name: /^Januar 2027:/ }));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/net-pay",
+      params: { month: "2027-01" },
+    });
+    expect(mockActiveMonthCoordinator.setMonth).not.toHaveBeenCalled();
+  });
+
   it("opens employment from worktime for the selected month without moving the analysis period", async () => {
     mockRouteMonth = "2026-12";
     const screen = await render(<AnalysisScreen />);
@@ -1510,7 +1542,7 @@ it("opens earned premiums directly from their own card with the exact month", as
 });
 
 async function openSalaryComponents(screen: Awaited<ReturnType<typeof render>>, month: string) {
-  expect(screen.getByRole("header", { name: "Gehalt & Netto" })).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Gehalt" })).toBeTruthy();
   expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
   expect(screen.getByText(formatMonthTitle(month))).toBeTruthy();
   expect(screen.queryByRole("button", { name: /^Gesamtbrutto:/ })).toBeNull();

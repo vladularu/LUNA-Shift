@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import { router } from "expo-router";
@@ -7,11 +7,19 @@ import { annualDetailsRoute } from "@/navigation/routes";
 import type { ShiftType } from "@/domain/types";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { AnnualReportScreen, AnnualReportDetails } from "@/features/analysis/annual-report-view";
+import { summarizeAnnualNetPay } from "./annual-net-pay";
+import type { AnnualNetPayState } from "./use-annual-net-pay";
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
+let mockAnnualNet: AnnualNetPayState = { report: null, loading: true, error: null };
 jest.mock("./use-annual-salary-payments", () => ({
-  useAnnualSalaryPayments: (report: AnnualReport) => ({ report, loading: false, error: null }),
+  useAnnualSalaryPayments: (report: AnnualReport) => ({
+    report,
+    loading: false,
+    error: null,
+    net: mockAnnualNet,
+  }),
 }));
 
 const report: AnnualReport = {
@@ -131,6 +139,7 @@ describe("annual report view", () => {
   });
   beforeEach(() => {
     mockPlanning = true;
+    mockAnnualNet = { report: null, loading: true, error: null };
   });
   it("uses calm list cards and retains the selected year", async () => {
     const screen = await render(<AnnualReportScreen {...props} />);
@@ -416,4 +425,56 @@ it("shows manual annual gross without invented supplement rows", async () => {
   expect(screen.getByText("28.700,00 €")).toBeTruthy();
   expect(screen.queryByText("Zeitzuschläge")).toBeNull();
   expect(screen.queryByText("Zulagen")).toBeNull();
+});
+
+describe("independent annual net", () => {
+  it("shows its own partial total and opens twelve individual net months", async () => {
+    mockAnnualNet = {
+      loading: false,
+      error: null,
+      report: summarizeAnnualNetPay(
+        2026,
+        Array.from({ length: 12 }, (_, index) => ({
+          month: `2026-${String(index + 1).padStart(2, "0")}`,
+          netCents: index < 2 ? 200000 : null,
+          status: index < 2 ? null : "Noch nicht eingerichtet",
+          notes: [],
+          preliminary: false,
+        })),
+      ),
+    };
+    const screen = await render(<AnnualReportScreen {...props} />);
+    expect(
+      within(screen.getByTestId("analysis-card-body-Netto")).getByText("4.000,00 €"),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("analysis-card-body-Gehalt")).queryByText(
+        "Voraussichtliches Netto",
+      ),
+    ).toBeNull();
+    expect(screen.getByText("Netto-Teilsumme · 2 von 12 Monaten")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Netto" }));
+    expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "NET"));
+    const select = jest.fn();
+    await screen.rerender(<AnnualReportDetails {...props} section="NET" onSelectMonth={select} />);
+    expect(screen.getByText("Netto-Prognose")).toBeTruthy();
+    expect(screen.queryByText("Gehaltsprognose")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: /^Januar 2026:/ }));
+    expect(select).toHaveBeenLastCalledWith("2026-01");
+    await fireEvent.press(screen.getByRole("button", { name: /^Dezember 2026:/ }));
+    expect(select).toHaveBeenLastCalledWith("2026-12");
+  });
+  it("shows pending and failed annual net without a false zero", async () => {
+    mockAnnualNet = { report: null, loading: true, error: null };
+    const screen = await render(
+      <AnnualReportDetails {...props} section="NET" onSelectMonth={jest.fn()} />,
+    );
+    expect(screen.getByText("Netto-Prognosen werden berechnet …")).toBeTruthy();
+    mockAnnualNet = { report: null, loading: false, error: "Netto-Angaben nicht verfügbar" };
+    await screen.rerender(
+      <AnnualReportDetails {...props} section="NET" onSelectMonth={jest.fn()} />,
+    );
+    expect(screen.getByText("Netto-Angaben nicht verfügbar")).toBeTruthy();
+    expect(screen.queryByText("0,00 €")).toBeNull();
+  });
 });
