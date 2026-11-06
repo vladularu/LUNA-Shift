@@ -25,17 +25,17 @@ export function ReportExportAction({
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: variant === "icon" ? CONTROL_HEIGHT.compact : CONTROL_HEIGHT.regular,
+        minHeight: variant === "icon" ? CONTROL_HEIGHT.compact : CONTROL_HEIGHT.large,
         width: variant === "icon" ? CONTROL_HEIGHT.compact : undefined,
         justifyContent: "center",
         alignItems: "center",
-        padding: SPACING.sm,
+        padding: variant === "icon" ? SPACING.sm : SPACING.md,
         borderRadius: variant === "icon" ? RADII.pill : RADII.control,
-        borderWidth: variant === "icon" ? 1 : 0,
-        borderColor: palette.separator,
+        borderWidth: 1,
+        borderColor: variant === "icon" ? palette.separator : palette.border,
         borderCurve: CORNER_CURVE,
-        backgroundColor: variant === "icon" ? palette.surface : palette.surfaceMuted,
-        opacity: disabled || pressed ? 0.5 : 1,
+        backgroundColor: variant === "icon" ? palette.surface : palette.primary,
+        opacity: disabled ? 0.5 : pressed ? (variant === "icon" ? 0.5 : 0.8) : 1,
       })}
     >
       {variant === "icon" ? (
@@ -48,7 +48,7 @@ export function ReportExportAction({
       ) : (
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.primary, ...TYPOGRAPHY.button }}
+          style={{ color: palette.onPrimary, ...TYPOGRAPHY.button, flexShrink: 1 }}
         >
           {busy ? "Bericht wird erstellt …" : "Bericht exportieren"}
         </Text>

@@ -1654,6 +1654,10 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("updates the displayed net when calendar work changes", async () => {
     const screen = await overview();
+    expect(
+      within(screen.getByTestId("salary-scroll-content")).getByTestId("salary-export-current"),
+    ).toBeTruthy();
+    expect(screen.getAllByTestId("salary-export-current")).toHaveLength(1);
     const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
     mockEntries = [forecastShift({ endTime: "04:00" })];
     await screen.rerender(<SalaryScreen />);
@@ -1741,7 +1745,7 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockSave).not.toHaveBeenCalled();
     },
   );
-  it("keeps the statement, deductions route and header export on the selected month", async () => {
+  it("keeps the statement, deductions route and bottom export on the selected month", async () => {
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     const screen = await render(<SalaryScreen />);
     const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
@@ -1752,7 +1756,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.getByText("August 2026")).toBeTruthy();
     expect(mockSetMonth).toHaveBeenLastCalledWith("2026-08");
     expect(mockExport).toHaveBeenLastCalledWith(
-      expect.objectContaining({ period: "2026-08", variant: "icon" }),
+      expect.objectContaining({ period: "2026-08", variant: "button" }),
     );
     expect(totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).not.toBe(
       before,

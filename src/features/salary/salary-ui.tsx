@@ -1,6 +1,6 @@
-import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
+import { useContext, type ComponentProps, type PropsWithChildren, type ReactNode } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaInsetsContext, SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
@@ -69,9 +69,11 @@ export function SalaryPage({
   const palette = usePalette();
   const { fontScale } = useWindowDimensions();
   const stacked = !largeTitle && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
+  const insets = useContext(SafeAreaInsetsContext);
   return (
     <SafeAreaView
-      edges={showBackFooter ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+      testID="salary-page-safe-area"
+      edges={["top", "left", "right"]}
       style={{ flex: 1, backgroundColor: palette.groupedBackground }}
     >
       <View
@@ -130,11 +132,14 @@ export function SalaryPage({
       >
         {(bottomPadding) => (
           <ScreenScrollView
+            testID="salary-scroll-content"
             surface="groupedBackground"
             contentInsetAdjustmentBehavior="never"
             contentGap={REPORT_CARD_GAP}
             contentContainerStyle={{ paddingTop: 0 }}
-            bottomPadding={bottomPadding}
+            bottomPadding={
+              showBackFooter ? bottomPadding : Math.max(insets?.bottom ?? 0, SPACING.lg)
+            }
           >
             {children}
           </ScreenScrollView>
