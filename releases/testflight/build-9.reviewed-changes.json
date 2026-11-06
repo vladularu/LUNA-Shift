@@ -49,6 +49,54 @@
       "kind": "modified",
       "sha256": "f9e26f4513ee452c8f76484a5fdca3a210775b929507c8c04f9e80eaaf7a970f",
       "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+    },
+    {
+      "path": "src/features/salary/salary-screen.tsx",
+      "kind": "modified",
+      "sha256": "6a0e4e7f1645cdb96e311ae040ab423e22ee0968ea8514a92d8ecd7d43a3a131",
+      "reason": "Paket 2: Move the single existing monthly report-export action from the header into the scroll content after the payroll statement, using its existing labelled and theme-aware button variant. Preserve period key, export logic and loading/error guards. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/salary/salary-ui.tsx",
+      "kind": "modified",
+      "sha256": "2b4068f7dec46c705f9f252e95fbe65bfb8c273266b19e2d1ec30f8dcf5f1d8f",
+      "reason": "Paket 2: Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-list-card.tsx",
+      "kind": "modified",
+      "sha256": "27e3a5ae1bf8f87a956afc5c3fc1e2bfa92484d09b363e58903adce990f9de26",
+      "reason": "Paket 2: Replace navigation-only ellipsis-circle disclosure icons in card headers and value rows with chevrons. Preserve handlers, amounts, availability, widths and accessibility. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-overview-card.tsx",
+      "kind": "modified",
+      "sha256": "4622b7cfa28b2253ee45f2ae33505fc35bf70b2ce4cf7e4fc31b2c61061b04d3",
+      "reason": "Paket 2: Replace the monthly detail-card navigation disclosure with a chevron; retain all interaction and layout behavior. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/annual-report-view.tsx",
+      "kind": "modified",
+      "sha256": "9c78454558f6178f944fa8cce4a616538672fab03567cf9190c5d30df3e2122f",
+      "reason": "Paket 2: Use chevrons on existing annual check, salary and monthly time-account detail links. Preserve available/unavailable states, callbacks, numbers and aggregation. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/salary-summary-card.tsx",
+      "kind": "modified",
+      "sha256": "3e35afe3fae48e2b494e8847759f4d6a42564b34862be17154df13c86d34a5b2",
+      "reason": "Paket 2: Use chevrons for salary setup and navigable salary constituent rows without changing destination or calculation. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
+      "kind": "modified",
+      "sha256": "449e9b059d3a89152fa054e647ff817dd92f538d8aba07097a0b6ab9d6a4aa31",
+      "reason": "Paket 2: Retain mandatory net-pay regression cases; update the existing month-navigation export assertion to the labelled bottom button and verify one export inside the scroll content. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/report-export/report-export-action.tsx",
+      "kind": "modified",
+      "sha256": "6268c1c88a058c774712b9268b37e77e931d7ff0b7bf0b8ac49928220f5c4672",
+      "reason": "Paket 2 R2, following user screenshots: match the labelled export action to the primary Apple sign-in reference using primary/onPrimary, large control height, medium padding and the same border/radius/pressed treatment. Preserve optional icon action styling, disabled/busy semantics, labels, handlers and all export data. Preview device acceptance pending."
     }
   ]
 }

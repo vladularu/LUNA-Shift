@@ -121,7 +121,7 @@ export function SalarySummaryCard({
           >
             Gehalt einrichten
           </Text>
-          <Ionicons color={palette.textMuted} name="ellipsis-horizontal-circle" size={20} />
+          <Ionicons color={palette.textMuted} name="chevron-forward" size={20} />
         </Pressable>
       ) : pay === null ? (
         <SalaryRuleUnavailableContent ruleFailure={ruleFailure} />
@@ -192,7 +192,7 @@ function SalaryDetailRowView({
           <Ionicons
             accessibilityElementsHidden
             color={palette.textMuted}
-            name="ellipsis-horizontal-circle"
+            name="chevron-forward"
             size={17}
           />
         ) : null}

@@ -393,7 +393,7 @@ function AnnualCheckDetails({
                 </View>
                 <Ionicons
                   color={palette.textMuted}
-                  name="ellipsis-horizontal-circle"
+                  name="chevron-forward"
                   size={18}
                   accessibilityElementsHidden
                   importantForAccessibility="no"
@@ -514,7 +514,7 @@ function AnnualSalaryDetails({
                     : formatEuro(item.estimatedGrossAmount)}
                 </Text>
               </View>
-              <Ionicons name="ellipsis-horizontal-circle" color={palette.textMuted} size={20} />
+              <Ionicons name="chevron-forward" color={palette.textMuted} size={20} />
             </Pressable>
           </View>
         ))}
@@ -591,7 +591,7 @@ function MonthlyBars({
                     </Text>
                   ) : null}
                 </View>
-                <Ionicons color={palette.textMuted} name="ellipsis-horizontal-circle" size={20} />
+                <Ionicons color={palette.textMuted} name="chevron-forward" size={20} />
               </View>
               <View
                 accessibilityElementsHidden

@@ -100,14 +100,10 @@ function SalaryMonthPage({
     );
   }
   return (
-    <SalaryPage
-      title="Gehalt & Netto"
-      showBackFooter={false}
-      backLabel="Zurück zur Auswertung"
-      action={<ReportExportButton key={month} period={month} variant="icon" />}
-    >
+    <SalaryPage title="Gehalt & Netto" showBackFooter={false} backLabel="Zurück zur Auswertung">
       {navigation}
       {content}
+      <ReportExportButton key={month} period={month} variant="button" />
     </SalaryPage>
   );
 }

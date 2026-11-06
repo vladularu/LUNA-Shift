@@ -39,9 +39,7 @@ export function AnalysisCardHeader({
       >
         {title}
       </Text>
-      {onPress ? (
-        <Ionicons name="ellipsis-horizontal-circle" size={22} color={secondaryText} />
-      ) : null}
+      {onPress ? <Ionicons name="chevron-forward" size={22} color={secondaryText} /> : null}
     </>
   );
   const headerStyle = {
@@ -235,9 +233,7 @@ export function AnalysisValueRow({
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
           >
-            {onPress ? (
-              <Ionicons name="ellipsis-horizontal-circle" size={16} color={secondaryText} />
-            ) : null}
+            {onPress ? <Ionicons name="chevron-forward" size={16} color={secondaryText} /> : null}
           </View>
         ) : null}
       </View>
