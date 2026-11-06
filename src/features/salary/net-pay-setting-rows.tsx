@@ -4,6 +4,7 @@ import { usePalette } from "@/theme/palette";
 import { CONTROL_HEIGHT, RADII, SELECTION_METRICS, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import Ionicons from "@/ui/icon";
+import { SurfaceCard } from "@/ui/design-system";
 import { Field } from "@/ui/form-controls";
 import { Text, TextInput } from "@/ui/text";
 import { NetPayCheck } from "./net-pay-controls";
@@ -51,7 +52,7 @@ export function NetPaySettingField({
   compact,
   title,
   caption,
-  separator = true,
+  separator: _separator,
   ...props
 }: Omit<ComponentProps<typeof Field>, "inputRef"> & {
   readonly compact: boolean;
@@ -73,7 +74,7 @@ export function NetPaySettingField({
       onPress={() => input.current?.focus()}
       style={{
         padding: SPACING.lg,
-        borderTopWidth: separator ? 1 : 0,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
         flexDirection: stacked ? "column" : "row",
         alignItems: stacked ? "stretch" : "center",
@@ -130,21 +131,7 @@ export function NetPaySettingField({
 }
 
 export function NetPaySettingGroup({ children }: PropsWithChildren) {
-  const palette = usePalette();
-  return (
-    <View
-      style={{
-        backgroundColor: palette.surface,
-        borderColor: palette.separator,
-        borderWidth: 1,
-        borderRadius: RADII.card,
-        borderCurve: "continuous",
-        overflow: "hidden",
-      }}
-    >
-      {children}
-    </View>
-  );
+  return <SurfaceCard>{children}</SurfaceCard>;
 }
 
 export function NetPaySettingDetails({
@@ -256,7 +243,7 @@ export function NetPaySettingAmount({
       onPress={() => input.current?.focus()}
       style={{
         padding: SPACING.lg,
-        borderTopWidth: 1,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
         flexDirection: stacked ? "column" : "row",
         alignItems: stacked ? "stretch" : "center",
@@ -329,7 +316,7 @@ export function NetPaySettingCheck({
       onPress={() => onChange(!checked)}
       style={({ pressed }) => ({
         minHeight: CONTROL_HEIGHT.regular,
-        borderTopWidth: 1,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
         padding: SPACING.lg,
         flexDirection: "row",

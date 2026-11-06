@@ -278,13 +278,11 @@ export function SettingsInfoDetailsScreen() {
             {content.intro}
           </Text>
           <SurfaceCard>
-            {content.items.map((item, index) => (
+            {content.items.map((item) => (
               <View
                 key={item.title}
                 style={{
                   gap: 4,
-                  borderTopWidth: index === 0 ? 0 : 1,
-                  borderTopColor: palette.separator,
                   paddingHorizontal: 16,
                   paddingVertical: 14,
                 }}

@@ -29,7 +29,7 @@ describe("shared LUNA card info area", () => {
           </View>
           <View testID="info-card">
             <AnalysisListCard title="Gehalt" caption="Zulagen aus Oktober 2026">
-              <Text>Beispielbetrag</Text>
+              <Text>9.232,62 €</Text>
             </AnalysisListCard>
           </View>
         </>,

@@ -4,7 +4,7 @@ import { Text } from "@/ui/text";
 import { SelectionSheet } from "@/ui/selection-sheet";
 import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { usePalette } from "@/theme/palette";
-import { CALENDAR_METRICS, CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { CALENDAR_METRICS, CORNER_CURVE, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { sharedCalendarChipPalette } from "@/theme/color-contrast";
 import { formatDateTitle } from "@/engine/calendar";
@@ -45,7 +45,7 @@ export function SharedCalendarDayMark({
         justifyContent: "center",
         marginHorizontal: CALENDAR_METRICS.chipHorizontalInset,
         paddingHorizontal: CALENDAR_METRICS.chipHorizontalInset,
-        borderRadius: RADII.small,
+        borderRadius: CALENDAR_METRICS.dayRadius,
         borderCurve: CORNER_CURVE,
         borderLeftWidth: CALENDAR_METRICS.sharedCalendarStripeWidth,
         borderLeftColor: first.calendarColor,

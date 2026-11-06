@@ -15,11 +15,13 @@ export function AnalysisCardHeader({
   label,
   onPress,
   accessory,
+  value,
 }: {
   readonly title: string;
   readonly label?: string;
   readonly onPress?: () => void;
   readonly accessory?: ReactNode;
+  readonly value?: string;
 }) {
   const p = usePalette();
   const secondaryText = p.textMuted;
@@ -39,9 +41,19 @@ export function AnalysisCardHeader({
       >
         {title}
       </Text>
-      {onPress ? (
-        <Ionicons name="ellipsis-horizontal-circle" size={22} color={secondaryText} />
+      {value ? (
+        <Text
+          style={{
+            ...TYPOGRAPHY.bodyStrong,
+            color: p.text,
+            fontVariant: ["tabular-nums"],
+            flexShrink: 1,
+          }}
+        >
+          {value}
+        </Text>
       ) : null}
+      {onPress ? <Ionicons name="chevron-forward" size={22} color={secondaryText} /> : null}
     </>
   );
   const headerStyle = {
@@ -51,9 +63,9 @@ export function AnalysisCardHeader({
     gap: SPACING.sm,
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    borderBottomWidth: p.dark ? 1 : 0,
+    borderBottomWidth: 0,
     borderBottomColor: p.cardSeparator,
-    backgroundColor: p.cardHeader,
+    backgroundColor: "transparent",
   };
   const headingContent = onPress ? (
     <Pressable
@@ -112,6 +124,7 @@ export function AnalysisListCard({
   headerAccessory,
   busy = false,
   bodyMinHeight,
+  headerValue,
 }: PropsWithChildren<{
   readonly title: string;
   readonly label?: string;
@@ -120,6 +133,7 @@ export function AnalysisListCard({
   readonly headerAccessory?: ReactNode;
   readonly busy?: boolean;
   readonly bodyMinHeight?: number;
+  readonly headerValue?: string;
 }>) {
   return (
     <SurfaceCard>
@@ -128,6 +142,7 @@ export function AnalysisListCard({
         label={label}
         onPress={onPress}
         accessory={headerAccessory}
+        value={headerValue}
       />
       <View
         testID={`analysis-card-body-${title}`}
@@ -148,7 +163,6 @@ export function AnalysisValueRow({
   label,
   value,
   total = false,
-  first = false,
   onPress,
   icon,
   iconColor,
@@ -171,13 +185,13 @@ export function AnalysisValueRow({
 }) {
   const p = usePalette();
   const secondaryText = p.textMuted;
-  const { fontScale } = useWindowDimensions();
-  const stacked = fontScale >= 1.3;
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = fontScale >= 1.3 || width < 360;
   const style = {
     minHeight: minimumHeight,
     paddingVertical: CARD_METRICS.rowPaddingVertical,
     gap: SPACING.sm,
-    borderTopWidth: first ? 0 : 1,
+    borderTopWidth: 0,
     borderTopColor: p.cardSeparator,
     flexDirection: stacked ? ("column" as const) : ("row" as const),
     alignItems: stacked ? ("stretch" as const) : ("center" as const),
@@ -235,9 +249,7 @@ export function AnalysisValueRow({
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
           >
-            {onPress ? (
-              <Ionicons name="ellipsis-horizontal-circle" size={16} color={secondaryText} />
-            ) : null}
+            {onPress ? <Ionicons name="chevron-forward" size={16} color={secondaryText} /> : null}
           </View>
         ) : null}
       </View>

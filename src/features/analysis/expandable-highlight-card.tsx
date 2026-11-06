@@ -49,7 +49,7 @@ export function ExpandableHighlightCard({
             ...cardHeaderFrame(palette.dark, SPACING.xl),
             minHeight: 100,
             gap: SPACING.sm,
-            backgroundColor: palette.cardHeader,
+            backgroundColor: "transparent",
             opacity: pressed ? 0.78 : 1,
             paddingVertical: SPACING.md,
           })}

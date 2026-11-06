@@ -118,7 +118,7 @@ describe("AppointmentEditOverlay", () => {
       borderTopRightRadius: RADII.sheet,
     });
     expect(screen.getByTestId("appointment-recurrence-preset-card")).toHaveStyle({
-      borderRadius: RADII.control,
+      borderRadius: RADII.card,
     });
     expect(screen.getByTestId("appointment-recurrence-custom-row")).toHaveStyle({ minHeight: 44 });
     expect(screen.getByRole("radio", { name: "Nie", checked: true })).toBeTruthy();

@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   presetCard: {
     flexShrink: 1,
     overflow: "hidden",
-    borderRadius: RADII.control,
+    borderRadius: RADII.card,
     borderCurve: CORNER_CURVE,
   },
   presetRow: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
     paddingHorizontal: 16,
   },
   presetLabel: {
