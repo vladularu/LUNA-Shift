@@ -195,13 +195,13 @@ export function AnnualReportDetails({
               />
             ) : null}
           </>
-        ) : (
+        ) : section !== "PAY" ? (
           <AnalysisDetailSummaryCard
             title={section === "WORK" ? "Deine Stunden" : "Gehaltsprognose"}
             period={String(report.year)}
             caption={section === "WORK" ? undefined : "Brutto nach Monaten"}
           />
-        )}
+        ) : null}
         {testMonthCount > 0 ? <AnnualTestBadge count={testMonthCount} /> : null}
         {section === "CHECK" ? (
           <>
@@ -427,38 +427,56 @@ function AnnualSalaryDetails({
   const palette = usePalette();
   const available = report.availablePayMonthCount > 0;
   const rows = [
-    {
-      label: "Berücksichtigte Monate",
-      value: `${report.availablePayMonthCount} von 12`,
-    },
-    ...(report.salarySource === "MANUAL"
-      ? []
-      : [
-          { label: "Zeitzuschläge", value: formatEuro(report.premiumAmount) },
-          { label: "Überstunden", value: formatEuro(report.overtimeAmount) },
-          { label: "Zulagen", value: formatEuro(report.allowanceAmount) },
-        ]),
+    { label: "Zeitzuschläge", value: formatEuro(report.premiumAmount) },
+    { label: "Überstunden", value: formatEuro(report.overtimeAmount) },
+    { label: "Zulagen", value: formatEuro(report.allowanceAmount) },
   ];
   return (
-    <SurfaceCard>
-      <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.text, ...TYPOGRAPHY.screenTitle, fontVariant: ["tabular-nums"] }}
-        >
-          {available ? formatEuro(report.estimatedGrossAmount) : "Nicht verfügbar"}
-        </Text>
-        <Text
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-        >
-          {available
-            ? `${report.availablePayMonthCount < 12 ? "Brutto-Teilsumme" : "Brutto-Schätzung"} · ${report.availablePayMonthCount} von 12 Monaten`
-            : "Keine unterstützte Monatsschätzung verfügbar"}
-        </Text>
-      </View>
-      {available ? (
+    <>
+      <SurfaceCard>
+        <ReportCardTitle title={`Gehaltsprognose ${report.year}`} />
+        <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{
+              color: palette.text,
+              ...TYPOGRAPHY.screenTitle,
+              fontVariant: ["tabular-nums"],
+            }}
+          >
+            {available ? formatEuro(report.estimatedGrossAmount) : "Nicht verfügbar"}
+          </Text>
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+          >
+            {available
+              ? `${report.availablePayMonthCount < 12 ? "Brutto-Teilsumme" : "Brutto-Schätzung"} · ${report.availablePayMonthCount} von 12 Monaten`
+              : "Keine unterstützte Monatsschätzung verfügbar"}
+          </Text>
+        </View>
         <View style={{ paddingHorizontal: SPACING.lg }}>
+          <AnalysisValueRow
+            first
+            label="Berücksichtigte Monate"
+            value={`${report.availablePayMonthCount} von 12`}
+          />
+        </View>
+        <CardFooterLine
+          caption={
+            available
+              ? report.availablePayMonthCount < 12
+                ? "Nur verfügbare Monate enthalten · keine Hochrechnung."
+                : "Unverbindliche Brutto-Schätzung."
+              : "Ohne eingerichtete Gehaltsgrundlage werden keine Beträge ausgewiesen."
+          }
+        />
+      </SurfaceCard>
+      {available && report.salarySource !== "MANUAL" ? (
+        <AnalysisListCard
+          title="Weitere Gehaltsbestandteile"
+          caption="Im Brutto enthalten. Die vollständige Zusammensetzung findest du im jeweiligen Monat."
+        >
           {rows.map((row, index) => (
             <AnalysisValueRow
               key={row.label}
@@ -473,20 +491,12 @@ function AnnualSalaryDetails({
               }
             />
           ))}
-        </View>
-      ) : (
-        <View style={{ padding: SPACING.lg }}>
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            selectable
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
-          >
-            Ohne eingerichtete Gehaltsgrundlage werden keine Beträge ausgewiesen.
-          </Text>
-        </View>
-      )}
-      <CardSeparator inset={0} />
-      <View style={{ paddingHorizontal: SPACING.lg }}>
+        </AnalysisListCard>
+      ) : null}
+      <AnalysisListCard
+        title="Nach Monaten"
+        caption="Öffne einen Monat für seine Gehaltszusammensetzung."
+      >
         {report.months.map((item, index) => (
           <View key={item.month}>
             {index > 0 ? <CardSeparator inset={0} /> : null}
@@ -524,9 +534,8 @@ function AnnualSalaryDetails({
             </Pressable>
           </View>
         ))}
-      </View>
-      <CardFooterLine />
-    </SurfaceCard>
+      </AnalysisListCard>
+    </>
   );
 }
 
