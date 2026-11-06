@@ -1,17 +1,17 @@
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import type { ComponentProps } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
-import type { CalendarLabelMode } from "@/domain/types";
+import { Pressable, View } from "react-native";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { CALENDAR_HOLIDAY_COLORS } from "@/theme/calendar-day-tints";
 import { readableTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CardSeparator, RowButton, SegmentedControl, SurfaceCard } from "@/ui/design-system";
+import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
 import { ShiftColorSchemePicker } from "./shift-color-scheme-picker";
+import { CalendarChoiceRows } from "./calendar-choice-rows";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 
 function DisplaySwitch({
@@ -69,10 +69,65 @@ function DisplaySwitch({
 export function CalendarDisplayControls() {
   const preferences = useCalendarPreferences();
   const palette = usePalette();
-  const { width, fontScale } = useWindowDimensions();
+  const legacyTimeDisplay = preferences.showShiftTimes && preferences.showShiftDuration;
+  const timeDisplay = legacyTimeDisplay
+    ? null
+    : preferences.showShiftTimes
+      ? "START"
+      : preferences.showShiftDuration
+        ? "DURATION"
+        : "NONE";
   const displayDisabled = !preferences.ready || !preferences.showShifts;
   return (
     <>
+      <SelectionGroup title="Dienstfarben" testID="calendar-shift-colors-settings">
+        <SurfaceCard>
+          <ShiftColorSchemePicker
+            pastelColors={preferences.pastelColors}
+            disabled={displayDisabled}
+            onChange={preferences.setPastelColors}
+          />
+        </SurfaceCard>
+      </SelectionGroup>
+      <SelectionGroup title="Dienstbezeichnung" testID="calendar-label-settings">
+        <SurfaceCard>
+          <CalendarChoiceRows
+            label="Dienstbezeichnung"
+            options={[
+              { value: "FULL", label: "Name" },
+              { value: "SHORT", label: "Kürzel" },
+              { value: "SYMBOL", label: "Symbol" },
+            ]}
+            value={preferences.labelMode}
+            disabled={displayDisabled}
+            onChange={preferences.setLabelMode}
+          />
+        </SurfaceCard>
+      </SelectionGroup>
+      <SelectionGroup title="Zeitangabe" testID="calendar-time-settings">
+        <SurfaceCard>
+          <CalendarChoiceRows
+            label="Zeitangabe"
+            options={[
+              { value: "NONE", label: "Keine" },
+              { value: "START", label: "Startzeit" },
+              { value: "DURATION", label: "Gesamtdauer" },
+            ]}
+            value={timeDisplay}
+            disabled={displayDisabled}
+            onChange={preferences.setTimeDisplay}
+          />
+          {legacyTimeDisplay ? (
+            <Text
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              style={{ ...TYPOGRAPHY.caption, color: palette.textMuted, padding: SPACING.lg }}
+            >
+              Bisher werden Startzeit und Gesamtdauer angezeigt. Wähle, welche Zeitangabe du künftig
+              sehen möchtest.
+            </Text>
+          ) : null}
+        </SurfaceCard>
+      </SelectionGroup>
       <SelectionGroup title="Kalenderinhalt" testID="calendar-content-settings">
         <SurfaceCard>
           <DisplaySwitch
@@ -166,49 +221,6 @@ export function CalendarDisplayControls() {
               );
             })}
           </View>
-        </SurfaceCard>
-      </SelectionGroup>
-      <SelectionGroup title="Dienstfarben" testID="calendar-shift-colors-settings">
-        <SurfaceCard>
-          <ShiftColorSchemePicker
-            pastelColors={preferences.pastelColors}
-            disabled={displayDisabled}
-            onChange={preferences.setPastelColors}
-          />
-        </SurfaceCard>
-      </SelectionGroup>
-      <SelectionGroup title="Dienstanzeige" testID="calendar-label-settings">
-        <SurfaceCard>
-          <View style={{ padding: SPACING.lg }}>
-            <SegmentedControl
-              accessibilityLabel="Dienstbezeichnung"
-              items={[
-                { value: "FULL", label: "Name" },
-                { value: "SHORT", label: "Kürzel" },
-                { value: "SYMBOL", label: "Symbol" },
-              ]}
-              value={preferences.labelMode}
-              disabled={displayDisabled}
-              stacked={width < 360 || fontScale > 1.2}
-              onChange={(value) => preferences.setLabelMode(value as CalendarLabelMode)}
-            />
-          </View>
-          <CardSeparator inset={0} />
-          <DisplaySwitch
-            label="Startzeit"
-            icon="time-outline"
-            value={preferences.showShiftTimes}
-            onChange={preferences.setShowShiftTimes}
-            disabled={displayDisabled}
-          />
-          <CardSeparator />
-          <DisplaySwitch
-            label="Gesamtdauer"
-            icon="hourglass-outline"
-            value={preferences.showShiftDuration}
-            onChange={preferences.setShowShiftDuration}
-            disabled={displayDisabled}
-          />
         </SurfaceCard>
       </SelectionGroup>
       {!preferences.showShifts ? (

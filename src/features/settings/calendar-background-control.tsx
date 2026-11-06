@@ -1,25 +1,17 @@
 import Ionicons from "@/ui/icon";
 import { useEffect } from "react";
-import { AccessibilityInfo, Image, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Image, View } from "react-native";
 import { calendarImageOpacityPercentage } from "@/theme/calendar-image";
 import { CalendarImageOpacityControl } from "./calendar-image-opacity-control";
 import { useCalendarBackground } from "./calendar-background-context";
 import { usePalette } from "@/theme/palette";
 import { RADII, SPACING } from "@/theme/tokens";
-import {
-  CardSeparator,
-  InlineNotice,
-  RowButton,
-  SegmentedControl,
-  SurfaceCard,
-} from "@/ui/design-system";
+import { CardSeparator, InlineNotice, RowButton, SurfaceCard } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
 
 export function CalendarBackgroundControl() {
   const background = useCalendarBackground();
   const palette = usePalette();
-  const { width, fontScale } = useWindowDimensions();
-  const stacked = width < 360 || fontScale > 1.2;
   const disabled = !background.supported || !background.ready || background.busy;
   useEffect(() => {
     if (background.canUndoRemoval)
@@ -27,27 +19,8 @@ export function CalendarBackgroundControl() {
   }, [background.canUndoRemoval]);
   return (
     <>
-      <SelectionGroup title="Hintergrund" testID="calendar-background-settings">
+      <SelectionGroup title="Eigenes Hintergrundbild" testID="calendar-background-settings">
         <SurfaceCard testID="calendar-photo-actions">
-          <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
-            <SegmentedControl
-              accessibilityLabel="Kalenderhintergrund"
-              items={[
-                { value: "standard", label: "LUNA Standard" },
-                { value: "photo", label: "Eigenes Foto" },
-              ]}
-              value={background.uri ? "photo" : "standard"}
-              stacked={stacked}
-              disabled={disabled}
-              onChange={(value) => {
-                if (value === "standard" && background.uri) void background.remove();
-                if (value === "photo" && !background.uri) {
-                  if (background.canUndoRemoval) void background.undoRemove();
-                  else void background.choose();
-                }
-              }}
-            />
-          </View>
           <RowButton
             title={background.uri ? "Foto ändern" : "Foto auswählen"}
             disabled={disabled}
