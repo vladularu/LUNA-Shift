@@ -185,7 +185,7 @@ describe("local backup restore", () => {
   it("round-trips dashboard order, visibility and metric, and resets them for older backups", async () => {
     const view = {
       ...DEFAULT_ANALYSIS_VIEW,
-      order: ["PAY", "WORK", "PREMIUM", "CHECK", "SHIFTS"] as const,
+      order: ["PAY", "NET", "WORK", "PREMIUM", "CHECK", "SHIFTS"] as const,
       hidden: ["SHIFTS"] as const,
       shiftMetric: "COUNT" as const,
     };
@@ -252,8 +252,8 @@ describe("local backup restore", () => {
     await restoreLocalBackup(destinationDb, validated);
     expect(await loadAnalysisView(destinationDb)).toEqual({
       version: 1,
-      order: ["SHIFTS", "PREMIUM", "PAY", "WORK", "CHECK"],
-      hidden: ["PAY", "PREMIUM"],
+      order: ["SHIFTS", "PREMIUM", "PAY", "NET", "WORK", "CHECK"],
+      hidden: ["PAY", "PREMIUM", "NET"],
       shiftMetric: "COUNT",
     });
   });

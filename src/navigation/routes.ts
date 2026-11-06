@@ -69,7 +69,7 @@ export function shiftAnalysisRoute(month: string) {
   });
 }
 
-export type AnnualDetailSection = "WORK" | "CHECK" | "PAY" | "PREMIUM" | "SHIFTS";
+export type AnnualDetailSection = "WORK" | "CHECK" | "PAY" | "NET" | "PREMIUM" | "SHIFTS";
 
 export function annualDetailsRoute(year: number, section: AnnualDetailSection) {
   return Object.freeze({
@@ -81,6 +81,13 @@ export function annualDetailsRoute(year: number, section: AnnualDetailSection) {
 export function salaryRoute(month: string) {
   return Object.freeze({
     pathname: "/salary" as const,
+    params: Object.freeze({ month: requireMonth(month) }),
+  });
+}
+
+export function netPayForecastRoute(month: string) {
+  return Object.freeze({
+    pathname: "/net-pay" as const,
     params: Object.freeze({ month: requireMonth(month) }),
   });
 }

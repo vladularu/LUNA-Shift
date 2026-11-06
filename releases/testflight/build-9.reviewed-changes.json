@@ -53,8 +53,8 @@
     {
       "path": "src/features/salary/salary-screen.tsx",
       "kind": "modified",
-      "sha256": "6a0e4e7f1645cdb96e311ae040ab423e22ee0968ea8514a92d8ecd7d43a3a131",
-      "reason": "Paket 2: Move the single existing monthly report-export action from the header into the scroll content after the payroll statement, using its existing labelled and theme-aware button variant. Preserve period key, export logic and loading/error guards. Preview device acceptance pending."
+      "sha256": "dc9d8d4ea3a3f533cb7934e7301841636f4e1e30222702c15dc400d111d47017",
+      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards."
     },
     {
       "path": "src/features/salary/salary-ui.tsx",
@@ -77,8 +77,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "9c78454558f6178f944fa8cce4a616538672fab03567cf9190c5d30df3e2122f",
-      "reason": "Paket 2: Use chevrons on existing annual check, salary and monthly time-account detail links. Preserve available/unavailable states, callbacks, numbers and aggregation. Preview device acceptance pending."
+      "sha256": "deb904a3f437ff830e8b511a19096169586f8c49809ead19d6d3c5474b245900",
+      "reason": "Paket 4C: pass prepared annual net state to overview and render distinct NET details. Other detail sections do not start net preparation."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
@@ -89,8 +89,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "449e9b059d3a89152fa054e647ff817dd92f538d8aba07097a0b6ab9d6a4aa31",
-      "reason": "Paket 2: Retain mandatory net-pay regression cases; update the existing month-navigation export assertion to the labelled bottom button and verify one export inside the scroll content. Preview device acceptance pending."
+      "sha256": "f09568678c7944dea74b99bd3ddade3a42244f948cdcc1def95e8a2dd914ea75",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -145,6 +145,108 @@
       "kind": "modified",
       "sha256": "7a49a486be45b8844962808e574a4f7c09a945e3225e2200ce0c7acbb1bc2b5b",
       "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged."
+    },
+    {
+      "path": "app/_layout.tsx",
+      "kind": "modified",
+      "sha256": "a2a43fb3c71d88c2831ee01a2e9fa3c825106fadca1b843b4df12ee45facdbd1",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes."
+    },
+    {
+      "path": "src/features/salary/salary-payroll-content.tsx",
+      "kind": "modified",
+      "sha256": "13d95514eb1133ed3b78e43acfeff88e2e109517333245c32e6ae1ea5e33a94d",
+      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields."
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.tsx",
+      "kind": "modified",
+      "sha256": "b712c9f83bc961f1e7b98ff2b5d0a10e7f8c01a830f97bf68f0a2f150599e0f7",
+      "reason": "Paket 4A: the existing automatic net route reuses the monthly report page in net mode. No manual calculator, new financial calculation or settings migration."
+    },
+    {
+      "path": "src/features/salary/net-pay-screen.tsx",
+      "kind": "modified",
+      "sha256": "dc8e0e9031f641f01b4b5f044982e7fb58fd642939b7e53b62b56b472b2d98c9",
+      "reason": "Paket 4A: preserve strict legacy net-link month validation and add a back-capable custom page for invalid links after removing the native header."
+    },
+    {
+      "path": "src/features/salary/net-pay-settings-screen.tsx",
+      "kind": "modified",
+      "sha256": "aef8d9079e4dca3d1c0c9349b89da8b7037fb819d96339b218f9aa85913a5350",
+      "reason": "Paket 4A: return to the net forecast when settings were opened without navigation history; preserve selected month, save behavior and draft protection."
+    },
+    {
+      "path": "src/navigation/routes.ts",
+      "kind": "modified",
+      "sha256": "7d72b7edf403819e7253e7f3fe4e4ab347fb4df6ef743f8db988360ceb212701",
+      "reason": "Paket 4C: extend typed annual detail section with NET while preserving existing selected-year validation and separated monthly salary/net routes."
+    },
+    {
+      "path": "src/domain/analysis-view.ts",
+      "kind": "modified",
+      "sha256": "8ee12cacfcda6912c8a077d43c0b3482a97156596e69210c2de731e230a1ce9f",
+      "reason": "Paket 4 correction: add independent NET card identity and title. Strictly migrate valid old four/five-card layouts, insert NET after PAY and inherit hidden PAY only during migration. Preserve independent six-card order/visibility, reject incomplete/unknown/duplicate IDs. No salary data or financial formula changes."
+    },
+    {
+      "path": "src/features/analysis/dashboard-cards.tsx",
+      "kind": "modified",
+      "sha256": "43e547c97e9f9d934bd7d0b1df527cd72ff55d9a79b055d8c04dafbb8abf02cb",
+      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics."
+    },
+    {
+      "path": "src/features/analysis/month-overview.tsx",
+      "kind": "modified",
+      "sha256": "7ccc6f8047212b567c468813c4ee4fa9bdbb808a992c0fd32c93197f40fef2f1",
+      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read."
+    },
+    {
+      "path": "src/features/analysis/analysis-view-controls.tsx",
+      "kind": "modified",
+      "sha256": "2090d9c8c63de5145b019e001e2d5f08a8e1a88e11720c9b843171351e30b914",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change."
+    },
+    {
+      "path": "src/features/analysis/analysis-net-pay-row.tsx",
+      "kind": "modified",
+      "sha256": "ebeda11dd7724e23e6a14a8773e58cfd49a6f9715acb6687c6618d7126d09fed",
+      "reason": "Paket 4 correction: mark the existing net result as the first row of its standalone card, removing the separator previously needed beneath gross. Preserve status, estimate and annual-payment labels and Preview styling."
+    },
+    {
+      "path": "src/features/analysis/annual-net-pay.ts",
+      "kind": "added",
+      "sha256": "7f51d1c2a20cde16a6a2e507c8595884cd4a05d33a23e868541845ee521c6c4e",
+      "reason": "Paket 4C: aggregate twelve existing monthly PAYOUT net forecasts in integer cents, resolving settings by effective month. Preserve missing/test-blocked status, preliminary basis, pension and annual-payment notes. No new tax or salary formulas."
+    },
+    {
+      "path": "src/features/analysis/use-annual-net-pay.ts",
+      "kind": "added",
+      "sha256": "289fddc32fab102fd3a6ff0b9e18f0fd9bd4647fa37cc582262ec9794de8f664",
+      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change."
+    },
+    {
+      "path": "src/features/analysis/annual-net-pay-view.tsx",
+      "kind": "added",
+      "sha256": "ddbdbbe49058b63d431fd759de75d769457479d93e7a0fc04f27f7ec90c3a0d3",
+      "reason": "Paket 4C: independent annual net card and twelve monthly net detail rows, partial-month coverage and basis notes, using existing shared Luftig-aware card/layout primitives."
+    },
+    {
+      "path": "src/features/analysis/annual-overview.tsx",
+      "kind": "modified",
+      "sha256": "1965e1aebadd0ddac51dba819031d5da03a2b9686be501dea2d19eda47d3186f",
+      "reason": "Paket 4C: add NET sibling to PAY in annual overview, honoring existing independent visibility/order preferences and selected year. Gross card unchanged."
+    },
+    {
+      "path": "src/features/analysis/annual-details-screen.tsx",
+      "kind": "modified",
+      "sha256": "5d81d8510b2b74b661ec1d866d3b3fdea6de4fc355f76755f9b0e3aad06b83e6",
+      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year."
+    },
+    {
+      "path": "src/features/analysis/use-annual-salary-payments.ts",
+      "kind": "modified",
+      "sha256": "d82a6ab8dfcb730a70734685cc7dffe9c210534e15a77cd094ed7290588c72be",
+      "reason": "Paket 4C: reuse one existing settings-timeline read for annual net; retain gross annual-payment guards and skip individual test months in net calculation."
     }
   ]
 }

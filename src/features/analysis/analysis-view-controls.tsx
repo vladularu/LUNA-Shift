@@ -22,6 +22,7 @@ const CARD_ICONS: Record<AnalysisCardId, ComponentProps<typeof Ionicons>["name"]
   CHECK: "shield-checkmark-outline",
   PREMIUM: "time-outline",
   PAY: "wallet-outline",
+  NET: "calculator-outline",
   SHIFTS: "calendar-outline",
 };
 

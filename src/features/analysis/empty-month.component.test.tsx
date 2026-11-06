@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react-native";
+import { render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { Text } from "react-native";
 import type { MonthlyComplianceResult } from "@/domain/types";
@@ -17,6 +17,7 @@ jest.mock("./dashboard-cards", () => {
       <>
         {cards.CHECK}
         {cards.PAY}
+        {cards.NET}
       </>
     ),
   };
@@ -79,7 +80,10 @@ describe("empty month presentation", () => {
     expect(screen.getByLabelText(/Grundgehalt:.*3.200,00/)).toBeTruthy();
     expect(screen.getByLabelText(/Weitere Zulagen:.*100,00/)).toBeTruthy();
     expect(screen.getByLabelText(/Jahressonderzahlung:.*500,00/)).toBeTruthy();
-    expect(screen.getByText("Basis-Netto vorhanden")).toBeTruthy();
+    const salary = screen.getByTestId("analysis-card-body-Gehalt");
+    const net = screen.getByTestId("analysis-card-body-Netto");
+    expect(within(salary).queryByText("Basis-Netto vorhanden")).toBeNull();
+    expect(within(net).getByText("Basis-Netto vorhanden")).toBeTruthy();
   });
   it("keeps cross-month findings and catalog warnings visible even without target-month shifts", async () => {
     const checks: MonthlyComplianceResult = {

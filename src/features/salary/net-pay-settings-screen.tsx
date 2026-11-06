@@ -9,7 +9,7 @@ import {
   usePflegeShiftTestData,
 } from "@/application/pflegeshift-provider";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
-import { salaryRoute } from "@/navigation/routes";
+import { netPayForecastRoute } from "@/navigation/routes";
 import { employmentProfileAt } from "@/domain/employment-history";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -33,9 +33,9 @@ export function NetPaySettingsScreen() {
     parsed.status === "valid" && ready && error === null && profile !== null && !blocked,
   );
   const scrollRef = useRef<ScrollView>(null);
-  function backToSalary() {
+  function backToForecast() {
     if (router.canGoBack()) router.back();
-    else router.replace(salaryRoute(month));
+    else router.replace(netPayForecastRoute(month));
   }
 
   if (parsed.status !== "valid") {
@@ -43,7 +43,7 @@ export function NetPaySettingsScreen() {
       <LoadFailureView
         title="Netto-Einstellungen können nicht geöffnet werden"
         message="Der Link enthält keinen gültigen Monat."
-        actionLabel="Zurück zum Gehalt"
+        actionLabel="Zurück zur Netto-Prognose"
         onRetry={() => router.back()}
       />
     );
@@ -54,8 +54,8 @@ export function NetPaySettingsScreen() {
       <LoadFailureView
         title="Netto-Einstellungen nicht verfügbar"
         message="Für Testdaten gibt es keine Netto-Prognose."
-        actionLabel="Zurück zum Gehalt"
-        onRetry={backToSalary}
+        actionLabel="Zurück zur Netto-Prognose"
+        onRetry={backToForecast}
       />
     );
   }
@@ -68,7 +68,7 @@ export function NetPaySettingsScreen() {
       <Stack.Screen
         options={{
           title: "Netto-Einstellungen",
-          ...pageBackButtonOptions(backToSalary, "Zurück zum Gehalt", true),
+          ...pageBackButtonOptions(backToForecast, "Zurück zur Netto-Prognose", true),
         }}
       />
       <NetPaySetupForm
@@ -80,7 +80,7 @@ export function NetPaySettingsScreen() {
         churchTaxDefaultPercent={work?.federalState === "BY" || work?.federalState === "BW" ? 8 : 9}
         busy={data.busy}
         onSave={data.save}
-        onSaved={backToSalary}
+        onSaved={backToForecast}
         onValidationFailure={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
         renderLayout={({ content, headerAction }) => (
           <>

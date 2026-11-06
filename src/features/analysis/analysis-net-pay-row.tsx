@@ -75,7 +75,13 @@ function NetPayContent({ model }: { readonly model: AnalysisNetPayModel }) {
           : null;
   return (
     <View testID="analysis-net-pay-row">
-      <AnalysisValueRow label={label} value={value} total={available !== null} reserveDisclosure />
+      <AnalysisValueRow
+        first
+        label={label}
+        value={value}
+        total={available !== null}
+        reserveDisclosure
+      />
       {notice ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.md }}>
           {notice}

@@ -9,6 +9,7 @@ import {
   type AnalysisViewPreferences,
 } from "@/domain/analysis-view";
 import { AnalysisViewProvider, useAnalysisView } from "./analysis-view-preferences";
+import { AnalysisDashboard } from "./dashboard-cards";
 import { AnalysisViewControls } from "./analysis-view-controls";
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context/jest/mock") as {
@@ -80,7 +81,42 @@ describe("analysis view preferences", () => {
       </AnalysisViewProvider>,
     );
     await waitFor(() => expect(read(next).hidden).toEqual(["PAY"]));
-    expect(read(next).order).toEqual(["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"]);
+    expect(read(next).order).toEqual(["WORK", "CHECK", "PREMIUM", "PAY", "SHIFTS", "NET"]);
+  });
+  it("persists salary and net as independently visible cards", async () => {
+    let stored = DEFAULT_ANALYSIS_VIEW;
+    mockLoad.mockImplementation(async () => stored);
+    mockSave.mockImplementation(async (_db, next) => {
+      stored = next;
+    });
+    const content = (
+      <AnalysisViewProvider>
+        <Harness />
+        <AnalysisViewControls />
+        <AnalysisDashboard
+          cards={{
+            PAY: <Text testID="independent-salary">Salary card</Text>,
+            NET: <Text testID="independent-net">Net card</Text>,
+          }}
+        />
+      </AnalysisViewProvider>
+    );
+    const screen = await render(content);
+    await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+    await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+    await fireEvent(screen.getByLabelText("Gehalt anzeigen"), "valueChange", false);
+    await waitFor(() => expect(stored.hidden).toEqual(["PAY"]));
+    expect(screen.queryByTestId("independent-salary")).toBeNull();
+    expect(screen.getByTestId("independent-net", { includeHiddenElements: true })).toBeTruthy();
+    await fireEvent(screen.getByLabelText("Netto anzeigen"), "valueChange", false);
+    await fireEvent(screen.getByLabelText("Gehalt anzeigen"), "valueChange", true);
+    await waitFor(() => expect(stored.hidden).toEqual(["NET"]));
+    await screen.unmount();
+    const restored = await render(content);
+    await waitFor(() => expect(restored.getByText("ready")).toBeTruthy());
+    expect(restored.getByTestId("independent-salary")).toBeTruthy();
+    expect(restored.queryByTestId("independent-net")).toBeNull();
+    expect(read(restored).hidden).toEqual(["NET"]);
   });
   it("serializes rapid writes and preserves every newer change", async () => {
     let finish!: () => void;
@@ -103,7 +139,7 @@ describe("analysis view preferences", () => {
     await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(2));
     expect(mockSave.mock.calls[1][1]).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "PAY", "SHIFTS", "NET"],
     });
   });
   it("rolls back a failed write and retries the requested view", async () => {
@@ -237,14 +273,14 @@ describe("analysis view preferences", () => {
     });
     expect(read(screen)).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "PAY", "SHIFTS", "NET"],
     });
     expect(screen.queryByRole("button", { name: "Standard wiederherstellen" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Auswahl anzeigen" }));
     expect(screen.getByLabelText("Gehalt anzeigen")).toBeTruthy();
     expect(read(screen)).toMatchObject({
       hidden: ["PAY"],
-      order: ["WORK", "CHECK", "PREMIUM", "SHIFTS", "PAY"],
+      order: ["WORK", "CHECK", "PREMIUM", "PAY", "SHIFTS", "NET"],
     });
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     expect(screen.queryByText("Deine Karten für Monat und Jahr.")).toBeNull();
@@ -270,23 +306,23 @@ describe("analysis view preferences", () => {
           fireGestureHandler(getByGestureTestId("analysis-sort-drag-WORK"), [
             { state: State.BEGAN },
             { state: State.ACTIVE, translationY: 0, translationX: 0 },
-            { state: State.ACTIVE, translationY: 400, translationX: 20 },
-            { state: State.END, translationY: 400, translationX: 20 },
+            { state: State.ACTIVE, translationY: 600, translationX: 20 },
+            { state: State.END, translationY: 600, translationX: 20 },
           ]);
           jest.advanceTimersByTime(500);
         });
         expect(mockSave).toHaveBeenCalledTimes(1);
         expect(mockSave.mock.calls[0][1]).toMatchObject({
-          order: ["CHECK", "PREMIUM", "PAY", "SHIFTS", "WORK"],
+          order: ["CHECK", "PREMIUM", "PAY", "NET", "SHIFTS", "WORK"],
           hidden: ["PAY"],
         });
         await waitFor(() =>
           expect(read(screen).order).toEqual(
-            fail ? initial.order : ["CHECK", "PREMIUM", "PAY", "SHIFTS", "WORK"],
+            fail ? initial.order : ["CHECK", "PREMIUM", "PAY", "NET", "SHIFTS", "WORK"],
           ),
         );
         expect(
-          screen.getByRole("adjustable", { name: `Arbeitszeit, Position ${fail ? 1 : 5} von 5` }),
+          screen.getByRole("adjustable", { name: `Arbeitszeit, Position ${fail ? 1 : 6} von 6` }),
         ).toBeTruthy();
         if (fail)
           expect(

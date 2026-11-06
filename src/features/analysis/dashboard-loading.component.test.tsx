@@ -2,7 +2,6 @@ import { render } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { StyleSheet } from "react-native";
 import { PayListCard, CheckListCard } from "./dashboard-cards";
-import { AnalysisValueRow } from "./analysis-list-card";
 
 const amounts = {
   base: 4075.58,
@@ -31,13 +30,6 @@ function Pay({
       annualPaymentExpected={annual}
       annualPaymentPresent={present}
       annualPayments={present ? 4084.53 : 0}
-      netRow={
-        <AnalysisValueRow
-          reserveDisclosure
-          label="Voraussichtliches Netto"
-          value={loading ? "—" : "3.628,47 €"}
-        />
-      }
     />
   );
 }
@@ -53,7 +45,7 @@ const height = (screen: Screen, busy: boolean) => {
 };
 
 describe("stable analysis card loading rows", () => {
-  it("keeps the complete salary row structure while gross and net finish", async () => {
+  it("keeps the complete salary row structure while gross finishes without embedding net", async () => {
     const screen = await render(<Pay loading />);
     const before = labels(screen),
       reserved = height(screen, true);

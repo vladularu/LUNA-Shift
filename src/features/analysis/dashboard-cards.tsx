@@ -216,6 +216,25 @@ export function CheckListCard({
     </AnalysisListCard>
   );
 }
+export function NetListCard({
+  onPress,
+  netPay,
+}: {
+  readonly onPress: () => void;
+  readonly netPay: ReactNode;
+}) {
+  return (
+    <AnalysisListCard
+      title="Netto"
+      label="Netto"
+      onPress={onPress}
+      caption="Unverbindliche Netto-Schätzung"
+    >
+      {netPay}
+    </AnalysisListCard>
+  );
+}
+
 export function PayListCard({
   onPress,
   base,
@@ -226,7 +245,6 @@ export function PayListCard({
   manual = false,
   status,
   caption,
-  netRow,
   annualPayments,
   annualPaymentPresent = false,
   annualPaymentExpected = false,
@@ -242,7 +260,6 @@ export function PayListCard({
   readonly manual?: boolean;
   readonly status?: string;
   readonly caption: string;
-  readonly netRow?: ReactNode;
   readonly annualPayments?: number;
   readonly annualPaymentPresent?: boolean;
   readonly annualPaymentExpected?: boolean;
@@ -266,7 +283,6 @@ export function PayListCard({
   ) : null;
   const rows =
     1 +
-    (netRow ? 1 : 0) +
     (hasAnnualRow ? 1 : 0) +
     (manual
       ? hasAnnualRow && base != null
@@ -283,11 +299,7 @@ export function PayListCard({
       onPress={onPress}
       caption={caption}
       busy={loading}
-      bodyMinHeight={
-        !reserveLoadingSpace || status || fontScale > 1.2
-          ? undefined
-          : rows * 47 + (hasAnnualRow && netRow ? 32 : 0)
-      }
+      bodyMinHeight={!reserveLoadingSpace || status || fontScale > 1.2 ? undefined : rows * 47}
     >
       {status ? (
         <AnalysisValueRow reserveDisclosure first label="Status" value={status} />
@@ -352,7 +364,6 @@ export function PayListCard({
           />
         </>
       )}
-      {netRow}
     </AnalysisListCard>
   );
 }

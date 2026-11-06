@@ -8,18 +8,25 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 import { useReportMonth } from "@/navigation/use-report-month";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ReportPeriodContent, ReportTestBadge } from "@/ui/report-layout";
-import { SalaryPayrollContent } from "./salary-payroll-content";
+import { SalaryPayrollContent, type PayrollView } from "./salary-payroll-content";
 import { useSalaryReport } from "./use-salary-report";
 import { SalaryMonthNavigator, SalaryPage } from "./salary-ui";
 
-export function SalaryScreen() {
+export function SalaryScreen({
+  view = "salary",
+  initialMonth,
+}: { readonly view?: PayrollView; readonly initialMonth?: string } = {}) {
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const parsed = parseMonthRouteParam(params.month);
   const routeMonth = parsed.status === "valid" ? parsed.value : null;
-  const { month, selectMonth } = useReportMonth(routeMonth);
+  const { month, selectMonth } = useReportMonth(initialMonth ?? routeMonth);
   if (parsed.status === "invalid")
     return (
-      <SalaryPage title="Gehalt & Netto" backLabel="Zurück zur Auswertung" showBackFooter={false}>
+      <SalaryPage
+        title={view === "salary" ? "Gehalt" : "Netto-Prognose"}
+        backLabel="Zurück zur Auswertung"
+        showBackFooter={false}
+      >
         <LoadFailureView
           title="Gehalt kann nicht geöffnet werden"
           message="Der Link enthält keinen gültigen Monat."
@@ -29,14 +36,20 @@ export function SalaryScreen() {
       </SalaryPage>
     );
   return (
-    <SalaryMonthPage month={month} moveMonth={(delta) => selectMonth(addMonths(month, delta))} />
+    <SalaryMonthPage
+      view={view}
+      month={month}
+      moveMonth={(delta) => selectMonth(addMonths(month, delta))}
+    />
   );
 }
 
 function SalaryMonthPage({
+  view,
   month,
   moveMonth,
 }: {
+  readonly view: PayrollView;
   readonly month: string;
   readonly moveMonth: (delta: number) => void;
 }) {
@@ -88,6 +101,7 @@ function SalaryMonthPage({
         {testMonths.includes(month) ? <ReportTestBadge /> : null}
         <SalaryPayrollContent
           key={month}
+          view={view}
           projection={projection}
           month={month}
           profile={profile}
@@ -100,7 +114,11 @@ function SalaryMonthPage({
     );
   }
   return (
-    <SalaryPage title="Gehalt & Netto" showBackFooter={false} backLabel="Zurück zur Auswertung">
+    <SalaryPage
+      title={view === "salary" ? "Gehalt" : "Netto-Prognose"}
+      showBackFooter={false}
+      backLabel="Zurück zur Auswertung"
+    >
       {navigation}
       {content}
       <ReportExportButton key={month} period={month} variant="button" />

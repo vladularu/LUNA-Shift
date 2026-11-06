@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { describe, expect, it, jest } from "@jest/globals";
 import { Text } from "react-native";
@@ -29,6 +29,7 @@ jest.mock("./dashboard-cards", () => ({
       {cards.WORK}
       {cards.PREMIUM}
       {cards.PAY}
+      {cards.NET}
     </>
   ),
 }));
@@ -164,7 +165,18 @@ describe("separate earned and payout salary cards", () => {
     expect(screen.queryByText("Für Oktober 2026")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.getByLabelText(/^Ist:/).props.accessibilityLabel).toBe(originalWork);
-    expect(screen.getByText("Netto aus passender Prognose")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("analysis-card-body-Netto")).getByText(
+        "Netto aus passender Prognose",
+      ),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("analysis-card-body-Gehalt")).queryByText(
+        "Netto aus passender Prognose",
+      ),
+    ).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Netto" }));
+    expect(router.push).toHaveBeenLastCalledWith({ pathname: "/net-pay", params: { month } });
     expect(
       screen.getByLabelText(
         `Brutto geschätzt: ${formatEuro(shifted.projection.pay.estimatedGrossAmount)}`,

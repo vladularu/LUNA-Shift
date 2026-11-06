@@ -37,7 +37,7 @@ describe("automatic net-pay route", () => {
       const screen = await render(<NetPayScreen />);
       expect(mockAutomatic).not.toHaveBeenCalled();
       expect(screen.getByText("Ungültiger Abrechnungsmonat")).toBeTruthy();
-      await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
       expect(router.back).toHaveBeenCalledTimes(1);
     },
   );

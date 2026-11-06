@@ -4,8 +4,14 @@ import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
-import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
-import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
+import { complianceDetailsRoute, salaryRoute, netPayForecastRoute } from "@/navigation/routes";
+import {
+  AnalysisDashboard,
+  CheckListCard,
+  PayListCard,
+  WorkListCard,
+  NetListCard,
+} from "./dashboard-cards";
 import { EarnedPremiumsCard } from "./salary-overview-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
@@ -218,7 +224,6 @@ export function MonthOverview({
               Number(month.slice(0, 4)),
             ).includes(month)}
             manual={manualSalary}
-            netRow={netPay ?? <AnalysisNetPayRow month={month} />}
             caption={
               salaryError
                 ? salaryError
@@ -230,6 +235,12 @@ export function MonthOverview({
                       ? "Manuell hinterlegtes Monatsbrutto"
                       : "Unverbindliche Schätzung"
             }
+          />
+        ),
+        NET: (
+          <NetListCard
+            onPress={() => router.push(netPayForecastRoute(month))}
+            netPay={netPay ?? <AnalysisNetPayRow month={month} />}
           />
         ),
         SHIFTS: (

@@ -108,11 +108,17 @@ describe("classical payroll presentation", () => {
     expect(
       paper.getByLabelText(`Gesamtbrutto: ${netPayEuro(props.net.amounts.grossCents)}`),
     ).toBeTruthy();
-    expect(paper.getByLabelText(`Netto geschätzt: ${netPayEuro(props.net.netCents)}`)).toBeTruthy();
+    expect(paper.queryByLabelText(/^Netto geschätzt:/)).toBeNull();
+    expect(paper.queryByRole("button", { name: /^Abzüge:/ })).toBeNull();
+    await screen.rerender(<SalaryPayrollStatement {...props} view="net" />);
+    const netPaper = within(screen.getByTestId("salary-payroll-statement"));
+    expect(
+      netPaper.getByLabelText(`Netto geschätzt: ${netPayEuro(props.net.netCents)}`),
+    ).toBeTruthy();
     expect(paper.queryByRole("button", { name: /^Gesamtbrutto:/ })).toBeNull();
     expect(paper.queryByRole("button", { name: /^Grundentgelt:/ })).toBeNull();
     expect(paper.queryByText("Lohnsteuer")).toBeNull();
-    const deductions = paper.getByRole("button", { name: /^Abzüge:/ });
+    const deductions = netPaper.getByRole("button", { name: /^Abzüge:/ });
     expect(deductions.props.accessibilityLabel).toContain(
       netPayEuro(-(props.net.amounts.grossCents - props.net.netCents)),
     );
@@ -137,14 +143,16 @@ describe("classical payroll presentation", () => {
       tax: { ...props.net.tax, solidarityCents: 750, churchTaxCents: 2500 },
       netCents: props.net.netCents - 3250,
     };
-    const screen = await render(<SalaryPayrollStatement {...props} net={net} />);
+    const screen = await render(<SalaryPayrollStatement view="net" {...props} net={net} />);
     await openDeductions(screen, net);
     expect(screen.getByLabelText(`Solidaritätszuschlag: ${netPayEuro(750)}`)).toBeTruthy();
     expect(screen.getByLabelText(`Kirchensteuer: ${netPayEuro(2500)}`)).toBeTruthy();
   });
   it("keeps missing net and blocked payroll distinct from zero employee deductions", async () => {
     const props = fixture();
-    const screen = await render(<SalaryPayrollStatement {...props} net={null} blocked />);
+    const screen = await render(
+      <SalaryPayrollStatement view="net" {...props} net={null} blocked />,
+    );
     const paper = within(screen.getByTestId("salary-payroll-statement"));
     expect(paper.getByLabelText("Abzüge: Nicht verfügbar")).toBeTruthy();
     expect(paper.getByLabelText("Netto geschätzt: Nicht verfügbar")).toBeTruthy();
@@ -243,7 +251,7 @@ describe("classical payroll presentation", () => {
       },
       netCents: props.net.netCents + props.net.tax.wageTaxCents,
     };
-    const screen = await render(<SalaryPayrollStatement {...props} net={net} />);
+    const screen = await render(<SalaryPayrollStatement view="net" {...props} net={net} />);
     await openDeductions(screen, net);
     expect(screen.getByLabelText(`Lohnsteuer: ${netPayEuro(0)}`)).toBeTruthy();
     expect(screen.queryByLabelText(`Lohnsteuer: ${netPayEuro(-0)}`)).toBeNull();
@@ -283,6 +291,7 @@ describe("classical payroll presentation", () => {
     expect(annual.annualPayment?.netIncluded).toBe(false);
     const screen = await render(
       <SalaryPayrollStatement
+        view="net"
         {...props}
         net={annual.pay}
         annualPayment={annual.annualPayment}
@@ -309,6 +318,7 @@ describe("classical payroll presentation", () => {
     expect(props.net.pension!.employeeCents).toBeGreaterThan(0);
     const screen = await render(
       <SalaryPayrollStatement
+        view="net"
         {...props}
         annualPayment={{
           grossCents: 50000,
@@ -377,23 +387,84 @@ describe("payroll content wiring", () => {
         blocked={false}
       />,
     );
+    expect(screen.queryByTestId("net-pay-settings-entry")).toBeNull();
+    expect(mockSettingsView.mock.calls.at(-1)?.[0].timingOnly).toBe(true);
+    await fireEvent.press(screen.getByRole("button", { name: "Auszahlungswechsel speichern" }));
+    expect(reload).toHaveBeenCalledTimes(1);
+    await screen.rerender(
+      <SalaryPayrollContent
+        view="net"
+        month={props.month}
+        profile={props.profile}
+        pay={props.pay}
+        projection={props.projection}
+        blocked={false}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Auszahlungswechsel speichern" })).toBeNull();
     const output = JSON.stringify(screen.toJSON());
+    expect(output.indexOf("net-pay-settings-entry")).toBeGreaterThan(-1);
     expect(output.indexOf("net-pay-settings-entry")).toBeLessThan(
       output.indexOf("salary-payroll-totals"),
     );
-    expect(mockSettingsView.mock.calls.at(-1)?.[0].timingOnly).toBe(true);
     await fireEvent.press(screen.getByTestId("net-pay-settings-entry"));
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/net-pay-settings",
       params: { month: props.month },
     });
-    await fireEvent.press(screen.getByRole("button", { name: "Auszahlungswechsel speichern" }));
-    expect(reload).toHaveBeenCalledTimes(1);
+
     const loaded = jest.mocked(useNetPayProfile).mock.results.at(-1)?.value as ReturnType<
       typeof useNetPayProfile
     >;
     expect(jest.mocked(useAutomaticNetPay).mock.calls.at(-1)?.[4]).toEqual(loaded.timeline);
+  });
+  it("shows salary without tax setup and keeps net setup on its own view", async () => {
+    // The fixture supplies a ready profile; remove only the saved tax setup.
+    const ready = useNetPayProfile("2026-07", true);
+    jest.mocked(useNetPayProfile).mockReturnValue({ ...ready, saved: null, timeline: [] });
+    const props = fixture();
+    const content = {
+      month: props.month,
+      profile: props.profile,
+      pay: props.pay,
+      projection: props.projection,
+      blocked: false,
+    };
+    const screen = await render(<SalaryPayrollContent {...content} />);
+    expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
+    expect(screen.queryByText(/Ergänze deine Netto-Angaben/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Netto-Einstellungen/ })).toBeNull();
+    await screen.rerender(<SalaryPayrollContent {...content} view="net" />);
+    expect(
+      screen.getByText("Ergänze deine Netto-Angaben über die Einstellungskarte."),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Netto-Einstellungen/ })).toBeTruthy();
+    expect(screen.queryByText("Zusammensetzung")).toBeNull();
+  });
+  it("marks salary incomplete if shared additional pay could not be loaded", async () => {
+    const ready = useNetPayProfile("2026-07", true);
+    jest
+      .mocked(useNetPayProfile)
+      .mockReturnValue({ ...ready, status: "error", saved: null, error: "Load failed" });
+    const props = fixture();
+    const screen = await render(
+      <SalaryPayrollContent
+        month={props.month}
+        profile={props.profile}
+        pay={props.pay}
+        projection={props.projection}
+        blocked={false}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "Weitere Bezüge konnten nicht geladen werden. Die Gehaltsübersicht ist unvollständig.",
+      ),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Erneut laden" }));
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Netto-Berechnung")).toBeNull();
   });
   it("opens the existing settings screen for the required source month", async () => {
     jest.mocked(useAutomaticNetPay).mockReturnValue({
@@ -408,6 +479,7 @@ describe("payroll content wiring", () => {
     const props = fixture();
     const screen = await render(
       <SalaryPayrollContent
+        view="net"
         month={props.month}
         profile={props.profile}
         pay={props.pay}

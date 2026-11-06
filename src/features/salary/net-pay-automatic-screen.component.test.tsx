@@ -28,7 +28,7 @@ import * as PaletteModule from "@/theme/palette";
 import { DARK_PALETTE } from "@/theme/palette-values";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { AnalysisNetPayRow } from "@/features/analysis/analysis-net-pay-row";
-import { PayListCard } from "@/features/analysis/dashboard-cards";
+import { PayListCard, NetListCard } from "@/features/analysis/dashboard-cards";
 import {
   DEFAULT_SALARY_PAYMENT_PREFERENCES,
   setSalaryPaymentPeriod,
@@ -269,6 +269,10 @@ describe("integrated salary-to-net workflow", () => {
     mockParams = { month };
     return render(<SalaryScreen />);
   }
+  async function netOverview(month = "2026-07") {
+    mockParams = { month };
+    return render(<NetPayScreen />);
+  }
   const statement = (screen: Awaited<ReturnType<typeof render>>) =>
     within(screen.getByTestId("salary-payroll-statement"));
   const totals = (screen: Awaited<ReturnType<typeof render>>) =>
@@ -342,7 +346,7 @@ describe("integrated salary-to-net workflow", () => {
   );
 
   it("opens standalone settings, persists the chosen effective month and reloads salary on return", async () => {
-    const salary = await overview();
+    const salary = await netOverview();
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     await fireEvent.press(salary.getByRole("button", { name: /^Netto-Einstellungen/ }));
     expect(router.push).toHaveBeenLastCalledWith({
@@ -364,38 +368,40 @@ describe("integrated salary-to-net workflow", () => {
     );
     expect(router.back).toHaveBeenCalledTimes(1);
     await screen.unmount();
-    const returned = await overview();
+    const returned = await netOverview();
     expect(
       returned.getByRole("button", { name: /^Netto-Einstellungen\. Steuerklasse 4/ }),
     ).toBeTruthy();
     expect(router.push).toHaveBeenCalledTimes(1);
   });
-  it("places the settings entry and timing selector before the summary and statement", async () => {
-    const screen = await overview();
-    const output = JSON.stringify(screen.toJSON());
-    expect(output.indexOf("net-pay-settings-entry")).toBeGreaterThan(-1);
-    expect(output.indexOf("Zulagen werden ausgezahlt auswählen")).toBeGreaterThan(
-      output.indexOf("net-pay-settings-entry"),
-    );
+  it("separates settings and net results from salary components without changing gross", async () => {
+    const salary = await overview();
+    const gross = totals(salary).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
+    expect(salary.queryByTestId("net-pay-settings-entry")).toBeNull();
+    expect(salary.queryByText("Netto-Berechnung")).toBeNull();
+    expect(salary.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
+    const output = JSON.stringify(salary.toJSON());
+    expect(output.indexOf("Zulagen werden ausgezahlt auswählen")).toBeGreaterThan(-1);
     expect(output.indexOf("salary-payroll-totals")).toBeGreaterThan(
       output.indexOf("Zulagen werden ausgezahlt auswählen"),
     );
-    expect(output.indexOf("salary-payroll-statement")).toBeGreaterThan(
-      output.indexOf("salary-payroll-totals"),
-    );
-    expect(screen.getAllByRole("button", { name: /^Netto-Einstellungen/ })).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: "Netto-Angaben speichern" })).toBeNull();
-    expect(screen.queryByRole("radio", { name: "Steuerklasse: 1" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /^Steuerklasse auswählen/ })).toBeNull();
-    expect(
-      screen.getAllByRole("button", { name: /^Zulagen werden ausgezahlt auswählen/ }),
-    ).toHaveLength(1);
+    expect(salary.queryByRole("button", { name: "Netto-Prognose öffnen" })).toBeNull();
+    await salary.unmount();
+    const net = await netOverview();
+    expect(net.getAllByRole("button", { name: /^Netto-Einstellungen/ })).toHaveLength(1);
+    expect(net.queryByRole("button", { name: /^Zulagen werden ausgezahlt auswählen/ })).toBeNull();
+    expect(net.queryByText("Zusammensetzung")).toBeNull();
+    expect(statement(net).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(gross);
+    expect(totals(net).queryByLabelText(/^Gesamtbrutto:/)).toBeNull();
+    expect(totals(net).getByLabelText(/^Netto geschätzt:/)).toBeTruthy();
+    expect(net.queryByRole("button", { name: "Gehaltsbestandteile ansehen" })).toBeNull();
+    expect(mockSave).not.toHaveBeenCalled();
   });
   it("retains the last valid payroll after a payment write conflict and guards the separate tax draft", async () => {
     mockEntries = [forecastShift({ id: "payment-write-conflict-draft" })];
     const beforePreferences = mockPaymentPreferences;
     const screen = await overview();
-    const beforeNet = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
+    const beforeGross = totals(screen).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
     mockPaymentSave.mockImplementationOnce(async () => {
       mockPaymentError = "Der Auszahlungsmonat wurde zwischenzeitlich geändert. Erneut laden.";
       throw new Error(mockPaymentError);
@@ -416,12 +422,14 @@ describe("integrated salary-to-net workflow", () => {
       screen.getByRole("button", { name: "Zulagen werden ausgezahlt auswählen: Im selben Monat" }),
     ).toBeTruthy();
     expect(mockPaymentPreferences).toBe(beforePreferences);
-    expect(totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).toBe(
-      beforeNet,
+    expect(totals(screen).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(
+      beforeGross,
     );
     expect(mockSave).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: /^Netto-Einstellungen/ }));
     await screen.unmount();
+    const net = await netOverview();
+    await fireEvent.press(net.getByRole("button", { name: /^Netto-Einstellungen/ }));
+    await net.unmount();
     const settingsScreen = await edit();
     await selectSettingOption(settingsScreen, "Steuerklasse", "3");
     expect(mockNativeGuard.active).toBe(true);
@@ -443,7 +451,7 @@ describe("integrated salary-to-net workflow", () => {
     }
   });
   it("keeps a standalone tax draft on cancelled back and changes the salary month only after discard", async () => {
-    const salary = await overview();
+    const salary = await netOverview();
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     await fireEvent.press(salary.getByRole("button", { name: /^Netto-Einstellungen/ }));
     await salary.unmount();
@@ -476,10 +484,10 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockNavigation.dispatch).toHaveBeenLastCalledWith(action);
       expect(mockSettings?.profile.taxClass).toBe(1);
       await screen.unmount();
-      const returned = await overview();
+      const returned = await netOverview();
       await fireEvent.press(returned.getByRole("button", { name: /^Nächster Monat/ }));
       expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
-      await returned.rerender(<SalaryScreen />);
+      await returned.rerender(<NetPayScreen />);
       expect(mockParams.month).toBe("2026-08");
       expect(returned.getByText("August 2026")).toBeTruthy();
       expect(
@@ -504,7 +512,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [forecastShift({ id: "settings-return-recalculate" })];
     const calculate = jest.spyOn(forecastEngine, "prepareAutomaticNetPay");
     try {
-      const salary = await overview();
+      const salary = await netOverview();
       const before = totals(salary).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
       await fireEvent.press(salary.getByRole("button", { name: /^Netto-Einstellungen/ }));
       const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
@@ -531,7 +539,7 @@ describe("integrated salary-to-net workflow", () => {
       );
       expect(router.back).toHaveBeenCalledTimes(1);
       await settingsScreen.unmount();
-      const screen = await overview();
+      const screen = await netOverview();
       await waitFor(() => {
         expect(
           totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel,
@@ -588,7 +596,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [];
     const calculate = jest.spyOn(forecastEngine, "prepareAutomaticNetPay");
     try {
-      const screen = await overview("2026-10");
+      const screen = await netOverview("2026-10");
       const computed = calculate.mock.results.at(-1)!.value as ReturnType<
         typeof forecastEngine.prepareAutomaticNetPay
       >;
@@ -653,7 +661,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [];
     const calculate = jest.spyOn(forecastEngine, "prepareAutomaticNetPay");
     try {
-      const screen = await overview();
+      const screen = await netOverview();
       const computed = calculate.mock.results.at(-1)!.value as ReturnType<
         typeof forecastEngine.prepareAutomaticNetPay
       >;
@@ -718,6 +726,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [];
     const screen = await overview("2026-11");
     expect(statement(screen).getByLabelText(/^Jahressonderzahlung:/)).toBeTruthy();
+    await screen.rerender(<NetPayScreen />);
     expect(totals(screen).getByLabelText(/^Netto geschätzt: [\d.,]+\s€/)).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Jahressonderzahlung bearbeiten" }));
     expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
@@ -728,16 +737,18 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("keeps the analysis calculation order from components to bonus to gross and net", async () => {
     const screen = await render(
-      <PayListCard
-        onPress={jest.fn()}
-        base={4000}
-        premiums={200}
-        allowances={150}
-        annualPayments={3600}
-        gross={7950}
-        caption="Unverbindliche Schätzung"
-        netRow={<AnalysisNetPayRow month="2026-11" />}
-      />,
+      <>
+        <PayListCard
+          onPress={jest.fn()}
+          base={4000}
+          premiums={200}
+          allowances={150}
+          annualPayments={3600}
+          gross={7950}
+          caption="Unverbindliche Schätzung"
+        />
+        <NetListCard onPress={jest.fn()} netPay={<AnalysisNetPayRow month="2026-11" />} />
+      </>,
     );
     const output = JSON.stringify(screen.toJSON());
     const labels = [
@@ -758,7 +769,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [
       forecastShift({ id: "missing-times", date: "2026-07-03", startTime: null, endTime: null }),
     ];
-    const screen = await overview();
+    const screen = await netOverview();
     await fireEvent.press(screen.getByRole("button", { name: "Dienstzeiten prüfen" }));
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     expect(router.push).toHaveBeenLastCalledWith({
@@ -777,7 +788,7 @@ describe("integrated salary-to-net workflow", () => {
     });
     try {
       mockEntries = [forecastShift({ id: "recovery-technical" })];
-      const screen = await overview();
+      const screen = await netOverview();
       expect(spy).toHaveBeenCalled();
       expect(screen.getByText("Die Berechnung ist nicht verfügbar.")).toBeTruthy();
       expect(screen.queryByLabelText(/^Voraussichtliches Netto:/)).toBeNull();
@@ -821,7 +832,7 @@ describe("integrated salary-to-net workflow", () => {
     });
     try {
       mockEntries = [forecastShift({ id: "recover-source-net-settings" })];
-      const screen = await overview();
+      const screen = await netOverview();
       expect(spy).toHaveBeenCalled();
       expect(screen.getByText("Die Netto-Angaben für den Zulagenmonat fehlen.")).toBeTruthy();
       await fireEvent.press(screen.getByRole("button", { name: "Netto-Angaben ergänzen" }));
@@ -859,7 +870,7 @@ describe("integrated salary-to-net workflow", () => {
       }));
     try {
       mockEntries = [forecastShift({ id: "source-adjustment-basis-note" })];
-      const screen = await overview();
+      const screen = await netOverview();
       expect(spy).toHaveBeenCalled();
       expect(screen.queryByText(/Netto-Schätzung auf Basis des Zulagenmonats/)).toBeNull();
       expect(screen.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
@@ -889,7 +900,7 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [
       forecastShift({ id: "invalid-pause-ui", date: "2026-07-03", breakMinutes: 9999 }),
     ];
-    const screen = await overview();
+    const screen = await netOverview();
     await fireEvent.press(screen.getByRole("button", { name: "Dienstzeiten prüfen" }));
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     expect(router.push).toHaveBeenLastCalledWith({
@@ -916,12 +927,14 @@ describe("integrated salary-to-net workflow", () => {
     if (result.status !== "available") throw new Error("Fixture unavailable");
     const euro = (cents: number) =>
       new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100);
+    await screen.rerender(<NetPayScreen />);
     expect(
       statement(screen).getByLabelText("Netto geschätzt: " + euro(result.pay.netCents)),
     ).toBeTruthy();
     expect(
       statement(screen).getByLabelText("Gesamtbrutto: " + euro(result.pay.amounts.grossCents)),
     ).toBeTruthy();
+    await screen.rerender(<SalaryScreen />);
     expect(
       statement(screen).getByLabelText(
         "Zeitzuschläge: " + euro(result.classification.paidPremiumCents),
@@ -931,6 +944,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.queryByRole("button", { name: "Gehaltsbestandteile" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Zuschläge je Dienst" })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Gesamtbrutto:/ })).toBeNull();
+    await screen.rerender(<NetPayScreen />);
     expect(screen.getAllByRole("button", { name: /^Abzüge:/ })).toHaveLength(1);
     expect(
       statement(screen).getByRole("button", { name: /^Abzüge:/ }).props.accessibilityState.expanded,
@@ -957,15 +971,15 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("keeps the legacy automatic route available with its computed overview", async () => {
     const screen = await render(<NetPayScreen />);
-    expect(screen.getByText("Gehaltsprognose")).toBeTruthy();
-    expect(screen.getByLabelText(/^Voraussichtliches Netto:/)).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Netto-Prognose" })).toBeTruthy();
+    expect(totals(screen).getByLabelText(/^Netto geschätzt:/)).toBeTruthy();
   });
   it("shows the same calculated net in the monthly analysis salary table", async () => {
     mockEntries = [forecastShift({ id: "analysis-net-value" })];
     const calculate = jest.spyOn(forecastEngine, "prepareAutomaticNetPay");
     const compute = jest.spyOn(paymentEngine, "calculateAutomaticPaymentNetPayForecastSteps");
     try {
-      const salary = await overview();
+      const salary = await netOverview();
       const computed = calculate.mock.results.at(-1)!.value as ReturnType<
         typeof forecastEngine.prepareAutomaticNetPay
       >;
@@ -974,19 +988,30 @@ describe("integrated salary-to-net workflow", () => {
       expect(initialComputations).toBeGreaterThan(0);
       const openSalary = jest.fn();
       const table = await render(
-        <PayListCard
-          onPress={openSalary}
-          gross={computed.result.pay.amounts.grossCents / 100}
-          caption="Unverbindliche Brutto-Schätzung"
-          netRow={<AnalysisNetPayRow month="2026-07" />}
-        />,
+        <>
+          <PayListCard
+            onPress={openSalary}
+            gross={computed.result.pay.amounts.grossCents / 100}
+            caption="Unverbindliche Brutto-Schätzung"
+          />
+          <NetListCard onPress={jest.fn()} netPay={<AnalysisNetPayRow month="2026-07" />} />
+        </>,
       );
       const expectedEuro = new Intl.NumberFormat("de-DE", {
         style: "currency",
         currency: "EUR",
       }).format(computed.result.pay.netCents / 100);
       expect(statement(salary).getByLabelText(`Netto geschätzt: ${expectedEuro}`)).toBeTruthy();
-      expect(table.getByLabelText(`Voraussichtliches Netto: ${expectedEuro}`)).toBeTruthy();
+      expect(
+        within(table.getByTestId("analysis-card-body-Netto")).getByLabelText(
+          `Voraussichtliches Netto: ${expectedEuro}`,
+        ),
+      ).toBeTruthy();
+      expect(
+        within(table.getByTestId("analysis-card-body-Gehalt")).queryByTestId(
+          "analysis-net-pay-row",
+        ),
+      ).toBeNull();
       expect(within(table.getByTestId("analysis-net-pay-row")).queryByRole("button")).toBeNull();
       await fireEvent.press(table.getByRole("button", { name: /^Gehalt,/ }));
       expect(openSalary).toHaveBeenCalledTimes(1);
@@ -1021,7 +1046,7 @@ describe("integrated salary-to-net workflow", () => {
   it("opens separate deductions and reuses the computed result on return and deep links", async () => {
     mockEntries = [forecastShift({ id: "direct-details-cache" })];
     const calculate = jest.spyOn(forecastEngine, "prepareAutomaticNetPay");
-    const screen = await overview();
+    const screen = await netOverview();
     const computed = calculate.mock.results.at(-1)?.value as
       ReturnType<typeof forecastEngine.prepareAutomaticNetPay> | undefined;
     expect(computed?.result.status).toBe("available");
@@ -1046,7 +1071,7 @@ describe("integrated salary-to-net workflow", () => {
     await fireEvent.press(detail.getByRole("button", { name: "Zurück" }));
     expect(router.back).toHaveBeenCalledTimes(1);
     await detail.unmount();
-    const returned = await overview();
+    const returned = await netOverview();
     expect(returned.getByLabelText(/^Abzüge:/)).toBeTruthy();
     expect(statement(returned).queryByLabelText(/^Krankenversicherung:/)).toBeNull();
     expect(calculate.mock.results.at(-1)?.value).toBe(computed);
@@ -1091,6 +1116,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
     expect(screen.queryByLabelText(/^Steuerbrutto:/)).toBeNull();
     expect(router.push).not.toHaveBeenCalled();
+    await screen.rerender(<NetPayScreen />);
     await fireEvent.press(screen.getByRole("button", { name: /^Abzüge:/ }));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/salary-details",
@@ -1405,11 +1431,13 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockPaymentSave).not.toHaveBeenCalled();
       expect(screen.queryByText("Noch offen")).toBeNull();
       expect(screen.getByTestId("salary-payroll-totals")).toBeTruthy();
-      expect(statement(screen).getByLabelText(/^Netto geschätzt: [\d.]+,/)).toBeTruthy();
       expect(
         statement(screen).getByLabelText(/^Ständige Schichtzulage: 100,00.*Geschätzt/),
       ).toBeTruthy();
       expect(statement(screen).getByLabelText(/^Bereitschaftsvergütung: [\d.]+,/)).toBeTruthy();
+      await screen.unmount();
+      const net = await netOverview(month);
+      expect(statement(net).getByLabelText(/^Netto geschätzt: [\d.]+,/)).toBeTruthy();
       expect(mockTariffDecisions).toEqual([]);
     },
   );
@@ -1569,7 +1597,7 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("labels saved private insurance on the entry and on the full settings page", async () => {
     mockSettings = { ...automatedSettings("2026-06"), specialCases: ["PRIVATE_INSURANCE"] };
-    const entry = await overview();
+    const entry = await netOverview();
     await fireEvent.press(
       entry.getByRole("button", { name: /^Netto-Einstellungen.*privat versichert/ }),
     );
@@ -1603,7 +1631,7 @@ describe("integrated salary-to-net workflow", () => {
       ...automatedSettings("2026-06"),
       automation: { ...automatedSettings().automation!, pensionScheme: "UNKNOWN" },
     };
-    const screen = await overview("2027-01");
+    const screen = await netOverview("2027-01");
     expect(screen.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
     expect(screen.getByText("2027 vorläufig · Abzüge nach Stand 2026")).toBeTruthy();
     expect(screen.getByText("Zusatzversorgung nicht berücksichtigt.")).toBeTruthy();
@@ -1640,7 +1668,7 @@ describe("integrated salary-to-net workflow", () => {
     }));
     const notice =
       "Jahreswechsel geschätzt · Auszahlung zum Monatsende, Jahresbrutto hochgerechnet.";
-    const screen = await overview("2027-01");
+    const screen = await netOverview("2027-01");
     expect(totals(screen).getByLabelText(/^Netto geschätzt: [\d.]+\s€$/)).toBeTruthy();
     expect(screen.getByText(notice)).toBeTruthy();
     expect(screen.getByText("2027 vorläufig · Abzüge nach Stand 2026")).toBeTruthy();
@@ -1653,14 +1681,14 @@ describe("integrated salary-to-net workflow", () => {
     }
   });
   it("updates the displayed net when calendar work changes", async () => {
-    const screen = await overview();
+    const screen = await netOverview();
     expect(
       within(screen.getByTestId("salary-scroll-content")).getByTestId("salary-export-current"),
     ).toBeTruthy();
     expect(screen.getAllByTestId("salary-export-current")).toHaveLength(1);
     const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
     mockEntries = [forecastShift({ endTime: "04:00" })];
-    await screen.rerender(<SalaryScreen />);
+    await screen.rerender(<NetPayScreen />);
     expect(totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).not.toBe(
       before,
     );
@@ -1704,7 +1732,7 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("does not suggest changing salary data when a future tariff is unavailable", async () => {
     mockEntries = [forecastShift({ date: "2027-04-04" })];
-    const screen = await overview("2027-04");
+    const screen = await netOverview("2027-04");
     expect(statement(screen).getByLabelText("Netto geschätzt: Nicht verfügbar")).toBeTruthy();
     expect(statement(screen).getByLabelText("Abzüge: Nicht verfügbar")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Gehaltsgrundlage ansehen" })).toBeNull();
@@ -1713,7 +1741,7 @@ describe("integrated salary-to-net workflow", () => {
   });
   it("blocks personal data and results in test months", async () => {
     mockTestMonths = ["2026-07"];
-    const screen = await overview();
+    const screen = await netOverview();
     expect(screen.queryByLabelText(/^Voraussichtliches Netto:/)).toBeNull();
     expect(screen.queryByRole("button", { name: /^Netto-Einstellungen/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Netto einmal einrichten" })).toBeNull();
@@ -1747,12 +1775,12 @@ describe("integrated salary-to-net workflow", () => {
   );
   it("keeps the statement, deductions route and bottom export on the selected month", async () => {
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-    const screen = await render(<SalaryScreen />);
+    const screen = await render(<NetPayScreen />);
     const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
     await fireEvent.press(screen.getByRole("button", { name: /^Nächster Monat/ }));
     expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
     mockParams = { month: "2026-08" };
-    await screen.rerender(<SalaryScreen />);
+    await screen.rerender(<NetPayScreen />);
     expect(screen.getByText("August 2026")).toBeTruthy();
     expect(mockSetMonth).toHaveBeenLastCalledWith("2026-08");
     expect(mockExport).toHaveBeenLastCalledWith(
@@ -1774,11 +1802,11 @@ describe("integrated salary-to-net workflow", () => {
     await fireEvent.press(deduction.getByRole("button", { name: "Zurück" }));
     expect(router.back).toHaveBeenCalledTimes(1);
     await deduction.unmount();
-    const returned = await overview("2026-08");
+    const returned = await netOverview("2026-08");
     await fireEvent.press(returned.getByRole("button", { name: /^Vorheriger Monat/ }));
     expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
     mockParams = { month: "2026-07" };
-    await returned.rerender(<SalaryScreen />);
+    await returned.rerender(<NetPayScreen />);
     expect(totals(returned).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).toBe(
       before,
     );
@@ -1935,6 +1963,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(statement(overview).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(
       gross,
     );
+    await overview.rerender(<NetPayScreen />);
     expect(statement(overview).getByLabelText(/^Netto geschätzt: [\d.,]+\s€/)).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
   });
@@ -1984,7 +2013,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(
       Native.StyleSheet.flatten(screen.getByText("Arbeitslosenversicherung").props.style).color,
     ).toBe(DARK_PALETTE.textMuted);
-    const summary = await overview();
+    const summary = await netOverview();
     expect(
       Native.StyleSheet.flatten(summary.getByTestId("salary-payroll-totals").props.style)
         .flexDirection,

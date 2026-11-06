@@ -15,6 +15,7 @@ import {
 import {
   complianceDetailsRoute,
   salaryRoute,
+  netPayForecastRoute,
   worktimeDetailsRoute,
   shiftAnalysisRoute,
   premiumDetailsRoute,
@@ -32,6 +33,7 @@ export function AnnualDetailsScreen() {
     "WORK",
     "CHECK",
     "PAY",
+    "NET",
     "PREMIUM",
     "SHIFTS",
   ]);
@@ -96,7 +98,9 @@ export function AnnualDetailsScreen() {
                       ? "Prüfung"
                       : section === "PREMIUM"
                         ? "Zeitzuschläge"
-                        : "Gehalt",
+                        : section === "NET"
+                          ? "Netto"
+                          : "Gehalt",
             }}
           />
           {ready && error ? (
@@ -126,7 +130,9 @@ export function AnnualDetailsScreen() {
                         ? complianceDetailsRoute(month)
                         : section === "PREMIUM"
                           ? premiumDetailsRoute(month)
-                          : salaryRoute(month),
+                          : section === "NET"
+                            ? netPayForecastRoute(month)
+                            : salaryRoute(month),
                 )
               }
             />
