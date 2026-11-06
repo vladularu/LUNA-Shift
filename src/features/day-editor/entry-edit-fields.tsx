@@ -64,7 +64,7 @@ export function EntryEditValueRow({
     ENTRY_EDIT_FIELD_STYLES.row,
     {
       borderBottomColor: palette.separator,
-      borderBottomWidth: separator ? StyleSheet.hairlineWidth : 0,
+      borderBottomWidth: 0,
     },
   ];
   return onPress ? (
@@ -143,7 +143,7 @@ export function EntryEditNotesLocation({
           onPress={() => setExpanded(true)}
           style={[
             ENTRY_EDIT_FIELD_STYLES.location,
-            { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.separator },
+            { borderBottomWidth: 0, borderBottomColor: palette.separator },
           ]}
         >
           <Ionicons
@@ -236,21 +236,21 @@ export function EntryEditTimePair({
 export const ENTRY_EDIT_FIELD_STYLES = StyleSheet.create({
   body: { padding: SPACING.md, gap: SPACING.sm },
   group: { paddingHorizontal: SPACING.md },
-  pair: { paddingVertical: SPACING.sm, borderBottomWidth: StyleSheet.hairlineWidth },
+  pair: { paddingVertical: SPACING.sm, borderBottomWidth: 0 },
   row: {
     minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
   },
   label: { flexShrink: 1, ...TYPOGRAPHY.body },
   value: { flex: 1, ...TYPOGRAPHY.body, textAlign: "right", fontVariant: ["tabular-nums"] },
-  timeRow: { minHeight: 48, justifyContent: "center", borderBottomWidth: StyleSheet.hairlineWidth },
+  timeRow: { minHeight: 48, justifyContent: "center", borderBottomWidth: 0 },
   note: {
     minHeight: 88,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     ...TYPOGRAPHY.compact,

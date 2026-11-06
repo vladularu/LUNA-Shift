@@ -22,6 +22,7 @@ const CARD_ICONS: Record<AnalysisCardId, ComponentProps<typeof Ionicons>["name"]
   CHECK: "shield-checkmark-outline",
   PREMIUM: "time-outline",
   PAY: "wallet-outline",
+  NET: "calculator-outline",
   SHIFTS: "calendar-outline",
 };
 
@@ -200,7 +201,7 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                     />
                   ) : (
                     <SurfaceCard>
-                      {state.preferences.order.map((id, index) => {
+                      {state.preferences.order.map((id) => {
                         const visible = !state.preferences.hidden.includes(id);
                         return (
                           <View
@@ -208,8 +209,6 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                             testID={`analysis-setting-${id}`}
                             style={{
                               minHeight: 72,
-                              borderTopWidth: index > 0 ? 1 : 0,
-                              borderTopColor: p.separator,
                               paddingHorizontal: SPACING.lg,
                               paddingVertical: SPACING.sm,
                               gap: SPACING.md,

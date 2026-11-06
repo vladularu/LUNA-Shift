@@ -14,6 +14,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { RowButton } from "@/ui/design-system";
 import { Field, PrimaryButton } from "@/ui/form-controls";
+import { SelectionControl } from "@/ui/selection-control";
 import { SelectionSheet } from "@/ui/selection-sheet";
 
 export function NetPayWorkflowText({ children }: PropsWithChildren) {
@@ -235,7 +236,7 @@ export function NetPayWorkflowSelect<T extends string>({
   disabled = false,
   searchable = false,
   compact = false,
-  separator = false,
+  separator: _separator,
 }: {
   readonly label: string;
   readonly value: T | null;
@@ -332,7 +333,7 @@ export function NetPayWorkflowSelect<T extends string>({
     <View
       style={{
         gap: compact ? 0 : SPACING.sm,
-        borderTopWidth: compact && separator ? 1 : 0,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
       }}
     >
@@ -437,45 +438,18 @@ export function NetPayWorkflowTabs({
   readonly onChange: (value: number) => void;
   readonly disabled: boolean;
 }) {
-  const palette = usePalette();
   return (
-    <View style={{ flexDirection: "row", gap: SPACING.xxs }}>
-      {["Steuern", "Familie", "Versicherung"].map((label, index) => (
-        <Pressable
-          key={label}
-          accessibilityRole="tab"
-          accessibilityLabel={label}
-          aria-selected={value === index}
-          accessibilityState={{ selected: value === index, disabled }}
-          onPress={() => onChange(index)}
-          disabled={disabled}
-          style={({ pressed }) => ({
-            flex: 1,
-            minHeight: 44,
-            paddingHorizontal: SPACING.xs,
-            paddingVertical: SPACING.sm,
-            borderRadius: RADII.control,
-            borderBottomWidth: 2,
-            borderBottomColor: value === index ? palette.accent : "transparent",
-            backgroundColor: value === index ? palette.surfaceMuted : palette.surfaceRaised,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
-          })}
-        >
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{
-              color: value === index ? palette.accent : palette.textMuted,
-              ...TYPOGRAPHY.label,
-              textAlign: "center",
-            }}
-          >
-            {label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
+    <SelectionControl
+      kind="view"
+      accessibilityLabel="Netto-Einstellungen"
+      items={["Steuern", "Familie", "Versicherung"].map((label, index) => ({
+        value: String(index),
+        label,
+      }))}
+      value={String(value)}
+      onChange={(next) => onChange(Number(next))}
+      disabled={disabled}
+    />
   );
 }
 

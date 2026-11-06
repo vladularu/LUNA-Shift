@@ -62,7 +62,7 @@ export function OptionRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        borderTopWidth: 1,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
         opacity: pressed ? 0.6 : 1,
       })}

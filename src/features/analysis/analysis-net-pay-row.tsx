@@ -7,8 +7,8 @@ import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
-import { AnalysisValueRow } from "./analysis-list-card";
 import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
+import { AnalysisValueRow } from "./analysis-list-card";
 
 export interface AnalysisNetPayModel {
   readonly blocked: boolean;
@@ -75,7 +75,7 @@ function NetPayContent({ model }: { readonly model: AnalysisNetPayModel }) {
           : null;
   return (
     <View testID="analysis-net-pay-row">
-      <AnalysisValueRow label={label} value={value} total={available !== null} reserveDisclosure />
+      <AnalysisValueRow first label={label} value={value} total reserveDisclosure />
       {notice ? (
         <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.md }}>
           {notice}

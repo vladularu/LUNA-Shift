@@ -12,17 +12,21 @@ import { addCheckCounts, type CheckCounts } from "./check-visibility";
 import { AnalysisDashboard, CheckListCard, PayListCard, WorkListCard } from "./dashboard-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
+import { AnnualNetPayCard } from "./annual-net-pay-view";
+import type { AnnualNetPayState } from "./use-annual-net-pay";
 
 export function AnnualOverview({
   report,
   pending,
   salaryPending = false,
   salaryError,
+  net,
 }: {
   readonly report: AnnualReport;
   readonly pending: boolean;
   readonly salaryPending?: boolean;
   readonly salaryError?: string | null;
+  readonly net?: AnnualNetPayState;
 }) {
   const checkPreferences = useCheckPreferences();
   const empty: CheckCounts = { criticalCount: 0, warningCount: 0, infoCount: 0 };
@@ -139,6 +143,7 @@ export function AnnualOverview({
             }
           />
         ),
+        NET: <AnnualNetPayCard year={report.year} data={net} />,
         SHIFTS: report.shiftTypeAnalysis ? (
           <ShiftAnalysisCard
             analysis={report.shiftTypeAnalysis}

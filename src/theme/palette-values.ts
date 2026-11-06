@@ -62,7 +62,7 @@ export const LUNA_LIGHT_BLUE_TEXT = SHADCN_COLORS.slate900;
 
 export const LIGHT_PALETTE: Palette = {
   dark: false,
-  calendarBackground: "#FAFAFA",
+  calendarBackground: "#F3F2F8",
   background: "#F3F2F8",
   onboardingBackground: "#F3F2F8",
   groupedBackground: "#F3F2F8",
@@ -72,10 +72,10 @@ export const LIGHT_PALETTE: Palette = {
   selectionTrack: "#EDEDEF",
   selectionActiveSurface: "#FFFFFF",
   selectionActiveBorder: "#E4E4E7",
-  cardHeader: "#F3F2F8",
+  cardHeader: "#FFFFFF",
   text: "#18181B",
   textSecondary: "#3F3F46",
-  textMuted: "#6B6B73",
+  textMuted: "#66636F",
   border: "#D4D4D8",
   separator: "#E4E4E7",
   cardSeparator: "#E4E4E7",
@@ -114,13 +114,13 @@ export const LIGHT_PALETTE: Palette = {
   shadow: SHADCN_COLORS.shadow,
 };
 
-// Neutral card tones follow the user's Supershift reference photos.
+// Dark surfaces retain the same quiet Wallet hierarchy.
 export const DARK_PALETTE: Palette = {
   dark: true,
   calendarBackground: "#09090B",
-  background: "#030303",
-  onboardingBackground: "#030303",
-  groupedBackground: "#030303",
+  background: "#111014",
+  onboardingBackground: "#111014",
+  groupedBackground: "#111014",
   surface: "#262628",
   surfaceRaised: "#2C2C2E",
   surfaceMuted: "#2C2C2E",

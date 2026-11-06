@@ -51,46 +51,226 @@
       "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
     },
     {
-      "path": "src/features/salary/salary-screen.tsx",
-      "kind": "modified",
-      "sha256": "6a0e4e7f1645cdb96e311ae040ab423e22ee0968ea8514a92d8ecd7d43a3a131",
-      "reason": "Paket 2: Move the single existing monthly report-export action from the header into the scroll content after the payroll statement, using its existing labelled and theme-aware button variant. Preserve period key, export logic and loading/error guards. Preview device acceptance pending."
-    },
-    {
-      "path": "src/features/salary/salary-ui.tsx",
-      "kind": "modified",
-      "sha256": "2b4068f7dec46c705f9f252e95fbe65bfb8c273266b19e2d1ec30f8dcf5f1d8f",
-      "reason": "Paket 2: Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending."
-    },
-    {
       "path": "src/features/analysis/analysis-list-card.tsx",
       "kind": "modified",
-      "sha256": "27e3a5ae1bf8f87a956afc5c3fc1e2bfa92484d09b363e58903adce990f9de26",
-      "reason": "Paket 2: Replace navigation-only ellipsis-circle disclosure icons in card headers and value rows with chevrons. Preserve handlers, amounts, availability, widths and accessibility. Preview device acceptance pending."
+      "sha256": "7c371ca4816016dfa6b2f0abb59c1f1340978450d9b270476ab71b92d1360b96",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Replace navigation-only ellipsis-circle disclosure icons in card headers and value rows with chevrons. Preserve handlers, amounts, availability, widths and accessibility. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-net-pay-row.tsx",
+      "kind": "modified",
+      "sha256": "de1d7a499b41826d2e4b6fcc16f318973fab848f65e8ff191ee3ed391c839b38",
+      "reason": "Paket 4 correction: mark the existing net result as the first row of its standalone card, removing the separator previously needed beneath gross. Preserve status, estimate and annual-payment labels and Preview styling."
     },
     {
       "path": "src/features/analysis/analysis-overview-card.tsx",
       "kind": "modified",
-      "sha256": "4622b7cfa28b2253ee45f2ae33505fc35bf70b2ce4cf7e4fc31b2c61061b04d3",
-      "reason": "Paket 2: Replace the monthly detail-card navigation disclosure with a chevron; retain all interaction and layout behavior. Preview device acceptance pending."
+      "sha256": "6528f9672527ff25362a21b81c37654417c2408f449231f9017f3417b0105014",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Replace the monthly detail-card navigation disclosure with a chevron; retain all interaction and layout behavior. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-view-controls.tsx",
+      "kind": "modified",
+      "sha256": "d5d51c1c88d4d291743244b34a6838c4d49f5ae7e3a90aa8137e7ce1f225078b",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change."
+    },
+    {
+      "path": "src/features/analysis/dashboard-cards.tsx",
+      "kind": "modified",
+      "sha256": "e944e583fc620efa972f99119bf4e52ce4dab37d5c6d87f85c65f727131d10e0",
+      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics."
+    },
+    {
+      "path": "src/features/analysis/expandable-highlight-card.tsx",
+      "kind": "modified",
+      "sha256": "b3aa87bf86d52e5fb91e57675f0c1c5b2c0080a335ebf58da6a2d769c5cd85c7",
+      "reason": "Preview-only preservation of src/features/analysis/expandable-highlight-card.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/analysis/salary-overview-cards.tsx",
+      "kind": "modified",
+      "sha256": "f989b4fd67ef10db453e8066491ffb24f613c75beb3f754f8ea588cd6bfe0441",
+      "reason": "Preview-only preservation of src/features/analysis/salary-overview-cards.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/calendar-shared-scene.tsx",
+      "kind": "modified",
+      "sha256": "451a0da605f4bd46daebb1f308f30ec5e41a5c8f4531e91c0c058c13992d3336",
+      "reason": "Preview-only preservation of src/features/calendar/calendar-shared-scene.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/month-card.tsx",
+      "kind": "modified",
+      "sha256": "85a2332304a9fcfb718dcb185489512321ee656f7b3815c3fbaeeeb357081ef0",
+      "reason": "Preview-only preservation of src/features/calendar/month-card.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/quick-entry-delete-confirmation.tsx",
+      "kind": "modified",
+      "sha256": "57bf63d27a1d7a14cc33884e2903be85cf4de78bd0de1b21870035cee3d44a83",
+      "reason": "Preview-only preservation of src/features/calendar/quick-entry-delete-confirmation.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/quick-entry-swipe-row.tsx",
+      "kind": "modified",
+      "sha256": "1c200554ba5c2ebeb0c35d71bce8626ca8b320715d1926cbbb9ac2e463ceb9f4",
+      "reason": "Preview-only preservation of src/features/calendar/quick-entry-swipe-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-day.tsx",
+      "kind": "modified",
+      "sha256": "9a579ded2c16ca564ab7b518be2defd44a9fceddb079075e8779608f04c10eb9",
+      "reason": "Preview-only preservation of src/features/calendar/shared-calendar-day.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/appointment-recurrence-overlay.tsx",
+      "kind": "modified",
+      "sha256": "c2a5e99153390c38bb7391677d617e3d24f5c2b66dd7cc28f5afa8f5f3362f5a",
+      "reason": "Preview-only preservation of src/features/day-editor/appointment-recurrence-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/day-editor-components.tsx",
+      "kind": "modified",
+      "sha256": "3ee97fb6c0c33eb7fa0a83280f6e5a2a3cd536638a248fa0a2d630f69e9fb39e",
+      "reason": "Preview-only preservation of src/features/day-editor/day-editor-components.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-fields.tsx",
+      "kind": "modified",
+      "sha256": "fee48e9def0cf7191244f780f4e323a39a2b396cd92cfd9355dbac5d959189ca",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-edit-fields.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/entry-options.tsx",
+      "kind": "modified",
+      "sha256": "8418cd4709f6f58553055d178ca3fe4e6af33fe7c171aa2fa6f5d98cc94b4fdc",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/shift-notification-overlay.tsx",
+      "kind": "modified",
+      "sha256": "73ce61ce9c43bceffb4abc8c6b89f88e45f38bf551bc50983f1257e638568cb2",
+      "reason": "Preview-only preservation of src/features/day-editor/shift-notification-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/day-editor/shift-overtime-fields.tsx",
+      "kind": "modified",
+      "sha256": "706a0a69b70981198a423e6e17b644eb03c2c360e2b6f49dbf0e5073857b736d",
+      "reason": "Preview-only preservation of src/features/day-editor/shift-overtime-fields.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/salary/net-pay-controls.tsx",
+      "kind": "modified",
+      "sha256": "b9ef8c67534a8bbc579e8830c08cabef33680e763180cb281847562bf62ea8fa",
+      "reason": "Preview-only preservation of src/features/salary/net-pay-controls.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/salary/net-pay-setting-rows.tsx",
+      "kind": "modified",
+      "sha256": "6ccac29b201892a7d58130ac708b38422092d6d3c1644be1f201279f83b30801",
+      "reason": "Preview-only preservation of src/features/salary/net-pay-setting-rows.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/salary/net-pay-workflow-controls.tsx",
+      "kind": "modified",
+      "sha256": "eecda95069098e7ee18220ef85ca8f514ebbfa859003e162ab8a3a891a601c60",
+      "reason": "Preview-only preservation of src/features/salary/net-pay-workflow-controls.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/salary/salary-ui.tsx",
+      "kind": "modified",
+      "sha256": "24b768785a1a11d7afc0ee5a65fbb9b48041c4474883e3eaea9f1e07eba878df",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/settings/settings-info-details-screen.tsx",
+      "kind": "modified",
+      "sha256": "d3683fa9f89c710ec563b2a396e61f1b3269b04dc0753e5410ca87c90e1eb999",
+      "reason": "Preview-only preservation of src/features/settings/settings-info-details-screen.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/settings/work-profile-card.tsx",
+      "kind": "modified",
+      "sha256": "57b7f476589071dd197bc10e30f551e8271b8ead2755382c259bcee08af38af9",
+      "reason": "Preview-only preservation of src/features/settings/work-profile-card.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/templates/shift-template-list.tsx",
+      "kind": "modified",
+      "sha256": "b14ffc4d4b0f901d07bc16068e8df90bfe4a9fdca0dd32ce72e8a96d911ff63a",
+      "reason": "Preview-only preservation of src/features/templates/shift-template-list.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/theme/card-layout.ts",
+      "kind": "modified",
+      "sha256": "18ef9a989143d37e4d66941c7748e85db5d699ab160584cb1bdcec13f9e4da9b",
+      "reason": "Preview-only preservation of src/theme/card-layout.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/theme/palette-values.ts",
+      "kind": "modified",
+      "sha256": "e3d22597e5e176fd6061a8e087d70c4f3a9a46014375be59cf248a0edbcaf6c8",
+      "reason": "Preview-only preservation of src/theme/palette-values.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/theme/tokens.ts",
+      "kind": "modified",
+      "sha256": "8fde3885c76971c53b688976e85eb5fd5041d6cbab0e2b3b1b8f0e598fcaf82e",
+      "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged."
+    },
+    {
+      "path": "src/theme/typography.ts",
+      "kind": "modified",
+      "sha256": "825dc404987b5d30f26ca4b7dd515349af986922c81a68b864475261348f93e3",
+      "reason": "Preview-only preservation of src/theme/typography.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/ui/design-system.tsx",
+      "kind": "modified",
+      "sha256": "f1e87bd2d38398af167eecd98734719ac255738beb12a3c15f92a2bcbbd194e2",
+      "reason": "Preview-only preservation of src/ui/design-system.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/ui/dropdown-field.tsx",
+      "kind": "modified",
+      "sha256": "fd4b08dd60e65ece35c7a7c32b7bb3cb3a9eea438990f3d398da6021135b63de",
+      "reason": "Preview-only preservation of src/ui/dropdown-field.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/ui/reorderable-row.tsx",
+      "kind": "modified",
+      "sha256": "0cf14e6d4d44247e49cc4415c8e889bd19e3f31b0e4c433213867df8c9efb2e8",
+      "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/ui/selection-option.tsx",
+      "kind": "modified",
+      "sha256": "e6f3616df4e69b16a3463e01b562ce2cb05ca71875c63d223744b8d4e1ff7943",
+      "reason": "Preview-only preservation of src/ui/selection-option.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
+      "kind": "modified",
+      "sha256": "6c7f3065661a2f6858793077e870cf5bb8726b76253f9cfc6f6c759867d7b1b2",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money."
+    },
+    {
+      "path": "src/features/salary/salary-screen.tsx",
+      "kind": "modified",
+      "sha256": "dc9d8d4ea3a3f533cb7934e7301841636f4e1e30222702c15dc400d111d47017",
+      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards."
     },
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "9c78454558f6178f944fa8cce4a616538672fab03567cf9190c5d30df3e2122f",
-      "reason": "Paket 2: Use chevrons on existing annual check, salary and monthly time-account detail links. Preserve available/unavailable states, callbacks, numbers and aggregation. Preview device acceptance pending."
+      "sha256": "deb904a3f437ff830e8b511a19096169586f8c49809ead19d6d3c5474b245900",
+      "reason": "Paket 4C: pass prepared annual net state to overview and render distinct NET details. Other detail sections do not start net preparation."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
       "kind": "modified",
       "sha256": "3e35afe3fae48e2b494e8847759f4d6a42564b34862be17154df13c86d34a5b2",
-      "reason": "Paket 2: Use chevrons for salary setup and navigable salary constituent rows without changing destination or calculation. Preview device acceptance pending."
-    },
-    {
-      "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
-      "kind": "modified",
-      "sha256": "449e9b059d3a89152fa054e647ff817dd92f538d8aba07097a0b6ab9d6a4aa31",
-      "reason": "Paket 2: Retain mandatory net-pay regression cases; update the existing month-navigation export assertion to the labelled bottom button and verify one export inside the scroll content. Preview device acceptance pending."
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Use chevrons for salary setup and navigable salary constituent rows without changing destination or calculation. Preview device acceptance pending."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -141,10 +321,88 @@
       "reason": "Paket 3 R2: remove only the visible separator between vivid and pastel choices, matching the requested consistent appearance. Preserve swatches, radio markers, labels, colors, hit targets and callbacks."
     },
     {
-      "path": "src/theme/tokens.ts",
+      "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "7a49a486be45b8844962808e574a4f7c09a945e3225e2200ce0c7acbb1bc2b5b",
-      "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged."
+      "sha256": "a2a43fb3c71d88c2831ee01a2e9fa3c825106fadca1b843b4df12ee45facdbd1",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes."
+    },
+    {
+      "path": "src/features/salary/salary-payroll-content.tsx",
+      "kind": "modified",
+      "sha256": "13d95514eb1133ed3b78e43acfeff88e2e109517333245c32e6ae1ea5e33a94d",
+      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields."
+    },
+    {
+      "path": "src/features/salary/net-pay-automatic-screen.tsx",
+      "kind": "modified",
+      "sha256": "b712c9f83bc961f1e7b98ff2b5d0a10e7f8c01a830f97bf68f0a2f150599e0f7",
+      "reason": "Paket 4A: the existing automatic net route reuses the monthly report page in net mode. No manual calculator, new financial calculation or settings migration."
+    },
+    {
+      "path": "src/features/salary/net-pay-screen.tsx",
+      "kind": "modified",
+      "sha256": "dc8e0e9031f641f01b4b5f044982e7fb58fd642939b7e53b62b56b472b2d98c9",
+      "reason": "Paket 4A: preserve strict legacy net-link month validation and add a back-capable custom page for invalid links after removing the native header."
+    },
+    {
+      "path": "src/features/salary/net-pay-settings-screen.tsx",
+      "kind": "modified",
+      "sha256": "aef8d9079e4dca3d1c0c9349b89da8b7037fb819d96339b218f9aa85913a5350",
+      "reason": "Paket 4A: return to the net forecast when settings were opened without navigation history; preserve selected month, save behavior and draft protection."
+    },
+    {
+      "path": "src/navigation/routes.ts",
+      "kind": "modified",
+      "sha256": "7d72b7edf403819e7253e7f3fe4e4ab347fb4df6ef743f8db988360ceb212701",
+      "reason": "Paket 4C: extend typed annual detail section with NET while preserving existing selected-year validation and separated monthly salary/net routes."
+    },
+    {
+      "path": "src/domain/analysis-view.ts",
+      "kind": "modified",
+      "sha256": "8ee12cacfcda6912c8a077d43c0b3482a97156596e69210c2de731e230a1ce9f",
+      "reason": "Paket 4 correction: add independent NET card identity and title. Strictly migrate valid old four/five-card layouts, insert NET after PAY and inherit hidden PAY only during migration. Preserve independent six-card order/visibility, reject incomplete/unknown/duplicate IDs. No salary data or financial formula changes."
+    },
+    {
+      "path": "src/features/analysis/month-overview.tsx",
+      "kind": "modified",
+      "sha256": "7ccc6f8047212b567c468813c4ee4fa9bdbb808a992c0fd32c93197f40fef2f1",
+      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read."
+    },
+    {
+      "path": "src/features/analysis/annual-net-pay.ts",
+      "kind": "added",
+      "sha256": "7f51d1c2a20cde16a6a2e507c8595884cd4a05d33a23e868541845ee521c6c4e",
+      "reason": "Paket 4C: aggregate twelve existing monthly PAYOUT net forecasts in integer cents, resolving settings by effective month. Preserve missing/test-blocked status, preliminary basis, pension and annual-payment notes. No new tax or salary formulas."
+    },
+    {
+      "path": "src/features/analysis/use-annual-net-pay.ts",
+      "kind": "added",
+      "sha256": "289fddc32fab102fd3a6ff0b9e18f0fd9bd4647fa37cc582262ec9794de8f664",
+      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change."
+    },
+    {
+      "path": "src/features/analysis/annual-net-pay-view.tsx",
+      "kind": "added",
+      "sha256": "ddbdbbe49058b63d431fd759de75d769457479d93e7a0fc04f27f7ec90c3a0d3",
+      "reason": "Paket 4C: independent annual net card and twelve monthly net detail rows, partial-month coverage and basis notes, using existing shared Luftig-aware card/layout primitives."
+    },
+    {
+      "path": "src/features/analysis/annual-overview.tsx",
+      "kind": "modified",
+      "sha256": "1965e1aebadd0ddac51dba819031d5da03a2b9686be501dea2d19eda47d3186f",
+      "reason": "Paket 4C: add NET sibling to PAY in annual overview, honoring existing independent visibility/order preferences and selected year. Gross card unchanged."
+    },
+    {
+      "path": "src/features/analysis/annual-details-screen.tsx",
+      "kind": "modified",
+      "sha256": "5d81d8510b2b74b661ec1d866d3b3fdea6de4fc355f76755f9b0e3aad06b83e6",
+      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year."
+    },
+    {
+      "path": "src/features/analysis/use-annual-salary-payments.ts",
+      "kind": "modified",
+      "sha256": "d82a6ab8dfcb730a70734685cc7dffe9c210534e15a77cd094ed7290588c72be",
+      "reason": "Paket 4C: reuse one existing settings-timeline read for annual net; retain gross annual-payment guards and skip individual test months in net calculation."
     }
   ]
 }
