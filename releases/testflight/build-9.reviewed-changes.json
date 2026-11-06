@@ -263,8 +263,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "deb904a3f437ff830e8b511a19096169586f8c49809ead19d6d3c5474b245900",
-      "reason": "Paket 4C: pass prepared annual net state to overview and render distinct NET details. Other detail sections do not start net preparation."
+      "sha256": "2c5c940457eff2d6e3bd8500d7e172dac3448c2b4fe379b1201c7a241751c02d",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
