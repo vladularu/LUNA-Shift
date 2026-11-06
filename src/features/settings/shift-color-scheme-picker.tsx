@@ -20,19 +20,10 @@ export function ShiftColorSchemePicker({
       {[
         { id: "vivid", label: "Kräftige Farben", value: false },
         { id: "pastel", label: "Pastellfarben", value: true },
-      ].map(({ id, label, value }, index) => {
+      ].map(({ id, label, value }) => {
         const selected = value === pastelColors;
         return (
           <View key={id}>
-            {index > 0 ? (
-              <View
-                style={{
-                  height: 1,
-                  marginHorizontal: SPACING.lg,
-                  backgroundColor: palette.separator,
-                }}
-              />
-            ) : null}
             <Pressable
               accessibilityRole="radio"
               accessibilityLabel={label}

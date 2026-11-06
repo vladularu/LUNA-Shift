@@ -23,6 +23,8 @@ import {
 } from "@/infrastructure/database/repository";
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
 
+export type CalendarTimeDisplay = "NONE" | "START" | "DURATION";
+
 interface CalendarPreferencesValue {
   readonly viewMode: CalendarViewMode;
   readonly showShifts: boolean;
@@ -45,6 +47,7 @@ interface CalendarPreferencesValue {
   readonly setHolidayColor: (value: CalendarHolidayColor) => void;
   readonly setPastelColors: (value: boolean) => void;
   readonly setLabelMode: (value: CalendarLabelMode) => void;
+  readonly setTimeDisplay: (value: CalendarTimeDisplay) => void;
   readonly setShowShiftTimes: (value: boolean) => void;
   readonly setShowShiftDuration: (value: boolean) => void;
 }
@@ -177,6 +180,11 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
     (pastelColors: boolean) => update({ pastelColors }),
     [update],
   );
+  const setTimeDisplay = useCallback(
+    (mode: CalendarTimeDisplay) =>
+      update({ showShiftTimes: mode === "START", showShiftDuration: mode === "DURATION" }),
+    [update],
+  );
   const setShowShiftTimes = useCallback(
     (showShiftTimes: boolean) => update({ showShiftTimes }),
     [update],
@@ -201,6 +209,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setHolidayColor,
       setPastelColors,
       setLabelMode,
+      setTimeDisplay,
       setShowShiftTimes,
       setShowShiftDuration,
     }),
@@ -217,6 +226,7 @@ export function CalendarPreferencesProvider({ children }: PropsWithChildren) {
       setHolidayColor,
       setPastelColors,
       setShowShiftDuration,
+      setTimeDisplay,
       setShowShiftTimes,
       setShowShifts,
       setViewMode,

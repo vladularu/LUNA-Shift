@@ -103,6 +103,20 @@ export const CALENDAR_METRICS = {
   floatingActionSize: 40,
 } as const;
 
+// Mirrors the medium native widget's LUNAWidgetLayout. Keep this preview local:
+// no WidgetKit/native code or full-month calendar geometry changes are needed.
+export const CALENDAR_WIDGET_PREVIEW_METRICS = {
+  height: 168,
+  horizontalInset: 12,
+  verticalInset: 10,
+  dayFont: 14,
+  dayWidth: 28,
+  dayHeight: 20,
+  dateGap: 8,
+  chipFont: 11,
+  lineHeight: 13,
+} as const;
+
 export const CALENDAR_MINI_METRICS = {
   rowHeight: 21,
   daySize: 18,

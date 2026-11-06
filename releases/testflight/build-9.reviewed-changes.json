@@ -97,6 +97,54 @@
       "kind": "modified",
       "sha256": "6268c1c88a058c774712b9268b37e77e931d7ff0b7bf0b8ac49928220f5c4672",
       "reason": "Paket 2 R2, following user screenshots: match the labelled export action to the primary Apple sign-in reference using primary/onPrimary, large control height, medium padding and the same border/radius/pressed treatment. Preserve optional icon action styling, disabled/busy semantics, labels, handlers and all export data. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/calendar/calendar-preferences.tsx",
+      "kind": "modified",
+      "sha256": "c2a947d9ab8ad1432405e73696c73ea3b33e8331085d8127ac225b898cad35b4",
+      "reason": "Paket 3: add one atomic NONE/START/DURATION action using the existing ordered snapshot persistence, rollback and retry. Preserve stored boolean fields, legacy combinations, parsing, initial load, resets and all existing readers. No automatic migration or native changes."
+    },
+    {
+      "path": "src/features/settings/calendar-display-controls.tsx",
+      "kind": "modified",
+      "sha256": "ae99f31e21da875d0e6115ff60959ed6b4b0d0fad9e2ef5b027e87e7c6488508",
+      "reason": "Paket 3: separate service-label/time radio cards with atomic time choice and explicit legacy-both-on handling. R2 reorders these groups to Dienstfarben, Dienstbezeichnung, Zeitangabe, Kalenderinhalt, Feiertage/Sondertage, producing the user-confirmed A-B-E-F-G-C-D-H order. Preserve selection/persistence handlers, loading/visibility guards and all other controls."
+    },
+    {
+      "path": "src/features/settings/calendar-choice-rows.tsx",
+      "kind": "added",
+      "sha256": "cd94e4681b75942955c1a94e22ab3b2660aad9669640e277700cd6a826aa9a17",
+      "reason": "Paket 3 R3: restore the vertical-only accessible choice rows used for service labels and time. Remove the obsolete horizontal appearance branch; existing vertical selection behavior is unchanged."
+    },
+    {
+      "path": "src/features/settings/calendar-background-control.tsx",
+      "kind": "modified",
+      "sha256": "9f32ec8bd39238ad8956b64f0a0218cda627dacd87fb284de795f4d603ced9e2",
+      "reason": "Paket 3: simplify to one own-photo card by removing the redundant LUNA Standard/Eigenes Foto segments. Keep choose/change, preview, opacity, removal, undo, loading/error handling and all existing photo persistence/native picker behavior."
+    },
+    {
+      "path": "src/features/settings/appearance-calendar-preview.tsx",
+      "kind": "modified",
+      "sha256": "909ad08c876aa134aada101984f07bc6eabc518705a56dbf93d081c138148e21",
+      "reason": "Paket 3 R2: replace the tall full-month-renderer excerpt with a local fixed two-row, seven-column preview following the existing medium native widget metrics. Preserve the two-week sample data, existing label/detail/color helpers, photo background, opacity and current-day marker. No native widget, full-calendar rendering or data changes."
+    },
+    {
+      "path": "src/features/settings/appearance-mode-control.tsx",
+      "kind": "modified",
+      "sha256": "25c2a2e6ea7347cc1c56d41eaaa4fc7154b66b79ff4c44dc8a8d6d725f0791e7",
+      "reason": "Paket 3 R3: local horizontal icon-and-label appearance selector with one continuous moving active surface, using the existing monochrome primary/onPrimary colors and 240ms calm animation with system Reduce Motion. Restore sun/moon/phone icons, preserve selected/disabled/haptic/no-repeat behavior and full accessibility labels. No global selection component or persistence changes."
+    },
+    {
+      "path": "src/features/settings/shift-color-scheme-picker.tsx",
+      "kind": "modified",
+      "sha256": "c0733c76c0dadfb5dc420ab658cda03ca3f07544a468dc00b3404585afb8bed9",
+      "reason": "Paket 3 R2: remove only the visible separator between vivid and pastel choices, matching the requested consistent appearance. Preserve swatches, radio markers, labels, colors, hit targets and callbacks."
+    },
+    {
+      "path": "src/theme/tokens.ts",
+      "kind": "modified",
+      "sha256": "7a49a486be45b8844962808e574a4f7c09a945e3225e2200ce0c7acbb1bc2b5b",
+      "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged."
     }
   ]
 }
