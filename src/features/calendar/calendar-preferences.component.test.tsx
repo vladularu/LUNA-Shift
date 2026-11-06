@@ -66,6 +66,14 @@ function PreferencesHarness() {
         accessibilityLabel="Dienste ausblenden"
         onPress={() => preferences.setShowShifts(false)}
       />
+      {(["NONE", "START", "DURATION"] as const).map((mode) => (
+        <Pressable
+          key={mode}
+          accessibilityRole="button"
+          accessibilityLabel={mode}
+          onPress={() => preferences.setTimeDisplay(mode)}
+        />
+      ))}
       <Text>{preferences.error ?? "OK"}</Text>
       <Pressable
         accessibilityRole="button"
@@ -265,6 +273,7 @@ describe("CalendarPreferencesProvider", () => {
     );
     await fireEvent.press(screen.getByRole("button", { name: "Anzeige zurücksetzen" }));
     await fireEvent.press(screen.getByRole("button", { name: "Dienste ausblenden" }));
+    await fireEvent.press(screen.getByRole("button", { name: "START" }));
     expect(mockSaveCalendarPreferences).not.toHaveBeenCalled();
     const stored = { ...mockDefaults, labelMode: "SYMBOL" as const, showShiftTimes: true };
     await act(async () => {
@@ -303,6 +312,101 @@ describe("CalendarPreferencesProvider", () => {
     expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(hidden);
     await fireEvent.press(screen.getByRole("button", { name: "Erneut versuchen" }));
     await waitFor(() => expect(screen.getByText("OK")).toBeTruthy());
+    expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(mockDefaults);
+  });
+  it.each(["NONE", "START", "DURATION"] as const)(
+    "persists an exclusive %s choice atomically across restart",
+    async (mode) => {
+      const stored = {
+        ...mockDefaults,
+        labelMode: "SYMBOL" as const,
+        showShiftTimes: true,
+        showShiftDuration: true,
+      };
+      mockLoadCalendarPreferences.mockResolvedValue(stored);
+      mockSaveCalendarPreferences.mockImplementation(async (_db, snapshot) => {
+        mockLoadCalendarPreferences.mockResolvedValue(snapshot);
+      });
+      const content = (
+        <CalendarPreferencesProvider>
+          <PreferencesHarness />
+        </CalendarPreferencesProvider>
+      );
+      const screen = await render(content);
+      await waitFor(() => expect(screen.getByText("READY")).toBeTruthy());
+      expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(stored);
+      expect(mockSaveCalendarPreferences).not.toHaveBeenCalled();
+      await fireEvent.press(screen.getByRole("button", { name: mode }));
+      const expected = {
+        ...stored,
+        showShiftTimes: mode === "START",
+        showShiftDuration: mode === "DURATION",
+      };
+      await waitFor(() => expect(mockSaveCalendarPreferences).toHaveBeenCalledTimes(1));
+      expect(mockSaveCalendarPreferences).toHaveBeenLastCalledWith(mockDatabase, expected);
+      await screen.unmount();
+      const restarted = await render(content);
+      await waitFor(() => expect(restarted.getByText("READY")).toBeTruthy());
+      expect(JSON.parse(restarted.getByTestId("snapshot").props.children)).toEqual(expected);
+      expect(mockSaveCalendarPreferences).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("restores both legacy time fields after a failed choice and retries the complete pair", async () => {
+    const stored = { ...mockDefaults, showShiftTimes: true, showShiftDuration: true };
+    mockLoadCalendarPreferences.mockResolvedValue(stored);
+    mockSaveCalendarPreferences
+      .mockRejectedValueOnce(new Error("disk unavailable"))
+      .mockResolvedValueOnce();
+    const screen = await render(
+      <CalendarPreferencesProvider>
+        <PreferencesHarness />
+      </CalendarPreferencesProvider>,
+    );
+    await waitFor(() => expect(screen.getByText("READY")).toBeTruthy());
+    await fireEvent.press(screen.getByRole("button", { name: "START" }));
+    await waitFor(() =>
+      expect(screen.getByText("Kalenderansicht konnte nicht gespeichert werden.")).toBeTruthy(),
+    );
+    expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(stored);
+    await fireEvent.press(screen.getByRole("button", { name: "Erneut versuchen" }));
+    await waitFor(() => expect(screen.getByText("OK")).toBeTruthy());
+    const expected = { ...stored, showShiftDuration: false };
+    expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(expected);
+    expect(mockSaveCalendarPreferences).toHaveBeenCalledTimes(2);
+    expect(mockSaveCalendarPreferences).toHaveBeenLastCalledWith(mockDatabase, expected);
+  });
+  it("serializes rapid time choices without persisting mixed flags", async () => {
+    const completeWrites: (() => void)[] = [];
+    mockSaveCalendarPreferences.mockImplementation(
+      () => new Promise<void>((resolve) => completeWrites.push(resolve)),
+    );
+    const screen = await render(
+      <CalendarPreferencesProvider>
+        <PreferencesHarness />
+      </CalendarPreferencesProvider>,
+    );
+    await waitFor(() => expect(screen.getByText("READY")).toBeTruthy());
+    for (const mode of ["START", "DURATION", "NONE"]) {
+      await fireEvent.press(screen.getByRole("button", { name: mode }));
+    }
+    expect(mockSaveCalendarPreferences).toHaveBeenCalledTimes(1);
+    for (let index = 0; index < 3; index += 1) {
+      await waitFor(() => expect(completeWrites).toHaveLength(index + 1));
+      await act(async () => {
+        completeWrites[index]();
+      });
+    }
+    expect(mockSaveCalendarPreferences).toHaveBeenCalledTimes(3);
+    expect(
+      mockSaveCalendarPreferences.mock.calls.map(([, v]) => [
+        v.showShiftTimes,
+        v.showShiftDuration,
+      ]),
+    ).toEqual([
+      [true, false],
+      [false, true],
+      [false, false],
+    ]);
     expect(JSON.parse(screen.getByTestId("snapshot").props.children)).toEqual(mockDefaults);
   });
 });

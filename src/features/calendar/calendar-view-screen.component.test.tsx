@@ -85,9 +85,6 @@ function page(notice?: string) {
 }
 async function renderView(notice?: string) {
   const screen = await render(page(notice));
-  await fireEvent(screen.getByTestId("appearance-preview-month"), "layout", {
-    nativeEvent: { layout: { width: 320 } },
-  });
   return screen;
 }
 describe("CalendarViewScreen", () => {
@@ -101,7 +98,7 @@ describe("CalendarViewScreen", () => {
     mockPreferences.showShiftDuration = true;
   });
 
-  it("offers separate full-name, short-label and symbol tabs", async () => {
+  it("offers separate full-name, short-label and symbol choices", async () => {
     const screen = await renderView();
 
     expect(within(screen.getByLabelText("Dienstbezeichnung")).getAllByRole("radio")).toHaveLength(
@@ -162,7 +159,8 @@ describe("CalendarViewScreen", () => {
     ).toBe(14);
     expect(screen.getByTestId("calendar-date-marker-2026-10-01", hidden)).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Dienste & Abwesenheiten" })).toBeTruthy();
-    expect(screen.getByText("Dienstanzeige")).toBeTruthy();
+    expect(screen.getByText("Dienstbezeichnung")).toBeTruthy();
+    expect(screen.getByText("Zeitangabe")).toBeTruthy();
     expect(screen.getAllByText("Frei")).toHaveLength(4);
     expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
     expect(screen.queryByText("• Termin (Beispiel)")).toBeNull();

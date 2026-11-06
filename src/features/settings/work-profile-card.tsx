@@ -23,7 +23,7 @@ export function WorkProfileCard({ profile }: { readonly profile: UserProfile }) 
         minHeight: CONTROL_HEIGHT.large,
         padding: SPACING.xl,
         gap: SPACING.lg,
-        backgroundColor: palette.secondarySoft,
+        backgroundColor: palette.surface,
         borderRadius: RADII.card,
         opacity: pressed ? 0.75 : 1,
       })}

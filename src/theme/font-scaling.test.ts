@@ -12,6 +12,10 @@ const COMPACT_SCALE_ALLOWLIST = new Set([
 ]);
 
 const TEXT_SHRINK_ALLOWLIST = new Set([
+  // Fixed widget-style sample cells expose full titles in accessible day labels.
+  "features/settings/appearance-calendar-preview.tsx",
+  // Explicit horizontal Hell/Dunkel/System layout; full option labels remain accessible.
+  "features/settings/appearance-mode-control.tsx",
   // Opt-in stable calendar title only: full accessible label and font-scaled height.
   "ui/screen-layout.tsx",
   "features/calendar/month-card.tsx",
@@ -19,6 +23,11 @@ const TEXT_SHRINK_ALLOWLIST = new Set([
 ]);
 
 const SINGLE_LINE_ALLOWLIST = new Set([
+  // Horizontal icon-and-label mode selector with complete accessible option names.
+  "features/settings/appearance-mode-control.tsx",
+  // Fixed widget-style sample cells expose full titles in accessible day labels.
+  "features/settings/appearance-calendar-preview.tsx",
+
   // Compact invitation URL only: full link is the accessibility hint; all other card text scales and wraps.
   "features/sharing/sharing-active-invitation-card.tsx",
   // Foreign month-cell marker only; its complete read-only sheet stays scalable.

@@ -726,7 +726,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.getByRole("button", { name: /^Anpassen,/ })).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it("keeps the analysis calculation order from components to bonus to gross and net", async () => {
+  it("keeps components, gross and net in order in one salary card", async () => {
     const screen = await render(
       <PayListCard
         onPress={jest.fn()}
@@ -739,19 +739,19 @@ describe("integrated salary-to-net workflow", () => {
         netRow={<AnalysisNetPayRow month="2026-11" />}
       />,
     );
-    const output = JSON.stringify(screen.toJSON());
-    const labels = [
+    const card = within(screen.getByTestId("analysis-card-body-Gehalt"));
+    const labels = card.getAllByText(
+      /^(Grundgehalt|Zeitzuschläge|Weitere Zulagen|Jahressonderzahlung|Brutto geschätzt|Voraussichtliches Netto)$/u,
+    );
+    expect(labels.map((node) => node.props.children)).toEqual([
       "Grundgehalt",
       "Zeitzuschläge",
       "Weitere Zulagen",
       "Jahressonderzahlung",
       "Brutto geschätzt",
       "Voraussichtliches Netto",
-    ];
-    for (let i = 1; i < labels.length; i++) {
-      expect(output.indexOf(labels[i - 1])).toBeGreaterThan(-1);
-      expect(output.indexOf(labels[i])).toBeGreaterThan(output.indexOf(labels[i - 1]));
-    }
+    ]);
+    expect(screen.getAllByTestId("analysis-card-body-Gehalt")).toHaveLength(1);
     expect(screen.queryByText(/Jahresprognose mit gleichbleibendem/)).toBeNull();
   });
   it("opens the affected service rather than tariff settings for missing service times", async () => {

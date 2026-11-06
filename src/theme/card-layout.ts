@@ -3,8 +3,8 @@ import { CARD_HEADER_INSET, CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING }
 export const CARD_METRICS = {
   contentInset: SPACING.lg,
   contentTopPadding: SPACING.lg,
-  rowMinHeight: MINIMUM_TOUCH_TARGET,
-  rowPaddingVertical: SPACING.sm,
+  rowMinHeight: 48,
+  rowPaddingVertical: 10,
   iconSize: 20,
   infoMinHeight: MINIMUM_TOUCH_TARGET,
   infoPaddingVertical: SPACING.md,

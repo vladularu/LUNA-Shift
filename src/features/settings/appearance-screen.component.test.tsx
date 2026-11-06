@@ -38,6 +38,7 @@ const mockDisplay = {
   pastelColors: false,
   setPastelColors: jest.fn(),
   setLabelMode: jest.fn(),
+  setTimeDisplay: jest.fn(),
   setShowShiftTimes: jest.fn(),
   setShowShiftDuration: jest.fn(),
   showShiftTimes: false,
@@ -112,11 +113,7 @@ function screenWith(
 function pictureScreen() {
   return screenWith({}, { uri: "file:///photo.jpg" });
 }
-async function layoutPreview(screen: Awaited<ReturnType<typeof render>>) {
-  await fireEvent(screen.getByTestId("appearance-preview-month"), "layout", {
-    nativeEvent: { layout: { width: 288, height: 400 } },
-  });
-}
+
 describe("appearance controls", () => {
   beforeEach(() => {
     mockDisplay.ready = true;
@@ -176,7 +173,7 @@ describe("appearance controls", () => {
       try {
         mockEntries[0] = { ...original, color: "#4FCB68" };
         const screen = await render(screenWith({ mode }));
-        await layoutPreview(screen);
+
         const title = () => within(screen.getByLabelText("2026-10-06, Früh")).getByText("F");
         expect(title().parent).toHaveStyle({ backgroundColor: "#4FCB68" });
         mockDisplay.pastelColors = true;
@@ -241,7 +238,7 @@ describe("appearance controls", () => {
     expect(screen.getByRole("adjustable", { name: "Deckkraft des Kalenderfotos" })).toHaveStyle({
       minHeight: 44,
     });
-    expect(screen.getByLabelText("Kalenderhintergrund")).toHaveStyle({ flexDirection: "column" });
+    expect(screen.getByRole("button", { name: "Foto ändern" })).toBeEnabled();
   });
   it("does not write again when the selected mode is pressed", async () => {
     const screen = await render(screenWith());
@@ -249,7 +246,7 @@ describe("appearance controls", () => {
     expect(preferences.setMode).not.toHaveBeenCalled();
     expect(preferences.setTheme).not.toHaveBeenCalled();
   });
-  it("stacks the choices for large text and preserves usable touch targets", async () => {
+  it("keeps the mode choices in one row with usable touch targets at large text sizes", async () => {
     jest.spyOn(nativeModule, "useWindowDimensions").mockReturnValue({
       width: 320,
       height: 640,
@@ -258,14 +255,14 @@ describe("appearance controls", () => {
     });
     const screen = await render(screenWith({ mode: "light" }));
     expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({
-      flexDirection: "column",
+      flexDirection: "row",
     });
     for (const name of ["Hell", "Dunkel", "System"]) {
       expect(screen.getByRole("radio", { name })).toHaveStyle({ minHeight: 44 });
     }
   });
 
-  it("keeps medium enlarged labels out of cramped horizontal segments", async () => {
+  it("keeps the three mode choices horizontal at medium text sizes", async () => {
     jest.spyOn(nativeModule, "useWindowDimensions").mockReturnValue({
       width: 375,
       height: 812,
@@ -273,29 +270,35 @@ describe("appearance controls", () => {
       fontScale: 1.3,
     });
     const screen = await render(screenWith());
-    expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({ flexDirection: "column" });
+    expect(screen.getByLabelText("Erscheinungsbild")).toHaveStyle({ flexDirection: "row" });
   });
 
-  it("uses card-shaped selections with the same contrast in both modes", async () => {
-    const screen = await render(screenWith({ mode: "light" }, { uri: "file:///photo.jpg" }));
+  it("keeps one sliding surface with contrasting mode icons in light and dark appearance", async () => {
+    const screen = await render(screenWith({ mode: "light" }));
     for (const mode of ["light", "dark"] as const) {
-      await screen.rerender(screenWith({ mode }, { uri: "file:///photo.jpg" }));
+      await screen.rerender(screenWith({ mode }));
+      await fireEvent(screen.getByTestId("appearance-mode-track"), "layout", {
+        nativeEvent: { layout: { width: 308, height: 52, x: 0, y: 0 } },
+      });
       const palette = resolvePalette("mint", mode === "dark");
-      for (const label of ["Erscheinungsbild", "Kalenderhintergrund", "Dienstbezeichnung"]) {
-        const group = screen.getByLabelText(label);
-        expect(group).toHaveStyle({
-          backgroundColor: palette.selectionTrack,
-          borderRadius: 12,
-        });
-        expect(within(group).getByRole("radio", { checked: true })).toBeTruthy();
-        expect(within(group).getByTestId(`${label}:active-surface`)).toHaveStyle({
-          backgroundColor: palette.selectionActiveSurface,
-          borderRadius: 8,
-        });
-        expect(ReactNative.StyleSheet.flatten(group.parent?.props.style)).not.toHaveProperty(
-          "backgroundColor",
-        );
-      }
+      expect(screen.getAllByTestId("appearance-mode-active-surface")).toHaveLength(1);
+      expect(screen.getByTestId("appearance-mode-active-surface")).toHaveStyle({
+        width: 100,
+        backgroundColor: palette.primary,
+      });
+      const group = within(screen.getByLabelText("Erscheinungsbild"));
+      expect(group.getByText(mode === "light" ? "Hell" : "Dunkel")).toHaveStyle({
+        color: palette.onPrimary,
+      });
+      expect(group.getAllByRole("radio")).toHaveLength(3);
+      expect(group.getAllByRole("radio", { checked: true })).toHaveLength(1);
+      expect(
+        group.getByRole("radio", { name: mode === "light" ? "Hell" : "Dunkel", checked: true }),
+      ).toBeTruthy();
+      expect(group.getByRole("radio", { name: "System" })).toHaveProp(
+        "accessibilityHint",
+        "Folgt der Darstellung deines Geräts",
+      );
     }
   });
 
@@ -316,9 +319,9 @@ describe("appearance controls", () => {
   });
   it("renders calendar examples, stored shift colors and date markers above settings", async () => {
     const screen = await render(pictureScreen());
-    await layoutPreview(screen);
+
     const preview = screen.getByTestId("appearance-calendar-preview");
-    expect(within(preview).getByText("Oktober 2026")).toBeTruthy();
+    expect(within(preview).queryByText("Oktober 2026")).toBeNull();
     expect(within(preview).getByLabelText("2026-10-06, Früh")).toBeTruthy();
     const chip = within(within(preview).getByLabelText("2026-10-06, Früh")).getByText("F");
     expect(chip.parent).toHaveStyle({
@@ -334,24 +337,44 @@ describe("appearance controls", () => {
       JSON.stringify(root).indexOf("appearance-settings"),
     );
   });
-  it("keeps the live preview fixed above the four scrolling sections with a non-interactive fade", async () => {
+  it("keeps the live preview fixed above the scrolling sections with a non-interactive fade", async () => {
     const screen = await render(pictureScreen());
-    await layoutPreview(screen);
+
     const preview = screen.getByTestId("appearance-calendar-preview");
     const controls = screen.getByTestId("calendar-design-controls");
+    const serialized = JSON.stringify(screen.toJSON());
+    const sections = [
+      "appearance-settings",
+      "calendar-background-settings",
+      "calendar-shift-colors-settings",
+      "calendar-label-settings",
+      "calendar-time-settings",
+      "calendar-content-settings",
+      "calendar-holiday-color-settings",
+      "Kalenderoptionen zurücksetzen",
+    ];
+    const positions = sections.map((id) => serialized.indexOf(id));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(screen.getAllByTestId(/^appearance-preview-week-/)).toHaveLength(2);
+    for (const week of screen.getAllByTestId(/^appearance-preview-week-/)) {
+      expect(within(week).getAllByTestId(/^calendar-combined-day-/)).toHaveLength(7);
+    }
+    expect(within(preview).queryByText("Oktober 2026")).toBeNull();
+
     expect(within(controls).queryByTestId("appearance-calendar-preview")).toBeNull();
     expect(
       screen.getByTestId("calendar-design-scroll-fade", { includeHiddenElements: true }),
     ).toHaveProp("pointerEvents", "none");
-    for (const name of ["Aussehen", "Hintergrund", "Kalenderinhalt", "Dienstanzeige"])
-      expect(within(controls).getByText(name)).toBeTruthy();
     for (const name of [
-      "Dienste & Abwesenheiten",
-      "Termine",
-      "Feiertage",
-      "Startzeit",
-      "Gesamtdauer",
+      "Aussehen",
+      "Eigenes Hintergrundbild",
+      "Kalenderinhalt",
+      "Dienstbezeichnung",
+      "Zeitangabe",
     ])
+      expect(within(controls).getByText(name)).toBeTruthy();
+    for (const name of ["Dienste & Abwesenheiten", "Termine", "Feiertage"])
       expect(within(controls).getByRole("switch", { name })).toBeTruthy();
     expect(
       within(controls).getByRole("button", { name: "Kalenderoptionen zurücksetzen" }),
@@ -368,7 +391,7 @@ describe("appearance controls", () => {
   });
   it("updates the real preview for each saved strength and mode without replacing its date nodes", async () => {
     const screen = await render(pictureScreen());
-    await layoutPreview(screen);
+
     const marker = screen.getByTestId("calendar-date-marker-2026-10-06", {
       includeHiddenElements: true,
     });
@@ -398,9 +421,10 @@ describe("appearance controls", () => {
     async (uri) => {
       const alert = jest.spyOn(ReactNative.Alert, "alert");
       const screen = await render(screenWith({}, { uri }));
-      const status = uri ? "Eigenes Foto" : "LUNA Standard";
-      expect(screen.getByRole("radio", { name: status, checked: true })).toBeTruthy();
-      expect(screen.getByLabelText("Kalenderhintergrund")).toBeTruthy();
+      expect(screen.getByText("Eigenes Hintergrundbild")).toBeTruthy();
+      expect(
+        within(screen.getByTestId("calendar-photo-actions")).queryAllByRole("radio"),
+      ).toHaveLength(0);
       expect(screen.queryByRole("button", { name: /Hintergrund/ })).toBeNull();
       await fireEvent.press(
         screen.getByRole("button", { name: uri ? "Foto ändern" : "Foto auswählen" }),
@@ -415,7 +439,7 @@ describe("appearance controls", () => {
     async (times) => {
       mockDisplay.showShiftTimes = times;
       const screen = await render(pictureScreen());
-      await layoutPreview(screen);
+
       const hidden = { includeHiddenElements: true };
       const dates = screen.getAllByTestId(/^calendar-date-marker-/, hidden);
       const adjacentDates = screen.getAllByTestId(/^calendar-adjacent-\d{4}/, hidden);
@@ -428,7 +452,7 @@ describe("appearance controls", () => {
   );
   it("keeps preview height and date positions stable when shift details are toggled", async () => {
     const screen = await render(pictureScreen());
-    await layoutPreview(screen);
+
     const hidden = { includeHiddenElements: true };
     const height = screen.getByTestId("appearance-preview-month").props.style.height;
     const datePositions = () =>
@@ -465,7 +489,8 @@ describe("appearance controls", () => {
     expect(preferences.setMode).not.toHaveBeenCalled();
     expect(setStrength).not.toHaveBeenCalled();
     await screen.rerender(screenWith({}, { canUndoRemoval: true }));
-    expect(screen.getByRole("radio", { name: "LUNA Standard", checked: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Foto auswählen" })).toBeTruthy();
+    expect(screen.queryByRole("radio", { name: "LUNA Standard" })).toBeNull();
     expect(screen.queryByLabelText("Bildsichtbarkeit")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Rückgängig" }));
     expect(background.undoRemove).toHaveBeenCalled();
@@ -501,32 +526,79 @@ describe("appearance controls", () => {
     });
     expect(screen.getByText("Änderungen werden automatisch gespeichert.")).toBeTruthy();
   });
-  it("keeps background selection direct and restores a removed photo without opening another picker", async () => {
-    const screen = await render(pictureScreen());
-    expect(screen.getByRole("radio", { name: "Eigenes Foto", checked: true })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("radio", { name: "LUNA Standard" }));
+  it("offers one photo entry and restores a removed photo through undo", async () => {
+    const screen = await render(screenWith());
+    expect(screen.getByText("Eigenes Hintergrundbild")).toBeTruthy();
+    expect(screen.queryByRole("radio", { name: "LUNA Standard" })).toBeNull();
+    expect(screen.queryByRole("radio", { name: "Eigenes Foto" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Foto auswählen" }));
+    expect(background.choose).toHaveBeenCalledTimes(1);
+    await screen.rerender(pictureScreen());
+    expect(screen.queryByRole("button", { name: "Foto auswählen" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Foto ändern" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Foto entfernen" }));
     expect(background.remove).toHaveBeenCalledTimes(1);
     await screen.rerender(screenWith({}, { canUndoRemoval: true }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Eigenes Foto" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Rückgängig" }));
     expect(background.undoRemove).toHaveBeenCalledTimes(1);
-    expect(background.choose).not.toHaveBeenCalled();
+    expect(background.choose).toHaveBeenCalledTimes(1);
   });
-  it("keeps the six calendar controls bound to the existing shared preferences", async () => {
+  it("keeps independent content switches and separates label and time choices", async () => {
     const screen = await render(screenWith());
     for (const [name, setter] of [
       ["Dienste & Abwesenheiten", mockDisplay.setShowShifts],
       ["Termine", mockDisplay.setShowAppointments],
       ["Feiertage", mockDisplay.setShowHolidays],
-      ["Startzeit", mockDisplay.setShowShiftTimes],
-      ["Gesamtdauer", mockDisplay.setShowShiftDuration],
     ] as const) {
       await fireEvent.press(screen.getByRole("switch", { name }));
-      expect(setter).toHaveBeenCalledWith(name === "Startzeit" || name === "Gesamtdauer");
-      expect(screen.getByRole("switch", { name })).toHaveStyle({ minHeight: 40, minWidth: 40 });
+      expect(setter).toHaveBeenCalledWith(false);
     }
-    await fireEvent.press(screen.getByRole("radio", { name: "Name" }));
+    const labels = within(screen.getByTestId("calendar-label-settings"));
+    const times = within(screen.getByTestId("calendar-time-settings"));
+    expect(labels.getAllByRole("radio")).toHaveLength(3);
+    expect(times.getAllByRole("radio")).toHaveLength(3);
+    expect(labels.queryByRole("radio", { name: "Startzeit" })).toBeNull();
+    expect(times.queryByRole("radio", { name: "Name" })).toBeNull();
+    await fireEvent.press(labels.getByRole("radio", { name: "Kürzel" }));
+    expect(mockDisplay.setLabelMode).not.toHaveBeenCalled();
+    await fireEvent.press(labels.getByRole("radio", { name: "Name" }));
     expect(mockDisplay.setLabelMode).toHaveBeenCalledWith("FULL");
+    await fireEvent.press(times.getByRole("radio", { name: "Keine", checked: true }));
+    expect(mockDisplay.setTimeDisplay).not.toHaveBeenCalled();
+    await fireEvent.press(times.getByRole("radio", { name: "Startzeit" }));
+    expect(mockDisplay.setTimeDisplay).toHaveBeenLastCalledWith("START");
+    await fireEvent.press(times.getByRole("radio", { name: "Gesamtdauer" }));
+    expect(mockDisplay.setTimeDisplay).toHaveBeenLastCalledWith("DURATION");
+    mockDisplay.showShiftDuration = true;
+    await screen.rerender(screenWith());
+    expect(times.getByRole("radio", { name: "Gesamtdauer", checked: true })).toBeTruthy();
+    await fireEvent.press(times.getByRole("radio", { name: "Keine" }));
+    expect(mockDisplay.setTimeDisplay).toHaveBeenLastCalledWith("NONE");
+    expect(mockDisplay.setShowShiftTimes).not.toHaveBeenCalled();
+    expect(mockDisplay.setShowShiftDuration).not.toHaveBeenCalled();
   });
+  it.each<[boolean, boolean, string | null]>([
+    [false, false, "Keine"],
+    [true, false, "Startzeit"],
+    [false, true, "Gesamtdauer"],
+    [true, true, null],
+  ])(
+    "keeps the stored time combination %s/%s until an explicit choice",
+    async (times, duration, label) => {
+      mockDisplay.showShiftTimes = times;
+      mockDisplay.showShiftDuration = duration;
+      const screen = await render(screenWith());
+      const group = within(screen.getByTestId("calendar-time-settings"));
+      if (label) {
+        expect(group.getAllByRole("radio", { checked: true })).toHaveLength(1);
+        expect(group.getByRole("radio", { name: label, checked: true })).toBeTruthy();
+      } else {
+        expect(group.queryAllByRole("radio", { checked: true })).toHaveLength(0);
+        expect(group.getByText(/Bisher werden Startzeit und Gesamtdauer angezeigt/)).toBeTruthy();
+      }
+      expect(mockDisplay.setTimeDisplay).not.toHaveBeenCalled();
+    },
+  );
   it("offers three named color dots with fixed opacity and follows the selection in the live preview", async () => {
     const screen = await render(screenWith());
     const group = within(screen.getByTestId("calendar-holiday-color-settings"));
@@ -537,9 +609,6 @@ describe("appearance controls", () => {
     expect(mockDisplay.setHolidayColor).toHaveBeenCalledWith("BLUE");
     mockDisplay.holidayColor = "BLUE";
     await screen.rerender(screenWith());
-    await fireEvent(screen.getByTestId("appearance-preview-month"), "layout", {
-      nativeEvent: { layout: { width: 360, height: 220 } },
-    });
     expect(screen.getByTestId("calendar-combined-day-2026-10-01")).toHaveStyle({
       backgroundColor: "#3B82D040",
     });
@@ -562,7 +631,7 @@ describe("appearance controls", () => {
       expect(screen.getByRole("radio", { name })).toBeDisabled();
     }
     for (const name of ["Startzeit", "Gesamtdauer"])
-      expect(screen.getByRole("switch", { name })).toBeDisabled();
+      expect(screen.getByRole("radio", { name })).toBeDisabled();
     expect(screen.getByText(/Aktiviere Dienste/)).toBeTruthy();
     expect(mockDisplay.setLabelMode).not.toHaveBeenCalled();
     expect(mockDisplay.setShowShiftTimes).not.toHaveBeenCalled();
@@ -570,7 +639,9 @@ describe("appearance controls", () => {
     mockDisplay.showShifts = true;
     await screen.rerender(screenWith());
     expect(screen.getByRole("radio", { name: "Kürzel", checked: true })).toBeEnabled();
-    expect(screen.getByRole("switch", { name: "Startzeit", checked: true })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Startzeit" })).toBeEnabled();
+    expect(screen.getByText(/Bisher werden Startzeit und Gesamtdauer angezeigt/)).toBeTruthy();
+    expect(mockDisplay.setTimeDisplay).not.toHaveBeenCalled();
   });
   it("shows a calendar persistence failure and never announces a saved selection", async () => {
     mockDisplay.error = "Kalenderansicht konnte nicht gespeichert werden.";
@@ -586,14 +657,13 @@ describe("appearance controls", () => {
   it("does not allow default values to overwrite an unloaded profile's preferences", async () => {
     mockDisplay.ready = false;
     const screen = await render(screenWith());
-    for (const name of [
-      "Dienste & Abwesenheiten",
-      "Termine",
-      "Feiertage",
-      "Startzeit",
-      "Gesamtdauer",
-    ])
+    for (const name of ["Dienste & Abwesenheiten", "Termine", "Feiertage"])
       expect(screen.getByRole("switch", { name })).toBeDisabled();
+    for (const name of ["Name", "Kürzel", "Symbol", "Keine", "Startzeit", "Gesamtdauer"]) {
+      expect(screen.getByRole("radio", { name })).toBeDisabled();
+      await fireEvent.press(screen.getByRole("radio", { name }));
+    }
+    expect(mockDisplay.setTimeDisplay).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Kalenderoptionen zurücksetzen" })).toBeDisabled();
   });
   it("names the calendar-only reset scope explicitly", async () => {
