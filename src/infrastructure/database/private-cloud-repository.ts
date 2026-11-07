@@ -1,3 +1,4 @@
+import { netPayProfilesChanged } from "./net-pay-profile-events";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { UserFacingError } from "@/domain/errors";
 import type {
@@ -149,6 +150,7 @@ export function createPrivateCloudLocal(
           return true;
         });
         applied = result;
+        if (result && changed) netPayProfilesChanged(db);
         return result;
       } catch (error) {
         if (notificationsTouched) {

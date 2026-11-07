@@ -17,6 +17,9 @@ import { useLocalReferenceDate } from "./use-local-reference-date";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
 import { analysisSalaryInputStore } from "./analysis-salary-input-store";
 import { createAnalysisWarmupRuntime } from "./analysis-warmup-runtime";
+import { usePreparedAnnualNetPay } from "./use-annual-net-pay";
+import type { AnnualNetPayRequest } from "./annual-net-pay";
+
 export default function AnalysisBackgroundPreparation() {
   const db = useSQLiteContext();
   const status = usePflegeShiftStatus();
@@ -46,6 +49,42 @@ export default function AnalysisBackgroundPreparation() {
   const snapshot = useSyncExternalStore(inputs.subscribe, inputs.getSnapshot, inputs.getSnapshot);
   const persistent = useAnalysisPersistentResults();
   const runtime = useMemo(() => createAnalysisWarmupRuntime(persistent), [persistent]);
+  const netYear = Number((analysisMonth ?? calendarMonth ?? referenceDate).slice(0, 4));
+  const netRequest = useMemo<AnnualNetPayRequest | null>(
+    () =>
+      started &&
+      status.ready &&
+      !status.error &&
+      savedProfile &&
+      snapshot.status === "ready" &&
+      payment.ready
+        ? {
+            year: netYear,
+            profile: savedProfile,
+            timeline: snapshot.timeline,
+            preferences: payment.preferences,
+            context: { entries, tariffDecisions, workPatternSettings, resolver, testMonths },
+          }
+        : null,
+    [
+      started,
+      status.ready,
+      status.error,
+      savedProfile,
+      snapshot.status,
+      snapshot.timeline,
+      payment.ready,
+      payment.preferences,
+      netYear,
+      entries,
+      tariffDecisions,
+      workPatternSettings,
+      resolver,
+      testMonths,
+    ],
+  );
+  // Visible month work takes precedence; opening annual pages joins and promotes this task.
+  usePreparedAnnualNetPay(netRequest, active, 30);
   useEffect(() => () => runtime.stop(), [runtime]);
   const monthsKey = [
     ...new Set([
@@ -58,7 +97,7 @@ export default function AnalysisBackgroundPreparation() {
   useEffect(() => {
     let previous = AppState.currentState;
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active" && previous !== "active") inputs.refresh();
+      if (state === "active" && previous !== "active") inputs.refresh(true);
       previous = state;
       if (state !== "active") runtime.stop();
       setActive(state === "active");

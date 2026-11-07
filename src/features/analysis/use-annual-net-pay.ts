@@ -10,10 +10,16 @@ import type { SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { useSalaryPaymentPreferences } from "@/features/salary/salary-payment-preferences";
 import { annualNetPaySteps, type AnnualNetPay, type AnnualNetPayRequest } from "./annual-net-pay";
 import { createAnalysisResultCache } from "./analysis-result-cache";
+import { useAnalysisPersistentResults } from "./analysis-persistent-results";
+import {
+  annualNetPayKey,
+  annualNetPayPeriod,
+  persistentAnnualNetPay,
+} from "./annual-net-pay-cache";
 import { requestSharedAnalysis } from "./shared-analysis-tasks";
 
 // Full input content and resolver identity isolate years, profiles and rule catalogs.
-// Keep only a few immutable results in memory; no new persistent financial data.
+// SQLite additionally retains validated snapshots across restarts of the same app update.
 const results = createAnalysisResultCache<AnnualNetPay>(6);
 
 export interface AnnualNetPayState {
@@ -63,14 +69,25 @@ export function useAnnualNetPay(
       testMonths,
     ],
   );
-  const key = useMemo(
-    () =>
-      request
-        ? "annual-net:" +
-          JSON.stringify({ ...request, context: { ...request.context, resolver: undefined } })
-        : null,
-    [request],
-  );
+  const prepared = usePreparedAnnualNetPay(request, focused);
+  const error =
+    data.error ??
+    payment.error ??
+    prepared.error ??
+    (data.status === "ready" && !profile ? "Keine Gehaltsgrundlage eingerichtet." : null);
+  return { ...prepared, loading: !error && prepared.loading, error };
+}
+
+// Shared by the mounted background preparation and the visible annual pages.
+// Route focus only belongs to the wrapper above, never to the background consumer.
+export function usePreparedAnnualNetPay(
+  request: AnnualNetPayRequest | null,
+  enabled: boolean,
+  priority = -1,
+): AnnualNetPayState {
+  const persistent = useAnalysisPersistentResults();
+  const resolver = request?.context.resolver ?? null;
+  const key = useMemo(() => (request ? annualNetPayKey(request) : null), [request]);
   const currentRequest = useRef(request);
   useLayoutEffect(() => {
     currentRequest.current = request;
@@ -81,23 +98,22 @@ export function useAnnualNetPay(
     report: AnnualNetPay | null;
     error: string | null;
   } | null>(null);
-  const cached = key === null ? null : results.read(resolver, key);
+  const cached = key === null || resolver === null ? null : results.read(resolver, key);
   const matching = key !== null && state?.key === key && state.resolver === resolver ? state : null;
   const settled = cached !== null || matching !== null;
   useEffect(() => {
     const input = currentRequest.current;
-    if (!focused || !input || key === null || settled) return;
+    if (!enabled || !input || key === null || resolver === null || settled) return;
     let active = true;
     const job = requestSharedAnalysis<AnnualNetPay>({
-      // A namespaced, memory-only salary task cannot collide with monthly requests.
+      // Dedicated annual period keeps the January salary cache intact.
       kind: "salary",
       key,
-      month: `${input.year}-01`,
+      month: annualNetPayPeriod(input.year),
       resolver,
-      persistent: null,
-      priority: -1,
-      accept: (value): value is AnnualNetPay =>
-        typeof value === "object" && value !== null && "months" in value && "netCents" in value,
+      persistent,
+      priority,
+      accept: (value): value is AnnualNetPay => persistentAnnualNetPay(value, input.year),
       steps: () => annualNetPaySteps(input),
       complete: (report) => {
         if (active)
@@ -122,12 +138,8 @@ export function useAnnualNetPay(
       active = false;
       job.cancel();
     };
-  }, [focused, key, resolver, settled]);
-  const error =
-    data.error ??
-    payment.error ??
-    matching?.error ??
-    (data.status === "ready" && !profile ? "Keine Gehaltsgrundlage eingerichtet." : null);
+  }, [enabled, key, resolver, settled, priority, persistent]);
+  const error = matching?.error ?? null;
   return {
     report: cached ?? matching?.report ?? null,
     loading: !error && (!request || !settled),

@@ -33,6 +33,44 @@ afterEach(() => {
   stores.splice(0).forEach((store) => store.dispose());
 });
 describe("shared committed salary timeline", () => {
+  it("retains ready data during an explicit reload but invalidates it on committed writes", async () => {
+    const { db, store } = fresh();
+    await store.ensure();
+    const previous = store.getSnapshot().timeline;
+    let finish!: (value: readonly SavedMonthlyNetPaySettings[]) => void;
+    load.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    store.refresh(true);
+    const reload = store.ensure();
+    expect(store.getSnapshot().status).toBe("ready");
+    expect(store.getSnapshot().timeline).toBe(previous);
+    expect(store.ensure()).toBe(reload);
+    netPayProfilesChanged(db);
+    expect(store.getSnapshot().status).toBe("loading");
+    load.mockResolvedValueOnce([row("2026-09")]);
+    await store.ensure();
+    finish([row("2026-02")]);
+    await reload;
+    expect(store.getSnapshot().timeline[0].settings.month).toBe("2026-09");
+  });
+  it("reports a failed retained reload and clears stale financial inputs", async () => {
+    const { store } = fresh();
+    await store.ensure();
+    store.refresh(true);
+    load.mockRejectedValueOnce(new Error("reload failed"));
+    await store.ensure();
+    expect(store.getSnapshot()).toMatchObject({
+      status: "error",
+      timeline: [],
+      annualPayments: [],
+    });
+    await store.ensure(true);
+    expect(store.getSnapshot().status).toBe("ready");
+  });
   it("shares a single load and keeps ready values across consumers and focus changes", async () => {
     const { db, store } = fresh();
     expect(analysisSalaryInputStore(db)).toBe(store);
