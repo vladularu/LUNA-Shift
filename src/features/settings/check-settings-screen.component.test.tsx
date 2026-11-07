@@ -1,6 +1,7 @@
 import { act, fireEvent, render as renderNative, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, jest } from "@jest/globals";
+import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { CheckSettingsScreen } from "./check-settings-screen";
 import { CheckPreferencesProvider, useCheckPreferences } from "./check-preferences";
@@ -66,9 +67,22 @@ it("loads the saved choice and keeps mandatory checks clearly visible", async ()
   mockLoad.mockResolvedValue(false);
   const screen = await render(<CheckSettingsScreen />);
   await waitFor(() =>
-    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+    expect(screen.getByLabelText("Dienstfolgen & Erholung").props.accessibilityState.checked).toBe(
+      false,
+    ),
   );
   expect(screen.getByText("Gesetzliche Hinweise bleiben immer sichtbar.")).toBeTruthy();
+  expect(
+    screen.getByText("Hinweise zu Nachtserien, Dienstwechseln und Erholungszeiten."),
+  ).toBeVisible();
+  expect(screen.getByText("Arbeitswissenschaftliche Hinweise")).toBeVisible();
+  const legalStyle = StyleSheet.flatten(
+    screen.getByTestId("legal-check-settings-card").props.style,
+  );
+  expect(screen.getByTestId("planning-settings-card")).toHaveStyle({
+    backgroundColor: legalStyle.backgroundColor,
+    borderColor: legalStyle.borderColor,
+  });
   await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Mehr" }));
   expect(router.back).toHaveBeenCalledTimes(1);
   expect(mockSave).not.toHaveBeenCalled();
@@ -153,15 +167,15 @@ it("updates already mounted month and year cards from the same saved selection",
     expect(screen.getAllByRole("button", { name: "Prüfung, 3 Meldungen" })).toHaveLength(2),
   );
   expect(screen.getByText("Freiwilliger Testhinweis")).toBeTruthy();
-  await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
+  await fireEvent(screen.getByLabelText("Dienstfolgen & Erholung"), "valueChange", false);
   await waitFor(() =>
     expect(screen.getAllByRole("button", { name: "Prüfung, 2 Meldungen" })).toHaveLength(2),
   );
   expect(screen.queryByText("Freiwilliger Testhinweis")).toBeNull();
   expect(screen.getByText("Gesetzlicher Testhinweis")).toBeTruthy();
   expect(screen.getByText("Fehlende Angaben")).toBeTruthy();
-  expect(screen.getAllByText(/Planungshinweise ausgeblendet/).length).toBeGreaterThan(0);
-  await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", true);
+  expect(screen.queryByText(/Planungshinweise ausgeblendet/)).toBeNull();
+  await fireEvent(screen.getByLabelText("Dienstfolgen & Erholung"), "valueChange", true);
   await waitFor(() =>
     expect(screen.getAllByRole("button", { name: "Prüfung, 3 Meldungen" })).toHaveLength(2),
   );
@@ -177,9 +191,11 @@ it("saves the choice and prevents overlapping writes", async () => {
       }),
   );
   const screen = await render(<CheckSettingsScreen />);
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
-  await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
-  expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.disabled).toBe(true);
+  await waitFor(() => expect(screen.getByLabelText("Dienstfolgen & Erholung")).toBeTruthy());
+  await fireEvent(screen.getByLabelText("Dienstfolgen & Erholung"), "valueChange", false);
+  expect(screen.getByLabelText("Dienstfolgen & Erholung").props.accessibilityState.disabled).toBe(
+    true,
+  );
   const back = screen.getByRole("button", { name: "Zurück zu Mehr" });
   expect(back.props.accessibilityState.disabled).toBe(true);
   await fireEvent.press(back);
@@ -187,7 +203,9 @@ it("saves the choice and prevents overlapping writes", async () => {
   expect(mockSave).toHaveBeenCalledWith(mockDb, false);
   await act(async () => resolve());
   await waitFor(() =>
-    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+    expect(screen.getByLabelText("Dienstfolgen & Erholung").props.accessibilityState.checked).toBe(
+      false,
+    ),
   );
   expect(
     screen.getByRole("button", { name: "Zurück zu Mehr" }).props.accessibilityState.disabled,
@@ -197,13 +215,17 @@ it("saves the choice and prevents overlapping writes", async () => {
 it("keeps the previous choice on write failure and permits retry", async () => {
   mockSave.mockRejectedValueOnce(new Error("write failed"));
   const screen = await render(<CheckSettingsScreen />);
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
-  await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
+  await waitFor(() => expect(screen.getByLabelText("Dienstfolgen & Erholung")).toBeTruthy());
+  await fireEvent(screen.getByLabelText("Dienstfolgen & Erholung"), "valueChange", false);
   await waitFor(() => expect(screen.getByText(/Nicht gespeichert/)).toBeTruthy());
-  expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(true);
-  await fireEvent(screen.getByLabelText("Planungshinweise"), "valueChange", false);
+  expect(screen.getByLabelText("Dienstfolgen & Erholung").props.accessibilityState.checked).toBe(
+    true,
+  );
+  await fireEvent(screen.getByLabelText("Dienstfolgen & Erholung"), "valueChange", false);
   await waitFor(() =>
-    expect(screen.getByLabelText("Planungshinweise").props.accessibilityState.checked).toBe(false),
+    expect(screen.getByLabelText("Dienstfolgen & Erholung").props.accessibilityState.checked).toBe(
+      false,
+    ),
   );
 });
 
@@ -216,7 +238,7 @@ it("shows a load error without writing defaults and can reload", async () => {
   expect(mockSave).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Zurück zu Mehr" })).toBeTruthy();
   await fireEvent.press(screen.getByText("Erneut versuchen"));
-  await waitFor(() => expect(screen.getByLabelText("Planungshinweise")).toBeTruthy());
+  await waitFor(() => expect(screen.getByLabelText("Dienstfolgen & Erholung")).toBeTruthy());
 });
 
 it("offers just one additional switch and keeps the previous youth choice after a failed save", async () => {

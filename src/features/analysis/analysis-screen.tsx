@@ -24,7 +24,7 @@ import { AnnualReportScreen } from "@/features/analysis/annual-report-view";
 import { useAnnualReportInputs } from "@/features/analysis/use-annual-report-inputs";
 import { useSimpleAnnualReport as useDeferredAnnualReport } from "@/features/analysis/use-simple-annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
-import { PLANNING_HIDDEN_NOTICE, selectVisibleCompliance } from "./check-visibility";
+import { selectVisibleCompliance } from "./check-visibility";
 import { complianceDetailsRoute, salaryRoute } from "@/navigation/routes";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { usePalette } from "@/theme/palette";
@@ -283,9 +283,6 @@ function AnalysisPage({
           >
             <ReportPeriodContent>
               {testMonths.includes(month) ? <ReportTestBadge /> : null}
-              {checkPreferences.enabled === false ? (
-                <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} />
-              ) : null}
               {checkPreferences.error ? (
                 <AnalysisCoverageNote message={checkPreferences.error} />
               ) : null}

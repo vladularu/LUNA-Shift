@@ -10,6 +10,7 @@ import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { useAnalysisView } from "./analysis-view-preferences";
 import { isCheckLimited, type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
 import { formatEuro } from "./salary-summary-card";
+import { PLANNING_TITLE } from "./check-presentation";
 
 export function AnalysisDashboard({
   cards,
@@ -94,11 +95,13 @@ function CheckRow({
   counts,
   first,
   minimumHeight,
+  planning = false,
 }: {
   readonly label: string;
   readonly counts: CheckCounts;
   readonly first?: boolean;
   readonly minimumHeight?: number;
+  readonly planning?: boolean;
 }) {
   const p = usePalette();
   const total = counts.criticalCount + counts.warningCount + counts.infoCount;
@@ -107,22 +110,30 @@ function CheckRow({
       minimumHeight={minimumHeight}
       label={label}
       first={first}
-      value={checkCountLabel(counts)}
+      value={
+        planning && total
+          ? `${total} ${total === 1 ? "Hinweis" : "Hinweise"}`
+          : checkCountLabel(counts)
+      }
       icon={
-        counts.criticalCount || counts.warningCount
-          ? "warning-outline"
-          : total || isCheckLimited(counts)
-            ? "information-circle-outline"
-            : "checkmark-circle-outline"
+        planning && total
+          ? "information-circle-outline"
+          : counts.criticalCount || counts.warningCount
+            ? "warning-outline"
+            : total || isCheckLimited(counts)
+              ? "information-circle-outline"
+              : "checkmark-circle-outline"
       }
       iconColor={
-        counts.criticalCount
-          ? p.danger
-          : counts.warningCount
-            ? p.warning
-            : total || isCheckLimited(counts)
-              ? p.info
-              : p.success
+        planning
+          ? p.textMuted
+          : counts.criticalCount
+            ? p.danger
+            : counts.warningCount
+              ? p.warning
+              : total || isCheckLimited(counts)
+                ? p.info
+                : p.success
       }
     />
   );
@@ -180,7 +191,7 @@ export function CheckListCard({
           {showPlanning ? (
             <AnalysisValueRow
               minimumHeight={rowHeight}
-              label="Planungshinweise"
+              label={PLANNING_TITLE}
               value="Wird geprüft …"
             />
           ) : null}
@@ -205,8 +216,9 @@ export function CheckListCard({
           {showPlanning ? (
             <CheckRow
               minimumHeight={rowHeight}
-              label="Planungshinweise"
+              label={PLANNING_TITLE}
               counts={categories.planning}
+              planning
             />
           ) : null}
         </>
