@@ -6,12 +6,7 @@ import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { AnalysisCoverageNote } from "./analysis-coverage-note";
-import {
-  isCheckLimited,
-  PLANNING_HIDDEN_NOTICE,
-  selectVisibleCompliance,
-} from "./check-visibility";
+import { isCheckLimited, selectVisibleCompliance } from "./check-visibility";
 import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { ComplianceIssueContent, checkDate, checkDayParts } from "./compliance-issue-content";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
@@ -47,7 +42,6 @@ export function ComplianceDayList({
   const days = [...new Set(issues.map((issue) => issue.date))];
   return (
     <View style={{ gap: SPACING.lg, flexGrow: issues.length ? undefined : 1 }}>
-      {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
       {visible.prerequisiteCount ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
       {!issues.length ? (
         <View

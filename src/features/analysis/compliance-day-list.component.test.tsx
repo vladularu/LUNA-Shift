@@ -8,6 +8,17 @@ import { newSpecialDuty } from "@/domain/special-duty";
 import { specialDutyComplianceIssues } from "@/engine/special-duty-compliance";
 import * as Palette from "@/theme/palette";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import { StyleSheet } from "react-native";
+import { colorContrastRatio } from "@/theme/color-contrast";
+jest.mock("lucide-react-native", () => {
+  const NativeView = jest.requireActual<typeof import("react-native")>("react-native").View;
+  return {
+    ...jest.requireActual<object>("lucide-react-native"),
+    Info: (props: object) => <NativeView testID="info-glyph" {...props} />,
+    AlertTriangle: (props: object) => <NativeView testID="warning-glyph" {...props} />,
+    AlertCircle: (props: object) => <NativeView testID="critical-glyph" {...props} />,
+  };
+});
 jest.mock(
   "react-native-safe-area-context",
   () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,
@@ -178,6 +189,65 @@ describe("visible check timelines", () => {
     mockWindowWidth = 390;
   });
 
+  it.each([
+    [LIGHT_PALETTE, 1],
+    [DARK_PALETTE, 1],
+    [LIGHT_PALETTE, 3.1],
+    [DARK_PALETTE, 3.1],
+  ] as [typeof LIGHT_PALETTE, number][])(
+    "distinguishes planning from legal cards accessibly in both appearances",
+    async (palette, scale) => {
+      mockFontScale = scale;
+      const spy = jest.spyOn(Palette, "usePalette").mockReturnValue(palette);
+      try {
+        const planning = issue({ id: "planning", kind: "PLANNING", severity: "warning" });
+        const screen = await render(list([issue(), planning]));
+        const card = screen.getByTestId("check-details-planning");
+        const legal = screen.getByTestId("check-details-rest");
+        const cardStyle = StyleSheet.flatten(card.props.style);
+        const label = within(card).getByText("Arbeitswissenschaftliche Hinweise");
+        const labelStyle = StyleSheet.flatten(label.props.style);
+        expect(within(card).getByText("Dienstfolgen & Erholung")).toBeVisible();
+        expect(within(legal).getByText("Gesetzliche Prüfung")).toBeVisible();
+        expect(legal).toHaveStyle({ backgroundColor: palette.surfaceRaised });
+        expect(cardStyle.backgroundColor).toBe(palette.surfaceRaised);
+        expect(labelStyle.color).toBe(palette.textMuted);
+        expect(
+          within(screen.getByTestId("check-issue-card-heading-planning")).getByTestId(
+            "info-glyph",
+            {
+              includeHiddenElements: true,
+            },
+          ),
+        ).toHaveProp("color", palette.textMuted);
+        expect(
+          within(screen.getByTestId("check-issue-card-heading-rest")).getByTestId(
+            "critical-glyph",
+            {
+              includeHiddenElements: true,
+            },
+          ),
+        ).toHaveProp("color", palette.danger);
+        expect(cardStyle.borderWidth).toBeGreaterThan(0);
+        expect(
+          colorContrastRatio(labelStyle.color, cardStyle.backgroundColor),
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          colorContrastRatio(cardStyle.borderColor, cardStyle.backgroundColor),
+        ).toBeGreaterThanOrEqual(3);
+        expect(colorContrastRatio(palette.text, cardStyle.backgroundColor)).toBeGreaterThanOrEqual(
+          4.5,
+        );
+        await screen.rerender(list([issue(), planning], [early, shift], false));
+        expect(screen.queryByText("Dienstfolgen & Erholung")).toBeNull();
+        expect(screen.queryByText("Arbeitswissenschaftliche Hinweise")).toBeNull();
+        expect(screen.getByTestId("check-details-rest")).toBeVisible();
+      } finally {
+        spy.mockRestore();
+      }
+    },
+  );
+
   it("keeps mixed findings in one day group with category and severity on each card", async () => {
     const findings = [
       issue({
@@ -199,12 +269,12 @@ describe("visible check timelines", () => {
     ]);
     expect(
       within(screen.getByTestId("check-details-planning")).getByLabelText(
-        "Dienstfolge prüfen, Planung, Warnung",
+        "Dienstfolge prüfen, Dienstfolgen & Erholung, Hinweis",
       ),
     ).toBeTruthy();
     expect(
       within(screen.getByTestId("check-details-rest")).getByLabelText(
-        "Ruhezeit zu kurz, Gesetzlich, Kritisch",
+        "Ruhezeit zu kurz, Gesetzliche Prüfung, Kritisch",
       ),
     ).toBeTruthy();
     await screen.rerender(list(findings, [shift, early], false));
@@ -322,7 +392,7 @@ describe("visible check timelines", () => {
     await fireEvent.press(screen.getByRole("button", { name: /Dienste ansehen:/ }));
     await screen.rerender(list([planning], [shift, early], false));
     expect(screen.queryByTestId("check-shift-late")).toBeNull();
-    expect(screen.getByText(/Planungshinweise ausgeblendet/)).toBeTruthy();
+    expect(screen.queryByText(/Planungshinweise ausgeblendet/)).toBeNull();
     expect(screen.getByText("Keine Auffälligkeiten")).toBeTruthy();
     await screen.rerender(list([planning]));
     expect(screen.queryByTestId("check-shift-late")).toBeNull();

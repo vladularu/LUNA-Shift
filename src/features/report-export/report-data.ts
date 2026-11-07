@@ -10,7 +10,20 @@ import {
   resolveNetPaySettings,
   type SavedMonthlyNetPaySettings,
 } from "@/domain/net-pay-profile";
-import { calculateAutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
+import {
+  calculateAutomaticNetPayForecast,
+  type AutomaticNetPayForecast,
+} from "@/engine/net-pay-automatic-forecast";
+import {
+  DEFAULT_SALARY_PAYMENT_PREFERENCES,
+  type SalaryPaymentPreferences,
+} from "@/domain/salary-payment";
+import {
+  annualNetPayMonth,
+  summarizeAnnualNetPay,
+  type AnnualNetPayMonth,
+} from "@/features/analysis/annual-net-pay";
+import { prepareAutomaticNetPaySteps } from "@/features/salary/automatic-net-pay-preparation";
 import type {
   CalendarEntry,
   MonthlyTariffDecision,
@@ -43,6 +56,8 @@ export interface ReportInput {
   readonly youthProtection: boolean;
   readonly testMonths: readonly string[];
   readonly netPayTimeline?: readonly SavedMonthlyNetPaySettings[];
+  readonly salaryPaymentPreferences?: SalaryPaymentPreferences;
+  readonly netPayProfile?: UserProfile;
 }
 
 function reportMonths(period: string): readonly string[] {
@@ -88,8 +103,15 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
   const rows: ReportRow[] = [];
   const workingTimeTargets: MonthlyWorkingTimeTarget[] = [];
   const readableEntries: NonNullable<ReportDocument["entries"]>[number][] = [];
-  let availableNetMonthCount = 0;
-  let annualNetCents = 0;
+  const annualNetMonths: AnnualNetPayMonth[] = [];
+  const annual = months.length === 12;
+  const netContext = {
+    entries: input.entries,
+    tariffDecisions: input.tariffDecisions,
+    workPatternSettings: input.workPatternSettings,
+    resolver: input.ruleResolver,
+    testMonths: input.testMonths,
+  };
   const add = (section: string, period: string, record: string, data: unknown) =>
     appendReportData(
       rows,
@@ -228,39 +250,71 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
     );
     const decision = input.tariffDecisions.find((item) => item.month === month);
     if (savedNet) add("Netto-Grundlagen", month, "Gespeicherte Angaben", savedNet);
-    if (savedNet && pay.ok) {
-      const forecast = calculateAutomaticNetPayForecast(
-        {
-          month,
-          profile: input.profile,
-          settings: savedNet.settings.automation
-            ? {
-                ...savedNet.settings,
-                automation: { ...savedNet.settings.automation, annualPayments },
-              }
-            : savedNet.settings,
-          shifts: calculation.monthShifts,
-          pay: pay.value,
-        },
-        input.ruleResolver,
-      );
-      add("Netto-Prognose", month, "Berechnung und Abzüge", forecast);
-      if (
-        forecast.result.status === "available" &&
-        (!forecast.annualPayment || forecast.annualPayment.netIncluded)
-      ) {
-        availableNetMonthCount += 1;
-        annualNetCents += forecast.result.pay.netCents;
-      } else {
-        add("Netto-Prognose", month, "Ergebnis", { netCents: null });
+    let forecast: AutomaticNetPayForecast | null = null;
+    if (savedNet) {
+      if (annual) {
+        if (savedNet.settings.version === 2 && !input.testMonths.includes(month)) {
+          const steps = prepareAutomaticNetPaySteps(
+            month,
+            savedNet.settings,
+            input.netPayProfile ?? input.profile,
+            netContext,
+            {
+              preferences: input.salaryPaymentPreferences ?? DEFAULT_SALARY_PAYMENT_PREFERENCES,
+              perspective: "PAYOUT",
+              sourceSettings: input.netPayTimeline ?? [],
+            },
+          );
+          let next = steps.next();
+          while (!next.done) {
+            yield;
+            next = steps.next();
+          }
+          forecast = next.value;
+        }
+      } else if (pay.ok) {
+        forecast = calculateAutomaticNetPayForecast(
+          {
+            month,
+            profile: input.profile,
+            settings: savedNet.settings.automation
+              ? {
+                  ...savedNet.settings,
+                  automation: { ...savedNet.settings.automation, annualPayments },
+                }
+              : savedNet.settings,
+            shifts: calculation.monthShifts,
+            pay: pay.value,
+          },
+          input.ruleResolver,
+        );
       }
+    }
+    if (forecast) {
+      add("Netto-Prognose", month, "Berechnung und Abzüge", forecast);
+      if (annual) annualNetMonths.push(annualNetPayMonth(month, forecast));
+      if (forecast.result.status !== "available")
+        add("Netto-Prognose", month, "Ergebnis", { netCents: null });
     } else {
+      if (annual)
+        annualNetMonths.push({
+          month,
+          netCents: null,
+          status: input.testMonths.includes(month)
+            ? "Im Testmonat gesperrt"
+            : "Noch nicht eingerichtet",
+          notes: [],
+          preliminary: false,
+        });
       add("Netto-Prognose", month, "Ergebnis", {
         status: "Nicht verfügbar",
         netCents: null,
-        reason: savedNet
-          ? "Die Brutto-Berechnungsgrundlagen sind nicht verfügbar."
-          : "Für diesen Monat sind keine Netto-Angaben eingerichtet.",
+        reason:
+          annual && input.testMonths.includes(month)
+            ? "Im Testmonat gesperrt"
+            : savedNet && (!annual || savedNet.settings.version === 2)
+              ? "Die Brutto-Berechnungsgrundlagen sind nicht verfügbar."
+              : "Für diesen Monat sind keine Netto-Angaben eingerichtet.",
       });
     }
     add("Tarifbestätigung", month, "Zulagen", decision ?? null);
@@ -295,7 +349,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
           step = steps.next();
         }
         const compliance = selectVisibleCompliance(step.value, true);
-        add("Auswertung", month, "Arbeitszeitrecht und Planung/Erholung", {
+        add("Auswertung", month, "Arbeitszeitrecht und Dienstfolgen & Erholung", {
           ...compliance,
           prerequisiteCount: compliance.prerequisiteCount ?? 0,
         });
@@ -329,12 +383,14 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
       yield;
     }
   }
-  if (months.length === 12)
+  if (annual) {
+    const summary = summarizeAnnualNetPay(Number(input.period), annualNetMonths);
     add("Jahresauswertung", input.period, "Netto-Prognose", {
-      netCents: availableNetMonthCount === 0 ? null : annualNetCents,
-      availableNetMonthCount,
-      reason: `Netto-Prognose für ${availableNetMonthCount} von 12 Monaten verfügbar; die Summe umfasst ausschließlich diese Monate.`,
+      netCents: summary.netCents,
+      availableNetMonthCount: summary.availableMonthCount,
+      reason: `Netto-Prognose für ${summary.availableMonthCount} von 12 Monaten verfügbar; die Summe umfasst ausschließlich diese Monate.`,
     });
+  }
   return {
     period: input.period,
     createdAt: input.createdAt,

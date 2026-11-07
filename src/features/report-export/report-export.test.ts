@@ -402,14 +402,10 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(Math.round((gross(actual) - gross(baseline)) * 100)).toBe(360_000);
     expect(reportToHtml(actual)).toContain("Netto ohne Sonderzahlung");
     expect(reportToHtml(actual)).toContain("Jahresgrundlagen ergänzen");
-    expect(
-      value(
-        build({ ...data, period: "2026" }),
-        "Jahresauswertung",
-        "availableNetMonthCount",
-        "2026",
-      ),
-    ).toBe("5");
+    const yearly = build({ ...data, period: "2026" });
+    expect(value(yearly, "Jahresauswertung", "availableNetMonthCount", "2026")).toBe("6");
+    expect(reportView(yearly).monthly[6].net).toBeGreaterThan(0);
+    expect(reportToHtml(yearly)).toContain("Jahresgrundlagen ergänzen");
   });
   it("verwendet eine neue datierte Netto-Konfiguration erst ab ihrem Gültigkeitsmonat", () => {
     const first = automatedSettings("2026-01");
@@ -903,7 +899,7 @@ describe("PDF und App mit gleicher Bedeutung", () => {
     },
   );
 
-  it("erhält alle Planungshinweise und macht den vollständigen PDF-Prüfumfang sichtbar", () => {
+  it("erhält alle Hinweise zu Dienstfolgen und macht den vollständigen PDF-Prüfumfang sichtbar", () => {
     const report = build({
       entries: Array.from({ length: 7 }, (_, i) =>
         shift(`day-${i}`, `2026-08-${String(i + 3).padStart(2, "0")}`),
@@ -915,7 +911,7 @@ describe("PDF und App mit gleicher Bedeutung", () => {
       ),
     ).toBe(true);
     expect(reportToHtml(report)).toContain(
-      "Arbeitszeitregeln und alle Planungshinweise – auch in der App ausgeblendete.",
+      "Arbeitszeitregeln und alle Hinweise zu Dienstfolgen &amp; Erholung – auch in der App ausgeblendete.",
     );
   });
 });

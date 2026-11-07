@@ -35,10 +35,8 @@ export function reportView(report: ReportDocument) {
     : [report.period];
   const monthly = periods.map((period) => {
     const net =
-      annual && text("Netto-Prognose", "annualPayment.netIncluded", period) === "Nein"
-        ? null
-        : (number("Netto-Prognose", "result.pay.netCents", period) ??
-          number("Netto-Prognose", "netCents", period));
+      number("Netto-Prognose", "result.pay.netCents", period) ??
+      number("Netto-Prognose", "netCents", period);
     const provisional =
       net !== null &&
       text("Netto-Prognose", "result.pay.calculationBasis.status", period) ===
@@ -101,7 +99,7 @@ export function reportView(report: ReportDocument) {
       const prefix = row.field.replace(/\.title$/, "");
       const date = text("Auswertung", `${prefix}.date`);
       const kind = text("Auswertung", `${prefix}.kind`);
-      return `${date ? `${date.slice(8, 10)}.${date.slice(5, 7)}.: ` : ""}${row.value}${kind === "Planung und Erholung" ? " (Planungshinweis)" : ""}`;
+      return `${date ? `${date.slice(8, 10)}.${date.slice(5, 7)}.: ` : ""}${row.value}${kind === "Dienstfolgen & Erholung" ? " (Dienstfolgen & Erholung)" : ""}`;
     });
   return {
     annual,

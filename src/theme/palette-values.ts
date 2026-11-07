@@ -9,6 +9,7 @@ export interface Palette {
   readonly surface: string;
   readonly surfaceRaised: string;
   readonly surfaceMuted: string;
+  readonly planningBorder: string;
   readonly selectionTrack: string;
   readonly selectionActiveSurface: string;
   readonly selectionActiveBorder: string;
@@ -69,6 +70,7 @@ export const LIGHT_PALETTE: Palette = {
   surface: SHADCN_COLORS.white,
   surfaceRaised: "#F8F7FB",
   surfaceMuted: "#EDEDEF",
+  planningBorder: "#2E7D87",
   selectionTrack: "#EDEDEF",
   selectionActiveSurface: "#FFFFFF",
   selectionActiveBorder: "#E4E4E7",
@@ -124,6 +126,7 @@ export const DARK_PALETTE: Palette = {
   surface: "#262628",
   surfaceRaised: "#2C2C2E",
   surfaceMuted: "#2C2C2E",
+  planningBorder: "#6AB7C2",
   selectionTrack: "#202023",
   selectionActiveSurface: "#303035",
   selectionActiveBorder: "#3F3F46",

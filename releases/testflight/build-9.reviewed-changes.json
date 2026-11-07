@@ -72,13 +72,13 @@
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
       "sha256": "c8a5ade5cadcb8d41ff1216bc182ac8616f07ae67c7fbb809c13154c25e6f04c",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
     },
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
       "kind": "modified",
-      "sha256": "e944e583fc620efa972f99119bf4e52ce4dab37d5c6d87f85c65f727131d10e0",
-      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics."
+      "sha256": "5e847eb937bf0fb4d290715945974bf5dce2bc27c020c2ed8f8edb3b508e8a60",
+      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending."
     },
     {
       "path": "src/features/analysis/expandable-highlight-card.tsx",
@@ -198,7 +198,7 @@
       "path": "src/features/templates/shift-template-list.tsx",
       "kind": "modified",
       "sha256": "925d6d725afac1561ce143b9ef58c27f614ec9d62e0a744e736fb10507f61894",
-      "reason": "Preview-only preservation of src/features/templates/shift-template-list.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "reason": "Preview-only preservation of src/features/templates/shift-template-list.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
     },
     {
       "path": "src/theme/card-layout.ts",
@@ -209,8 +209,8 @@
     {
       "path": "src/theme/palette-values.ts",
       "kind": "modified",
-      "sha256": "e3d22597e5e176fd6061a8e087d70c4f3a9a46014375be59cf248a0edbcaf6c8",
-      "reason": "Preview-only preservation of src/theme/palette-values.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "1128e117cf8bdbab13d0a63ea40f6fdad36965881e16590ef927eee8df5f3925",
+      "reason": "Preserve the established light/dark palette and add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint card outlines. Remove the provisional violet planning fill/text tokens per iPhone feedback. Existing palette colors remain unchanged. iPhone visual acceptance of this correction pending."
     },
     {
       "path": "src/theme/tokens.ts",
@@ -240,7 +240,7 @@
       "path": "src/ui/reorderable-row.tsx",
       "kind": "modified",
       "sha256": "05ec1f0954474ef1bac50d36cd4c9d9f7c90190bd18a432b6999ed012b4b0583",
-      "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
     },
     {
       "path": "src/ui/selection-option.tsx",
@@ -263,14 +263,14 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "1a386702a13f710146514c82431c6719d465a100c46710a96d497bd4506cc766",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "226817976d92e5f610fd244b3b36d3498e92313a3090a44c1af966f02359e748",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove the disabled-planning notice from the annual overview and check detail, preserving data coverage, errors, financial behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
       "kind": "modified",
       "sha256": "3e35afe3fae48e2b494e8847759f4d6a42564b34862be17154df13c86d34a5b2",
-      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Use chevrons for salary setup and navigable salary constituent rows without changing destination or calculation. Preview device acceptance pending."
+      "reason": "Paket 2: Use chevrons for salary setup and navigable salary constituent rows without changing destination or calculation. Preview device acceptance pending."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -413,8 +413,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "6e1527a675e98e86077db5c986e12b4713c282c90ab9e5a04732f78871f12fa3",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending."
+      "sha256": "8f46fb72bd32ff35f58d9bfd4af79f8e87b4d7fa063898ee424f92474f8736d0",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove the disabled-planning notice above monthly analysis while preserving preference loading/error notices, legal findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     },
     {
       "path": "src/features/salary/use-net-pay-profile.ts",
@@ -468,13 +468,73 @@
       "path": "src/ui/reorderable-list.tsx",
       "kind": "modified",
       "sha256": "a668cca7d4660685d556269ddcc3f38b1a697a5acc9f451349fcf0b9cfc37e1e",
-      "reason": "Remove the visible sorting instruction and its spacing as requested on 2026-11-07. Preserve drag-and-drop behavior, VoiceOver guidance and the accepted Luftig presentation. Local candidate only; iPhone acceptance and publication remain pending. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "reason": "Remove the visible sorting instruction and its spacing as requested on 2026-11-07. Preserve drag-and-drop behavior, VoiceOver guidance and the accepted Luftig presentation. Local candidate only; iPhone acceptance and publication remain pending. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+    },
+    {
+      "path": "src/features/analysis/check-visibility.ts",
+      "kind": "modified",
+      "sha256": "e3beb6fe4e192fe4f30bd0be14cbd2515f8748bb71d1f583632a7d73fce20f82",
+      "reason": "Remove only the unused disabled-planning notice string. Preserve every selector, filter and internal count. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-details.tsx",
+      "kind": "modified",
+      "sha256": "0face6f88fcf55ae06533e27bd58445dbb43cb54d86ce89ff5b31d01b264da8c",
+      "reason": "Label planning groups Dienstfolgen & Erholung with scientific category, neutral surfaces, petrol outline and muted Info icon. Use Hinweis/Hinweise for planning accessibility. Remove the disabled notice. Preserve legal severity icons/labels, data and expansion behavior. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-day-list.tsx",
+      "kind": "modified",
+      "sha256": "685e9805214f2b00d4da81d6585189ee1056359e159f6cf52929f7cb81d0d018",
+      "reason": "Remove the disabled-planning notice above day-based results, including the empty state. Preserve legal findings, prerequisites, filtering and day grouping. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/check-presentation.ts",
+      "kind": "added",
+      "sha256": "7fe439d28c5f633eec1500074d0f354d383c5b1c698b40b12e8e3d717dc0c6fe",
+      "reason": "Centralize the approved title/subtitle and category labels plus the petrol hint-border renderer. No rule thresholds, stored keys, native values or global fills/text colors are changed. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/settings/check-settings-screen.tsx",
+      "kind": "modified",
+      "sha256": "4f537bb05777f6426b163a2eb91f87ed475744c22ced3fcca523caab578e492c",
+      "reason": "Use the approved Dienstfolgen & Erholung title/subtitle and scientific category on the existing neutral preference card. Preserve both persisted switches, youth/legal behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-content.tsx",
+      "kind": "modified",
+      "sha256": "4389dae5eac6bd7577e3a31c061a5c56450bc54ec50556ae4c1f58fae58513c4",
+      "reason": "Present day-based Dienstfolgen & Erholung hints with neutral surface/text, petrol border and muted Info icon. Announce Hinweis for planning. Preserve raw issue severity, timelines, affected shifts and legal warnings. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/report-export/report-data.ts",
+      "kind": "modified",
+      "sha256": "a41725ae85b726bf27803725920e2fcd6e4f41c1374c42737bd5365ff5e472d4",
+      "reason": "Align the human-readable exported check record title with Dienstfolgen & Erholung. Preserve all source values and export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes. Annual PDF uses the same PAYOUT preparation, saved profile, dated net settings, payout preferences, test-month exclusions and annual summary helpers as the annual net view. Include available base net when the annual payment lacks a net basis; preserve partial-payment warnings and genuine zero values. Calendar CSV, monthly PDF, rules, formulas and stored data are unchanged. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
+    },
+    {
+      "path": "src/features/report-export/report-document.ts",
+      "kind": "modified",
+      "sha256": "32672c3d1a709a06b18c472a6fe293ea453026e8f6bd2d860b963a5fd53be7b3",
+      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys, raw counts and full export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/report-export/report-view-data.ts",
+      "kind": "modified",
+      "sha256": "0a851ef03b8639768dbec40f628670d182f37fcfdb70090fdaba5bb4415ed54b",
+      "reason": "Align the human-readable planning-category comparison and annotation with the renamed export label. Preserve exported findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes. Read the available annual monthly net values already recorded by the shared preparation. Remove the second annual-payment exclusion so monthly values, total and coverage match the annual net view; retain provisional and incomplete-payment notices. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
     },
     {
       "path": "src/features/templates/templates-manager-screen.tsx",
       "kind": "modified",
       "sha256": "78c99cf69a71a2d10ad7e3142a7655bf2d908bd450fcaf5325ded99bdaf189ee",
-      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+    },
+    {
+      "path": "src/features/report-export/report-export-button.tsx",
+      "kind": "modified",
+      "sha256": "1447a3a3930e06f571ae9f7e67faebaa0f08c5c0883211ed2c25202e1f3578a0",
+      "reason": "Load saved payout preferences only for an annual PDF with salary. Pass the saved raw profile for annual net preparation while retaining the enriched calculation profile for other report parts. Preserve cancellation, safe error handling and the calendar-only CSV path. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
     }
   ]
 }

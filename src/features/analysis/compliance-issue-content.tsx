@@ -11,6 +11,12 @@ import { ColorBadge } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
 import { SelectionSheet } from "@/ui/selection-sheet";
 import { complianceTimeline, restDuration } from "./compliance-timeline";
+import {
+  LEGAL_KIND_LABEL,
+  PLANNING_KIND_LABEL,
+  PLANNING_TITLE,
+  planningAppearance,
+} from "./check-presentation";
 
 const MONTHS = [
   "Januar",
@@ -57,9 +63,15 @@ export function checkDayParts(date: string): readonly [string, string] {
   }
 }
 export const issueCategory = (issue: ComplianceIssue) =>
-  issue.kind === "PLANNING" ? "Planung" : "Gesetzlich";
+  issue.kind === "PLANNING" ? PLANNING_TITLE : LEGAL_KIND_LABEL;
 export const issueSeverity = (issue: ComplianceIssue) =>
-  issue.severity === "critical" ? "Kritisch" : issue.severity === "warning" ? "Warnung" : "Hinweis";
+  issue.kind === "PLANNING"
+    ? "Hinweis"
+    : issue.severity === "critical"
+      ? "Kritisch"
+      : issue.severity === "warning"
+        ? "Warnung"
+        : "Hinweis";
 
 function compactShiftDate(date: string): string {
   try {
@@ -144,9 +156,11 @@ export function ComplianceIssueContent({
   const stacked = fontScale >= 1.3 || width < 360;
   const [showShifts, setShowShifts] = useState(false);
   const model = complianceTimeline(issue, shifts, timeZone);
+  const planning = issue.kind === "PLANNING" ? planningAppearance(palette) : null;
   const { rest, series } = model;
-  const color =
-    issue.severity === "critical"
+  const color = planning
+    ? palette.textMuted
+    : issue.severity === "critical"
       ? palette.danger
       : issue.severity === "warning"
         ? palette.warning
@@ -160,22 +174,30 @@ export function ComplianceIssueContent({
         backgroundColor: palette.surfaceRaised,
         borderRadius: RADII.card,
         padding: SPACING.lg,
+        ...planning?.cardStyle,
       }}
     >
-      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
+      <Text style={{ color: planning?.labelColor ?? palette.textMuted, ...TYPOGRAPHY.caption }}>
         {issueCategory(issue)}
       </Text>
+      {planning ? (
+        <Text style={{ color: planning.labelColor, ...TYPOGRAPHY.caption }}>
+          {PLANNING_KIND_LABEL}
+        </Text>
+      ) : null}
       <View
         testID={`check-issue-card-heading-${issue.id}`}
         style={{ flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm }}
       >
         <Ionicons
           name={
-            issue.severity === "critical"
-              ? "alert-circle-outline"
-              : issue.severity === "warning"
-                ? "warning-outline"
-                : "information-circle-outline"
+            planning
+              ? "information-circle-outline"
+              : issue.severity === "critical"
+                ? "alert-circle-outline"
+                : issue.severity === "warning"
+                  ? "warning-outline"
+                  : "information-circle-outline"
           }
           size={18}
           color={color}

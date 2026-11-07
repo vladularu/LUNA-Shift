@@ -129,6 +129,3 @@ export function selectAnnualCheckDisplay(
   );
   return { ...report, months, ...totals };
 }
-
-export const PLANNING_HIDDEN_NOTICE =
-  "Planungshinweise ausgeblendet · gesetzliche Hinweise bleiben sichtbar.";

@@ -1,8 +1,17 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { AssessmentSummaryCard, ComplianceDetails } from "@/features/analysis/analysis-screen";
+jest.mock("lucide-react-native", () => {
+  const NativeView = jest.requireActual<typeof import("react-native")>("react-native").View;
+  return {
+    ...jest.requireActual<object>("lucide-react-native"),
+    Info: (props: object) => <NativeView testID="info-glyph" {...props} />,
+    AlertTriangle: (props: object) => <NativeView testID="warning-glyph" {...props} />,
+    AlertCircle: (props: object) => <NativeView testID="critical-glyph" {...props} />,
+  };
+});
 // These cases exercise compliance components; the salary row has dedicated integration coverage.
 jest.mock("@/features/analysis/analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
 jest.mock("@/features/analysis/analysis-salary-inputs", () => ({
@@ -100,6 +109,28 @@ const compliance: MonthlyComplianceResult = {
 };
 
 describe("analysis compliance details", () => {
+  it("presents grouped planning findings as neutral hints", async () => {
+    const planning = {
+      ...compliance.issues[0],
+      id: "planning",
+      kind: "PLANNING" as const,
+      severity: "warning" as const,
+      rule: "PLANNING_7_DAYS",
+      title: "Dienstfolge prüfen",
+    };
+    const screen = await render(
+      <ComplianceDetails
+        compliance={{ ...compliance, criticalCount: 0, warningCount: 1, issues: [planning] }}
+        shifts={shifts}
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Dienstfolge prüfen, 1 Hinweis" });
+    expect(button.props.accessibilityHint).toBe("Hinweis. Öffnet die betroffenen Dienste.");
+    const group = within(button);
+    expect(group.getByTestId("info-glyph", { includeHiddenElements: true })).toBeTruthy();
+    expect(group.queryByTestId("warning-glyph", { includeHiddenElements: true })).toBeNull();
+    expect(group.queryByTestId("critical-glyph", { includeHiddenElements: true })).toBeNull();
+  });
   it("shows scope without warning totals, completion or missing-input setup in the embedded view", async () => {
     const scope = {
       ...compliance.issues[0],

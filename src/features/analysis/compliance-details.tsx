@@ -10,12 +10,7 @@ import type {
   MonthlyComplianceResult,
   ShiftEntry,
 } from "@/domain/types";
-import { AnalysisCoverageNote } from "./analysis-coverage-note";
-import {
-  isCheckLimited,
-  PLANNING_HIDDEN_NOTICE,
-  selectVisibleCompliance,
-} from "./check-visibility";
+import { isCheckLimited, selectVisibleCompliance } from "./check-visibility";
 import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { CheckClearStatus } from "./check-summary-card";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
@@ -26,6 +21,7 @@ import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { CardSeparator } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
 import { AffectedCheckShifts } from "./compliance-issue-content";
+import { PLANNING_KIND_LABEL, PLANNING_TITLE, planningAppearance } from "./check-presentation";
 
 interface ComplianceIssueGroup {
   readonly rule: string;
@@ -126,9 +122,6 @@ export function ComplianceDetails({
   return (
     <View style={{ gap: SPACING.xl }}>
       {legal.prerequisiteCount ? <CheckPrerequisitesCard issues={legal.prerequisites} /> : null}
-      {!showPlanning && !embedded ? (
-        <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} />
-      ) : null}
       {legal.issues.length > 0 || !hideEmptyLegal ? (
         <ComplianceIssueList
           compliance={legal}
@@ -140,7 +133,7 @@ export function ComplianceDetails({
       {showPlanning && planning.issues.length > 0 ? (
         <ComplianceIssueList
           compliance={planning}
-          heading="Planungshinweise"
+          heading={PLANNING_TITLE}
           shifts={shifts}
           embedded={embedded}
         />
@@ -164,6 +157,9 @@ function ComplianceIssueList({
   const palette = usePalette();
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const groups = useMemo(() => groupComplianceIssues(compliance.issues), [compliance.issues]);
+  const planning = compliance.issues.every((issue) => issue.kind === "PLANNING")
+    ? planningAppearance(palette)
+    : null;
   const shiftsById = useMemo(() => new Map(shifts.map((shift) => [shift.id, shift])), [shifts]);
   if (compliance.issues.length === 0) {
     return (
@@ -188,19 +184,27 @@ function ComplianceIssueList({
       <View style={{ gap: SPACING.sm }}>
         {groups.map((group) => {
           const expanded = expandedRule === group.rule;
-          const accent =
-            group.severity === "critical"
+          const accent = planning
+            ? palette.textMuted
+            : group.severity === "critical"
               ? palette.danger
               : group.severity === "warning"
                 ? palette.warning
                 : palette.primary;
           const displayTitle = formatComplianceGroupTitle(group);
           const accessibleCountLabel = `${group.issues.length} ${
-            group.issues.length === 1 ? "Meldung" : "Meldungen"
+            planning
+              ? group.issues.length === 1
+                ? "Hinweis"
+                : "Hinweise"
+              : group.issues.length === 1
+                ? "Meldung"
+                : "Meldungen"
           }`;
           return (
             <Animated.View
               key={group.rule}
+              testID={`check-rule-card-${group.rule}`}
               layout={LinearTransition.duration(MOTION.duration.normal).reduceMotion(
                 MOTION.reduceMotion,
               )}
@@ -211,6 +215,7 @@ function ComplianceIssueList({
                 borderRadius: embedded ? 0 : RADII.card,
                 borderCurve: CORNER_CURVE,
                 backgroundColor: embedded ? "transparent" : palette.surface,
+                ...planning?.cardStyle,
               }}
             >
               <Pressable
@@ -218,11 +223,13 @@ function ComplianceIssueList({
                 accessibilityRole="button"
                 accessibilityState={{ expanded }}
                 accessibilityHint={
-                  group.severity === "critical"
-                    ? "Kritische Meldung. Öffnet die betroffenen Dienste."
-                    : group.severity === "warning"
-                      ? "Warnung. Öffnet die betroffenen Dienste."
-                      : "Hinweis. Öffnet die betroffenen Dienste."
+                  planning
+                    ? "Hinweis. Öffnet die betroffenen Dienste."
+                    : group.severity === "critical"
+                      ? "Kritische Meldung. Öffnet die betroffenen Dienste."
+                      : group.severity === "warning"
+                        ? "Warnung. Öffnet die betroffenen Dienste."
+                        : "Hinweis. Öffnet die betroffenen Dienste."
                 }
                 onPress={() => {
                   setExpandedRule((current) => (current === group.rule ? null : group.rule));
@@ -244,15 +251,22 @@ function ComplianceIssueList({
                   importantForAccessibility="no"
                   color={accent}
                   name={
-                    group.severity === "critical"
-                      ? "alert-circle-outline"
-                      : group.severity === "warning"
-                        ? "warning-outline"
-                        : "information-circle-outline"
+                    planning
+                      ? "information-circle-outline"
+                      : group.severity === "critical"
+                        ? "alert-circle-outline"
+                        : group.severity === "warning"
+                          ? "warning-outline"
+                          : "information-circle-outline"
                   }
                   size={20}
                 />
                 <View style={{ minWidth: 0, flex: 1 }}>
+                  {planning ? (
+                    <Text style={{ color: planning.labelColor, ...TYPOGRAPHY.caption }}>
+                      {PLANNING_KIND_LABEL}
+                    </Text>
+                  ) : null}
                   <Text
                     maxFontSizeMultiplier={TEXT_MAX_SCALE}
                     selectable
