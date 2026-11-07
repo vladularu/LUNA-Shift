@@ -59,6 +59,7 @@ export function ShiftTemplateListRow({
   onMorePress,
   onPress,
   sorting = false,
+  showChevron = false,
   subtitle,
   symbol,
   testID,
@@ -70,6 +71,7 @@ export function ShiftTemplateListRow({
   readonly disabled?: boolean;
   readonly onPress: () => void;
   readonly sorting?: boolean;
+  readonly showChevron?: boolean;
   readonly subtitle: string;
   readonly symbol: string;
   readonly testID?: string;
@@ -85,7 +87,7 @@ export function ShiftTemplateListRow({
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
-        disabled={disabled}
+        disabled={disabled || (showChevron && sorting)}
         onPress={onPress}
         style={({ pressed }) => [
           styles.select,
@@ -117,6 +119,19 @@ export function ShiftTemplateListRow({
             {subtitle}
           </Text>
         </View>
+        {showChevron ? (
+          <View
+            style={styles.moreButton}
+            accessibilityElementsHidden
+            testID={testID ? `${testID}-${sorting ? "drag" : "edit"}` : undefined}
+          >
+            <Ionicons
+              name={sorting ? "reorder-three-outline" : "chevron-forward"}
+              size={sorting ? 24 : 18}
+              color={palette.textMuted}
+            />
+          </View>
+        ) : null}
       </Pressable>
       {onMorePress ? (
         <Pressable

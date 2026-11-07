@@ -83,13 +83,13 @@ export function ReorderableRow({
           top: 0,
           left: 0,
           right: 0,
-          minHeight: 72,
-          paddingHorizontal: SPACING.lg,
-          paddingVertical: SPACING.sm,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: SPACING.md,
-          borderTopWidth: 1,
+          minHeight: item.estimatedHeight ?? 72,
+          paddingHorizontal: item.content ? 0 : SPACING.lg,
+          paddingVertical: item.content ? 0 : SPACING.sm,
+          flexDirection: item.content ? "column" : "row",
+          alignItems: item.content ? "stretch" : "center",
+          gap: item.content ? 0 : SPACING.md,
+          borderTopWidth: item.content ? 0 : 1,
           borderTopColor: index > 0 && !lifted ? p.separator : "transparent",
           borderRadius: lifted || index === 0 || index === count - 1 ? RADII.card : 0,
           borderCurve: CORNER_CURVE,
@@ -108,24 +108,36 @@ export function ReorderableRow({
           ],
         }}
       >
-        <View
-          style={{ width: 38, height: 38, alignItems: "center", justifyContent: "center" }}
-          accessibilityElementsHidden
-        >
-          {item.leading}
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ color: p.text, ...TYPOGRAPHY.bodyStrong }}>{item.title}</Text>
-          {item.subtitle ? (
-            <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>{item.subtitle}</Text>
-          ) : null}
-        </View>
-        <View
-          style={{ width: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
-          accessibilityElementsHidden
-        >
-          <Ionicons name="reorder-three-outline" size={24} color={p.textMuted} />
-        </View>
+        {item.content ? (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {item.content}
+          </View>
+        ) : (
+          <>
+            <View
+              style={{ width: 38, height: 38, alignItems: "center", justifyContent: "center" }}
+              accessibilityElementsHidden
+            >
+              {item.leading}
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ color: p.text, ...TYPOGRAPHY.bodyStrong }}>{item.title}</Text>
+              {item.subtitle ? (
+                <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>{item.subtitle}</Text>
+              ) : null}
+            </View>
+            <View
+              style={{ width: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+              accessibilityElementsHidden
+            >
+              <Ionicons name="reorder-three-outline" size={24} color={p.textMuted} />
+            </View>
+          </>
+        )}
       </Animated.View>
     </GestureDetector>
   );

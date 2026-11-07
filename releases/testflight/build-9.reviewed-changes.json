@@ -203,8 +203,8 @@
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
-      "sha256": "2090d9c8c63de5145b019e001e2d5f08a8e1a88e11720c9b843171351e30b914",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change."
+      "sha256": "adfab6281429b21c81e49a928a786f1fe54d37eef79e7129e5dc2e83a8e1d5a4",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     },
     {
       "path": "src/features/analysis/analysis-net-pay-row.tsx",
@@ -307,6 +307,30 @@
       "kind": "added",
       "sha256": "4638bfcf27d9f4c293e89b801459d80c5364ca11f1a6f60345b98dcd33141d7b",
       "reason": "Correction D: define annual net request/period identity and a strict persistent result validator for all twelve ordered months, safe integer cents, status/notes/preliminary consistency and recalculated annual totals; reject transient calculation failure snapshots. No native schema change, no sync or backup of derived results. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/templates/shift-template-list.tsx",
+      "kind": "modified",
+      "sha256": "f2b5d532b48ca354c9c5322ffc4767adcb97349f9933190a1f426f7cbc1ca5e2",
+      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+    },
+    {
+      "path": "src/features/templates/templates-manager-screen.tsx",
+      "kind": "modified",
+      "sha256": "f5d32295dab87e5374878cbec68a52b251b7c48589824fedd0f605d2ad2136d0",
+      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+    },
+    {
+      "path": "src/ui/reorderable-list.tsx",
+      "kind": "modified",
+      "sha256": "ac9647109d31c8c1f13666b0b8dce3d2d0f54a420a9a1d33a41f4c711965e838",
+      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+    },
+    {
+      "path": "src/ui/reorderable-row.tsx",
+      "kind": "modified",
+      "sha256": "8629d61f973aa93649e4d3d40676646af13b57595f5b6707c9d6c58648043cbe",
+      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     }
   ]
 }

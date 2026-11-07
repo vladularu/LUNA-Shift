@@ -1,7 +1,7 @@
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { usePflegeShiftStatus, usePflegeShiftTemplates } from "@/application/pflegeshift-provider";
 import { userFacingErrorMessage } from "@/domain/errors";
@@ -17,7 +17,7 @@ import { templateEditorRoute } from "@/navigation/routes";
 import { RADII, SPACING } from "@/theme/tokens";
 import { ReorderableList } from "@/ui/reorderable-list";
 import { useReorderScroll } from "@/ui/use-reorder-scroll";
-import { ColorBadge, EmptyState } from "@/ui/design-system";
+import { EmptyState } from "@/ui/design-system";
 import { FormStatus } from "@/ui/form-layout";
 import { selectionFeedback } from "@/ui/haptics";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
@@ -88,13 +88,35 @@ export function TemplatesManagerScreen() {
           {sorting ? (
             <ReorderableList
               testID="template-manager-sort"
+              cardStyle={{
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: palette.cardSeparator,
+                boxShadow: "none",
+              }}
               scroll={reorderScroll.controller}
               disabled={busyTemplateId !== null}
-              items={templates.map((template) => ({
+              items={templates.map((template, index) => ({
                 id: template.id,
                 title: template.name,
                 subtitle: shiftTemplateSubtitle(template),
-                leading: <ColorBadge color={template.color} label={template.symbol} size={30} />,
+                estimatedHeight: 68 + (index > 0 ? StyleSheet.hairlineWidth : 0),
+                content: (
+                  <View>
+                    {index > 0 ? <ShiftTemplateListSeparator /> : null}
+                    <ShiftTemplateListRow
+                      compact
+                      showChevron
+                      sorting
+                      accessibilityLabel={`${template.name}, ${shiftTemplateSubtitle(template)}, Vorlage bearbeiten`}
+                      color={template.color}
+                      onPress={() => router.push(templateEditorRoute(template.id))}
+                      subtitle={shiftTemplateSubtitle(template)}
+                      symbol={template.symbol}
+                      testID={`template-manager-row-${template.id}`}
+                      title={template.name}
+                    />
+                  </View>
+                ),
               }))}
               onMove={async (id, index) => {
                 const template = templates.find((item) => item.id === id);
@@ -128,6 +150,7 @@ export function TemplatesManagerScreen() {
                       {index > 0 ? <ShiftTemplateListSeparator /> : null}
                       <ShiftTemplateListRow
                         compact
+                        showChevron
                         accessibilityLabel={`${template.name}, ${subtitle}, Vorlage bearbeiten`}
                         color={template.color}
                         disabled={busyTemplateId !== null}
