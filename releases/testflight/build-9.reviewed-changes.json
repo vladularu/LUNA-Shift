@@ -71,8 +71,8 @@
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
-      "sha256": "d5d51c1c88d4d291743244b34a6838c4d49f5ae7e3a90aa8137e7ce1f225078b",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change."
+      "sha256": "c8a5ade5cadcb8d41ff1216bc182ac8616f07ae67c7fbb809c13154c25e6f04c",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     },
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
@@ -197,8 +197,8 @@
     {
       "path": "src/features/templates/shift-template-list.tsx",
       "kind": "modified",
-      "sha256": "b14ffc4d4b0f901d07bc16068e8df90bfe4a9fdca0dd32ce72e8a96d911ff63a",
-      "reason": "Preview-only preservation of src/features/templates/shift-template-list.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "925d6d725afac1561ce143b9ef58c27f614ec9d62e0a744e736fb10507f61894",
+      "reason": "Preview-only preservation of src/features/templates/shift-template-list.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     },
     {
       "path": "src/theme/card-layout.ts",
@@ -239,8 +239,8 @@
     {
       "path": "src/ui/reorderable-row.tsx",
       "kind": "modified",
-      "sha256": "0cf14e6d4d44247e49cc4415c8e889bd19e3f31b0e4c433213867df8c9efb2e8",
-      "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "05ec1f0954474ef1bac50d36cd4c9d9f7c90190bd18a432b6999ed012b4b0583",
+      "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     },
     {
       "path": "src/ui/selection-option.tsx",
@@ -463,6 +463,18 @@
       "kind": "added",
       "sha256": "4638bfcf27d9f4c293e89b801459d80c5364ca11f1a6f60345b98dcd33141d7b",
       "reason": "Correction D: define annual net request/period identity and a strict persistent result validator for all twelve ordered months, safe integer cents, status/notes/preliminary consistency and recalculated annual totals; reject transient calculation failure snapshots. No native schema change, no sync or backup of derived results. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/ui/reorderable-list.tsx",
+      "kind": "modified",
+      "sha256": "a668cca7d4660685d556269ddcc3f38b1a697a5acc9f451349fcf0b9cfc37e1e",
+      "reason": "Remove the visible sorting instruction and its spacing as requested on 2026-11-07. Preserve drag-and-drop behavior, VoiceOver guidance and the accepted Luftig presentation. Local candidate only; iPhone acceptance and publication remain pending. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+    },
+    {
+      "path": "src/features/templates/templates-manager-screen.tsx",
+      "kind": "modified",
+      "sha256": "78c99cf69a71a2d10ad7e3142a7655bf2d908bd450fcaf5325ded99bdaf189ee",
+      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
     }
   ]
 }

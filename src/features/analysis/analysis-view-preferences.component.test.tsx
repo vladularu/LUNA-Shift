@@ -249,6 +249,41 @@ describe("analysis view preferences", () => {
       jest.useRealTimers();
     }
   });
+  it.each([1, 3.1])(
+    "keeps label styling, row spacing and card surface stable when sorting at scale %s",
+    async (fontScale) => {
+      mockFontScale = fontScale;
+      const screen = await render(
+        <AnalysisViewProvider>
+          <Harness />
+          <AnalysisViewControls />
+        </AnalysisViewProvider>,
+      );
+      await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+      await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+      const title = StyleSheet.flatten(screen.getByText("Arbeitszeit").props.style);
+      const row = StyleSheet.flatten(screen.getByTestId("analysis-setting-WORK").props.style);
+      const card = StyleSheet.flatten(screen.getByTestId("analysis-settings-card").props.style);
+      await fireEvent.press(screen.getByRole("button", { name: "Reihenfolge ändern" }));
+      const hidden = { includeHiddenElements: true };
+      expect(StyleSheet.flatten(screen.getByText("Arbeitszeit", hidden).props.style)).toEqual(
+        title,
+      );
+      expect(
+        StyleSheet.flatten(screen.getByTestId("analysis-setting-WORK", hidden).props.style),
+      ).toEqual(row);
+      expect(screen.getByTestId("analysis-sort")).toHaveStyle(card);
+      expect(screen.getByTestId("analysis-sort-row-WORK")).toHaveStyle({
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+        borderTopWidth: 0,
+      });
+      expect(screen.queryByText("Gedrückt halten und verschieben.")).toBeNull();
+      await fireEvent.press(screen.getByRole("button", { name: "Auswahl anzeigen" }));
+      expect(StyleSheet.flatten(screen.getByText("Arbeitszeit").props.style)).toEqual(title);
+    },
+  );
+
   it.each([1, 3.1])("supports native customization at scale %s", async (fontScale) => {
     mockFontScale = fontScale;
     const screen = await render(

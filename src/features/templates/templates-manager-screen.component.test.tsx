@@ -1,6 +1,7 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
+import { StyleSheet } from "react-native";
 
 import { TemplatesManagerScreen } from "@/features/templates/templates-manager-screen";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
@@ -94,6 +95,54 @@ describe("TemplatesManagerScreen", () => {
     expect(screen.getByTestId("template-manager-add-row")).toHaveStyle({ minHeight: 64 });
     await fireEvent.press(screen.getByRole("button", { name: "Neue Dienstvorlage erstellen" }));
     expect(mockPush).toHaveBeenCalledWith("/template-editor");
+  });
+
+  it("preserves row typography, badges and card appearance while swapping edit chevrons for drag handles", async () => {
+    const screen = await render(
+      <FeedbackProvider>
+        <TemplatesManagerScreen />
+      </FeedbackProvider>,
+    );
+    const title = StyleSheet.flatten(screen.getByText("Früh").props.style);
+    const subtitle = StyleSheet.flatten(
+      screen.getByText("06:00–14:00 · 30 Min. Pause").props.style,
+    );
+    const row = StyleSheet.flatten(screen.getByTestId("template-manager-row-early").props.style);
+    const badge = StyleSheet.flatten(
+      screen.getByTestId("template-manager-row-early-badge").props.style,
+    );
+    const card = StyleSheet.flatten(screen.getByTestId("template-manager-list").props.style);
+    expect(
+      screen.getByTestId("template-manager-row-early-edit", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Vorlagen sortieren" }));
+    const hidden = { includeHiddenElements: true };
+    expect(StyleSheet.flatten(screen.getByText("Früh", hidden).props.style)).toEqual(title);
+    expect(
+      StyleSheet.flatten(screen.getByText("06:00–14:00 · 30 Min. Pause", hidden).props.style),
+    ).toEqual(subtitle);
+    expect(
+      StyleSheet.flatten(screen.getByTestId("template-manager-row-early", hidden).props.style),
+    ).toEqual(row);
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("template-manager-row-early-badge", hidden).props.style,
+      ),
+    ).toEqual(badge);
+    expect(screen.getByTestId("template-manager-sort")).toHaveStyle(card);
+    expect(screen.getByTestId("template-manager-sort")).toHaveStyle({ height: 138 });
+    expect(screen.getByTestId("template-manager-sort-row-early")).toHaveStyle({
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+      borderTopWidth: 0,
+    });
+    expect(screen.queryByTestId("template-manager-row-early-edit", hidden)).toBeNull();
+    expect(screen.getByTestId("template-manager-row-early-drag", hidden)).toBeTruthy();
+    await fireEvent.press(screen.getByText("Früh", hidden));
+    expect(mockPush).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Sortieren beenden" }));
+    await fireEvent.press(screen.getByTestId("template-manager-row-early-edit", hidden));
+    expect(mockPush).toHaveBeenCalledTimes(1);
   });
 
   it("uses the accent sort toggle and confines move actions to sort mode", async () => {
