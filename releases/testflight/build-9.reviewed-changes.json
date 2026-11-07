@@ -377,14 +377,14 @@
     {
       "path": "src/features/analysis/use-annual-net-pay.ts",
       "kind": "added",
-      "sha256": "289fddc32fab102fd3a6ff0b9e18f0fd9bd4647fa37cc582262ec9794de8f664",
-      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change."
+      "sha256": "6ba44f234d184b10c106725be71a91d0397add9f3ec5869008c589cf66760a51",
+      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change. Package A: retain valid annual net results across navigation focus changes, share identical in-flight salary tasks and reuse up to six immutable complete results keyed by full inputs and resolver identity. Preserve formulas, input invalidation, cancellation and rejection of late results. Device acceptance pending."
     },
     {
       "path": "src/features/analysis/annual-net-pay-view.tsx",
       "kind": "added",
-      "sha256": "ddbdbbe49058b63d431fd759de75d769457479d93e7a0fc04f27f7ec90c3a0d3",
-      "reason": "Paket 4C: independent annual net card and twelve monthly net detail rows, partial-month coverage and basis notes, using existing shared Luftig-aware card/layout primitives."
+      "sha256": "b5db72c4e9906fde19b6b0d6983b73ebbc3f68c039fd918beac057274bfd266f",
+      "reason": "Annual net UI correction after iPhone feedback: remove redundant introduction card, keep year in result card, display unavailable monthly results as Nicht verfügbar and keep full details in existing month destination. Preserve sums, coverage, available-month notes, calculations and Luftig. Device acceptance pending."
     },
     {
       "path": "src/features/analysis/annual-overview.tsx",
@@ -395,14 +395,26 @@
     {
       "path": "src/features/analysis/annual-details-screen.tsx",
       "kind": "modified",
-      "sha256": "5d81d8510b2b74b661ec1d866d3b3fdea6de4fc355f76755f9b0e3aad06b83e6",
-      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year."
+      "sha256": "e76cd1e27a0d87bbaab555b8d8d8b46c3fb89daa7544eee9e5b6672d66cd2998",
+      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year. Package A: pause annual detail work on blur without discarding results for still valid inputs, across all six detail sections. Preserve routes and existing layout. Device acceptance pending."
     },
     {
       "path": "src/features/analysis/use-annual-salary-payments.ts",
       "kind": "modified",
       "sha256": "d82a6ab8dfcb730a70734685cc7dffe9c210534e15a77cd094ed7290588c72be",
       "reason": "Paket 4C: reuse one existing settings-timeline read for annual net; retain gross annual-payment guards and skip individual test months in net calculation."
+    },
+    {
+      "path": "src/features/analysis/use-simple-annual-report.ts",
+      "kind": "modified",
+      "sha256": "7c5cd26f38145f327d4585091360ce5dc0a8a8de0306d3c2b3da6838b25ea86b",
+      "reason": "Package A: separate active work scheduling from valid annual request identity so inactive navigation retains matching complete/core results. Preserve disabled-input, retry, persistent-cache and stale-result guards. Device acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-screen.tsx",
+      "kind": "modified",
+      "sha256": "6e1527a675e98e86077db5c986e12b4713c282c90ab9e5a04732f78871f12fa3",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending."
     }
   ]
 }

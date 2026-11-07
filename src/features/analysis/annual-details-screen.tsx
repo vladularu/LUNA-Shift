@@ -58,7 +58,8 @@ export function AnnualDetailsScreen() {
     profile?.tariff !== null,
   );
   const annual = useDeferredAnnualReport({
-    enabled: valid && ready && !error && focused && inputs !== null,
+    enabled: valid && ready && !error && inputs !== null,
+    active: focused,
     entries: inputs?.ok ? inputs.value.entries : entries,
     tariffDecisions: inputs?.ok ? inputs.value.tariffDecisions : tariffDecisions,
     profile,

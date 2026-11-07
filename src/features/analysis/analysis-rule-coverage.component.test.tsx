@@ -210,6 +210,7 @@ let mockAnnualInputFailure: {
   readonly failure: RuleResolutionError["failure"];
 } | null = null;
 let mockAnnualReportValue: AnnualReport | null = null;
+const mockAnnualActivation = jest.fn<(input: { enabled: boolean; active?: boolean }) => void>();
 let mockAnnualCoreValue: AnnualReport | null = null;
 let mockAnnualRuleFailure: {
   readonly ok: false;
@@ -218,6 +219,7 @@ let mockAnnualRuleFailure: {
 } | null = null;
 
 let mockFocused = true;
+const mockFocusContext = MockReact.createContext<boolean | null>(null);
 let mockTariffDecisions: readonly MonthlyTariffDecision[] = Object.freeze([]);
 const mockWorkPatternSettings = {
   workplaceCoverage: "UNKNOWN",
@@ -300,7 +302,7 @@ jest.mock("expo-router", () => ({
   },
   useFocusEffect: (effect: () => void | (() => void)) =>
     MockReact.useEffect(() => (mockFocused ? effect() : undefined), [effect, mockFocused]),
-  useIsFocused: () => mockFocused,
+  useIsFocused: () => MockReact.useContext(mockFocusContext) ?? mockFocused,
   useLocalSearchParams: () => ({
     month: mockRouteMonth,
     period: mockRoutePeriod,
@@ -385,14 +387,17 @@ jest.mock("@/features/analysis/use-annual-report-inputs", () => ({
 }));
 
 jest.mock("@/features/analysis/use-simple-annual-report", () => ({
-  useSimpleAnnualReport: () => ({
-    error: null,
-    fatalError: mockAnnualFatalError,
-    report: mockAnnualReportValue,
-    coreReport: mockAnnualCoreValue,
-    retry: jest.fn(),
-    ruleFailure: mockAnnualRuleFailure,
-  }),
+  useSimpleAnnualReport: (input: { enabled: boolean; active?: boolean }) => {
+    mockAnnualActivation(input);
+    return {
+      error: null,
+      fatalError: mockAnnualFatalError,
+      report: mockAnnualReportValue,
+      coreReport: mockAnnualCoreValue,
+      retry: jest.fn(),
+      ruleFailure: mockAnnualRuleFailure,
+    };
+  },
 }));
 
 jest.mock("@/navigation/active-month", () => ({
@@ -1427,14 +1432,47 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.queryByText("0,00 €")).toBeNull();
   });
 
+  it.each(["WORK", "CHECK", "PAY", "NET", "PREMIUM", "SHIFTS"])(
+    "pauses annual %s work on blur without disabling valid results",
+    async (section) => {
+      mockAnnualSection = section;
+      mockAnnualReportValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
+      const screen = await render(<AnnualDetailsScreen />);
+      expect(mockAnnualActivation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: true, active: true }),
+      );
+      mockFocused = false;
+      await screen.rerender(<AnnualDetailsScreen />);
+      expect(mockAnnualActivation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: true, active: false }),
+      );
+      expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
+      mockFocused = true;
+      await screen.rerender(<AnnualDetailsScreen />);
+      expect(mockAnnualActivation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: true, active: true }),
+      );
+    },
+  );
   it("retains a completed yearly report underneath a native detail page", async () => {
     mockAnnualCoreValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
-    const screen = await render(<AnalysisScreen />);
+    const screen = await render(
+      <mockFocusContext.Provider value={true}>
+        <AnalysisScreen />
+      </mockFocusContext.Provider>,
+    );
     await openAnalysisMode(screen, "Jahresauswertung öffnen");
     expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
     mockFocused = false;
-    mockAnnualCoreValue = null;
-    await screen.rerender(<AnalysisScreen />);
+    // The real hook now retains valid results while inactive (covered in its lifecycle tests).
+    await screen.rerender(
+      <mockFocusContext.Provider value={false}>
+        <AnalysisScreen />
+      </mockFocusContext.Provider>,
+    );
+    expect(mockAnnualActivation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ enabled: true, active: false }),
+    );
     expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
     expect(screen.getByTestId("analysis-year-toolbar")).toBeTruthy();
   });

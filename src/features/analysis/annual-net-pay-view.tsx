@@ -9,7 +9,6 @@ import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ReportScrollView } from "@/ui/report-layout";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
-import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
 import type { AnnualNetPayState } from "./use-annual-net-pay";
 
 const loading: AnnualNetPayState = { report: null, loading: true, error: null };
@@ -31,7 +30,7 @@ export function AnnualNetPayCard({
   const count = report?.availableMonthCount ?? 0;
   return (
     <AnalysisListCard
-      title="Netto"
+      title={detail ? `Netto ${year}` : "Netto"}
       label="Netto"
       onPress={detail ? undefined : () => router.push(annualDetailsRoute(year, "NET"))}
       caption={
@@ -79,11 +78,6 @@ export function AnnualNetPayDetails({
   const palette = usePalette();
   return (
     <ReportScrollView>
-      <AnalysisDetailSummaryCard
-        title="Netto-Prognose"
-        period={String(year)}
-        caption="Netto nach Auszahlungsmonaten · unverbindliche Schätzung"
-      />
       <AnnualNetPayCard year={year} data={data} detail />
       {data?.report ? (
         <AnalysisListCard title="Nach Monaten">
@@ -92,14 +86,10 @@ export function AnnualNetPayDetails({
               <AnalysisValueRow
                 first={index === 0}
                 label={formatMonthTitle(month.month)}
-                value={
-                  month.netCents === null
-                    ? (month.status ?? "Nicht verfügbar")
-                    : amount(month.netCents, month.preliminary)
-                }
+                value={amount(month.netCents, month.preliminary)}
                 onPress={() => onSelectMonth(month.month)}
               />
-              {month.notes.map((note) => (
+              {(month.netCents === null ? [] : month.notes).map((note) => (
                 <Text
                   key={note}
                   style={{
