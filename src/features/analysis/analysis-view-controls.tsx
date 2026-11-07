@@ -10,7 +10,7 @@ import { moveListItem } from "@/domain/reorder";
 import { ReorderableList } from "@/ui/reorderable-list";
 import { useReorderScroll } from "@/ui/use-reorder-scroll";
 import { usePalette } from "@/theme/palette";
-import { SPACING, RADII } from "@/theme/tokens";
+import { SHADCN_METRICS, SPACING, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { SurfaceCard } from "@/ui/design-system";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
@@ -57,6 +57,76 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
       </Pressable>
     </View>
   ) : null;
+  const renderPreferenceRow = (id: AnalysisCardId) => {
+    const index = state.preferences.order.indexOf(id);
+    const visible = !state.preferences.hidden.includes(id);
+    return (
+      <View
+        key={id}
+        testID={`analysis-setting-${id}`}
+        style={{
+          minHeight: 72,
+          borderTopWidth: index > 0 ? 1 : 0,
+          borderTopColor: p.separator,
+          paddingHorizontal: SPACING.lg,
+          paddingVertical: SPACING.sm,
+          gap: SPACING.md,
+          flexDirection: stacked ? "column" : "row",
+          alignItems: stacked ? "stretch" : "center",
+        }}
+      >
+        <View
+          style={{
+            flex: stacked ? undefined : 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: SPACING.md,
+          }}
+        >
+          <Ionicons name={CARD_ICONS[id]} size={22} color={p.textMuted} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>{ANALYSIS_CARD_TITLES[id]}</Text>
+          </View>
+        </View>
+        <View
+          style={{
+            minHeight: 44,
+            justifyContent: "center",
+            alignSelf: stacked ? "flex-end" : undefined,
+          }}
+        >
+          {sorting ? (
+            <View
+              style={{
+                minWidth: SHADCN_METRICS.switchWidth,
+                minHeight: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="reorder-three-outline" size={24} color={p.textMuted} />
+            </View>
+          ) : (
+            <Switch
+              accessibilityLabel={ANALYSIS_CARD_TITLES[id] + " anzeigen"}
+              hitSlop={8}
+              value={visible}
+              trackColor={{ true: p.accent, false: p.surfaceMuted }}
+              onValueChange={(enabled) => {
+                selectionFeedback();
+                state.update((current) => ({
+                  ...current,
+                  hidden: enabled
+                    ? current.hidden.filter((key) => key !== id)
+                    : [...current.hidden, id],
+                }));
+              }}
+            />
+          )}
+        </View>
+      </View>
+    );
+  };
   return (
     <View style={{ gap: SPACING.sm }}>
       {compact ? null : error}
@@ -182,11 +252,10 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                       saveFailed={state.error !== null}
                       items={state.preferences.order.map((id) => ({
                         id,
-                        title: ANALYSIS_CARD_TITLES[id],
-                        subtitle: state.preferences.hidden.includes(id)
-                          ? "Ausgeblendet"
-                          : undefined,
-                        leading: <Ionicons name={CARD_ICONS[id]} size={24} color={p.textMuted} />,
+                        title: state.preferences.hidden.includes(id)
+                          ? `${ANALYSIS_CARD_TITLES[id]}, ausgeblendet`
+                          : ANALYSIS_CARD_TITLES[id],
+                        content: renderPreferenceRow(id),
                       }))}
                       onMove={(id, to) =>
                         state.update((current) => ({
@@ -200,70 +269,8 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                       }
                     />
                   ) : (
-                    <SurfaceCard>
-                      {state.preferences.order.map((id, index) => {
-                        const visible = !state.preferences.hidden.includes(id);
-                        return (
-                          <View
-                            key={id}
-                            testID={`analysis-setting-${id}`}
-                            style={{
-                              minHeight: 72,
-                              borderTopWidth: index > 0 ? 1 : 0,
-                              borderTopColor: p.separator,
-                              paddingHorizontal: SPACING.lg,
-                              paddingVertical: SPACING.sm,
-                              gap: SPACING.md,
-                              flexDirection: stacked ? "column" : "row",
-                              alignItems: stacked ? "stretch" : "center",
-                            }}
-                          >
-                            <View
-                              style={{
-                                flex: stacked ? undefined : 1,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: SPACING.md,
-                              }}
-                            >
-                              <Ionicons name={CARD_ICONS[id]} size={22} color={p.textMuted} />
-                              <View style={{ flex: 1 }}>
-                                <Text style={{ color: p.text, ...TYPOGRAPHY.body }}>
-                                  {ANALYSIS_CARD_TITLES[id]}
-                                </Text>
-                                {sorting && !visible ? (
-                                  <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-                                    Ausgeblendet
-                                  </Text>
-                                ) : null}
-                              </View>
-                            </View>
-                            <View
-                              style={{
-                                minHeight: 44,
-                                justifyContent: "center",
-                                alignSelf: stacked ? "flex-end" : undefined,
-                              }}
-                            >
-                              <Switch
-                                accessibilityLabel={ANALYSIS_CARD_TITLES[id] + " anzeigen"}
-                                hitSlop={8}
-                                value={visible}
-                                trackColor={{ true: p.accent, false: p.surfaceMuted }}
-                                onValueChange={(enabled) => {
-                                  selectionFeedback();
-                                  state.update((current) => ({
-                                    ...current,
-                                    hidden: enabled
-                                      ? current.hidden.filter((key) => key !== id)
-                                      : [...current.hidden, id],
-                                  }));
-                                }}
-                              />
-                            </View>
-                          </View>
-                        );
-                      })}
+                    <SurfaceCard testID="analysis-settings-card">
+                      {state.preferences.order.map(renderPreferenceRow)}
                     </SurfaceCard>
                   )}
                   {error}

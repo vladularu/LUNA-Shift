@@ -7,15 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AccessibilityInfo, Animated, View } from "react-native";
+import { AccessibilityInfo, Animated, type ViewStyle } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { moveListItem } from "@/domain/reorder";
-import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { SurfaceCard } from "@/ui/design-system";
 import { ReorderableRow } from "@/ui/reorderable-row";
-import { Text } from "@/ui/text";
 import { selectionFeedback } from "@/ui/haptics";
 import { reorderOffsets, reorderTarget } from "@/ui/reorder-geometry";
 import type { ReorderScroll } from "@/ui/use-reorder-scroll";
@@ -24,7 +21,9 @@ export interface ReorderItem {
   readonly id: string;
   readonly title: string;
   readonly subtitle?: string;
-  readonly leading: ReactNode;
+  readonly leading?: ReactNode;
+  readonly content?: ReactNode;
+  readonly estimatedHeight?: number;
 }
 interface Drag {
   readonly id: string;
@@ -48,6 +47,7 @@ export function ReorderableList({
   onMove,
   disabled = false,
   saveFailed = false,
+  cardStyle,
   scroll,
   testID,
 }: {
@@ -55,10 +55,10 @@ export function ReorderableList({
   readonly onMove: (id: string, index: number) => void | Promise<void>;
   readonly disabled?: boolean;
   readonly saveFailed?: boolean;
+  readonly cardStyle?: ViewStyle;
   readonly scroll?: ReorderScroll;
   readonly testID: string;
 }) {
-  const p = usePalette();
   const incoming = items.map((item) => item.id);
   const orderKey = JSON.stringify(incoming);
   const [order, setOrder] = useState(incoming);
@@ -75,15 +75,20 @@ export function ReorderableList({
   const positions = useRef(new Map<string, ReorderPosition>());
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const duration = reduced ? 0 : 200;
+  const estimatesKey = JSON.stringify(items.map((item) => [item.id, item.estimatedHeight ?? 72]));
+  const estimates = useMemo(
+    () => new Map(JSON.parse(estimatesKey) as [string, number][]),
+    [estimatesKey],
+  );
   const layout = useMemo(() => {
     const tops = new Map<string, number>();
     let height = 0;
     order.forEach((id) => {
       tops.set(id, height);
-      height += heights[id] ?? 72;
+      height += heights[id] ?? estimates.get(id) ?? 72;
     });
     return { tops, height };
-  }, [order, heights]);
+  }, [order, heights, estimates]);
   function position(id: string) {
     return positions.current.get(id)!;
   }
@@ -249,60 +254,52 @@ export function ReorderableList({
   }
   return (
     <GestureHandlerRootView style={{ flexGrow: 0 }}>
-      <View style={{ gap: SPACING.sm }}>
-        <Text style={{ color: p.textMuted, ...TYPOGRAPHY.caption }}>
-          Gedrückt halten und verschieben.
-        </Text>
-        <View
-          testID={testID}
-          style={{
-            borderRadius: RADII.card,
-            borderCurve: CORNER_CURVE,
-            backgroundColor: p.surface,
-            borderWidth: 1,
-            borderColor: p.separator,
-            height: layout.height + 2,
-          }}
-        >
-          {order.map((id, index) => {
-            const item = items.find((candidate) => candidate.id === id);
-            if (!item) return null;
-            return (
-              <ReorderableRow
-                key={id}
-                item={item}
-                index={index}
-                initialY={layout.tops.get(id) ?? 0}
-                count={items.length}
-                onRegisterPosition={registerPosition}
-                lifted={active === id}
-                disabled={disabled || pending}
-                testID={testID}
-                onStart={() => begin(id)}
-                onDrag={(x, y, absoluteY) => {
-                  if (drag.current?.id !== id) return;
-                  drag.current.translation = y;
-                  drag.current.x = x;
-                  drag.current.absoluteY = absoluteY;
-                  update();
-                }}
-                onEnd={(success) => {
-                  if (drag.current?.id === id) finish(!success);
-                }}
-                onHeight={(height) => {
-                  if (!Number.isFinite(height) || height <= 0) return;
-                  setHeights((current) =>
-                    current[id] === height ? current : { ...current, [id]: height },
-                  );
-                }}
-                onAccessibilityMove={(delta) => {
-                  if (!active) void commit(id, index, index + delta);
-                }}
-              />
-            );
-          })}
-        </View>
-      </View>
+      <SurfaceCard
+        testID={testID}
+        style={{
+          ...cardStyle,
+          height: layout.height + 2 * (cardStyle?.borderWidth ?? 1),
+          overflow: active ? "visible" : "hidden",
+        }}
+      >
+        {order.map((id, index) => {
+          const item = items.find((candidate) => candidate.id === id);
+          if (!item) return null;
+          return (
+            <ReorderableRow
+              key={id}
+              item={item}
+              index={index}
+              initialY={layout.tops.get(id) ?? 0}
+              count={items.length}
+              onRegisterPosition={registerPosition}
+              lifted={active === id}
+              disabled={disabled || pending}
+              testID={testID}
+              onStart={() => begin(id)}
+              onDrag={(x, y, absoluteY) => {
+                if (drag.current?.id !== id) return;
+                drag.current.translation = y;
+                drag.current.x = x;
+                drag.current.absoluteY = absoluteY;
+                update();
+              }}
+              onEnd={(success) => {
+                if (drag.current?.id === id) finish(!success);
+              }}
+              onHeight={(height) => {
+                if (!Number.isFinite(height) || height <= 0) return;
+                setHeights((current) =>
+                  current[id] === height ? current : { ...current, [id]: height },
+                );
+              }}
+              onAccessibilityMove={(delta) => {
+                if (!active) void commit(id, index, index + delta);
+              }}
+            />
+          );
+        })}
+      </SurfaceCard>
     </GestureHandlerRootView>
   );
 }
