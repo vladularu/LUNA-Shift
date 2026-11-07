@@ -77,8 +77,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "1a386702a13f710146514c82431c6719d465a100c46710a96d497bd4506cc766",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "226817976d92e5f610fd244b3b36d3498e92313a3090a44c1af966f02359e748",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove the disabled-planning notice from the annual overview and check detail, preserving data coverage, errors, financial behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
@@ -191,8 +191,8 @@
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
       "kind": "modified",
-      "sha256": "43e547c97e9f9d934bd7d0b1df527cd72ff55d9a79b055d8c04dafbb8abf02cb",
-      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics."
+      "sha256": "a060f44c0e3749c88741bc9d965668f3f17c6be08e09ded9b7aab92e0fa5456e",
+      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics. Rename the planning overview row to Dienstfolgen & Erholung and present its unchanged counts as Hinweise with a muted Info icon. Keep the original neutral row structure, legal warning labels/icons, loading/empty states and master salary-card geometry. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     },
     {
       "path": "src/features/analysis/month-overview.tsx",
@@ -257,8 +257,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "6e1527a675e98e86077db5c986e12b4713c282c90ab9e5a04732f78871f12fa3",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending."
+      "sha256": "8f46fb72bd32ff35f58d9bfd4af79f8e87b4d7fa063898ee424f92474f8736d0",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove the disabled-planning notice above monthly analysis while preserving preference loading/error notices, legal findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -331,6 +331,66 @@
       "kind": "modified",
       "sha256": "8629d61f973aa93649e4d3d40676646af13b57595f5b6707c9d6c58648043cbe",
       "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+    },
+    {
+      "path": "src/features/analysis/check-visibility.ts",
+      "kind": "modified",
+      "sha256": "e3beb6fe4e192fe4f30bd0be14cbd2515f8748bb71d1f583632a7d73fce20f82",
+      "reason": "Remove only the unused disabled-planning notice string. Preserve every selector, filter and internal count. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-day-list.tsx",
+      "kind": "modified",
+      "sha256": "685e9805214f2b00d4da81d6585189ee1056359e159f6cf52929f7cb81d0d018",
+      "reason": "Remove the disabled-planning notice above day-based results, including the empty state. Preserve legal findings, prerequisites, filtering and day grouping. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-details.tsx",
+      "kind": "modified",
+      "sha256": "0face6f88fcf55ae06533e27bd58445dbb43cb54d86ce89ff5b31d01b264da8c",
+      "reason": "Label planning groups Dienstfolgen & Erholung with scientific category, neutral surfaces, petrol outline and muted Info icon. Use Hinweis/Hinweise for planning accessibility. Remove the disabled notice. Preserve legal severity icons/labels, data and expansion behavior. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-content.tsx",
+      "kind": "modified",
+      "sha256": "4389dae5eac6bd7577e3a31c061a5c56450bc54ec50556ae4c1f58fae58513c4",
+      "reason": "Present day-based Dienstfolgen & Erholung hints with neutral surface/text, petrol border and muted Info icon. Announce Hinweis for planning. Preserve raw issue severity, timelines, affected shifts and legal warnings. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/analysis/check-presentation.ts",
+      "kind": "added",
+      "sha256": "7fe439d28c5f633eec1500074d0f354d383c5b1c698b40b12e8e3d717dc0c6fe",
+      "reason": "Centralize the approved title/subtitle and category labels plus the petrol hint-border renderer. No rule thresholds, stored keys, native values or global fills/text colors are changed. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/settings/check-settings-screen.tsx",
+      "kind": "modified",
+      "sha256": "4f537bb05777f6426b163a2eb91f87ed475744c22ced3fcca523caab578e492c",
+      "reason": "Use the approved Dienstfolgen & Erholung title/subtitle and scientific category on the existing neutral preference card. Preserve both persisted switches, youth/legal behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/report-export/report-data.ts",
+      "kind": "modified",
+      "sha256": "be2e11a7f40b4007b94c3ad42ca4d5547ff1bc0ed431b7f2d1597673d74df661",
+      "reason": "Align the human-readable exported check record title with Dienstfolgen & Erholung. Preserve all source values and export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/report-export/report-document.ts",
+      "kind": "modified",
+      "sha256": "32672c3d1a709a06b18c472a6fe293ea453026e8f6bd2d860b963a5fd53be7b3",
+      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys, raw counts and full export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/features/report-export/report-view-data.ts",
+      "kind": "modified",
+      "sha256": "72196f09de84a8898c380f153357e2d47c7477da28655d3e7548ee9e4a79e47a",
+      "reason": "Align the human-readable planning-category comparison and annotation with the renamed export label. Preserve exported findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+    },
+    {
+      "path": "src/theme/palette-values.ts",
+      "kind": "modified",
+      "sha256": "7e22623fc7cfad468a57bce1a0e1edde1487b1615d0348a66924436d47fa5716",
+      "reason": "Add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint outlines. Existing palette fields/values are unchanged. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
     }
   ]
 }

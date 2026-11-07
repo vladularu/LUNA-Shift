@@ -12,6 +12,11 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { InfoDisclosure } from "@/ui/info-disclosure";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
+import {
+  PLANNING_KIND_LABEL,
+  PLANNING_SUBTITLE,
+  PLANNING_TITLE,
+} from "@/features/analysis/check-presentation";
 
 export function CheckSettingsScreen() {
   const palette = usePalette();
@@ -35,7 +40,7 @@ export function CheckSettingsScreen() {
           <ScreenScrollView bottomPadding={bottomPadding} surface="groupedBackground">
             <InlineNotice message="Gesetzliche Hinweise bleiben immer sichtbar." />
             <SectionHeader title="Gesetzliche Prüfung" />
-            <SurfaceCard>
+            <SurfaceCard testID="legal-check-settings-card">
               <View
                 style={{
                   flexDirection: "row",
@@ -65,8 +70,8 @@ export function CheckSettingsScreen() {
                 />
               </View>
             </SurfaceCard>
-            <SectionHeader title="Planungshinweise" />
-            <SurfaceCard>
+            <SectionHeader title={PLANNING_TITLE} />
+            <SurfaceCard testID="planning-settings-card">
               <View
                 style={{
                   flexDirection: "row",
@@ -79,20 +84,23 @@ export function CheckSettingsScreen() {
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
                   style={{ ...TYPOGRAPHY.body, color: palette.text, flex: 1 }}
                 >
-                  Planungshinweise
+                  {PLANNING_TITLE}
                 </Text>
                 <LabeledSwitch
-                  label="Planungshinweise"
+                  label={PLANNING_TITLE}
                   value={enabled}
                   disabled={saving}
                   onValueChange={(value) => void save(value)}
                 />
               </View>
               <View style={{ padding: SPACING.md, paddingTop: 0 }}>
+                <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
+                  {PLANNING_KIND_LABEL}
+                </Text>
                 <InfoDisclosure
-                  summary="Dienstfolgen, Nächte, Wochenenden – freiwillige Hinweise."
-                  details="Planungshinweise sind keine festgestellten Gesetzesverstöße."
-                  label="Über die Planungshinweise"
+                  summary={PLANNING_SUBTITLE}
+                  details="Arbeitswissenschaftliche Hinweise zur Schichtgestaltung. Eine Auffälligkeit ist für sich allein kein festgestellter Gesetzesverstoß."
+                  label="Über Dienstfolgen & Erholung"
                 />
               </View>
             </SurfaceCard>

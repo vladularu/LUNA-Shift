@@ -2,7 +2,7 @@ import type { MonthlyWorkingTimeTarget } from "@/domain/working-time-target";
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 
 export const REPORT_CHECK_SCOPE =
-  "Arbeitszeitregeln und alle Planungshinweise – auch in der App ausgeblendete.";
+  "Arbeitszeitregeln und alle Hinweise zu Dienstfolgen & Erholung – auch in der App ausgeblendete.";
 
 export interface ReportRow {
   readonly section: string;
@@ -267,7 +267,7 @@ const LABELS: Readonly<Record<string, string>> = {
   complianceComplete: "Prüfung vollständig",
   checkCounts: "Hinweise nach Art",
   legal: "Arbeitszeitrecht",
-  planning: "Planung und Erholung",
+  planning: "Dienstfolgen & Erholung",
   info: "Informationen",
   warning: "Warnungen",
   critical: "Kritisch",
@@ -285,7 +285,7 @@ const VALUES: Readonly<Record<string, string>> = {
   SHIFT: "Dienst",
   APPOINTMENT: "Termin",
   LEGAL: "Arbeitszeitrecht",
-  PLANNING: "Planung und Erholung",
+  PLANNING: "Dienstfolgen & Erholung",
   critical: "Kritisch",
   warning: "Warnung",
   info: "Information",

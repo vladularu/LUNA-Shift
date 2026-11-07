@@ -903,7 +903,7 @@ describe("PDF und App mit gleicher Bedeutung", () => {
     },
   );
 
-  it("erhält alle Planungshinweise und macht den vollständigen PDF-Prüfumfang sichtbar", () => {
+  it("erhält alle Hinweise zu Dienstfolgen und macht den vollständigen PDF-Prüfumfang sichtbar", () => {
     const report = build({
       entries: Array.from({ length: 7 }, (_, i) =>
         shift(`day-${i}`, `2026-08-${String(i + 3).padStart(2, "0")}`),
@@ -915,7 +915,7 @@ describe("PDF und App mit gleicher Bedeutung", () => {
       ),
     ).toBe(true);
     expect(reportToHtml(report)).toContain(
-      "Arbeitszeitregeln und alle Planungshinweise – auch in der App ausgeblendete.",
+      "Arbeitszeitregeln und alle Hinweise zu Dienstfolgen &amp; Erholung – auch in der App ausgeblendete.",
     );
   });
 });

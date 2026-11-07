@@ -1,7 +1,15 @@
-import { render } from "@testing-library/react-native";
+import { render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { StyleSheet } from "react-native";
 import { PayListCard, CheckListCard } from "./dashboard-cards";
+jest.mock("lucide-react-native", () => {
+  const NativeView = jest.requireActual<typeof import("react-native")>("react-native").View;
+  return {
+    ...jest.requireActual<object>("lucide-react-native"),
+    Info: (props: object) => <NativeView testID="info-glyph" {...props} />,
+    AlertTriangle: (props: object) => <NativeView testID="warning-glyph" {...props} />,
+  };
+});
 
 const amounts = {
   base: 4075.58,
@@ -84,7 +92,8 @@ describe("stable analysis card loading rows", () => {
       />,
     );
     const before = labels(screen);
-    expect(before).toEqual(["Gesetzliche Prüfung", "Planungshinweise"]);
+    expect(before).toEqual(["Gesetzliche Prüfung", "Dienstfolgen & Erholung"]);
+    expect(screen.queryByTestId("planning-check-summary")).toBeNull();
     await screen.rerender(
       <CheckListCard
         reserveLoadingSpace
@@ -95,6 +104,26 @@ describe("stable analysis card loading rows", () => {
       />,
     );
     expect(labels(screen)).toEqual(before);
+    expect(screen.queryByTestId("planning-check-summary")).toBeNull();
     expect(screen.getByLabelText("Gesetzliche Prüfung: Keine Auffälligkeiten")).toBeTruthy();
+    await screen.rerender(
+      <CheckListCard
+        onPress={onPress}
+        counts={{ ...counts, warningCount: 3 }}
+        showPlanning
+        categories={{
+          legal: { ...counts, warningCount: 1 },
+          planning: { ...counts, warningCount: 2 },
+        }}
+      />,
+    );
+    const planning = screen.getByLabelText("Dienstfolgen & Erholung: 2 Hinweise");
+    expect(
+      within(planning).getByTestId("info-glyph", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    const legal = screen.getByLabelText("Gesetzliche Prüfung: 1 Warnung");
+    expect(
+      within(legal).getByTestId("warning-glyph", { includeHiddenElements: true }),
+    ).toBeTruthy();
   });
 });

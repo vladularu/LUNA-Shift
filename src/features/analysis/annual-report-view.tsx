@@ -14,11 +14,7 @@ import { buildAnnualDistributionSections } from "@/features/analysis/annual-dist
 import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
-import {
-  isCheckLimited,
-  PLANNING_HIDDEN_NOTICE,
-  selectAnnualCheckDisplay,
-} from "./check-visibility";
+import { isCheckLimited, selectAnnualCheckDisplay } from "./check-visibility";
 import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import {
   AnalysisYearHeader,
@@ -88,7 +84,6 @@ export function AnnualReportScreen({
       <ReportScrollView resumeKey={resumeKey}>
         <ReportPeriodContent>
           {testMonthCount > 0 ? <AnnualTestBadge count={testMonthCount} /> : null}
-          {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
           {preferences.error ? <AnalysisCoverageNote message={preferences.error} /> : null}
           {preferences.enabled === null && !preferences.error ? (
             <AnalysisCoverageNote message="Prüfung wird geladen …" />
@@ -208,7 +203,6 @@ export function AnnualReportDetails({
         {testMonthCount > 0 ? <AnnualTestBadge count={testMonthCount} /> : null}
         {section === "CHECK" ? (
           <>
-            {!showPlanning ? <AnalysisCoverageNote message={PLANNING_HIDDEN_NOTICE} /> : null}
             {preferences.error ? <AnalysisCoverageNote message={preferences.error} /> : null}
             {preferences.enabled === null && !preferences.error ? (
               <AnalysisCoverageNote message="Prüfung wird geladen …" />

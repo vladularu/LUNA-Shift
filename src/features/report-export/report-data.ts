@@ -295,7 +295,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
           step = steps.next();
         }
         const compliance = selectVisibleCompliance(step.value, true);
-        add("Auswertung", month, "Arbeitszeitrecht und Planung/Erholung", {
+        add("Auswertung", month, "Arbeitszeitrecht und Dienstfolgen & Erholung", {
           ...compliance,
           prerequisiteCount: compliance.prerequisiteCount ?? 0,
         });

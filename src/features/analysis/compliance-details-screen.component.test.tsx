@@ -70,16 +70,16 @@ describe("ComplianceDetailsScreen", () => {
     mockPlanning = false;
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByRole("header", { name: /Meldungen/ })).toBeNull();
-    expect(screen.queryByText("Planungshinweise")).toBeNull();
-    expect(screen.getByText(/Planungshinweise ausgeblendet/)).toBeVisible();
+    expect(screen.queryByText("Dienstfolgen & Erholung")).toBeNull();
+    expect(screen.queryByText(/Planungshinweise ausgeblendet/)).toBeNull();
   });
   it("shows one neutral total and reserves color for its severity", async () => {
     const screen = await render(<ComplianceDetailsScreen />);
 
     expect(screen.queryByRole("header", { name: /Meldungen/ })).toBeNull();
     expect(screen.queryByText("0 Hinweise")).toBeNull();
-    expect(screen.getAllByText("Gesetzlich")).toHaveLength(2);
-    expect(screen.getByText("Planung")).toBeVisible();
+    expect(screen.getAllByText("Gesetzliche Prüfung")).toHaveLength(2);
+    expect(screen.getByText("Dienstfolgen & Erholung")).toBeVisible();
   });
 
   it("shows a single quiet legal status for a planning-only result", async () => {
@@ -90,7 +90,7 @@ describe("ComplianceDetailsScreen", () => {
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByRole("header", { name: "1 Meldung" })).toBeNull();
     expect(screen.queryByText("Gesetzliche Prüfung")).toBeNull();
-    expect(screen.getByText("Planung")).toBeVisible();
+    expect(screen.getByText("Dienstfolgen & Erholung")).toBeVisible();
   });
 
   it("has no general info section or nested explanation buttons", async () => {
