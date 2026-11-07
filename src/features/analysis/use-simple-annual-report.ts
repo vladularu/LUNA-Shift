@@ -37,6 +37,7 @@ interface DeferredAnnualReportResult {
 const NO_TEST_MONTHS: readonly string[] = [];
 export function useSimpleAnnualReport({
   enabled,
+  active = true,
   entries,
   profile,
   ruleResolver = bundledRuleResolver,
@@ -46,6 +47,8 @@ export function useSimpleAnnualReport({
   testMonths = NO_TEST_MONTHS,
 }: {
   readonly enabled: boolean;
+  /** Pause new work without invalidating results for otherwise valid inputs. */
+  readonly active?: boolean;
   readonly entries: readonly CalendarEntry[];
   readonly profile: UserProfile | null;
   readonly ruleResolver?: RuleResolver;
@@ -114,8 +117,8 @@ export function useSimpleAnnualReport({
   const settled = cached !== null || matching !== null;
   useEffect(() => {
     const current = input.current;
-    if (current === null || key === null || settled) return;
-    let active = true;
+    if (!active || current === null || key === null || settled) return;
+    let subscribed = true;
     const snapshot = { key, resolver: current.ruleResolver, persistent, revision: retryRevision };
     const lease = requestAnnualAnalysis(
       current,
@@ -123,10 +126,10 @@ export function useSimpleAnnualReport({
       persistent,
       -1,
       (report) => {
-        if (active) setState({ ...snapshot, report, fatalError: null });
+        if (subscribed) setState({ ...snapshot, report, fatalError: null });
       },
       (error) => {
-        if (active)
+        if (subscribed)
           setState({
             ...snapshot,
             report: null,
@@ -135,14 +138,14 @@ export function useSimpleAnnualReport({
           });
       },
       (report) => {
-        if (active) setCoreState({ ...snapshot, report, fatalError: null });
+        if (subscribed) setCoreState({ ...snapshot, report, fatalError: null });
       },
     );
     return () => {
-      active = false;
+      subscribed = false;
       lease.cancel();
     };
-  }, [key, resolver, persistent, settled, retryRevision]);
+  }, [active, key, resolver, persistent, settled, retryRevision]);
   return {
     coreReport: core?.report ?? null,
     error: youthEnabled === null ? preferenceError : null,
