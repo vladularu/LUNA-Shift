@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { annualDetailsRoute } from "@/navigation/routes";
 import { formatMonthTitle } from "@/engine/calendar";
@@ -26,6 +26,7 @@ export function AnnualNetPayCard({
   readonly detail?: boolean;
 }) {
   const palette = usePalette();
+  const { fontScale } = useWindowDimensions();
   const report = data.report;
   const count = report?.availableMonthCount ?? 0;
   return (
@@ -55,14 +56,19 @@ export function AnnualNetPayCard({
         }
         total={count > 0}
       />
-      {report?.notes.map((note) => (
-        <Text
-          key={note}
-          style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.sm }}
-        >
-          {note}
-        </Text>
-      ))}
+      <View
+        testID="annual-net-notes"
+        style={{ minHeight: 2 * (TYPOGRAPHY.small.lineHeight * fontScale + SPACING.sm) }}
+      >
+        {report?.notes.map((note) => (
+          <Text
+            key={note}
+            style={{ ...TYPOGRAPHY.small, color: palette.textMuted, paddingBottom: SPACING.sm }}
+          >
+            {note}
+          </Text>
+        ))}
+      </View>
     </AnalysisListCard>
   );
 }

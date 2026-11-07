@@ -1,3 +1,4 @@
+import { createRuleResolver } from "@/rules/rule-resolver";
 import type { AllowanceStatus, MonthlyTariffDecision, UserProfile } from "@/domain/types";
 import * as MockReact from "react";
 import { Temporal } from "@js-temporal/polyfill";
@@ -34,6 +35,7 @@ import {
   setSalaryPaymentPeriod,
   type SalaryPaymentPreferences,
 } from "@/domain/salary-payment";
+let mockResolver = createRuleResolver();
 let mockPaymentPreferences: SalaryPaymentPreferences = DEFAULT_SALARY_PAYMENT_PREFERENCES;
 let mockPaymentError: string | null = null;
 const mockPaymentSave = jest.fn<(preferences: SalaryPaymentPreferences) => Promise<void>>();
@@ -146,9 +148,7 @@ jest.mock("@/application/pflegeshift-provider", () => ({
 }));
 jest.mock("@/application/rule-catalog-runtime-provider", () => ({
   useRuleCatalogRuntime: () => ({
-    resolver:
-      jest.requireActual<typeof import("@/rules/rule-resolver")>("@/rules/rule-resolver")
-        .bundledRuleResolver,
+    resolver: mockResolver,
   }),
 }));
 jest.mock("./use-net-pay-profile", () => ({
@@ -240,6 +240,8 @@ async function chooseBirthDate(screen: Awaited<ReturnType<typeof render>>, value
 }
 describe("integrated salary-to-net workflow", () => {
   beforeEach(() => {
+    // Each fixture has its own engine mocks and therefore its own calculation-cache scope.
+    mockResolver = createRuleResolver();
     mockPaymentPreferences = DEFAULT_SALARY_PAYMENT_PREFERENCES;
     mockPaymentError = null;
     mockPaymentSave.mockReset().mockResolvedValue(undefined);

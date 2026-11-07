@@ -127,7 +127,10 @@ export function AnnualReportDetails({
   const palette = usePalette();
   const preferences = useCheckPreferences();
   const showPlanning = preferences.enabled !== false;
-  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths, section === "NET");
+  const salaryData = useAnnualSalaryPayments(sourceReport, pending, testMonths, {
+    salary: section === "PAY",
+    net: section === "NET",
+  });
   const report = selectAnnualCheckDisplay(salaryData.report, showPlanning);
   const testMonthCount = report.months.filter((item) => testMonths.includes(item.month)).length;
   if (section === "NET")

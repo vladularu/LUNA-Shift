@@ -251,8 +251,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "6c7f3065661a2f6858793077e870cf5bb8726b76253f9cfc6f6c759867d7b1b2",
-      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money."
+      "sha256": "e8cf871c0375e91b166cc348965f87c1cf9d32e407c572b60275829835ae7365",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/features/salary/salary-screen.tsx",
@@ -263,8 +263,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "2c5c940457eff2d6e3bd8500d7e172dac3448c2b4fe379b1201c7a241751c02d",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending."
+      "sha256": "1a386702a13f710146514c82431c6719d465a100c46710a96d497bd4506cc766",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
@@ -347,8 +347,8 @@
     {
       "path": "src/features/salary/net-pay-settings-screen.tsx",
       "kind": "modified",
-      "sha256": "aef8d9079e4dca3d1c0c9349b89da8b7037fb819d96339b218f9aa85913a5350",
-      "reason": "Paket 4A: return to the net forecast when settings were opened without navigation history; preserve selected month, save behavior and draft protection."
+      "sha256": "c02fa9ec6033a3026b373774a11678f0581f9ec4a47061d042844c8dbcc69da2",
+      "reason": "Paket 4A: return to the net forecast when settings were opened without navigation history; preserve selected month, save behavior and draft protection. Package B: retain the open net-settings editor snapshot during background invalidation; preserve its original optimistic conflict basis. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/navigation/routes.ts",
@@ -377,14 +377,14 @@
     {
       "path": "src/features/analysis/use-annual-net-pay.ts",
       "kind": "added",
-      "sha256": "6ba44f234d184b10c106725be71a91d0397add9f3ec5869008c589cf66760a51",
-      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change. Package A: retain valid annual net results across navigation focus changes, share identical in-flight salary tasks and reuse up to six immutable complete results keyed by full inputs and resolver identity. Preserve formulas, input invalidation, cancellation and rejection of late results. Device acceptance pending."
+      "sha256": "17b6cc70ef9bb70182a6812e3ca8d881605a64257bdbefef5b7d9abb47cdf548",
+      "reason": "Paket 4C: schedule annual net preparation through the existing cooperative queue after settings load. Full content key and resolver identity invalidate results; cancel on year/input change or blur and ignore late completions. No native/cache schema change. Package A: retain valid annual net results across navigation focus changes, share identical in-flight salary tasks and reuse up to six immutable complete results keyed by full inputs and resolver identity. Preserve formulas, input invalidation, cancellation and rejection of late results. Device acceptance pending. Correction C: factor route-independent annual net preparation from the existing screen hook so background and visible consumers share the exact content key, cache and pending job; visible consumers promote priority. Preserve full-content/resolver isolation, stale-completion guards, errors and focus behavior. No new financial persistence. Preview device acceptance confirmed on 2026-11-07. Correction D: hydrate annual net from the existing local derived-results SQLite cache, under a separate annual period, complete content key and strict result validator. Existing catalog/bundle hashes, bounded lookup, checksums and stale writer/restore epoch guards remain active. Preserve Luftig and prior B/C fixes. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/features/analysis/annual-net-pay-view.tsx",
       "kind": "added",
-      "sha256": "b5db72c4e9906fde19b6b0d6983b73ebbc3f68c039fd918beac057274bfd266f",
-      "reason": "Annual net UI correction after iPhone feedback: remove redundant introduction card, keep year in result card, display unavailable monthly results as Nicht verfügbar and keep full details in existing month destination. Preserve sums, coverage, available-month notes, calculations and Luftig. Device acceptance pending."
+      "sha256": "38b6292d4afd5ea13f73be7c0067453a8aff9259b3790de265eadf0a62bee520",
+      "reason": "Annual net UI correction after iPhone feedback: remove redundant introduction card, keep year in result card, display unavailable monthly results as Nicht verfügbar and keep full details in existing month destination. Preserve sums, coverage, available-month notes, calculations and Luftig. Device acceptance pending. Correction C: reserve space for two standard annual-net explanatory lines while loading and after completion, scaling with text size. Longer or additional notes remain fully visible and may grow. Preserve Luftig and existing card content/navigation. Actual first-open and app-return layout require iPhone acceptance. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/features/analysis/annual-overview.tsx",
@@ -401,8 +401,8 @@
     {
       "path": "src/features/analysis/use-annual-salary-payments.ts",
       "kind": "modified",
-      "sha256": "d82a6ab8dfcb730a70734685cc7dffe9c210534e15a77cd094ed7290588c72be",
-      "reason": "Paket 4C: reuse one existing settings-timeline read for annual net; retain gross annual-payment guards and skip individual test months in net calculation."
+      "sha256": "720717d818ac449e73acd37f93d0677b05c88e789c89a0e211e51b8b9d021ab5",
+      "reason": "Paket 4C: reuse one existing settings-timeline read for annual net; retain gross annual-payment guards and skip individual test months in net calculation. Package B: select salary and net preparation independently; unused annual details perform neither preparation. Preserve pending/test-month guards and default overview behavior. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     },
     {
       "path": "src/features/analysis/use-simple-annual-report.ts",
@@ -415,6 +415,54 @@
       "kind": "modified",
       "sha256": "6e1527a675e98e86077db5c986e12b4713c282c90ab9e5a04732f78871f12fa3",
       "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending."
+    },
+    {
+      "path": "src/features/salary/use-net-pay-profile.ts",
+      "kind": "modified",
+      "sha256": "e5aefb45145facedbd647d8cc7996cea3e76fef6b6c34fb4dcae3ab1de81439b",
+      "reason": "Package B: reuse the existing database-scoped committed net-settings timeline across overview and detail consumers; project the requested month without redundant SQL on navigation. Preserve guarded saves, annual-payment reset, busy state, explicit reload and error handling. No calculation formulas or stored settings change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/analysis/analysis-salary-input-store.ts",
+      "kind": "modified",
+      "sha256": "e82a3fae45c48545b9991b0c4dcb1ce9b079f81e15f30cdf80ef51e3980e6058",
+      "reason": "Package B: support explicit revalidation while retaining a ready snapshot; actual committed-write invalidation still drops obsolete inputs immediately. Epoch guards reject late old reads and concurrent consumers share the current load. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/infrastructure/database/local-backup-restore.ts",
+      "kind": "modified",
+      "sha256": "7668f747e8e8d6474e2b9e4be57a6e001109741e1019af28f6f7d3a6513f0494",
+      "reason": "Package B cache validity: notify existing net-profile subscribers only after the local backup replacement transaction commits successfully. No SQL, backup format or schema change; no notification on rollback. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/infrastructure/database/private-cloud-repository.ts",
+      "kind": "modified",
+      "sha256": "5ee758628161cd06ed038d088475d9beb4a568cc170e44ea9a778a49cbbbc7b2",
+      "reason": "Package B cache validity: notify existing net-profile subscribers only after a changed cloud snapshot is actually committed. Preserve account/current-snapshot guards and rollback; unchanged/rejected/failed applications do not invalidate. No remote cloud action or schema change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/salary/salary-payroll-settings.tsx",
+      "kind": "modified",
+      "sha256": "026205aeb19fca3af4e881544eb9e4a3e860cc4edc3444e186ef736fc76f207e",
+      "reason": "Package B: retain the open payroll-settings editor snapshot during background invalidation; preserve its original optimistic conflict basis. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/analysis/analysis-background-preparation.tsx",
+      "kind": "modified",
+      "sha256": "6fe10c5578ac6c4742339ecb8bd229619ee6047ed25472ef7ac908cdb0e9de4a",
+      "reason": "Correction C, following the two iPhone videos: retain ready salary inputs during foreground revalidation; committed write events still invalidate immediately. Warm the relevant annual net result after startup using the same saved profile, timeline, payment policy, entries, restrictions and resolver as annual pages. Pause background work when inactive and prioritize visible work. No formulas, stored data or native changes. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/salary/salary-month-input.ts",
+      "kind": "modified",
+      "sha256": "35909781240a24991e42be01a760ec36929771b384f5da3b3c6a40392a55a3e9",
+      "reason": "Correction D: bound and share immutable successful monthly salary inputs across annual/payment preparation using complete effective profile, selected shift/reference contents, monthly decision, work pattern and resolver identity. Failed attempts are not cached. Preserve formulas. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/analysis/annual-net-pay-cache.ts",
+      "kind": "added",
+      "sha256": "4638bfcf27d9f4c293e89b801459d80c5364ca11f1a6f60345b98dcd33141d7b",
+      "reason": "Correction D: define annual net request/period identity and a strict persistent result validator for all twelve ordered months, safe integer cents, status/notes/preliminary consistency and recalculated annual totals; reject transient calculation failure snapshots. No native schema change, no sync or backup of derived results. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
     }
   ]
 }

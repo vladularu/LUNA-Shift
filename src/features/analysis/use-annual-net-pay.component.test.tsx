@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import {
   forecastProfile as mockforecastProfile,
@@ -10,8 +10,18 @@ import {
   setSalaryPaymentPeriod,
 } from "@/domain/salary-payment";
 import { createRuleResolver } from "@/rules/rule-resolver";
-import { useAnnualNetPay } from "./use-annual-net-pay";
+import { useAnnualNetPay, usePreparedAnnualNetPay } from "./use-annual-net-pay";
 import { summarizeAnnualNetPay, type AnnualNetPay } from "./annual-net-pay";
+
+import {
+  createPersistentAnalysisCache,
+  type PersistentAnalysisCache,
+} from "./persistent-analysis-cache";
+import type { StoredAnalysisResult } from "@/infrastructure/database/analysis-result-repository";
+let mockPersistent: PersistentAnalysisCache | null = null;
+jest.mock("./analysis-persistent-results", () => ({
+  useAnalysisPersistentResults: () => mockPersistent,
+}));
 
 let mockFocused = true;
 let mockResolver = createRuleResolver();
@@ -56,6 +66,7 @@ jest.mock("./analysis-work-queue", () => ({
 }));
 const data = { status: "ready" as const, timeline: [], error: null };
 beforeEach(() => {
+  mockPersistent = null;
   mockFocused = true;
   mockResolver = createRuleResolver();
   mockProfile = mockforecastProfile;
@@ -64,6 +75,56 @@ beforeEach(() => {
   mockJobs.length = 0;
 });
 describe("annual net lifecycle", () => {
+  const request = () => ({
+    year: 2026,
+    profile: mockProfile,
+    timeline: [],
+    preferences: mockPayment,
+    context: {
+      entries: mockEntries,
+      tariffDecisions: [],
+      workPatternSettings: mockDEFAULT_TVOED_WORK_PATTERN_SETTINGS,
+      resolver: mockResolver,
+      testMonths: [],
+    },
+  });
+  it("opens a prewarmed annual result immediately without route focus during warmup", async () => {
+    mockFocused = false;
+    const background = await renderHook(() => usePreparedAnnualNetPay(request(), true, 30));
+    expect(mockJobs).toHaveLength(1);
+    await act(async () => mockJobs[0].complete(summarizeAnnualNetPay(2026, [])));
+    const expected = background.result.current.report;
+    await background.unmount();
+    mockFocused = true;
+    const visible = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    expect(visible.result.current.report).toBe(expected);
+    expect(visible.result.current.loading).toBe(false);
+    expect(mockJobs).toHaveLength(1);
+  });
+  it("joins and promotes unfinished background work when the annual screen opens", async () => {
+    const background = await renderHook(() => usePreparedAnnualNetPay(request(), true, 30));
+    const visible = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    expect(mockJobs).toHaveLength(1);
+    expect(mockJobs[0].setPriority).toHaveBeenCalledWith(-1);
+    await background.unmount();
+    expect(mockJobs[0].cancel).not.toHaveBeenCalled();
+    await act(async () => mockJobs[0].complete(summarizeAnnualNetPay(2026, [])));
+    expect(visible.result.current.loading).toBe(false);
+  });
+  it("pauses inactive background work and rejects its late completion", async () => {
+    const background = await renderHook(
+      ({ active }: { active: boolean }) => usePreparedAnnualNetPay(request(), active, 30),
+      { initialProps: { active: false } },
+    );
+    expect(mockJobs).toHaveLength(0);
+    await background.rerender({ active: true });
+    await background.rerender({ active: false });
+    expect(mockJobs[0].cancel).toHaveBeenCalledTimes(1);
+    await act(async () => mockJobs[0].complete(summarizeAnnualNetPay(2026, [])));
+    expect(background.result.current.report).toBeNull();
+    await background.rerender({ active: true });
+    expect(mockJobs).toHaveLength(2);
+  });
   it.each(["profile", "payment"] as const)(
     "invalidates changed %s content without requiring a new timestamp",
     async (change) => {
@@ -228,5 +289,80 @@ describe("annual net lifecycle", () => {
       error: "Laden fehlgeschlagen",
       report: null,
     });
+  });
+});
+
+describe("annual net restart delivery", () => {
+  function persisted() {
+    const disk = new Map<string, StoredAnalysisResult>();
+    let writes = 0;
+    const open = () =>
+      createPersistentAnalysisCache({
+        bundleId: "preview-d",
+        sha256: async (value) => value,
+        repository: {
+          read: async (kind, month, key) => disk.get(JSON.stringify([kind, month, key])) ?? null,
+          write: async (kind, month, key, value) => {
+            disk.set(JSON.stringify([kind, month, key]), value);
+            writes++;
+          },
+        },
+      });
+    return { disk, open, writes: () => writes };
+  }
+  const report = () =>
+    summarizeAnnualNetPay(
+      2026,
+      Array.from({ length: 12 }, (_, index) => ({
+        month: `2026-${String(index + 1).padStart(2, "0")}`,
+        netCents: 250000,
+        status: null,
+        notes: [],
+        preliminary: false,
+      })),
+    );
+  it("restores a completed year after replacing all runtime caches without scheduling calculation", async () => {
+    const storage = persisted();
+    mockPersistent = storage.open();
+    const first = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    await waitFor(() => expect(mockJobs).toHaveLength(1));
+    const expected = report();
+    await act(async () => mockJobs[0].complete(expected));
+    await waitFor(() => expect(storage.writes()).toBe(1));
+    await first.unmount();
+    mockResolver = createRuleResolver(); // Fresh identity discards both shared tasks and result memory.
+    mockPersistent = storage.open();
+    const restarted = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    await waitFor(() => expect(restarted.result.current.report).toEqual(expected));
+    expect(restarted.result.current.loading).toBe(false);
+    expect(mockJobs).toHaveLength(1);
+    expect(storage.writes()).toBe(1);
+  });
+  it("calculates changed inputs after a restart instead of restoring the earlier amount", async () => {
+    const storage = persisted();
+    mockPersistent = storage.open();
+    const first = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    await waitFor(() => expect(mockJobs).toHaveLength(1));
+    await act(async () => mockJobs[0].complete(report()));
+    await waitFor(() => expect(storage.writes()).toBe(1));
+    await first.unmount();
+    mockResolver = createRuleResolver();
+    mockPersistent = storage.open();
+    mockEntries = [forecastShift({ endTime: "05:00" })];
+    const restarted = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    await waitFor(() => expect(mockJobs).toHaveLength(2));
+    expect(restarted.result.current.report).toBeNull();
+  });
+  it("falls back to calculation when the disk lookup fails", async () => {
+    mockPersistent = {
+      read: async () => {
+        throw new Error("SQLite offline");
+      },
+      write: async () => {},
+    };
+    const hook = await renderHook(() => useAnnualNetPay(2026, data, true, []));
+    await waitFor(() => expect(mockJobs).toHaveLength(1));
+    await act(async () => mockJobs[0].complete(report()));
+    expect(hook.result.current).toMatchObject({ report: report(), loading: false, error: null });
   });
 });

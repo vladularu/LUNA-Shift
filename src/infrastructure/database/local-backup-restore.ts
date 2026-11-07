@@ -1,3 +1,4 @@
+import { netPayProfilesChanged } from "./net-pay-profile-events";
 import { WORKING_TIME_TARGET_COLUMNS } from "./working-time-target-repository";
 import { NET_PAY_PROFILE_COLUMNS } from "./net-pay-profile-repository";
 import { DRK_TRAINING_MONTH_CONFIRMATION_COLUMNS } from "./drk-training-month-confirmation-repository";
@@ -66,6 +67,7 @@ export async function restoreLocalBackup(
   await withImmediateTransaction(db, (transaction) =>
     restoreLocalBackupInTransaction(transaction, backup),
   );
+  netPayProfilesChanged(db);
 }
 
 /** Only for callers already holding the keyed connection's immediate transaction. */

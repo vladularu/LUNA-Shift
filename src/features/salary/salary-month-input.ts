@@ -1,3 +1,4 @@
+import { createAnalysisResultCache } from "@/features/analysis/analysis-result-cache";
 import { employmentProfileAt } from "@/domain/employment-history";
 import type {
   CalendarEntry,
@@ -83,6 +84,10 @@ export function salaryEntryDependencies(
   );
 }
 
+// Share exact monthly inputs across payout months and annual reference calculations.
+// Bound retained snapshots; never freeze or mutate caller-owned entries/profiles.
+const preparedMonths = createAnalysisResultCache<ReturnType<typeof salaryMonthInput>>(36);
+
 export function* salaryMonthInputSteps(
   month: string,
   profile: UserProfile,
@@ -90,14 +95,26 @@ export function* salaryMonthInputSteps(
 ): Generator<number, ReturnType<typeof salaryMonthInput>, void> {
   const dated = employmentProfileAt(profile, month + "-01");
   const { shifts, assessment } = selectSalaryMonthEntries(month, dated, context);
+  const decision = context.tariffDecisions.find((d) => d.month === month) ?? null;
+  const key = JSON.stringify([
+    month,
+    dated,
+    shifts,
+    assessment,
+    decision,
+    context.workPatternSettings,
+  ]);
+  const cached = preparedMonths.read(context.resolver, key);
+  if (cached !== null) return cached;
   yield* prepareMonthlyPaySteps(
     month,
     shifts,
     dated,
-    context.tariffDecisions.find((d) => d.month === month) ?? null,
+    decision,
     assessment,
     context.workPatternSettings,
     context.resolver,
   );
-  return salaryMonthInput(month, profile, context);
+  const result = salaryMonthInput(month, profile, context);
+  return result.pay.available ? preparedMonths.write(context.resolver, key, result) : result;
 }

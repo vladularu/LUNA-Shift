@@ -4,12 +4,14 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import type { SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import {
-  loadApplicableNetPaySettings,
+  loadNetPayProfileTimeline,
   saveContinuousNetPaySettings,
   resetAnnualSalaryPayments,
 } from "@/infrastructure/database/net-pay-profile-repository";
 import { useNetPayProfile } from "./use-net-pay-profile";
-const mockDb = {};
+import { netPayProfilesChanged } from "@/infrastructure/database/net-pay-profile-events";
+import { analysisSalaryInputStore } from "@/features/analysis/analysis-salary-input-store";
+let mockDb = {};
 let mockFocused = true;
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("expo-router", () => ({
@@ -17,11 +19,11 @@ jest.mock("expo-router", () => ({
     MockReact.useEffect(() => (mockFocused ? effect() : undefined), [effect, mockFocused]),
 }));
 jest.mock("@/infrastructure/database/net-pay-profile-repository", () => ({
-  loadApplicableNetPaySettings: jest.fn(),
+  loadNetPayProfileTimeline: jest.fn(),
   saveContinuousNetPaySettings: jest.fn(),
   resetAnnualSalaryPayments: jest.fn(),
 }));
-const load = jest.mocked(loadApplicableNetPaySettings),
+const load = jest.mocked(loadNetPayProfileTimeline),
   save = jest.mocked(saveContinuousNetPaySettings),
   resetAnnual = jest.mocked(resetAnnualSalaryPayments);
 function snapshot(month = "2026-06", revision = 1) {
@@ -31,7 +33,7 @@ function snapshot(month = "2026-06", revision = 1) {
     createdAt: "2026-06-01T00:00:00Z",
     updatedAt: "2026-06-01T00:00:00Z",
   };
-  return { saved, timeline: [saved] };
+  return [saved];
 }
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -45,25 +47,117 @@ function deferred<T>() {
 describe("effective-dated net profile lifecycle", () => {
   beforeEach(() => {
     mockFocused = true;
-    resetAnnual.mockReset().mockResolvedValue(undefined);
+    mockDb = {};
+    resetAnnual.mockReset().mockImplementation(async () => {
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]);
+    });
     load.mockReset().mockResolvedValue(snapshot());
-    save.mockReset().mockResolvedValue(snapshot().saved);
+    save.mockReset().mockImplementation(async () => {
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]);
+      return snapshot()[0];
+    });
   });
+  it("preserves the editor and its conflict basis while readers receive external changes", async () => {
+    const editor = await renderHook(() =>
+      useNetPayProfile("2026-07", true, { preserveDraft: true }),
+    );
+    const reader = await renderHook(() => useNetPayProfile("2026-07", true));
+    const original = editor.result.current.timeline;
+    const pending = deferred<ReturnType<typeof snapshot>>();
+    load.mockReturnValueOnce(pending.promise);
+    await act(async () =>
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]),
+    );
+    expect(editor.result.current.status).toBe("ready");
+    expect(editor.result.current.timeline).toBe(original);
+    expect(reader.result.current.status).toBe("loading");
+    await act(async () => pending.resolve(snapshot("2026-06", 2)));
+    expect(reader.result.current.saved!.revision).toBe(2);
+    expect(editor.result.current.timeline).toBe(original);
+    save.mockRejectedValueOnce(new Error("zwischenzeitlich geändert"));
+    await act(async () => {
+      await expect(editor.result.current.save(automatedSettings())).rejects.toThrow(
+        "zwischenzeitlich",
+      );
+    });
+    expect(save).toHaveBeenCalledWith(mockDb, {
+      settings: automatedSettings(),
+      expectedTimeline: original,
+    });
+    expect(editor.result.current.timeline).toBe(original);
+    load.mockResolvedValueOnce(snapshot("2026-06", 2));
+    await act(async () => editor.result.current.reload());
+    expect(editor.result.current.saved!.revision).toBe(2);
+  });
+
+  it("keeps the editor mounted during its own committed save until the refreshed data arrives", async () => {
+    const editor = await renderHook(() =>
+      useNetPayProfile("2026-07", true, { preserveDraft: true }),
+    );
+    const previous = editor.result.current.saved;
+    const pending = deferred<ReturnType<typeof snapshot>>();
+    load.mockReturnValueOnce(pending.promise);
+    let writing!: Promise<void>;
+    await act(async () => {
+      writing = editor.result.current.save(automatedSettings());
+    });
+    expect(editor.result.current.status).toBe("ready");
+    expect(editor.result.current.saved).toBe(previous);
+    expect(editor.result.current.busy).toBe(true);
+    await act(async () => {
+      pending.resolve(snapshot("2026-07", 2));
+      await writing;
+    });
+    expect(editor.result.current.saved!.revision).toBe(2);
+    expect(editor.result.current.busy).toBe(false);
+  });
+
+  it("does not release a newer month editor when an older reload finishes", async () => {
+    load.mockResolvedValueOnce([...snapshot(), ...snapshot("2026-08", 2)]);
+    const editor = await renderHook(
+      ({ month }: { month: string }) => useNetPayProfile(month, true, { preserveDraft: true }),
+      { initialProps: { month: "2026-07" } },
+    );
+    const pending = deferred<ReturnType<typeof snapshot>>();
+    load.mockReturnValueOnce(pending.promise);
+    await act(async () => editor.result.current.reload());
+    await editor.rerender({ month: "2026-08" });
+    const originalAugust = editor.result.current.saved;
+    await act(async () => pending.resolve([...snapshot(), ...snapshot("2026-08", 3)]));
+    expect(editor.result.current.month).toBe("2026-08");
+    expect(editor.result.current.saved).toBe(originalAugust);
+    expect(editor.result.current.saved!.revision).toBe(2);
+  });
+
+  it("releases a retained editor after an explicit failed reload", async () => {
+    const editor = await renderHook(() =>
+      useNetPayProfile("2026-07", true, { preserveDraft: true }),
+    );
+    load.mockRejectedValueOnce(new Error("unavailable"));
+    await act(async () => editor.result.current.reload());
+    expect(editor.result.current.status).toBe("error");
+    expect(editor.result.current.saved).toBeNull();
+  });
+
   it("does not read before application readiness", async () => {
     const hook = await renderHook(() => useNetPayProfile("2026-07", false));
     expect(load).not.toHaveBeenCalled();
     expect(hook.result.current.saved).toBeNull();
   });
-  it("discards a delayed response for the previous visible month", async () => {
+
+  it("projects the current month from one shared pending timeline after navigation", async () => {
     const pending = deferred<ReturnType<typeof snapshot>>();
-    load.mockReturnValueOnce(pending.promise).mockResolvedValueOnce(snapshot("2026-08"));
+    load.mockReturnValueOnce(pending.promise);
     const hook = await renderHook(({ month }: { month: string }) => useNetPayProfile(month, true), {
       initialProps: { month: "2026-07" },
     });
     await hook.rerender({ month: "2026-08" });
-    await act(async () => pending.resolve(snapshot()));
+    await act(async () => pending.resolve([...snapshot(), ...snapshot("2026-08")]));
+    expect(hook.result.current.month).toBe("2026-08");
     expect(hook.result.current.saved!.settings.month).toBe("2026-08");
+    expect(load).toHaveBeenCalledTimes(1);
   });
+
   it("guards the entire inherited timeline and reloads after a successful write", async () => {
     const previous = snapshot();
     load.mockResolvedValueOnce(previous).mockResolvedValueOnce(snapshot("2026-07", 2));
@@ -71,15 +165,12 @@ describe("effective-dated net profile lifecycle", () => {
     await act(async () => hook.result.current.save(automatedSettings()));
     expect(save).toHaveBeenCalledWith(mockDb, {
       settings: automatedSettings(),
-      expectedTimeline: previous.timeline,
+      expectedTimeline: previous,
     });
     expect(hook.result.current.saved!.revision).toBe(2);
   });
   it("reloads the first profile anchored in January for the visible July", async () => {
-    load
-      .mockResolvedValueOnce({ saved: null, timeline: [] })
-      .mockResolvedValueOnce(snapshot("2026-01"));
-    save.mockResolvedValueOnce(snapshot("2026-01").saved);
+    load.mockResolvedValueOnce([]).mockResolvedValueOnce(snapshot("2026-01"));
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));
     await act(async () => hook.result.current.save(automatedSettings()));
     expect(save).toHaveBeenCalledWith(mockDb, {
@@ -96,7 +187,7 @@ describe("effective-dated net profile lifecycle", () => {
     await act(async () => hook.result.current.save(automatedSettings(), "2026-01"));
     expect(save).toHaveBeenCalledWith(mockDb, {
       settings: { ...automatedSettings(), month: "2026-01" },
-      expectedTimeline: previous.timeline,
+      expectedTimeline: previous,
     });
     await act(async () => {
       await expect(
@@ -127,38 +218,74 @@ describe("effective-dated net profile lifecycle", () => {
     expect(hook.result.current.saved!.settings.month).toBe("2026-06");
     expect(hook.result.current.busy).toBe(false);
   });
-  it("keeps the forecast available throughout a focus refresh and applies restored settings", async () => {
-    const renderedStatuses: string[] = [];
-    const hook = await renderHook(() => {
+
+  it("reuses ready settings on another page and repeated focus changes without another read", async () => {
+    const first = await renderHook(() => useNetPayProfile("2026-07", true));
+    const statuses: string[] = [];
+    const second = await renderHook(() => {
       const profile = useNetPayProfile("2026-07", true);
-      renderedStatuses.push(profile.status);
+      statuses.push(profile.status);
       return profile;
     });
-    const previous = hook.result.current.saved;
+    expect(statuses).toEqual(["ready"]);
+    expect(second.result.current.saved).toBe(first.result.current.saved);
     mockFocused = false;
-    await hook.rerender(undefined);
+    await second.rerender(undefined);
+    mockFocused = true;
+    await second.rerender(undefined);
+    expect(statuses.every((value) => value === "ready")).toBe(true);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+  it("receives committed external changes without requiring navigation", async () => {
+    const first = await renderHook(() => useNetPayProfile("2026-07", true));
+    const second = await renderHook(() => useNetPayProfile("2026-11", true));
+    const updated = snapshot("2026-01", 3);
+    load.mockResolvedValueOnce(updated);
+    await act(async () =>
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]),
+    );
+    expect(first.result.current.saved!.revision).toBe(3);
+    expect(second.result.current.saved!.revision).toBe(3);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+  it("shares a pending read and keeps it alive for another page after unmount", async () => {
     const pending = deferred<ReturnType<typeof snapshot>>();
     load.mockReturnValueOnce(pending.promise);
-    renderedStatuses.length = 0;
-    mockFocused = true;
-    await hook.rerender(undefined);
-    expect(load).toHaveBeenCalledTimes(2);
-    expect(renderedStatuses.length).toBeGreaterThan(0);
-    expect(renderedStatuses.every((status) => status === "ready")).toBe(true);
-    expect(hook.result.current.saved).toBe(previous);
-    const restored = snapshot("2026-06", 3);
-    const restoredSaved: SavedMonthlyNetPaySettings = {
-      ...restored.saved,
-      settings: {
-        ...restored.saved.settings,
-        profile: { ...restored.saved.settings.profile, taxClass: 3 },
-      },
-    };
-    await act(async () => pending.resolve({ saved: restoredSaved, timeline: [restoredSaved] }));
-    expect(hook.result.current.saved!.revision).toBe(3);
-    expect(hook.result.current.saved!.settings.profile.taxClass).toBe(3);
-    expect(renderedStatuses.every((status) => status === "ready")).toBe(true);
+    const first = await renderHook(() => useNetPayProfile("2026-07", true));
+    const second = await renderHook(() => useNetPayProfile("2026-08", true));
+    await first.unmount();
+    expect(load).toHaveBeenCalledTimes(1);
+    await act(async () => pending.resolve(snapshot()));
+    expect(second.result.current.status).toBe("ready");
+    expect(second.result.current.saved!.settings.month).toBe("2026-06");
   });
+  it("isolates settings belonging to different database connections", async () => {
+    const first = await renderHook(() => useNetPayProfile("2026-07", true));
+    await first.unmount();
+    mockDb = {};
+    const pending = deferred<ReturnType<typeof snapshot>>();
+    load.mockReturnValueOnce(pending.promise);
+    const second = await renderHook(() => useNetPayProfile("2026-07", true));
+    expect(second.result.current.status).toBe("loading");
+    expect(second.result.current.saved).toBeNull();
+    await act(async () => pending.resolve(snapshot("2026-01", 5)));
+    expect(second.result.current.saved!.revision).toBe(5);
+  });
+  it("uses the timeline already prepared by the monthly overview", async () => {
+    await analysisSalaryInputStore(
+      mockDb as Parameters<typeof analysisSalaryInputStore>[0],
+    ).ensure();
+    const statuses: string[] = [];
+    const hook = await renderHook(() => {
+      const profile = useNetPayProfile("2026-07", true);
+      statuses.push(profile.status);
+      return profile;
+    });
+    expect(statuses).toEqual(["ready"]);
+    expect(hook.result.current.saved!.settings.month).toBe("2026-06");
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps same-month settings visible during an explicit reload", async () => {
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));
     const previous = hook.result.current.saved;
@@ -170,20 +297,22 @@ describe("effective-dated net profile lifecycle", () => {
     await act(async () => pending.resolve(snapshot("2026-07", 2)));
     expect(hook.result.current.saved!.revision).toBe(2);
   });
-  it("hides the previous month's forecast until the new month has loaded", async () => {
+
+  it("selects each month's actual dated profile from the warm complete timeline", async () => {
+    load.mockResolvedValueOnce([...snapshot(), ...snapshot("2026-08", 2)]);
     const hook = await renderHook(({ month }: { month: string }) => useNetPayProfile(month, true), {
       initialProps: { month: "2026-07" },
     });
-    expect(hook.result.current.status).toBe("ready");
-    const pending = deferred<ReturnType<typeof snapshot>>();
-    load.mockReturnValueOnce(pending.promise);
+    expect(hook.result.current.saved!.settings.month).toBe("2026-06");
     await hook.rerender({ month: "2026-08" });
-    expect(hook.result.current.status).toBe("loading");
-    expect(hook.result.current.saved).toBeNull();
-    expect(hook.result.current.timeline).toEqual([]);
-    await act(async () => pending.resolve(snapshot("2026-08")));
+    expect(hook.result.current.status).toBe("ready");
     expect(hook.result.current.saved!.settings.month).toBe("2026-08");
+    await hook.rerender({ month: "2026-05" });
+    expect(hook.result.current.status).toBe("ready");
+    expect(hook.result.current.saved).toBeNull();
+    expect(load).toHaveBeenCalledTimes(1);
   });
+
   it("keeps a successful save when an older background read finishes later", async () => {
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));
     const previousTimeline = hook.result.current.timeline;
@@ -200,37 +329,35 @@ describe("effective-dated net profile lifecycle", () => {
     expect(hook.result.current.saved!.revision).toBe(2);
     expect(hook.result.current.saved!.settings.month).toBe("2026-07");
   });
-  it("clears the retained forecast when a background refresh fails", async () => {
+
+  it("clears retained settings after a failed explicit reload and allows retry", async () => {
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));
-    mockFocused = false;
-    await hook.rerender(undefined);
     const pending = deferred<ReturnType<typeof snapshot>>();
     load.mockReturnValueOnce(pending.promise);
-    mockFocused = true;
-    await hook.rerender(undefined);
+    await act(async () => hook.result.current.reload());
     expect(hook.result.current.status).toBe("ready");
     await act(async () => pending.reject(new Error("Database unavailable")));
     expect(hook.result.current.status).toBe("error");
     expect(hook.result.current.saved).toBeNull();
     expect(hook.result.current.error).toBe("Die Netto-Angaben konnten nicht geladen werden.");
+    await act(async () => hook.result.current.reload());
+    expect(hook.result.current.status).toBe("ready");
   });
-  it("ignores a delayed refresh after another return has already loaded newer settings", async () => {
+
+  it("ignores a delayed read when a newer committed timeline has already loaded", async () => {
     const hook = await renderHook(() => useNetPayProfile("2026-07", true));
-    mockFocused = false;
-    await hook.rerender(undefined);
     const pending = deferred<ReturnType<typeof snapshot>>();
     load.mockReturnValueOnce(pending.promise);
-    mockFocused = true;
-    await hook.rerender(undefined);
-    mockFocused = false;
-    await hook.rerender(undefined);
+    await act(async () => hook.result.current.reload());
     load.mockResolvedValueOnce(snapshot("2026-06", 3));
-    mockFocused = true;
-    await hook.rerender(undefined);
+    await act(async () =>
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]),
+    );
     await act(async () => pending.resolve(snapshot("2026-06", 2)));
     expect(hook.result.current.status).toBe("ready");
     expect(hook.result.current.saved!.revision).toBe(3);
   });
+
   it("uses the complete snapshot when resetting the visible cash year and reloads the result", async () => {
     const before = snapshot();
     load.mockResolvedValueOnce(before).mockResolvedValueOnce(snapshot("2026-06", 2));
@@ -238,7 +365,7 @@ describe("effective-dated net profile lifecycle", () => {
     await act(async () => hook.result.current.resetAnnualPayments());
     expect(resetAnnual).toHaveBeenCalledWith(mockDb, {
       year: 2026,
-      expectedTimeline: before.timeline,
+      expectedTimeline: before,
     });
     expect(hook.result.current.saved!.revision).toBe(2);
     expect(hook.result.current.busy).toBe(false);
@@ -258,7 +385,10 @@ describe("effective-dated net profile lifecycle", () => {
   });
   it("prevents a second reset during an in-flight mutation", async () => {
     const pending = deferred<void>();
-    resetAnnual.mockReturnValueOnce(pending.promise);
+    resetAnnual.mockImplementationOnce(async () => {
+      await pending.promise;
+      netPayProfilesChanged(mockDb as Parameters<typeof netPayProfilesChanged>[0]);
+    });
     const hook = await renderHook(() => useNetPayProfile("2026-11", true));
     let writing!: Promise<void>;
     await act(async () => {

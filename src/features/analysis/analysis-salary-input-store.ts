@@ -21,6 +21,7 @@ const stores = new WeakMap<SQLiteDatabase, ReturnType<typeof createAnalysisSalar
 
 export function createAnalysisSalaryInputStore(db: SQLiteDatabase) {
   let epoch = 0,
+    resolvedEpoch = -1,
     pending: Promise<void> | null = null;
   let snapshot: Snapshot = {
     epoch,
@@ -33,16 +34,19 @@ export function createAnalysisSalaryInputStore(db: SQLiteDatabase) {
   const emit = () => {
     for (const listener of [...listeners]) listener();
   };
-  const refresh = () => {
+  const refresh = (retainReady = false) => {
     epoch++;
     pending = null;
-    snapshot = {
-      epoch,
-      status: "loading",
-      timeline: EMPTY_TIMELINE,
-      annualPayments: EMPTY_PAYMENTS,
-      error: null,
-    };
+    snapshot =
+      retainReady && snapshot.status === "ready"
+        ? { ...snapshot, epoch }
+        : {
+            epoch,
+            status: "loading",
+            timeline: EMPTY_TIMELINE,
+            annualPayments: EMPTY_PAYMENTS,
+            error: null,
+          };
     emit();
   };
   const unsubscribe = subscribeNetPayProfiles(db, refresh);
@@ -57,7 +61,10 @@ export function createAnalysisSalaryInputStore(db: SQLiteDatabase) {
     refresh,
     ensure(retry = false) {
       if (pending !== null) return pending;
-      if (snapshot.status === "ready" || (snapshot.status === "error" && !retry))
+      if (
+        (snapshot.status === "ready" && resolvedEpoch === epoch) ||
+        (snapshot.status === "error" && !retry)
+      )
         return Promise.resolve();
       if (snapshot.status === "error") refresh();
       const current = epoch;
@@ -74,6 +81,7 @@ export function createAnalysisSalaryInputStore(db: SQLiteDatabase) {
               finish({ state: 2 });
               return;
             }
+            resolvedEpoch = current;
             snapshot = {
               epoch,
               status: "ready",

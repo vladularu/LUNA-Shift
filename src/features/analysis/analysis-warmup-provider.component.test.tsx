@@ -1,6 +1,6 @@
 import { act, render } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { useLayoutEffect, type PropsWithChildren } from "react";
+import { useLayoutEffect, useSyncExternalStore, type PropsWithChildren } from "react";
 import { Text } from "react-native";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -27,6 +27,22 @@ import * as diagnostics from "@/infrastructure/diagnostics";
 import { AnalysisSalaryInputsProvider } from "./analysis-salary-inputs";
 import { AnalysisMonthDataProvider, useAnalysisMonthData } from "./analysis-month-data";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
+
+import { useAnnualNetPay, type AnnualNetPayState } from "./use-annual-net-pay";
+import { analysisSalaryInputStore } from "./analysis-salary-input-store";
+import * as annualNet from "./annual-net-pay";
+let annualObserved: AnnualNetPayState;
+let annualFrames: boolean[] = [];
+function AnnualProbe() {
+  const store = analysisSalaryInputStore(mockDb);
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const net = useAnnualNetPay(2026, snapshot, true, mockTestMonths);
+  useLayoutEffect(() => {
+    annualObserved = net;
+    annualFrames.push(!net.loading && net.report !== null);
+  });
+  return <Text>Jahresnetto</Text>;
+}
 
 let mockDb = {} as SQLiteDatabase,
   mockReady = true,
@@ -151,13 +167,22 @@ function Probe() {
   });
   return <Text>Auswertung</Text>;
 }
-function Scene({ show = false, month = "2026-10" }: { show?: boolean; month?: string }) {
+function Scene({
+  show = false,
+  month = "2026-10",
+  annual = false,
+}: {
+  show?: boolean;
+  month?: string;
+  annual?: boolean;
+}) {
   return (
     <SalaryPaymentPreferencesProvider>
       <ActiveMonthProvider>
         <>
           <AnalysisBackgroundPreparation />
           <Coordinator />
+          {annual ? <AnnualProbe /> : null}
           {show ? (
             <AnalysisSalaryInputsProvider enabled profile={mockProfile}>
               <AnalysisMonthDataProvider month={month} enabled active distance={0}>
@@ -199,6 +224,7 @@ beforeEach(() => {
     forecastShift({ id: `m${m}`, date: `2026-${String(m).padStart(2, "0")}-05` }),
   );
   frames = [];
+  annualFrames = [];
   load.mockReset().mockResolvedValue([row()]);
   loadPayment.mockReset().mockResolvedValue(paymentPreferences());
 });
@@ -208,6 +234,78 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 describe("calendar-first analysis preparation", () => {
+  it("prepares annual net after startup and exposes it on the first annual opening", async () => {
+    const work = jest.spyOn(annualNet, "annualNetPaySteps");
+    const screen = await render(<Scene />);
+    await flush();
+    expect(work).not.toHaveBeenCalled();
+    await act(async () => startupPresentation.complete());
+    await flush();
+    expect(work).toHaveBeenCalledTimes(1);
+    await screen.rerender(<Scene annual />);
+    expect(annualFrames[0]).toBe(true);
+    expect(annualObserved.report?.year).toBe(2026);
+    await flush();
+    expect(work).toHaveBeenCalledTimes(1);
+  });
+  it("keeps salary and annual net visible through repeated inactive and background returns", async () => {
+    const screen = await render(<Scene />);
+    await act(async () => startupPresentation.complete());
+    await flush();
+    await screen.rerender(<Scene show annual />);
+    const expected = annualObserved.report;
+    const salaryWork = jest.spyOn(salary, "prepareAnalysisSalarySteps");
+    const netWork = jest.spyOn(annualNet, "annualNetPaySteps");
+    for (const state of ["inactive", "background", "inactive"]) {
+      let finish!: (rows: readonly SavedMonthlyNetPaySettings[]) => void;
+      load.mockImplementationOnce(
+        () =>
+          new Promise((done) => {
+            finish = done;
+          }),
+      );
+      await foreground(state);
+      frames = [];
+      annualFrames = [];
+      await foreground("active");
+      expect(observed.salaryPayments.status).toBe("ready");
+      expect(annualObserved.report).toBe(expected);
+      expect(frames.every(Boolean)).toBe(true);
+      expect(annualFrames.every(Boolean)).toBe(true);
+      await act(async () => finish([row()]));
+      await flush();
+      expect(frames.every(Boolean)).toBe(true);
+      expect(annualFrames.every(Boolean)).toBe(true);
+    }
+    expect(load).toHaveBeenCalledTimes(4);
+    expect(salaryWork).not.toHaveBeenCalled();
+    expect(netWork).not.toHaveBeenCalled();
+  });
+  it("replaces retained results after a changed resume read and exposes a failed read", async () => {
+    const screen = await render(<Scene />);
+    await act(async () => startupPresentation.complete());
+    await flush();
+    await screen.rerender(<Scene show annual />);
+    const before = annualObserved.report;
+    const changed = row();
+    load.mockResolvedValueOnce([
+      {
+        ...changed,
+        settings: { ...changed.settings, profile: { ...changed.settings.profile, taxClass: 4 } },
+      },
+    ]);
+    await foreground("background");
+    await foreground("active");
+    await flush();
+    expect(observed.salaryPayments.saved?.settings.profile.taxClass).toBe(4);
+    expect(annualObserved.report).not.toBe(before);
+    load.mockRejectedValueOnce(new Error("SQL unavailable"));
+    await foreground("background");
+    await foreground("active");
+    expect(observed.salaryPayments.status).toBe("error");
+    expect(annualObserved.error).toBeTruthy();
+    expect(annualObserved.report).toBeNull();
+  });
   it("hydrates month/check results and recomputes payment salary before opening after a cold restart", async () => {
     const rows = new Map<string, unknown>();
     mockPersistent = {
@@ -224,8 +322,12 @@ describe("calendar-first analysis preparation", () => {
     await flush();
     await first.rerender(<Scene show />);
     const expected = observed.salary.result;
-    expect(rows.size).toBe(2);
-    expect([...rows.keys()].every((key) => !key.startsWith("salary:"))).toBe(true);
+    expect(rows.size).toBe(3);
+    expect(
+      [...rows.keys()]
+        .filter((key) => key.startsWith("salary:"))
+        .every((key) => key.startsWith("salary:2026:")),
+    ).toBe(true);
     await first.unmount();
     mockDb = {} as SQLiteDatabase;
     mockResolver = createRuleResolver();
