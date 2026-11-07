@@ -67,6 +67,42 @@ async function finish() {
 }
 
 describe("original annual salary flow", () => {
+  it("retains a finished report during inactive navigation and reuses it on return", async () => {
+    const screen = await renderHook(
+      ({ active, year }: { active: boolean; year: number }) =>
+        useSimpleAnnualReport({ ...input, active, year }),
+      { initialProps: { active: true, year: 2031 } },
+    );
+    await finish();
+    const report = screen.result.current.report;
+    expect(report).not.toBeNull();
+    for (const active of [false, true, false, true]) {
+      await screen.rerender({ active, year: 2031 });
+      expect(screen.result.current.report).toBe(report);
+    }
+    await screen.rerender({ active: false, year: 2032 });
+    expect(screen.result.current.report).toBeNull();
+    await finish();
+    expect(screen.result.current.report).toBeNull();
+    await screen.rerender({ active: true, year: 2032 });
+    await finish();
+    expect(screen.result.current.report?.year).toBe(2032);
+  });
+  it("keeps disabled inputs distinct from a valid but inactive screen", async () => {
+    const screen = await renderHook(
+      ({ enabled, active }: { enabled: boolean; active: boolean }) =>
+        useSimpleAnnualReport({ ...input, enabled, active, year: 2033 }),
+      { initialProps: { enabled: true, active: true } },
+    );
+    await finish();
+    const report = screen.result.current.report;
+    await screen.rerender({ enabled: true, active: false });
+    expect(screen.result.current.report).toBe(report);
+    await screen.rerender({ enabled: false, active: false });
+    expect(screen.result.current.report).toBeNull();
+    await screen.rerender({ enabled: true, active: false });
+    expect(screen.result.current.report).toBe(report);
+  });
   it("calculates the old profile without a remuneration date or training settings", async () => {
     const { result } = await renderHook(() => useSimpleAnnualReport(input));
     await finish();

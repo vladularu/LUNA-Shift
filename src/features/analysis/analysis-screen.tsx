@@ -173,7 +173,8 @@ function AnalysisPage({
     profile?.tariff !== null,
   );
   const annualReport = useDeferredAnnualReport({
-    enabled: ready && !error && isFocused && period === "YEAR" && annualInputs !== null,
+    enabled: ready && !error && period === "YEAR" && annualInputs !== null,
+    active: isFocused,
     entries: annualInputs?.ok ? annualInputs.value.entries : entries,
     profile,
     ruleResolver,

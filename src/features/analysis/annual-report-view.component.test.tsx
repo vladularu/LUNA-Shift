@@ -457,7 +457,10 @@ describe("independent annual net", () => {
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "NET"));
     const select = jest.fn();
     await screen.rerender(<AnnualReportDetails {...props} section="NET" onSelectMonth={select} />);
-    expect(screen.getByText("Netto-Prognose")).toBeTruthy();
+    expect(screen.queryByText("Netto-Prognose")).toBeNull();
+    expect(screen.getByText("Netto 2026")).toBeTruthy();
+    expect(screen.queryByText("Noch nicht eingerichtet")).toBeNull();
+    expect(screen.getByRole("button", { name: "Dezember 2026: Nicht verfügbar" })).toBeTruthy();
     expect(screen.queryByText("Gehaltsprognose")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /^Januar 2026:/ }));
     expect(select).toHaveBeenLastCalledWith("2026-01");
