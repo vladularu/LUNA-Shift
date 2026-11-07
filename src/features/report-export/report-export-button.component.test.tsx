@@ -1,3 +1,8 @@
+import {
+  DEFAULT_SALARY_PAYMENT_PREFERENCES,
+  setSalaryPaymentLag,
+  type SalaryPaymentPreferences,
+} from "@/domain/salary-payment";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Alert, Platform } from "react-native";
@@ -11,6 +16,11 @@ const mockShare =
   jest.fn<(report: ReportDocument, format: string, options: ReportOptions) => Promise<void>>();
 const mockBuild = jest.fn<(input: ReportInput) => void>();
 const mockLoadNetTimeline = jest.fn<() => Promise<readonly unknown[]>>().mockResolvedValue([]);
+const mockLoadPaymentPreferences = jest
+  .fn<() => Promise<SalaryPaymentPreferences>>()
+  .mockResolvedValue(DEFAULT_SALARY_PAYMENT_PREFERENCES);
+const mockSavedProfile = { timeZone: "Europe/Berlin" };
+let mockCalculationProfile: { timeZone: string; manualMonthlyGrossCents: number } | null = null;
 let mockReady = true;
 let mockYouth: boolean | null = false;
 let mockSchedule: (() => void) | null = null;
@@ -18,10 +28,16 @@ jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => ({}) }));
 jest.mock("@/infrastructure/database/net-pay-profile-repository", () => ({
   loadNetPayProfileTimeline: () => mockLoadNetTimeline(),
 }));
+jest.mock("@/infrastructure/database/salary-payment-repository", () => ({
+  loadSalaryPaymentPreferences: () => mockLoadPaymentPreferences(),
+}));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftStatus: () => ({ ready: mockReady, error: null }),
   usePflegeShiftEntries: () => ({ entries: [] }),
-  usePflegeShiftProfile: () => ({ profile: { timeZone: "Europe/Berlin" } }),
+  usePflegeShiftProfile: () => ({
+    profile: mockSavedProfile,
+    calculationProfile: mockCalculationProfile,
+  }),
   usePflegeShiftTariff: () => ({ tariffDecisions: [], workPatternSettings: {} }),
   usePflegeShiftTestData: () => ({ testMonths: [] }),
 }));
@@ -65,30 +81,36 @@ jest.mock("@/ui/schedule-idle-work", () => ({
 describe("Exportbedienung", () => {
   beforeEach(() => {
     mockReady = true;
+    mockCalculationProfile = null;
     mockYouth = false;
     mockSchedule = null;
     mockShare.mockResolvedValue(undefined);
     mockLoadNetTimeline.mockResolvedValue([]);
+    mockLoadPaymentPreferences.mockResolvedValue(DEFAULT_SALARY_PAYMENT_PREFERENCES);
     jest.replaceProperty(Platform, "OS", "ios");
     jest.spyOn(Alert, "alert").mockImplementation(() => {});
   });
-  it("öffnet PDF mit Standard und Gehalt vorausgewählt und übernimmt die Auswahl", async () => {
-    const screen = await render(<ReportExportButton period="2026-08" />);
-    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
-    expect(screen.getByRole("radio", { name: "Standard" })).toBeChecked();
-    expect(screen.getByRole("switch", { name: "Gehaltsprognose einfügen" })).toBeChecked();
-    await fireEvent.press(screen.getByRole("radio", { name: "Kompakt" }));
-    await fireEvent.press(screen.getByRole("switch", { name: "Gehaltsprognose einfügen" }));
-    await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
-    expect(mockLoadNetTimeline).not.toHaveBeenCalled();
-    await act(async () => {
-      mockSchedule?.();
-    });
-    expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period: "2026-08" }), "PDF", {
-      layout: "compact",
-      includeSalary: false,
-    });
-  });
+  it.each(["2026-08", "2026"])(
+    "öffnet PDF mit Standard und Gehalt und übernimmt die Auswahl für %s",
+    async (period) => {
+      const screen = await render(<ReportExportButton period={period} />);
+      await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+      expect(screen.getByRole("radio", { name: "Standard" })).toBeChecked();
+      expect(screen.getByRole("switch", { name: "Gehaltsprognose einfügen" })).toBeChecked();
+      await fireEvent.press(screen.getByRole("radio", { name: "Kompakt" }));
+      await fireEvent.press(screen.getByRole("switch", { name: "Gehaltsprognose einfügen" }));
+      await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
+      expect(mockLoadNetTimeline).not.toHaveBeenCalled();
+      expect(mockLoadPaymentPreferences).not.toHaveBeenCalled();
+      await act(async () => {
+        mockSchedule?.();
+      });
+      expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period }), "PDF", {
+        layout: "compact",
+        includeSalary: false,
+      });
+    },
+  );
   it("öffnet den bestehenden Exportablauf über die Kopfleistenaktion", async () => {
     const screen = await render(<ReportExportButton period="2026-08" variant="icon" />);
     expect(screen.queryByText(/Monatsbericht als PDF/)).toBeNull();
@@ -106,28 +128,35 @@ describe("Exportbedienung", () => {
       expect.any(Object),
     );
   });
-  it("exportiert CSV ohne Gehaltsangaben und blockiert doppelte Exporte", async () => {
-    const screen = await render(<ReportExportButton period="2026-08" />);
-    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "CSV" }));
-    expect(screen.queryByText("Berichtsumfang")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "CSV erstellen und teilen" }));
-    expect(screen.getByRole("button", { name: "Bericht wird erstellt …" })).toBeDisabled();
-    await fireEvent.press(screen.getByRole("button", { name: "Bericht wird erstellt …" }));
-    await act(async () => {
-      mockSchedule?.();
-    });
-    expect(mockShare).toHaveBeenCalledTimes(1);
-    expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period: "2026-08" }), "CSV", {
-      layout: "standard",
-      includeSalary: true,
-    });
-    expect(mockLoadNetTimeline).not.toHaveBeenCalled();
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Bericht exportieren" })).toBeEnabled(),
-    );
-  });
+  it.each(["2026-08", "2026"])(
+    "exportiert CSV für %s ohne Gehaltsangaben und blockiert doppelte Exporte",
+    async (period) => {
+      const screen = await render(<ReportExportButton period={period} />);
+      await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+      await fireEvent.press(screen.getByRole("radio", { name: "CSV" }));
+      expect(screen.queryByText("Berichtsumfang")).toBeNull();
+      await fireEvent.press(screen.getByRole("button", { name: "CSV erstellen und teilen" }));
+      expect(screen.getByRole("button", { name: "Bericht wird erstellt …" })).toBeDisabled();
+      await fireEvent.press(screen.getByRole("button", { name: "Bericht wird erstellt …" }));
+      await act(async () => {
+        mockSchedule?.();
+      });
+      expect(mockShare).toHaveBeenCalledTimes(1);
+      expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period }), "CSV", {
+        layout: "standard",
+        includeSalary: true,
+      });
+      expect(mockLoadNetTimeline).not.toHaveBeenCalled();
+      expect(mockLoadPaymentPreferences).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Bericht exportieren" })).toBeEnabled(),
+      );
+    },
+  );
   it("exportiert das gewählte Jahr mit den gespeicherten Netto-Grundlagen", async () => {
+    const preferences = setSalaryPaymentLag(DEFAULT_SALARY_PAYMENT_PREFERENCES, "2026-01", 2);
+    mockLoadPaymentPreferences.mockResolvedValue(preferences);
+    mockCalculationProfile = { timeZone: "Europe/Berlin", manualMonthlyGrossCents: 900000 };
     const screen = await render(<ReportExportButton period="2026" />);
     expect(screen.getByText(/Jahresbericht als PDF/)).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
@@ -137,10 +166,30 @@ describe("Exportbedienung", () => {
       mockSchedule?.();
     });
     expect(mockLoadNetTimeline).toHaveBeenCalledTimes(1);
+    expect(mockLoadPaymentPreferences).toHaveBeenCalledTimes(1);
+    expect(mockBuild).toHaveBeenCalledWith(
+      expect.objectContaining({
+        salaryPaymentPreferences: preferences,
+        profile: mockCalculationProfile,
+        netPayProfile: mockSavedProfile,
+      }),
+    );
     expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period: "2026" }), "PDF", {
       layout: "standard",
       includeSalary: true,
     });
+  });
+  it("verhindert ein Jahres-PDF mit Gehalt wenn Auszahlungsangaben nicht geladen werden können", async () => {
+    mockLoadPaymentPreferences.mockRejectedValue(new Error("private payment database path"));
+    const screen = await render(<ReportExportButton period="2026" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+    await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
+    expect(mockBuild).not.toHaveBeenCalled();
+    expect(mockShare).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenLastCalledWith("Export nicht möglich", expect.any(String));
+    expect(JSON.stringify(jest.mocked(Alert.alert).mock.calls)).not.toContain(
+      "private payment database path",
+    );
   });
   it("wartet auf Daten und Prüfungseinstellungen", async () => {
     mockReady = false;
