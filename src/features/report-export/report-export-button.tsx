@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Platform, View } from "react-native";
 import { Text } from "@/ui/text";
 import { useSQLiteContext } from "expo-sqlite";
+import type { SalaryPaymentPreferences } from "@/domain/salary-payment";
 import { Temporal } from "@js-temporal/polyfill";
 import {
   usePflegeShiftEntries,
@@ -73,6 +74,14 @@ export function ReportExportButton({
         format === "PDF" && selectedOptions.includeSalary
           ? await loadNetPayProfileTimeline(db)
           : [];
+      let salaryPaymentPreferences: SalaryPaymentPreferences | undefined;
+      if (format === "PDF" && selectedOptions.includeSalary && period.length === 4) {
+        /* eslint-disable @typescript-eslint/no-require-imports */
+        const { loadSalaryPaymentPreferences } =
+          require("@/infrastructure/database/salary-payment-repository") as typeof import("@/infrastructure/database/salary-payment-repository");
+        /* eslint-enable @typescript-eslint/no-require-imports */
+        salaryPaymentPreferences = await loadSalaryPaymentPreferences(db);
+      }
       if (!mounted.current) return;
       const createdAt = Temporal.Now.zonedDateTimeISO(profile.timeZone);
       const steps = buildReportSteps({
@@ -87,6 +96,8 @@ export function ReportExportButton({
         youthProtection: youthEnabled,
         testMonths,
         netPayTimeline,
+        salaryPaymentPreferences,
+        netPayProfile: savedProfile ?? undefined,
       });
       const report = await new Promise<ReportDocument>((resolve, reject) => {
         const advance = () => {

@@ -35,10 +35,8 @@ export function reportView(report: ReportDocument) {
     : [report.period];
   const monthly = periods.map((period) => {
     const net =
-      annual && text("Netto-Prognose", "annualPayment.netIncluded", period) === "Nein"
-        ? null
-        : (number("Netto-Prognose", "result.pay.netCents", period) ??
-          number("Netto-Prognose", "netCents", period));
+      number("Netto-Prognose", "result.pay.netCents", period) ??
+      number("Netto-Prognose", "netCents", period);
     const provisional =
       net !== null &&
       text("Netto-Prognose", "result.pay.calculationBasis.status", period) ===

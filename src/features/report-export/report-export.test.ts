@@ -402,14 +402,10 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
     expect(Math.round((gross(actual) - gross(baseline)) * 100)).toBe(360_000);
     expect(reportToHtml(actual)).toContain("Netto ohne Sonderzahlung");
     expect(reportToHtml(actual)).toContain("Jahresgrundlagen ergänzen");
-    expect(
-      value(
-        build({ ...data, period: "2026" }),
-        "Jahresauswertung",
-        "availableNetMonthCount",
-        "2026",
-      ),
-    ).toBe("5");
+    const yearly = build({ ...data, period: "2026" });
+    expect(value(yearly, "Jahresauswertung", "availableNetMonthCount", "2026")).toBe("6");
+    expect(reportView(yearly).monthly[6].net).toBeGreaterThan(0);
+    expect(reportToHtml(yearly)).toContain("Jahresgrundlagen ergänzen");
   });
   it("verwendet eine neue datierte Netto-Konfiguration erst ab ihrem Gültigkeitsmonat", () => {
     const first = automatedSettings("2026-01");
