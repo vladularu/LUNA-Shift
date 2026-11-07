@@ -1,8 +1,9 @@
+import { subscribeNetPayProfiles } from "./net-pay-profile-events";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { collectAnnualSalaryPayments } from "@/domain/net-pay-profile";
 import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import canonicalize from "canonicalize";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { settings } from "@/domain/net-pay-profile-test-fixtures";
 import { restoreLocalBackup } from "./local-backup-restore";
@@ -72,7 +73,11 @@ describe("monthly net-pay profile backup compatibility", () => {
     expect(exported.document.data.netPayProfiles).toHaveLength(2);
     const original = await loadMonthlyNetPaySettings(source.db, "2026-09");
     await saveMonthlyNetPaySettings(target.db, { settings: settings("2026-08"), expected: null });
+    const changed = vi.fn();
+    const unsubscribe = subscribeNetPayProfiles(target.db, changed);
     await restoreLocalBackup(target.db, await validateTvlBackup(exported.serialized));
+    expect(changed).toHaveBeenCalledTimes(1);
+    unsubscribe();
     expect(await loadMonthlyNetPaySettings(target.db, "2026-09")).toEqual(original);
     expect(await loadMonthlyNetPaySettings(target.db, "2026-07")).toEqual(
       await loadMonthlyNetPaySettings(source.db, "2026-07"),
@@ -177,9 +182,13 @@ describe("monthly net-pay profile backup compatibility", () => {
     target.adapter.database.exec(
       "CREATE TRIGGER reject_net_pay BEFORE INSERT ON net_pay_profiles BEGIN SELECT RAISE(ABORT, 'injected restore failure'); END;",
     );
+    const changed = vi.fn();
+    const unsubscribe = subscribeNetPayProfiles(target.db, changed);
     await expect(restoreLocalBackup(target.db, validated)).rejects.toThrow(
       "injected restore failure",
     );
+    expect(changed).not.toHaveBeenCalled();
+    unsubscribe();
     expect(await loadMonthlyNetPaySettings(target.db, "2026-07")).toEqual(saved);
     expect(target.adapter.database.prepare("SELECT * FROM shift_entries").all()).toEqual(shifts);
   });

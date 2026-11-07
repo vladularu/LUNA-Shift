@@ -8,9 +8,16 @@ export function useAnnualSalaryPayments(
   report: AnnualReport,
   pending: boolean,
   testMonths: readonly string[],
-  includeNet = true,
+  {
+    salary: includeSalary = true,
+    net: includeNet = true,
+  }: {
+    readonly salary?: boolean;
+    readonly net?: boolean;
+  } = {},
 ) {
-  const enabled = !pending && !testMonths.some((month) => month.startsWith(`${report.year}-`));
+  const enabled =
+    includeSalary && !pending && !testMonths.some((month) => month.startsWith(`${report.year}-`));
   const data = useNetPayProfile(`${report.year}-12`, enabled || (!pending && includeNet));
   const net = useAnnualNetPay(report.year, data, !pending && includeNet, testMonths);
   const annual = useAnnualSalaryForecast(

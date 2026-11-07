@@ -57,7 +57,9 @@ export function SalaryPayrollSettings({
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
   const timingWriting = useRef(false);
   const handledRequest = useRef<string | null>(null);
-  const net = useNetPayProfile(netMonth, !timingOnly && !blocked && root.ready && !!profile);
+  const net = useNetPayProfile(netMonth, !timingOnly && !blocked && root.ready && !!profile, {
+    preserveDraft: true,
+  });
   const work = profile ? employmentProfileAt(profile, `${netMonth}-01`) : null;
   const period = resolveSalaryPaymentPeriod(payment.preferences, month);
   const configuredLag = period ? period.delays.PREMIUMS : 0;

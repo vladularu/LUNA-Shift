@@ -1,3 +1,4 @@
+import { subscribeNetPayProfiles } from "./net-pay-profile-events";
 import { LATEST_DATABASE_SCHEMA_VERSION } from "./migrations";
 import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -118,7 +119,13 @@ describe("atomic private cloud storage", () => {
         },
       },
     };
+    const changed = vi.fn();
+    const unsubscribe = subscribeNetPayProfiles(memory.db, changed);
     expect(await port.apply("a", before, receipt(next), () => true)).toBe(true);
+    expect(changed).toHaveBeenCalledTimes(1);
+    await port.apply("a", next, receipt(next), () => true);
+    expect(changed).toHaveBeenCalledTimes(1);
+    unsubscribe();
     expect(await port.capture()).toEqual(next);
     expect(await port.recovery()).toEqual(before);
     expect((await port.state())?.baseline?.revision).toBe(1);
@@ -158,9 +165,13 @@ describe("atomic private cloud storage", () => {
         },
       },
     };
+    const changed = vi.fn();
+    const unsubscribe = subscribeNetPayProfiles(memory.db, changed);
     memory.fail = "DELETE FROM shift_entries";
     await expect(port.apply("a", before, receipt(next), () => true)).rejects.toThrow("injected");
     memory.fail = null;
+    expect(changed).not.toHaveBeenCalled();
+    unsubscribe();
     expect(await port.capture()).toEqual(before);
     expect((await port.state())?.baseline).toBeNull();
     expect(discard).toHaveBeenCalledOnce();

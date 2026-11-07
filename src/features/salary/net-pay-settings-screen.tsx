@@ -31,6 +31,7 @@ export function NetPaySettingsScreen() {
   const data = useNetPayProfile(
     month,
     parsed.status === "valid" && ready && error === null && profile !== null && !blocked,
+    { preserveDraft: true },
   );
   const scrollRef = useRef<ScrollView>(null);
   function backToForecast() {
