@@ -323,8 +323,8 @@
     {
       "path": "src/ui/reorderable-list.tsx",
       "kind": "modified",
-      "sha256": "ac9647109d31c8c1f13666b0b8dce3d2d0f54a420a9a1d33a41f4c711965e838",
-      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "sha256": "2bd8a376e9ec0275e5b21691aed32710812e7e9eb5855471db8165004bb85bdc",
+      "reason": "Remove the visible sorting instruction and its spacing as requested on 2026-11-07. Preserve drag-and-drop behavior, VoiceOver guidance and the accepted Luftig presentation. Local candidate only; iPhone acceptance and publication remain pending. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Keep the sorting card overflow visible throughout lift, drag and drop, avoiding Fabric shadow-clipping container reparenting while preserving the existing LUNA card and all reorder/persistence logic. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/ui/reorderable-row.tsx",

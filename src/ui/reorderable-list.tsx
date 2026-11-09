@@ -256,10 +256,12 @@ export function ReorderableList({
     <GestureHandlerRootView style={{ flexGrow: 0 }}>
       <SurfaceCard
         testID={testID}
+        // Keep Fabric from reparenting shadow-clipping containers while a native
+        // row gesture is active. Preserve custom card geometry from master.
         style={{
           ...cardStyle,
           height: layout.height + 2 * (cardStyle?.borderWidth ?? 1),
-          overflow: active ? "visible" : "hidden",
+          overflow: "visible",
         }}
       >
         {order.map((id, index) => {
