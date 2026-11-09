@@ -1,3 +1,4 @@
+import { checkPlanningSeries } from "./compliance-planning-series";
 import { specialDutyComplianceIssues } from "./special-duty-compliance";
 import { projectDutyShifts } from "./special-duty";
 import {
@@ -9,6 +10,10 @@ import {
 import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
 import { Temporal } from "@js-temporal/polyfill";
 import { finishMonthlyCompliance } from "./compliance-result";
+import { checkPlanningNightsSteps } from "./planning-night-recovery";
+import { checkTariffWorkingTimeSteps } from "./tariff-compliance";
+import { checkPlanningWeekendsSteps } from "./planning-weekends";
+import { planningWeekendCoverageStart } from "@/domain/planning-weekend-policy";
 
 import type {
   UserProfile,
@@ -20,10 +25,9 @@ import type {
 } from "@/domain/types";
 import { calculateSimpleYouthCompliance } from "@/engine/simple-youth-duty-time";
 import { checkEvidenceCompleteness } from "@/engine/compliance-evidence";
-import { createComplianceIssue as issue } from "@/engine/compliance-issue";
+import { createComplianceIssue as issue, germanQuantity } from "@/engine/compliance-issue";
 import {
   compensatedShortRestIndexes,
-  consecutiveDateStreaks,
   restPeriods,
   type ComplianceInterval as Interval,
 } from "@/engine/compliance-sequences";
@@ -53,6 +57,8 @@ interface CachedInterval {
 const INTERVAL_CACHE = new WeakMap<ShiftEntry, Map<string, CachedInterval>>();
 
 export interface ComplianceOptions {
+  /** The dated orchestrator assesses weekends once with the original full timeline. */
+  readonly skipWeekendAssessment?: boolean;
   readonly employmentProfile?: UserProfile;
   readonly employmentAssessmentPeriod?: { readonly from: string; readonly until: string | null };
   readonly federalState?: FederalState;
@@ -163,16 +169,6 @@ export function* prepareComplianceIntervalsIncrementally(
 }
 
 const hours = (minutes: number): string => `${Math.round((minutes / 60) * 100) / 100} h`;
-
-function germanQuantity(value: number, capitalize = false): string {
-  const words: Readonly<Record<number, string>> = {
-    5: "fünf",
-    6: "sechs",
-    7: "sieben",
-  };
-  const valueLabel = words[value] ?? String(value);
-  return capitalize ? `${valueLabel.charAt(0).toUpperCase()}${valueLabel.slice(1)}` : valueLabel;
-}
 
 function dateLabel(date: Temporal.PlainDate): string {
   return `${String(date.day).padStart(2, "0")}.${String(date.month).padStart(2, "0")}.${date.year}`;
@@ -514,78 +510,6 @@ function checkRestAndSequence(
   return issues;
 }
 
-function checkPlanningSeries(
-  intervals: readonly Interval[],
-  rules: RuleLegalRules,
-): ComplianceIssue[] {
-  const shifts = intervals.map((item) => item.shift);
-  const issues: ComplianceIssue[] = [];
-  for (const streak of consecutiveDateStreaks(shifts)) {
-    if (streak.length >= rules.planning.consecutiveWorkDaysWarning) {
-      issues.push(
-        issue(
-          "warning",
-          "PLANNING",
-          "PLANNING_7_DAYS",
-          `${germanQuantity(rules.planning.consecutiveWorkDaysWarning, true)} oder mehr Arbeitstage in Folge`,
-          `${streak.length} aufeinanderfolgende Arbeitstage wurden erkannt.`,
-          streak,
-          undefined,
-          { rule: "PLANNING_7_DAYS", count: streak.length },
-        ),
-      );
-    }
-  }
-
-  const nightShifts = intervals
-    .filter((item) => isNightWork(item, rules))
-    .map((item) => item.shift);
-  for (const streak of consecutiveDateStreaks(nightShifts)) {
-    if (streak.length >= rules.planning.consecutiveNightShiftsWarning) {
-      issues.push(
-        issue(
-          "warning",
-          "PLANNING",
-          "PLANNING_NIGHT_SERIES",
-          `${germanQuantity(rules.planning.consecutiveNightShiftsWarning, true)} oder mehr Nachtdienste in Folge`,
-          `${streak.length} aufeinanderfolgende Nachtdienste wurden erkannt.`,
-          streak,
-          undefined,
-          { rule: "PLANNING_NIGHT_SERIES", count: streak.length },
-        ),
-      );
-    }
-  }
-
-  const weekends = new Map<string, ShiftEntry>();
-  for (const shift of shifts) {
-    const date = Temporal.PlainDate.from(shift.date);
-    if (date.dayOfWeek === 6) weekends.set(date.toString(), shift);
-    if (date.dayOfWeek === 7) weekends.set(date.subtract({ days: 1 }).toString(), shift);
-  }
-  const keys = [...weekends.keys()].sort();
-  for (let index = 0; index < keys.length - 1; index++) {
-    if (
-      Temporal.PlainDate.from(keys[index + 1]).since(Temporal.PlainDate.from(keys[index])).days ===
-      rules.planning.consecutiveWeekendGapDays
-    ) {
-      issues.push(
-        issue(
-          "warning",
-          "PLANNING",
-          "PLANNING_WEEKENDS",
-          "Zwei Wochenenden in Folge gearbeitet",
-          "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.",
-          [weekends.get(keys[index])!, weekends.get(keys[index + 1])!],
-          undefined,
-          { rule: "PLANNING_WEEKENDS" },
-        ),
-      );
-    }
-  }
-  return issues;
-}
-
 const datedCompliance = createDatedComplianceCalculator(calculateMonthlyComplianceCoreSteps);
 export const calculateMonthlyComplianceSteps = datedCompliance.steps;
 export const calculateMonthlyCompliance = datedCompliance.calculate;
@@ -596,6 +520,7 @@ function* calculateMonthlyComplianceCoreSteps(
   timeZone: string,
   options: ComplianceOptions = {},
 ): Generator<number, MonthlyComplianceResult, void> {
+  const originalShifts = shifts;
   const dutyIssues = specialDutyComplianceIssues(shifts, month);
   const isPlannedSplitBreak = createSplitDutyBreakCheck(shifts);
   shifts = projectDutyShifts(shifts);
@@ -625,16 +550,43 @@ function* calculateMonthlyComplianceCoreSteps(
   const baseEnd = getLegalCalculationEnd(monthEnd, calculationWindow);
   const yearStart = Temporal.PlainDate.from({ year: first.year, month: 1, day: 1 });
   const yearEnd = Temporal.PlainDate.from({ year: first.year, month: 12, day: 31 });
-  const start = (
+  const legalStart = (
     calculationWindow.calendarYearCoverage && Temporal.PlainDate.compare(yearStart, baseStart) < 0
       ? yearStart
       : baseStart
   ).toString();
+  const weekendStart = planningWeekendCoverageStart(month);
+  const start = legalStart < weekendStart ? legalStart : weekendStart;
   const end = (
     calculationWindow.calendarYearCoverage && Temporal.PlainDate.compare(yearEnd, baseEnd) > 0
       ? yearEnd
       : baseEnd
   ).toString();
+  const weekend = options.skipWeekendAssessment
+    ? null
+    : yield* checkPlanningWeekendsSteps(month, originalShifts, timeZone, {
+        allEmploymentWorkRecorded: options.allEmploymentWorkRecorded,
+        employmentProfile: options.employmentProfile,
+        coverageStart: start,
+        coverageEnd: Temporal.PlainDate.from(end).add({ days: 1 }).toString(),
+      });
+  const weekendPlanningIssues = weekend?.issues ?? [];
+  const withWeekends = (result: MonthlyComplianceResult): MonthlyComplianceResult => ({
+    ...result,
+    ...(weekend ? { weekendAssessment: weekend.assessment } : {}),
+    // Youth findings keep their own short legal ranges; the result also retains
+    // the fully loaded horizon needed by weekend checks and dated aggregation.
+    assessmentRange: {
+      from:
+        result.assessmentRange && result.assessmentRange.from < start
+          ? result.assessmentRange.from
+          : start,
+      through:
+        result.assessmentRange && result.assessmentRange.through > end
+          ? result.assessmentRange.through
+          : end,
+    },
+  });
   const preparation = prepareComplianceIntervalsIncrementally(shifts, timeZone);
   while (true) {
     const step = preparation.next();
@@ -657,17 +609,24 @@ function* calculateMonthlyComplianceCoreSteps(
     (shift) => shift.deletedAt === null && shift.date >= start && shift.date <= end,
   );
   if (options.youthProtection === true) {
-    return calculateSimpleYouthCompliance(month, intervals, options, [
-      ...dutyIssues,
-      ...checkDuplicates(assessmentIntervals),
-      ...checkOverlaps(assessmentIntervals),
-      ...checkPlanningSeries(assessmentIntervals, rules),
-    ]);
+    return withWeekends(
+      calculateSimpleYouthCompliance(month, intervals, options, [
+        ...dutyIssues,
+        ...weekendPlanningIssues,
+        ...checkDuplicates(assessmentIntervals),
+        ...checkOverlaps(assessmentIntervals),
+        ...checkPlanningSeries(assessmentIntervals, rules),
+      ]),
+    );
   }
   if (shifts.length === 0) {
     // No duty-dependent finding is possible without any entry in the entire loaded horizon.
     // Catalog coverage and calendar-year notices still use the authoritative helper.
-    const issues = [...dutyIssues, ...checkEvidenceCompleteness(month, [], options, rules)];
+    const issues = [
+      ...dutyIssues,
+      ...weekendPlanningIssues,
+      ...checkEvidenceCompleteness(month, [], options, rules),
+    ];
     issues.push(
       ...(yield* checkSundayHolidayRestIncrementally(
         month,
@@ -683,7 +642,7 @@ function* calculateMonthlyComplianceCoreSteps(
         end,
       )),
     );
-    return finishMonthlyCompliance(month, issues, start, end);
+    return withWeekends(finishMonthlyCompliance(month, issues, start, end));
   }
   const nightWorkerQualification = qualifyAsNightWorkerIncrementally(
     intervals,
@@ -702,7 +661,15 @@ function* calculateMonthlyComplianceCoreSteps(
     yield step.value;
   }
   yield 1;
-  const issues: ComplianceIssue[] = [...dutyIssues];
+  const issues: ComplianceIssue[] = [...dutyIssues, ...weekendPlanningIssues];
+  issues.push(
+    ...(yield* checkTariffWorkingTimeSteps(month, originalShifts, timeZone, {
+      employmentProfile: options.employmentProfile,
+      employmentAssessmentPeriod: options.employmentAssessmentPeriod,
+      referenceDate: referenceDate.toString(),
+      youthProtection: options.youthProtection,
+    })),
+  );
   issues.push(
     ...checkEvidenceCompleteness(
       month,
@@ -784,9 +751,18 @@ function* calculateMonthlyComplianceCoreSteps(
     yield step.value;
   }
   yield 7;
-  issues.push(...checkPlanningSeries(assessmentIntervals, rules));
+  const scientificNightPlanning = (options.sectorId ?? "care") === "care";
+  issues.push(...checkPlanningSeries(assessmentIntervals, rules, !scientificNightPlanning));
+  if (scientificNightPlanning)
+    issues.push(
+      ...(yield* checkPlanningNightsSteps(intervals, originalShifts, timeZone, {
+        allEmploymentWorkRecorded: options.allEmploymentWorkRecorded,
+        coverageStart: start,
+        coverageEnd: end,
+      })),
+    );
   // Include the end day of overnight services. Shared replacement-day assignment,
   // night-worker qualification and even checks without findings depend on this
   // entire loaded horizon, not just on each finding's display date.
-  return finishMonthlyCompliance(month, issues, start, end);
+  return withWeekends(finishMonthlyCompliance(month, issues, start, end));
 }

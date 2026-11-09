@@ -54,6 +54,7 @@ const view = (
   data = emptyData,
   compliance: MonthlyComplianceResult | null = emptyChecks,
   error: string | null = null,
+  showPlanning = true,
 ) => (
   <MonthOverview
     month={month}
@@ -61,17 +62,48 @@ const view = (
     profile={forecastProfile}
     compliance={compliance}
     checkError={error}
-    showPlanning
+    showPlanning={showPlanning}
     annualPayments={[{ revision: 1, payoutMonth: month, grossCents: 50000, netBasis: null }]}
     netPay={<Text>Basis-Netto vorhanden</Text>}
   />
 );
 describe("empty month presentation", () => {
+  it.each<[boolean, 0 | 2]>([
+    [true, 0],
+    [false, 0],
+    [true, 2],
+    [false, 2],
+  ])(
+    "keeps an empty month neutral without weekend statistics (planning %s, open %s)",
+    async (showPlanning, unknownCount) => {
+      const checks: MonthlyComplianceResult = {
+        ...emptyChecks,
+        weekendAssessment: {
+          policyVersion: "2026-11-09-four-weeks",
+          month,
+          weekends: [],
+          windows: [],
+          totalCount: 5,
+          occupiedCount: 0,
+          freeCount: 5 - unknownCount,
+          unknownCount,
+        },
+      };
+      const screen = await render(view(emptyData, checks, null, showPlanning));
+      expect(screen.getByText("Keine Dienste eingetragen")).toBeVisible();
+      expect(screen.queryByLabelText("Gesetz & Tarif: Keine Auffälligkeiten")).toBeNull();
+      expect(screen.queryByLabelText(/^Belegte Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Vollständig freie Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Offene Wochenenden:/)).toBeNull();
+      expect(screen.queryByRole("button", { name: /Wochenendübersicht/ })).toBeNull();
+    },
+  );
+
   it("shows a neutral empty state without waiting or a positive check seal", async () => {
     const screen = await render(view(emptyData, null));
     expect(screen.getByText("Keine Dienste eingetragen")).toBeTruthy();
     expect(screen.queryByText("Wird geprüft …")).toBeNull();
-    expect(screen.queryByLabelText("Gesetzliche Prüfung: Keine Auffälligkeiten")).toBeNull();
+    expect(screen.queryByLabelText("Gesetz & Tarif: Keine Auffälligkeiten")).toBeNull();
   });
   it("shows fixed pay and annual payment in the original salary rows", async () => {
     const screen = await render(view());
@@ -104,7 +136,7 @@ describe("empty month presentation", () => {
     };
     const screen = await render(view(emptyData, checks));
     expect(screen.queryByText("Keine Dienste eingetragen")).toBeNull();
-    expect(screen.getByLabelText("Gesetzliche Prüfung: 1 Warnung")).toBeTruthy();
+    expect(screen.getByLabelText("Gesetz & Tarif: 1 Warnung")).toBeTruthy();
     const data = {
       ...emptyData,
       complianceShifts: { ok: true as const, value: [forecastShift({ date: "2026-10-31" })] },
@@ -112,7 +144,7 @@ describe("empty month presentation", () => {
     await screen.rerender(
       view(data, { ...checks, issues: [{ ...checks.issues[0], rule: "ARBZG_11_SUNDAY_REST" }] }),
     );
-    expect(screen.getByLabelText("Gesetzliche Prüfung: 1 Warnung")).toBeTruthy();
+    expect(screen.getByLabelText("Gesetz & Tarif: 1 Warnung")).toBeTruthy();
   });
   it("resumes checking when a shift is added and keeps errors above the empty state", async () => {
     const screen = await render(view());

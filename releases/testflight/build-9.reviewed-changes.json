@@ -77,8 +77,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "226817976d92e5f610fd244b3b36d3498e92313a3090a44c1af966f02359e748",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove the disabled-planning notice from the annual overview and check detail, preserving data coverage, errors, financial behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "35542ddc160a5a673b4736b290edf0cd62d251186f8a41d4c9bc8429a2bd37e6",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate prerequisite and scope disclosure into one expandable annual status, with bounded empty copy; retain original counts and month navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/salary-summary-card.tsx",
@@ -149,8 +149,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "a2a43fb3c71d88c2831ee01a2e9fa3c825106fadca1b843b4df12ee45facdbd1",
-      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes."
+      "sha256": "840dc12f0afc0d1147a370bd494e16f264aedab4212325ff8240cdb6aa26916c",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
@@ -191,14 +191,14 @@
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
       "kind": "modified",
-      "sha256": "a060f44c0e3749c88741bc9d965668f3f17c6be08e09ded9b7aab92e0fa5456e",
-      "reason": "Paket 4 correction: add standalone NetListCard using the existing analysis-card design and remove the net-row slot from PayListCard. Preserve gross component amounts and loading row height; preserve Preview Luftig row metrics. Rename the planning overview row to Dienstfolgen & Erholung and present its unchanged counts as Hinweise with a muted Info icon. Keep the original neutral row structure, legal warning labels/icons, loading/empty states and master salary-card geometry. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "cdfd92d2a762ebf759c6b67b99b73f6258e08e30c4b3cf37b7ed911c1acc4065",
+      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending. Dienstplan-Check local implementation: Use Dienstplan-Check and Gesetz & Tarif labels while preserving the neutral overview, original counts, icons, layout and navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Keep compact neutral month statistics visible independently of the recommendations switch. Compact-list implementation: Remove permanent monthly weekend statistics from the analysis card while retaining category counts and limited-check status. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "7ccc6f8047212b567c468813c4ee4fa9bdbb808a992c0fd32c93197f40fef2f1",
-      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read."
+      "sha256": "d39bbfe66cf55d6d6ff6bc98e32e92e659803ce1667b7e7916f5cad497223d8a",
+      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read. Weekend implementation: Retain monthly weekend statistics for genuine empty months and zero findings. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
@@ -239,8 +239,8 @@
     {
       "path": "src/features/analysis/annual-details-screen.tsx",
       "kind": "modified",
-      "sha256": "e76cd1e27a0d87bbaab555b8d8d8b46c3fb89daa7544eee9e5b6672d66cd2998",
-      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year. Package A: pause annual detail work on blur without discarding results for still valid inputs, across all six detail sections. Preserve routes and existing layout. Device acceptance pending."
+      "sha256": "94bc359872a7e2586e4d60e7301c78b4b8f4e87cc50cf181b3b6a8f0918a90b5",
+      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year. Package A: pause annual detail work on blur without discarding results for still valid inputs, across all six detail sections. Preserve routes and existing layout. Device acceptance pending. Dienstplan-Check local implementation: Use the common Dienstplan-Check title for the existing annual check route. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/use-annual-salary-payments.ts",
@@ -257,8 +257,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "8f46fb72bd32ff35f58d9bfd4af79f8e87b4d7fa063898ee424f92474f8736d0",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove the disabled-planning notice above monthly analysis while preserving preference loading/error notices, legal findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "757e89203df23ac3e472e65b2dcc92cc1fcd20d6f26a4e25d621a2fde81481eb",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -323,8 +323,8 @@
     {
       "path": "src/ui/reorderable-list.tsx",
       "kind": "modified",
-      "sha256": "ac9647109d31c8c1f13666b0b8dce3d2d0f54a420a9a1d33a41f4c711965e838",
-      "reason": "Retain the existing card family while reusing normal row content during sorting and adding template edit chevrons. Sortierkorrektur am 2026-11-07 auf dem iPhone abgenommen: Nutzerfeedback \"ja das past\", Preview-Gruppe 17b65ab2-f71f-4e82-becd-f4a1374a6165, Update 01a1b421-f0c8-797f-b232-2ab73dbd7d39. Nur der Sortierumfang gilt als abgenommen; fuer die parallel erhaltene Planungshinweis-Korrektur wird keine eigene Abnahme abgeleitet. Git-Integration gemaess vereinbartem Ablauf nach Abnahme; keine neue TestFlight-/Production-Veroeffentlichung."
+      "sha256": "2bd8a376e9ec0275e5b21691aed32710812e7e9eb5855471db8165004bb85bdc",
+      "reason": "Remove the visible sorting instruction and its spacing as requested on 2026-11-07. Preserve drag-and-drop behavior, VoiceOver guidance and the accepted Luftig presentation. Local candidate only; iPhone acceptance and publication remain pending. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. Keep the sorting card overflow visible throughout lift, drag and drop, avoiding Fabric shadow-clipping container reparenting while preserving the existing LUNA card and all reorder/persistence logic. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/ui/reorderable-row.tsx",
@@ -335,68 +335,326 @@
     {
       "path": "src/features/analysis/check-visibility.ts",
       "kind": "modified",
-      "sha256": "e3beb6fe4e192fe4f30bd0be14cbd2515f8748bb71d1f583632a7d73fce20f82",
-      "reason": "Remove only the unused disabled-planning notice string. Preserve every selector, filter and internal count. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "b291bf3959ad6377faadee347a9515714d77031d8a905e97461f780e34eeaa85",
+      "reason": "Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Remove precisely retired planning observations and recompute projected prerequisite counters while preserving legal and unknown findings. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/compliance-day-list.tsx",
       "kind": "modified",
-      "sha256": "685e9805214f2b00d4da81d6585189ee1056359e159f6cf52929f7cb81d0d018",
-      "reason": "Remove the disabled-planning notice above day-based results, including the empty state. Preserve legal findings, prerequisites, filtering and day grouping. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "d0517ac675334c9cae6a918642f56ddf54086b36b8a314a291cbcdd3d7d0eb6b",
+      "reason": "Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Render lossless planning groups and one compact prerequisite/scope status with bounded empty wording, preserving raw findings and separate recommendation visibility. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Expose common monthly weekend counts in the existing day-list renderer even without recommendation cards. Compact-list implementation: Use the compact per-date planning list and remove the permanent weekend statistics without changing underlying findings. Simple end-user check: Use the shared conservative grouping for tariff observations in the primary renderer while keeping planning and legal findings reachable. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/compliance-details.tsx",
       "kind": "modified",
-      "sha256": "0face6f88fcf55ae06533e27bd58445dbb43cb54d86ce89ff5b31d01b264da8c",
-      "reason": "Label planning groups Dienstfolgen & Erholung with scientific category, neutral surfaces, petrol outline and muted Info icon. Use Hinweis/Hinweise for planning accessibility. Remove the disabled notice. Preserve legal severity icons/labels, data and expansion behavior. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "d63838fc8a16ff51e649d3efb90c8119ea49d484f6dbafa83fcec424dea896d8",
+      "reason": "Render grouped Dienstfolgen & Erholung cards with the approved petrol outline and neutral surface. Per iPhone feedback, use a muted Info icon and Hinweis/Hinweise in the count and accessibility hint for planning groups. Preserve legal findings, icons, severity labels, counts and expansion behavior. iPhone visual acceptance of the Info-icon correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Apply identical categories, bounded status, lossless recommendation grouping and profile timezone in the secondary check renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Expose the same weekend assessment in the secondary details renderer without duplicating service lists. Compact-list implementation: Apply the same compact planning list to the secondary renderer and remove its permanent weekend overview. Simple end-user check: Apply the same tariff grouping and short-copy behavior to the secondary renderer without altering engine findings or raw counts. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/compliance-issue-content.tsx",
       "kind": "modified",
-      "sha256": "4389dae5eac6bd7577e3a31c061a5c56450bc54ec50556ae4c1f58fae58513c4",
-      "reason": "Present day-based Dienstfolgen & Erholung hints with neutral surface/text, petrol border and muted Info icon. Announce Hinweis for planning. Preserve raw issue severity, timelines, affected shifts and legal warnings. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "19bb8118071719716d95752d047e8343aaf2031e4eadf2804c3f3707f213845b",
+      "reason": "Render Dienstfolgen & Erholung day cards with the approved neutral fills/text and petrol border. Per iPhone feedback, use a muted Info icon and announce Hinweis for planning findings. Preserve all rule data, raw severity, timelines, shift details and legal severity icons/labels. iPhone visual acceptance of the Info-icon correction pending. User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Default related duties to a collapsed, accessible compact table; preserve individual shift colors and explicit overnight rollover. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Dienstplan-Check local implementation: Show concrete observations and compact comparison values with accessible details for all result categories, preserving grouped original observations and a single collapsed union duty table. Local validation only; new iPhone acceptance and OTA approval remain separate. Compact-list implementation: Reuse the existing detail sheet for compact planning rows while retaining full statutory and tariff cards and native design tokens. Simple end-user check: Use consistent concise tariff copy in cards and retain grouped original observations, periods and duties in accessible details. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/analysis/check-presentation.ts",
       "kind": "added",
-      "sha256": "7fe439d28c5f633eec1500074d0f354d383c5b1c698b40b12e8e3d717dc0c6fe",
-      "reason": "Centralize the approved title/subtitle and category labels plus the petrol hint-border renderer. No rule thresholds, stored keys, native values or global fills/text colors are changed. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "fb3ad30c867658f973430f52799cf5f4a5cdd7d18fc56d53b5c9dc2fcc25ffb4",
+      "reason": "Add the approved Dienstfolgen & Erholung labels and the planning-card renderer. Following iPhone feedback, render only a semantic petrol border on actual hints; retain standard muted labels and existing card fills. No check thresholds or persisted values change. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Use explicit result categories with neutral recommendations, blue tariff and warm statutory borders on neutral surfaces; preserve semantic status behavior elsewhere. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Present the new planning observation neutrally and retire the old three-weekend wording. Compact-list implementation: Keep fallback recovery recommendations consistent with the single applicable 24- or 48-hour tier. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/settings/check-settings-screen.tsx",
       "kind": "modified",
-      "sha256": "4f537bb05777f6426b163a2eb91f87ed475744c22ced3fcca523caab578e492c",
-      "reason": "Use the approved Dienstfolgen & Erholung title/subtitle and scientific category on the existing neutral preference card. Preserve both persisted switches, youth/legal behavior and navigation. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "6995dd82e0631a1b2612a52d50291660e8ae317045261f65f636661c8e81e564",
+      "reason": "Use the approved title/subtitle and scientific category while retaining both existing switches. Restore the planning setting card to the same neutral surface/border as the legal setting card per iPhone feedback. Preserve saved preferences and legal/youth behavior. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Explain the supported integrated Gesetz & Tarif scope while retaining the separate recommendation toggle and neutral settings cards. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/report-export/report-data.ts",
       "kind": "modified",
-      "sha256": "a41725ae85b726bf27803725920e2fcd6e4f41c1374c42737bd5365ff5e472d4",
-      "reason": "Align the human-readable exported check record title with Dienstfolgen & Erholung. Preserve all source values and export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes. Annual PDF uses the same PAYOUT preparation, saved profile, dated net settings, payout preferences, test-month exclusions and annual summary helpers as the annual net view. Include available base net when the annual payment lacks a net basis; preserve partial-payment warnings and genuine zero values. Calendar CSV, monthly PDF, rules, formulas and stored data are unchanged. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
+      "sha256": "ab57ddbd3837b7dae82ef2a6902913d8969b857358e889cffec586a45f866044",
+      "reason": "Align the exported check record title with Dienstfolgen & Erholung. Preserve source values and export coverage. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/report-export/report-document.ts",
       "kind": "modified",
-      "sha256": "32672c3d1a709a06b18c472a6fe293ea453026e8f6bd2d860b963a5fd53be7b3",
-      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys, raw counts and full export coverage. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "af28226c7b4269f77d80049d8f2d7cabe874c6fac1d2bd8846f352b137e50fe5",
+      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys and complete export coverage. iPhone visual acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use readable German labels for the newly exported weekend facts; do not change exported values or pay calculations. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Label new weekend evidence readably in exports while preserving salary and time calculations. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/report-export/report-view-data.ts",
       "kind": "modified",
-      "sha256": "0a851ef03b8639768dbec40f628670d182f37fcfdb70090fdaba5bb4415ed54b",
-      "reason": "Align the human-readable planning-category comparison and annotation with the renamed export label. Preserve exported findings and calculations. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes. Read the available annual monthly net values already recorded by the shared preparation. Remove the second annual-payment exclusion so monthly values, total and coverage match the annual net view; retain provisional and incomplete-payment notices. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
+      "sha256": "5fdc07fbdb99ef3abab6026591a06cc6bb0ccbbd8b03d08569e02cf76ebc54c0",
+      "reason": "Align the human-readable planning category comparison and annotation with the renamed export label. Preserve findings and calculations. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/theme/palette-values.ts",
       "kind": "modified",
-      "sha256": "7e22623fc7cfad468a57bce1a0e1edde1487b1615d0348a66924436d47fa5716",
-      "reason": "Add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint outlines. Existing palette fields/values are unchanged. This task scope was accepted on iPhone on 2026-11-07, Preview group a28e6587-9ff8-4833-95cd-0e2f3171f62b. The Git delivery preserves current master and excludes independent Luftig changes."
+      "sha256": "694cb7e1e23f4771110e3542cbcf8bcf00a1ce5d6f3441c2426e4bf31eea7612",
+      "reason": "Preserve the established light/dark palette and add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint card outlines. Remove the provisional violet planning fill/text tokens per iPhone feedback. Existing palette colors remain unchanged. iPhone visual acceptance of this correction pending. Dienstplan-Check local implementation: Add independent check-specific light/dark blue and warm border tokens; preserve the global status and palette values. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     },
     {
       "path": "src/features/report-export/report-export-button.tsx",
       "kind": "modified",
       "sha256": "1447a3a3930e06f571ae9f7e67faebaa0f08c5c0883211ed2c25202e1f3578a0",
       "reason": "Load saved payout preferences only for an annual PDF with salary. Pass the saved raw profile for annual net preparation while retaining the enriched calculation profile for other report parts. Preserve cancellation, safe error handling and the calendar-only CSV path. iPhone acceptance confirmed on 2026-11-07: annual net and PDF match in Preview group e6a1ade7-2cca-4c72-b606-49a23a226eda. Commit and GitHub sync authorized; keep Luftig. Premium remains deferred."
+    },
+    {
+      "path": "app/check-settings.tsx",
+      "kind": "modified",
+      "sha256": "51973bdeb7ba77211e803d355f9cff2ff62b50385850d6ac444427e4ef7b70c7",
+      "reason": "Dienstplan-Check local implementation: Use the common Dienstplan-Check settings route title. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/compliance-issue-facts.ts",
+      "kind": "modified",
+      "sha256": "7bad20ad3fe1329ab284bd62a4567e85e51f788a84fca0360e683027f4168c68",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. User-requested local check correction: Validate new counted weekend-series facts while retaining historical facts without invented counts. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Validate the new four-week weekend facts without reinterpreting retired three-weekend observations. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/planning-guidance-policy.ts",
+      "kind": "added",
+      "sha256": "b14afb87708cad3dee98165f1e6cd7a3dc9fed73868e87a00ae30298f60fc132",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/planning-night-policy.ts",
+      "kind": "added",
+      "sha256": "2043f15be8e369b495e5927241de5ad9fd661ca2664f93df8196ae3aa575e5d6",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/planning-weekend-policy.ts",
+      "kind": "added",
+      "sha256": "64d7ede19e6c57aa399ab8d7701d89941bd24b32648f82038c27da16bfec16e3",
+      "reason": "User-requested local check correction: Restore the explicitly requested optional third-weekend trigger with transparent BGW source and no invented legal maximum. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Represent and validate calendar-aligned four-week evidence and the sourced BAuA two-free-weekend criterion. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/tariff-compliance-validation.ts",
+      "kind": "added",
+      "sha256": "713677619dc01a578249c7a4c763da3d2aed9825d747b5b5617907c6361dc117",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/tariff-compliance.ts",
+      "kind": "added",
+      "sha256": "401c9d03dd28aafc84aa0a9a4733552fceb873081ef4a214f7518ad5f4c52120",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/tariff-time-policy.ts",
+      "kind": "added",
+      "sha256": "37a9fd5cf34fbd2bde279160519ee2ec0dcf4138ae468c28d57f14abb56889d8",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Use the verified official TV-H employer PDF for the existing narrowly scoped tariff policy. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/domain/types.ts",
+      "kind": "modified",
+      "sha256": "33a12b08281c7023473e4d582805adef22ffa464750148f6f7653d5f1819faf3",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/compliance-issue.ts",
+      "kind": "modified",
+      "sha256": "2a14eb6afa41e0408656832c4cc1b6fa2a195401884ed2d617001f07b053b036",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/compliance-planning-series.ts",
+      "kind": "added",
+      "sha256": "e708e1d8e95a62ce7073abd5f2ac77ac0b710232264a2b5a4753f05b5a1c68c2",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local consistency correction: Use the shared product threshold of four nights in every existing series-check branch, including simple youth checks; preserve all recovery logic and statutory catalog packages. No new device acceptance or publication is asserted. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/compliance-version.ts",
+      "kind": "added",
+      "sha256": "0e1068741794fa3160d8d90a11c00cde28d697cd4b6fe2fd28fcdc52d7c09b1c",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Invalidate prior monthly and annual check results after the corrected rule semantics. Preserve all other accepted Preview sources; no device acceptance or release is asserted. User-requested local consistency correction: Recalculate monthly and annual derived checks after the corrected fourth-night trigger and youth text. No new device acceptance or publication is asserted. Weekend implementation: Invalidate monthly and annual results calculated under the retired weekend trigger. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/compliance.ts",
+      "kind": "modified",
+      "sha256": "b59fe68a74b08476e5069085977e3de3aee54c5a8c8707dfef2e71b77eb789c8",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Connect weekend guidance to ordinary, youth and availability-only calendars without changing statutory or pay rules. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Calculate weekend statistics in adult, youth and empty-month paths without changing statutory checks. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/dated-compliance.ts",
+      "kind": "modified",
+      "sha256": "6963cf7b849e9464264e5c88d167b26b21c75b7c15a1fe5ca52eb1e9b755ea80",
+      "reason": "Weekend implementation: Recalculate final weekend evidence across the entire loaded profile history rather than keeping a segment model. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/planning-night-recovery.ts",
+      "kind": "added",
+      "sha256": "72128cbac5b5ba19ee76ad7a882c8cb38954fdf5ce9e220a6863d4d55c38ac05",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/planning-weekends.ts",
+      "kind": "added",
+      "sha256": "6d7de370c201cea0e968635341d3619c8e708f4a731fa608cc544855a0a3e98c",
+      "reason": "User-requested local check correction: Recognize consecutive weekend duty commitments from actual recorded intervals across months and zones; blank dates never prove freedom. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Replace the three-weekend trigger with one monthly observation for fully assessable four-week windows below two free weekends; preserve uncertain coverage. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/simple-youth-duty-week.ts",
+      "kind": "modified",
+      "sha256": "54ce7ce0b71695c10d7cc085c8290142855e0d03980482acfce1d584c99dcbd5",
+      "reason": "User-requested local consistency correction: Correct the youth weekday-holiday replacement description to a school-free working day in the same or following week under section 18(3) JArbSchG. No new device acceptance or publication is asserted. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/tariff-compliance-context.ts",
+      "kind": "added",
+      "sha256": "f452e725b877d77f0ffa7f12e978ca8d3ef569f7b2e84e5c82a3a9de8aec5f16",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/engine/tariff-compliance.ts",
+      "kind": "added",
+      "sha256": "50b75c1abba1c5155da484b22c32d4daa2dc2e891b29f357bcfcd4ae07967288",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Do not flag six recorded weekdays by count alone; retain neutral, scoped review of seven days in the same week. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Observe two occupied Sundays independently as REVIEW or PENDING with explicit scope, regularity and period prerequisites. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/analysis-compliance-cache.ts",
+      "kind": "modified",
+      "sha256": "67d4b762ac3b828a9b9eca4764eb4208084a6c6507bc15b52565fea218751d8e",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/analysis-data.ts",
+      "kind": "modified",
+      "sha256": "ec92920a326f1a29e7ee8fadb4ec2ec4f554b00cce981d2db3234674eaa8e3d4",
+      "reason": "Weekend implementation: Load the full four-week lookback plus possible special-duty spillover for January and other month boundaries. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/annual-core-report.ts",
+      "kind": "modified",
+      "sha256": "a06b31b33c3ededed8c5dc199ef61189bf6a13e537de39491028f10eca0d1d34",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/annual-report.ts",
+      "kind": "modified",
+      "sha256": "579f982aad62537caeacb06f5589769f5a5a2f06faa4acb4a1f8544781b67326",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-copy.ts",
+      "kind": "added",
+      "sha256": "5c62556d8791349b6cb197a3ee3d27e99994e0c58efb0452525e46a74047db59",
+      "reason": "Dienstplan-Check local implementation: Share the Dienstplan-Check category, status and supported-scope empty-state wording across existing check surfaces. Local validation only; new iPhone acceptance and OTA approval remain separate. Simple end-user check: Use the plain-language limited-check label consistently in monthly and annual views without changing check completeness semantics. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-detail-disclosure.tsx",
+      "kind": "added",
+      "sha256": "b7119d6feed2fe360d863a1b18dd5d063fa0199c1d210cae71a7a2b480b8a515",
+      "reason": "Simple end-user check: Provide an initially closed accessible disclosure using existing LUNA tokens and a minimum 44-point touch target. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-display-groups.ts",
+      "kind": "added",
+      "sha256": "1e79017d4903d6f078a1a8b43de56ea54f1d296d1ead712b35a6f18333f74df9",
+      "reason": "Dienstplan-Check local implementation: Purely group proven compatible known planning observations without changing originals, anchors or raw counts; reject missing, ambiguous or conflicting duty evidence. Local validation only; new iPhone acceptance and OTA approval remain separate. Simple end-user check: Conservatively group only fully supported overlapping tariff observations with matching rule, status and tariff evidence while retaining all originals. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-prerequisites-card.tsx",
+      "kind": "modified",
+      "sha256": "aebaa5963903c3d8125209dfd6ca778b411f456d0bd5dc8c64a66cf2ffa2622b",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate missing inputs and scope limits into one neutral initially compact status sheet; retain original findings, sources, tariff details and setup action, closing the sheet before navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Simple end-user check: Explain real check limitations once and expose a profile action only when a concrete supported question can be edited. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-scope-disclosure.tsx",
+      "kind": "modified",
+      "sha256": "48a7e8362ece9b9d424ee135a8b612ea7662269eb8ec1da71bba2916ed00c910",
+      "reason": "Dienstplan-Check local implementation: Allow the existing scope explanation to be embedded in the unified status without changing its content. Local validation only; new iPhone acceptance and OTA approval remain separate. Simple end-user check: Keep check coverage and limitations accessible in concise existing disclosure UI without pretending complete verification. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/check-summary-card.tsx",
+      "kind": "modified",
+      "sha256": "7ea78715f379f03d7e9cd83d103b97584301f5db6f8ff883ab6300e32d11e370",
+      "reason": "Dienstplan-Check local implementation: Bound empty states to supported checks and make an incomplete assessment explicit. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/compliance-details-screen.tsx",
+      "kind": "modified",
+      "sha256": "a78e30469244559151b16ee6a06549d8ad766adb3e50b5b5612058082cba0b33",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-legacy.ts",
+      "kind": "modified",
+      "sha256": "c30d7c907e0c12ac8e2d0516818cd9328ca15c145283f4b7ca89e226cf2c2138",
+      "reason": "Weekend implementation: Stop rewriting retired weekend observations into a current recommendation. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/compliance-issue-summary.ts",
+      "kind": "modified",
+      "sha256": "5b704490e92a837d48d39404f440a6a8a50c743c4b068d186789f8e125965068",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Weekend implementation: Summarize the tightest eligible four-week window from validated facts rather than calendar-month free counts. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/compliance-timeline.ts",
+      "kind": "modified",
+      "sha256": "c6cf77d6bcaccadc100b388ca22d2f0f2b4dee5398bfbff4376378a2cbb421dc",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. User-requested local check correction: Explain the real end of the final duty without counting an overnight tail as an additional duty. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/legal-check-details.tsx",
+      "kind": "added",
+      "sha256": "1490fff2ad6d3d4467bec2b809e9282b10e6553e98d446c2d22f1f05fc17a2eb",
+      "reason": "Dienstplan-Check local implementation: Expose original statutory findings, applicability limits and fixed official sources under Details ansehen, without inventing sources for data or unknown rules. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/legal-check-presentation.ts",
+      "kind": "added",
+      "sha256": "b498a6d724c7aa9ad8f43b8eeb75493b6841f1dea15dc5d2f0eb5b2fba0c7540",
+      "reason": "Dienstplan-Check local implementation: Map known statutory rule IDs to concise observations and fixed official HTTPS sources while retaining original text and safe unknown/data fallbacks. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/persistent-analysis-values.ts",
+      "kind": "modified",
+      "sha256": "8159cd9b06994bc1127dd660fec72dc03dfb9c7236eb7f84d494e71d7df241c4",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Reject malformed or month-inconsistent cached weekend models and new-rule facts using the shared validator. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/planning-hint-details.tsx",
+      "kind": "added",
+      "sha256": "3acc9ed122a746ba03c36566456797cdf7ba433d192711c94c7844d74f184268",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Show clear actual service-period information and compact duty access inside the existing detail sheet. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Dienstplan-Check local implementation: Retain every grouped recommendation original, explanation and source, with a single initially collapsed table of associated duties. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Explain all observed four-week windows and BAuA source limits behind Details with collapsed services. Compact-list implementation: Explain each structured observation once, retain collapsed duties and sources, and show only affected weekend windows. Simple end-user check: Present each recommendation briefly with collapsed sources and limits, preserving all associated duties and unknown evidence. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/planning-hint-list.tsx",
+      "kind": "added",
+      "sha256": "b26834287ac9cab3c601fd055621129e3b5a41b79b489b7123fc9c68123fb59c",
+      "reason": "Compact-list implementation: Render individually tappable planning rows in a neutral existing LUNA card; consolidate only validated observations of the same night phase. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/planning-hint-presentation.ts",
+      "kind": "added",
+      "sha256": "aebe71e6bf2efd527406f9d840077a5b6d1d23149fd8ad645b80e772c4997beb",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use dynamic weekend facts and the correct BGW recommendation, keeping observation thresholds separate from legal or source-imposed limits. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Show concise observed free-weekend counts and the two-in-four-weeks planning criterion. Compact-list implementation: Provide concise row titles, explicit affected weekend periods and mutually exclusive 24/48-hour recovery wording. Simple end-user check: Keep recommendations concise and retain exclusive 24/48-hour guidance, showing actual free time without the redundant subtraction in list rows. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/tariff-check-details.tsx",
+      "kind": "added",
+      "sha256": "6a370bb2b0d0b56a6161c636da045e5407770da1adedbe1da167405917432cc0",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Keep original tariff rule facts, source and prerequisites in details while showing compact observations and comparison on cards. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Explain the free-Sunday observation and its unconfirmed tariff prerequisites independently from recommendations. Simple end-user check: Show two short explanatory sentences, a compact period and collapsed sources with understandable limits instead of non-actionable confirmation requirements. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/tariff-check-presentation.ts",
+      "kind": "added",
+      "sha256": "973dcc1782f5b8a98ae4c2964ad8b671925642bed617bc6e9e75ca20907d62a1",
+      "reason": "Simple end-user check: Project tariff observations to concise end-user wording while distinguishing planned observations, true unavailability and definite evidence without asserting a violation. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/analysis/weekend-assessment-summary.tsx",
+      "kind": "added",
+      "sha256": "0af8d557f9e1adfa2565d0b4d654f012ff7452895dd77f407fa02904ba02f6e8",
+      "reason": "Weekend implementation: Render common occupied, fully free and open monthly counts with accessible window and source details. Compact-list implementation: Support filtered affected-window details while retaining the existing honest completeness helper and internal assessment contract. Simple end-user check: Show one representative affected four-week period with further affected periods collapsed, retaining all assessed observations and the completeness contract. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+    },
+    {
+      "path": "src/features/settings/settings-screen.tsx",
+      "kind": "modified",
+      "sha256": "b83b6502311b8b4e8c5f1b87faa7eb3bc0c1096d7867529b196465799fd111a5",
+      "reason": "Dienstplan-Check local implementation: Rename the existing settings entry to Dienstplan-Check; preserve the settings structure and route. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
     }
   ]
 }

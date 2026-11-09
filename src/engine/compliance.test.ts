@@ -181,6 +181,23 @@ describe("ArbZG compliance", () => {
     expect(result.issues.some((item) => item.rule === "ARBZG_5_REST_10H")).toBe(true);
   });
 
+  it.each([5, 6])("uses the BAuA work-series orientation for %s consecutive days", (count) => {
+    const entries = Array.from({ length: count }, (_, index) =>
+      shift(`series-${index}`, `2026-07-${String(index + 1).padStart(2, "0")}`),
+    );
+    const result = calculateMonthlyCompliance("2026-07", entries, "Europe/Berlin");
+    expect(result.issues.some((item) => item.rule === "PLANNING_7_DAYS")).toBe(count > 5);
+  });
+
+  it("does not invent a universal every-other-weekend requirement", () => {
+    const result = calculateMonthlyCompliance(
+      "2026-07",
+      [shift("weekend-one", "2026-07-04"), shift("weekend-two", "2026-07-11")],
+      "Europe/Berlin",
+    );
+    expect(result.issues.some((item) => item.rule === "PLANNING_WEEKENDS")).toBe(false);
+  });
+
   it("separates legal issues from planning hints", () => {
     const shifts = Array.from({ length: 7 }, (_, index) =>
       shift(String(index), `2026-07-${String(index + 1).padStart(2, "0")}`),
@@ -192,8 +209,8 @@ describe("ArbZG compliance", () => {
     expect(streak).toMatchObject({ facts: { rule: "PLANNING_7_DAYS", count: 7 } });
   });
 
-  it("allows four consecutive night shifts without a series warning", () => {
-    const shifts = Array.from({ length: 4 }, (_, index) =>
+  it("does not flag three consecutive night shifts as a long series", () => {
+    const shifts = Array.from({ length: 3 }, (_, index) =>
       shift(
         `night-${index + 1}`,
         `2026-07-${String(index + 1).padStart(2, "0")}`,
@@ -209,8 +226,8 @@ describe("ArbZG compliance", () => {
     expect(result.issues.some((item) => item.rule === "PLANNING_NIGHT_SERIES")).toBe(false);
   });
 
-  it("warns from five consecutive night shifts", () => {
-    const shifts = Array.from({ length: 5 }, (_, index) =>
+  it("flags a series from the fourth consecutive night", () => {
+    const shifts = Array.from({ length: 4 }, (_, index) =>
       shift(
         `night-${index + 1}`,
         `2026-07-${String(index + 1).padStart(2, "0")}`,
@@ -227,7 +244,7 @@ describe("ArbZG compliance", () => {
     expect(warning).toMatchObject({
       kind: "PLANNING",
       severity: "warning",
-      title: "Fünf oder mehr Nachtdienste in Folge",
+      title: "4 Nächte in Folge mit Nachtarbeit",
     });
   });
 
@@ -247,6 +264,62 @@ describe("ArbZG compliance", () => {
 
     expect(result.issues.some((item) => item.rule === "PLANNING_NIGHT_SERIES")).toBe(true);
   });
+
+  const nightProfiles = [false, true].flatMap((youthProtection) =>
+    ["care", "hospital", "other"].map((sectorId) => ({ sectorId, youthProtection })),
+  );
+  it.each(nightProfiles.flatMap((profile) => [3, 4, 5].map((count) => ({ ...profile, count }))))(
+    "uses the fourth-night threshold for $sectorId, youth=$youthProtection, nights=$count",
+    ({ sectorId, youthProtection, count }) => {
+      const shifts = Array.from({ length: count }, (_, index) =>
+        shift(`night-${index}`, `2026-11-0${index + 4}`, "21:00", "07:00", 60, "CUSTOM"),
+      );
+      const result = calculateMonthlyCompliance("2026-11", shifts, "Europe/Berlin", {
+        sectorId,
+        youthProtection,
+        allEmploymentWorkRecorded: true,
+        referenceDate: "2026-11-09",
+      });
+      const series = result.issues.filter((item) => item.rule === "PLANNING_NIGHT_SERIES");
+      expect(series).toHaveLength(count >= 4 ? 1 : 0);
+      if (count >= 4)
+        expect(series[0]).toMatchObject({
+          kind: "PLANNING",
+          facts: { rule: "PLANNING_NIGHT_SERIES", count },
+        });
+    },
+  );
+
+  it.each(nightProfiles)(
+    "keeps a fourth night across the month boundary for $sectorId, youth=$youthProtection",
+    ({ sectorId, youthProtection }) => {
+      const shifts = ["2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01"].map((date) =>
+        shift(date, date, "21:00", "07:00", 60, "NIGHT"),
+      );
+      const options = {
+        sectorId,
+        youthProtection,
+        allEmploymentWorkRecorded: true,
+        referenceDate: "2026-11-09",
+      };
+      expect(
+        calculateMonthlyCompliance("2026-10", shifts, "Europe/Berlin", options).issues.filter(
+          (item) => item.rule === "PLANNING_NIGHT_SERIES",
+        ),
+      ).toHaveLength(0);
+      expect(
+        calculateMonthlyCompliance("2026-11", shifts, "Europe/Berlin", options).issues.filter(
+          (item) => item.rule === "PLANNING_NIGHT_SERIES",
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          date: "2026-11-01",
+          kind: "PLANNING",
+          facts: expect.objectContaining({ rule: "PLANNING_NIGHT_SERIES", count: 4 }),
+        }),
+      ]);
+    },
+  );
 
   it("keeps the deferred night-series recovery hint disabled", () => {
     const result = calculateMonthlyCompliance(

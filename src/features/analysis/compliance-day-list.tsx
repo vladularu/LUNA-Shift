@@ -7,11 +7,13 @@ import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { isCheckLimited, selectVisibleCompliance } from "./check-visibility";
-import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { ComplianceIssueContent, checkDate, checkDayParts } from "./compliance-issue-content";
 import { CheckPrerequisitesCard } from "./check-prerequisites-card";
 import { CheckRunnerEgg } from "./check-runner-egg";
-const PRIORITY = { critical: 0, warning: 1, info: 2 };
+import { checkDisplayProjection, groupCheckDisplayIssues } from "./check-display-groups";
+import { CHECK_NOT_ASSESSABLE, CHECK_TITLE, SUPPORTED_CHECKS_EMPTY } from "./check-copy";
+import { weekendAssessmentOpen } from "./weekend-assessment-summary";
+import { PlanningHintList, planningHintGroups } from "./planning-hint-list";
 
 export function ComplianceDayList({
   compliance,
@@ -27,25 +29,47 @@ export function ComplianceDayList({
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3 || width < 360;
-  const visible = selectVisibleCompliance(compliance, showPlanning);
-  const limited = isCheckLimited(visible);
-  const issues = useMemo(
-    () =>
-      [...selectVisibleCompliance(compliance, showPlanning).issues].sort(
-        (a, b) =>
-          a.date.localeCompare(b.date) ||
-          PRIORITY[a.severity] - PRIORITY[b.severity] ||
-          a.id.localeCompare(b.id),
-      ),
+  const visible = useMemo(
+    () => selectVisibleCompliance(compliance, showPlanning),
     [compliance, showPlanning],
   );
-  const days = [...new Set(issues.map((issue) => issue.date))];
+  const limited = isCheckLimited(visible) || weekendAssessmentOpen(compliance.weekendAssessment);
+  const display = useMemo(() => checkDisplayProjection(visible), [visible]);
+  const planningGroups = useMemo(
+    () => planningHintGroups(display.issues, shifts),
+    [display.issues, shifts],
+  );
+  const groups = useMemo(
+    () =>
+      [
+        ...groupCheckDisplayIssues(
+          display.issues.filter((issue) => issue.kind !== "PLANNING"),
+          shifts,
+          timeZone,
+        ),
+        ...planningGroups,
+      ].sort(
+        (a, b) =>
+          a.date.localeCompare(b.date) ||
+          { critical: 0, warning: 1, info: 2 }[a.primary.severity] -
+            { critical: 0, warning: 1, info: 2 }[b.primary.severity] ||
+          a.id.localeCompare(b.id),
+      ),
+    [display.issues, shifts, planningGroups, timeZone],
+  );
+  const days = [...new Set(groups.map((group) => group.date))];
   return (
-    <View style={{ gap: SPACING.lg, flexGrow: issues.length ? undefined : 1 }}>
-      {visible.prerequisiteCount ? <CheckPrerequisitesCard issues={visible.prerequisites} /> : null}
-      {!issues.length ? (
+    <View style={{ gap: SPACING.lg, flexGrow: groups.length ? undefined : 1 }}>
+      {display.prerequisites.length || visible.scopeCount ? (
+        <CheckPrerequisitesCard
+          issues={display.prerequisites}
+          scopeIssues={visible.scopeNotes}
+          shifts={shifts}
+        />
+      ) : null}
+      {!groups.length ? (
         <View
-          testID={limited ? "check-limited" : "check-complete"}
+          testID={limited || display.unavailable ? "check-limited" : "check-complete"}
           style={{
             flexGrow: 1,
             minHeight: 280,
@@ -54,9 +78,7 @@ export function ComplianceDayList({
             gap: SPACING.md,
           }}
         >
-          {limited && !visible.prerequisiteCount ? (
-            <CheckRunnerEgg title="Keine Auffälligkeiten" subtitle="In den geprüften Zeiten." />
-          ) : limited ? (
+          {limited || display.unavailable ? (
             <>
               <Ionicons
                 name="information-circle-outline"
@@ -69,21 +91,19 @@ export function ComplianceDayList({
                 accessibilityRole="header"
                 style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
               >
-                Bisher keine Auffälligkeiten
+                {CHECK_NOT_ASSESSABLE}
               </Text>
               <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}>
-                Angaben fehlen noch.
+                Angaben oder Prüfumfang sind noch offen.
               </Text>
             </>
           ) : (
-            <CheckRunnerEgg
-              title={showPlanning ? "Prüfung abgeschlossen" : "Gesetzliche Prüfung"}
-            />
+            <CheckRunnerEgg title={CHECK_TITLE} subtitle={SUPPORTED_CHECKS_EMPTY} />
           )}
         </View>
       ) : null}
       {days.map((date) => {
-        const dayIssues = issues.filter((issue) => issue.date === date);
+        const dayGroups = groups.filter((group) => group.date === date);
         const [day, month] = checkDayParts(date);
         return (
           <View
@@ -122,19 +142,30 @@ export function ComplianceDayList({
               ) : null}
             </View>
             <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: SPACING.sm }}>
-              {dayIssues.map((issue) => (
-                <ComplianceIssueContent
-                  key={issue.id}
-                  issue={issue}
-                  shifts={shifts}
-                  timeZone={timeZone}
-                />
-              ))}
+              {dayGroups.map((group, index) =>
+                group.primary.kind === "PLANNING" ? (
+                  index === dayGroups.findIndex((item) => item.primary.kind === "PLANNING") ? (
+                    <PlanningHintList
+                      key="planning"
+                      groups={planningGroups.filter((item) => item.date === date)}
+                      shifts={shifts}
+                      timeZone={timeZone}
+                    />
+                  ) : null
+                ) : (
+                  <ComplianceIssueContent
+                    key={group.id}
+                    issue={group.primary}
+                    relatedIssues={group.relatedIssues}
+                    shifts={shifts}
+                    timeZone={timeZone}
+                  />
+                ),
+              )}
             </View>
           </View>
         );
       })}
-      <CheckScopeDisclosure issues={visible.scopeNotes} shifts={shifts} />
     </View>
   );
 }

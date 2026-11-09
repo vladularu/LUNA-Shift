@@ -19,6 +19,16 @@ const amounts = {
   gross: 4980.88,
 };
 const onPress = jest.fn();
+const weekendAssessment = {
+  policyVersion: "2026-11-09-four-weeks",
+  month: "2026-11",
+  weekends: [],
+  windows: [],
+  totalCount: 5,
+  occupiedCount: 3,
+  freeCount: 1,
+  unknownCount: 1,
+};
 function Pay({
   loading,
   annual = false,
@@ -53,6 +63,63 @@ const height = (screen: Screen, busy: boolean) => {
 };
 
 describe("stable analysis card loading rows", () => {
+  it.each([true, false])(
+    "keeps an honest open status without permanent weekend statistics (planning %s)",
+    async (showPlanning) => {
+      const counts = { criticalCount: 0, warningCount: 0, infoCount: 0 };
+      const screen = await render(
+        <CheckListCard
+          counts={counts}
+          categories={{ legal: counts, planning: counts }}
+          showPlanning={showPlanning}
+          onPress={onPress}
+          weekendAssessment={weekendAssessment}
+        />,
+      );
+      expect(
+        screen.getByRole("button", { name: "Dienstplan-Check, Prüfung eingeschränkt" }),
+      ).toBeVisible();
+      expect(Boolean(screen.queryByText("Hinweise & Empfehlungen"))).toBe(showPlanning);
+      expect(screen.queryByLabelText(/^Belegte Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Vollständig freie Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Offene Wochenenden:/)).toBeNull();
+      expect(screen.queryByRole("button", { name: /Wochenendübersicht/ })).toBeNull();
+      await screen.rerender(
+        <CheckListCard
+          counts={counts}
+          showPlanning={showPlanning}
+          onPress={onPress}
+          weekendAssessment={weekendAssessment}
+          status="Keine Dienste eingetragen"
+        />,
+      );
+      expect(screen.getByText("Keine Dienste eingetragen")).toBeVisible();
+      expect(screen.queryByLabelText(/^Offene Wochenenden:/)).toBeNull();
+      await screen.rerender(
+        <CheckListCard
+          counts={counts}
+          showPlanning={showPlanning}
+          onPress={onPress}
+          weekendAssessment={weekendAssessment}
+          loading
+          status="Wird geprüft …"
+        />,
+      );
+      expect(screen.getByLabelText("Gesetz & Tarif: Wird geprüft …")).toBeVisible();
+      expect(screen.queryByLabelText(/^Belegte Wochenenden:/)).toBeNull();
+      await screen.rerender(
+        <CheckListCard
+          counts={counts}
+          showPlanning={showPlanning}
+          onPress={onPress}
+          weekendAssessment={weekendAssessment}
+          status="Nicht verfügbar"
+        />,
+      );
+      expect(screen.getByText("Nicht verfügbar")).toBeVisible();
+      expect(screen.queryByLabelText(/^Vollständig freie Wochenenden:/)).toBeNull();
+    },
+  );
   it("keeps the complete salary row structure while gross finishes without embedding net", async () => {
     const screen = await render(<Pay loading />);
     const before = labels(screen),
@@ -92,7 +159,7 @@ describe("stable analysis card loading rows", () => {
       />,
     );
     const before = labels(screen);
-    expect(before).toEqual(["Gesetzliche Prüfung", "Dienstfolgen & Erholung"]);
+    expect(before).toEqual(["Gesetz & Tarif", "Hinweise & Empfehlungen"]);
     expect(screen.queryByTestId("planning-check-summary")).toBeNull();
     await screen.rerender(
       <CheckListCard
@@ -105,7 +172,7 @@ describe("stable analysis card loading rows", () => {
     );
     expect(labels(screen)).toEqual(before);
     expect(screen.queryByTestId("planning-check-summary")).toBeNull();
-    expect(screen.getByLabelText("Gesetzliche Prüfung: Keine Auffälligkeiten")).toBeTruthy();
+    expect(screen.getByLabelText("Gesetz & Tarif: Keine Auffälligkeiten")).toBeTruthy();
     await screen.rerender(
       <CheckListCard
         onPress={onPress}
@@ -117,11 +184,11 @@ describe("stable analysis card loading rows", () => {
         }}
       />,
     );
-    const planning = screen.getByLabelText("Dienstfolgen & Erholung: 2 Hinweise");
+    const planning = screen.getByLabelText("Hinweise & Empfehlungen: 2 Hinweise");
     expect(
       within(planning).getByTestId("info-glyph", { includeHiddenElements: true }),
     ).toBeTruthy();
-    const legal = screen.getByLabelText("Gesetzliche Prüfung: 1 Warnung");
+    const legal = screen.getByLabelText("Gesetz & Tarif: 1 Warnung");
     expect(
       within(legal).getByTestId("warning-glyph", { includeHiddenElements: true }),
     ).toBeTruthy();

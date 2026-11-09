@@ -11,6 +11,9 @@ import { useAnalysisView } from "./analysis-view-preferences";
 import { isCheckLimited, type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
 import { formatEuro } from "./salary-summary-card";
 import { PLANNING_TITLE } from "./check-presentation";
+import { CHECK_TITLE, LEGAL_TARIFF_TITLE } from "./check-copy";
+import type { PlanningWeekendAssessment } from "@/domain/planning-weekend-policy";
+import { weekendAssessmentOpen } from "./weekend-assessment-summary";
 
 export function AnalysisDashboard({
   cards,
@@ -147,6 +150,7 @@ export function CheckListCard({
   caption,
   loading = false,
   reserveLoadingSpace = false,
+  weekendAssessment,
 }: {
   readonly counts: CheckCounts;
   readonly categories?: ClassifiedCheckCounts;
@@ -156,6 +160,7 @@ export function CheckListCard({
   readonly caption?: string;
   readonly loading?: boolean;
   readonly reserveLoadingSpace?: boolean;
+  readonly weekendAssessment?: PlanningWeekendAssessment;
 }) {
   const { fontScale } = useWindowDimensions();
   const rowHeight = reserveLoadingSpace
@@ -169,13 +174,13 @@ export function CheckListCard({
     status ??
     (total
       ? total + (total === 1 ? " Meldung" : " Meldungen")
-      : isCheckLimited(counts)
+      : isCheckLimited(counts) || weekendAssessmentOpen(weekendAssessment)
         ? "Prüfung eingeschränkt"
         : "Keine sichtbaren Auffälligkeiten");
   return (
     <AnalysisListCard
-      title="Prüfung"
-      label={"Prüfung, " + label}
+      title={CHECK_TITLE}
+      label={CHECK_TITLE + ", " + label}
       onPress={onPress}
       caption={caption}
       busy={loading}
@@ -185,7 +190,7 @@ export function CheckListCard({
           <AnalysisValueRow
             minimumHeight={rowHeight}
             first
-            label="Gesetzliche Prüfung"
+            label={LEGAL_TARIFF_TITLE}
             value="Wird geprüft …"
           />
           {showPlanning ? (
@@ -203,7 +208,7 @@ export function CheckListCard({
           <CheckRow
             minimumHeight={rowHeight}
             first
-            label="Gesetzliche Prüfung"
+            label={LEGAL_TARIFF_TITLE}
             counts={categories.legal}
           />
           {categories.legal.prerequisiteCount ? (

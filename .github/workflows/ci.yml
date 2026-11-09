@@ -40,7 +40,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run test:coverage
+      # V8 instrumentation adds overhead to full-year regression cases.
+      # The normal verify:fast test time limit remains unchanged.
+      - run: npm run test:coverage:unit -- --testTimeout=20000
+      - run: npm run test:coverage:components
 
   production-safety:
     name: production-safety

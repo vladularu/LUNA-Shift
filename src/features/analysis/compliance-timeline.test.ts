@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { complianceTimeline, restDuration } from "./compliance-timeline";
+import { calculateMonthlyCompliance } from "@/engine/compliance";
+import { newSpecialDuty, validateDutyParent } from "@/domain/special-duty";
 const shift = (change: Partial<ShiftEntry> = {}): ShiftEntry => ({
   kind: "SHIFT",
   id: "late",
@@ -50,6 +52,112 @@ const model = (
 ) => complianceTimeline(finding, shifts, timeZone);
 
 describe("check timeline presentation", () => {
+  it("keeps six service-start days but shows the last night ending on the seventh calendar day", () => {
+    const entries = Array.from({ length: 6 }, (_, index) =>
+      shift({
+        id: `series-${index}`,
+        date: `2026-11-${24 + index}`,
+        title: index < 3 ? "Tag" : "Nacht",
+        type: index < 3 ? "DAY" : "NIGHT",
+        startTime: index < 3 ? "08:00" : "21:00",
+        endTime: index < 3 ? "16:12" : "07:30",
+      }),
+    );
+    const result = model(
+      issue({
+        rule: "PLANNING_7_DAYS",
+        kind: "PLANNING",
+        severity: "info",
+        relatedShiftIds: entries.map((entry) => entry.id),
+        facts: { rule: "PLANNING_7_DAYS", count: 6 },
+      }),
+      entries,
+    );
+    expect(result.series).toMatchObject({
+      count: 6,
+      unit: "Diensttage",
+      from: "2026-11-24",
+      until: "2026-11-29",
+      dutyPeriod: {
+        fromDate: "2026-11-24",
+        fromTime: "08:00",
+        untilDate: "2026-11-30",
+        untilTime: "07:30",
+      },
+    });
+  });
+
+  it("does not invent an exact duty period when a related end time is missing", () => {
+    const entries = [
+      shift({ date: "2026-11-28" }),
+      shift({ id: "last", date: "2026-11-29", endTime: null }),
+    ];
+    const result = model(
+      issue({
+        rule: "PLANNING_7_DAYS",
+        kind: "PLANNING",
+        relatedShiftIds: entries.map((entry) => entry.id),
+        facts: { rule: "PLANNING_7_DAYS", count: 2 },
+      }),
+      entries,
+    );
+    expect(result.series).not.toHaveProperty("dutyPeriod");
+  });
+
+  it("keeps a split duty with a later extra part out of the exact parent-based period", () => {
+    const entries = Array.from({ length: 6 }, (_, index) =>
+      shift({ id: `split-series-${index}`, date: `2026-11-${24 + index}` }),
+    );
+    const last = {
+      ...entries[5],
+      startTime: "16:00",
+      endTime: "20:00",
+      breakMinutes: 0,
+      specialDuty: {
+        ...newSpecialDuty("SPLIT", "16:00", "20:00", "Europe/Berlin"),
+        parts: [{ start: 1410, end: 1530, breakMinutes: 0 }],
+      },
+    };
+    expect(() => validateDutyParent(last.specialDuty, last)).not.toThrow();
+    entries[5] = last;
+    const result = model(
+      issue({
+        rule: "PLANNING_7_DAYS",
+        kind: "PLANNING",
+        relatedShiftIds: entries.map((entry) => entry.id),
+        facts: { rule: "PLANNING_7_DAYS", count: 6 },
+      }),
+      entries,
+    );
+    expect(result.series).toMatchObject({ from: "2026-11-24", until: "2026-11-29", count: 6 });
+    expect(result.series).not.toHaveProperty("dutyPeriod");
+  });
+
+  it("uses night-window dates and the correct pair for a combined recovery finding", () => {
+    const entries: ShiftEntry[] = [
+      ...["2026-11-28", "2026-11-29", "2026-11-30", "2026-12-01"].map((date) =>
+        shift({ id: date, date, type: "NIGHT", startTime: "22:00", endTime: "06:00" }),
+      ),
+      shift({ id: "next", date: "2026-12-03", startTime: "05:59", endTime: "14:00" }),
+    ];
+    const finding = calculateMonthlyCompliance("2026-12", entries, "Europe/Berlin", {
+      allEmploymentWorkRecorded: true,
+    }).issues.find((item) => item.rule === "PLANNING_NIGHT_SERIES")!;
+    const timeline = model(finding, entries);
+    expect(timeline.series).toMatchObject({
+      count: 4,
+      unit: "Nächte",
+      from: "2026-11-28",
+      until: "2026-12-01",
+    });
+    expect(timeline.rest).toMatchObject({
+      minutes: 1439,
+      previous: { id: "2026-12-01" },
+      next: { id: "next" },
+    });
+    expect(timeline.note).toContain("23:59 h");
+    expect(timeline.note).toContain("mindestens 24 Stunden");
+  });
   it("uses structured rest minimum and compensation instead of German text", () => {
     const short = {
       ...issue(),
@@ -235,8 +343,8 @@ describe("check timeline presentation", () => {
         description: "Die Serie wird neu beschrieben.",
         facts: { rule, count: 12 },
       };
-      const unit = rule === "PLANNING_7_DAYS" ? "Arbeitstage" : "Nachtdienste";
-      expect(model(structured, seriesShifts).series).toEqual({
+      const unit = rule === "PLANNING_7_DAYS" ? "Diensttage" : "Nachtdienste";
+      expect(model(structured, seriesShifts).series).toMatchObject({
         count: 12,
         unit,
         from: "2026-11-19",
@@ -273,9 +381,9 @@ describe("check timeline presentation", () => {
     },
   );
   it("takes the series count from the engine, with an independently verified date range", () => {
-    expect(model(series, seriesShifts).series).toEqual({
+    expect(model(series, seriesShifts).series).toMatchObject({
       count: 12,
-      unit: "Arbeitstage",
+      unit: "Diensttage",
       from: "2026-11-19",
       until: "2026-11-30",
     });
@@ -289,7 +397,7 @@ describe("check timeline presentation", () => {
   });
   it("keeps the authoritative count without fabricating a range from a partial list", () => {
     const result = model(series, seriesShifts.slice(1));
-    expect(result.series).toEqual({ count: 12, unit: "Arbeitstage", from: null, until: null });
+    expect(result.series).toEqual({ count: 12, unit: "Diensttage", from: null, until: null });
     expect(result.missing).toBe(true);
   });
   it("requires consecutive valid dates before showing a complete series range", () => {

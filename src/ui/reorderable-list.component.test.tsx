@@ -1,7 +1,7 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { useState } from "react";
-import { Animated } from "react-native";
+import { Animated, Text } from "react-native";
 import { PointerType, State, type PanGesture } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { moveListItem } from "@/domain/reorder";
@@ -60,6 +60,51 @@ describe("ReorderableList", () => {
       jest.advanceTimersByTime(500);
     });
   }
+  it.each<[boolean, number | undefined]>([
+    [false, undefined],
+    [true, undefined],
+    [false, 0.5],
+    [true, 0.5],
+  ])(
+    "keeps native clipping stable and preserves custom card geometry (content: %s, border: %s)",
+    async (customContent, borderWidth) => {
+      const screen = await render(
+        <ReorderableList
+          items={
+            customContent
+              ? items.map((item) => ({ ...item, content: <Text>{item.title}</Text> }))
+              : items
+          }
+          onMove={mockMove}
+          cardStyle={borderWidth === undefined ? undefined : { borderWidth }}
+          testID="sort"
+        />,
+      );
+      const restingStyle = { ...screen.getByTestId("sort").props.style };
+      expect(restingStyle.height).toBe(288 + 2 * (borderWidth ?? 1));
+      if (borderWidth !== undefined) expect(restingStyle.borderWidth).toBe(borderWidth);
+      const event = { translationX: 0, translationY: 0, absoluteY: 250 };
+      const gesture = getByGestureTestId("sort-drag-0") as PanGesture;
+      await act(async () => {
+        gesture.handlers.onStart?.(event as never);
+      });
+      expect(screen.getByTestId("sort-row-0").props.accessibilityState.busy).toBe(true);
+      expect(screen.getByTestId("sort").props.style.overflow).toBe(restingStyle.overflow);
+      expect(screen.getByTestId("sort").props.style.overflow).toBe("visible");
+      for (const property of ["boxShadow", "borderRadius", "borderWidth", "backgroundColor"]) {
+        expect(screen.getByTestId("sort").props.style[property]).toEqual(restingStyle[property]);
+      }
+      expect(mockMove).not.toHaveBeenCalled();
+      await act(async () => {
+        gesture.handlers.onUpdate?.({ ...event, translationY: 230 } as never);
+        gesture.handlers.onEnd?.({ ...event, translationY: 230 } as never, true);
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockMove).toHaveBeenCalledTimes(1);
+      expect(mockMove).toHaveBeenCalledWith("0", 3);
+      expect(screen.getByTestId("sort").props.style.overflow).toBe(restingStyle.overflow);
+    },
+  );
   it("retains the landed coordinate throughout the drop handoff and delayed persistence", async () => {
     let complete!: () => void;
     mockMove.mockImplementationOnce(

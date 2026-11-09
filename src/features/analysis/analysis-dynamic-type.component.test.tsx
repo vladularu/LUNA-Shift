@@ -259,8 +259,8 @@ describe("analysis Dynamic Type layout", () => {
     expect(title).toHaveStyle({ alignSelf: "stretch" });
     expect(title.props.numberOfLines).toBeUndefined();
     expect(title.props.maxFontSizeMultiplier).toBe(0);
-    const message = screen.getByText("Keine Auffälligkeiten");
-    const label = screen.getByText("Gesetzliche Prüfung");
+    const message = screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.");
+    const label = screen.getByText("Gesetz & Tarif");
     expect(label.props.maxFontSizeMultiplier).toBe(0);
     expect(message.props.maxFontSizeMultiplier).toBe(0);
     expect(message.props.numberOfLines).toBeUndefined();

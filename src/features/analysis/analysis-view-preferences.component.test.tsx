@@ -272,7 +272,7 @@ describe("analysis view preferences", () => {
       expect(
         StyleSheet.flatten(screen.getByTestId("analysis-setting-WORK", hidden).props.style),
       ).toEqual(row);
-      expect(screen.getByTestId("analysis-sort")).toHaveStyle(card);
+      expect(screen.getByTestId("analysis-sort")).toHaveStyle({ ...card, overflow: "visible" });
       expect(screen.getByTestId("analysis-sort-row-WORK")).toHaveStyle({
         paddingHorizontal: 0,
         paddingVertical: 0,

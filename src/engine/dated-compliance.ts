@@ -3,6 +3,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { employmentMonthPeriods } from "@/domain/employment-history";
 import type { MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import type { ComplianceOptions } from "./compliance";
+import { checkPlanningWeekendsSteps } from "./planning-weekends";
 type Steps = (
   month: string,
   shifts: readonly ShiftEntry[],
@@ -31,6 +32,7 @@ export function createDatedComplianceCalculator(core: Steps) {
       const p = period.profile;
       const result = yield* core(month, shifts, p.timeZone, {
         ...options,
+        skipWeekendAssessment: true,
         employmentAssessmentPeriod: { from: period.from, until: period.until },
         federalState: p.federalState,
         holidayRegion: p.holidayRegion,
@@ -51,8 +53,26 @@ export function createDatedComplianceCalculator(core: Steps) {
         results.flatMap((result) => result.issues).map((issue) => [issue.id, issue]),
       ).values(),
     ];
+    const ranges = results.flatMap((result) =>
+      result.assessmentRange ? [result.assessmentRange] : [],
+    );
+    const coverageStart = ranges.map((range) => range.from).sort()[0];
+    const coverageThrough = ranges
+      .map((range) => range.through)
+      .sort()
+      .at(-1);
+    const weekend = yield* checkPlanningWeekendsSteps(month, shifts, timeZone, {
+      allEmploymentWorkRecorded: options.allEmploymentWorkRecorded,
+      employmentProfile: options.employmentProfile,
+      coverageStart,
+      coverageEnd: coverageThrough
+        ? Temporal.PlainDate.from(coverageThrough).add({ days: 1 }).toString()
+        : undefined,
+    });
+    issues.push(...weekend.issues);
     return {
       ...results[0],
+      weekendAssessment: weekend.assessment,
       issues,
       criticalCount: issues.filter((i) => i.severity === "critical").length,
       warningCount: issues.filter((i) => i.severity === "warning").length,

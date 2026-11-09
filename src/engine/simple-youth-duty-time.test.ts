@@ -195,6 +195,13 @@ describe("simple opt-in youth duty checks", () => {
       "derselben Woche",
     );
   });
+  it("describes a school-free replacement day in the same or following week", () => {
+    const holiday = findings([shift("2026-10-03")], "JARBSCHG_18_HOLIDAY");
+    expect(holiday).toHaveLength(1);
+    expect(holiday[0]?.description).toContain("berufsschulfreier Arbeitstag");
+    expect(holiday[0]?.description).toContain("derselben oder der folgenden Woche");
+    expect(holiday[0]?.description).not.toContain("drei Wochen");
+  });
   it("requires two free Sundays even with the healthcare exception", () => {
     const shifts = ["2026-10-04", "2026-10-11", "2026-10-18"].map((date) => shift(date));
     expect(findings(shifts, "JARBSCHG_17_FREE_SUNDAYS")).toHaveLength(1);

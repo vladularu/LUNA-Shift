@@ -3,6 +3,7 @@ import type { ComplianceIssue, MonthlyComplianceResult } from "@/domain/types";
 import { buildAnnualCoreReport } from "./annual-core-report";
 import {
   classifyChecks,
+  countChecks,
   isCheckPrerequisite,
   selectAnnualCheckDisplay,
   selectVisibleCompliance,
@@ -50,6 +51,83 @@ const monthly: MonthlyComplianceResult = {
 };
 
 describe("display-only check selection", () => {
+  it("clears retired observations and stale prerequisite counts from a projected cache", () => {
+    const retired: ComplianceIssue = {
+      ...issues[2],
+      id: "retired-open",
+      rule: "PLANNING_WEEKENDS",
+    };
+    const cached = { ...monthly, issues: [], prerequisites: [retired], prerequisiteCount: 1 };
+    const original = JSON.stringify(cached);
+    const selected = selectVisibleCompliance(cached, true);
+    expect(selected.prerequisites).toBeUndefined();
+    expect(selected.prerequisiteCount).toBeUndefined();
+    expect(selected).not.toHaveProperty("tariffPrerequisiteCount");
+    expect(selectVisibleCompliance(selected, true)).toEqual(selected);
+    expect(JSON.stringify(cached)).toBe(original);
+  });
+  it.each([true, false])(
+    "retires old three-weekend findings without hiding legal findings when planning is %s",
+    (showPlanning) => {
+      const retired: ComplianceIssue = {
+        ...issues[2],
+        id: "retired-weekends",
+        rule: "PLANNING_WEEKENDS",
+        severity: "info",
+      };
+      const current: ComplianceIssue = {
+        ...retired,
+        id: "four-weekends",
+        rule: "PLANNING_WEEKEND_RECOVERY",
+      };
+      const unknown: ComplianceIssue = {
+        ...retired,
+        id: "unknown-planning",
+        rule: "UNKNOWN_PLANNING_RULE",
+        severity: "critical",
+      };
+      const legal: ComplianceIssue = {
+        ...retired,
+        id: "same-name-legal",
+        kind: "LEGAL",
+        severity: "critical",
+      };
+      const raw = { ...monthly, issues: [...issues, retired, current, unknown, legal] };
+      const original = JSON.stringify(raw);
+      const selected = selectVisibleCompliance(raw, showPlanning);
+      expect(selected.issues.some((issue) => issue.id === retired.id)).toBe(false);
+      expect(selected.issues).toContain(legal);
+      expect(selected.issues.includes(current)).toBe(showPlanning);
+      expect(selected.issues.includes(unknown)).toBe(showPlanning);
+      expect(selectVisibleCompliance(selected, showPlanning)).toEqual(selected);
+      expect(JSON.stringify(raw)).toBe(original);
+    },
+  );
+  it("excludes retired weekend observations from raw category counts and annual display", () => {
+    const retired: ComplianceIssue = {
+      ...issues[2],
+      id: "old-weekend",
+      rule: "PLANNING_WEEKENDS",
+      severity: "info",
+    };
+    const actual: ComplianceIssue = {
+      ...retired,
+      id: "new-weekend",
+      rule: "PLANNING_WEEKEND_RECOVERY",
+    };
+    expect(countChecks([retired])).toEqual({ criticalCount: 0, warningCount: 0, infoCount: 0 });
+    expect(classifyChecks([retired, actual]).planning.infoCount).toBe(1);
+    const core = buildAnnualCoreReport(2026, [], { timeZone: "Europe/Berlin" });
+    const report = {
+      ...core,
+      months: core.months.map((month, index) => ({
+        ...month,
+        checkCounts: classifyChecks(index === 10 ? [retired, actual] : []),
+      })),
+    };
+    expect(selectAnnualCheckDisplay(report, true).infoCount).toBe(1);
+    expect(selectAnnualCheckDisplay(report, false).infoCount).toBe(0);
+  });
   it("keeps recurring special-duty scope out of findings, dates and warning counts", () => {
     const notices = [1, 2, 3].map((day) => ({
       ...issues[0],

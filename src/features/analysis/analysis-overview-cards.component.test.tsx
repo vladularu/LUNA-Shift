@@ -12,6 +12,7 @@ import {
   ShiftTypeHoursCard,
 } from "@/features/analysis/analysis-overview-cards";
 import type { MonthlyShiftTypeAnalysis } from "@/features/analysis/analysis-metrics";
+import { CheckListCard } from "./dashboard-cards";
 
 jest.mock("@/ui/shift-symbol", () => {
   const React = jest.requireActual<typeof import("react")>("react");
@@ -55,6 +56,47 @@ const pay: MonthlyPayEstimate = {
 };
 
 describe("analysis overview cards", () => {
+  it.each([true, false])(
+    "keeps check counts and navigation without a weekend panel (planning %s)",
+    async (showPlanning) => {
+      const onOpenCheck = jest.fn();
+      const legal = { criticalCount: 0, warningCount: 1, infoCount: 0 };
+      const planning = { criticalCount: 0, warningCount: 0, infoCount: 2 };
+      const screen = await render(
+        <CheckListCard
+          counts={{ ...legal, infoCount: showPlanning ? 2 : 0 }}
+          categories={{ legal, planning }}
+          showPlanning={showPlanning}
+          onPress={onOpenCheck}
+          weekendAssessment={{
+            policyVersion: "2026-11-09-four-weeks",
+            month: "2026-08",
+            weekends: [],
+            windows: [],
+            totalCount: 4,
+            occupiedCount: 3,
+            freeCount: 1,
+            unknownCount: 0,
+          }}
+        />,
+      );
+      expect(screen.getByLabelText("Gesetz & Tarif: 1 Warnung")).toBeVisible();
+      expect(Boolean(screen.queryByLabelText("Hinweise & Empfehlungen: 2 Hinweise"))).toBe(
+        showPlanning,
+      );
+      await fireEvent.press(
+        screen.getByRole("button", {
+          name: `Dienstplan-Check, ${showPlanning ? 3 : 1} ${showPlanning ? "Meldungen" : "Meldung"}`,
+        }),
+      );
+      expect(onOpenCheck).toHaveBeenCalledTimes(1);
+      expect(screen.queryByLabelText(/^Belegte Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Vollständig freie Wochenenden:/)).toBeNull();
+      expect(screen.queryByLabelText(/^Offene Wochenenden:/)).toBeNull();
+      expect(screen.queryByRole("button", { name: /Wochenendübersicht/ })).toBeNull();
+    },
+  );
+
   it("formats the selected month as a compact date range", () => {
     expect(formatMonthRangeLabel("2026-08")).toBe("Sa. 1. Aug. - 31. Aug. 2026");
   });

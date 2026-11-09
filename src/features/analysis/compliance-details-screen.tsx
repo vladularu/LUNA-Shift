@@ -42,7 +42,8 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
   const preferences = useCheckPreferences();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const { error, ready, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const parsedMonth = parseMonthRouteParam(params.month);

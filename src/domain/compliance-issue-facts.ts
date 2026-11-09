@@ -1,4 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { PLANNING_NIGHT_POLICY, type PlanningNightSequence } from "./planning-night-policy";
+import {
+  PLANNING_WEEKEND_POLICY,
+  validPlanningWeekendAssessment,
+  type PlanningWeekendAssessment,
+  type PlanningWeekendSequence,
+} from "./planning-weekend-policy";
 
 /** Presentation facts copied from a finding's calculation, never used to assess it. */
 export type ComplianceIssueFacts =
@@ -32,8 +39,25 @@ export type ComplianceIssueFacts =
       readonly grossMinutes: number;
     }
   | { readonly rule: "TIME_GROSS_OVER_16H"; readonly grossMinutes: number }
-  | { readonly rule: "PLANNING_7_DAYS" | "PLANNING_NIGHT_SERIES"; readonly count: number }
-  | { readonly rule: "PLANNING_LATE_EARLY" | "PLANNING_WEEKENDS" };
+  | { readonly rule: "PLANNING_7_DAYS"; readonly count: number }
+  | {
+      readonly rule: "PLANNING_NIGHT_SERIES";
+      readonly count: number;
+      readonly nightSequence?: PlanningNightSequence;
+    }
+  | {
+      readonly rule: "PLANNING_NIGHT_RECOVERY";
+      readonly count: number;
+      readonly nightSequence: PlanningNightSequence;
+    }
+  | { readonly rule: "PLANNING_LATE_EARLY" }
+  | { readonly rule: "PLANNING_WEEKEND_RECOVERY"; readonly assessment: PlanningWeekendAssessment }
+  | {
+      readonly rule: "PLANNING_WEEKENDS";
+      /** Missing only on findings produced by the earlier, retired weekend rule. */
+      readonly count?: number;
+      readonly weekendSeries?: PlanningWeekendSequence;
+    };
 
 const minutes = (value: unknown): value is number =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
@@ -93,13 +117,98 @@ export function validComplianceIssueFacts(
       valid = minutes(facts.grossMinutes);
       break;
     case "PLANNING_7_DAYS":
-    case "PLANNING_NIGHT_SERIES":
       valid = minutes(facts.count) && facts.count > 0;
       break;
+    case "PLANNING_NIGHT_SERIES":
+    case "PLANNING_NIGHT_RECOVERY":
+      valid =
+        minutes(facts.count) &&
+        facts.count > 0 &&
+        (facts.nightSequence === undefined
+          ? facts.rule === "PLANNING_NIGHT_SERIES"
+          : validNightSequence(facts.nightSequence, facts.count));
+      if (valid && facts.nightSequence !== undefined) {
+        const sequence = facts.nightSequence as PlanningNightSequence;
+        valid =
+          facts.rule === "PLANNING_NIGHT_SERIES"
+            ? (facts.count as number) >= PLANNING_NIGHT_POLICY.firstNightHint
+            : (facts.count as number) >= PLANNING_NIGHT_POLICY.minimumSeriesForRecovery &&
+              (sequence.recoveryStatus === "under24" || sequence.recoveryStatus === "under48");
+      }
+      break;
     case "PLANNING_LATE_EARLY":
-    case "PLANNING_WEEKENDS":
       valid = true;
+      break;
+    case "PLANNING_WEEKEND_RECOVERY":
+      valid =
+        validPlanningWeekendAssessment(facts.assessment) &&
+        facts.assessment.windows.some(
+          (window) =>
+            window.assessmentComplete &&
+            window.unknownCount === 0 &&
+            window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,
+        );
+      break;
+    case "PLANNING_WEEKENDS":
+      valid =
+        facts.count === undefined && facts.weekendSeries === undefined
+          ? true
+          : minutes(facts.count) &&
+            facts.count >= PLANNING_WEEKEND_POLICY.firstOccupiedWeekendHint &&
+            validWeekendSequence(facts.weekendSeries, facts.count);
       break;
   }
   return valid ? (value as ComplianceIssueFacts) : null;
+}
+
+function validWeekendSequence(value: unknown, count: number): value is PlanningWeekendSequence {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const sequence = value as Record<string, unknown>;
+  if (
+    sequence.policyVersion !== "2026-11-08" ||
+    !calendarDate(sequence.firstSaturday) ||
+    !calendarDate(sequence.lastSunday)
+  )
+    return false;
+  const first = Temporal.PlainDate.from(sequence.firstSaturday);
+  const last = Temporal.PlainDate.from(sequence.lastSunday);
+  return (
+    first.dayOfWeek === 6 && last.dayOfWeek === 7 && last.since(first).days === (count - 1) * 7 + 1
+  );
+}
+
+function validNightSequence(value: unknown, count: number): value is PlanningNightSequence {
+  if (!value || typeof value !== "object") return false;
+  const sequence = value as Record<string, unknown>;
+  if (
+    sequence.policyVersion !== PLANNING_NIGHT_POLICY.version ||
+    !calendarDate(sequence.firstNight) ||
+    !calendarDate(sequence.lastNight) ||
+    Temporal.PlainDate.from(sequence.lastNight).since(Temporal.PlainDate.from(sequence.firstNight))
+      .days !==
+      count - 1 ||
+    typeof sequence.countIsMinimum !== "boolean" ||
+    typeof sequence.lastShiftId !== "string" ||
+    !(sequence.nextShiftId === null || typeof sequence.nextShiftId === "string")
+  )
+    return false;
+  const rest = sequence.restMinutes;
+  if (rest !== null && sequence.nextShiftId === null) return false;
+  switch (sequence.recoveryStatus) {
+    case "open":
+    case "unknown":
+      return rest === null;
+    case "under24":
+      return minutes(rest) && rest < PLANNING_NIGHT_POLICY.minimumRecoveryMinutes;
+    case "under48":
+      return (
+        minutes(rest) &&
+        rest >= PLANNING_NIGHT_POLICY.minimumRecoveryMinutes &&
+        rest < PLANNING_NIGHT_POLICY.preferredRecoveryMinutes
+      );
+    case "atLeast48":
+      return minutes(rest) && rest >= PLANNING_NIGHT_POLICY.preferredRecoveryMinutes;
+    default:
+      return false;
+  }
 }

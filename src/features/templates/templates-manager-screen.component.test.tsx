@@ -129,7 +129,10 @@ describe("TemplatesManagerScreen", () => {
         screen.getByTestId("template-manager-row-early-badge", hidden).props.style,
       ),
     ).toEqual(badge);
-    expect(screen.getByTestId("template-manager-sort")).toHaveStyle(card);
+    expect(screen.getByTestId("template-manager-sort")).toHaveStyle({
+      ...card,
+      overflow: "visible",
+    });
     expect(screen.getByTestId("template-manager-sort")).toHaveStyle({
       height: 136 + 3 * StyleSheet.hairlineWidth,
     });

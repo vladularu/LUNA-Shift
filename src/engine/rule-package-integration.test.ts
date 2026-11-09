@@ -172,7 +172,7 @@ describe("rule-package-driven calculation engine", () => {
     expect(result.issues).toContainEqual(expect.objectContaining({ rule: "ARBZG_3_MAX_10H" }));
   });
 
-  it("loads analysis inputs across rule-defined lookback and lookahead windows", () => {
+  it("loads the weekend source lookback while preserving rule-defined allowance and lookahead bounds", () => {
     const tariff = clone(BUNDLED_TARIFF_RULES[1]);
     tariff.rules.workPatternPolicy.assessmentLookbackMonths = 1;
     const legal = clone(BUNDLED_LEGAL_RULES[0]);
@@ -187,6 +187,10 @@ describe("rule-package-driven calculation engine", () => {
 
     const result = selectAnalysisEntryWindow(
       [
+        // July's first four-week window starts on 8 June. Loading possible
+        // carried special-duty entries adds fourteen dates before that Monday.
+        shift({ id: "before-weekend-source", date: "2026-05-24" }),
+        shift({ id: "weekend-source-start", date: "2026-05-25" }),
         shift({ id: "before-allowance", date: "2026-05-31" }),
         shift({ id: "allowance-start", date: "2026-06-01" }),
         shift({ id: "before-compliance", date: "2026-06-27" }),
@@ -206,6 +210,10 @@ describe("rule-package-driven calculation engine", () => {
       "month",
     ]);
     expect(result.complianceShifts.map((entry) => entry.id)).toEqual([
+      "weekend-source-start",
+      "before-allowance",
+      "allowance-start",
+      "before-compliance",
       "compliance-start",
       "month",
       "compliance-end",

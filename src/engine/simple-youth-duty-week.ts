@@ -162,7 +162,7 @@ function holidayFindings(
           "JARBSCHG_18_HOLIDAY",
           "Feiertagsdienst für Jugendliche prüfen",
           holidays.get(day.date) +
-            ": Arbeit ist nur mit gesetzlicher Ausnahme zulässig, etwa in Krankenhäusern oder entsprechenden Pflegeeinrichtungen. Für einen Feiertag an einem Werktag ist innerhalb derselben oder der folgenden drei Wochen ein anderer beschäftigungsfreier Arbeitstag nötig (§ 18).",
+            ": Arbeit ist nur mit gesetzlicher Ausnahme zulässig, etwa in Krankenhäusern oder entsprechenden Pflegeeinrichtungen. Für einen Feiertagsdienst an einem Werktag ist ein anderer berufsschulfreier Arbeitstag derselben oder der folgenden Woche als Ausgleich nötig (§ 18).",
           related,
           day.date,
         ),

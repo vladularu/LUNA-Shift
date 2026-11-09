@@ -16,6 +16,7 @@ import type {
   UserProfile,
 } from "@/domain/types";
 import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
+import { COMPLIANCE_CALCULATION_VERSION } from "@/engine/compliance-version";
 import { calculateMonthlySummary, calculateMonthlySummarySteps } from "@/engine/monthly-summary";
 import { prepareMonthlyPaySteps } from "@/engine/prepare-monthly-pay";
 import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
@@ -38,7 +39,7 @@ import {
   buildMonthlyTimedShiftTypeAnalysisSteps,
 } from "@/features/analysis/analysis-metrics";
 import type { AnnualMonthReport, AnnualReport } from "@/features/analysis/annual-report";
-import { classifyChecks } from "./check-visibility";
+import { classifyChecks, countChecks } from "./check-visibility";
 import {
   trainingComplianceForState,
   type TrainingComplianceData,
@@ -203,7 +204,7 @@ export function createAnnualAvailableReportCache() {
 }
 
 export function annualInputKey(value: unknown): string {
-  return JSON.stringify(value, (_key, item: unknown) => {
+  return JSON.stringify([COMPLIANCE_CALCULATION_VERSION, value], (_key, item: unknown) => {
     if (item === null || typeof item !== "object" || Array.isArray(item)) return item;
     const record = item as Record<string, unknown>;
     return Object.fromEntries(
@@ -544,9 +545,7 @@ export function* buildAnnualAvailableReportSteps(
             (available.pay?.tvoedAllowanceAmount ?? 0) +
             (available.pay?.careAllowanceAmount ?? 0)
           : 0,
-        criticalCount: compliance?.criticalCount ?? 0,
-        warningCount: compliance?.warningCount ?? 0,
-        infoCount: compliance?.infoCount ?? 0,
+        ...countChecks(compliance?.issues ?? []),
         checkCounts: classifyChecks(compliance?.issues ?? []),
       }),
     );

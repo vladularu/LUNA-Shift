@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ShiftEntry } from "@/domain/types";
-import { selectAnalysisEntryWindow } from "@/features/analysis/analysis-data";
+import {
+  selectAnalysisEntryWindow,
+  selectComplianceShifts,
+} from "@/features/analysis/analysis-data";
 
 function shift(id: string, date: string): ShiftEntry {
   return {
@@ -27,6 +30,26 @@ function shift(id: string, date: string): ShiftEntry {
 }
 
 describe("selectAnalysisEntryWindow", () => {
+  it("loads the full January weekend lookback plus carried special duties", () => {
+    const entries = [
+      shift("carried", "2026-11-23"),
+      shift("window", "2026-12-07"),
+      shift("before", "2026-11-22"),
+    ];
+    expect(selectComplianceShifts(entries, "2027-01").map((entry) => entry.id)).toContain(
+      "carried",
+    );
+  });
+  it("does not resurrect an older active revision when its tombstone is newer", () => {
+    const old = shift("duplicate", "2026-11-07");
+    const deleted = { ...old, revision: 2, deletedAt: "2026-11-08T00:00:00Z" };
+    expect(selectComplianceShifts([old, deleted], "2026-11")).toEqual([]);
+  });
+  it("preserves conflicting equal revisions for conservative engine assessment", () => {
+    const old = shift("duplicate", "2026-11-07");
+    const moved = { ...old, date: "2026-11-09" };
+    expect(selectComplianceShifts([old, moved], "2026-11")).toHaveLength(2);
+  });
   it("keeps the selected month small while loading the legal qualification year", () => {
     const result = selectAnalysisEntryWindow(
       [

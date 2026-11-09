@@ -1,5 +1,6 @@
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
+import { CHECK_TITLE } from "@/features/analysis/check-copy";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState, type ComponentProps } from "react";
 import { Alert, Platform, View, useWindowDimensions } from "react-native";
@@ -110,7 +111,7 @@ export function SettingsScreen() {
             <RowButton
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="shield-checkmark-outline" />}
-              title="Prüfung & Hinweise"
+              title={CHECK_TITLE}
               onPress={() => router.push("/check-settings")}
             />
           </SurfaceCard>
