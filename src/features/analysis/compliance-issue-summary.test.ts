@@ -3,6 +3,8 @@ import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { complianceIssueSummary } from "./compliance-issue-summary";
 import { calculateMonthlyCompliance } from "@/engine/compliance";
 import type { ComplianceIssueFacts } from "@/domain/compliance-issue-facts";
+import type { PlanningNightSequence } from "@/domain/planning-night-policy";
+import { shift, work } from "@/engine/remuneration-test-fixtures";
 
 const finding = (rule: string, description: string): ComplianceIssue =>
   Object.freeze({
@@ -17,6 +19,40 @@ const finding = (rule: string, description: string): ComplianceIssue =>
   });
 
 describe("compact compliance information", () => {
+  const nightSequence: PlanningNightSequence = {
+    policyVersion: "2026-11-07",
+    firstNight: "2026-11-05",
+    lastNight: "2026-11-06",
+    countIsMinimum: false,
+    recoveryStatus: "under24",
+    restMinutes: 1439,
+    lastShiftId: "last",
+    nextShiftId: "next",
+  };
+  it("uses typed recovery minutes rather than localized descriptions", () => {
+    const actual = {
+      ...finding("PLANNING_NIGHT_RECOVERY", "Anderer Text"),
+      facts: { rule: "PLANNING_NIGHT_RECOVERY" as const, count: 2, nightSequence },
+    };
+    expect(complianceIssueSummary(actual)).toContain("23:59 h");
+  });
+  it.each([
+    { restMinutes: -1 },
+    { restMinutes: 1440 },
+    { recoveryStatus: "open", restMinutes: 10 },
+    { firstNight: "2026-11-04" },
+    { policyVersion: "unreviewed" },
+  ])("rejects inconsistent recovery facts: %j", (change) => {
+    const actual = {
+      ...finding("PLANNING_NIGHT_RECOVERY", "Erholungszeit nicht beurteilbar."),
+      facts: {
+        rule: "PLANNING_NIGHT_RECOVERY",
+        count: 2,
+        nightSequence: { ...nightSequence, ...change },
+      },
+    };
+    expect(complianceIssueSummary(actual as ComplianceIssue)).toBe(actual.description);
+  });
   it.each([
     [
       "ARBZG_5_REST_10H",
@@ -96,7 +132,7 @@ describe("compact compliance information", () => {
     [
       "PLANNING_WEEKENDS",
       "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.",
-      "Prüfen, ob jedes zweite Wochenende frei sein sollte.",
+      "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.",
     ],
   ])("keeps facts and actions visible for %s", (rule, description, summary) => {
     const original = finding(rule, description);
@@ -182,11 +218,6 @@ describe("structured compliance facts", () => {
       "Die gesetzliche Ruhezeit ist eingehalten; die kurze Vorwärtsrotation sollte dennoch geprüft werden.",
       {},
     ],
-    [
-      "PLANNING_WEEKENDS",
-      "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.",
-      {},
-    ],
   ] as const;
 
   it.each(cases)(
@@ -268,5 +299,45 @@ describe("structured compliance facts", () => {
     expect(issue.description).toBe(
       "Erfasst sind 15 Minuten Pause; erforderlich sind mindestens 45 Minuten.",
     );
+  });
+  it("does not turn a retired weekend observation into a current recommendation", () => {
+    const legacy = finding("PLANNING_WEEKENDS", "Alter gespeicherter Wochenendbefund.");
+    expect(complianceIssueSummary(legacy)).toBe(legacy.description);
+    expect(complianceIssueSummary({ ...legacy, facts: { rule: "PLANNING_WEEKENDS" } })).toBe(
+      legacy.description,
+    );
+  });
+  it("summarizes the four-week facts independently from wording and monthly free counts", () => {
+    const entries = [7, 14, 21].map((day) =>
+      shift({
+        id: `sat-${day}`,
+        date: `2026-11-${String(day).padStart(2, "0")}`,
+        type: "DAY",
+        startTime: "08:00",
+        endTime: "16:00",
+        breakMinutes: 30,
+      }),
+    );
+    const result = calculateMonthlyCompliance("2026-11", entries, work.timeZone, {
+      employmentProfile: { ...work, allEmploymentWorkRecorded: true },
+      allEmploymentWorkRecorded: true,
+      referenceDate: "2026-11-30",
+    });
+    expect(result.weekendAssessment).toMatchObject({
+      freeCount: 2,
+      occupiedCount: 3,
+      unknownCount: 0,
+    });
+    const original = result.issues.find((issue) => issue.rule === "PLANNING_WEEKEND_RECOVERY");
+    expect(original).toBeDefined();
+    const before = JSON.stringify(original);
+    expect(
+      complianceIssueSummary({
+        ...original!,
+        title: "Neuer Titel",
+        description: "Neue Erklärung.",
+      }),
+    ).toBe("1 von 4 Wochenenden vollständig frei.");
+    expect(JSON.stringify(original)).toBe(before);
   });
 });

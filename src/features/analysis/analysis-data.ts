@@ -1,5 +1,6 @@
 import { dutyCalendarDates } from "@/engine/special-duty";
 import { Temporal } from "@js-temporal/polyfill";
+import { planningWeekendCoverageStart } from "@/domain/planning-weekend-policy";
 
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import {
@@ -51,12 +52,14 @@ export function selectComplianceShifts(
   const legalWindow = getLegalCalculationWindow(first.toString(), ruleResolver);
   const baseComplianceStart = first.subtract({ days: legalWindow.lookbackDays });
   const yearStart = Temporal.PlainDate.from({ year: first.year, month: 1, day: 1 });
-  const complianceStart = (
+  const legalStart = (
     legalWindow.calendarYearCoverage &&
     Temporal.PlainDate.compare(yearStart, baseComplianceStart) < 0
       ? yearStart
       : baseComplianceStart
   ).toString();
+  const weekendStart = planningWeekendCoverageStart(month);
+  const complianceStart = legalStart < weekendStart ? legalStart : weekendStart;
   const monthEnd = first.add({ months: 1 }).subtract({ days: 1 }).toString();
   const baseComplianceEnd = getLegalCalculationEnd(Temporal.PlainDate.from(monthEnd), legalWindow);
   const yearEnd = Temporal.PlainDate.from({ year: first.year, month: 12, day: 31 });
@@ -65,14 +68,53 @@ export function selectComplianceShifts(
       ? yearEnd
       : baseComplianceEnd
   ).toString();
+  const latest = new Map<string, ShiftEntry>();
+  const alternatives = new Map<string, ShiftEntry[]>();
+  const signature = (entry: ShiftEntry) =>
+    JSON.stringify([
+      entry.date,
+      entry.type,
+      entry.allDay,
+      entry.startTime,
+      entry.endTime,
+      entry.breakMinutes,
+      entry.specialDuty,
+    ]);
+  for (const entry of entries) {
+    if (entry.kind !== "SHIFT") continue;
+    const old = latest.get(entry.id);
+    if (
+      !old ||
+      entry.revision > old.revision ||
+      (entry.revision === old.revision &&
+        (entry.updatedAt > old.updatedAt ||
+          (entry.updatedAt === old.updatedAt && entry.deletedAt !== null)))
+    ) {
+      latest.set(entry.id, entry);
+      alternatives.delete(entry.id);
+    } else if (
+      old &&
+      entry.revision === old.revision &&
+      entry.updatedAt === old.updatedAt &&
+      old.deletedAt === null &&
+      entry.deletedAt === null &&
+      signature(old) !== signature(entry)
+    ) {
+      const previous = alternatives.get(entry.id) ?? [old];
+      if (!previous.some((value) => signature(value) === signature(entry)))
+        alternatives.set(entry.id, [...previous, entry]);
+    }
+  }
   return Object.freeze(
-    entries.filter(
-      (entry): entry is ShiftEntry =>
-        entry.kind === "SHIFT" &&
-        entry.deletedAt === null &&
-        entry.date >= complianceStart &&
-        entry.date <= complianceEnd,
-    ),
+    [...latest.values()]
+      .flatMap((entry) => alternatives.get(entry.id) ?? [entry])
+      .filter(
+        (entry): entry is ShiftEntry =>
+          entry.kind === "SHIFT" &&
+          entry.deletedAt === null &&
+          entry.date >= complianceStart &&
+          entry.date <= complianceEnd,
+      ),
   );
 }
 

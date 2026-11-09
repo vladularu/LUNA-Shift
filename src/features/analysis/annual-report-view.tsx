@@ -15,7 +15,7 @@ import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { isCheckLimited, selectAnnualCheckDisplay } from "./check-visibility";
-import { CheckScopeDisclosure } from "./check-scope-disclosure";
+import { CHECK_NOT_ASSESSABLE, SUPPORTED_CHECKS_EMPTY } from "./check-copy";
 import {
   AnalysisYearHeader,
   formatEuro,
@@ -315,17 +315,34 @@ function AnnualCheckDetails({
   );
   if (issueMonths.length === 0)
     return (
-      <AnalysisCoverageNote message="Keine Auffälligkeiten in den eingeblendeten Prüfungen." />
+      <View style={{ gap: SPACING.md }}>
+        {isCheckLimited(report) ? (
+          <CheckPrerequisitesCard
+            aggregateTariffCount={report.tariffPrerequisiteCount}
+            aggregatePrerequisiteCount={report.prerequisiteCount}
+            aggregateScopeCount={report.scopeCount}
+          />
+        ) : null}
+        <AnalysisCoverageNote
+          message={isCheckLimited(report) ? CHECK_NOT_ASSESSABLE : SUPPORTED_CHECKS_EMPTY}
+        />
+      </View>
     );
   return (
     <View style={{ gap: SPACING.md }}>
-      {report.prerequisiteCount ? <CheckPrerequisitesCard /> : null}
+      {isCheckLimited(report) ? (
+        <CheckPrerequisitesCard
+          aggregateTariffCount={report.tariffPrerequisiteCount}
+          aggregatePrerequisiteCount={report.prerequisiteCount}
+          aggregateScopeCount={report.scopeCount}
+        />
+      ) : null}
       <Text
         accessibilityRole="header"
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
         style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
       >
-        {isCheckLimited(report) ? "Monate mit Hinweisen" : "Monate mit Meldungen"}
+        Monatsprüfungen
       </Text>
       <SurfaceCard style={{ paddingHorizontal: SPACING.lg }}>
         {issueMonths.map((item, index) => {
@@ -409,7 +426,6 @@ function AnnualCheckDetails({
           <CardSeparator inset={0} />
         </View>
       </SurfaceCard>
-      <CheckScopeDisclosure scopeCount={report.scopeCount} />
     </View>
   );
 }

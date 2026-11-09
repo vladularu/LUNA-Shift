@@ -33,3 +33,13 @@ export function createComplianceIssue(
     ...(facts === undefined ? {} : { facts }),
   };
 }
+
+export function germanQuantity(value: number, capitalize = false): string {
+  const words: Readonly<Record<number, string>> = {
+    5: "fünf",
+    6: "sechs",
+    7: "sieben",
+  };
+  const valueLabel = words[value] ?? String(value);
+  return capitalize ? `${valueLabel.charAt(0).toUpperCase()}${valueLabel.slice(1)}` : valueLabel;
+}

@@ -12,6 +12,10 @@ import type { AnnualNetPayState } from "./use-annual-net-pay";
 jest.mock("@/features/report-export/report-export-button", () => ({
   ReportExportButton: () => null,
 }));
+jest.mock(
+  "react-native-safe-area-context",
+  () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,
+);
 let mockAnnualNet: AnnualNetPayState = { report: null, loading: true, error: null };
 jest.mock("./use-annual-salary-payments", () => ({
   useAnnualSalaryPayments: (report: AnnualReport) => ({
@@ -84,7 +88,9 @@ describe("annual report view", () => {
       })),
     };
     const screen = await render(<AnnualReportScreen {...props} report={scoped} />);
-    expect(screen.getByRole("button", { name: "Prüfung, Prüfung eingeschränkt" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Dienstplan-Check, Prüfung eingeschränkt" }),
+    ).toBeTruthy();
     expect(screen.queryByText(/Warnungen/)).toBeNull();
     const select = jest.fn();
     await screen.rerender(
@@ -96,8 +102,13 @@ describe("annual report view", () => {
       />,
     );
     expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" }));
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Prüfstatus: Prüfumfang eingeschränkt" }),
+    );
+    expect(screen.queryByTestId("check-scope-details")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrenzen", expanded: false }));
     expect(screen.getByTestId("check-scope-details")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await fireEvent.press(
       screen.getByRole("button", { name: /^August 2026, Prüfung eingeschränkt/ }),
     );
@@ -120,7 +131,9 @@ describe("annual report view", () => {
       })),
     };
     const screen = await render(<AnnualReportScreen {...props} report={limited} />);
-    expect(screen.getByRole("button", { name: "Prüfung, Prüfung eingeschränkt" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Dienstplan-Check, Prüfung eingeschränkt" }),
+    ).toBeTruthy();
     expect(screen.queryByText(/Warnungen/)).toBeNull();
     const onSelectMonth = jest.fn();
     await screen.rerender(
@@ -131,15 +144,94 @@ describe("annual report view", () => {
         onSelectMonth={onSelectMonth}
       />,
     );
-    expect(screen.getByRole("button", { name: "Angaben ergänzen" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfstatus: 3 Angaben offen" }));
+    expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await fireEvent.press(
       screen.getByRole("button", { name: /^August 2026, Prüfung eingeschränkt/ }),
     );
     expect(onSelectMonth).toHaveBeenCalledWith("2026-08");
   });
+  it.each([0, 1])(
+    "separates annual tariff prerequisites from %s general prerequisites",
+    async (generalCount) => {
+      mockPlanning = false;
+      const limited: AnnualReport = {
+        ...report,
+        months: report.months.map((month, index) => ({
+          ...month,
+          checkCounts: {
+            legal: {
+              criticalCount: 0,
+              warningCount: 0,
+              infoCount: 0,
+              ...(index === 7
+                ? { prerequisiteCount: 1 + generalCount, tariffPrerequisiteCount: 1 }
+                : {}),
+            },
+            planning: { criticalCount: 0, warningCount: 0, infoCount: 0 },
+          },
+        })),
+      };
+      const onSelectMonth = jest.fn();
+      const screen = await render(
+        <AnnualReportDetails
+          report={limited}
+          section="CHECK"
+          testMonths={[]}
+          onSelectMonth={onSelectMonth}
+        />,
+      );
+      await fireEvent.press(
+        screen.getByRole("button", {
+          name: generalCount
+            ? "Prüfstatus: 1 Angabe offen · Tarifprüfung eingeschränkt"
+            : "Prüfstatus: Tarifprüfung eingeschränkt",
+        }),
+      );
+      expect(screen.getByText("Tarifgrundlagen unvollständig")).toBeVisible();
+      expect(screen.getByText("Einzelheiten findest du in den Monatsprüfungen.")).toBeVisible();
+      if (generalCount) {
+        expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+      } else {
+        expect(screen.queryByRole("button", { name: "Angaben ergänzen" })).toBeNull();
+      }
+      await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+      await fireEvent.press(
+        screen.getByRole("button", { name: /^August 2026, Prüfung eingeschränkt/ }),
+      );
+      expect(onSelectMonth).toHaveBeenCalledWith("2026-08");
+      expect(screen.queryByText(/Warnungen/)).toBeNull();
+    },
+  );
   beforeEach(() => {
     mockPlanning = true;
     mockAnnualNet = { report: null, loading: true, error: null };
+  });
+  it("limits the clear yearly result to supported checks", async () => {
+    const empty: AnnualReport = {
+      ...report,
+      criticalCount: 0,
+      warningCount: 0,
+      infoCount: 0,
+      months: report.months.map((month) => ({
+        ...month,
+        criticalCount: 0,
+        warningCount: 0,
+        infoCount: 0,
+      })),
+    };
+    const screen = await render(
+      <AnnualReportDetails
+        report={empty}
+        section="CHECK"
+        testMonths={[]}
+        onSelectMonth={() => {}}
+      />,
+    );
+    expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeVisible();
+    expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
   });
   it("uses calm list cards and retains the selected year", async () => {
     const screen = await render(<AnnualReportScreen {...props} />);
@@ -154,7 +246,7 @@ describe("annual report view", () => {
     expect(screen.getByText("Brutto-Teilsumme · 7 von 12 Monaten")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /^Stunden,/ }));
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "WORK"));
-    await fireEvent.press(screen.getByRole("button", { name: "Prüfung, 3 Meldungen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan-Check, 3 Meldungen" }));
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "CHECK"));
     await fireEvent.press(screen.getByRole("button", { name: /^Gehalt,/ }));
     expect(router.push).toHaveBeenLastCalledWith(annualDetailsRoute(2026, "PAY"));
@@ -169,7 +261,7 @@ describe("annual report view", () => {
 
   it("does not show provisional pay or checks as finished results", async () => {
     const screen = await render(<AnnualReportScreen {...props} pending />);
-    expect(screen.getByRole("button", { name: "Prüfung, Wird geprüft …" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Wird geprüft …" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Wird berechnet …" })).toBeTruthy();
     expect(screen.getByLabelText("Soll: Wird berechnet")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: Wird berechnet")).toBeTruthy();
@@ -211,7 +303,7 @@ describe("annual report view", () => {
 
     expect(screen.queryByText("0 Hinweise")).toBeNull();
     expect(screen.queryByText("Deine Jahresprüfung")).toBeNull();
-    expect(screen.getByRole("header", { name: "Monate mit Meldungen" })).toBeVisible();
+    expect(screen.getByRole("header", { name: "Monatsprüfungen" })).toBeVisible();
     await fireEvent.press(screen.getByRole("button", { name: /^August 2026, 3 Meldungen/ }));
     expect(onSelectMonth).toHaveBeenCalledWith("2026-08");
   });
@@ -305,7 +397,7 @@ describe("annual report view", () => {
     expect(screen.getByLabelText("Soll: Nicht verfügbar")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: Nicht verfügbar")).toBeTruthy();
     expect(screen.getByText("Erfasste Zeiten · Soll und Saldo nicht berechenbar")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Prüfung, Nicht verfügbar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Nicht verfügbar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Nicht verfügbar" })).toBeTruthy();
     expect(screen.queryByText("Keine sichtbaren Auffälligkeiten")).toBeNull();
     await screen.rerender(

@@ -24,7 +24,7 @@ import {
 } from "@/features/analysis/analysis-data";
 import { buildShiftTypeDistribution } from "@/features/calendar/calendar-metrics";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
-import { classifyChecks, type ClassifiedCheckCounts } from "./check-visibility";
+import { classifyChecks, countChecks, type ClassifiedCheckCounts } from "./check-visibility";
 
 import type { AnnualRemuneration } from "./annual-remuneration";
 
@@ -33,6 +33,7 @@ export interface AnnualMonthReport {
   readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;
+  readonly tariffPrerequisiteCount?: number;
   /** Missing on legacy reports; use the year coverage as the conservative fallback. */
   readonly complianceComplete?: boolean;
   /** Day-level legal training values; never included in actualMinutes or pay. */
@@ -57,6 +58,7 @@ export interface AnnualReport {
   readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
   readonly prerequisiteCount?: number;
+  readonly tariffPrerequisiteCount?: number;
   /** Present only when the caller supplies a dated snapshot; legacy numbers are not a fallback. */
   readonly remuneration?: AnnualRemuneration;
   readonly shiftTypeAnalysis?: MonthlyShiftTypeAnalysis;
@@ -302,9 +304,7 @@ function* calculateAnnualMonthContribution(
       timePremiumAmount: profile.tariff !== null && pay.available ? pay.timePremiumAmount : null,
       estimatedGrossAmount: pay.estimatedGrossAmount,
       premiumAmount: pay.timePremiumAmount + pay.overtimeAmount + allowanceAmount,
-      criticalCount: compliance.criticalCount,
-      warningCount: compliance.warningCount,
-      infoCount: compliance.infoCount,
+      ...countChecks(compliance.issues),
       checkCounts: classifyChecks(compliance.issues),
     }),
     workMinutes: summary.work.minutes,

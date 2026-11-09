@@ -78,10 +78,6 @@ export function legacyComplianceIssueSummary(issue: ComplianceIssue): string {
       )
         return "Ruhezeit eingehalten · Dienstfolge prüfen.";
       break;
-    case "PLANNING_WEEKENDS":
-      if (text === "Prüfen, ob nach der Dienstplanregel jedes zweite Wochenende frei sein sollte.")
-        return "Prüfen, ob jedes zweite Wochenende frei sein sollte.";
-      break;
   }
   return text;
 }

@@ -1,4 +1,5 @@
 import { router, Stack, useIsFocused, useLocalSearchParams } from "expo-router";
+import { CHECK_TITLE } from "./check-copy";
 import {
   usePflegeShiftEntries,
   usePflegeShiftProfile,
@@ -96,7 +97,7 @@ export function AnnualDetailsScreen() {
                   : section === "WORK"
                     ? "Stunden"
                     : section === "CHECK"
-                      ? "Prüfung"
+                      ? CHECK_TITLE
                       : section === "PREMIUM"
                         ? "Zeitzuschläge"
                         : section === "NET"

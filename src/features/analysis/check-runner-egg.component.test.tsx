@@ -9,6 +9,10 @@ import type { ComplianceIssue, MonthlyComplianceResult } from "@/domain/types";
 
 const mockDb = {};
 let mockBlur: (() => void) | undefined;
+jest.mock(
+  "react-native-safe-area-context",
+  () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,
+);
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("expo-router", () => ({
   useFocusEffect: (effect: () => void | (() => void)) => {
@@ -39,7 +43,7 @@ async function unlock(screen: Awaited<ReturnType<typeof render>>) {
   await fireEvent.press(screen.getByRole("button", { name: "Prüfungs-Dino" }));
 }
 
-it("keeps the real Dino playable beside scope limits and removes it when an actual finding appears", async () => {
+it("keeps the Dino playable for complete empty checks and stops it when scope becomes limited", async () => {
   const scope: ComplianceIssue = {
     id: "scope",
     date: "2026-07-06",
@@ -61,18 +65,32 @@ it("keeps the real Dino playable beside scope limits and removes it when an actu
   const page = (value: MonthlyComplianceResult) => (
     <ComplianceDayList compliance={value} shifts={[]} showPlanning timeZone="Europe/Berlin" />
   );
-  const screen = await render(page(compliance));
-  expect(screen.getByTestId("check-limited")).toBeTruthy();
-  expect(screen.queryByTestId("check-complete")).toBeNull();
-  expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
-  expect(screen.getByRole("header", { name: "Keine Auffälligkeiten" })).toBeTruthy();
-  expect(screen.getByText("In den geprüften Zeiten.")).toBeTruthy();
+  const screen = await render(page({ ...compliance, issues: [], infoCount: 0 }));
+  expect(screen.getByTestId("check-complete")).toBeTruthy();
+  expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeTruthy();
   await unlock(screen);
   expect(screen.getByTestId("dino-runner")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Springen" })).toBeTruthy();
-  await fireEvent.press(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" }));
-  expect(screen.getByTestId("check-scope-details")).toBeTruthy();
-  expect(screen.getByTestId("dino-runner")).toBeTruthy();
+
+  await screen.rerender(page(compliance));
+  expect(screen.getByTestId("check-limited")).toBeTruthy();
+  expect(screen.queryByTestId("check-complete")).toBeNull();
+  expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
+  expect(screen.getByRole("header", { name: "Prüfung eingeschränkt" })).toBeTruthy();
+  expect(screen.queryByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeNull();
+  expect(screen.queryByTestId("dino-runner")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
+  expect(saveRunnerProgress).toHaveBeenCalled();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Prüfstatus: Prüfumfang eingeschränkt" }),
+  );
+  expect(screen.getByTestId("check-status-details")).toBeTruthy();
+  expect(screen.queryByTestId("dino-runner")).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(300);
+  });
+  expect(screen.queryByTestId("check-status-details")).toBeNull();
   const finding: ComplianceIssue = {
     ...scope,
     id: "pause",
@@ -85,7 +103,7 @@ it("keeps the real Dino playable beside scope limits and removes it when an actu
   expect(screen.queryByTestId("dino-runner")).toBeNull();
   expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
   expect(screen.getByTestId("check-details-pause")).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Prüfumfang eingeschränkt" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Prüfstatus: Prüfumfang eingeschränkt" })).toBeTruthy();
   expect(saveRunnerProgress).toHaveBeenCalled();
 });
 

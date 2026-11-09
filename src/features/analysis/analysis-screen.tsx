@@ -32,6 +32,7 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ReportPeriodContent, ReportScrollView, ReportTestBadge } from "@/ui/report-layout";
 
 import { ComplianceDetails } from "./compliance-details";
+import { CHECK_TITLE } from "./check-copy";
 import { AnalysisMonthTransition } from "./analysis-month-transition";
 import { useAnalysisNavigation } from "./use-analysis-navigation";
 import { ReportPeriodPager } from "@/ui/report-period-pager";
@@ -352,12 +353,14 @@ export function AssessmentSummaryCard({
   compliance: sourceCompliance,
   showPlanning = true,
   shifts,
+  timeZone = "Europe/Berlin",
   expanded,
   onToggle,
 }: {
   readonly compliance: MonthlyComplianceResult;
   readonly showPlanning?: boolean;
   readonly shifts: readonly ShiftEntry[];
+  readonly timeZone?: string;
   readonly expanded: boolean;
   readonly onToggle: () => void;
 }) {
@@ -387,7 +390,7 @@ export function AssessmentSummaryCard({
             : "information-circle-outline"
       }
       onToggle={onToggle}
-      title="Prüfung"
+      title={CHECK_TITLE}
       value={
         !messageCount && limited
           ? "Prüfung eingeschränkt"
@@ -401,6 +404,7 @@ export function AssessmentSummaryCard({
         showPlanning={showPlanning}
         embedded
         shifts={shifts}
+        timeZone={timeZone}
       />
     </ExpandableHighlightCard>
   );

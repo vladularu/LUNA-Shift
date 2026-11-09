@@ -911,7 +911,7 @@ describe("PDF und App mit gleicher Bedeutung", () => {
       ),
     ).toBe(true);
     expect(reportToHtml(report)).toContain(
-      "Arbeitszeitregeln und alle Hinweise zu Dienstfolgen &amp; Erholung – auch in der App ausgeblendete.",
+      "Gesetzliche und hinterlegte tarifliche Regeln sowie alle Hinweise &amp; Empfehlungen – auch in der App ausgeblendete.",
     );
   });
 });

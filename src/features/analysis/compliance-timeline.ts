@@ -21,9 +21,15 @@ export interface RestTimeline {
 }
 export interface WorkSeries {
   readonly count: number;
-  readonly unit: "Arbeitstage" | "Nachtdienste";
+  readonly unit: "Arbeitstage" | "Diensttage" | "Nachtdienste" | "Nächte";
   readonly from: string | null;
   readonly until: string | null;
+  readonly dutyPeriod?: {
+    readonly fromDate: string;
+    readonly fromTime: string;
+    readonly untilDate: string;
+    readonly untilTime: string;
+  };
 }
 const REST_RULES = new Set([
   "ARBZG_5_REST_10H",
@@ -48,10 +54,25 @@ export function complianceTimeline(
         a.id.localeCompare(b.id),
     );
   const missing = related.length !== ids.size;
+  const facts = validComplianceIssueFacts(issue.facts, issue.rule);
+  const nightSequence =
+    facts?.rule === "PLANNING_NIGHT_SERIES" || facts?.rule === "PLANNING_NIGHT_RECOVERY"
+      ? (facts.nightSequence ?? null)
+      : null;
+  const endpoints = nightSequence
+    ? related.filter(
+        (shift) => shift.id === nightSequence.lastShiftId || shift.id === nightSequence.nextShiftId,
+      )
+    : related;
   let rest: RestTimeline | null = null;
-  if (REST_RULES.has(issue.rule) && !missing && related.length === 2) {
+  if (
+    (REST_RULES.has(issue.rule) || nightSequence?.restMinutes != null) &&
+    !missing &&
+    endpoints.length === 2 &&
+    !endpoints.some((shift) => shift.specialDuty)
+  ) {
     try {
-      const bounds = related
+      const bounds = endpoints
         .map((shift) => ({ shift, bounds: calculateTimedShiftBounds(shift, timeZone) }))
         .filter(
           (
@@ -90,7 +111,6 @@ export function complianceTimeline(
   }
   let series: WorkSeries | null = null;
   const legacy = !("facts" in issue);
-  const facts = validComplianceIssueFacts(issue.facts, issue.rule);
   const count = legacy
     ? legacyComplianceSeriesCount(issue)
     : facts?.rule === "PLANNING_7_DAYS" || facts?.rule === "PLANNING_NIGHT_SERIES"
@@ -113,11 +133,57 @@ export function complianceTimeline(
     } catch {
       complete = false;
     }
+    let dutyPeriod: WorkSeries["dutyPeriod"];
+    if (complete && issue.rule === "PLANNING_7_DAYS") {
+      try {
+        const bounds = related.map((shift) => {
+          // Parent windows do not establish the full extent of special-duty parts.
+          if (shift.specialDuty) return null;
+          const value = calculateTimedShiftBounds(shift, timeZone);
+          if (!value || value.grossMinutes <= 0) return null;
+          const start = Temporal.Instant.fromEpochMilliseconds(
+            value.startEpochMinutes * 60_000,
+          ).toZonedDateTimeISO(timeZone);
+          const end = Temporal.Instant.fromEpochMilliseconds(
+            value.endEpochMinutes * 60_000,
+          ).toZonedDateTimeISO(timeZone);
+          if (
+            start.toPlainTime().toString({ smallestUnit: "minute" }) !== shift.startTime ||
+            end.toPlainTime().toString({ smallestUnit: "minute" }) !== shift.endTime
+          )
+            return null;
+          return { value, start, end };
+        });
+        if (bounds.every((value) => value !== null)) {
+          const first = bounds.reduce((left, right) =>
+            left.value.startEpochMinutes <= right.value.startEpochMinutes ? left : right,
+          );
+          const last = bounds.reduce((left, right) =>
+            left.value.endEpochMinutes >= right.value.endEpochMinutes ? left : right,
+          );
+          dutyPeriod = {
+            fromDate: first.start.toPlainDate().toString(),
+            fromTime: first.start.toPlainTime().toString({ smallestUnit: "minute" }),
+            untilDate: last.end.toPlainDate().toString(),
+            untilTime: last.end.toPlainTime().toString({ smallestUnit: "minute" }),
+          };
+        }
+      } catch {
+        // Missing or invalid bounds remain a start-date range, never invented times.
+      }
+    }
     series = {
       count,
-      unit: issue.rule === "PLANNING_7_DAYS" ? "Arbeitstage" : "Nachtdienste",
-      from: complete ? dates[0] : null,
-      until: complete ? dates[dates.length - 1] : null,
+      unit:
+        issue.rule === "PLANNING_7_DAYS" ? "Diensttage" : nightSequence ? "Nächte" : "Nachtdienste",
+      from: nightSequence && !missing ? nightSequence.firstNight : complete ? dates[0] : null,
+      until:
+        nightSequence && !missing
+          ? nightSequence.lastNight
+          : complete
+            ? dates[dates.length - 1]
+            : null,
+      ...(dutyPeriod ? { dutyPeriod } : {}),
     };
   }
   const summary = complianceIssueSummary(issue);
@@ -132,8 +198,9 @@ export function complianceTimeline(
     else if (facts?.rule === "JARBSCHG_13_REST")
       note = `Jugendliche brauchen mindestens ${complianceLimitHours(facts.minimumRestMinutes)} Std. Ruhezeit.`;
   }
-  if (series) title = `${series.count} ${series.unit} hintereinander`;
-  return { related, missing, rest, series, title, note };
+  if (series)
+    title = `${nightSequence?.countIsMinimum ? "Mindestens " : ""}${series.count} ${series.unit} hintereinander`;
+  return { related, missing, rest, series, title, note, nightSequence };
 }
 
 export function restDuration(minutes: number): string {

@@ -3,6 +3,7 @@ import {
   type ComplianceIssueFacts,
 } from "@/domain/compliance-issue-facts";
 import type { ComplianceIssue } from "@/domain/types";
+import { planningNightExplanation } from "@/domain/planning-night-policy";
 import { legacyComplianceIssueSummary } from "./compliance-issue-legacy";
 
 // Match the existing engine's two-decimal display; raw minutes stay unchanged.
@@ -43,11 +44,22 @@ export function complianceIssueSummary(issue: ComplianceIssue): string {
     case "PLANNING_7_DAYS":
       return `${facts.count} Arbeitstage in Folge.`;
     case "PLANNING_NIGHT_SERIES":
-      return `${facts.count} Nachtdienste in Folge.`;
+      return facts.nightSequence
+        ? planningNightExplanation(facts.count, facts.nightSequence)
+        : `${facts.count} Nachtdienste in Folge.`;
+    case "PLANNING_NIGHT_RECOVERY":
+      return planningNightExplanation(facts.count, facts.nightSequence);
     case "PLANNING_LATE_EARLY":
       return "Ruhezeit eingehalten · Dienstfolge prüfen.";
-    case "PLANNING_WEEKENDS":
-      return "Prüfen, ob jedes zweite Wochenende frei sein sollte.";
+    case "PLANNING_WEEKEND_RECOVERY": {
+      const counts = facts.assessment.windows
+        .filter(
+          (window) =>
+            window.assessmentComplete && window.unknownCount === 0 && window.freeCount < 2,
+        )
+        .map((window) => window.freeCount);
+      return `${Math.min(...counts)} von 4 Wochenenden vollständig frei.`;
+    }
     default:
       return issue.description;
   }

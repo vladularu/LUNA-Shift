@@ -150,6 +150,7 @@ export function MonthOverview({
             status={status}
             loading={status === "Wird geprüft …"}
             showPlanning={showPlanning}
+            weekendAssessment={compliance?.weekendAssessment}
             onPress={() => router.push(complianceDetailsRoute(month))}
             caption={
               !data.complianceShifts.ok

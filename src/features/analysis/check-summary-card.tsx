@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SPACING } from "@/theme/tokens";
+import { CHECK_NOT_ASSESSABLE, SUPPORTED_CHECKS_EMPTY } from "./check-copy";
 
 export function CheckClearStatus({
   title,
@@ -33,7 +34,7 @@ export function CheckClearStatus({
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
           style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
         >
-          {limited ? "Keine Auffälligkeiten in den geprüften Zeiten." : "Keine Auffälligkeiten"}
+          {limited ? CHECK_NOT_ASSESSABLE : SUPPORTED_CHECKS_EMPTY}
         </Text>
       </View>
     </View>

@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { CHECK_TITLE } from "@/features/analysis/check-copy";
 
 import { CheckSettingsScreen } from "@/features/settings/check-settings-screen";
 import { usePalette } from "@/theme/palette";
@@ -9,7 +10,7 @@ export default function CheckSettingsRoute() {
     <>
       <Stack.Screen
         options={{
-          title: "Prüfung & Hinweise",
+          title: CHECK_TITLE,
           headerShown: true,
           headerStyle: { backgroundColor: palette.groupedBackground },
           headerTintColor: palette.text,

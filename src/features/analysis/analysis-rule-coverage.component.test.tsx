@@ -696,7 +696,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     });
     expect(screen.getByTestId("analysis-month-page-2026-10")).toBeTruthy();
     expect(screen.getByLabelText("Ist: 0:00 h")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Prüfung, Nicht verfügbar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Nicht verfügbar" })).toBeTruthy();
   });
 
   it("returns a reselected yearly analysis to the current year and preserves its mode and month selection", async () => {
@@ -733,7 +733,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
   });
 
   it.each([
-    ["Prüfung", "/compliance-details"],
+    ["Dienstplan-Check", "/compliance-details"],
     ["Gehalt", "/salary"],
   ])("opens %s for the selected month and keeps return navigation", async (title, pathname) => {
     mockRouteMonth = "2026-09";
@@ -755,12 +755,12 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockEntries = [{ ...januaryShift(), id: "pending-shift", date: "2026-09-03" }];
     mockComplianceResult = null;
     const screen = await render(<AnalysisScreen />);
-    expect(screen.getByRole("button", { name: "Prüfung, Wird geprüft …" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Wird geprüft …" })).toBeTruthy();
     expect(screen.getByText("Arbeitszeit")).toBeTruthy();
     expect(screen.queryByText("Keine sichtbaren Auffälligkeiten")).toBeNull();
     mockCheckError = "Prüfung fehlgeschlagen";
     await screen.rerender(<AnalysisScreen />);
-    expect(screen.getByRole("button", { name: "Prüfung, Nicht verfügbar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Nicht verfügbar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
   });
 
@@ -1492,7 +1492,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     await openAnalysisMode(screen, "Jahresauswertung öffnen");
     expect(screen.queryByText("Jahresauswertung wird berechnet …")).toBeNull();
     expect(screen.getByText("Arbeitszeit")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Prüfung, Wird geprüft …" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Wird geprüft …" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Wird berechnet …" })).toBeTruthy();
     expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
   });

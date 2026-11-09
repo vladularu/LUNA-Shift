@@ -4,6 +4,8 @@ import type { TvhKrTariff } from "./tvh-kr-tariff";
 import type { TvUkNursingTariff } from "./tvuk-nursing-tariff";
 import type { TvlKrSalaryTariff } from "./tvl-kr-tariff";
 import type { ComplianceIssueFacts } from "./compliance-issue-facts";
+import type { TariffComplianceEvidence } from "./tariff-compliance";
+import type { PlanningWeekendAssessment } from "./planning-weekend-policy";
 
 export const FEDERAL_STATES = [
   "BW",
@@ -469,9 +471,11 @@ export interface ComplianceIssue {
   readonly date: string;
   readonly assessmentRanges?: readonly ComplianceAssessmentRange[];
   readonly facts?: ComplianceIssueFacts;
+  readonly tariff?: TariffComplianceEvidence;
 }
 
 export interface MonthlyComplianceResult {
+  readonly weekendAssessment?: PlanningWeekendAssessment;
   /** General limits of the check, without a finding or a missing user input. */
   readonly scopeNotes?: readonly ComplianceIssue[];
   readonly scopeCount?: number;

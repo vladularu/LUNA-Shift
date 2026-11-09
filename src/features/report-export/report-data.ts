@@ -332,6 +332,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
           selected.value,
           input.profile.timeZone,
           {
+            employmentProfile: input.profile,
             federalState: input.profile.federalState,
             holidayRegion: input.profile.holidayRegion,
             weeklyMinutes: input.profile.weeklyMinutes,
@@ -349,7 +350,7 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
           step = steps.next();
         }
         const compliance = selectVisibleCompliance(step.value, true);
-        add("Auswertung", month, "Arbeitszeitrecht und Dienstfolgen & Erholung", {
+        add("Auswertung", month, "Arbeitszeitrecht und Hinweise & Empfehlungen", {
           ...compliance,
           prerequisiteCount: compliance.prerequisiteCount ?? 0,
         });

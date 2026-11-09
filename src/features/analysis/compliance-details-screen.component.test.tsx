@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react-native";
+import { render, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type { MonthlyComplianceResult } from "@/domain/types";
@@ -70,7 +70,7 @@ describe("ComplianceDetailsScreen", () => {
     mockPlanning = false;
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByRole("header", { name: /Meldungen/ })).toBeNull();
-    expect(screen.queryByText("Dienstfolgen & Erholung")).toBeNull();
+    expect(screen.queryByText("Hinweise & Empfehlungen")).toBeNull();
     expect(screen.queryByText(/Planungshinweise ausgeblendet/)).toBeNull();
   });
   it("shows one neutral total and reserves color for its severity", async () => {
@@ -79,7 +79,7 @@ describe("ComplianceDetailsScreen", () => {
     expect(screen.queryByRole("header", { name: /Meldungen/ })).toBeNull();
     expect(screen.queryByText("0 Hinweise")).toBeNull();
     expect(screen.getAllByText("Gesetzliche Prüfung")).toHaveLength(2);
-    expect(screen.getByText("Dienstfolgen & Erholung")).toBeVisible();
+    expect(screen.getByText("Hinweise & Empfehlungen")).toBeVisible();
   });
 
   it("shows a single quiet legal status for a planning-only result", async () => {
@@ -90,14 +90,23 @@ describe("ComplianceDetailsScreen", () => {
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByRole("header", { name: "1 Meldung" })).toBeNull();
     expect(screen.queryByText("Gesetzliche Prüfung")).toBeNull();
-    expect(screen.getByText("Dienstfolgen & Erholung")).toBeVisible();
+    expect(screen.getByText("Hinweise & Empfehlungen")).toBeVisible();
   });
 
-  it("has no general info section or nested explanation buttons", async () => {
+  it("keeps explanations behind one details action without a general info section", async () => {
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByText("Über die Prüfung")).toBeNull();
     expect(screen.queryByText(/keine Rechtsberatung/)).toBeNull();
-    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.queryByText("Warum dieser Hinweis?")).toBeNull();
+    for (const id of ["0", "1", "2"]) {
+      expect(
+        within(screen.getByTestId(`check-details-${id}`)).getByRole("button", {
+          name: "Details ansehen: Hinweis",
+        }),
+      ).toBeVisible();
+    }
+    expect(screen.getAllByRole("button", { name: "Details ansehen: Hinweis" })).toHaveLength(3);
+    expect(screen.getAllByRole("button")).toHaveLength(4);
     expect(screen.getByRole("button", { name: "Zurück zur Auswertung" })).toBeVisible();
   });
 
@@ -106,9 +115,10 @@ describe("ComplianceDetailsScreen", () => {
     const screen = await render(<ComplianceDetailsScreen />);
     expect(screen.queryByText("Keine Meldungen")).toBeNull();
     expect(screen.queryByText("Keine Auffälligkeiten")).toBeNull();
+    expect(screen.queryByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeNull();
     expect(screen.queryByText("Keine sichtbaren Auffälligkeiten")).toBeNull();
     mockResult = { ...mockCompliance, issues: [] };
     await screen.rerender(<ComplianceDetailsScreen />);
-    expect(screen.getByText("Keine Auffälligkeiten")).toBeVisible();
+    expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeVisible();
   });
 });

@@ -3,6 +3,9 @@ import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import type { PreparedAnalysisSalary } from "./analysis-salary";
 import type { AnnualReport } from "./annual-report";
 import { SHIFT_TYPES } from "@/domain/types";
+import { validTariffComplianceEvidence } from "@/domain/tariff-compliance-validation";
+import { validPlanningWeekendAssessment } from "@/domain/planning-weekend-policy";
+import { validComplianceIssueFacts } from "@/domain/compliance-issue-facts";
 
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -112,9 +115,27 @@ export function persistentMonthValue(value: unknown): value is MonthlyAnalysisCa
   );
 }
 export function persistentCheckValue(value: unknown): value is MonthlyComplianceResult {
+  const validWeekendFinding = (
+    issue: Record<string, unknown>,
+    month: unknown,
+    assessment: unknown,
+  ) => {
+    if (issue.rule !== "PLANNING_WEEKEND_RECOVERY") return true;
+    const facts = validComplianceIssueFacts(issue.facts, "PLANNING_WEEKEND_RECOVERY");
+    // Both copies originate in the same producer and retain JSON property order on persistence.
+    // Reject disagreement and recalculate instead of presenting conflicting counts and details.
+    return (
+      facts?.rule === "PLANNING_WEEKEND_RECOVERY" &&
+      facts.assessment.month === month &&
+      (assessment === undefined || JSON.stringify(facts.assessment) === JSON.stringify(assessment))
+    );
+  };
   return (
     record(value) &&
     typeof value.month === "string" &&
+    (value.weekendAssessment === undefined ||
+      (validPlanningWeekendAssessment(value.weekendAssessment) &&
+        value.weekendAssessment.month === value.month)) &&
     numbers(value, ["criticalCount", "warningCount", "infoCount"]) &&
     Array.isArray(value.affectedDates) &&
     value.affectedDates.every((date) => typeof date === "string") &&
@@ -127,7 +148,24 @@ export function persistentCheckValue(value: unknown): value is MonthlyCompliance
         typeof issue.description === "string" &&
         typeof issue.rule === "string" &&
         Array.isArray(issue.relatedShiftIds) &&
-        ["critical", "warning", "info"].includes(String(issue.severity)),
+        ["critical", "warning", "info"].includes(String(issue.severity)) &&
+        validWeekendFinding(issue, value.month, value.weekendAssessment) &&
+        (issue.tariff === undefined || validTariffComplianceEvidence(issue.tariff, issue.rule)),
+    ) &&
+    [value.prerequisites, value.scopeNotes].every(
+      (items) =>
+        items === undefined ||
+        (Array.isArray(items) &&
+          items.every(
+            (item: unknown) =>
+              record(item) &&
+              validWeekendFinding(item, value.month, value.weekendAssessment) &&
+              (item.tariff === undefined ||
+                validTariffComplianceEvidence(
+                  item.tariff,
+                  typeof item.rule === "string" ? item.rule : undefined,
+                )),
+          )),
     )
   );
 }

@@ -1,4 +1,5 @@
 import { ProfileSelectionProvider } from "@/features/settings/profile-selection";
+import { CHECK_TITLE } from "@/features/analysis/check-copy";
 import { PrivateCloudProvider } from "@/composition/private-cloud-provider";
 import { AnalysisViewProvider } from "@/features/analysis/analysis-view-preferences";
 import { SalaryPaymentPreferencesProvider } from "@/features/salary/salary-payment-preferences";
@@ -258,7 +259,7 @@ function ThemedApp() {
                             <Stack.Screen
                               name="compliance-details"
                               options={{
-                                title: "Prüfung",
+                                title: CHECK_TITLE,
                                 presentation: "card",
                                 contentStyle: { backgroundColor: palette.groupedBackground },
                               }}

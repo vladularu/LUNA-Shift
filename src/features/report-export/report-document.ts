@@ -2,7 +2,7 @@ import type { MonthlyWorkingTimeTarget } from "@/domain/working-time-target";
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 
 export const REPORT_CHECK_SCOPE =
-  "Arbeitszeitregeln und alle Hinweise zu Dienstfolgen & Erholung – auch in der App ausgeblendete.";
+  "Gesetzliche und hinterlegte tarifliche Regeln sowie alle Hinweise & Empfehlungen – auch in der App ausgeblendete.";
 
 export interface ReportRow {
   readonly section: string;
@@ -86,6 +86,21 @@ const LABELS: Readonly<Record<string, string>> = {
   pensionBasisCents: "Beitragsgrundlage Renten-/Arbeitslosenversicherung",
   calculationBasis: "Berechnungsbasis",
   ruleVersion: "Regelversion",
+  facts: "Details",
+  policyVersion: "Regelversion",
+  weekendSeries: "Wochenendserie",
+  firstSaturday: "Erster Samstag",
+  lastSunday: "Letzter Sonntag",
+  weekendAssessment: "Wochenendprüfung",
+  weekends: "Wochenenden",
+  windows: "Vier-Wochen-Zeiträume",
+  saturday: "Samstag",
+  sunday: "Sonntag",
+  assessmentComplete: "Vollständig prüfbar",
+  freeCount: "Vollständig freie Wochenenden",
+  occupiedCount: "Belegte Wochenenden",
+  unknownCount: "Offene Wochenenden",
+  reasons: "Prüfgrundlage",
   classification: "Zuschlagszuordnung",
   solidarityCents: "Solidaritätszuschlag",
   churchTaxCents: "Kirchensteuer",
@@ -246,6 +261,16 @@ const LABELS: Readonly<Record<string, string>> = {
   infoCount: "Informationen",
   assessmentRange: "Prüfzeitraum",
   assessmentRanges: "Prüfzeiträume",
+  period: "Bezugszeitraum",
+  source: "Quelle",
+  section: "Fundstelle",
+  version: "Fassung",
+  url: "Link",
+  ruleText: "Tarifbestimmung",
+  requirements: "Offene Voraussetzungen",
+  tariffPrerequisiteCount: "Offene Tarifgrundlagen",
+  recordedDates: "Erfasste Arbeitstage",
+  limit: "Vergleichswert",
   startDate: "Von",
   endDate: "Bis",
   from: "Von",
@@ -267,7 +292,7 @@ const LABELS: Readonly<Record<string, string>> = {
   complianceComplete: "Prüfung vollständig",
   checkCounts: "Hinweise nach Art",
   legal: "Arbeitszeitrecht",
-  planning: "Dienstfolgen & Erholung",
+  planning: "Hinweise & Empfehlungen",
   info: "Informationen",
   warning: "Warnungen",
   critical: "Kritisch",
@@ -285,17 +310,22 @@ const VALUES: Readonly<Record<string, string>> = {
   SHIFT: "Dienst",
   APPOINTMENT: "Termin",
   LEGAL: "Arbeitszeitrecht",
-  PLANNING: "Dienstfolgen & Erholung",
+  PLANNING: "Hinweise & Empfehlungen",
   critical: "Kritisch",
   warning: "Warnung",
   info: "Information",
   DETECTED: "Erkannt",
   NOT_DETECTED: "Nicht erkannt",
   REVIEW: "Prüfen",
+  DEVIATION: "Abweichung",
+  PENDING: "Noch offen",
+  UNAVAILABLE: "Nicht verfügbar",
   MET: "Erfüllt",
   OPEN: "Offen",
   NOT_MET: "Nicht erfüllt",
   UNKNOWN: "Unbekannt",
+  FREE: "Vollständig frei",
+  OCCUPIED: "Belegt",
   PERMANENT: "Dauerhaft",
   TEMPORARY: "Vorübergehend",
   AROUND_THE_CLOCK: "Rund um die Uhr",
@@ -398,7 +428,15 @@ export function appendReportData(
     .map((key) =>
       /^\d+$/.test(key)
         ? String(Number(key) + 1)
-        : (LABELS[key] ?? SHIFT_TYPE_LABELS[key as ShiftType] ?? key),
+        : key === "tariff" && /^(issues|prerequisites|scopeNotes)\./.test(path)
+          ? "Tarifprüfung"
+          : key === "assessment" &&
+              /^(issues|prerequisites|scopeNotes)\.\d+\.facts\.assessment\./.test(path)
+            ? "Wochenendprüfung"
+            : key === "totalCount" &&
+                (path.startsWith("weekendAssessment.") || path.includes(".facts.assessment."))
+              ? "Wochenenden gesamt"
+              : (LABELS[key] ?? SHIFT_TYPE_LABELS[key as ShiftType] ?? key),
     )
     .join(" · ");
   rows.push({ section, period, record, field: path, label, value, unit });

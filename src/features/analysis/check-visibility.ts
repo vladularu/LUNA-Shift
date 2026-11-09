@@ -7,12 +7,15 @@ export interface CheckCounts {
   readonly warningCount: number;
   readonly infoCount: number;
   readonly prerequisiteCount?: number;
+  readonly tariffPrerequisiteCount?: number;
 }
 export interface ClassifiedCheckCounts {
   readonly legal: CheckCounts;
   readonly planning: CheckCounts;
 }
 const emptyCounts = (): CheckCounts => ({ criticalCount: 0, warningCount: 0, infoCount: 0 });
+const isRetiredPlanningIssue = (issue: ComplianceIssue) =>
+  issue.kind === "PLANNING" && issue.rule === "PLANNING_WEEKENDS";
 
 export function isCheckScopeNotice(issue: ComplianceIssue): boolean {
   return issue.rule === "SPECIAL_DUTY_REVIEW" && issue.severity !== "critical";
@@ -31,21 +34,27 @@ export function isCheckPrerequisite(issue: ComplianceIssue): boolean {
       "ARBZG_6_NIGHT_STATUS_UNKNOWN",
       "HOLIDAY_REGION_UNKNOWN",
       "ARBZG_10_ELIGIBILITY",
+      "TARIFF_SCOPE",
     ].includes(issue.rule)
   );
 }
 
 export function countChecks(issues: readonly ComplianceIssue[]): CheckCounts {
   const findings = issues.filter(
-    (issue) => !isCheckPrerequisite(issue) && !isCheckScopeNotice(issue),
+    (issue) =>
+      !isRetiredPlanningIssue(issue) && !isCheckPrerequisite(issue) && !isCheckScopeNotice(issue),
   );
   const prerequisiteCount = issues.filter(isCheckPrerequisite).length;
+  const tariffPrerequisiteCount = issues.filter(
+    (issue) => issue.rule === "TARIFF_SCOPE" && isCheckPrerequisite(issue),
+  ).length;
   const scopeCount = issues.some(isCheckScopeNotice) ? 1 : 0;
   return {
     criticalCount: findings.filter((issue) => issue.severity === "critical").length,
     warningCount: findings.filter((issue) => issue.severity === "warning").length,
     infoCount: findings.filter((issue) => issue.severity === "info").length,
     ...(prerequisiteCount ? { prerequisiteCount } : {}),
+    ...(tariffPrerequisiteCount ? { tariffPrerequisiteCount } : {}),
     ...(scopeCount ? { scopeCount } : {}),
   };
 }
@@ -57,12 +66,15 @@ export function classifyChecks(issues: readonly ComplianceIssue[]): ClassifiedCh
 }
 export function addCheckCounts(a: CheckCounts, b: CheckCounts): CheckCounts {
   const prerequisiteCount = (a.prerequisiteCount ?? 0) + (b.prerequisiteCount ?? 0);
+  const tariffPrerequisiteCount =
+    (a.tariffPrerequisiteCount ?? 0) + (b.tariffPrerequisiteCount ?? 0);
   const scopeCount = (a.scopeCount ?? 0) + (b.scopeCount ?? 0);
   return {
     criticalCount: a.criticalCount + b.criticalCount,
     warningCount: a.warningCount + b.warningCount,
     infoCount: a.infoCount + b.infoCount,
     ...(prerequisiteCount ? { prerequisiteCount } : {}),
+    ...(tariffPrerequisiteCount ? { tariffPrerequisiteCount } : {}),
     ...(scopeCount ? { scopeCount } : {}),
   };
 }
@@ -75,7 +87,7 @@ export function selectVisibleCompliance(
     ...new Map(
       [...(result.scopeNotes ?? []), ...result.issues].map((issue) => [issue.id, issue]),
     ).values(),
-  ];
+  ].filter((issue) => !isRetiredPlanningIssue(issue));
   const scopeNotes = [
     ...new Map(
       originalIssues.filter(isCheckScopeNotice).map((issue) => [issue.id, issue]),
@@ -83,9 +95,9 @@ export function selectVisibleCompliance(
   ];
   const prerequisites = [
     ...new Map(
-      [...(result.prerequisites ?? []), ...originalIssues.filter(isCheckPrerequisite)].map(
-        (issue) => [issue.id, issue],
-      ),
+      [...(result.prerequisites ?? []), ...originalIssues.filter(isCheckPrerequisite)]
+        .filter((issue) => !isRetiredPlanningIssue(issue))
+        .map((issue) => [issue.id, issue]),
     ).values(),
   ];
   const issues = originalIssues.filter(
@@ -94,14 +106,23 @@ export function selectVisibleCompliance(
       !isCheckScopeNotice(issue) &&
       (showPlanning || issue.kind !== "PLANNING"),
   );
-  const base = { ...result };
-  delete base.scopeNotes;
-  delete base.scopeCount;
+  const {
+    scopeNotes: _scopeNotes,
+    scopeCount: _scopeCount,
+    prerequisites: _prerequisites,
+    prerequisiteCount: _prerequisiteCount,
+    tariffPrerequisiteCount: _tariffPrerequisiteCount,
+    ...base
+  } = result as MonthlyComplianceResult & CheckCounts;
+  const tariffPrerequisiteCount = prerequisites.filter(
+    (issue) => issue.rule === "TARIFF_SCOPE" && isCheckPrerequisite(issue),
+  ).length;
   return {
     ...base,
     issues,
     ...countChecks(issues),
     ...(prerequisites.length ? { prerequisites, prerequisiteCount: prerequisites.length } : {}),
+    ...(tariffPrerequisiteCount ? { tariffPrerequisiteCount } : {}),
     ...(scopeNotes.length ? { scopeNotes, scopeCount: 1 } : {}),
     affectedDates: [...new Set(issues.map((issue) => issue.date))].sort(),
   };
