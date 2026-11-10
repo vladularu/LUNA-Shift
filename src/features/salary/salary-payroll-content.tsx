@@ -167,6 +167,7 @@ export function SalaryPayrollStatement({
   payrollTimingEstimate,
   blocked = false,
   onReviewAllowance,
+  afterTotals,
   afterStatement,
 }: {
   readonly view?: PayrollView;
@@ -182,6 +183,7 @@ export function SalaryPayrollStatement({
   readonly payrollTimingEstimate?: AutomaticNetPayForecast["payrollTimingEstimate"];
   readonly blocked?: boolean;
   readonly onReviewAllowance: (months: readonly string[]) => void;
+  readonly afterTotals?: ReactNode;
   readonly afterStatement?: ReactNode;
 }) {
   const palette = usePalette();
@@ -297,6 +299,7 @@ export function SalaryPayrollStatement({
           <PayrollNote>{netPayCrossYearLabel(payrollTimingEstimate)}</PayrollNote>
         ) : null}
       </SurfaceCard>
+      {afterTotals}
       <View testID="salary-payroll-statement" style={{ gap: REPORT_CARD_GAP }}>
         {view === "salary" ? (
           <SalarySectionCard title="Zusammensetzung">
@@ -576,16 +579,6 @@ export function SalaryPayrollContent({
           />
         )
       ) : null}
-      {view === "salary" ? (
-        <SalaryPayrollSettings
-          timingOnly
-          month={month}
-          blocked={blocked}
-          onChanged={data.reload}
-          onDirtyChange={onDirtyChange}
-          onBusyChange={onBusyChange}
-        />
-      ) : null}
       {!hasBasis ? (
         <>
           <InlineNotice message="Hinterlege einen Tarif oder dein Monatsbrutto." />
@@ -635,6 +628,18 @@ export function SalaryPayrollContent({
         payrollTimingEstimate={forecast?.payrollTimingEstimate}
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
+        afterTotals={
+          view === "salary" ? (
+            <SalaryPayrollSettings
+              timingOnly
+              month={month}
+              blocked={blocked}
+              onChanged={data.reload}
+              onDirtyChange={onDirtyChange}
+              onBusyChange={onBusyChange}
+            />
+          ) : null
+        }
         afterStatement={
           configured &&
           settings &&

@@ -16,12 +16,19 @@ import { RowButton } from "@/ui/design-system";
 import { Field, PrimaryButton } from "@/ui/form-controls";
 import { SelectionSheet } from "@/ui/selection-sheet";
 
-export function NetPayWorkflowText({ children }: PropsWithChildren) {
+export function NetPayWorkflowText({
+  children,
+  centered = false,
+}: PropsWithChildren<{ readonly centered?: boolean }>) {
   const palette = usePalette();
   return (
     <Text
       maxFontSizeMultiplier={TEXT_MAX_SCALE}
-      style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+      style={{
+        color: palette.textMuted,
+        ...TYPOGRAPHY.caption,
+        ...(centered ? { textAlign: "center" as const } : {}),
+      }}
     >
       {children}
     </Text>

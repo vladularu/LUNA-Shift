@@ -230,7 +230,9 @@ export function AnnualSalaryPaymentEditor({
           />
           {!initial && issue ? (
             <>
-              <NetPayWorkflowText>{annualSalaryIssueMessage(issue)}</NetPayWorkflowText>
+              <View style={{ paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm }}>
+                <NetPayWorkflowText centered>{annualSalaryIssueMessage(issue)}</NetPayWorkflowText>
+              </View>
               {issue.code === "TARIFF_CHANGE" || issue.code === "SALARY_BASIS_CONFLICT" ? (
                 <SalaryNavigationRow
                   title="Beschäftigungsverlauf prüfen"
