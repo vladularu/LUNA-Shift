@@ -1,6 +1,7 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
+import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it, jest } from "@jest/globals";
-import { Linking } from "react-native";
+import * as ReactNative from "react-native";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { ComplianceIssueContent } from "./compliance-issue-content";
@@ -9,10 +10,16 @@ import { ComplianceDetails } from "./compliance-details";
 import { TARIFF_SCOPE_SOURCE, TARIFF_TIME_POLICIES } from "@/domain/tariff-time-policy";
 import { TariffCheckDetails } from "./tariff-check-details";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
+import { TariffCheckPeriod } from "./tariff-check-period";
+import * as DesignSystem from "@/ui/design-system";
+
+const { Linking } = ReactNative;
 
 type Screen = Awaited<ReturnType<typeof render>>;
 const openLimits = async (screen: Screen) =>
-  fireEvent.press(screen.getByRole("button", { name: "Quelle & Prüfgrenzen", expanded: false }));
+  fireEvent.press(screen.getByRole("button", { name: "Quelle & Berechnung", expanded: false }));
+const openOriginal = async (screen: Screen) =>
+  fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben", expanded: false }));
 
 jest.mock(
   "react-native-safe-area-context",
@@ -92,6 +99,228 @@ const compliance = (issues: readonly ComplianceIssue[]) => ({
 });
 
 describe("integrated tariff details", () => {
+  it("shows only duties starting on each Sunday without copying Saturday nights or visible times", async () => {
+    const base = finding();
+    const entries: ShiftEntry[] = [
+      {
+        ...duty,
+        id: "late-sun",
+        date: "2026-11-22",
+        title: "Spät",
+        symbol: "sun",
+        color: "#DD4455",
+      },
+      {
+        ...duty,
+        id: "night-sat",
+        date: "2026-11-28",
+        title: "Nacht",
+        symbol: "moon",
+        color: "#AA8833",
+        type: "NIGHT",
+        startTime: "21:00",
+        endTime: "07:30",
+      },
+      {
+        ...duty,
+        id: "night-sun",
+        date: "2026-11-29",
+        title: "Nacht",
+        symbol: "moon",
+        color: "#AA8833",
+        type: "NIGHT",
+        startTime: "21:00",
+        endTime: "07:30",
+      },
+    ];
+    const badgeSpy = jest.spyOn(DesignSystem, "ColorBadge");
+    try {
+      const screen = await render(
+        <TariffCheckDetails
+          evidence={{
+            ...base.tariff!,
+            ruleId: "TARIFF_FREE_SUNDAY",
+            count: 2,
+            recordedDates: ["2026-11-22", "2026-11-29"],
+            period: { from: "2026-11-16", until: "2026-11-29" },
+          }}
+          shifts={entries}
+          timeZone="Europe/Berlin"
+          title="2 Sonntage mit Dienst"
+          description="Beide Sonntage belegt"
+          missing={false}
+        />,
+      );
+      const late = within(screen.getByTestId("tariff-period-2026-11-22"));
+      expect(late.getByText("Spät")).toBeVisible();
+      expect(badgeSpy.mock.calls.map(([props]) => props)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            color: "#DD4455",
+            label: "sun",
+          }),
+          expect.objectContaining({ color: "#AA8833", label: "moon" }),
+        ]),
+      );
+      const night = within(screen.getByTestId("tariff-period-2026-11-29"));
+      expect(night.getAllByText("Nacht")).toHaveLength(1);
+      expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(2);
+      expect(screen.queryByTestId("check-shift-night-sat")).toBeNull();
+      expect(night.queryByText("vom 28.11.")).toBeNull();
+      expect(screen.queryByText(/21:00|07:30|13:18/)).toBeNull();
+      expect(screen.queryByText("Dienst")).toBeNull();
+      expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+      expect(screen.queryByText("Zugehörige Dienste")).toBeNull();
+    } finally {
+      badgeSpy.mockRestore();
+    }
+  });
+
+  it("shows every weekly symbol from the actual plan including two duties on one day", async () => {
+    const base = finding();
+    const dates = [
+      "2026-11-30",
+      "2026-12-01",
+      "2026-12-02",
+      "2026-12-03",
+      "2026-12-04",
+      "2026-12-05",
+      "2026-12-06",
+    ];
+    const entries = dates.map((date, index) => ({
+      ...duty,
+      id: date,
+      date,
+      color: index % 2 ? "#ABCDEF" : "#123456",
+    }));
+    entries.push({
+      ...duty,
+      id: "second-duty",
+      date: dates[0],
+      startTime: "18:00",
+      color: "#FEDCBA",
+    });
+    const screen = await render(
+      <TariffCheckPeriod
+        evidence={{ ...base.tariff!, recordedDates: dates }}
+        shifts={entries}
+        timeZone="Europe/Berlin"
+      />,
+    );
+    for (const entry of entries)
+      expect(screen.getByTestId(`check-duty-symbol-${entry.date}-${entry.id}`)).toBeVisible();
+    expect(screen.getAllByTestId(/^check-duty-symbol-/)).toHaveLength(8);
+    expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
+  });
+  it("renders the week without native date formatting or implicit Temporal coercion", async () => {
+    const formatter = jest
+      .spyOn(Temporal.PlainDate.prototype, "toLocaleString")
+      .mockImplementation(() => {
+        throw new TypeError("Native date formatter unavailable");
+      });
+    const primitive = jest.spyOn(Temporal.PlainDate.prototype, "valueOf");
+    try {
+      const issue = finding();
+      const evidence = {
+        ...issue.tariff!,
+        recordedDates: [
+          "2026-11-30",
+          "2026-12-01",
+          "2026-12-02",
+          "2026-12-03",
+          "2026-12-04",
+          "2026-12-05",
+          "2026-12-06",
+        ],
+      };
+      const screen = await render(
+        <TariffCheckDetails
+          evidence={evidence}
+          title={issue.title}
+          description={issue.description}
+          missing={false}
+        >
+          {null}
+        </TariffCheckDetails>,
+      );
+      expect(screen.getByTestId("tariff-check-summary")).toBeVisible();
+      expect(
+        screen.getByLabelText(/^Montag, 30. November 2026. Kein Dienstbeginn erfasst/),
+      ).toBeVisible();
+      expect(
+        screen.getByLabelText(/^Sonntag, 6. Dezember 2026. Kein Dienstbeginn erfasst/),
+      ).toBeVisible();
+      expect(formatter).not.toHaveBeenCalled();
+      expect(primitive).not.toHaveBeenCalled();
+    } finally {
+      formatter.mockRestore();
+      primitive.mockRestore();
+    }
+  });
+  it("shows real dates across a month boundary and keeps the calculation closed", async () => {
+    const issue = finding();
+    const evidence = {
+      ...issue.tariff!,
+      recordedDates: [
+        "2026-11-30",
+        "2026-12-01",
+        "2026-12-02",
+        "2026-12-03",
+        "2026-12-04",
+        "2026-12-05",
+        "2026-12-06",
+      ],
+    };
+    const screen = await render(
+      <TariffCheckDetails
+        evidence={evidence}
+        title={issue.title}
+        description={issue.description}
+        missing={false}
+      >
+        {null}
+      </TariffCheckDetails>,
+    );
+    expect(screen.getByTestId("tariff-period-2026-11-30")).toBeVisible();
+    expect(screen.getByTestId("tariff-period-2026-12-06")).toBeVisible();
+    expect(
+      screen.getByLabelText(/Montag, 30. November 2026. Kein Dienstbeginn erfasst/),
+    ).toBeVisible();
+    expect(screen.queryByTestId("tariff-check-limitation")).toBeNull();
+    await openLimits(screen);
+    expect(screen.getByTestId("tariff-check-limitation")).toBeVisible();
+  });
+
+  it("shows only the two recorded Sundays and makes a large-text period scrollable", async () => {
+    const dimensions = jest
+      .spyOn(ReactNative, "useWindowDimensions")
+      .mockReturnValue({ width: 320, height: 700, scale: 3, fontScale: 1.6 });
+    try {
+      const issue = finding();
+      const screen = await render(
+        <TariffCheckPeriod
+          evidence={{
+            ...issue.tariff!,
+            ruleId: "TARIFF_FREE_SUNDAY",
+            period: { from: "2026-11-16", until: "2026-11-29" },
+            count: 2,
+            recordedDates: ["2026-11-29", "2026-11-22"],
+          }}
+        />,
+      );
+      expect(screen.getByLabelText("Betroffene Tage, horizontal scrollbar")).toBeVisible();
+      expect(screen.getAllByText("Sonntag")).toHaveLength(2);
+      const dates = screen.getAllByTestId(/^tariff-period-2026/).map((node) => node.props.testID);
+      expect(dates).toEqual(["tariff-period-2026-11-22", "tariff-period-2026-11-29"]);
+    } finally {
+      dimensions.mockRestore();
+    }
+  });
+
+  it("does not invent a week strip from incomplete saved dates", async () => {
+    const screen = await render(<TariffCheckPeriod evidence={finding().tariff!} />);
+    expect(screen.queryByTestId("tariff-period")).toBeNull();
+  });
   it("keeps the first tariff view short with planned time and collapsed source limits", async () => {
     const issue = finding("PENDING");
     const screen = await render(
@@ -111,11 +340,15 @@ describe("integrated tariff details", () => {
     expect(screen.queryByText(issue.tariff!.ruleText)).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
     await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle & Prüfgrenzen", expanded: false }),
+      screen.getByRole("button", { name: "Quelle & Berechnung", expanded: false }),
     );
-    expect(screen.getByText(issue.tariff!.ruleText)).toBeVisible();
     expect(screen.getByRole("link", { name: issue.tariff!.source.title })).toBeVisible();
+    expect(screen.queryByText(issue.tariff!.ruleText)).toBeNull();
+    expect(screen.queryByText(issue.description)).toBeNull();
     expect(screen.queryByText(issue.tariff!.requirements[0])).toBeNull();
+    await openOriginal(screen);
+    expect(screen.getByText(issue.tariff!.ruleText)).toBeVisible();
+    expect(screen.getByText(issue.description)).toBeVisible();
   });
   it("lets a grouped caller render the shared services once without false missing-service text", async () => {
     const issue = finding();
@@ -150,9 +383,7 @@ describe("integrated tariff details", () => {
     expect(screen.queryByText(condition)).toBeNull();
     await openLimits(screen);
     expect(screen.queryByText(condition)).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Gespeicherte Originalbedingungen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben", expanded: false }));
     expect(screen.getByText(condition)).toBeVisible();
     expect(screen.queryByRole("button", { name: condition })).toBeNull();
   });
@@ -228,6 +459,8 @@ describe("integrated tariff details", () => {
       expect(screen.queryByRole("link")).toBeNull();
       expect(screen.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);
+      expect(screen.queryByText(issue.description)).toBeNull();
+      await openOriginal(screen);
       expect(screen.getByText(issue.description)).toBeVisible();
       expect(screen.getByText(issue.tariff!.ruleText)).toBeVisible();
       expect(screen.getByRole("link", { name: issue.tariff!.source.title })).toBeVisible();
@@ -262,15 +495,18 @@ describe("integrated tariff details", () => {
       const body = within(screen.getByTestId("tariff-check-detail-content"));
       const copy = tariffCheckPresentation(issue.tariff!, issue.title, issue.description);
       expect(body.getByText(copy.summary)).toBeVisible();
-      expect(body.getByText(copy.limitation)).toBeVisible();
+      expect(body.queryByText(copy.limitation)).toBeNull();
       if (status === "PENDING") expect(body.getByText("Geplant oder noch laufend")).toBeVisible();
       if (status === "DEVIATION") expect(body.getByText("Abweichung erkannt")).toBeVisible();
       expect(body.getByText("30.11.–06.12.2026")).toBeVisible();
       expect(body.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);
+      expect(body.getByText(copy.limitation)).toBeVisible();
+      expect(body.queryByText(issue.description)).toBeNull();
+      await openOriginal(screen);
       expect(body.getByText(issue.description)).toBeVisible();
-      expect(screen.queryByTestId("check-shift-duty")).toBeNull();
-      await fireEvent.press(screen.getByRole("button", { name: "1 Dienst anzeigen" }));
+      expect(screen.getByTestId("check-shift-duty")).toBeVisible();
+      expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
       expect(screen.getByTestId("check-shift-duty")).toBeVisible();
     },
   );
@@ -384,9 +620,11 @@ describe("integrated tariff details", () => {
     );
     expect(screen.queryByRole("link")).toBeNull();
     await openLimits(screen);
+    expect(screen.queryByText(issue.description)).toBeNull();
+    await openOriginal(screen);
     expect(screen.getByText(issue.description)).toBeVisible();
     expect(screen.getByRole("link", { name: "TVöD-AT, § 6" })).toBeVisible();
-    await fireEvent.press(screen.getByRole("button", { name: "1 Dienst anzeigen" }));
+    expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
     expect(screen.getByTestId("check-shift-duty")).toBeVisible();
   });
 
@@ -419,10 +657,12 @@ describe("integrated tariff details", () => {
       await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
       expect(screen.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);
+      expect(screen.queryByText(issue.description)).toBeNull();
+      await openOriginal(screen);
       expect(screen.getByText(issue.description)).toBeVisible();
       expect(screen.getByRole("link", { name: TARIFF_SCOPE_SOURCE.title })).toBeVisible();
       expect(screen.getByText("Grundlage des Prüfumfangs")).toBeVisible();
-      await fireEvent.press(screen.getByRole("button", { name: "1 Dienst anzeigen" }));
+      expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
       expect(screen.getByTestId("check-shift-duty")).toBeVisible();
     },
   );

@@ -23,6 +23,8 @@ export interface TariffTimeContext {
   readonly unavailableReason: "CONFLICT" | "COVERAGE" | "SCOPE" | null;
   readonly requirements: readonly string[];
   readonly sundayHolidayWorkEligible: boolean | null;
+  /** LUNA working-model basis, not a separate legal confirmation. */
+  readonly sundayWorkModelKnown?: boolean;
   readonly key: string;
 }
 
@@ -238,6 +240,11 @@ export function tariffContextAt(profile: UserProfile, date: string): TariffTimeC
     unavailableReason,
     requirements,
     sundayHolidayWorkEligible: p.sundayHolidayWorkEligible,
+    sundayWorkModelKnown:
+      p.sundayHolidayWorkEligible === true ||
+      (p.sundayHolidayWorkEligible !== false &&
+        p.workPattern?.workplaceCoverage === "AROUND_THE_CLOCK" &&
+        p.workPattern.assignment === "PERMANENT"),
     key: JSON.stringify([
       policy?.family ?? null,
       training,
@@ -245,6 +252,7 @@ export function tariffContextAt(profile: UserProfile, date: string): TariffTimeC
       unavailable,
       requirements,
       p.sundayHolidayWorkEligible,
+      p.workPattern ?? null,
       boundaries,
     ]),
   };

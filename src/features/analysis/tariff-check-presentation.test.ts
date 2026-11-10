@@ -27,8 +27,9 @@ describe("plain tariff check presentation", () => {
     const copy = tariffCheckPresentation(source, "Alter Titel", "Interne Zuordnung");
     expect(copy.title).toBe("2 Sonntage hintereinander mit Dienst");
     expect(copy.summary).toContain("soll");
-    expect(copy.limitation).toContain("Zweiwochen-Zeitraum");
-    expect(copy.limitation).toContain("nicht bekannt");
+    expect(copy.limitation).toContain("gezeigten zwei Wochen");
+    expect(copy.limitation).toContain("abweichender betrieblicher Bezugszeitraum");
+    expect(copy.constraints.join(" ")).not.toMatch(/nicht hinterlegt|nicht sicher erkennen/);
     expect(copy.status).toBe("observation");
     expect(JSON.stringify(source)).toBe(before);
   });
@@ -38,9 +39,11 @@ describe("plain tariff check presentation", () => {
       "Alt",
       "Alt",
     );
-    expect(copy.title).toBe("7 Tage in einer Kalenderwoche mit Dienst");
-    expect(copy.summary).toContain("fünf Tage");
-    expect(copy.limitation).toContain("regelmäßigen Arbeitszeit");
+    expect(copy.title).toBe("7 Diensttage in einer Kalenderwoche");
+    expect(copy.summary).toContain("fünf Arbeitstage");
+    expect(copy.summary).toContain("auch sechs");
+    expect(copy.limitation).toContain("Startdatum");
+    expect(copy.limitation).toContain("setzt die betrieblichen Gründe");
     expect(`${copy.title} ${copy.summary} ${copy.limitation}`).not.toMatch(
       /Verstoß|unzulässig|verboten/,
     );
@@ -110,9 +113,8 @@ describe("plain tariff check presentation", () => {
       "Generische Originalbeobachtung",
     );
     expect(copy.originalRequirements).toEqual([original[0], original[2]]);
-    expect(copy.constraints).toContain(
-      "Der im Betrieb geltende Zweiwochen-Zeitraum ist der App nicht bekannt.",
-    );
+    expect(copy.limitation).toContain("gezeigten zwei Wochen");
+    expect(copy.constraints.join(" ")).not.toContain("Welche zwei Wochen");
     expect(`${copy.summary} ${copy.limitation}`).not.toContain(original[2]);
     expect(original).toHaveLength(3);
   });
@@ -162,13 +164,14 @@ describe("plain tariff check presentation", () => {
     expect(text).not.toMatch(/Bestätige|Prüfe|zu bestätigen|zu klären/);
     expect(copy.originalDescription).toBe("Original");
   });
-  it("keeps the TV-UK five-day average instead of claiming five days in every calendar week", () => {
+  it("labels the TV-UK six-day threshold as a LUNA assumption rather than rewriting the tariff", () => {
     const copy = tariffCheckPresentation(
       evidence({ ruleId: "TARIFF_WEEK_DAYS", count: 7, source: TARIFF_TIME_POLICIES.TVUK.source }),
       "Alt",
       "Alt",
     );
-    expect(copy.summary).toContain("durchschnittlich fünf Tage");
+    expect(copy.summary).toContain("durchschnittlich fünf Arbeitstage");
+    expect(TARIFF_TIME_POLICIES.TVUK.ruleText).toContain("durchschnittlich");
   });
   it("keeps the TV-UK connected two-day block in the simple rule explanation", () => {
     const copy = tariffCheckPresentation(

@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { dutyInstant } from "@/domain/special-duty";
 import type { TariffComplianceEvidence } from "@/domain/tariff-compliance";
-import { TARIFF_SCOPE_SOURCE } from "@/domain/tariff-time-policy";
+import { TARIFF_SCOPE_SOURCE, TARIFF_WEEKLY_CHECK_ASSUMPTION } from "@/domain/tariff-time-policy";
 import type { ComplianceIssue, ShiftEntry, UserProfile } from "@/domain/types";
 import { dutyWorkParts } from "./special-duty";
 import { tariffContextAt, type TariffTimeContext } from "./tariff-compliance-context";
@@ -13,7 +13,7 @@ export interface TariffComplianceOptions {
   readonly employmentAssessmentPeriod?: { readonly from: string; readonly until: string | null };
 }
 
-function recordedWorkDates(shift: ShiftEntry, timeZone: string): readonly string[] {
+export function recordedWorkDates(shift: ShiftEntry, timeZone: string): readonly string[] {
   if (
     shift.deletedAt !== null ||
     shift.allDay ||
@@ -104,7 +104,11 @@ function freeDayRequirements(
   return [
     ...context.requirements,
     "Die Zuordnung des tariflichen Zweiwochen-Bezugszeitraums ist zu bestätigen; dieses Fenster ist ein Beobachtungszeitraum.",
-    "Prüfe, ob regelmäßig Sonn- und Feiertagsarbeit im Sinne der Tarifregel geleistet wird. Die Zulässigkeit von Sonntagsarbeit allein bestätigt diese Regelmäßigkeit nicht.",
+    ...(contexts.every((item) => item?.sundayWorkModelKnown === true)
+      ? []
+      : [
+          "Prüfe, ob regelmäßig Sonn- und Feiertagsarbeit im Sinne der Tarifregel geleistet wird. Die Zulässigkeit von Sonntagsarbeit allein bestätigt diese Regelmäßigkeit nicht.",
+        ]),
     "Leere Kalendertage sind kein Nachweis tatsächlich arbeitsfreier Tage.",
     ...(contexts.some((item) => item !== null && !item.scopeConfirmed)
       ? ["Der persönliche Geltungsbereich dieser Tarifregel ist zu bestätigen."]
@@ -160,6 +164,9 @@ export function* checkTariffWorkingTimeSteps(
   const scanEnd = monday(last).add({ days: 13 });
   const reference = options.referenceDate ?? Temporal.Now.plainDateISO(timeZone).toString();
   const work = new Map<string, Set<string>>();
+  // Weekly distribution uses entry start dates. Free-day/Sunday checks below
+  // retain actual work on every touched date, including overnight spillover.
+  const starts = new Map<string, Set<string>>();
   const unique = new Map<string, ShiftEntry>();
   let checkpoint = 0;
   yield checkpoint;
@@ -176,13 +183,20 @@ export function* checkTariffWorkingTimeSteps(
   const earliestEntry = scanStart.subtract({ days: 15 }).toString();
   const latestEntry = scanEnd.toString();
   for (const shift of unique.values()) {
-    if (shift.date >= earliestEntry && shift.date <= latestEntry)
-      for (const date of recordedWorkDates(shift, timeZone)) {
+    if (shift.date >= earliestEntry && shift.date <= latestEntry) {
+      const workedDates = recordedWorkDates(shift, timeZone);
+      if (workedDates.length && shift.date >= scanStart.toString()) {
+        const ids = starts.get(shift.date) ?? new Set<string>();
+        ids.add(shift.id);
+        starts.set(shift.date, ids);
+      }
+      for (const date of workedDates) {
         if (date < scanStart.toString() || date > latestEntry) continue;
         const ids = work.get(date) ?? new Set<string>();
         ids.add(shift.id);
         work.set(date, ids);
       }
+    }
     if (++checkpoint % 4 === 0) yield checkpoint;
   }
   if (work.size === 0) return [];
@@ -248,7 +262,12 @@ export function* checkTariffWorkingTimeSteps(
       if (++checkpoint % 4 === 0) yield checkpoint;
     }
     const context = contexts[13] ?? contexts.find((value) => value !== null);
-    if (!context?.policy?.freeSource || context.unavailable) continue;
+    if (
+      !context?.policy?.freeSource ||
+      context.unavailable ||
+      sundays.some((date) => contextAt(date)?.sundayHolidayWorkEligible === false)
+    )
+      continue;
     const tariff: TariffComplianceEvidence = {
       ...evidence(context, dates[0], until, reference, true),
       ruleId: "TARIFF_FREE_SUNDAY",
@@ -270,9 +289,8 @@ export function* checkTariffWorkingTimeSteps(
     );
   }
 
-  // Scope gaps above still matter with few duties. Six occupied dates alone
-  // establish neither a seven-day week nor an impossible two-day freedom block.
-  if (work.size <= 6) return result;
+  // Start dates and occupied dates can differ around midnight and pauses.
+  if (work.size <= 6 && starts.size <= 6) return result;
 
   for (
     let start = scanStart;
@@ -280,7 +298,7 @@ export function* checkTariffWorkingTimeSteps(
     start = start.add({ days: 7 })
   ) {
     const dates = localDays(start, 7);
-    const worked = dates.filter((date) => work.has(date));
+    const worked = dates.filter((date) => starts.has(date));
     if (worked.length <= 6 || !inDisplayPeriod(worked[6])) continue;
     const contexts: (TariffTimeContext | null)[] = [];
     for (const date of dates) {
@@ -302,13 +320,7 @@ export function* checkTariffWorkingTimeSteps(
       requirements: [
         ...base.requirements,
         "Prüfe, welche erfassten Tätigkeiten regelmäßige Arbeitszeit und welche zusätzliche Arbeit sind.",
-        ...(context.policy
-          ? [
-              context.policy.averageFive
-                ? "Bestätige den Zeitraum für den Fünftagedurchschnitt und die notwendigen betrieblichen Gründe für eine Sechstagewoche."
-                : `Die ${context.policy.sixthDayReason}n betrieblichen oder dienstlichen Gründe für einen sechsten Tag sind zu prüfen.`,
-            ]
-          : []),
+        TARIFF_WEEKLY_CHECK_ASSUMPTION,
         ...(contexts.some((item) => item !== null && !item.scopeConfirmed)
           ? ["Der persönliche Geltungsbereich der gewählten Tarifregel ist zu bestätigen."]
           : []),
@@ -326,9 +338,9 @@ export function* checkTariffWorkingTimeSteps(
         context.unavailable
           ? "Tarifgrundlage prüfen"
           : `Arbeit an allen ${worked.length} Tagen der Kalenderwoche`,
-        `${worked.length} Kalendertage mit erfassten Tätigkeiten. ${tariff.ruleText}`,
+        `${worked.length} Tage mit Dienstbeginn in einer Kalenderwoche. ${TARIFF_WEEKLY_CHECK_ASSUMPTION}`,
         tariff,
-        worked.flatMap((d) => [...work.get(d)!]),
+        worked.flatMap((d) => [...starts.get(d)!]),
       ),
     );
   }

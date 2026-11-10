@@ -4,6 +4,7 @@ import type { ShiftEntry, UserProfile } from "@/domain/types";
 import { checkTariffWorkingTimeSteps } from "./tariff-compliance";
 import { captureEmploymentProfile } from "@/domain/employment-history";
 import { newSpecialDuty } from "@/domain/special-duty";
+import { TARIFF_TIME_POLICIES, TARIFF_WEEKLY_CHECK_ASSUMPTION } from "@/domain/tariff-time-policy";
 import { createWorkingTimeCalculationProfile } from "./working-time-calculation-profile";
 import * as tariffContexts from "./tariff-compliance-context";
 
@@ -140,17 +141,57 @@ describe("tariff rules integrated as legal findings", () => {
   });
 
   it.each([true, false, null])(
-    "does not mistake Sunday eligibility %s for regular Sunday work",
+    "uses the saved Sunday working-model answer %s",
     (sundayHolidayWorkEligible) => {
       const sunday = calculate([shift("2026-08-09"), shift("2026-08-16")], {
         ...profile,
         sundayHolidayWorkEligible,
       }).find((item) => item.rule === "TARIFF_FREE_SUNDAY");
-      expect(sunday?.tariff?.requirements.join(" ")).toMatch(/regelmäßig/);
+      if (sundayHolidayWorkEligible === false) {
+        expect(sunday).toBeUndefined();
+        return;
+      }
+      if (sundayHolidayWorkEligible === true)
+        expect(sunday?.tariff?.requirements.join(" ")).not.toMatch(/regelmäßig/);
+      else expect(sunday?.tariff?.requirements.join(" ")).toMatch(/regelmäßig/);
       expect(sunday?.tariff?.requirements.join(" ")).toMatch(/Geltungsbereich/);
       expect(sunday?.tariff?.status).toBe("REVIEW");
     },
   );
+
+  it("uses a permanent 24/7 model when the older Sunday answer is empty", () => {
+    const result = calculate([shift("2026-08-09"), shift("2026-08-16")], {
+      ...profile,
+      sundayHolidayWorkEligible: null,
+      workPattern: { workplaceCoverage: "AROUND_THE_CLOCK", assignment: "PERMANENT" },
+    });
+    const sunday = result.find((item) => item.rule === "TARIFF_FREE_SUNDAY");
+    expect(sunday).toBeDefined();
+    expect(sunday?.tariff?.requirements.join(" ")).not.toMatch(/regelmäßig/);
+  });
+
+  it("respects a historical negative Sunday answer within a later positive period", () => {
+    const p: UserProfile = {
+      ...profile,
+      employmentTimeline: [false, true].map((answer, index) => ({
+        effectiveFrom: index === 0 ? null : "2026-08-10",
+        employment: captureEmploymentProfile({ ...profile, sundayHolidayWorkEligible: answer }),
+        data: {
+          version: 1 as const,
+          weeklyMinutes: 2310,
+          selection: { kind: "unconfigured" as const },
+        },
+        revision: 1,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
+      })),
+    };
+    expect(
+      calculate([shift("2026-08-09"), shift("2026-08-16")], p).some(
+        (item) => item.rule === "TARIFF_FREE_SUNDAY",
+      ),
+    ).toBe(false);
+  });
 
   it("keeps the Sunday observation pending until its second Sunday has passed", () => {
     const result = calculate(
@@ -234,14 +275,92 @@ describe("tariff rules integrated as legal findings", () => {
     ).toHaveLength(0);
   });
 
-  it("counts both touched calendar dates of an overnight shift", () => {
+  it("counts a night shift once by its start date in the weekly check", () => {
     const result = calculate([
       ...days("2026-08-03", 5),
       shift("2026-08-08", { type: "NIGHT", startTime: "22:00", endTime: "06:00" }),
     ]);
-    const week = result.find((i) => i.rule === "TARIFF_WEEK_DAYS")!;
-    expect(week.tariff?.count).toBe(7);
-    expect(week.relatedShiftIds).toHaveLength(6);
+    expect(result.find((i) => i.rule === "TARIFF_WEEK_DAYS")).toBeUndefined();
+  });
+
+  it.each(Object.values(TARIFF_TIME_POLICIES))(
+    "uses six start days and assumed sixth-day reasons for $family",
+    (policy) => {
+      vi.spyOn(tariffContexts, "tariffContextAt").mockReturnValue({
+        policy,
+        label: policy.label,
+        training: false,
+        scopeConfirmed: true,
+        unavailable: false,
+        unavailableReason: null,
+        requirements: [],
+        sundayHolidayWorkEligible: true,
+        key: policy.family,
+      });
+      const nights = (start: string, count: number) =>
+        days(start, count).map((day) => ({
+          ...day,
+          type: "NIGHT" as const,
+          startTime: "21:00",
+          endTime: "07:30",
+        }));
+      const weeks = (duties: readonly ShiftEntry[]) =>
+        calculate(duties).filter((finding) => finding.rule === "TARIFF_WEEK_DAYS");
+      expect(weeks(nights("2026-08-03", 6))).toEqual([]);
+      expect(weeks(nights("2026-08-04", 12))).toEqual([]);
+      expect(weeks(nights("2026-08-03", 12))).toHaveLength(1);
+      const seven = weeks(nights("2026-08-03", 7));
+      expect(seven).toHaveLength(1);
+      expect(seven[0].tariff).toMatchObject({ count: 7, limit: 6, source: policy.source });
+      expect(seven[0].relatedShiftIds).toHaveLength(7);
+      expect(seven[0].tariff?.requirements).toContain(TARIFF_WEEKLY_CHECK_ASSUMPTION);
+      expect(seven[0].tariff?.requirements.join(" ")).not.toMatch(
+        /Gründe.*prüfen|Gründe.*bestätigen/,
+      );
+    },
+  );
+
+  it("counts multiple duties on the same start day once", () => {
+    expect(
+      calculate([
+        ...days("2026-08-03", 6),
+        shift("2026-08-08", { id: "second-duty", startTime: "18:00", endTime: "22:00" }),
+      ]).filter((item) => item.rule === "TARIFF_WEEK_DAYS"),
+    ).toEqual([]);
+  });
+
+  it("keeps a start day even when its short midnight slice could contain the pause", () => {
+    const result = calculate([
+      shift("2026-08-03", { type: "NIGHT", startTime: "23:50", endTime: "06:00" }),
+      ...days("2026-08-04", 6),
+    ]);
+    expect(result.find((item) => item.rule === "TARIFF_WEEK_DAYS")?.tariff?.count).toBe(7);
+  });
+
+  it("still counts overnight work on Sunday for the separate free-Sunday check", () => {
+    const result = calculate(
+      ["2026-08-08", "2026-08-15"].map((date) =>
+        shift(date, { type: "NIGHT", startTime: "21:00", endTime: "07:30" }),
+      ),
+    );
+    expect(
+      result.find((item) => item.rule === "TARIFF_FREE_SUNDAY")?.tariff?.recordedDates,
+    ).toEqual(["2026-08-09", "2026-08-16"]);
+    expect(result.some((item) => item.rule === "TARIFF_WEEK_DAYS")).toBe(false);
+  });
+
+  it("does not assign a prior Sunday's night to Monday in a new month", () => {
+    const result = calculate(
+      days("2026-08-30", 7).map((day) => ({
+        ...day,
+        type: "NIGHT" as const,
+        startTime: "21:00",
+        endTime: "07:30",
+      })),
+      profile,
+      "2026-09",
+    );
+    expect(result.some((item) => item.rule === "TARIFF_WEEK_DAYS")).toBe(false);
   });
 
   it("does not count a midnight endpoint as work on the next day", () => {
@@ -386,14 +505,15 @@ describe("tariff rules integrated as legal findings", () => {
     expect(result[0].tariff?.status).toBe("REVIEW");
   });
 
-  it("keeps touched dates stable over the autumn clock change", () => {
+  it("counts each start date once over the autumn clock change", () => {
     const shifts = [
       ...days("2026-10-19", 5),
       shift("2026-10-24", { type: "NIGHT", startTime: "22:00", endTime: "06:00" }),
     ];
     const result = calculate(shifts, profile, "2026-10", "2026-11-03");
-    expect(result[0].tariff?.recordedDates).toContain("2026-10-25");
-    expect(result[0].tariff?.count).toBe(7);
+    expect(result.find((item) => item.rule === "TARIFF_WEEK_DAYS")).toBeUndefined();
+    const seven = calculate([...shifts, shift("2026-10-25")], profile, "2026-10", "2026-11-03");
+    expect(seven.find((item) => item.rule === "TARIFF_WEEK_DAYS")?.tariff?.count).toBe(7);
   });
 
   it("does not treat whole on-call availability as observed work without callouts", () => {
@@ -405,7 +525,7 @@ describe("tariff rules integrated as legal findings", () => {
     expect(result).toEqual([]);
   });
 
-  it("counts actual on-call travel and service touching another calendar day", () => {
+  it("counts an on-call duty with actual work once in weekly distribution", () => {
     const duty = newSpecialDuty("ON_CALL", "08:00", "08:00", profile.timeZone);
     const result = calculate([
       ...days("2026-08-03", 5),
@@ -427,7 +547,7 @@ describe("tariff rules integrated as legal findings", () => {
         endTime: "08:00",
       }),
     ]);
-    expect(result[0].tariff?.count).toBe(7);
+    expect(result.find((item) => item.rule === "TARIFF_WEEK_DAYS")).toBeUndefined();
   });
 
   it("shows one targeted coverage notice for an unreviewed year even with few duties", () => {

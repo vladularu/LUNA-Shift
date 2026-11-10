@@ -49,6 +49,7 @@ export function PlanningHintDetails({
       <Text style={{ color: palette.text, ...TYPOGRAPHY.body, fontWeight: "500" }}>
         {hint.title}
       </Text>
+      {children}
       <View style={{ gap: SPACING.sm }}>
         <Text style={body}>{explanation}</Text>
         {hint.recommendation ? <Text style={body}>{hint.recommendation}</Text> : null}
@@ -98,7 +99,6 @@ export function PlanningHintDetails({
       {missing ? (
         <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
       ) : null}
-      {children}
       {hint.sources.length || hint.policyNote ? (
         <CheckDetailDisclosure title="Quelle und Prüfgrenzen" testID="planning-source-disclosure">
           <Text style={body}>

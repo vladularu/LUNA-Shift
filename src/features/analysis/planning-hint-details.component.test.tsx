@@ -108,7 +108,7 @@ describe("single concise planning detail explanation", () => {
     expect(screen.queryByText("Wochenenden im Monat")).toBeNull();
     expect(screen.queryByRole("button", { name: "Wochenendübersicht ansehen" })).toBeNull();
   });
-  it("shows one structured explanation, source and initially collapsed service list", async () => {
+  it("shows one structured explanation, source and immediately visible duty overview", async () => {
     const hint = planningHintPresentation(work);
     const duties = Array.from({ length: 7 }, (_, index) =>
       forecastShift({ id: "duty-" + index, date: "2026-10-" + String(index + 2).padStart(2, "0") }),
@@ -138,9 +138,7 @@ describe("single concise planning detail explanation", () => {
     expect(screen.getAllByRole("link", { name: hint.sources[0]!.title })).toHaveLength(1);
     expect(screen.getByText(hint.policyNote!)).toBeVisible();
     expect(screen.queryByText(/Dies ist eine arbeitswissenschaftliche Empfehlung/)).toBeNull();
-    const services = screen.getByRole("button", { name: "7 Dienste anzeigen", expanded: false });
-    expect(screen.queryByTestId("check-shift-duty-0")).toBeNull();
-    await fireEvent.press(services);
+    expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
     expect(screen.getByTestId("check-shift-duty-0")).toBeVisible();
   });
   it.each<["under24" | "under48", number, string, string]>([

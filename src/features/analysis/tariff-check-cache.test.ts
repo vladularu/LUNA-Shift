@@ -106,6 +106,13 @@ describe("cached tariff evidence", () => {
     );
     expect(JSON.parse(annualInputKey({ year: 2026 }))[0]).not.toBe(published);
   });
+  it("invalidates weekly checks that counted overnight calendar dates", () => {
+    const previous = "2026-11-09-weekends-four-weeks";
+    expect(JSON.parse(monthlyComplianceKey("2026-11", work, "2026-11-09", [], false))[0]).not.toBe(
+      previous,
+    );
+    expect(JSON.parse(annualInputKey({ year: 2026 }))[0]).not.toBe(previous);
+  });
 });
 
 const weekendResult = (days = [7, 14, 21]) =>
