@@ -11,6 +11,11 @@ import {
   listScheduledNotificationIds,
   replaceScheduledNotifications,
 } from "@/infrastructure/notifications/notification-schedule-repository";
+import {
+  captureEntryNotificationGeneration,
+  invalidateEntryNotifications,
+  writeEntryNotificationSchedule,
+} from "./entry-notification-lifecycle";
 
 const MAX_PENDING_FOR_ENTRY = 48;
 
@@ -125,6 +130,7 @@ function occurrenceDates(
 }
 
 export async function cancelAllEntryNotifications(db: SQLiteDatabase): Promise<void> {
+  await invalidateEntryNotifications(db);
   const ids = await listAllScheduledNotificationIds(db);
   await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id)));
 }
@@ -132,26 +138,35 @@ export async function cancelAllEntryNotifications(db: SQLiteDatabase): Promise<v
 export async function cancelEntryNotifications(
   db: SQLiteDatabase,
   entry: Pick<CalendarEntry, "id" | "kind">,
+  current: () => boolean = captureEntryNotificationGeneration(db),
 ): Promise<void> {
+  if (!current()) return;
   const ids = await listScheduledNotificationIds(db, entry);
+  if (!current()) return;
   await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id)));
-  await replaceScheduledNotifications(db, entry, []);
+  await writeEntryNotificationSchedule(db, current, () =>
+    replaceScheduledNotifications(db, entry, []),
+  );
 }
 
 export async function syncEntryNotifications(
   db: SQLiteDatabase,
   entry: CalendarEntry,
   timeZone: string,
+  current: () => boolean = captureEntryNotificationGeneration(db),
 ): Promise<void> {
-  await cancelEntryNotifications(db, entry);
+  if (!current()) return;
+  await cancelEntryNotifications(db, entry, current);
+  if (!current()) return;
   const specs = reminderSpecs(entry);
   if (specs.length === 0 || entry.deletedAt !== null) return;
 
   const currentPermission = await Notifications.getPermissionsAsync();
+  if (!current()) return;
   const permission = currentPermission.granted
     ? currentPermission
     : await Notifications.requestPermissionsAsync();
-  if (!permission.granted) return;
+  if (!current() || !permission.granted) return;
 
   const now = Temporal.Now.zonedDateTimeISO(timeZone);
   const today = now.toPlainDate().toString();
@@ -186,9 +201,22 @@ export async function syncEntryNotifications(
           },
         });
         schedules.push({ occurrenceDate, notificationId });
+        if (!current()) return;
       }
     }
   } finally {
-    await replaceScheduledNotifications(db, entry, schedules);
+    try {
+      await writeEntryNotificationSchedule(db, current, () =>
+        replaceScheduledNotifications(db, entry, schedules),
+      );
+    } finally {
+      if (!current()) {
+        await Promise.all(
+          schedules.map(({ notificationId }) =>
+            Notifications.cancelScheduledNotificationAsync(notificationId),
+          ),
+        );
+      }
+    }
   }
 }

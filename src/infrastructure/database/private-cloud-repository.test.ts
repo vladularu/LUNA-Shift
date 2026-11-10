@@ -15,7 +15,7 @@ const present: PrivateCloudDocument["presentation"] = {
   calendarImageStrength: "medium",
 };
 let memory: TariffAnnualTestDatabase;
-const beforeReplace = vi.fn(async () => undefined);
+const beforeReplace = vi.fn<() => Promise<void | (() => void)>>(async () => undefined);
 const recoverNotifications = vi.fn(async () => undefined);
 const discard = vi.fn();
 function local() {
@@ -131,6 +131,41 @@ describe("atomic private cloud storage", () => {
     expect((await port.state())?.baseline?.revision).toBe(1);
     expect(beforeReplace).toHaveBeenCalledOnce();
   });
+
+  it.each([false, true])(
+    "releases the reminder barrier after commit or rollback (failure=%s)",
+    async (failure) => {
+      const port = local();
+      await port.bind("a", () => true);
+      const before = await port.capture();
+      const next = {
+        ...before,
+        data: {
+          ...before.data,
+          profile: { ...(before.data.profile as object), employer_name: "Cloud" },
+        },
+      };
+      let released = false;
+      const resume = vi.fn(() => {
+        released = true;
+      });
+      beforeReplace.mockResolvedValueOnce(resume);
+      recoverNotifications.mockImplementationOnce(async () => {
+        expect(released).toBe(true);
+      });
+      if (failure) memory.fail = "DELETE FROM shift_entries";
+      try {
+        const result = port.apply("a", before, receipt(next), () => true);
+        if (failure) await expect(result).rejects.toThrow("injected");
+        else await expect(result).resolves.toBe(true);
+        expect(resume).toHaveBeenCalledOnce();
+        expect(released).toBe(true);
+      } finally {
+        memory.fail = null;
+        recoverNotifications.mockReset().mockResolvedValue(undefined);
+      }
+    },
+  );
   it("does not overwrite a local edit committed after the snapshot was captured", async () => {
     const port = local();
     await port.bind("a", () => true);

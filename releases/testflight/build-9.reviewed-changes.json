@@ -287,8 +287,8 @@
     {
       "path": "src/infrastructure/database/private-cloud-repository.ts",
       "kind": "modified",
-      "sha256": "5ee758628161cd06ed038d088475d9beb4a568cc170e44ea9a778a49cbbbc7b2",
-      "reason": "Package B cache validity: notify existing net-profile subscribers only after a changed cloud snapshot is actually committed. Preserve account/current-snapshot guards and rollback; unchanged/rejected/failed applications do not invalidate. No remote cloud action or schema change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "30906dd77132afc312854562e926ee0847fd481e79d14c9abd0526144b5be1da",
+      "reason": "Package B cache validity: notify existing net-profile subscribers only after a changed cloud snapshot is actually committed. Preserve account/current-snapshot guards and rollback; unchanged/rejected/failed applications do not invalidate. No remote cloud action or schema change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
       "path": "src/features/analysis/analysis-background-preparation.tsx",
@@ -859,6 +859,24 @@
       "kind": "modified",
       "sha256": "d5c39f61ccba92a0edccdecbc1713b1ecf611ad2497bf32150b4524a1a99bf46",
       "reason": "User-authorized robustness maintenance on 2026-11-10: read SDK-57 streaming fetch bodies with a 524288-byte ceiling, cancel on overflow and enforce the deadline during body reads. Keep HTTPS/path/status/content-type/URL/UTF-8 checks and verification inputs unchanged; never fall back to unbounded arrayBuffer. Explicit streaming overflow, exact-boundary, UTF-8, timeout and transport regressions are added. Preview/iPhone network acceptance remains pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notification-lifecycle.ts",
+      "kind": "added",
+      "sha256": "620404f282ed2ec4c53b9109b89c69f76b60ad5be24d7bb7e473ead004d0136a",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.native.ts",
+      "kind": "modified",
+      "sha256": "da1db120af99d509b995f7f1801b405ee8355f90af40b6ebe14fe04841b8faf3",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.ts",
+      "kind": "modified",
+      "sha256": "9d56c9151a27986fd52947a40e9a9a67ac7aa1cbb6f224d8cfd36553f121d741",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     }
   ]
 }

@@ -40,7 +40,7 @@ export function createPrivateCloudLocal(
       apply(transaction: SQLiteDatabase): Promise<void>;
       discard(): void;
     }>;
-    readonly beforeReplace: (transaction: SQLiteDatabase) => Promise<void>;
+    readonly beforeReplace: (transaction: SQLiteDatabase) => Promise<void | (() => void)>;
     readonly recoverNotifications: () => Promise<void>;
   },
 ): CloudLocalPort {
@@ -126,6 +126,7 @@ export function createPrivateCloudLocal(
         : null;
       let applied = false;
       let notificationsTouched = false;
+      let resumeNotifications: (() => void) | undefined;
       try {
         const result = await withImmediateTransaction(db, async (transaction) => {
           requireCurrent(isCurrent);
@@ -139,7 +140,7 @@ export function createPrivateCloudLocal(
               JSON.stringify(actual),
             );
             notificationsTouched = true;
-            await options.beforeReplace(transaction);
+            resumeNotifications = (await options.beforeReplace(transaction)) ?? undefined;
             requireCurrent(isCurrent);
             await restoreLocalBackupInTransaction(transaction, validated.backup, true);
             await media?.apply(transaction);
@@ -153,6 +154,8 @@ export function createPrivateCloudLocal(
         if (result && changed) netPayProfilesChanged(db);
         return result;
       } catch (error) {
+        resumeNotifications?.();
+        resumeNotifications = undefined;
         if (notificationsTouched) {
           try {
             await options.recoverNotifications();
@@ -164,6 +167,7 @@ export function createPrivateCloudLocal(
         }
         throw error;
       } finally {
+        resumeNotifications?.();
         if (!applied) media?.discard();
       }
     },
