@@ -149,8 +149,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "840dc12f0afc0d1147a370bd494e16f264aedab4212325ff8240cdb6aa26916c",
-      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "8f7e2dec8795ab1cbce461bfffc2dba4da89bd059cb409a587cececf8e608275",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
@@ -861,21 +861,15 @@
       "reason": "User-authorized robustness maintenance on 2026-11-10: read SDK-57 streaming fetch bodies with a 524288-byte ceiling, cancel on overflow and enforce the deadline during body reads. Keep HTTPS/path/status/content-type/URL/UTF-8 checks and verification inputs unchanged; never fall back to unbounded arrayBuffer. Explicit streaming overflow, exact-boundary, UTF-8, timeout and transport regressions are added. Preview/iPhone network acceptance remains pending."
     },
     {
-      "path": "src/infrastructure/notifications/entry-notification-lifecycle.ts",
+      "path": "src/composition/private-cloud-provider.tsx",
+      "kind": "modified",
+      "sha256": "c2732dede756a3cbaffaa1c24d9ad879608f4168445c36164a85e37c8de09048",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/composition/cloud-data-refresh-boundary.tsx",
       "kind": "added",
-      "sha256": "620404f282ed2ec4c53b9109b89c69f76b60ad5be24d7bb7e473ead004d0136a",
-      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
-    },
-    {
-      "path": "src/infrastructure/notifications/entry-notifications.native.ts",
-      "kind": "modified",
-      "sha256": "da1db120af99d509b995f7f1801b405ee8355f90af40b6ebe14fe04841b8faf3",
-      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
-    },
-    {
-      "path": "src/infrastructure/notifications/entry-notifications.ts",
-      "kind": "modified",
-      "sha256": "9d56c9151a27986fd52947a40e9a9a67ac7aa1cbb6f224d8cfd36553f121d741",
+      "sha256": "f8c9a9098e3c07bd718fd5c77d4f325e9ac58754390232175358444dbf0915e5",
       "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
@@ -891,16 +885,34 @@
       "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
-      "path": "src/composition/create-entry-notification-port.ts",
-      "kind": "added",
-      "sha256": "8bbe56ff46d0ed393cdeabdc6ef1aae44966f55331eb422007ab5444c7c765f3",
-      "reason": " User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending."
-    },
-    {
       "path": "src/features/data-backup/use-local-backup-restore.ts",
       "kind": "modified",
       "sha256": "c6de3b88e907494133a5fa5d604ac4b38be82e92456bdf5c8042faa2d59ad472",
       "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.native.ts",
+      "kind": "modified",
+      "sha256": "da1db120af99d509b995f7f1801b405ee8355f90af40b6ebe14fe04841b8faf3",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.ts",
+      "kind": "modified",
+      "sha256": "9d56c9151a27986fd52947a40e9a9a67ac7aa1cbb6f224d8cfd36553f121d741",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notification-lifecycle.ts",
+      "kind": "added",
+      "sha256": "620404f282ed2ec4c53b9109b89c69f76b60ad5be24d7bb7e473ead004d0136a",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/composition/create-entry-notification-port.ts",
+      "kind": "added",
+      "sha256": "8bbe56ff46d0ed393cdeabdc6ef1aae44966f55331eb422007ab5444c7c765f3",
+      "reason": " User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending."
     }
   ]
 }
