@@ -103,6 +103,14 @@ export function createPrivateCloudRuntime(options: {
         if (!current()) return;
         const device = await options.local.capture();
         if (!current()) return;
+        // No durable state changes are needed when the server confirms our baseline
+        // and a fresh local snapshot still matches it. Keep validation below.
+        const unchanged =
+          remote.head !== undefined &&
+          state.pending === null &&
+          cloud !== null &&
+          cloud === state.baseline &&
+          sameCloudValue(device, cloud.document);
         let merged = device;
         if (!state.baseline) {
           if (choice === "cloud") {
@@ -134,7 +142,7 @@ export function createPrivateCloudRuntime(options: {
           }
         } else if (cloud && choice && status.requiresFullChoice) {
           merged = choice === "cloud" ? cloud.document : device;
-        } else if (cloud) {
+        } else if (cloud && !unchanged) {
           const result =
             choice === "cloud"
               ? mergePrivateCloudDocuments(
@@ -157,7 +165,7 @@ export function createPrivateCloudRuntime(options: {
             return;
           }
           merged = result.document;
-        } else {
+        } else if (!cloud) {
           throw new UserFacingError(
             "Der bisherige Cloud-Stand fehlt. Deine Gerätedaten bleiben erhalten.",
           );
@@ -180,7 +188,7 @@ export function createPrivateCloudRuntime(options: {
         if (!current()) return;
         const head = cloud;
         let receipt = head;
-        if (!head || !sameCloudValue(merged, head.document)) {
+        if (!unchanged && (!head || !sameCloudValue(merged, head.document))) {
           const pending = {
             expectedRevision: head?.revision ?? 0,
             mutationId: options.makeId(),
@@ -193,7 +201,7 @@ export function createPrivateCloudRuntime(options: {
           if (!current()) return;
         }
         if (!receipt || !current()) return;
-        const applied = await options.local.apply(actor, device, receipt, current);
+        const applied = unchanged || (await options.local.apply(actor, device, receipt, current));
         if (!current()) return;
         if (!applied) {
           update({
@@ -209,7 +217,8 @@ export function createPrivateCloudRuntime(options: {
           requiresFullChoice: false,
           hasCloudData: true,
         });
-        if (!sameCloudValue(device, receipt.document)) await onApplied(device, receipt.document);
+        if (!unchanged && !sameCloudValue(device, receipt.document))
+          await onApplied(device, receipt.document);
       } catch (error) {
         if (current())
           update({

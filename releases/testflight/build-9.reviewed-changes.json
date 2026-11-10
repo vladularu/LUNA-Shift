@@ -923,8 +923,8 @@
     {
       "path": "src/application/private-cloud-runtime.ts",
       "kind": "modified",
-      "sha256": "ced1e01b727677f4c5f8b1cc68deee8ab55308f36f6e5030e51820776fe1f38e",
-      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+      "sha256": "3d52e3aeb048e512969d4dd82ed262c944878c1569520c960a387558f4976e37",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending. Combine the already Preview-tested unchanged-sync fast path from PR #376; preserve fresh local capture, server-head validation, all activity/account guards and the current onApplied handler."
     },
     {
       "path": "src/application/use-cloud-calendar-notifications.ts",
