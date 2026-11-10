@@ -153,6 +153,7 @@ export interface PflegeShiftRepositoryPort {
     endDate?: string,
   ) => Promise<readonly CalendarEntry[]>;
   readonly saveShift: (input: SaveShiftInput) => Promise<ShiftEntry>;
+  readonly saveShifts: (inputs: readonly SaveShiftInput[]) => Promise<readonly ShiftEntry[]>;
   readonly saveAppointment: (input: SaveAppointmentInput) => Promise<Appointment>;
   readonly deleteCalendarEntry: (entry: CalendarEntry) => Promise<void>;
   readonly restoreCalendarEntry: (entry: CalendarEntry) => Promise<CalendarEntry>;

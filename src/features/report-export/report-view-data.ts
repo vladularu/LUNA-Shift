@@ -119,7 +119,9 @@ export function reportView(report: ReportDocument) {
     hasTimeAccount: text(section, "timeAccountMinutes") !== "",
     timeAccount: completeTime ? number(section, "timeAccountMinutes") : null,
     balance: completeTime ? number(section, "balanceMinutes") : null,
-    gross: number(salarySection, "estimatedGrossAmount"),
+    gross:
+      number(salarySection, "estimatedGrossAmount") ?? number(salarySection, "knownGrossAmount"),
+    grossPartial: number(salarySection, "knownGrossAmount") !== null,
     net,
     netDisplay: reportNetMoney(
       net,

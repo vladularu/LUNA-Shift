@@ -1,3 +1,5 @@
+import type { SpecialDutyReview } from "@/domain/special-duty-review";
+import { SpecialDutyReviewRow } from "@/features/salary/special-duty-review-row";
 import { Text } from "@/ui/text";
 import { WorktimeCard } from "./analysis-report-cards";
 import type { ReactNode } from "react";
@@ -14,6 +16,10 @@ import { PLANNING_TITLE } from "./check-presentation";
 import { CHECK_TITLE, LEGAL_TARIFF_TITLE } from "./check-copy";
 import type { PlanningWeekendAssessment } from "@/domain/planning-weekend-policy";
 import { weekendAssessmentOpen } from "./weekend-assessment-summary";
+import {
+  annualSalaryIssueLabel,
+  type AnnualSalaryIssue,
+} from "@/features/salary/annual-salary-issue";
 
 export function AnalysisDashboard({
   cards,
@@ -253,6 +259,8 @@ export function NetListCard({
 }
 
 export function PayListCard({
+  partial = false,
+  duties = [],
   onPress,
   base,
   premiums,
@@ -265,11 +273,14 @@ export function PayListCard({
   annualPayments,
   annualPaymentPresent = false,
   annualPaymentExpected = false,
+  annualIssue,
   loading = false,
   reserveLoadingSpace = false,
 }: {
   readonly onPress: () => void;
   readonly base?: number | null;
+  readonly partial?: boolean;
+  readonly duties?: readonly SpecialDutyReview[];
   readonly premiums?: number;
   readonly overtime?: number;
   readonly allowances?: number;
@@ -280,6 +291,7 @@ export function PayListCard({
   readonly annualPayments?: number;
   readonly annualPaymentPresent?: boolean;
   readonly annualPaymentExpected?: boolean;
+  readonly annualIssue?: AnnualSalaryIssue | null;
   readonly loading?: boolean;
   readonly reserveLoadingSpace?: boolean;
 }) {
@@ -294,7 +306,7 @@ export function PayListCard({
           ? formatEuro(annualPayments ?? 0)
           : loading
             ? "—"
-            : "Nicht hinterlegt"
+            : annualSalaryIssueLabel(annualIssue)
       }
     />
   ) : null;
@@ -331,11 +343,12 @@ export function PayListCard({
             />
           ) : null}
           {annualRow}
+          <SpecialDutyReviewRow duties={duties} analysis />
           <AnalysisValueRow
             reserveDisclosure
             first
             total
-            label="Brutto geschätzt"
+            label={partial ? "Bekanntes Brutto" : "Brutto geschätzt"}
             value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>
@@ -372,11 +385,12 @@ export function PayListCard({
             />
           ) : null}
           {annualRow}
+          <SpecialDutyReviewRow duties={duties} analysis />
           <AnalysisValueRow
             reserveDisclosure
             first={base == null && premiums == null}
             total
-            label="Brutto geschätzt"
+            label={partial ? "Bekanntes Brutto" : "Brutto geschätzt"}
             value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>

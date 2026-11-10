@@ -1,7 +1,7 @@
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { annualPayoutMonths, salaryAnnualFamily } from "@/domain/salary-annual-schedule";
 import type { UserProfile } from "@/domain/types";
-import { annualSalaryProposalSteps } from "./annual-salary-proposal";
+import { annualSalaryProposalResultSteps } from "./annual-salary-proposal";
 import type { SalaryMonthContext } from "./salary-month-input";
 
 /** Derived forecast only. Saved annual instalments (including zero) replace that year's schedule. */
@@ -24,7 +24,7 @@ export function* annualSalaryForecastSteps(
   context: SalaryMonthContext,
   saved: readonly AnnualSalaryPayment[] = [],
 ) {
-  const proposal = yield* annualSalaryProposalSteps(year, profile, context);
+  const { proposal, issue } = yield* annualSalaryProposalResultSteps(year, profile, context);
   const months = annualPayoutMonths(salaryAnnualFamily(profile), year);
   const automatic =
     proposal !== null &&
@@ -41,5 +41,5 @@ export function* annualSalaryForecastSteps(
         },
       ]
     : saved;
-  return { payments, proposal, automatic };
+  return { payments, proposal, automatic, issue };
 }

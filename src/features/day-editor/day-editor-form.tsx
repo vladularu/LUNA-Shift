@@ -1,6 +1,6 @@
-import { editorDutyDuration, editorDutyTariff } from "./special-duty-editor-state";
+import { editorDutyDuration } from "./special-duty-editor-state";
+import { useStandbyBillingReview } from "./use-standby-billing-review";
 import { calculateTimedShiftMinutes } from "@/engine/working-time";
-import { DayEditorSpecialDutyFields } from "./day-editor-special-duty";
 import { TextInput } from "@/ui/text";
 import { router, Stack, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -38,12 +38,14 @@ import { locationPickerRoute } from "@/navigation/routes";
 type EditorMode = "SHIFT" | "APPOINTMENT";
 export function DayEditorForm({
   date,
+  billingFocus = false,
   existing: loadedExisting,
   onDeletionChange,
   requestedMode,
   sessionKey,
 }: {
   readonly date: string;
+  readonly billingFocus?: boolean;
   readonly existing: CalendarEntry | null;
   readonly onDeletionChange: (entry: CalendarEntry | null) => void;
   readonly requestedMode: EditorMode;
@@ -52,7 +54,8 @@ export function DayEditorForm({
   const navigation = useNavigation();
   const { profile } = usePflegeShiftProfile();
   const { templates } = usePflegeShiftTemplates();
-  const { entries, removeEntry, upsertShift, upsertAppointment } = usePflegeShiftEntries();
+  const { entries, removeEntry, upsertShift, upsertShifts, upsertAppointment } =
+    usePflegeShiftEntries();
   const { resolver: ruleResolver } = useRuleCatalogRuntime();
   const { initialValue: existing } = useStableEditorSession(sessionKey, () => loadedExisting);
   const mode: EditorMode = existing?.kind ?? requestedMode;
@@ -60,6 +63,16 @@ export function DayEditorForm({
   const initialAppointment = existing?.kind === "APPOINTMENT" ? existing : null;
   const draftState = useEntryEditorDraft(initialShift, initialAppointment, mode);
   const [specialDuty, setSpecialDuty] = draftState.specialDuty;
+  const billingReview = useStandbyBillingReview({
+    original: initialShift,
+    draft: draftState,
+    date,
+    save: { upsertShift, upsertShifts },
+    entries,
+    profile,
+    resolver: ruleResolver,
+    focused: billingFocus,
+  });
   const [shiftType, setShiftType] = draftState.shiftType;
   const [shiftAllDay, setShiftAllDay] = draftState.shiftAllDay;
   const [selectedTemplateId, setSelectedTemplateId] = draftState.selectedTemplateId;
@@ -199,7 +212,7 @@ export function DayEditorForm({
             );
           }
         }
-        const saved = await upsertShift({
+        const saved = await billingReview.saveShift({
           ...(initialShift ? { id: initialShift.id, expectedRevision: initialShift.revision } : {}),
           date: initialShift?.date ?? date,
           specialDuty,
@@ -316,14 +329,7 @@ export function DayEditorForm({
         <ShiftEditOverlay
           specialDutyKind={specialDuty?.kind}
           specialDutyFields={
-            shiftIsTimed && shiftType !== "TRAINING" ? (
-              <DayEditorSpecialDutyFields
-                tariffFamily={editorDutyTariff(profile, initialShift?.date ?? date)}
-                draft={draftState}
-                date={initialShift?.date ?? date}
-                timeZone={profile?.timeZone ?? "Europe/Berlin"}
-              />
-            ) : undefined
+            shiftIsTimed && shiftType !== "TRAINING" ? billingReview.fields : undefined
           }
           alarmEnabled={shiftAlarmEnabled}
           breakMinutes={breakMinutes}

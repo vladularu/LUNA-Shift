@@ -616,18 +616,28 @@ export function calculateMonthlyPayEstimate(
   );
   if (!specialDutyBreakdowns.length) return estimate;
   const specialDutyAmount =
-    specialDutyBreakdowns.reduce(
-      (sum, line) =>
-        sum +
-        (line.baseAmountCents ?? 0) +
-        (line.calloutPay?.baseAmountCents ?? 0) +
-        (line.calloutPay?.overtimePremiumCents ?? 0) +
-        (line.calloutPay?.timePremiumCents ?? 0),
-      0,
-    ) / 100;
+    specialDutyBreakdowns
+      .filter((line) => line.complete)
+      .reduce(
+        (sum, line) =>
+          sum +
+          (line.baseAmountCents ?? 0) +
+          (line.calloutPay?.baseAmountCents ?? 0) +
+          (line.calloutPay?.overtimePremiumCents ?? 0) +
+          (line.calloutPay?.timePremiumCents ?? 0),
+        0,
+      ) / 100;
   const result = { ...estimate, specialDutyBreakdowns, specialDutyAmount };
   return specialDutyBreakdowns.some((line) => !line.complete)
-    ? { ...result, available: false, estimatedGrossAmount: null, specialDutyNotes: notes }
+    ? {
+        ...result,
+        available: false,
+        estimatedGrossAmount: null,
+        ...(estimate.available && estimate.estimatedGrossAmount !== null
+          ? { knownGrossAmount: roundMoney(estimate.estimatedGrossAmount + specialDutyAmount) }
+          : {}),
+        specialDutyNotes: notes,
+      }
     : {
         ...result,
         estimatedGrossAmount:

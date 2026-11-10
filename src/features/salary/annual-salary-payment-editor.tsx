@@ -1,4 +1,6 @@
+import { SpecialDutyReviewRow } from "./special-duty-review-row";
 import { useState } from "react";
+import { router } from "expo-router";
 import { View } from "react-native";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { validateMonthlyNetPaySettings } from "@/domain/net-pay-profile";
@@ -25,6 +27,33 @@ import { netPayEuro } from "./net-pay-format";
 import { formatMonthTitle } from "@/engine/calendar";
 import type { AnnualSalaryProposal } from "./annual-salary-proposal";
 import { SPACING } from "@/theme/tokens";
+import { salaryRoute, settingsEditorRoute } from "@/navigation/routes";
+import {
+  annualSalaryIssueLabel,
+  annualSalaryIssueMessage,
+  type AnnualSalaryIssue,
+} from "./annual-salary-issue";
+
+export function annualSalaryPaymentEditorVisible(
+  month: string,
+  profile: UserProfile,
+  payments: readonly AnnualSalaryPayment[],
+): boolean {
+  const year = month.slice(0, 4);
+  const initial =
+    payments.find((payment) => payment.payoutMonth === month) ??
+    payments.find((payment) => payment.payoutMonth.startsWith(`${year}-`));
+  const payout =
+    initial?.payoutMonth ??
+    annualPayoutMonths(salaryAnnualFamily(profile), Number(year))[0] ??
+    month;
+  const movedAway =
+    initial?.grossCents === 0 &&
+    payments.some(
+      (payment) => payment.payoutMonth.startsWith(`${year}-`) && payment.grossCents > 0,
+    );
+  return payout === month && !movedAway;
+}
 
 function payrollValues(basis: AnnualPaymentNetBasis | null | undefined) {
   return {
@@ -44,6 +73,7 @@ export function AnnualSalaryPaymentEditor({
   onSave,
   forecastPayments = [],
   proposal,
+  issue,
   automatic = false,
   onResetAutomatic,
   embedded = false,
@@ -55,6 +85,7 @@ export function AnnualSalaryPaymentEditor({
   readonly onSave: (settings: MonthlyNetPaySettings) => Promise<void>;
   readonly forecastPayments?: readonly AnnualSalaryPayment[];
   readonly proposal?: AnnualSalaryProposal | null;
+  readonly issue?: AnnualSalaryIssue | null;
   readonly automatic?: boolean;
   readonly onResetAutomatic?: () => Promise<void>;
   readonly embedded?: boolean;
@@ -179,10 +210,7 @@ export function AnnualSalaryPaymentEditor({
       setSaving(false);
     }
   }
-  const movedAway =
-    initial?.grossCents === 0 &&
-    visible.some((payment) => payment.payoutMonth.startsWith(`${year}-`) && payment.grossCents > 0);
-  if (initialPayout !== month || movedAway) return null;
+  if (!annualSalaryPaymentEditorVisible(month, profile, visible)) return null;
   return (
     <>
       <View
@@ -196,10 +224,33 @@ export function AnnualSalaryPaymentEditor({
         >
           <SalaryNavigationRow
             title={initial ? "Anpassen" : "Betrag ergänzen"}
-            subtitle={`${automatic ? "Automatisch nach Tarif" : initial ? "Eigener Betrag" : "Keine Tarifprognose"} · ${formatMonthTitle(initialPayout)}`}
+            subtitle={`${automatic ? "Automatisch nach Tarif" : initial ? "Eigener Betrag" : issue ? annualSalaryIssueLabel(issue) : "Keine Tarifprognose"} · ${formatMonthTitle(initialPayout)}`}
             onPress={edit}
             disabled={locked}
           />
+          {!initial && issue ? (
+            <>
+              <NetPayWorkflowText>{annualSalaryIssueMessage(issue)}</NetPayWorkflowText>
+              {issue.code === "TARIFF_CHANGE" || issue.code === "SALARY_BASIS_CONFLICT" ? (
+                <SalaryNavigationRow
+                  title="Beschäftigungsverlauf prüfen"
+                  onPress={() => router.push(settingsEditorRoute("TARIFF"))}
+                  disabled={locked}
+                />
+              ) : issue.code === "REFERENCE_MONTH_UNAVAILABLE" ||
+                issue.code === "REFERENCE_MONTH_FAILED" ? (
+                issue.duties?.length ? (
+                  <SpecialDutyReviewRow duties={issue.duties} disabled={locked} />
+                ) : (
+                  <SalaryNavigationRow
+                    title={`${formatMonthTitle(issue.month)} prüfen`}
+                    onPress={() => router.push(salaryRoute(issue.month))}
+                    disabled={locked}
+                  />
+                )
+              ) : null}
+            </>
+          ) : null}
           {!automatic &&
           proposal &&
           onResetAutomatic &&

@@ -737,6 +737,41 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.getByRole("button", { name: /^Anpassen,/ })).toBeTruthy();
     expect(mockSave).not.toHaveBeenCalled();
   });
+  it("keeps missing annual payment entry reachable in the salary view", async () => {
+    mockEntries = [];
+    const current = {
+      ...forecastProfile,
+      tariff: null,
+      tvlKrTariff: {
+        payGroup: "KR12" as const,
+        payLevel: 4 as const,
+        universityRegion: "WEST" as const,
+      },
+    };
+    const row = (profile: typeof mockProfile, effectiveFrom: string | null) => ({
+      effectiveFrom,
+      data: {
+        version: 1 as const,
+        weeklyMinutes: profile.weeklyMinutes,
+        selection: { kind: "unconfigured" as const },
+      },
+      employment: employmentDataFromProfile(profile),
+      revision: 1,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    });
+    mockProfile = {
+      ...current,
+      employmentTimeline: [row(forecastProfile, null), row(current, "2026-11-01")],
+    };
+    const screen = await overview("2026-11");
+    await fireEvent.press(screen.getByRole("button", { name: "Jahressonderzahlung bearbeiten" }));
+    expect(screen.getByText(/Im Anspruchsjahr ändern sich Tarif/)).toBeTruthy();
+    expect(screen.getByText("Beschäftigungsverlauf prüfen")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Betrag ergänzen"));
+    expect(screen.getByLabelText("Jahressonderzahlung brutto (€)")).toBeTruthy();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
   it("keeps the analysis calculation order from components to bonus to gross and net", async () => {
     const screen = await render(
       <>
@@ -1900,13 +1935,14 @@ describe("integrated salary-to-net workflow", () => {
     });
     mockEntries = [onCall, standby];
     const screen = await render(<SalaryScreen />);
-    expect(statement(screen).getByLabelText("Gesamtbrutto: Noch offen")).toBeTruthy();
+    expect(statement(screen).getByLabelText(/^Bekanntes Brutto: 4\.242,40/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Bereitschaft · 2 Dienste prüfen" })).toBeTruthy();
     expect(screen.queryByText("Bereitschaften")).toBeNull();
     expect(screen.queryByText(/Rufbereitschaftspauschale:/)).toBeNull();
     expect(screen.queryByRole("button", { name: /^Dienst öffnen:/ })).toBeNull();
-    expect(totals(screen).getByLabelText("Gesamtbrutto: Nicht verfügbar")).toBeTruthy();
+    expect(totals(screen).getByLabelText(/^Bekanntes Brutto: 4\.242,40/)).toBeTruthy();
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-    expect(statement(screen).getByLabelText("Weitere Zulagen: Noch offen")).toBeTruthy();
+    expect(statement(screen).getByLabelText("Bereitschaftsvergütung: Noch offen")).toBeTruthy();
     expect(router.push).not.toHaveBeenCalled();
     await screen.unmount();
     const components = await details("components", "2026-12");

@@ -234,6 +234,7 @@ const LABELS: Readonly<Record<string, string>> = {
   timeCreditMinutes: "Vorgesehener Freizeitausgleich (Minuten)",
   mandatoryRestMinutes: "Gesundheitlicher Zeitausgleich (Minuten)",
   estimatedGrossAmount: "Bruttoprognose",
+  knownGrossAmount: "Bekanntes Brutto (Bereitschaft noch offen)",
   nightCompensatoryMinutes: "Nächtlicher Zeitausgleich",
   assessment: "Zulagenprüfung",
   estimateNote: "Schätzungsgrenze",

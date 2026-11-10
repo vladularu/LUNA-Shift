@@ -20,6 +20,7 @@ export function DayEditorScreen() {
     date?: RouteParam;
     mode?: RouteParam;
     entryId?: RouteParam;
+    focus?: RouteParam;
     sharedCalendarId?: RouteParam;
   }>();
   const { error, ready, reload } = usePflegeShiftStatus();
@@ -28,10 +29,14 @@ export function DayEditorScreen() {
   const parsedMode = parseEnumRouteParam(params.mode, ["SHIFT", "APPOINTMENT"] as const);
   const parsedSharedCalendarId = parseIdentifierRouteParam(params.sharedCalendarId);
   const parsedEntryId = parseIdentifierRouteParam(params.entryId);
+  const parsedFocus = parseEnumRouteParam(params.focus, ["BILLING"] as const);
   const routeInvalid =
     parsedDate.status !== "valid" ||
     parsedMode.status !== "valid" ||
     parsedEntryId.status === "invalid" ||
+    parsedFocus.status === "invalid" ||
+    (parsedFocus.status === "valid" &&
+      (parsedEntryId.status !== "valid" || parsedMode.value !== "SHIFT")) ||
     parsedSharedCalendarId.status === "invalid" ||
     (parsedSharedCalendarId.status === "valid" && parsedEntryId.status !== "valid");
   const date = parsedDate.status === "valid" ? parsedDate.value : today();
@@ -87,6 +92,7 @@ export function DayEditorScreen() {
       key={session.key}
       date={date}
       existing={session.initialValue}
+      billingFocus={parsedFocus.status === "valid"}
       onDeletionChange={(entry) => setDeletion(entry ? { key: sessionKey, entry } : null)}
       requestedMode={requestedMode}
       sessionKey={session.key}

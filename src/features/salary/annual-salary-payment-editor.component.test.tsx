@@ -4,6 +4,81 @@ import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import { forecastProfile } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { AnnualSalaryPaymentEditor } from "./annual-salary-payment-editor";
+import { router } from "expo-router";
+
+jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+
+describe("unavailable annual payment recovery", () => {
+  it("opens the incomplete reference duty directly without changing the annual amount", async () => {
+    const onSave = save();
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={automatedSettings("2026-11")}
+        busy={false}
+        onSave={onSave}
+        issue={{
+          code: "REFERENCE_MONTH_UNAVAILABLE",
+          month: "2026-07",
+          duties: [
+            {
+              shiftId: "open-duty",
+              date: "2026-07-07",
+              title: "Bereitschaft",
+              message: "Grundlage fehlt",
+            },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText(/Abrechnungsangaben zur Bereitschaft/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Bereitschaft · 1 Dienst prüfen" }));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/shift-editor",
+      params: { date: "2026-07-07", mode: "SHIFT", entryId: "open-duty", focus: "BILLING" },
+    });
+    expect(onSave).not.toHaveBeenCalled();
+  });
+  it("explains a tariff switch and opens both profile review and amount entry without saving", async () => {
+    const onSave = save();
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={automatedSettings("2026-11")}
+        busy={false}
+        onSave={onSave}
+        issue={{ code: "TARIFF_CHANGE" }}
+      />,
+    );
+    expect(screen.getByText(/Im Anspruchsjahr ändern sich Tarif/)).toBeTruthy();
+    await fireEvent.press(screen.getByText("Beschäftigungsverlauf prüfen"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/settings-editor",
+      params: { section: "TARIFF" },
+    });
+    await fireEvent.press(screen.getByText("Betrag ergänzen"));
+    expect(screen.getByLabelText("Jahressonderzahlung brutto (€)")).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+  it("links to the actual failed reference month", async () => {
+    const onSave = save();
+    const screen = await render(
+      <AnnualSalaryPaymentEditor
+        month="2026-11"
+        profile={forecastProfile}
+        settings={automatedSettings("2026-11")}
+        busy={false}
+        onSave={onSave}
+        issue={{ code: "REFERENCE_MONTH_FAILED", month: "2026-08" }}
+      />,
+    );
+    await fireEvent.press(screen.getByText("August 2026 prüfen"));
+    expect(router.push).toHaveBeenCalledWith({ pathname: "/salary", params: { month: "2026-08" } });
+    expect(onSave).not.toHaveBeenCalled();
+  });
+});
 
 jest.mock("react-native-safe-area-context", () => ({
   ...jest.requireActual<typeof import("react-native-safe-area-context")>(

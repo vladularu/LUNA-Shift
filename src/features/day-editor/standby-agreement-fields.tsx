@@ -28,13 +28,15 @@ export function StandbyAgreementFields({
   tariffFamily,
   template,
   onChange,
+  initiallyOpen = false,
 }: {
   readonly value: SpecialDuty;
   readonly tariffFamily: DutyTariffFamily | null;
   readonly template: boolean;
   readonly onChange: (next: SpecialDuty) => void;
+  readonly initiallyOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [rateText, setRateText] = useState(
     value.standbyAgreement?.hourlyCents == null
       ? ""
@@ -88,7 +90,8 @@ export function StandbyAgreementFields({
             <>
               {agreement.tariff !== tariff ? (
                 <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted }]}>
-                  Dein Tarif hat sich geändert. Wähle die Abrechnungsgrundlage erneut.
+                  Diese Bereitschaft ist noch mit {names[agreement.tariff]} gespeichert. Wähle die
+                  Abrechnungsgrundlage für {names[tariff]} erneut.
                 </Text>
               ) : null}
               <DutyChoice

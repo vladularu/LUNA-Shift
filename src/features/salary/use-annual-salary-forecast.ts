@@ -30,7 +30,7 @@ export function useAnnualSalaryForecast(
             { entries, tariffDecisions, workPatternSettings, resolver, testMonths },
             saved,
           )
-        : { payments: enabled ? saved : EMPTY, proposal: null, automatic: false },
+        : { payments: enabled ? saved : EMPTY, proposal: null, automatic: false, issue: null },
     [
       year,
       saved,

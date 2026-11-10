@@ -13,6 +13,7 @@ import {
   saveAppointment,
   saveMonthlyTariffDecision,
   saveShift,
+  saveShifts,
   saveTvoedWorkPatternSettings,
 } from "@/infrastructure/database/repository";
 import { listTestBackupMonths } from "@/infrastructure/database/test-backup-status-repository";
@@ -33,6 +34,7 @@ export function createPflegeShiftPorts(db: SQLiteDatabase): PflegeShiftPorts {
       ...createTemplatePorts(db),
       listCalendarEntries: (startDate, endDate) => listCalendarEntries(db, startDate, endDate),
       saveShift: (input) => saveShift(db, input),
+      saveShifts: (inputs) => saveShifts(db, inputs),
       saveAppointment: (input) => saveAppointment(db, input),
       deleteCalendarEntry: (entry) => deleteCalendarEntry(db, entry),
       restoreCalendarEntry: (entry) => restoreCalendarEntry(db, entry),
