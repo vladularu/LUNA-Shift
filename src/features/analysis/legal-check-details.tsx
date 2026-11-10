@@ -34,6 +34,7 @@ export function LegalCheckDetails({
       }}
     >
       <Text style={{ color: palette.text, ...TYPOGRAPHY.body, fontWeight: "500" }}>{title}</Text>
+      {children}
       <View style={{ gap: SPACING.sm }}>
         <Text style={heading}>Einordnung und Prüfmaßstab</Text>
         <Text style={body}>{issue.description}</Text>
@@ -44,12 +45,6 @@ export function LegalCheckDetails({
       </View>
       {missing ? (
         <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
-      ) : null}
-      {children ? (
-        <View style={{ gap: SPACING.sm }}>
-          <Text style={heading}>Zugehörige Dienste</Text>
-          {children}
-        </View>
       ) : null}
       {presentation.sources.length ? (
         <View style={{ gap: SPACING.sm }}>

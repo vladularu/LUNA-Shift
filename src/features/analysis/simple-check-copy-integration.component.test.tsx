@@ -95,7 +95,7 @@ describe("simple check copy in both result renderers", () => {
     },
   );
   it.each<[boolean]>([[false], [true]])(
-    "keeps one observation, all original periods and one closed service union (%s)",
+    "keeps one observation, all original periods and a duty overview for each original period (%s)",
     async (secondary) => {
       const issues = [observation("first"), observation("second", true)],
         before = JSON.stringify(issues);
@@ -113,22 +113,21 @@ describe("simple check copy in both result renderers", () => {
       expect(screen.queryByTestId("check-original-issue-first")).toBeNull();
       const more = screen.getByRole("button", { name: "Weitere Zeiträume (1)", expanded: false });
       expect(more).toHaveStyle({ minHeight: 44 });
-      expect(
-        screen.getAllByRole("button", { name: "3 Dienste anzeigen", expanded: false }),
-      ).toHaveLength(1);
+      expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+      expect(screen.getByTestId("tariff-period")).toBeVisible();
       expect(screen.queryByTestId(`check-shift-${shifts[0].id}`)).toBeNull();
       await fireEvent.press(more);
       expect(screen.getByTestId("check-original-issue-first")).toBeVisible();
       const original = within(screen.getByTestId("check-original-issue-first"));
       await fireEvent.press(
-        original.getByRole("button", { name: "Quelle & Prüfgrenzen", expanded: false }),
+        original.getByRole("button", { name: "Quelle & Berechnung", expanded: false }),
       );
       expect(
         original.getByRole("link", { name: TARIFF_TIME_POLICIES.TVOED_K.freeSource!.title }),
       ).toBeVisible();
-      await fireEvent.press(screen.getByRole("button", { name: "3 Dienste anzeigen" }));
+      expect(screen.queryByRole("button", { name: "3 Dienste anzeigen" })).toBeNull();
       for (const shift of shifts)
-        expect(screen.getByTestId(`check-shift-${shift.id}`)).toBeVisible();
+        expect(screen.getAllByTestId(`check-shift-${shift.id}`).length).toBeGreaterThan(0);
       expect(countChecks(issues).infoCount).toBe(2);
       expect(JSON.stringify(issues)).toBe(before);
     },

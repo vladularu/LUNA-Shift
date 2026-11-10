@@ -97,6 +97,32 @@ const tariffObservation = (id: string, later = false): ComplianceIssue => ({
 });
 
 describe("conservative tariff observation groups", () => {
+  it("groups weekly night observations by their seven start dates", () => {
+    const nights = Array.from({ length: 7 }, (_, n) => duty(`2026-11-0${n + 2}`, true));
+    const first = tariffObservation("week-a");
+    const week: ComplianceIssue = {
+      ...first,
+      rule: "TARIFF_WEEK_DAYS",
+      date: "2026-11-08",
+      relatedShiftIds: nights.map((night) => night.id),
+      tariff: {
+        ...first.tariff!,
+        ruleId: "TARIFF_WEEK_DAYS",
+        count: 7,
+        limit: 6,
+        period: { from: "2026-11-02", until: "2026-11-08" },
+        recordedDates: nights.map((night) => night.date),
+      },
+    };
+    expect(
+      groupCheckDisplayIssues([week, { ...week, id: "week-b" }], nights, "Europe/Berlin"),
+    ).toHaveLength(1);
+    // A legacy seven-calendar-day observation with only six starts must not merge.
+    const six = { ...week, relatedShiftIds: nights.slice(0, 6).map((night) => night.id) };
+    expect(
+      groupCheckDisplayIssues([six, { ...six, id: "week-b" }], nights, "Europe/Berlin"),
+    ).toHaveLength(2);
+  });
   it("keeps a seven-day span outside a calendar week separate", () => {
     const days = [3, 4, 5, 6, 7, 8, 9].map((day) =>
       duty(`2026-11-${String(day).padStart(2, "0")}`),

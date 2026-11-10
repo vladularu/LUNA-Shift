@@ -133,6 +133,16 @@ function consistentTariffDuties(
       if (!Number.isSafeInteger(shift.breakMinutes) || shift.breakMinutes < 0) return false;
       const bounds = calculateTimedShiftBounds(shift, timeZone);
       if (!bounds) return false;
+      if (tariff.ruleId === "TARIFF_WEEK_DAYS") {
+        if (
+          shift.date < tariff.period.from ||
+          shift.date > tariff.period.until ||
+          bounds.endEpochMinutes - bounds.startEpochMinutes <= shift.breakMinutes
+        )
+          return false;
+        proved.add(shift.date);
+        continue;
+      }
       let contributes = false;
       for (let offset = 0; offset < days; offset += 1) {
         const day = from.add({ days: offset });

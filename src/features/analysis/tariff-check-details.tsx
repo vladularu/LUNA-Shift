@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
 import type { TariffComplianceEvidence } from "@/domain/tariff-compliance";
+import type { ShiftEntry } from "@/domain/types";
 import { isTariffSourceUrl, TARIFF_SCOPE_SOURCE } from "@/domain/tariff-time-policy";
 import { usePalette } from "@/theme/palette";
 import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
@@ -8,6 +9,8 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
+import { TariffCheckPeriod } from "./tariff-check-period";
+import { CheckDutyOverview } from "./check-duty-overview";
 
 export function tariffCheckStatus(status: TariffComplianceEvidence["status"]): string {
   switch (status) {
@@ -29,15 +32,18 @@ export function TariffCheckDetails({
   title,
   description,
   missing,
-  children,
   embedded = false,
   hideServices = false,
+  shifts = [],
+  timeZone,
 }: {
   readonly evidence: TariffComplianceEvidence;
   readonly title: string;
   readonly description: string;
   readonly missing: boolean;
-  readonly children: ReactNode;
+  readonly children?: ReactNode;
+  readonly shifts?: readonly ShiftEntry[];
+  readonly timeZone?: string;
   readonly embedded?: boolean;
   readonly hideServices?: boolean;
 }) {
@@ -69,6 +75,7 @@ export function TariffCheckDetails({
       <Text style={{ color: palette.text, ...TYPOGRAPHY.body, fontWeight: "500" }}>
         {presentation.title}
       </Text>
+      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{period}</Text>
       {presentation.status === "planned" ? (
         <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
           Geplant oder noch laufend
@@ -77,56 +84,26 @@ export function TariffCheckDetails({
       {presentation.status === "deviation" ? (
         <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>Abweichung erkannt</Text>
       ) : null}
-      <Text testID="tariff-check-summary" style={body}>
-        {presentation.summary}
-      </Text>
-      <Text testID="tariff-check-limitation" style={body}>
-        {presentation.limitation}
-      </Text>
-      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{period}</Text>
-      {!hideServices ? (
-        <View style={{ gap: SPACING.sm }}>
-          <Text style={heading}>Zugehörige Dienste</Text>
-          {children ??
-            (!missing ? (
-              <Text style={body}>Für diesen Befund sind keine Dienste zugeordnet.</Text>
-            ) : null)}
-          {missing ? (
-            <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
-          ) : null}
-        </View>
+      {scopeOnly ? (
+        <CheckDutyOverview shifts={shifts} timeZone={timeZone} />
+      ) : (
+        <TariffCheckPeriod evidence={evidence} shifts={shifts} timeZone={timeZone} />
+      )}
+      <View
+        style={{
+          borderLeftWidth: 2,
+          borderLeftColor: palette.tariffCheckBorder,
+          paddingLeft: SPACING.md,
+        }}
+      >
+        <Text testID="tariff-check-summary" style={body}>
+          {presentation.summary}
+        </Text>
+      </View>
+      {!hideServices && missing ? (
+        <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
       ) : null}
-      <CheckDetailDisclosure title="Quelle & Prüfgrenzen" testID="tariff-source-limits">
-        {!scopeOnly ? (
-          <View style={{ gap: SPACING.sm }}>
-            <Text style={heading}>Tarifregel · {evidence.tariffLabel}</Text>
-            <Text style={body}>{evidence.ruleText}</Text>
-          </View>
-        ) : null}
-        {presentation.constraints.map((constraint) => (
-          <Text key={constraint} style={body}>
-            {constraint}
-          </Text>
-        ))}
-        {presentation.originalDescription ? (
-          <Text style={body}>{presentation.originalDescription}</Text>
-        ) : null}
-        {presentation.originalRequirements.length ? (
-          <CheckDetailDisclosure
-            title="Gespeicherte Originalbedingungen"
-            testID="tariff-original-requirements"
-          >
-            {presentation.originalRequirements.map((condition, index) => (
-              <Text
-                key={index}
-                accessibilityLabel={`Gespeicherte Originalbedingung: ${condition}`}
-                style={body}
-              >
-                {condition}
-              </Text>
-            ))}
-          </CheckDetailDisclosure>
-        ) : null}
+      <CheckDetailDisclosure title="Quelle & Berechnung" testID="tariff-source-limits">
         <Text style={heading}>{scopeOnly ? "Grundlage des Prüfumfangs" : "Quelle"}</Text>
         {isTariffSourceUrl(evidence.source.url) ? (
           <Pressable
@@ -144,6 +121,41 @@ export function TariffCheckDetails({
         ) : (
           source
         )}
+        <Text testID="tariff-check-limitation" style={body}>
+          {presentation.limitation}
+        </Text>
+        {presentation.constraints.map((constraint) => (
+          <Text key={constraint} style={body}>
+            {constraint}
+          </Text>
+        ))}
+        {!scopeOnly ||
+        presentation.originalDescription ||
+        presentation.originalRequirements.length ? (
+          <CheckDetailDisclosure title="Weitere Angaben" testID="tariff-original-requirements">
+            {!scopeOnly ? (
+              <View style={{ gap: SPACING.sm }}>
+                <Text style={heading}>Tarifregel · {evidence.tariffLabel}</Text>
+                <Text style={body}>{evidence.ruleText}</Text>
+              </View>
+            ) : null}
+            {presentation.originalDescription ? (
+              <View style={{ gap: SPACING.sm }}>
+                <Text style={heading}>Gespeicherte Erläuterung</Text>
+                <Text style={body}>{presentation.originalDescription}</Text>
+              </View>
+            ) : null}
+            {presentation.originalRequirements.map((condition, index) => (
+              <Text
+                key={index}
+                accessibilityLabel={`Gespeicherte Originalbedingung: ${condition}`}
+                style={body}
+              >
+                {condition}
+              </Text>
+            ))}
+          </CheckDetailDisclosure>
+        ) : null}
       </CheckDetailDisclosure>
     </View>
   );

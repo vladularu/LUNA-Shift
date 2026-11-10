@@ -139,7 +139,7 @@ describe("compact check status", () => {
     expect(screen.queryByText(tariff.tariff!.requirements[0])).toBeNull();
     expect(screen.queryByRole("link", { name: TARIFF_SCOPE_SOURCE.title })).toBeNull();
     await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle & Prüfgrenzen", expanded: false }),
+      screen.getByRole("button", { name: "Quelle & Berechnung", expanded: false }),
     );
     expect(screen.getByRole("link", { name: TARIFF_SCOPE_SOURCE.title })).toBeVisible();
     await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Prüfstatus" }));

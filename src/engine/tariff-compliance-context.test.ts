@@ -30,6 +30,27 @@ function withTarget(overrides: Partial<WorkingTimeTargetInput>) {
 }
 
 describe("tariff context for the existing legal check", () => {
+  it.each([
+    { answer: true, coverage: "UNKNOWN", assignment: "UNKNOWN", known: true },
+    { answer: false, coverage: "AROUND_THE_CLOCK", assignment: "PERMANENT", known: false },
+    { answer: null, coverage: "AROUND_THE_CLOCK", assignment: "PERMANENT", known: true },
+    { answer: null, coverage: "AROUND_THE_CLOCK", assignment: "TEMPORARY", known: false },
+    { answer: null, coverage: "UNKNOWN", assignment: "PERMANENT", known: false },
+  ] as const)(
+    "derives the Sunday basis from saved settings %j",
+    ({ answer, coverage, assignment, known }) => {
+      const result = tariffContextAt(
+        {
+          ...profile,
+          sundayHolidayWorkEligible: answer,
+          workPattern: { workplaceCoverage: coverage, assignment },
+        },
+        "2026-08-01",
+      );
+      expect(result?.sundayWorkModelKnown).toBe(known);
+      expect(result?.sundayHolidayWorkEligible).toBe(answer);
+    },
+  );
   it("does not treat a salary selection as confirmed legal scope", () => {
     const result = tariffContextAt(profile, "2026-08-01");
     expect(result?.policy?.family).toBe("TVOED_K");

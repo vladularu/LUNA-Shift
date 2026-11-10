@@ -1,5 +1,9 @@
 import type { TariffComplianceEvidence } from "@/domain/tariff-compliance";
-import { TARIFF_SCOPE_SOURCE, TARIFF_TIME_POLICIES } from "@/domain/tariff-time-policy";
+import {
+  TARIFF_SCOPE_SOURCE,
+  TARIFF_TIME_POLICIES,
+  TARIFF_WEEKLY_CHECK_ASSUMPTION,
+} from "@/domain/tariff-time-policy";
 
 export interface TariffCheckPresentation {
   readonly title: string;
@@ -11,16 +15,20 @@ export interface TariffCheckPresentation {
   readonly originalDescription?: string;
 }
 
-const regularWork =
-  "Aus den Einträgen geht nicht sicher hervor, welche Dienste zur regelmäßigen Arbeitszeit oder zu zusätzlicher Arbeit gehören.";
+const regularWork = "Die Wochenprüfung berücksichtigt alle zugehörigen Dienste.";
 const scope =
-  "Aus den Daten geht nicht sicher hervor, ob die Tarifregel auf dein Arbeitsverhältnis zutrifft.";
-const fortnight = "Der im Betrieb geltende Zweiwochen-Zeitraum ist der App nicht bekannt.";
+  "Ob die Regel für dich gilt, lässt sich aus deinen gespeicherten Tarifangaben nicht sicher erkennen.";
+const fortnight =
+  "Verglichen werden die gezeigten zwei Wochen. Ein abweichender betrieblicher Bezugszeitraum kann die Einordnung ändern.";
+const regularSundays =
+  "In deinem Arbeitsmodell ist Sonn- und Feiertagsarbeit noch nicht hinterlegt.";
+const unrecordedFree = "Ein leerer Kalendertag ist kein bestätigter freier Tag.";
 const mixed = "Innerhalb des Zeitraums ändert sich die Tarifzuordnung oder eine Prüfgrundlage.";
 const insufficient = "Die vorhandenen Angaben reichen für diese Tarifprüfung nicht aus.";
 const coverageRequirement =
   "Die Tarifregeln sind für diesen Zeitraum noch nicht in dieser Prüffassung geprüft.";
 const translations = new Map<string, readonly string[]>([
+  [TARIFF_WEEKLY_CHECK_ASSUMPTION, []],
   [coverageRequirement, ["Für diesen Zeitraum sind die Tarifregeln in LUNA noch nicht geprüft."]],
   [
     "Wähle eine eindeutige Tarifgrundlage für diesen Zeitraum.",
@@ -78,14 +86,9 @@ const translations = new Map<string, readonly string[]>([
   ],
   [
     "Prüfe, ob regelmäßig Sonn- und Feiertagsarbeit im Sinne der Tarifregel geleistet wird. Die Zulässigkeit von Sonntagsarbeit allein bestätigt diese Regelmäßigkeit nicht.",
-    [
-      "Die Regel setzt regelmäßige Sonn- und Feiertagsarbeit voraus; einzelne Einträge belegen diese Regelmäßigkeit nicht.",
-    ],
+    [regularSundays],
   ],
-  [
-    "Leere Kalendertage sind kein Nachweis tatsächlich arbeitsfreier Tage.",
-    ["Leere Kalendertage belegen keine tatsächlich freie Zeit."],
-  ],
+  ["Leere Kalendertage sind kein Nachweis tatsächlich arbeitsfreier Tage.", [unrecordedFree]],
   ["Der persönliche Geltungsbereich dieser Tarifregel ist zu bestätigen.", [scope]],
   ["Der persönliche Geltungsbereich der gewählten Tarifregel ist zu bestätigen.", [scope]],
   ["Ein Tarifwechsel innerhalb des Beobachtungszeitraums muss gesondert geprüft werden.", [mixed]],
@@ -147,20 +150,19 @@ export function tariffCheckPresentation(
     evidence.count! <= (week ? 7 : 14)
       ? evidence.count
       : undefined;
-  const baseConstraints: string[] =
-    sunday || freeDays
-      ? [
-          "Die Regel setzt regelmäßige Sonn- und Feiertagsarbeit voraus; einzelne Einträge belegen diese Regelmäßigkeit nicht.",
-          fortnight,
-          "Leere Kalendertage belegen keine tatsächlich freie Zeit.",
-        ]
-      : [regularWork, "Persönliche und betriebliche Ausnahmen sind nicht vollständig erfasst."];
   const constraints = [
     ...new Set([
-      ...baseConstraints,
       ...evidence.requirements.flatMap((requirement) => translations.get(requirement) ?? []),
     ]),
-  ];
+  ].filter(
+    (constraint) =>
+      // Show only conditions relevant to this finding. Selected tariffs are the
+      // working basis; genuine scope gaps have their own unavailable result.
+      (unavailable || constraint !== scope) &&
+      !(!unavailable && (sunday || freeDays) && constraint === fortnight) &&
+      !(week && constraint === regularWork) &&
+      !(sunday && constraint === unrecordedFree),
+  );
   const originalRequirements = evidence.requirements.filter(
     (requirement) => !translations.has(requirement),
   );
@@ -182,23 +184,23 @@ export function tariffCheckPresentation(
     sunday && count === 2
       ? "2 Sonntage hintereinander mit Dienst"
       : week && count
-        ? `${count} Tage in einer Kalenderwoche mit Dienst`
+        ? `${count} Diensttage in einer Kalenderwoche`
         : freeDays && count
           ? `${count} Tage mit Dienst in zwei Wochen`
           : title.trim() || "Tarifhinweis";
   const averageFive = evidence.source.url === TARIFF_TIME_POLICIES.TVUK.source.url;
   const summary = sunday
-    ? "Bei regelmäßiger Sonn- und Feiertagsarbeit soll innerhalb von zwei Wochen ein Sonntag frei sein."
+    ? `${constraints.includes(regularSundays) ? "Bei regelmäßiger Sonn- und Feiertagsarbeit soll von zwei freien Tagen innerhalb von zwei Wochen einer" : "Von zwei freien Tagen innerhalb von zwei Wochen soll einer"} auf einen Sonntag fallen.`
     : week
-      ? `Der Tarif verteilt die regelmäßige Arbeitszeit auf ${averageFive ? "durchschnittlich " : ""}fünf Tage; betriebliche Gründe können sechs Tage erlauben.`
+      ? `Der Tarif sieht ${averageFive ? "durchschnittlich " : ""}fünf Arbeitstage vor, bei betrieblichen Gründen auch sechs.`
       : freeDays
         ? `Bei regelmäßiger Sonn- und Feiertagsarbeit sind in zwei Wochen zwei ${averageFive ? "zusammenhängende " : ""}freie Tage vorgesehen.`
         : "Für diesen Zeitraum ist ein Tarifhinweis hinterlegt.";
   const limitation =
     sunday || freeDays
-      ? "Der betriebliche Zweiwochen-Zeitraum ist der App nicht bekannt."
+      ? fortnight
       : week
-        ? "Die Einträge zeigen nicht, welche Dienste zur regelmäßigen Arbeitszeit oder zu zusätzlicher Arbeit gehören."
+        ? TARIFF_WEEKLY_CHECK_ASSUMPTION
         : "Für eine genauere Aussage reichen die verfügbaren Tarifangaben nicht aus.";
   return {
     title: shortTitle,

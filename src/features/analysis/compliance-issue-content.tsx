@@ -7,7 +7,6 @@ import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { ColorBadge } from "@/ui/design-system";
 import { selectionFeedback } from "@/ui/haptics";
 import { SelectionSheet } from "@/ui/selection-sheet";
 import { PlanningHintDetails } from "./planning-hint-details";
@@ -24,6 +23,7 @@ import { LegalCheckDetails } from "./legal-check-details";
 import { legalCheckPresentation } from "./legal-check-presentation";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
+import { CheckDutyOverview } from "./check-duty-overview";
 
 const MONTHS = [
   "Januar",
@@ -84,15 +84,6 @@ export const issueSeverity = (issue: ComplianceIssue) =>
           ? "Warnung"
           : "Hinweis";
 
-function compactShiftDate(date: string, includeYear = false): string {
-  try {
-    const day = Temporal.PlainDate.from(date);
-    return `${String(day.day).padStart(2, "0")}.${String(day.month).padStart(2, "0")}.${includeYear ? String(day.year).slice(-2) : ""}`;
-  } catch {
-    return "Datum nicht verfügbar";
-  }
-}
-
 function compactCheckPeriod(period?: {
   readonly from: string;
   readonly until: string;
@@ -110,162 +101,58 @@ function compactCheckPeriod(period?: {
   }
 }
 
-export function AffectedCheckShifts({ shifts }: { readonly shifts: readonly ShiftEntry[] }) {
+export function AffectedCheckShifts({
+  shifts,
+  timeZone,
+  weekendPeriod,
+}: {
+  readonly shifts: readonly ShiftEntry[];
+  readonly timeZone?: string;
+  readonly weekendPeriod?: { readonly from: string; readonly until: string };
+}) {
   const palette = usePalette();
-  const { fontScale } = useWindowDimensions();
-  const [expanded, setExpanded] = useState(false);
-  const largeText = fontScale >= 1.3;
-  const includeYear = new Set(shifts.map((shift) => shift.date.slice(0, 4))).size > 1;
-  const label = `${shifts.length} ${shifts.length === 1 ? "Dienst" : "Dienste"} ${expanded ? "ausblenden" : "anzeigen"}`;
+  if (!weekendPeriod)
+    return <CheckDutyOverview shifts={shifts} timeZone={timeZone} testID="check-affected-shifts" />;
+  const label = compactCheckPeriod(weekendPeriod);
+  if (!label) return null;
+  const selected = shifts.filter((shift) => {
+    if (
+      shift.deletedAt !== null ||
+      shift.date < weekendPeriod.from ||
+      shift.date > weekendPeriod.until
+    )
+      return false;
+    try {
+      return Temporal.PlainDate.from(shift.date).dayOfWeek >= 6;
+    } catch {
+      return false;
+    }
+  });
   return (
-    <View testID="check-affected-shifts">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityState={{ expanded }}
-        onPress={() => {
-          selectionFeedback();
-          setExpanded((value) => !value);
-        }}
-        style={({ pressed }) => ({
-          minHeight: MINIMUM_TOUCH_TARGET,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: SPACING.sm,
-          opacity: pressed ? 0.65 : 1,
-        })}
-      >
-        <Text style={{ color: palette.text, ...TYPOGRAPHY.small, fontWeight: "500", flex: 1 }}>
-          {label}
-        </Text>
-        <Ionicons
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size={16}
-          color={palette.textMuted}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        />
-      </Pressable>
-      {expanded ? (
-        <View>
-          {!largeText ? (
-            <View style={{ flexDirection: "row", gap: SPACING.sm, paddingBottom: SPACING.xs }}>
-              <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption, width: 58 }}>
-                Datum
-              </Text>
-              <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption, flex: 1 }}>
-                Dienst
-              </Text>
-              <Text
-                style={{
-                  color: palette.textMuted,
-                  ...TYPOGRAPHY.caption,
-                  width: 112,
-                  textAlign: "right",
-                }}
-              >
-                Uhrzeit
-              </Text>
-            </View>
-          ) : null}
-          {shifts.map((shift, index) => {
-            let endDate: string | null = null;
-            let dayOffset = 0;
-            if (!shift.allDay && shift.startTime && shift.endTime) {
-              try {
-                const offset =
-                  shift.specialDuty?.endDay ?? (shift.endTime <= shift.startTime ? 1 : 0);
-                if (Number.isSafeInteger(offset) && offset >= 0 && offset <= 14) {
-                  dayOffset = offset;
-                  endDate = Temporal.PlainDate.from(shift.date).add({ days: offset }).toString();
-                }
-              } catch {
-                // Keep invalid dates/times readable without inventing an end date.
-              }
-            }
-            const splitDuty = shift.specialDuty?.kind === "SPLIT";
-            const timeWindow = shift.allDay
-              ? "Ganztägig"
-              : !shift.startTime || !shift.endTime
-                ? "Zeit fehlt"
-                : `${shift.startTime}–${shift.endTime}${dayOffset ? ` +${dayOffset}` : ""}`;
-            const time = `${timeWindow}${splitDuty ? " · Teilzeiten" : ""}`;
-            const spokenTime =
-              endDate && shift.startTime && shift.endTime
-                ? `${shift.startTime} bis ${dayOffset ? `${checkDate(endDate)}, ` : ""}${shift.endTime}`
-                : timeWindow;
-            return (
-              <View
-                key={shift.id}
-                testID={`check-shift-${shift.id}`}
-                accessible
-                accessibilityLabel={`${shift.title}, ${checkDate(shift.date)}, ${splitDuty ? `eingetragenes Zeitfenster ${spokenTime}, mit Teilzeiten` : spokenTime}`}
-                style={{
-                  minHeight: 40,
-                  paddingVertical: SPACING.sm,
-                  borderTopWidth: index > 0 ? 1 : 0,
-                  borderTopColor: palette.separator,
-                  flexDirection: largeText ? "column" : "row",
-                  alignItems: largeText ? "stretch" : "center",
-                  gap: largeText ? SPACING.xs : SPACING.sm,
-                }}
-              >
-                <Text
-                  style={{
-                    color: palette.textMuted,
-                    ...TYPOGRAPHY.caption,
-                    ...(largeText ? {} : { width: 58 }),
-                  }}
-                >
-                  {compactShiftDate(shift.date, includeYear)}
-                </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: SPACING.xs,
-                    minWidth: 0,
-                    ...(largeText ? {} : { flex: 1 }),
-                  }}
-                >
-                  <ColorBadge color={shift.color} label={shift.symbol} size={16} />
-                  <Text
-                    style={{ color: palette.text, ...TYPOGRAPHY.small, fontWeight: "500", flex: 1 }}
-                  >
-                    {shift.title}
-                  </Text>
-                </View>
-                <Text
-                  style={{
-                    color: palette.textMuted,
-                    ...TYPOGRAPHY.small,
-                    fontVariant: ["tabular-nums"],
-                    ...(largeText ? {} : { width: 112, textAlign: "right" }),
-                  }}
-                >
-                  {time}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-      ) : null}
+    <View testID="weekend-duty-overview" style={{ gap: SPACING.sm }}>
+      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{label}</Text>
+      <CheckDutyOverview
+        shifts={selected}
+        dates={[...new Set(selected.map((shift) => shift.date))]}
+        timeZone={timeZone}
+        testID="check-affected-shifts"
+      />
     </View>
   );
 }
 
-/** Original windows stay available while one shared service list avoids repeated content. */
+/** Each observed window keeps its own dated duty overview. */
 export function TariffObservationDetails({
   issues,
   shifts,
   embedded = false,
+  timeZone,
 }: {
   readonly issues: readonly ComplianceIssue[];
   readonly shifts: readonly ShiftEntry[];
   readonly embedded?: boolean;
+  readonly timeZone?: string;
 }) {
-  const palette = usePalette();
   const byId = new Map<string, ShiftEntry | null>();
   for (const shift of shifts) byId.set(shift.id, byId.has(shift.id) ? null : shift);
   const members = issues.map((issue) => {
@@ -275,17 +162,6 @@ export function TariffObservationDetails({
       .filter((shift): shift is ShiftEntry => !!shift && shift.deletedAt === null);
     return { issue, related, missing: related.length !== ids.length };
   });
-  const grouped = members.length > 1;
-  const services = [
-    ...new Map(
-      members.flatMap((member) => member.related).map((shift) => [shift.id, shift]),
-    ).values(),
-  ].sort(
-    (a, b) =>
-      a.date.localeCompare(b.date) ||
-      (a.startTime ?? "").localeCompare(b.startTime ?? "") ||
-      a.id.localeCompare(b.id),
-  );
   const original = (member: (typeof members)[number]) =>
     member.issue.tariff ? (
       <View key={member.issue.id} testID={`check-original-issue-${member.issue.id}`}>
@@ -295,31 +171,19 @@ export function TariffObservationDetails({
           description={member.issue.description}
           missing={member.missing}
           embedded={embedded}
-          hideServices={grouped}
-        >
-          {!grouped && member.related.length ? (
-            <AffectedCheckShifts shifts={member.related} />
-          ) : null}
-        </TariffCheckDetails>
+          shifts={member.related}
+          timeZone={timeZone}
+        />
       </View>
     ) : null;
   return (
     <View style={{ gap: SPACING.md }}>
       {members[0] ? original(members[0]) : null}
-      {grouped ? (
+      {members.length > 1 ? (
         <View style={{ paddingHorizontal: embedded ? 0 : SPACING.lg }}>
           <CheckDetailDisclosure title={`Weitere Zeiträume (${members.length - 1})`}>
             {members.slice(1).map(original)}
           </CheckDetailDisclosure>
-          <Text style={{ color: palette.text, ...TYPOGRAPHY.small, fontWeight: "500" }}>
-            Zugehörige Dienste
-          </Text>
-          {services.length ? <AffectedCheckShifts shifts={services} /> : null}
-          {members.some((member) => member.missing) ? (
-            <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>
-              Einige zugehörige Dienste sind nicht mehr verfügbar.
-            </Text>
-          ) : null}
         </View>
       ) : null}
     </View>
@@ -378,6 +242,7 @@ export function ComplianceIssueContent({
     hint?.compactSummary ??
     (hint ? planningCardSummary(issue, hint).join(" ") : model.note);
   const grouped = members.length > 1;
+  const shareDutyOverview = grouped && !members.some((member) => member.hint?.weekendPeriod);
   const groupedTariff = grouped && members.every((member) => !!member.issue.tariff);
   const groupLabel = groupedTariff
     ? `${members.length} betroffene Zeiträume`
@@ -669,16 +534,27 @@ export function ComplianceIssueContent({
         >
           {() => (
             <View style={{ gap: SPACING.md }}>
+              {shareDutyOverview && !tariff && allRelated.length ? (
+                <View style={{ paddingHorizontal: SPACING.lg }}>
+                  <AffectedCheckShifts shifts={allRelated} timeZone={timeZone} />
+                </View>
+              ) : null}
               {tariff ? (
                 <TariffObservationDetails
                   issues={members.map((member) => member.issue)}
                   shifts={shifts}
+                  timeZone={timeZone}
                 />
               ) : (
                 members.map((member) => {
                   const children =
-                    !grouped && member.model.related.length ? (
-                      <AffectedCheckShifts shifts={member.model.related} />
+                    !shareDutyOverview &&
+                    (member.model.related.length || member.hint?.weekendPeriod) ? (
+                      <AffectedCheckShifts
+                        shifts={member.model.related}
+                        timeZone={timeZone}
+                        weekendPeriod={member.hint?.weekendPeriod}
+                      />
                     ) : null;
                   return member.issue.tariff ? (
                     <TariffCheckDetails
@@ -687,9 +563,9 @@ export function ComplianceIssueContent({
                       title={member.model.title}
                       description={member.issue.description}
                       missing={member.model.missing}
-                    >
-                      {children}
-                    </TariffCheckDetails>
+                      shifts={member.model.related}
+                      timeZone={timeZone}
+                    />
                   ) : member.hint ? (
                     <PlanningHintDetails
                       key={member.issue.id}
@@ -713,14 +589,6 @@ export function ComplianceIssueContent({
                   );
                 })
               )}
-              {grouped && !tariff && allRelated.length ? (
-                <View style={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm }}>
-                  <Text style={{ color: palette.text, ...TYPOGRAPHY.small, fontWeight: "500" }}>
-                    Zugehörige Dienste
-                  </Text>
-                  <AffectedCheckShifts shifts={allRelated} />
-                </View>
-              ) : null}
             </View>
           )}
         </SelectionSheet>

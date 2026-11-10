@@ -166,7 +166,7 @@ describe("analysis compliance details", () => {
     expect(group.queryByTestId("warning-glyph", { includeHiddenElements: true })).toBeNull();
     expect(group.queryByTestId("critical-glyph", { includeHiddenElements: true })).toBeNull();
   });
-  it("keeps work and night as independently tappable rows with their own collapsed services", async () => {
+  it("keeps work and night as independently tappable rows with their own duty overviews", async () => {
     const duties = Array.from({ length: 6 }, (_, index) => ({
       ...shift(
         `series-${index}`,
@@ -240,13 +240,10 @@ describe("analysis compliance details", () => {
       }),
     ).toBeVisible();
     expect(screen.queryByRole("link", { name: "BGW: Nacht- und Schichtarbeit" })).toBeNull();
-    const services = screen.getAllByRole("button", { name: "6 Dienste anzeigen", expanded: false });
-    expect(services).toHaveLength(1);
-    expect(screen.queryByTestId("check-shift-series-0")).toBeNull();
-    await fireEvent.press(services[0]);
+    expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
     expect(screen.getByTestId("check-shift-series-0")).toBeVisible();
     expect(screen.queryByTestId("check-shift-following")).toBeNull();
-    expect(screen.getAllByText("21:00–07:00 +1")).toHaveLength(4);
+    expect(screen.getAllByLabelText(/^Nacht,/)).toHaveLength(4);
     await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await waitFor(() => expect(screen.queryByTestId("planning-hint-detail-content")).toBeNull());
     await fireEvent.press(
@@ -257,9 +254,8 @@ describe("analysis compliance details", () => {
       screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
     );
     expect(screen.getByRole("link", { name: "BGW: Nacht- und Schichtarbeit" })).toBeVisible();
-    expect(
-      screen.getAllByRole("button", { name: "5 Dienste anzeigen", expanded: false }),
-    ).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
   });
   it("uses the supplied profile timezone in planning details across the clock change", async () => {
     const late = {
@@ -370,19 +366,13 @@ describe("analysis compliance details", () => {
     expect(screen.getByText("Zwischen den Diensten liegen nur 9 h Ruhezeit.")).toBeTruthy();
     expect(screen.getAllByText(/05\. Aug/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/06\. Aug/).length).toBeGreaterThan(0);
-    expect(screen.queryByText("Spät")).toBeNull();
-    const serviceLists = screen.getAllByRole("button", {
-      name: "2 Dienste anzeigen",
-      expanded: false,
-    });
-    expect(serviceLists).toHaveLength(2);
-    for (const serviceList of serviceLists) {
-      await fireEvent.press(serviceList);
-    }
+    expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
     expect(screen.getByText("Spät")).toBeTruthy();
     expect(screen.getAllByText("Früh").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/14:00–22:00/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/06:00–14:00/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/14:00–22:00/)).toBeNull();
+    expect(screen.queryByText(/06:00–14:00/)).toBeNull();
+    expect(screen.getAllByLabelText(/Spät,.*14:00 bis 22:00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Früh,.*06:00 bis 14:00/).length).toBeGreaterThan(0);
     await fireEvent.press(
       screen.getByRole("button", { name: "Dienste überschneiden sich, 1 Meldung" }),
     );

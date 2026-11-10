@@ -392,6 +392,7 @@ function ComplianceIssueList({
                             key={displayGroup.id}
                             issues={[displayGroup.primary, ...displayGroup.relatedIssues]}
                             shifts={shifts}
+                            timeZone={timeZone}
                             embedded
                           />
                         ))
@@ -419,15 +420,13 @@ function ComplianceIssueList({
                               {item.tariff ? (
                                 <TariffCheckDetails
                                   evidence={item.tariff}
+                                  shifts={relatedShifts}
+                                  timeZone={timeZone}
                                   title={item.title}
                                   description={item.description}
                                   missing={item.relatedShiftIds.some((id) => !shiftsById.has(id))}
                                   embedded
-                                >
-                                  {relatedShifts.length ? (
-                                    <AffectedCheckShifts shifts={relatedShifts} />
-                                  ) : null}
-                                </TariffCheckDetails>
+                                />
                               ) : (
                                 <LegalCheckDetails
                                   issue={item}
@@ -436,7 +435,10 @@ function ComplianceIssueList({
                                   embedded
                                 >
                                   {relatedShifts.length ? (
-                                    <AffectedCheckShifts shifts={relatedShifts} />
+                                    <AffectedCheckShifts
+                                      shifts={relatedShifts}
+                                      timeZone={timeZone}
+                                    />
                                   ) : null}
                                 </LegalCheckDetails>
                               )}

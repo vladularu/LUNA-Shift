@@ -11,7 +11,6 @@ import { SecondaryButton } from "@/ui/form-controls";
 import Ionicons from "@/ui/icon";
 import { SelectionSheet } from "@/ui/selection-sheet";
 import { Text } from "@/ui/text";
-import { AffectedCheckShifts } from "./compliance-issue-content";
 import { TariffCheckDetails } from "./tariff-check-details";
 import { CheckScopeDisclosure } from "./check-scope-disclosure";
 import { isCheckScopeNotice } from "./check-visibility";
@@ -152,12 +151,11 @@ export function CheckPrerequisitesCard({
                 </Pressable>
                 <TariffCheckDetails
                   evidence={selected.tariff}
+                  shifts={related}
                   title={selected.title}
                   description={selected.description}
                   missing={selected.relatedShiftIds.some((id) => !shiftsById.has(id))}
-                >
-                  {related.length ? <AffectedCheckShifts shifts={related} /> : null}
-                </TariffCheckDetails>
+                />
               </View>
             ) : (
               <View

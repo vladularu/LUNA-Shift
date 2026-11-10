@@ -119,11 +119,10 @@ describe("compact planning hint lists", () => {
         name: "BAuA: Arbeitszeitgestaltung – Handbuch zur Gefährdungsbeurteilung",
       }),
     ).toBeVisible();
-    expect(
-      screen.getAllByRole("button", { name: "6 Dienste anzeigen", expanded: false }),
-    ).toHaveLength(1);
-    expect(screen.queryByTestId("check-shift-duty-0")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "6 Dienste anzeigen" }));
+    expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
+    expect(screen.getByTestId("check-shift-duty-0")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "6 Dienste anzeigen" })).toBeNull();
     expect(screen.getByTestId("check-shift-duty-0")).toBeVisible();
   });
 
@@ -144,9 +143,8 @@ describe("compact planning hint lists", () => {
     expect(
       screen.getAllByRole("link", { name: PLANNING_NIGHT_POLICY.sources[0].title }),
     ).toHaveLength(1);
-    expect(
-      screen.getAllByRole("button", { name: "5 Dienste anzeigen", expanded: false }),
-    ).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
     expect(JSON.stringify(issues)).toBe(before);
     expect(countChecks(issues).infoCount).toBe(3);
   });
@@ -328,9 +326,8 @@ describe("compact planning hint lists", () => {
       screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
     );
     expect(screen.getByRole("link", { name: PLANNING_WEEKEND_POLICY.source.title })).toBeVisible();
-    expect(
-      screen.getAllByRole("button", { name: "3 Dienste anzeigen", expanded: false }),
-    ).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
   });
 
   it.each([LIGHT_PALETTE, DARK_PALETTE])(

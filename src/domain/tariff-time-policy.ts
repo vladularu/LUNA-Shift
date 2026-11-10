@@ -43,6 +43,9 @@ export interface TariffTimePolicy {
 
 const regularFive = (reason: "notwendige" | "dringende") =>
   `Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern ${reason} betriebliche oder dienstliche Gründe.`;
+/** Product assumption for weekly checks, not a statement of tariff interpretation. */
+export const TARIFF_WEEKLY_CHECK_ASSUMPTION =
+  "LUNA zählt Dienste am Startdatum und setzt die betrieblichen Gründe für einen sechsten Arbeitstag voraus.";
 const twoFree =
   "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.";
 

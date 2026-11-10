@@ -171,9 +171,8 @@ describe("visible check timelines", () => {
             /23 Std\. 59 Min\./,
           ),
         ).toHaveLength(1);
-        expect(
-          screen.getByRole("button", { name: "5 Dienste anzeigen", expanded: false }),
-        ).toBeVisible();
+        expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
+        expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
         await fireEvent.press(
           screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
         );
@@ -243,8 +242,8 @@ describe("visible check timelines", () => {
       expect(details.queryByText(/nur die Anzahl der Nächte/)).toBeNull();
       expect(details.getByText(/08\.08\.2026/)).toBeTruthy();
       expect(details.getByText(/08\.08\.2026 · 07:30 bis 10\.08\.2026 · 08:00/)).toBeTruthy();
-      expect(details.queryAllByTestId(/^check-shift-/)).toHaveLength(0);
-      await fireEvent.press(details.getByRole("button", { name: "5 Dienste anzeigen" }));
+      expect(details.getAllByTestId(/^check-shift-/)).toHaveLength(5);
+      expect(details.queryByRole("button", { name: "5 Dienste anzeigen" })).toBeNull();
       expect(details.getAllByTestId(/^check-shift-/)).toHaveLength(5);
       expect(details.queryAllByRole("link")).toHaveLength(0);
       await fireEvent.press(
@@ -324,7 +323,7 @@ describe("visible check timelines", () => {
     expect(screen.getByText("6 Diensttage in Folge")).toBeVisible();
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
     expect(screen.getByText("24.11.2026 · 08:00 bis 30.11.2026 · 07:30")).toBeVisible();
-    expect(screen.queryAllByTestId(/^check-shift-/)).toHaveLength(0);
+    expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(6);
   });
   it.each([LIGHT_PALETTE, DARK_PALETTE])(
     "keeps scope neutral in both appearances",
@@ -418,7 +417,7 @@ describe("visible check timelines", () => {
         screen.getByTestId("check-details-SPECIAL_DUTY_CALLOUTS_INCOMPLETE:on-call:2026-12"),
       ).getByRole("button", { name: /Details ansehen/ }),
     );
-    await fireEvent.press(screen.getByRole("button", { name: "1 Dienst anzeigen" }));
+    expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
     expect(screen.getByTestId("check-shift-on-call")).toBeTruthy();
   });
   beforeEach(() => {
@@ -454,12 +453,12 @@ describe("visible check timelines", () => {
         expect(card.queryByRole("link")).toBeNull();
         await fireEvent.press(card.getByRole("button", { name: /Details ansehen:/ }));
         expect(screen.getByText(finding.description)).toBeVisible();
-        expect(screen.queryByTestId("check-shift-late")).toBeNull();
+        expect(screen.getByTestId("check-shift-late")).toBeVisible();
         await fireEvent.press(
           screen.getByRole("link", { name: "Arbeitszeitgesetz · § 5 Ruhezeit" }),
         );
         expect(open).toHaveBeenCalledWith("https://www.gesetze-im-internet.de/arbzg/__5.html");
-        await fireEvent.press(screen.getByRole("button", { name: "2 Dienste anzeigen" }));
+        expect(screen.queryByRole("button", { name: "2 Dienste anzeigen" })).toBeNull();
         expect(screen.getByTestId("check-shift-late")).toBeVisible();
       } finally {
         spy.mockRestore();
@@ -580,7 +579,7 @@ describe("visible check timelines", () => {
     const screen = await render(list([finding], shifts));
     expect(screen.getByText("7 Diensttage in Folge")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
-    await fireEvent.press(screen.getByRole("button", { name: "7 Dienste anzeigen" }));
+    expect(screen.queryByRole("button", { name: "7 Dienste anzeigen" })).toBeNull();
     expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(7);
     await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-series-0")).toBeNull());
@@ -633,15 +632,15 @@ describe("visible check timelines", () => {
     expect(screen.queryByRole("button", { name: /Erklärung|Über die Prüfung/ })).toBeNull();
     expect(screen.queryByTestId("check-shift-late")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
-    await fireEvent.press(screen.getByRole("button", { name: "2 Dienste anzeigen" }));
+    expect(screen.queryByRole("button", { name: "2 Dienste anzeigen" })).toBeNull();
     expect(screen.getAllByTestId(/^check-shift-/).map((row) => row.props.testID)).toEqual([
       "check-shift-late",
       "check-shift-early",
     ]);
-    expect(screen.getByText("13:18–21:30")).toBeTruthy();
-    expect(screen.getByText("13:18–21:30").parent).toHaveStyle({
-      flexDirection: scale >= 1.3 ? "column" : "row",
-    });
+    expect(screen.queryByText("13:18–21:30")).toBeNull();
+    expect(screen.getByTestId("check-shift-late").props.accessibilityLabel).toMatch(
+      /13:18 bis 21:30/,
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-late")).toBeNull());
     expect(screen.getByText("9:30 h")).toBeTruthy();
@@ -709,7 +708,7 @@ describe("visible check timelines", () => {
       expect(screen.queryByTestId("check-shift-day-0")).toBeNull();
       await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
       expect(screen.getByText("23.11.2026 · 13:18 bis 04.12.2026 · 21:30")).toBeTruthy();
-      await fireEvent.press(screen.getByRole("button", { name: "12 Dienste anzeigen" }));
+      expect(screen.queryByRole("button", { name: "12 Dienste anzeigen" })).toBeNull();
       expect(screen.getAllByTestId(/^check-shift-/).map((r) => r.props.testID)).toEqual(
         shifts.map((s) => `check-shift-${s.id}`),
       );
