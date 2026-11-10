@@ -19,10 +19,7 @@ import {
 import { listTestBackupMonths } from "@/infrastructure/database/test-backup-status-repository";
 import { DEV_TOOLS_AVAILABLE, shouldLoadDevToolState } from "@/infrastructure/dev-tools-policy";
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
-import {
-  cancelEntryNotifications,
-  syncEntryNotifications,
-} from "@/infrastructure/notifications/entry-notifications";
+import { createEntryNotificationPort } from "./create-entry-notification-port";
 
 export function createPflegeShiftPorts(db: SQLiteDatabase): PflegeShiftPorts {
   const profilePorts = createSimpleProfilePorts(db);
@@ -43,10 +40,7 @@ export function createPflegeShiftPorts(db: SQLiteDatabase): PflegeShiftPorts {
       loadTvoedWorkPatternSettings: () => loadTvoedWorkPatternSettings(db),
       saveTvoedWorkPatternSettings: (input) => saveTvoedWorkPatternSettings(db, input),
     },
-    notifications: {
-      syncEntry: (entry, timeZone) => syncEntryNotifications(db, entry, timeZone),
-      cancelEntry: (entry) => cancelEntryNotifications(db, entry),
-    },
+    notifications: createEntryNotificationPort(db),
     diagnostics: {
       record: (source, code, error) => {
         recordDiagnostic(source, code, error);

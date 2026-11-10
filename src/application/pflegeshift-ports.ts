@@ -168,6 +168,7 @@ export interface PflegeShiftRepositoryPort {
 }
 
 export interface PflegeShiftNotificationPort {
+  readonly capture?: () => PflegeShiftNotificationPort;
   readonly syncEntry: (entry: CalendarEntry, timeZone: string) => Promise<void>;
   readonly cancelEntry: (entry: Pick<CalendarEntry, "id" | "kind">) => Promise<void>;
 }

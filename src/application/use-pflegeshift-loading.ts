@@ -95,6 +95,7 @@ export function usePflegeShiftLoading(
       setError(null);
       try {
         if (full || !initialized.current) {
+          const scopedNotifications = notifications.capture?.() ?? notifications;
           const snapshot = await loadPflegeShiftSnapshot(repository, range);
           if (revision !== sequence.current) {
             calendarPerformance.record("load-discard", { load: revision });
@@ -106,7 +107,7 @@ export function usePflegeShiftLoading(
             snapshot.entries,
             snapshot.profile?.timeZone ?? "Europe/Berlin",
             {
-              notifications,
+              notifications: scopedNotifications,
               diagnostics,
             },
           ).then((failed) => {

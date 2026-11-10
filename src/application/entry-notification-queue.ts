@@ -43,10 +43,11 @@ export function createEntryNotificationReconciler(
       warning: (message: string) => void,
       restored = false,
     ) {
+      const scoped = notifications.capture?.() ?? notifications;
       queue.enqueue(
         entry.id,
         entry.revision,
-        () => notifications.syncEntry(entry, timeZone),
+        () => scoped.syncEntry(entry, timeZone),
         (error) => {
           const code = restored
             ? "ENTRY_NOTIFICATION_RESTORE_FAILED"
@@ -63,10 +64,11 @@ export function createEntryNotificationReconciler(
       );
     },
     cancel(entry: CalendarEntry, warning: (message: string) => void) {
+      const scoped = notifications.capture?.() ?? notifications;
       queue.enqueue(
         entry.id,
         entry.revision + 1,
-        () => notifications.cancelEntry(entry),
+        () => scoped.cancelEntry(entry),
         (error) => {
           diagnostics.record("notifications", "ENTRY_NOTIFICATION_CANCEL_FAILED", error);
           warning("Gelöscht. Eine geplante Erinnerung konnte nicht entfernt werden.");

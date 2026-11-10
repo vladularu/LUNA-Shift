@@ -671,8 +671,8 @@
     {
       "path": "src/application/pflegeshift-ports.ts",
       "kind": "modified",
-      "sha256": "a55e9a28be8be96e91757474e2aa2ff10203e096f7023e04ca4708847318bbb5",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "79b462b247ff68cd6d3a2cc93ed2011e37271ee57fba1cb92d285ad1c0d98df6",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
       "path": "src/application/pflegeshift-provider.tsx",
@@ -689,8 +689,8 @@
     {
       "path": "src/composition/create-pflegeshift-ports.ts",
       "kind": "modified",
-      "sha256": "fb215c55481d6a834b9b0bad9c5892b01b1ecd5fd4a5962c37aa263c87e87948",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "f70ed211bea567728cb5dbbb80569c7e69a6b5b789a461086b7866e5c7e8e8d7",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending."
     },
     {
       "path": "src/domain/special-duty-review.ts",
@@ -876,6 +876,30 @@
       "path": "src/infrastructure/notifications/entry-notifications.ts",
       "kind": "modified",
       "sha256": "9d56c9151a27986fd52947a40e9a9a67ac7aa1cbb6f224d8cfd36553f121d741",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/application/entry-notification-queue.ts",
+      "kind": "modified",
+      "sha256": "8b71982574705fb826717304637bdd414b749e4249baa95837df6a8821eae091",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/application/use-pflegeshift-loading.ts",
+      "kind": "modified",
+      "sha256": "e0a0d36846e691b0206db057da465c94d45f3faed3717db4a9e4bfc62e08226b",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/composition/create-entry-notification-port.ts",
+      "kind": "added",
+      "sha256": "8bbe56ff46d0ed393cdeabdc6ef1aae44966f55331eb422007ab5444c7c765f3",
+      "reason": " User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending."
+    },
+    {
+      "path": "src/features/data-backup/use-local-backup-restore.ts",
+      "kind": "modified",
+      "sha256": "c6de3b88e907494133a5fa5d604ac4b38be82e92456bdf5c8042faa2d59ad472",
       "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     }
   ]

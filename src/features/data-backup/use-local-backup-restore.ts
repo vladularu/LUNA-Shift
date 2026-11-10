@@ -19,6 +19,7 @@ import {
   cancelAllEntryNotifications,
   syncEntryNotifications,
 } from "@/infrastructure/notifications/entry-notifications";
+import { captureEntryNotificationGeneration } from "@/infrastructure/notifications/entry-notification-lifecycle";
 
 function needsNotification(
   entry: Awaited<ReturnType<typeof listCalendarEntries>>[number],
@@ -27,10 +28,13 @@ function needsNotification(
 }
 
 async function recoverCurrentNotifications(db: ReturnType<typeof useSQLiteContext>): Promise<void> {
+  const current = captureEntryNotificationGeneration(db);
   const [profile, entries] = await Promise.all([loadProfile(db), listCalendarEntries(db)]);
   const timeZone = profile?.timeZone ?? "Europe/Berlin";
   const results = await Promise.allSettled(
-    entries.filter(needsNotification).map((entry) => syncEntryNotifications(db, entry, timeZone)),
+    entries
+      .filter(needsNotification)
+      .map((entry) => syncEntryNotifications(db, entry, timeZone, current)),
   );
   if (results.some((result) => result.status === "rejected")) {
     throw new Error("Notification recovery failed");
