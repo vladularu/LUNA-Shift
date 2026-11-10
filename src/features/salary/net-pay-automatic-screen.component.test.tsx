@@ -384,7 +384,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(salary.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
     const output = JSON.stringify(salary.toJSON());
     expect(output.indexOf("Zulagen werden ausgezahlt auswählen")).toBeGreaterThan(-1);
-    expect(output.indexOf("salary-payroll-totals")).toBeGreaterThan(
+    expect(output.indexOf("salary-payroll-totals")).toBeLessThan(
       output.indexOf("Zulagen werden ausgezahlt auswählen"),
     );
     expect(salary.queryByRole("button", { name: "Netto-Prognose öffnen" })).toBeNull();

@@ -89,8 +89,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "8fd697cb3e48c6ad9faaadcbff291dd2fdecb6081c21d95d6c0f4dc4bc04f14a",
-      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "3fb6bd5e44b8a7033b5dd97ab249292a02cb1fd102b488030595af8d0ffe8578",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Git integration of Preview ec680935 on 2026-11-10: Reverse only the existing total/selector order assertion, retaining every payroll regression. Preserve unrelated master and Preview differences."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -155,8 +155,8 @@
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
       "kind": "modified",
-      "sha256": "e062f14b31016904fcbd9e6c8ee9fa558bd893f5dbae705608ee53fbb6de057f",
-      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "99e99b0a72cd7ffce0e54ab158be6390da48dcf0a5317a638c6d3e677cb8e24c",
+      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Git integration of Preview ec680935 on 2026-11-10: Place the existing gross total before the payout-month selector; preserve all calculations and callbacks. Preserve unrelated master and Preview differences."
     },
     {
       "path": "src/features/salary/net-pay-automatic-screen.tsx",
@@ -779,8 +779,8 @@
     {
       "path": "src/features/salary/annual-salary-payment-editor.tsx",
       "kind": "modified",
-      "sha256": "71b34603d18efa45c25930228a5227f4af4dbd573af9bf9a00d7ce83e348ebc7",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "33686cbad92df531f9b64484578387f4907f9970a9b5150cb4f349bc8ab3c6a8",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Git integration of Preview ec680935 on 2026-11-10: Center only the annual-payment issue text with existing LUNA side insets. Preserve unrelated master and Preview differences."
     },
     {
       "path": "src/features/salary/annual-salary-proposal.ts",
@@ -805,6 +805,12 @@
       "kind": "modified",
       "sha256": "b72835929c04d11adfe4a08e7b55eae34f1119a0901a50d7eb3fa9f1dcebb377",
       "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/net-pay-workflow-controls.tsx",
+      "kind": "modified",
+      "sha256": "bae0642e42af296bdd258653f5431906d6f6ad788e81795be84ce21ac0b899b3",
+      "reason": "User-authorized Git integration of Preview ec680935 on 2026-11-10: Add opt-in centered alignment while preserving every existing default hint style. Preserve unrelated master and Preview differences."
     }
   ]
 }
