@@ -42,10 +42,11 @@ export function createEntryNotificationReconciler(
       timeZone: string,
       warning: (message: string) => void,
       restored = false,
+      captured?: PflegeShiftNotificationPort,
     ) {
-      const scoped = notifications.capture?.() ?? notifications;
+      const scoped = captured ?? notifications.capture?.() ?? notifications;
       queue.enqueue(
-        entry.id,
+        JSON.stringify([scoped.scopeKey ?? "unscoped", entry.kind, entry.id]),
         entry.revision,
         () => scoped.syncEntry(entry, timeZone),
         (error) => {
@@ -66,7 +67,7 @@ export function createEntryNotificationReconciler(
     cancel(entry: CalendarEntry, warning: (message: string) => void) {
       const scoped = notifications.capture?.() ?? notifications;
       queue.enqueue(
-        entry.id,
+        JSON.stringify([scoped.scopeKey ?? "unscoped", entry.kind, entry.id]),
         entry.revision + 1,
         () => scoped.cancelEntry(entry),
         (error) => {

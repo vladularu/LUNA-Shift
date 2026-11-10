@@ -5,7 +5,10 @@ import { createPflegeShiftPorts } from "@/composition/create-pflegeshift-ports";
 import type { CalendarEntry } from "@/domain/types";
 import { tariffAnnualFixture } from "@/engine/tariff-annual-test-fixtures";
 import { tvlFact } from "@/engine/tvl-shift-work-test-fixtures";
-import { invalidateEntryNotifications } from "@/infrastructure/notifications/entry-notification-lifecycle";
+import {
+  invalidateEntryNotifications,
+  pauseEntryNotifications,
+} from "@/infrastructure/notifications/entry-notification-lifecycle";
 
 const repositoryMocks = vi.hoisted(() => ({
   deleteCalendarEntry: vi.fn(),
@@ -95,8 +98,10 @@ describe("createPflegeShiftPorts", () => {
     const db = {} as SQLiteDatabase;
     const ports = createPflegeShiftPorts(db);
     const old = ports.notifications.capture!();
+    expect(ports.notifications.capture!().scopeKey).toBe(old.scopeKey);
     await invalidateEntryNotifications(db);
     const fresh = ports.notifications.capture!();
+    expect(fresh.scopeKey).not.toBe(old.scopeKey);
     await old.syncEntry(entry, "Europe/Berlin");
     const oldGuard = notificationMocks.syncEntry.mock.calls.at(-1)?.[3];
     expect(oldGuard()).toBe(false);
@@ -104,6 +109,16 @@ describe("createPflegeShiftPorts", () => {
     const freshGuard = notificationMocks.syncEntry.mock.calls.at(-1)?.[3];
     expect(freshGuard()).toBe(true);
     expect(old.capture).toBeUndefined();
+  });
+
+  it("separates paused reminder jobs from fresh jobs after the same restore resumes", () => {
+    const db = {} as SQLiteDatabase;
+    const ports = createPflegeShiftPorts(db);
+    const resume = pauseEntryNotifications(db);
+    const paused = ports.notifications.capture!();
+    resume();
+    const active = ports.notifications.capture!();
+    expect(paused.scopeKey).not.toBe(active.scopeKey);
   });
 
   it("binds one template permutation to the database without calendar or notification writes", async () => {

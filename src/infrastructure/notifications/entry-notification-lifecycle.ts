@@ -18,6 +18,11 @@ export function captureEntryNotificationGeneration(db: SQLiteDatabase): () => bo
   return () => permitted && state.pauses === 0 && state.generation === generation;
 }
 
+export function entryNotificationScopeKey(db: SQLiteDatabase): string {
+  const state = stateFor(db);
+  return `${state.generation}:${state.pauses === 0 ? "active" : "paused"}`;
+}
+
 export function pauseEntryNotifications(db: SQLiteDatabase): () => void {
   const state = stateFor(db);
   state.generation++;

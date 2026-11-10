@@ -4,13 +4,17 @@ import {
   cancelEntryNotifications,
   syncEntryNotifications,
 } from "@/infrastructure/notifications/entry-notifications";
-import { captureEntryNotificationGeneration } from "@/infrastructure/notifications/entry-notification-lifecycle";
+import {
+  captureEntryNotificationGeneration,
+  entryNotificationScopeKey,
+} from "@/infrastructure/notifications/entry-notification-lifecycle";
 
 export function createEntryNotificationPort(db: SQLiteDatabase): PflegeShiftNotificationPort {
   return {
     capture: () => {
       const current = captureEntryNotificationGeneration(db);
       return {
+        scopeKey: entryNotificationScopeKey(db),
         syncEntry: (entry, timeZone) => syncEntryNotifications(db, entry, timeZone, current),
         cancelEntry: (entry) => cancelEntryNotifications(db, entry, current),
       };
