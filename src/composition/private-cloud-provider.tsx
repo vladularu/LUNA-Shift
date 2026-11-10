@@ -41,6 +41,7 @@ import { createCloudSharingClient } from "@/infrastructure/sharing/cloud-sharing
 import { UserFacingError } from "@/domain/errors";
 import { useAccountPhoto } from "@/features/account/use-account-photo";
 import { useCloudDataRefresh } from "./cloud-data-refresh-boundary";
+import { isCalendarOnlyCloudChange } from "@/application/private-cloud-refresh-scope";
 import {
   captureEntryNotificationGeneration,
   pauseEntryNotifications,
@@ -52,7 +53,7 @@ const sha256 = (value: string) =>
 export function PrivateCloudProvider({ children }: PropsWithChildren) {
   const db = useSQLiteContext();
   const refreshData = useCloudDataRefresh();
-  const { ready } = usePflegeShiftStatus();
+  const { ready, refreshCalendar } = usePflegeShiftStatus();
   const { testMonths } = usePflegeShiftTestData();
   const segments = useSegments();
   const allowed =
@@ -118,6 +119,12 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
       onApplied: refreshData,
     });
   }, [db, refreshData]);
+  useLayoutEffect(() => {
+    runtime.setOnApplied(async (previous, applied) => {
+      if (isCalendarOnlyCloudChange(previous, applied)) await refreshCalendar();
+      else await refreshData();
+    });
+  }, [runtime, refreshCalendar, refreshData]);
   useLayoutEffect(() => {
     runtime.setAllowed(allowed);
   }, [runtime, allowed]);

@@ -1,6 +1,7 @@
 import { useDatedWorkPattern, useEmploymentProfileValue } from "./dated-work-pattern";
 import { WorkingTimeProvider, type PflegeShiftProfileValue } from "./working-time-provider";
 import { createEntryNotificationReconciler } from "./entry-notification-queue";
+import { useCloudCalendarNotifications } from "./use-cloud-calendar-notifications";
 import React, {
   createContext,
   useCallback,
@@ -50,6 +51,7 @@ interface PflegeShiftStatusValue {
   readonly notificationWarning: NotificationWarning | null;
   readonly clearNotificationWarning: (id: number) => void;
   readonly reload: () => Promise<void>;
+  readonly refreshCalendar: () => Promise<void>;
 }
 
 export interface NotificationWarning {
@@ -154,6 +156,8 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     calendarRange,
     error,
     reload,
+    refreshCalendar,
+    notificationRefresh,
     recordDeletion,
   } = usePflegeShiftLoading(
     activeMonth,
@@ -161,6 +165,13 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     entries,
     setEntries,
     applySnapshot,
+    publishNotificationWarning,
+  );
+
+  useCloudCalendarNotifications(
+    entries,
+    notificationRefresh,
+    notificationQueue,
     publishNotificationWarning,
   );
 
@@ -321,8 +332,17 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
       notificationWarning,
       clearNotificationWarning,
       reload,
+      refreshCalendar,
     }),
-    [calendarRange, clearNotificationWarning, error, notificationWarning, reload, statusReady],
+    [
+      calendarRange,
+      clearNotificationWarning,
+      error,
+      notificationWarning,
+      reload,
+      refreshCalendar,
+      statusReady,
+    ],
   );
   const profileValue = useEmploymentProfileValue(profile, updateProfile, workPatternSettings);
   const templatesValue = useMemo<PflegeShiftTemplatesValue>(

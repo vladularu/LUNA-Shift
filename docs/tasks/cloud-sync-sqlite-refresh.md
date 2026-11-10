@@ -31,3 +31,15 @@ Die Arbeit ist in zwei getrennte Pakete geteilt:
 Beide Pakete müssen gemeinsam geprüft sein, bevor die Preview-Korrektur verteilt wird.
 
 Lokale Prüfungen, CI, Preview-Verteilung und iPhone-Abnahme werden getrennt dokumentiert. Ein grüner JavaScript-Test beweist keine native Absturzfreiheit. Der PR bleibt bis zur Geräteabnahme ein Entwurf.
+
+## R2: Kalenderänderungen ohne sichtbaren Neuaufbau
+
+Gerätefeedback vom 10.11.2026: Empfang und Löschung werden in Preview übernommen; Preview bleibt geöffnet. Es entsteht aber ein schwarzer Zwischenzustand, und die geöffnete Mehr-Ansicht springt zurück zum Kalender. Beide Apps liefen auf demselben iPhone. Der bisherige native Preview-Absturz ist in diesem Test ausgeblieben; die visuelle Abnahme ist nicht bestanden. TestFlight enthält weiterhin den alten Neustart und stürzt laut Nutzer dort erneut ab.
+
+- Ziel: Bei ausschließlich geänderten Terminen/Diensten den Kalender im Hintergrund neu einlesen; bisherige Daten, Bereitschaft, Navigator, Tab und Monat bleiben bis zur fertigen Übernahme erhalten. Entfernte Einträge verschwinden ohne kompletten Ansichtsneustart. Gleichzeitig gespeicherte lokale Änderungen bleiben erhalten.
+- Nicht-Ziele: kürzere Upload-Fristen des unveränderten TestFlight-Builds, Hintergrundausführung unter iOS, globale Präferenz-/Profil-Aktualisierung ohne Remount, automatische Dublettenbereinigung, native Builds oder TestFlight-Veröffentlichung.
+- Plattform: iOS Preview Build 50; derselbe App-/Runtime-Stand, neue JavaScript-OTA nach lokalen Prüfungen.
+- Paket A: generationengebundene Erinnerungswarteschlangen. Gleiche aktive Generationen bleiben pro Eintrag serialisiert; ausgemusterte oder pausierte Generationen dürfen frische Restore-Daten mit kleinerer Revision nicht blockieren. Lifecycle-Schlüssel, Adapter/Port und Queue samt fokussierten Tests.
+- Paket B: Klassifikation des übernommenen Vorher-/Nachher-Dokuments, Hintergrundladen im bestehenden Kalenderprovider, sichere Erinnerungserneuerung nach dem React-Commit, Cloud-Anbindung und Regressionstests. Profil-, Präferenz-, Darstellungs- und unbekannte Dokumentänderungen verwenden weiterhin die geprüfte globale React-Aktualisierung.
+- Abnahme: kein schwarzer Zwischenzustand oder Tab-Wechsel bei Erstellen/Ändern/Löschen eines Cloud-Termins oder Dienstes; Einträge bleiben während einer verzögerten Abfrage sichtbar. Lokale Änderungen/Löschungen, Jahreswechsel, veraltete Abfrageergebnisse und Erinnerungen sind abgesichert. Preview-iPhone-Abnahme bleibt erforderlich.
+- Bestehende Freigaben gelten für Implementierung, Git und Preview. Der bisherige Preview-Checkout wird für R2 eingefroren; ein neuer separater Preview-Checkout erhält dessen kontrollierten Quellstand. TestFlight bleibt unverändert.

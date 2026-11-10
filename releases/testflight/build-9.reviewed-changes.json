@@ -677,8 +677,8 @@
     {
       "path": "src/application/pflegeshift-provider.tsx",
       "kind": "modified",
-      "sha256": "8a8599d2c96bffb4957edfb9e40f1df405c0b802cd8e8b85d6f835127ce74b17",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "5d8dcb46a11716882278ae74806e62cd74522998ac769c672219a542d932f20b",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     },
     {
       "path": "src/application/use-shift-save-actions.ts",
@@ -863,8 +863,8 @@
     {
       "path": "src/composition/private-cloud-provider.tsx",
       "kind": "modified",
-      "sha256": "c2732dede756a3cbaffaa1c24d9ad879608f4168445c36164a85e37c8de09048",
-      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+      "sha256": "37ca3d1abe567457c28faae7c3e46d6b25f482f7abb92e74abf06c2824383d5f",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     },
     {
       "path": "src/composition/cloud-data-refresh-boundary.tsx",
@@ -881,8 +881,8 @@
     {
       "path": "src/application/use-pflegeshift-loading.ts",
       "kind": "modified",
-      "sha256": "e0a0d36846e691b0206db057da465c94d45f3faed3717db4a9e4bfc62e08226b",
-      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+      "sha256": "eb927d37246d6ca6cca1858b02f4593a81eca638f8c93c7535c75223ed5ed8a5",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     },
     {
       "path": "src/features/data-backup/use-local-backup-restore.ts",
@@ -913,6 +913,24 @@
       "kind": "added",
       "sha256": "30a414d09e92f3b83633d67c6736b4a28e789dda6d32cabb81aedbb477ea7ab9",
       "reason": " User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/private-cloud-refresh-scope.ts",
+      "kind": "added",
+      "sha256": "8fe73e1fe4bf1f367e737f006b659932d8d0933a65ff4f8968cfc4be27e35044",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/private-cloud-runtime.ts",
+      "kind": "modified",
+      "sha256": "ced1e01b727677f4c5f8b1cc68deee8ab55308f36f6e5030e51820776fe1f38e",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/use-cloud-calendar-notifications.ts",
+      "kind": "added",
+      "sha256": "02f4f4e9fa9f1d8b3c4a1d1e2999053702ec32cd2fdd0b70876c0761a63fcadf",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     }
   ]
 }

@@ -22,13 +22,17 @@ export function createPrivateCloudRuntime(options: {
   readonly remote: PrivateCloudRemote | null;
   readonly makeId: () => string;
   readonly validate: (document: PrivateCloudDocument) => Promise<void>;
-  readonly onApplied: () => Promise<void>;
+  readonly onApplied: (
+    previous: PrivateCloudDocument,
+    applied: PrivateCloudDocument,
+  ) => Promise<void>;
   readonly canSynchronize?: () => boolean;
 }) {
   let accountId: string | null = null;
   let generation = 0;
   let allowed = true;
   let busy: Promise<void> | null = null;
+  let onApplied = options.onApplied;
   let status: PrivateCloudStatus = {
     phase: "signed_out",
     lastSyncedAt: null,
@@ -205,7 +209,7 @@ export function createPrivateCloudRuntime(options: {
           requiresFullChoice: false,
           hasCloudData: true,
         });
-        if (!sameCloudValue(device, receipt.document)) await options.onApplied();
+        if (!sameCloudValue(device, receipt.document)) await onApplied(device, receipt.document);
       } catch (error) {
         if (current())
           update({
@@ -222,6 +226,9 @@ export function createPrivateCloudRuntime(options: {
     return busy;
   }
   return {
+    setOnApplied(handler: typeof options.onApplied) {
+      onApplied = handler;
+    },
     isCurrentAccount: (value: string) => accountId === value,
     setAllowed(value: boolean) {
       if (allowed === value) return;

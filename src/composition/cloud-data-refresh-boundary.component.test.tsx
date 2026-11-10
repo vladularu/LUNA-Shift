@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, waitFor } from "@testing-library/react-native";
+import { fireEvent, waitFor } from "@testing-library/react-native";
 import { Stack, useLocalSearchParams, usePathname } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import { useEffect, useState, type PropsWithChildren } from "react";
@@ -33,9 +33,13 @@ jest.mock("expo", () => ({
 const mockDb = { closeAsync: jest.fn(async () => undefined) };
 const mockOwnerMounted = jest.fn();
 const mockOwnerUnmounted = jest.fn();
+let mockRefreshVisible: (() => void) | undefined;
+const mockRefreshCalendar = jest.fn(async () => {
+  mockRefreshVisible?.();
+});
 jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("@/application/pflegeshift-provider", () => ({
-  usePflegeShiftStatus: () => ({ ready: true }),
+  usePflegeShiftStatus: () => ({ ready: true, refreshCalendar: mockRefreshCalendar }),
   usePflegeShiftTestData: () => ({ testMonths: [] }),
 }));
 jest.mock("@/infrastructure/startup-presentation", () => ({
@@ -124,7 +128,6 @@ const mockRemote: PrivateCloudRemote = {
   write: mockWriteCloud,
 };
 const mockConsumerUnmounted = jest.fn();
-let mockResolvePending: (() => void) | undefined;
 function DatabaseOwner({ children }: PropsWithChildren) {
   useEffect(() => {
     mockOwnerMounted(mockDb);
@@ -142,16 +145,11 @@ function Screen() {
   const activeMonth = useActiveMonth();
   const coordinator = useActiveMonthCoordinator();
   const [snapshot, setSnapshot] = useState(mockDevice);
+  const [selected, setSelected] = useState(false);
   useEffect(() => {
-    let active = true;
-    const captured = mockDevice;
-    if (!mockResolvePending) {
-      mockResolvePending = () => {
-        if (active) setSnapshot(captured);
-      };
-    }
+    mockRefreshVisible = () => setSnapshot(mockDevice);
     return () => {
-      active = false;
+      mockRefreshVisible = undefined;
       mockConsumerUnmounted();
     };
   }, []);
@@ -161,7 +159,9 @@ function Screen() {
       <Text>{`${path}:${month}`}</Text>
       <Text>{`Monat:${activeMonth}`}</Text>
       <Text>{ready ? user?.id : "initializing"}</Text>
+      <Text>{selected ? "selected" : "unselected"}</Text>
       <Button title="Sync" onPress={() => void runtime.synchronize()} />
+      <Button title="Auswahl" onPress={() => setSelected(true)} />
       <Button title="Januar" onPress={() => coordinator.setMonth("2027-01")} />
     </>
   );
@@ -181,6 +181,7 @@ async function open(initialUrl = "/account?month=2027-01") {
         </DatabaseOwner>
       ),
       account: Screen,
+      "(tabs)/more": Screen,
     },
     { initialUrl },
   );
@@ -191,15 +192,16 @@ async function open(initialUrl = "/account?month=2027-01") {
 beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(AppState, "currentState", { value: "active", writable: true });
-  mockResolvePending = undefined;
+  mockRefreshVisible = undefined;
   mockDevice = document("before");
   mockCloud = { document: mockDevice, revision: 1, updatedAt: "2026-11-10T20:00:00Z" };
   mockState = { accountId: "account", baseline: mockCloud, pending: null };
 });
 
 describe("cloud apply with a live database", () => {
-  it("refreshes committed data and auth without closing SQLite or reloading Expo; keeps the route", async () => {
+  it("refreshes committed calendar data without remounting consumers, auth or navigation", async () => {
     const screen = await open();
+    await fireEvent.press(screen.getByRole("button", { name: "Auswahl" }));
     mockCloud = { ...mockCloud, document: document("from-cloud"), revision: 2 };
     await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
     await waitFor(() => expect(screen.getByText(/from-cloud/)).toBeTruthy());
@@ -210,12 +212,12 @@ describe("cloud apply with a live database", () => {
     expect(mockOwnerUnmounted).not.toHaveBeenCalled();
     expect(mockDb.closeAsync).not.toHaveBeenCalled();
     expect(mockNativeReload).not.toHaveBeenCalled();
-    expect(mockUnsubscribeAuth).toHaveBeenCalledTimes(1);
-    expect(mockGetSession).toHaveBeenCalledTimes(2);
-    expect(mockConsumerUnmounted).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribeAuth).not.toHaveBeenCalled();
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
+    expect(mockConsumerUnmounted).not.toHaveBeenCalled();
+    expect(mockRefreshCalendar).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("selected")).toBeTruthy();
     expect(mockWriteCloud).not.toHaveBeenCalled();
-    await act(async () => mockResolvePending?.());
-    expect(screen.getByText(/from-cloud/)).toBeTruthy();
     await screen.unmount();
     expect(mockDb.closeAsync).toHaveBeenCalledTimes(1);
   });
@@ -230,7 +232,8 @@ describe("cloud apply with a live database", () => {
     await waitFor(() => expect(screen.getByText("account")).toBeTruthy());
     await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
     await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
-    expect(mockConsumerUnmounted).toHaveBeenCalledTimes(1);
+    expect(mockConsumerUnmounted).not.toHaveBeenCalled();
+    expect(mockRefreshCalendar).toHaveBeenCalledTimes(1);
     expect(mockNativeReload).not.toHaveBeenCalled();
     expect(mockDb.closeAsync).not.toHaveBeenCalled();
     await screen.unmount();
@@ -244,6 +247,40 @@ describe("cloud apply with a live database", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
     await waitFor(() => expect(screen.getByText(/new-month-data/)).toBeTruthy());
     expect(screen.getByText("Monat:2027-01")).toBeTruthy();
+    expect(mockDb.closeAsync).not.toHaveBeenCalled();
+    await screen.unmount();
+  });
+
+  it("removes a cloud-deleted entry while the More route and its local state stay open", async () => {
+    const screen = await open("/more");
+    await fireEvent.press(screen.getByRole("button", { name: "Auswahl" }));
+    mockCloud = { ...mockCloud, document: { ...mockDevice, data: { shifts: [] } }, revision: 2 };
+    await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
+    await waitFor(() => expect(screen.queryByText(/before/)).toBeNull());
+    expect(screen.getByText("/more:undefined")).toBeTruthy();
+    expect(screen.getByText("selected")).toBeTruthy();
+    expect(mockConsumerUnmounted).not.toHaveBeenCalled();
+    expect(mockNativeReload).not.toHaveBeenCalled();
+    await screen.unmount();
+  });
+
+  it("still refreshes all persisted contexts when presentation data changes", async () => {
+    const screen = await open();
+    mockCloud = {
+      ...mockCloud,
+      document: {
+        ...document("new-presentation"),
+        presentation: { ...mockDevice.presentation, calendarImageStrength: "strong" },
+      },
+      revision: 2,
+    };
+    await fireEvent.press(screen.getByRole("button", { name: "Sync" }));
+    await waitFor(() => expect(screen.getByText(/new-presentation/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("account")).toBeTruthy());
+    expect(mockRefreshCalendar).not.toHaveBeenCalled();
+    expect(mockConsumerUnmounted).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribeAuth).toHaveBeenCalledTimes(1);
+    expect(mockGetSession).toHaveBeenCalledTimes(2);
     expect(mockDb.closeAsync).not.toHaveBeenCalled();
     await screen.unmount();
   });
