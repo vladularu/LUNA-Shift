@@ -1,3 +1,4 @@
+import { incompleteSpecialDuties } from "@/domain/special-duty-review";
 import { targetCalculationCaption } from "./target-calculation-caption";
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
@@ -25,6 +26,7 @@ import {
 import type { SalaryPaymentProjection } from "@/domain/salary-payment";
 import { salaryPaymentHint } from "@/features/salary/salary-composition";
 import { annualPayoutMonths, salaryAnnualFamily } from "@/domain/salary-annual-schedule";
+import type { AnnualSalaryIssue } from "@/features/salary/annual-salary-issue";
 
 export function MonthOverview({
   month,
@@ -34,6 +36,7 @@ export function MonthOverview({
   checkError,
   showPlanning,
   annualPayments,
+  annualIssue,
   salaryLoading = false,
   salaryError,
   netPay,
@@ -48,6 +51,7 @@ export function MonthOverview({
   readonly checkError: string | null;
   readonly showPlanning: boolean;
   readonly annualPayments?: readonly AnnualSalaryPayment[];
+  readonly annualIssue?: AnnualSalaryIssue | null;
   readonly salaryLoading?: boolean;
   readonly salaryError?: string | null;
   readonly netPay?: ReactNode;
@@ -95,13 +99,14 @@ export function MonthOverview({
   const estimate = projectionPending
     ? null
     : projection
-      ? projection.pay.available
+      ? projection.pay.available || projection.pay.knownGrossAmount !== undefined
         ? projection.pay
         : null
-      : pay.ok && pay.value.available
+      : pay.ok && (pay.value.available || pay.value.knownGrossAmount !== undefined)
         ? pay.value
         : null;
   const paymentHint = projection ? salaryPaymentHint(projection) : null;
+  const monthlyGross = estimate?.estimatedGrossAmount ?? estimate?.knownGrossAmount ?? null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
   const hasAccount = summary.ok && summary.value.timeAccountMinutes !== undefined;
   return (
@@ -209,16 +214,17 @@ export function MonthOverview({
                   (manualSalary ? 0 : additionalRecurringGrossCents / 100)
                 : undefined
             }
+            partial={estimate?.knownGrossAmount !== undefined}
+            duties={estimate ? incompleteSpecialDuties(estimate) : []}
             gross={
-              estimate?.estimatedGrossAmount == null
+              monthlyGross === null
                 ? null
                 : Math.round(
-                    estimate.estimatedGrossAmount * 100 +
-                      annualGross * 100 +
-                      additionalRecurringGrossCents,
+                    monthlyGross * 100 + annualGross * 100 + additionalRecurringGrossCents,
                   ) / 100
             }
             annualPayments={annualGross}
+            annualIssue={annualIssue}
             annualPaymentPresent={annualPayments?.some((payment) => payment.payoutMonth === month)}
             annualPaymentExpected={annualPayoutMonths(
               salaryAnnualFamily(profile),

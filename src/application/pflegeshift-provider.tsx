@@ -35,7 +35,7 @@ import type {
   TvoedWorkPatternSettings,
   UserProfile,
 } from "@/domain/types";
-import { compareCalendarEntries } from "@/engine/calendar-entry-order";
+import { useShiftSaveActions, upsertSortedCalendarEntry } from "./use-shift-save-actions";
 import { useTemplateOrder } from "@/application/use-template-order";
 
 interface PflegeShiftProviderProps extends PropsWithChildren {
@@ -69,6 +69,7 @@ interface PflegeShiftTemplatesValue {
 interface PflegeShiftEntriesValue {
   readonly entries: readonly CalendarEntry[];
   readonly upsertShift: (input: SaveShiftInput) => Promise<ShiftEntry>;
+  readonly upsertShifts: (inputs: readonly SaveShiftInput[]) => Promise<readonly ShiftEntry[]>;
   readonly upsertAppointment: (input: SaveAppointmentInput) => Promise<Appointment>;
   readonly removeEntry: (entry: CalendarEntry) => Promise<void>;
   readonly restoreEntry: (entry: CalendarEntry) => Promise<CalendarEntry>;
@@ -103,22 +104,6 @@ function replaceById<T extends { readonly id: string }>(
   const next = values.filter((value) => value.id !== saved.id);
   next.push(saved);
   return next;
-}
-
-function upsertSortedCalendarEntry(
-  current: readonly CalendarEntry[],
-  saved: CalendarEntry,
-): readonly CalendarEntry[] {
-  const next = current.filter((entry) => entry.id !== saved.id);
-  let low = 0;
-  let high = next.length;
-  while (low < high) {
-    const middle = (low + high) >>> 1;
-    if (compareCalendarEntries(next[middle], saved) <= 0) low = middle + 1;
-    else high = middle;
-  }
-  next.splice(low, 0, saved);
-  return Object.freeze(next);
 }
 
 function useRequiredContext<T>(context: React.Context<T | null>, name: string): T {
@@ -259,19 +244,13 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     repository,
   );
 
-  const upsertShift = useCallback(
-    async (input: SaveShiftInput) => {
-      const saved = await repository.saveShift(input);
-      setEntries((current) => upsertSortedCalendarEntry(current, saved));
-      notificationQueue.sync(
-        saved,
-        profile?.timeZone ?? "Europe/Berlin",
-        publishNotificationWarning,
-      );
-      return saved;
-    },
-    [notificationQueue, profile?.timeZone, publishNotificationWarning, repository],
-  );
+  const { upsertShift, upsertShifts } = useShiftSaveActions({
+    repository,
+    setEntries,
+    notificationQueue,
+    timeZone: profile?.timeZone ?? "Europe/Berlin",
+    onWarning: publishNotificationWarning,
+  });
 
   const upsertAppointment = useCallback(
     async (input: SaveAppointmentInput) => {
@@ -365,8 +344,8 @@ export function PflegeShiftProvider({ activeMonth, children, ports }: PflegeShif
     ],
   );
   const entriesValue = useMemo<PflegeShiftEntriesValue>(
-    () => ({ entries, upsertShift, upsertAppointment, removeEntry, restoreEntry }),
-    [entries, removeEntry, restoreEntry, upsertAppointment, upsertShift],
+    () => ({ entries, upsertShift, upsertShifts, upsertAppointment, removeEntry, restoreEntry }),
+    [entries, removeEntry, restoreEntry, upsertAppointment, upsertShift, upsertShifts],
   );
   const tariffValue = useMemo<PflegeShiftTariffValue>(
     () => ({

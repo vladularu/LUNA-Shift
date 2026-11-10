@@ -89,8 +89,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "72ef48928fffd7d6bc0cb68e5c3ad4dafecec75b240d0d34b6b9c4f69b0f105a",
-      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "8fd697cb3e48c6ad9faaadcbff291dd2fdecb6081c21d95d6c0f4dc4bc04f14a",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -155,8 +155,8 @@
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
       "kind": "modified",
-      "sha256": "13d95514eb1133ed3b78e43acfeff88e2e109517333245c32e6ae1ea5e33a94d",
-      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields."
+      "sha256": "e062f14b31016904fcbd9e6c8ee9fa558bd893f5dbae705608ee53fbb6de057f",
+      "reason": "Paket 4A: split existing gross components and net result/deductions/settings by explicit presentation view. Preserve gross calculation, annual payments, recurring additions and forecast inputs exactly. Net setup notices stay on net; shared-data load errors mark salary incomplete. Existing annual-payment editor remains reachable on net with its net-basis fields. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/salary/net-pay-automatic-screen.tsx",
@@ -179,8 +179,8 @@
     {
       "path": "src/navigation/routes.ts",
       "kind": "modified",
-      "sha256": "7d72b7edf403819e7253e7f3fe4e4ab347fb4df6ef743f8db988360ceb212701",
-      "reason": "Paket 4C: extend typed annual detail section with NET while preserving existing selected-year validation and separated monthly salary/net routes."
+      "sha256": "7ef05beea12c8c802b30c5ac1663ee4632a21ccb655badf8714f95df17f2749c",
+      "reason": "Paket 4C: extend typed annual detail section with NET while preserving existing selected-year validation and separated monthly salary/net routes. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/domain/analysis-view.ts",
@@ -191,14 +191,14 @@
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
       "kind": "modified",
-      "sha256": "cdfd92d2a762ebf759c6b67b99b73f6258e08e30c4b3cf37b7ed911c1acc4065",
-      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending. Dienstplan-Check local implementation: Use Dienstplan-Check and Gesetz & Tarif labels while preserving the neutral overview, original counts, icons, layout and navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Keep compact neutral month statistics visible independently of the recommendations switch. Compact-list implementation: Remove permanent monthly weekend statistics from the analysis card while retaining category counts and limited-check status. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "415fb46bfcf2629642cd2495b5b7b9aaad67259f74ab8dfdba7a3be6bc5df5aa",
+      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending. Dienstplan-Check local implementation: Use Dienstplan-Check and Gesetz & Tarif labels while preserving the neutral overview, original counts, icons, layout and navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Keep compact neutral month statistics visible independently of the recommendations switch. Compact-list implementation: Remove permanent monthly weekend statistics from the analysis card while retaining category counts and limited-check status. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "d39bbfe66cf55d6d6ff6bc98e32e92e659803ce1667b7e7916f5cad497223d8a",
-      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read. Weekend implementation: Retain monthly weekend statistics for genuine empty months and zero findings. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "207c0f3e0cad8b2054d740c1c48f1a949490184dfe931c9a4701f898c27525ea",
+      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read. Weekend implementation: Retain monthly weekend statistics for genuine empty months and zero findings. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
@@ -257,8 +257,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "757e89203df23ac3e472e65b2dcc92cc1fcd20d6f26a4e25d621a2fde81481eb",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "51437676b5078e5904f6f2deecfada9e4b757c77abd028be16f684d25d64b4c7",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -371,20 +371,20 @@
     {
       "path": "src/features/report-export/report-data.ts",
       "kind": "modified",
-      "sha256": "ab57ddbd3837b7dae82ef2a6902913d8969b857358e889cffec586a45f866044",
-      "reason": "Align the exported check record title with Dienstfolgen & Erholung. Preserve source values and export coverage. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "7b972d96f260c4d340d8c71bcf9cb548f222701d6bb16a7cbf1bfb4abed2e411",
+      "reason": "Align the exported check record title with Dienstfolgen & Erholung. Preserve source values and export coverage. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/report-export/report-document.ts",
       "kind": "modified",
-      "sha256": "af28226c7b4269f77d80049d8f2d7cabe874c6fac1d2bd8846f352b137e50fe5",
-      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys and complete export coverage. iPhone visual acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use readable German labels for the newly exported weekend facts; do not change exported values or pay calculations. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Label new weekend evidence readably in exports while preserving salary and time calculations. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "bad1fbb647d377beff1d5b36b5642d83cc0000e1c5cc2377c743199b1d4378b5",
+      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys and complete export coverage. iPhone visual acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use readable German labels for the newly exported weekend facts; do not change exported values or pay calculations. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Label new weekend evidence readably in exports while preserving salary and time calculations. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/features/report-export/report-view-data.ts",
       "kind": "modified",
-      "sha256": "5fdc07fbdb99ef3abab6026591a06cc6bb0ccbbd8b03d08569e02cf76ebc54c0",
-      "reason": "Align the human-readable planning category comparison and annotation with the renamed export label. Preserve findings and calculations. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "7df06423c8d6d70b7357292c3bad1011b65959d53c918bec15654c2a616bf462",
+      "reason": "Align the human-readable planning category comparison and annotation with the renamed export label. Preserve findings and calculations. iPhone visual acceptance pending.  Annual net/PDF consistency requested on 2026-11-07: use the same payout preparation, dated settings and summary helpers as annual net UI, retain available base net when an annual payment lacks a net basis, exclude test months consistently, and remove the duplicate PDF month exclusion. Load payout preferences only for annual PDF with salary. Preserve calendar CSV, monthly PDF behavior, Luftig, existing rules and stored data. Own Preview OTA authorized; device acceptance and Git delivery pending. Premium deferred. Preserve the independently published Dienstfolgen preview predecessor; merge only its existing wording in shared report files. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/theme/palette-values.ts",
@@ -449,8 +449,8 @@
     {
       "path": "src/domain/types.ts",
       "kind": "modified",
-      "sha256": "33a12b08281c7023473e4d582805adef22ffa464750148f6f7653d5f1819faf3",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "192b29ed9758938a09ae5435f386f4a265d4601057e0255d990165c50dc30eb9",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     },
     {
       "path": "src/engine/compliance-issue.ts",
@@ -667,6 +667,144 @@
       "kind": "added",
       "sha256": "9d9c93c2d7ee59f3467ff51627c889dc961157648c3b8be07b30aeb5c08347ed",
       "reason": "User-authorized Variant C implementation and Preview OTA on 2026-11-09: Render only validated recorded weekly dates or Sunday pairs with accessible date labels and horizontal scrolling for large text; no inferred free days. iPhone acceptance remains pending; accepted TestFlight baseline unchanged. Preview render correction 2026-11-09 within the authorized Variant C scope: prepare primitive native-view props inside the guarded date section; remove native Intl/toLocaleString dependency and implicit Temporal coercion from rendering. Reproduced formatter failure is covered by a regression. Exact iPhone root cause remains unconfirmed until device retest. Preserve all other Preview sources. Duty overview: Render validated tariff periods with real associated duties and their stored colors; preserve start-date weekly counting and actual-work Sunday projection. Duty symbols: Use the shared start-date-only duty display in tariff details so Saturday night is not duplicated under Sunday. Preserve evidence validation, actual-time Sunday assessment and all rule thresholds. Git integration: exact accepted Preview source from group 2d1b5896-efab-44e6-9acc-1f8be4a4cee6; user confirmed the latest weekend detail UI on 2026-11-10. Other master files, accepted TestFlight baseline and app release channels remain unchanged."
+    },
+    {
+      "path": "src/application/pflegeshift-ports.ts",
+      "kind": "modified",
+      "sha256": "a55e9a28be8be96e91757474e2aa2ff10203e096f7023e04ca4708847318bbb5",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/application/pflegeshift-provider.tsx",
+      "kind": "modified",
+      "sha256": "8a8599d2c96bffb4957edfb9e40f1df405c0b802cd8e8b85d6f835127ce74b17",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/application/use-shift-save-actions.ts",
+      "kind": "added",
+      "sha256": "5a51ad3b0c54b2d13a34bd6ca1c5f88dfa345f4b56c7ffb3fb35b1ad7ec3b9f5",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/composition/create-pflegeshift-ports.ts",
+      "kind": "modified",
+      "sha256": "fb215c55481d6a834b9b0bad9c5892b01b1ecd5fd4a5962c37aa263c87e87948",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/domain/special-duty-review.ts",
+      "kind": "added",
+      "sha256": "7247f59cf29105f333a30384baf6a37c4936fcdee4d752e328d55c87827d6f6e",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/engine/salary-payment.ts",
+      "kind": "modified",
+      "sha256": "67e0deb5ba203ce7c3868928a02365327896871a4c5bfb820177d843f80c2df1",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/engine/simple-pay.ts",
+      "kind": "modified",
+      "sha256": "fcb7948a0fefb67882a22f5e72021f643c7934a75d61279a9b1fd04a42faf23d",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/day-editor-form.tsx",
+      "kind": "modified",
+      "sha256": "0819de3975cc8998857fde45f66e9954b8864f8cebaf3e9e3cd21e60025a2482",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/day-editor-screen.tsx",
+      "kind": "modified",
+      "sha256": "51e998d51430c282cb67a1a8697404901ad897370457c801a6cf7a53b9abad0e",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/day-editor-special-duty.tsx",
+      "kind": "modified",
+      "sha256": "5c2e347dcad1fe82f775270a0ad4a9e9af86a9a5882722939bb6a206e0a580f1",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/special-duty-fields.tsx",
+      "kind": "modified",
+      "sha256": "34f7b1665fbe84fea78428be0a467a0c4eee1c8cd278840b38fc83aa505c5e85",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/standby-agreement-fields.tsx",
+      "kind": "modified",
+      "sha256": "78dee73d421b9f08056bac227bda2c9ba44897946d8e63f240127a1aedd1b6c4",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/standby-billing-transfer-fields.tsx",
+      "kind": "added",
+      "sha256": "ae868c4c83913a6f2f7474f2c062d3309ee7f1faafc6dfcd01517ba6902d5905",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/standby-billing-transfer.ts",
+      "kind": "added",
+      "sha256": "d35999f44ea9dd5a70b048ed9fe3dc2762ebd4369676c8df2775114f03e390ae",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/day-editor/use-standby-billing-review.tsx",
+      "kind": "added",
+      "sha256": "48d55b3025a65fa880bca0f158e773ec0b8d5b843006a0b9d043de517fd526cf",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/report-export/report-pdf.ts",
+      "kind": "modified",
+      "sha256": "4236232353f03cc2cd6e15fb67dd0a2de732803251d10a087ba8e5f0a1fe10e8",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/annual-salary-forecast.ts",
+      "kind": "modified",
+      "sha256": "ce0fca9e693318b46e3d25fb459f29df46c26b4448687aaf13b7d13531b72c3f",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/annual-salary-issue.ts",
+      "kind": "added",
+      "sha256": "21122338865b4ad564ab53d535d96c3bff29c41c25f2a001bf8d1e2e360ccf40",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/annual-salary-payment-editor.tsx",
+      "kind": "modified",
+      "sha256": "71b34603d18efa45c25930228a5227f4af4dbd573af9bf9a00d7ce83e348ebc7",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/annual-salary-proposal.ts",
+      "kind": "modified",
+      "sha256": "466552fee9446462b706dd800c0de338cbe7e873297e8ea83bf0a4ef779b107e",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/special-duty-review-row.tsx",
+      "kind": "added",
+      "sha256": "4c435fc37e17a027902ff8da071885a29d7b95701721e567c0ad6ab1449ab90a",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/features/salary/use-annual-salary-forecast.ts",
+      "kind": "modified",
+      "sha256": "db77e7b77041316b2f7f24680584ecebf9c20690e2cd9af19c14e472b38f1e56",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+    },
+    {
+      "path": "src/infrastructure/database/calendar-entry-repository.ts",
+      "kind": "modified",
+      "sha256": "b72835929c04d11adfe4a08e7b55eae34f1119a0901a50d7eb3fa9f1dcebb377",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
     }
   ]
 }

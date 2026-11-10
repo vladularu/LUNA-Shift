@@ -63,6 +63,32 @@ const height = (screen: Screen, busy: boolean) => {
 };
 
 describe("stable analysis card loading rows", () => {
+  it("distinguishes a blocked annual forecast from an explicitly saved zero", async () => {
+    const screen = await render(
+      <PayListCard
+        {...amounts}
+        onPress={onPress}
+        caption="Geschätzt"
+        annualPaymentExpected
+        annualIssue={{ code: "TARIFF_CHANGE" }}
+      />,
+    );
+    expect(screen.getByLabelText("Jahressonderzahlung: Tarifwechsel prüfen")).toBeTruthy();
+    expect(screen.queryByText("Nicht hinterlegt")).toBeNull();
+    await screen.rerender(
+      <PayListCard
+        {...amounts}
+        onPress={onPress}
+        caption="Geschätzt"
+        annualPaymentExpected
+        annualPaymentPresent
+        annualPayments={0}
+        annualIssue={{ code: "TARIFF_CHANGE" }}
+      />,
+    );
+    expect(screen.getByLabelText(/^Jahressonderzahlung: 0,00/)).toBeTruthy();
+    expect(screen.queryByText("Tarifwechsel prüfen")).toBeNull();
+  });
   it.each([true, false])(
     "keeps an honest open status without permanent weekend statistics (planning %s)",
     async (showPlanning) => {

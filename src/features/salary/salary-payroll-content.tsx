@@ -1,3 +1,5 @@
+import { incompleteSpecialDuties } from "@/domain/special-duty-review";
+import { SpecialDutyReviewRow } from "./special-duty-review-row";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Alert, Pressable, View, useWindowDimensions } from "react-native";
@@ -37,7 +39,10 @@ import { NetPaySettingsEntry } from "./net-pay-automatic-entry-card";
 import { useNetPayProfile } from "./use-net-pay-profile";
 import { useAutomaticNetPay } from "./use-automatic-net-pay";
 import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
-import { AnnualSalaryPaymentEditor } from "./annual-salary-payment-editor";
+import {
+  AnnualSalaryPaymentEditor,
+  annualSalaryPaymentEditorVisible,
+} from "./annual-salary-payment-editor";
 
 export type PayrollView = "salary" | "net";
 
@@ -182,14 +187,18 @@ export function SalaryPayrollStatement({
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale >= 1.4;
-  const available = blocked ? null : net;
-  const fullAnnual = annualPayment?.grossCents ?? annualGrossCents;
+  const available = blocked || !pay.available ? null : net;
+  const fullAnnual = pay.available
+    ? (annualPayment?.grossCents ?? annualGrossCents)
+    : annualGrossCents;
+  const partial = !pay.available && pay.knownGrossAmount !== undefined;
+  const monthlyGross = pay.estimatedGrossAmount ?? pay.knownGrossAmount ?? null;
   const gross =
-    annualPayment?.totalGrossCents ??
+    (pay.available ? annualPayment?.totalGrossCents : null) ??
     available?.amounts.grossCents ??
-    (pay.estimatedGrossAmount === null
+    (monthlyGross === null
       ? null
-      : Math.round(pay.estimatedGrossAmount * 100) + additionalGrossCents + fullAnnual);
+      : Math.round(monthlyGross * 100) + additionalGrossCents + fullAnnual);
   const deductions = available ? salaryDeductions(available) : null;
   const netLabel =
     annualPayment && !annualPayment.netIncluded
@@ -254,7 +263,7 @@ export function SalaryPayrollStatement({
           }}
         >
           {(view === "salary"
-            ? [{ label: "Gesamtbrutto", amount: gross }]
+            ? [{ label: partial ? "Bekanntes Brutto" : "Gesamtbrutto", amount: gross }]
             : [{ label: netLabel, amount: available?.netCents ?? null }]
           ).map((total) => (
             <View
@@ -316,7 +325,7 @@ export function SalaryPayrollStatement({
                 ),
               );
               const visible = sourceParts.filter((part) => part.amountCents > 0);
-              const openRemainder = sourceParts.some(
+              const openParts = sourceParts.filter(
                 (part) =>
                   part.amountCents === 0 &&
                   projection.issues.some(
@@ -358,10 +367,18 @@ export function SalaryPayrollStatement({
                       />
                     </View>
                   ))}
-                  {openRemainder ? (
+                  {openParts.length ? (
                     <>
                       {visible.length ? <CardSeparator /> : null}
-                      <SalaryAmountRow label="Weitere Zulagen" value="Noch offen" quiet />
+                      <SalaryAmountRow
+                        label={
+                          openParts.length === 1 && openParts[0].group === "SPECIAL_DUTY"
+                            ? "Bereitschaftsvergütung"
+                            : "Weitere Zulagen"
+                        }
+                        value="Noch offen"
+                        quiet
+                      />
                     </>
                   ) : null}
                 </View>
@@ -383,6 +400,7 @@ export function SalaryPayrollStatement({
                 />
               </>
             ) : null}
+            <SpecialDutyReviewRow duties={incompleteSpecialDuties(pay)} disabled={blocked} />
             {fullAnnual > 0 ? (
               <>
                 <CardSeparator />
@@ -391,7 +409,7 @@ export function SalaryPayrollStatement({
             ) : null}
             <CardSeparator />
             <SalaryAmountRow
-              label="Gesamtbrutto"
+              label={partial ? "Bekanntes Brutto" : "Gesamtbrutto"}
               value={gross === null ? "Noch offen" : netPayEuro(gross)}
               quiet
               emphasizeValue
@@ -401,11 +419,12 @@ export function SalaryPayrollStatement({
         {view === "net" ? (
           <SalarySectionCard title="Netto-Berechnung">
             <SalaryAmountRow
-              label="Gesamtbrutto"
+              label={partial ? "Bekanntes Brutto" : "Gesamtbrutto"}
               value={gross === null ? "Noch offen" : netPayEuro(gross)}
               quiet
             />
             <CardSeparator />
+            <SpecialDutyReviewRow duties={incompleteSpecialDuties(pay)} disabled={blocked} />
             {annualPayment && !annualPayment.netIncluded && available ? (
               <>
                 <PayrollNote>
@@ -617,11 +636,10 @@ export function SalaryPayrollContent({
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
         afterStatement={
-          view === "net" &&
           configured &&
           settings &&
           !blocked &&
-          annualSalaryGrossCents(month, annual.payments) > 0 ? (
+          annualSalaryPaymentEditorVisible(month, profile, annual.payments) ? (
             <PayrollDisclosure label="Jahressonderzahlung bearbeiten">
               <AnnualSalaryPaymentEditor
                 embedded
@@ -633,6 +651,7 @@ export function SalaryPayrollContent({
                 onSave={data.save}
                 forecastPayments={annual.payments}
                 proposal={annual.proposal}
+                issue={annual.issue}
                 automatic={annual.automatic}
                 onResetAutomatic={data.resetAnnualPayments}
               />

@@ -1,5 +1,6 @@
 import { mapShift, mapAppointment, type ShiftRow, type AppointmentRow } from "./calendar-entry-row";
 import type { SQLiteDatabase } from "expo-sqlite";
+import { withImmediateTransaction } from "./transaction";
 
 import type {
   Appointment,
@@ -124,6 +125,26 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
   );
   if (row === null) throw new Error("Dienst konnte nicht gespeichert werden.");
   return mapShift(row);
+}
+
+/** One explicit save; a revision conflict rolls every selected correction back. */
+export async function saveShifts(
+  db: SQLiteDatabase,
+  inputs: readonly SaveShiftInput[],
+): Promise<readonly ShiftEntry[]> {
+  if (
+    inputs.some(
+      (input) =>
+        !input.id || !Number.isSafeInteger(input.expectedRevision) || input.expectedRevision! < 1,
+    ) ||
+    new Set(inputs.map((input) => input.id)).size !== inputs.length
+  )
+    throw new Error("Prüfe die ausgewählten Dienste erneut.");
+  return withImmediateTransaction(db, async (transaction) => {
+    const saved: ShiftEntry[] = [];
+    for (const input of inputs) saved.push(await saveShift(transaction, input));
+    return saved;
+  });
 }
 
 export async function saveAppointment(

@@ -123,7 +123,10 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
   const warnings = new Set<string>([
     "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
   ]);
-  if (!current.pay.available || current.pay.personalBaseAmount === null)
+  if (
+    (!current.pay.available && current.pay.knownGrossAmount === undefined) ||
+    current.pay.personalBaseAmount === null
+  )
     issues.push({
       kind: "UNAVAILABLE",
       month,
@@ -155,12 +158,18 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
         warnings.add(
           "Der Auszahlungszeitpunkt ist noch nicht eingerichtet. Die Ansicht zeigt den Anspruchsmonat.",
         );
-      if (!source.pay.available)
+      if (
+        !source.pay.available &&
+        (source.pay.knownGrossAmount === undefined || group === "SPECIAL_DUTY")
+      )
         issues.push({
           kind: "UNAVAILABLE",
           month: claimMonth,
           group,
-          message: `Ansprüche aus ${claimMonth} konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.`,
+          message:
+            source.pay.knownGrossAmount !== undefined
+              ? `Für Bereitschaften aus ${claimMonth} fehlen noch Abrechnungsangaben.`
+              : `Ansprüche aus ${claimMonth} konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.`,
         });
       if (
         !sameMonth &&
@@ -209,9 +218,20 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
     );
   const specialSources = selectedSources(["SPECIAL_DUTY"]);
   const available = issues.length === 0;
+  const knownGrossAmount =
+    !available &&
+    issues.every(
+      (issue) =>
+        issue.kind === "UNAVAILABLE" &&
+        issue.group === "SPECIAL_DUTY" &&
+        byMonth.get(issue.month)?.pay.knownGrossAmount !== undefined,
+    )
+      ? contributions.reduce((total, part) => total + part.amountCents, 0) / 100
+      : undefined;
   const pay: MonthlyPayEstimate = {
     ...current.pay,
     available,
+    knownGrossAmount,
     shiftBreakdowns: selectedSources(["PREMIUMS", "OVERTIME"]).flatMap(
       (source) => source.pay.shiftBreakdowns,
     ),

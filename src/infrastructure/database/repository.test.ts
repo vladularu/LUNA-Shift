@@ -27,6 +27,7 @@ import {
   saveCalendarPreferences,
   saveProfile,
   saveShift,
+  saveShifts,
   saveMonthlyTariffDecision,
   saveTemplate,
   saveTvoedWorkPatternSettings,
@@ -67,6 +68,47 @@ describe("SQLite repository", () => {
     testDb = new TestDatabase();
     db = testDb as unknown as SQLiteDatabase;
     await migrateDatabase(db);
+  });
+
+  it("saves a selected correction atomically and rolls back on a stale service revision", async () => {
+    const input = {
+      date: "2026-07-07",
+      title: "Bereitschaft",
+      type: "CUSTOM" as const,
+      startTime: "08:00",
+      endTime: "16:00",
+      breakMinutes: 30,
+      color: "#123456",
+      symbol: "B",
+    };
+    const first = await saveShift(db, input);
+    const second = await saveShift(db, { ...input, date: "2026-07-08" });
+    const newer = await saveShift(db, {
+      ...second,
+      expectedRevision: second.revision,
+      note: "Neu",
+    });
+    await expect(
+      saveShifts(db, [
+        { ...first, expectedRevision: first.revision, title: "Korrigiert" },
+        { ...second, expectedRevision: second.revision, title: "Korrigiert" },
+      ]),
+    ).rejects.toThrow();
+    const after = await listCalendarEntries(db);
+    expect(after.find((entry) => entry.id === first.id)).toEqual(first);
+    expect(after.find((entry) => entry.id === second.id)).toEqual(newer);
+    const saved = await saveShifts(db, [
+      { ...first, expectedRevision: first.revision, title: "Korrigiert" },
+      { ...newer, expectedRevision: newer.revision, title: "Korrigiert" },
+    ]);
+    expect(saved.map((entry) => entry.title)).toEqual(["Korrigiert", "Korrigiert"]);
+    expect(saved[1]).toMatchObject({
+      startTime: "08:00",
+      endTime: "16:00",
+      breakMinutes: 30,
+      note: "Neu",
+      revision: newer.revision + 1,
+    });
   });
 
   afterEach(() => {

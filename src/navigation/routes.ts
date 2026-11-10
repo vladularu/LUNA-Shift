@@ -203,11 +203,17 @@ export function settingsInfoRoute(section: SettingsInfoSection, tariff?: "TVL" |
   });
 }
 
-export function dayEditorRoute(date: string, mode: "SHIFT" | "APPOINTMENT", entryId?: string) {
+export function dayEditorRoute(
+  date: string,
+  mode: "SHIFT" | "APPOINTMENT",
+  entryId?: string,
+  focus?: "BILLING",
+) {
   const params = Object.freeze({
     date: requireDate(date),
     mode,
     ...(entryId ? { entryId: requireIdentifier(entryId) } : {}),
+    ...(focus && mode === "SHIFT" && entryId ? { focus } : {}),
   });
   if (mode === "APPOINTMENT") {
     return Object.freeze({

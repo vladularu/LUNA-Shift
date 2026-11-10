@@ -43,6 +43,7 @@ import { reportEntries } from "./report-entry-data";
 import { withAnnualSalaryPayments } from "@/features/analysis/annual-salary-payments";
 import { annualSalaryGrossCents } from "@/domain/annual-salary-payment";
 import { annualSalaryForecast } from "@/features/salary/annual-salary-forecast";
+import { salaryPaymentInputSteps } from "@/features/salary/salary-payment-input";
 
 export interface ReportInput {
   readonly period: string;
@@ -220,7 +221,27 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
         : { status: "Nicht verfügbar", reason: calculation.summary.error.message },
     );
     add("Schichtstatistik", month, "Verteilung", calculation.shiftTypeAnalysis);
-    const pay = calculation.pay;
+    let pay = calculation.pay;
+    if (input.salaryPaymentPreferences) {
+      try {
+        const paymentSteps = salaryPaymentInputSteps(
+          month,
+          input.profile,
+          netContext,
+          input.salaryPaymentPreferences,
+          "PAYOUT",
+        );
+        let paymentStep = paymentSteps.next();
+        while (!paymentStep.done) {
+          yield;
+          paymentStep = paymentSteps.next();
+        }
+        pay = { ok: true, value: paymentStep.value.pay };
+      } catch (error) {
+        if (!(error instanceof RuleResolutionError)) throw error;
+        pay = { ok: false, error, failure: error.failure };
+      }
+    }
     const savedNet = resolveNetPaySettings(month, input.netPayTimeline ?? []);
     const annualGross = annualSalaryGrossCents(month, annualPayments);
     add(
@@ -237,22 +258,29 @@ export function* buildReportSteps(input: ReportInput): Generator<void, ReportDoc
                   : Math.round(pay.value.estimatedGrossAmount * 100 + annualGross) / 100,
               ...(annualGross ? { annualPaymentAmount: annualGross / 100 } : {}),
             }
-          : {
-              ...pay.value,
-              timePremiumAmount: null,
-              overtimeAmount: null,
-              allowanceAmount: null,
-              tvoedAllowanceAmount: null,
-              careAllowanceAmount: null,
-              status: "Nicht verfügbar",
-            }
+          : pay.value.knownGrossAmount !== undefined
+            ? {
+                ...pay.value,
+                knownGrossAmount: Math.round(pay.value.knownGrossAmount * 100 + annualGross) / 100,
+                ...(annualGross ? { annualPaymentAmount: annualGross / 100 } : {}),
+                status: "Bekanntes Brutto · Bereitschaft noch offen",
+              }
+            : {
+                ...pay.value,
+                timePremiumAmount: null,
+                overtimeAmount: null,
+                allowanceAmount: null,
+                tvoedAllowanceAmount: null,
+                careAllowanceAmount: null,
+                status: "Nicht verfügbar",
+              }
         : { status: "Nicht verfügbar", reason: pay.error.message },
     );
     const decision = input.tariffDecisions.find((item) => item.month === month);
     if (savedNet) add("Netto-Grundlagen", month, "Gespeicherte Angaben", savedNet);
     let forecast: AutomaticNetPayForecast | null = null;
     if (savedNet) {
-      if (annual) {
+      if (annual || (input.salaryPaymentPreferences && savedNet.settings.version === 2)) {
         if (savedNet.settings.version === 2 && !input.testMonths.includes(month)) {
           const steps = prepareAutomaticNetPaySteps(
             month,

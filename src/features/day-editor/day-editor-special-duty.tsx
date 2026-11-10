@@ -9,11 +9,17 @@ export function DayEditorSpecialDutyFields({
   date,
   timeZone,
   tariffFamily,
+  billingFocus = false,
+  billingMessage,
+  billingActions,
 }: {
   readonly draft: ReturnType<typeof useEntryEditorDraft>;
   readonly date: string;
   readonly timeZone: string;
   readonly tariffFamily: DutyTariffFamily | null;
+  readonly billingFocus?: boolean;
+  readonly billingMessage?: string;
+  readonly billingActions?: import("react").ReactNode;
 }) {
   return (
     <SpecialDutyFields
@@ -28,6 +34,9 @@ export function DayEditorSpecialDutyFields({
       date={date}
       timeZone={timeZone}
       tariffFamily={tariffFamily}
+      billingFocus={billingFocus}
+      billingMessage={billingMessage}
+      billingActions={billingActions}
     />
   );
 }

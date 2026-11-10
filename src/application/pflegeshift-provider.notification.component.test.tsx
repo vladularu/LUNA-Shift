@@ -82,6 +82,7 @@ const repository: PflegeShiftRepositoryPort = {
   }),
   listCalendarEntries: jest.fn(async () => []),
   saveShift: jest.fn(async () => mockSavedShift),
+  saveShifts: jest.fn(async () => [mockSavedShift]),
   saveAppointment: jest.fn(async () => {
     throw new Error("Unexpected saveAppointment call");
   }),

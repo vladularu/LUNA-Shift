@@ -19,6 +19,9 @@ import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-
 import { calculateAutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { calculateMonthlyAnalysis } from "@/features/analysis/monthly-analysis";
 import { annualSalaryForecast } from "@/features/salary/annual-salary-forecast";
+import { DEFAULT_SALARY_PAYMENT_PREFERENCES, setSalaryPaymentLag } from "@/domain/salary-payment";
+import { salaryPaymentInput } from "@/features/salary/salary-payment-input";
+import { prepareAutomaticNetPay } from "@/features/salary/automatic-net-pay-preparation";
 vi.mock("@/features/analysis/rule-computation", () => ({
   captureRuleComputation: (compute: () => unknown) => {
     try {
@@ -89,6 +92,96 @@ function build(extra: Partial<ReportInput> = {}): ReportDocument {
   while (!next.done) next = steps.next();
   return next.value;
 }
+
+it("exports the same known payout as the salary card when a prior month's duty is incomplete", () => {
+  const tvl: UserProfile = {
+    ...forecastProfile,
+    tariff: null,
+    tvlKrTariff: { payGroup: "KR8", payLevel: 4, universityRegion: "WEST" },
+  };
+  const duty = forecastShift({
+    id: "july",
+    date: "2026-07-07",
+    type: "CUSTOM",
+    startTime: "08:00",
+    endTime: "16:00",
+    breakMinutes: 0,
+    specialDuty: {
+      ...newSpecialDuty("STANDBY", "08:00", "16:00", "Europe/Berlin"),
+      version: 2,
+      standbyLevel: "II",
+      settlement: "PAY",
+      standbyAgreement: { ...newStandbyAgreement("TVOED_K"), rule: "STANDARD", sequence: 1 },
+    },
+  });
+  const entries = [
+    duty,
+    forecastShift({ id: "august", date: "2026-08-05" }),
+    forecastShift({ id: "july-night", date: "2026-07-20" }),
+  ];
+  const preferences = setSalaryPaymentLag(DEFAULT_SALARY_PAYMENT_PREFERENCES, "2026-08", 1);
+  const settings = input({
+    profile: tvl,
+    entries,
+    netPayTimeline: [savedNet(automatedSettings("2026-01"))],
+  });
+  const projection = salaryPaymentInput(
+    "2026-08",
+    tvl,
+    {
+      entries,
+      tariffDecisions: [],
+      workPatternSettings: settings.workPatternSettings,
+      resolver: bundledRuleResolver,
+    },
+    preferences,
+    "PAYOUT",
+  );
+  const report = build({ ...settings, salaryPaymentPreferences: preferences });
+  expect(reportView(report).gross).toBe(projection.pay.knownGrossAmount);
+  expect(reportView(report).grossPartial).toBe(true);
+  expect(reportView(report).net).toBeNull();
+  expect(reportToHtml(report)).toContain("Bekanntes Brutto");
+  expect(reportView(report).specialDutyNote).toContain("passt nicht zum Tarif");
+  const fixed = {
+    ...duty,
+    revision: 2,
+    specialDuty: {
+      ...duty.specialDuty!,
+      standbyLevel: "B" as const,
+      standbyAgreement: {
+        ...newStandbyAgreement("TVL_43"),
+        rule: "STANDARD" as const,
+        sequence: 1,
+        payGroup: "KR_VII",
+      },
+    },
+  };
+  const repaired = reportView(
+    build({
+      ...settings,
+      entries: [fixed, ...entries.slice(1)],
+      salaryPaymentPreferences: preferences,
+    }),
+  );
+  expect(repaired.grossPartial).toBe(false);
+  expect(repaired.gross).toBeGreaterThan(reportView(report).gross!);
+  const forecast = prepareAutomaticNetPay(
+    "2026-08",
+    settings.netPayTimeline![0].settings,
+    tvl,
+    {
+      entries: [fixed, ...entries.slice(1)],
+      tariffDecisions: [],
+      workPatternSettings: settings.workPatternSettings,
+      resolver: bundledRuleResolver,
+    },
+    { preferences, perspective: "PAYOUT", sourceSettings: settings.netPayTimeline ?? [] },
+  );
+  expect(forecast.result.status).toBe("available");
+  if (forecast.result.status === "available")
+    expect(repaired.net).toBe(forecast.result.pay.netCents / 100);
+});
 function value(report: ReportDocument, section: string, field: string, period = "2026-08") {
   return report.rows.find(
     (row) => row.section === section && row.field === field && row.period === period,
@@ -266,7 +359,10 @@ describe("Netto im gemeinsamen PDF-/CSV-Bericht", () => {
       profile: forecastProfile,
       entries: [{ ...entry, specialDuty: { ...entry.specialDuty!, calloutsComplete: false } }],
     });
-    expect(reportView(open).gross).toBeNull();
+    expect(reportView(open).gross).toBeGreaterThan(0);
+    expect(reportView(open).grossPartial).toBe(true);
+    expect(reportView(open).net).toBeNull();
+    expect(reportToHtml(open)).toContain("Bekanntes Brutto");
     expect(reportView(open).specialDutyNote).toContain("Bestätige noch");
     expect(reportToHtml(open)).toContain("Bestätige noch");
   });

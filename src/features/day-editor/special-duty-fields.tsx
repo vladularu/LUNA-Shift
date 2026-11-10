@@ -53,6 +53,9 @@ export function SpecialDutyFields({
   date,
   template = false,
   tariffFamily = null,
+  billingFocus = false,
+  billingMessage,
+  billingActions,
 }: {
   readonly value: SpecialDuty | null;
   readonly onChange: (duty: SpecialDuty | null) => void;
@@ -66,6 +69,9 @@ export function SpecialDutyFields({
   readonly date?: string;
   readonly template?: boolean;
   readonly tariffFamily?: DutyTariffFamily | null;
+  readonly billingFocus?: boolean;
+  readonly billingMessage?: string;
+  readonly billingActions?: import("react").ReactNode;
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   // Session-only drafts: changing the form must not discard parts or actual calls.
@@ -134,8 +140,69 @@ export function SpecialDutyFields({
       : value?.kind === "ON_CALL"
         ? "Rufbereitschaftszeitraum"
         : "Bereitschaftszeitraum";
+  const standbyFields = value ? (
+    <>
+      {value.kind === "STANDBY" ? (
+        <EntryEditGroup>
+          <DutyHeading>Vereinbarung</DutyHeading>
+          <DutyChoice
+            label="Bereitschaftsstufe"
+            value={
+              standbyLevels(tariffFamily ?? value.standbyAgreement?.tariff ?? null).includes(
+                value.standbyLevel,
+              )
+                ? value.standbyLevel
+                : "UNKNOWN"
+            }
+            options={[
+              { value: "UNKNOWN", label: "Weiß ich noch nicht" },
+              ...standbyLevels(tariffFamily ?? value.standbyAgreement?.tariff ?? null).map(
+                (level) => ({
+                  value: level,
+                  label: `Stufe ${level}`,
+                }),
+              ),
+            ]}
+            onChange={(level) =>
+              onChange({ ...value, standbyLevel: level as SpecialDuty["standbyLevel"] })
+            }
+          />
+          <DutyHint>Laut deiner Vereinbarung.</DutyHint>
+          <DutyDivider />
+          <DutyChoice
+            label="Ausgleich"
+            value={value.settlement}
+            options={[
+              { value: "UNKNOWN", label: "Weiß ich noch nicht" },
+              { value: "PAY", label: "Auszahlung" },
+              { value: "TIME_OFF", label: "Freizeitausgleich" },
+            ]}
+            onChange={(settlement) =>
+              onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
+            }
+          />
+          <StandbyTimeOffFields value={value} tariffFamily={tariffFamily} onChange={onChange} />
+        </EntryEditGroup>
+      ) : null}
+
+      {value.kind === "STANDBY" ? (
+        <EntryEditGroup>
+          <StandbyAgreementFields
+            value={value}
+            initiallyOpen={billingFocus}
+            tariffFamily={tariffFamily}
+            template={template}
+            onChange={onChange}
+          />
+          {billingActions}
+        </EntryEditGroup>
+      ) : null}
+    </>
+  ) : null;
   return (
     <View testID="special-duty-fields" style={{ gap: SPACING.md }}>
+      {billingMessage ? <DutyHint>{billingMessage}</DutyHint> : null}
+      {billingFocus ? standbyFields : null}
       <EntryEditGroup>
         <DutyChoice
           label="Dienstform"
@@ -371,53 +438,7 @@ export function SpecialDutyFields({
             </EntryEditGroup>
           ) : null}
 
-          {value.kind === "STANDBY" ? (
-            <EntryEditGroup>
-              <DutyHeading>Vereinbarung</DutyHeading>
-              <DutyChoice
-                label="Bereitschaftsstufe"
-                value={value.standbyLevel}
-                options={[
-                  { value: "UNKNOWN", label: "Weiß ich noch nicht" },
-                  ...standbyLevels(tariffFamily ?? value.standbyAgreement?.tariff ?? null).map(
-                    (level) => ({
-                      value: level,
-                      label: `Stufe ${level}`,
-                    }),
-                  ),
-                ]}
-                onChange={(level) =>
-                  onChange({ ...value, standbyLevel: level as SpecialDuty["standbyLevel"] })
-                }
-              />
-              <DutyHint>Laut deiner Vereinbarung.</DutyHint>
-              <DutyDivider />
-              <DutyChoice
-                label="Ausgleich"
-                value={value.settlement}
-                options={[
-                  { value: "UNKNOWN", label: "Weiß ich noch nicht" },
-                  { value: "PAY", label: "Auszahlung" },
-                  { value: "TIME_OFF", label: "Freizeitausgleich" },
-                ]}
-                onChange={(settlement) =>
-                  onChange({ ...value, settlement: settlement as SpecialDuty["settlement"] })
-                }
-              />
-              <StandbyTimeOffFields value={value} tariffFamily={tariffFamily} onChange={onChange} />
-            </EntryEditGroup>
-          ) : null}
-
-          {value.kind === "STANDBY" ? (
-            <EntryEditGroup>
-              <StandbyAgreementFields
-                value={value}
-                tariffFamily={tariffFamily}
-                template={template}
-                onChange={onChange}
-              />
-            </EntryEditGroup>
-          ) : null}
+          {!billingFocus ? standbyFields : null}
 
           <EntryEditGroup>
             <DutyValueRow

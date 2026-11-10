@@ -302,6 +302,7 @@ function AnalysisPage({
                 annualPayments={
                   salary.annual?.payments ?? salaryPayments.annualPayments ?? EMPTY_PAYMENTS
                 }
+                annualIssue={salary.annual?.issue}
                 additionalRecurringGrossCents={
                   testMonths.includes(month)
                     ? 0

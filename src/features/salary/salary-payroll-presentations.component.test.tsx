@@ -18,6 +18,7 @@ import { netPayEuro } from "./net-pay-format";
 import { useNetPayProfile } from "./use-net-pay-profile";
 import { useAutomaticNetPay } from "./use-automatic-net-pay";
 import { SalaryPayrollSettings } from "./salary-payroll-settings";
+import { newSpecialDuty } from "@/domain/special-duty";
 
 const mockSettingsView = jest.fn<(props: ComponentProps<typeof SalaryPayrollSettings>) => void>();
 jest.mock("./salary-payroll-settings", () => ({
@@ -101,6 +102,34 @@ async function openDeductions(
 }
 
 describe("classical payroll presentation", () => {
+  it("retains known gross and the review action without showing a stale full net", async () => {
+    const props = fixture();
+    const entry = forecastShift({
+      id: "open-standby",
+      specialDuty: newSpecialDuty("STANDBY", "21:00", "07:00", "Europe/Berlin"),
+    });
+    const projection = salaryPaymentInput(
+      props.month,
+      props.profile,
+      { ...context, entries: [entry] },
+      DEFAULT_SALARY_PAYMENT_PREFERENCES,
+      "PAYOUT",
+    );
+    expect(projection.pay.knownGrossAmount).toBeGreaterThan(0);
+    const screen = await render(
+      <SalaryPayrollStatement {...props} pay={projection.pay} projection={projection} />,
+    );
+    expect(screen.getAllByText("Bekanntes Brutto").length).toBeGreaterThan(0);
+    expect(screen.getByText("Grundentgelt")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Bereitschaft · 1 Dienst prüfen" })).toBeTruthy();
+    await screen.rerender(
+      <SalaryPayrollStatement {...props} pay={projection.pay} projection={projection} view="net" />,
+    );
+    expect(
+      screen.queryByLabelText(`Netto geschätzt: ${netPayEuro(props.net.netCents)}`),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Bereitschaft · 1 Dienst prüfen" })).toBeTruthy();
+  });
   it("keeps the genuine statement and opens the previous separate deduction view", async () => {
     const props = fixture();
     const screen = await render(<SalaryPayrollStatement {...props} />);
