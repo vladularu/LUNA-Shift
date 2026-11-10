@@ -4,11 +4,61 @@ LUNA Shift verwendet die in `package.json` deklarierte Expo-57-Abhängigkeitsbas
 
 ## Automatisches Gate
 
-`npm run audit:production` prüft den installierten Produktionsbaum und bricht bei neuen Schwachstellen der Stufen `high` oder `critical` ab. Die CI führt diesen Check bei jedem Pull Request und Push nach `master` aus.
+`npm run audit:production` prüft den installierten Produktionsbaum und bricht bei neuen Schwachstellen der Stufen `high` oder `critical` ab.
+
+`npm run audit:all` prüft zusätzlich die Entwicklungsabhängigkeiten. Es verwendet
+dieselbe strikte Backport-Verifikation wie das Produktionsgate und blockiert
+unbehobene `high`-/`critical`-Befunde auch in der Test- und Werkzeugkette.
+Ungültige oder unvollständige npm-Antworten, Registry- und Ausführungsfehler
+führen ebenfalls zum Fehlerstatus. Ein alter erfolgreicher JSON-Bericht wird
+bei einem späteren Audit-Fehler durch einen Fehlerbericht ersetzt.
+
+`verify:full` und die CI bei jedem Pull Request und Push nach `master` führen
+beide Audits aus.
+Der vollständige Audit läuft auch bei einem fehlgeschlagenen vorherigen
+Release-Check; dessen Auslieferungssperre bleibt davon unberührt.
+Zusätzlich prüft `.github/workflows/dependency-audit.yml` jeden Montag um
+07:23 UTC den aktuellen Standardbranch und lässt sich manuell starten.
+Der vollständige JSON-Bericht wird auch bei fehlgeschlagenem Audit für
+30 Tage als Workflow-Artefakt aufbewahrt. Der neue Upload-Schritt ist auf
+einen unveränderlichen Commit von `actions/upload-artifact` v7 gepinnt.
+
+Lokaler Aufruf mit Bericht:
+
+```powershell
+npm.cmd run audit:all -- --output artifacts/dependency-audit.json
+```
+
+Alle npm-Schweregrade, Advisory-Referenzen, Paketpfade und der ursprüngliche
+npm-Bericht bleiben darin sichtbar. `moderate`-/`low`-Meldungen sind kein
+High-/Critical-Gate und werden dadurch weder behoben noch pauschal freigegeben.
+Der Projektmaintainer bewertet neue Meldungen beim wöchentlichen Lauf nach
+Erreichbarkeit und betroffener Laufzeit und ordnet die Korrektur einem eigenen
+Arbeitspaket zu. Ein bestandener Audit ist kein schwachstellenfreier Befund.
 
 Gepinnte transitive Overrides dürfen nur innerhalb kompatibler APIs aktualisiert werden. Nach jeder Override-Änderung müssen Unit-/Komponententests, `expo install --check` sowie Web-, Android- und iOS-Export bestehen.
 
 `npm audit fix --force` wird nicht verwendet, weil es unkontrollierte Hauptversionswechsel und damit native Inkompatibilitäten auslösen kann. Aktuelle Befunde werden durch `npm run audit:production` bewertet und nicht als dauerhafte Momentaufnahme in diesem Dokument gepflegt.
+
+## Sicherheitswartung der Testwerkzeuge vom 10. November 2026
+
+Vitest, `@vitest/mocker` und `@vitest/coverage-v8` werden gemeinsam auf
+4.1.12 angehoben. Der gezielte Override `vite@8.1.5 -> 8.1.6` schließt die
+bekannte Windows-Lücke der launch-editor-Kette innerhalb der bestehenden
+kompatiblen Vite-8-Familie. Die Installations- und Lockfile-Versionen werden
+zusätzlich in `scripts/audit-all.test.mjs` gegen diese Sicherheitsgrenzen geprüft.
+
+Primärquellen:
+
+- [Vite / launch-editor: GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
+- [Vitest-Mocker: GHSA-qxg6-89mg-rqv8](https://github.com/advisories/GHSA-qxg6-89mg-rqv8)
+- [Vitest-Mocker: GHSA-82fw-gwwq-j7x9](https://github.com/advisories/GHSA-82fw-gwwq-j7x9)
+
+Expo SDK 57, native Pakete, App-Oberfläche und Fachberechnungen werden in
+diesem Paket nicht geändert. Der ausstehende SDK-57-Patchabgleich bleibt ein
+eigenes Arbeitspaket. Die vorhandenen hohen npm-Meldungen zu Zod und
+`decode-uri-component` werden weiterhin nur mit dem tatsächlichen,
+identitätsgebundenen Nachweis der installierten Backports als mitigiert gewertet.
 
 ## SDK-57-Patchabgleich vom 13. September 2026
 

@@ -811,6 +811,18 @@
       "kind": "modified",
       "sha256": "bae0642e42af296bdd258653f5431906d6f6ad788e81795be84ce21ac0b899b3",
       "reason": "User-authorized Git integration of Preview ec680935 on 2026-11-10: Add opt-in centered alignment while preserving every existing default hint style. Preserve unrelated master and Preview differences."
+    },
+    {
+      "path": "package.json",
+      "kind": "modified",
+      "sha256": "2139aea026b8c20c504e7eeaf1814538def7566e5c5086245697e61c3abda8b7",
+      "reason": "User-authorized security implementation on 2026-11-10: update the Vitest/Vite development toolchain and add the complete dependency audit and regression-test wiring. Declare the two already installed test utilities directly without changing their versions. Production dependencies and app sources stay unchanged. npm-script changes alter the runtime fingerprint; this source review is not device acceptance or permission to publish to the existing TestFlight runtime."
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "modified",
+      "sha256": "dc01f6d1dd5719382e1cbaa890aa11451f2501d4f0778d971ad3727739b71c8b",
+      "reason": "User-authorized security implementation on 2026-11-10: update the Vitest/Vite development toolchain and add the complete dependency audit and regression-test wiring. Declare the two already installed test utilities directly without changing their versions. Production dependencies and app sources stay unchanged. npm-script changes alter the runtime fingerprint; this source review is not device acceptance or permission to publish to the existing TestFlight runtime."
     }
   ]
 }
