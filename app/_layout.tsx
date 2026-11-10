@@ -1,6 +1,7 @@
 import { ProfileSelectionProvider } from "@/features/settings/profile-selection";
 import { CHECK_TITLE } from "@/features/analysis/check-copy";
 import { PrivateCloudProvider } from "@/composition/private-cloud-provider";
+import { CloudDataRefreshBoundary } from "@/composition/cloud-data-refresh-boundary";
 import { AnalysisViewProvider } from "@/features/analysis/analysis-view-preferences";
 import { SalaryPaymentPreferencesProvider } from "@/features/salary/salary-payment-preferences";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
@@ -67,13 +68,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SecureDatabaseProvider>
-        <AppearancePreferencesProvider>
-          <CalendarBackgroundProvider>
-            <SalaryPaymentPreferencesProvider>
-              <ThemedApp />
-            </SalaryPaymentPreferencesProvider>
-          </CalendarBackgroundProvider>
-        </AppearancePreferencesProvider>
+        <ActiveMonthProvider>
+          <CloudDataRefreshBoundary>
+            <AppearancePreferencesProvider>
+              <CalendarBackgroundProvider>
+                <SalaryPaymentPreferencesProvider>
+                  <ThemedApp />
+                </SalaryPaymentPreferencesProvider>
+              </CalendarBackgroundProvider>
+            </AppearancePreferencesProvider>
+          </CloudDataRefreshBoundary>
+        </ActiveMonthProvider>
       </SecureDatabaseProvider>
     </GestureHandlerRootView>
   );
@@ -88,292 +93,290 @@ function ThemedApp() {
 
   return (
     <AppErrorBoundary>
-      <ActiveMonthProvider>
-        <CalendarPreferencesProvider>
-          <CheckPreferencesProvider>
-            <PflegeShiftRuntimeProvider>
-              <AnalysisViewProvider>
-                <AppErrorBoundary title="Ansicht konnte nicht angezeigt werden">
-                  <ThemeProvider
-                    value={{
-                      ...navigationTheme,
-                      fonts: {
-                        regular: { fontFamily: APP_FONT_FAMILY, fontWeight: "400" },
-                        medium: { fontFamily: APP_FONT_FAMILY, fontWeight: "500" },
-                        bold: { fontFamily: APP_FONT_FAMILY, fontWeight: "700" },
-                        heavy: { fontFamily: APP_FONT_FAMILY, fontWeight: "800" },
-                      },
-                      colors: {
-                        ...navigationTheme.colors,
-                        primary: palette.accent,
-                        background: palette.background,
-                        card: palette.surface,
-                        text: palette.text,
-                        border: palette.separator,
-                        notification: palette.danger,
-                      },
-                    }}
-                  >
-                    <FeedbackProvider>
-                      <NotificationFeedbackBridge />
-                      <PrivateCloudProvider>
-                        <ProfileSelectionProvider>
-                          <StartupRoutePresentation />
-                          <AppResumeCheckpoint />
-                          <Stack
-                            screenOptions={({ route }) => ({
-                              ...horizontalBackGestureOptions(route.name),
-                              headerBackButtonDisplayMode: "minimal",
-                              ...PAGE_HEADER_OPTIONS,
-                              ...pageBackButtonOptions(),
-                              headerStyle: nativePageHeaderStyle(palette.background),
-                              headerTintColor: palette.text,
-                              headerTitleStyle: {
-                                ...TYPOGRAPHY.sectionTitle,
-                                fontFamily: APP_FONT_FAMILY,
-                                color: palette.text,
-                              },
+      <CalendarPreferencesProvider>
+        <CheckPreferencesProvider>
+          <PflegeShiftRuntimeProvider>
+            <AnalysisViewProvider>
+              <AppErrorBoundary title="Ansicht konnte nicht angezeigt werden">
+                <ThemeProvider
+                  value={{
+                    ...navigationTheme,
+                    fonts: {
+                      regular: { fontFamily: APP_FONT_FAMILY, fontWeight: "400" },
+                      medium: { fontFamily: APP_FONT_FAMILY, fontWeight: "500" },
+                      bold: { fontFamily: APP_FONT_FAMILY, fontWeight: "700" },
+                      heavy: { fontFamily: APP_FONT_FAMILY, fontWeight: "800" },
+                    },
+                    colors: {
+                      ...navigationTheme.colors,
+                      primary: palette.accent,
+                      background: palette.background,
+                      card: palette.surface,
+                      text: palette.text,
+                      border: palette.separator,
+                      notification: palette.danger,
+                    },
+                  }}
+                >
+                  <FeedbackProvider>
+                    <NotificationFeedbackBridge />
+                    <PrivateCloudProvider>
+                      <ProfileSelectionProvider>
+                        <StartupRoutePresentation />
+                        <AppResumeCheckpoint />
+                        <Stack
+                          screenOptions={({ route }) => ({
+                            ...horizontalBackGestureOptions(route.name),
+                            headerBackButtonDisplayMode: "minimal",
+                            ...PAGE_HEADER_OPTIONS,
+                            ...pageBackButtonOptions(),
+                            headerStyle: nativePageHeaderStyle(palette.background),
+                            headerTintColor: palette.text,
+                            headerTitleStyle: {
+                              ...TYPOGRAPHY.sectionTitle,
+                              fontFamily: APP_FONT_FAMILY,
+                              color: palette.text,
+                            },
+                            statusBarStyle: dark ? "light" : "dark",
+                          })}
+                        >
+                          <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                              headerShown: false,
                               statusBarStyle: dark ? "light" : "dark",
-                            })}
-                          >
+                            }}
+                          />
+                          <Stack.Screen
+                            name="onboarding"
+                            options={{
+                              headerShown: false,
+                              presentation: "fullScreenModal",
+                            }}
+                          />
+                          <Stack.Screen
+                            name="account"
+                            options={{ title: "Konto", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="account-name"
+                            options={{ title: "Name ändern", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="calendar-sharing"
+                            options={{ headerShown: false, presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="calendar-access"
+                            options={{ title: "Kalenderzugriff", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="sharing-invite"
+                            options={{ headerShown: false, presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="auth/callback"
+                            options={{ headerShown: false, presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="calendar-design"
+                            options={{ presentation: "card", title: "Kalender gestalten" }}
+                          />
+                          <Stack.Screen name="appearance" options={{ presentation: "card" }} />
+                          <Stack.Screen name="work-profile" options={{ presentation: "card" }} />
+                          <Stack.Screen
+                            name="day-editor"
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
+                          />
+                          <Stack.Screen
+                            name="shift-editor"
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
+                          />
+                          <Stack.Screen
+                            name="appointment-editor"
+                            options={entryEditorScreenOptions(
+                              Platform.OS,
+                              palette.groupedBackground,
+                            )}
+                          />
+                          <Stack.Screen
+                            name="day-details"
+                            options={{
+                              title: "Tagesdetails",
+                              presentation: "formSheet",
+                              contentStyle: { backgroundColor: "transparent" },
+                              sheetAllowedDetents: [1],
+                              sheetGrabberVisible: true,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="quick-add"
+                            options={{
+                              headerShown: false,
+                              presentation: "card",
+                              animation: "slide_from_bottom",
+                              animationDuration: MOTION.duration.scene,
+                              contentStyle: { backgroundColor: palette.background },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="calendar-view"
+                            options={{
+                              title: "Kalender gestalten",
+                              presentation: "card",
+                              contentStyle: { backgroundColor: palette.background },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="info-details"
+                            options={{
+                              title: "Information",
+                              presentation: "formSheet",
+                              contentStyle: { backgroundColor: "transparent" },
+                              sheetAllowedDetents: [1],
+                              sheetGrabberVisible: true,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="data-backup"
+                            options={{
+                              title: "Datensicherung",
+                              presentation: "card",
+                              contentStyle: { backgroundColor: palette.groupedBackground },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="premium-details"
+                            options={{
+                              title: "Zuschläge erarbeitet",
+                              headerShown: false,
+                              presentation: "card",
+                              contentStyle: { backgroundColor: palette.groupedBackground },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="compliance-details"
+                            options={{
+                              title: CHECK_TITLE,
+                              presentation: "card",
+                              contentStyle: { backgroundColor: palette.groupedBackground },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="tariff-assessment"
+                            options={{
+                              title: "Schichtzulage",
+                              presentation: "formSheet",
+                              contentStyle: { backgroundColor: "transparent" },
+                              sheetAllowedDetents: [1],
+                              sheetGrabberVisible: true,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="profile-selection"
+                            options={{ title: "Auswahl", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="settings-editor"
+                            options={{
+                              title: "Arbeitsprofil",
+                              presentation: "card",
+                            }}
+                          />
+                          <Stack.Screen
+                            name="shift-selection"
+                            options={{
+                              headerShown: false,
+                              presentation: "formSheet",
+                              sheetAllowedDetents: [1],
+                              sheetGrabberVisible: true,
+                              contentStyle: { backgroundColor: palette.background },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="template-editor"
+                            options={{
+                              title: "Dienstvorlage",
+                              presentation: "card",
+                              contentStyle: { backgroundColor: palette.background },
+                            }}
+                          />
+                          <Stack.Screen
+                            name="location-picker"
+                            options={{
+                              headerShown: false,
+                              presentation: "formSheet",
+                              contentStyle: { backgroundColor: palette.surface },
+                              sheetAllowedDetents: [1],
+                              sheetCornerRadius: 28,
+                              sheetExpandsWhenScrolledToEdge: false,
+                              sheetGrabberVisible: false,
+                              sheetInitialDetentIndex: 0,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="salary"
+                            options={{
+                              title: "Gehalt",
+                              presentation: "card",
+                              headerShown: false,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="salary-details"
+                            options={{ presentation: "card", headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="net-pay-settings"
+                            options={{ title: "Netto-Einstellungen", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="salary-payment"
+                            options={{ presentation: "card", headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="net-pay"
+                            options={{
+                              title: "Netto-Prognose",
+                              presentation: "card",
+                              headerShown: false,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="worktime-details"
+                            options={{ title: "Stunden", presentation: "card" }}
+                          />
+                          <Stack.Screen
+                            name="annual-details"
+                            options={{ title: "Jahresdetails", presentation: "card" }}
+                          />
+                          {DEV_TOOLS_AVAILABLE ? (
                             <Stack.Screen
-                              name="(tabs)"
-                              options={{
-                                headerShown: false,
-                                statusBarStyle: dark ? "light" : "dark",
-                              }}
+                              name="dev-tools"
+                              options={{ title: "Testlabor", presentation: "fullScreenModal" }}
                             />
-                            <Stack.Screen
-                              name="onboarding"
-                              options={{
-                                headerShown: false,
-                                presentation: "fullScreenModal",
-                              }}
-                            />
-                            <Stack.Screen
-                              name="account"
-                              options={{ title: "Konto", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="account-name"
-                              options={{ title: "Name ändern", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="calendar-sharing"
-                              options={{ headerShown: false, presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="calendar-access"
-                              options={{ title: "Kalenderzugriff", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="sharing-invite"
-                              options={{ headerShown: false, presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="auth/callback"
-                              options={{ headerShown: false, presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="calendar-design"
-                              options={{ presentation: "card", title: "Kalender gestalten" }}
-                            />
-                            <Stack.Screen name="appearance" options={{ presentation: "card" }} />
-                            <Stack.Screen name="work-profile" options={{ presentation: "card" }} />
-                            <Stack.Screen
-                              name="day-editor"
-                              options={entryEditorScreenOptions(
-                                Platform.OS,
-                                palette.groupedBackground,
-                              )}
-                            />
-                            <Stack.Screen
-                              name="shift-editor"
-                              options={entryEditorScreenOptions(
-                                Platform.OS,
-                                palette.groupedBackground,
-                              )}
-                            />
-                            <Stack.Screen
-                              name="appointment-editor"
-                              options={entryEditorScreenOptions(
-                                Platform.OS,
-                                palette.groupedBackground,
-                              )}
-                            />
-                            <Stack.Screen
-                              name="day-details"
-                              options={{
-                                title: "Tagesdetails",
-                                presentation: "formSheet",
-                                contentStyle: { backgroundColor: "transparent" },
-                                sheetAllowedDetents: [1],
-                                sheetGrabberVisible: true,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="quick-add"
-                              options={{
-                                headerShown: false,
-                                presentation: "card",
-                                animation: "slide_from_bottom",
-                                animationDuration: MOTION.duration.scene,
-                                contentStyle: { backgroundColor: palette.background },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="calendar-view"
-                              options={{
-                                title: "Kalender gestalten",
-                                presentation: "card",
-                                contentStyle: { backgroundColor: palette.background },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="info-details"
-                              options={{
-                                title: "Information",
-                                presentation: "formSheet",
-                                contentStyle: { backgroundColor: "transparent" },
-                                sheetAllowedDetents: [1],
-                                sheetGrabberVisible: true,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="data-backup"
-                              options={{
-                                title: "Datensicherung",
-                                presentation: "card",
-                                contentStyle: { backgroundColor: palette.groupedBackground },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="premium-details"
-                              options={{
-                                title: "Zuschläge erarbeitet",
-                                headerShown: false,
-                                presentation: "card",
-                                contentStyle: { backgroundColor: palette.groupedBackground },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="compliance-details"
-                              options={{
-                                title: CHECK_TITLE,
-                                presentation: "card",
-                                contentStyle: { backgroundColor: palette.groupedBackground },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="tariff-assessment"
-                              options={{
-                                title: "Schichtzulage",
-                                presentation: "formSheet",
-                                contentStyle: { backgroundColor: "transparent" },
-                                sheetAllowedDetents: [1],
-                                sheetGrabberVisible: true,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="profile-selection"
-                              options={{ title: "Auswahl", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="settings-editor"
-                              options={{
-                                title: "Arbeitsprofil",
-                                presentation: "card",
-                              }}
-                            />
-                            <Stack.Screen
-                              name="shift-selection"
-                              options={{
-                                headerShown: false,
-                                presentation: "formSheet",
-                                sheetAllowedDetents: [1],
-                                sheetGrabberVisible: true,
-                                contentStyle: { backgroundColor: palette.background },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="template-editor"
-                              options={{
-                                title: "Dienstvorlage",
-                                presentation: "card",
-                                contentStyle: { backgroundColor: palette.background },
-                              }}
-                            />
-                            <Stack.Screen
-                              name="location-picker"
-                              options={{
-                                headerShown: false,
-                                presentation: "formSheet",
-                                contentStyle: { backgroundColor: palette.surface },
-                                sheetAllowedDetents: [1],
-                                sheetCornerRadius: 28,
-                                sheetExpandsWhenScrolledToEdge: false,
-                                sheetGrabberVisible: false,
-                                sheetInitialDetentIndex: 0,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="salary"
-                              options={{
-                                title: "Gehalt",
-                                presentation: "card",
-                                headerShown: false,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="salary-details"
-                              options={{ presentation: "card", headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="net-pay-settings"
-                              options={{ title: "Netto-Einstellungen", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="salary-payment"
-                              options={{ presentation: "card", headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="net-pay"
-                              options={{
-                                title: "Netto-Prognose",
-                                presentation: "card",
-                                headerShown: false,
-                              }}
-                            />
-                            <Stack.Screen
-                              name="worktime-details"
-                              options={{ title: "Stunden", presentation: "card" }}
-                            />
-                            <Stack.Screen
-                              name="annual-details"
-                              options={{ title: "Jahresdetails", presentation: "card" }}
-                            />
-                            {DEV_TOOLS_AVAILABLE ? (
-                              <Stack.Screen
-                                name="dev-tools"
-                                options={{ title: "Testlabor", presentation: "fullScreenModal" }}
-                              />
-                            ) : null}
-                          </Stack>
-                        </ProfileSelectionProvider>
-                      </PrivateCloudProvider>
-                    </FeedbackProvider>
-                    <StatusBar
-                      animated
-                      barStyle={dark ? "light-content" : "dark-content"}
-                      key={dark ? "dark-status" : "light-status"}
-                    />
-                  </ThemeProvider>
-                </AppErrorBoundary>
-              </AnalysisViewProvider>
-            </PflegeShiftRuntimeProvider>
-          </CheckPreferencesProvider>
-        </CalendarPreferencesProvider>
-      </ActiveMonthProvider>
+                          ) : null}
+                        </Stack>
+                      </ProfileSelectionProvider>
+                    </PrivateCloudProvider>
+                  </FeedbackProvider>
+                  <StatusBar
+                    animated
+                    barStyle={dark ? "light-content" : "dark-content"}
+                    key={dark ? "dark-status" : "light-status"}
+                  />
+                </ThemeProvider>
+              </AppErrorBoundary>
+            </AnalysisViewProvider>
+          </PflegeShiftRuntimeProvider>
+        </CheckPreferencesProvider>
+      </CalendarPreferencesProvider>
     </AppErrorBoundary>
   );
 }

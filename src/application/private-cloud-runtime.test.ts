@@ -106,6 +106,20 @@ function setup(bound = true) {
 }
 
 describe("private cloud account lifecycle", () => {
+  it("uses the latest view refresh handler without replacing an in-flight runtime", async () => {
+    const f = setup(false);
+    f.setDevice(doc([]));
+    const held = deferred<PrivateCloudRevision | null>();
+    vi.mocked(f.remote.read).mockReturnValueOnce(held.promise);
+    const runtime = f.make();
+    const pending = runtime.synchronize();
+    const latest = vi.fn(async () => undefined);
+    runtime.setOnApplied(latest);
+    held.resolve(revision(doc(["original"])));
+    await pending;
+    expect(latest).toHaveBeenCalledWith(doc([]), doc(["original"]));
+    expect(f.onApplied).not.toHaveBeenCalled();
+  });
   it("does not download personal snapshots or photos again when the remote revision is unchanged", async () => {
     const f = setup();
     f.remote.head = vi.fn(async () => ({ revision: 1, updatedAt: "2026-10-17T12:00:00Z" }));
@@ -144,6 +158,7 @@ describe("private cloud account lifecycle", () => {
     expect(f.getDevice()).toEqual(doc(["original"]));
     expect(f.remote.write).not.toHaveBeenCalled();
     expect(f.onApplied).toHaveBeenCalledTimes(1);
+    expect(f.onApplied).toHaveBeenCalledWith(doc([]), doc(["original"]));
   });
   it("merges independent first-device data without an initial setup choice", async () => {
     const f = setup(false);

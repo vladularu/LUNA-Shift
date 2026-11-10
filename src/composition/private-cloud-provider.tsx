@@ -1,4 +1,3 @@
-import { reloadAppAsync } from "expo";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import * as Crypto from "expo-crypto";
 import { useSegments } from "expo-router";
@@ -41,13 +40,20 @@ import { saveAccountName } from "@/application/save-account-name";
 import { createCloudSharingClient } from "@/infrastructure/sharing/cloud-sharing-client";
 import { UserFacingError } from "@/domain/errors";
 import { useAccountPhoto } from "@/features/account/use-account-photo";
+import { useCloudDataRefresh } from "./cloud-data-refresh-boundary";
+import { isCalendarOnlyCloudChange } from "@/application/private-cloud-refresh-scope";
+import {
+  captureEntryNotificationGeneration,
+  pauseEntryNotifications,
+} from "@/infrastructure/notifications/entry-notification-lifecycle";
 
 const sha256 = (value: string) =>
   Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, value);
 
 export function PrivateCloudProvider({ children }: PropsWithChildren) {
   const db = useSQLiteContext();
-  const { ready } = usePflegeShiftStatus();
+  const refreshData = useCloudDataRefresh();
+  const { ready, refreshCalendar } = usePflegeShiftStatus();
   const { testMonths } = usePflegeShiftTestData();
   const segments = useSegments();
   const allowed =
@@ -88,21 +94,37 @@ export function PrivateCloudProvider({ children }: PropsWithChildren) {
         sha256,
         readPresentation: readCloudPresentation,
         preparePresentation: (presentation) => prepareCloudPresentation(db, presentation),
-        beforeReplace: cancelAllEntryNotifications,
+        async beforeReplace(transaction) {
+          const resume = pauseEntryNotifications(transaction);
+          try {
+            await cancelAllEntryNotifications(transaction);
+            return resume;
+          } catch (error) {
+            resume();
+            throw error;
+          }
+        },
         async recoverNotifications() {
+          const current = captureEntryNotificationGeneration(db);
           const profile = await loadProfile(db);
           const entries = await listCalendarEntries(db);
           await Promise.all(
             entries.map((entry) =>
-              syncEntryNotifications(db, entry, profile?.timeZone ?? "Europe/Berlin"),
+              syncEntryNotifications(db, entry, profile?.timeZone ?? "Europe/Berlin", current),
             ),
           );
         },
       }),
       remote: client ? createPrivateCloudClient(client, validate) : null,
-      onApplied: () => reloadAppAsync("private-cloud-updated"),
+      onApplied: refreshData,
     });
-  }, [db]);
+  }, [db, refreshData]);
+  useLayoutEffect(() => {
+    runtime.setOnApplied(async (previous, applied) => {
+      if (isCalendarOnlyCloudChange(previous, applied)) await refreshCalendar();
+      else await refreshData();
+    });
+  }, [runtime, refreshCalendar, refreshData]);
   useLayoutEffect(() => {
     runtime.setAllowed(allowed);
   }, [runtime, allowed]);

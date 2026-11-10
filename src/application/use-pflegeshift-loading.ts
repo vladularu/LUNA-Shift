@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import type { PflegeShiftPorts } from "@/application/pflegeshift-ports";
+import type { CloudCalendarNotificationRefresh } from "./use-cloud-calendar-notifications";
 import {
   calendarRangeCoversYear,
   reconcileCalendarRange,
@@ -51,6 +52,8 @@ export function usePflegeShiftLoading(
   const sequence = useRef(0);
   const currentEntries = useRef(entries);
   const deletedDuringLoad = useRef(new Set<string>());
+  const [notificationRefresh, setNotificationRefresh] =
+    useState<CloudCalendarNotificationRefresh | null>(null);
   const recordDeletion = useCallback((entry: CalendarEntry) => {
     deletedDuringLoad.current.add(`${entry.kind}:${entry.id}`);
   }, []);
@@ -59,7 +62,7 @@ export function usePflegeShiftLoading(
   }, [entries]);
 
   const load = useCallback(
-    async (full: boolean) => {
+    async (full: boolean, background = false) => {
       const revision = ++sequence.current;
       const presentYear = Number(currentMonth().slice(0, 4));
       const cached = retained.current.find(
@@ -86,35 +89,53 @@ export function usePflegeShiftLoading(
       const deleted = new Set<string>();
       deletedDuringLoad.current = deleted;
       if (full) {
+        if (
+          background &&
+          retained.current.some((known) => calendarRangeCoversYear(known, activeYear))
+        )
+          setLoadedKey(rangeKey);
         initialized.current = false;
-        setLoadedKey(null);
-        setCalendarRange(null);
+        if (!background) {
+          setLoadedKey(null);
+          setCalendarRange(null);
+        }
         retained.current = [];
         setRetainedRanges([]);
       }
       setError(null);
       try {
         if (full || !initialized.current) {
+          const scopedNotifications = notifications.capture?.() ?? notifications;
           const snapshot = await loadPflegeShiftSnapshot(repository, range);
           if (revision !== sequence.current) {
             calendarPerformance.record("load-discard", { load: revision });
             return;
           }
-          applySnapshot(snapshot);
+          if (background) {
+            setEntries((current) =>
+              reconcileCalendarRange(snapshot.entries, before, current, range, deleted, [range]),
+            );
+            setNotificationRefresh({
+              isCurrent: () => revision === sequence.current,
+              notifications: scopedNotifications,
+              timeZone: snapshot.profile?.timeZone ?? "Europe/Berlin",
+            });
+          } else applySnapshot(snapshot);
           initialized.current = true;
-          void reconcileLoadedEntryNotifications(
-            snapshot.entries,
-            snapshot.profile?.timeZone ?? "Europe/Berlin",
-            {
-              notifications,
-              diagnostics,
-            },
-          ).then((failed) => {
-            if (revision === sequence.current && failed)
-              publishNotificationWarning(
-                "Erinnerungen konnten nicht vollständig aktualisiert werden.",
-              );
-          });
+          if (!background)
+            void reconcileLoadedEntryNotifications(
+              snapshot.entries,
+              snapshot.profile?.timeZone ?? "Europe/Berlin",
+              {
+                notifications: scopedNotifications,
+                diagnostics,
+              },
+            ).then((failed) => {
+              if (revision === sequence.current && failed)
+                publishNotificationWarning(
+                  "Erinnerungen konnten nicht vollständig aktualisiert werden.",
+                );
+            });
         } else {
           const loaded = await withDataLoadFailureCode("LOAD_CALENDAR_FAILED", () =>
             repository.listCalendarEntries(range.startDate, range.endDate),
@@ -147,6 +168,7 @@ export function usePflegeShiftLoading(
       }
     },
     [
+      activeYear,
       applySnapshot,
       diagnostics,
       notifications,
@@ -165,6 +187,7 @@ export function usePflegeShiftLoading(
     };
   }, [load]);
   const reload = useCallback(() => load(true), [load]);
+  const refreshCalendar = useCallback(() => load(true, true), [load]);
   return {
     ready:
       loadedKey === rangeKey ||
@@ -176,6 +199,8 @@ export function usePflegeShiftLoading(
       : calendarRange,
     error,
     reload,
+    refreshCalendar,
+    notificationRefresh,
     recordDeletion,
   };
 }

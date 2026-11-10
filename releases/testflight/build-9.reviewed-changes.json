@@ -149,8 +149,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "840dc12f0afc0d1147a370bd494e16f264aedab4212325ff8240cdb6aa26916c",
-      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "8f7e2dec8795ab1cbce461bfffc2dba4da89bd059cb409a587cececf8e608275",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
@@ -287,8 +287,8 @@
     {
       "path": "src/infrastructure/database/private-cloud-repository.ts",
       "kind": "modified",
-      "sha256": "5ee758628161cd06ed038d088475d9beb4a568cc170e44ea9a778a49cbbbc7b2",
-      "reason": "Package B cache validity: notify existing net-profile subscribers only after a changed cloud snapshot is actually committed. Preserve account/current-snapshot guards and rollback; unchanged/rejected/failed applications do not invalidate. No remote cloud action or schema change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "30906dd77132afc312854562e926ee0847fd481e79d14c9abd0526144b5be1da",
+      "reason": "Package B cache validity: notify existing net-profile subscribers only after a changed cloud snapshot is actually committed. Preserve account/current-snapshot guards and rollback; unchanged/rejected/failed applications do not invalidate. No remote cloud action or schema change. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
     },
     {
       "path": "src/features/analysis/analysis-background-preparation.tsx",
@@ -671,14 +671,14 @@
     {
       "path": "src/application/pflegeshift-ports.ts",
       "kind": "modified",
-      "sha256": "a55e9a28be8be96e91757474e2aa2ff10203e096f7023e04ca4708847318bbb5",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "af437770fe27161201fec0da2796ee163cf1f65499268d07e0a5cbccbd285cc9",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     },
     {
       "path": "src/application/pflegeshift-provider.tsx",
       "kind": "modified",
-      "sha256": "8a8599d2c96bffb4957edfb9e40f1df405c0b802cd8e8b85d6f835127ce74b17",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "5d8dcb46a11716882278ae74806e62cd74522998ac769c672219a542d932f20b",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     },
     {
       "path": "src/application/use-shift-save-actions.ts",
@@ -689,8 +689,8 @@
     {
       "path": "src/composition/create-pflegeshift-ports.ts",
       "kind": "modified",
-      "sha256": "fb215c55481d6a834b9b0bad9c5892b01b1ecd5fd4a5962c37aa263c87e87948",
-      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "f70ed211bea567728cb5dbbb80569c7e69a6b5b789a461086b7866e5c7e8e8d7",
+      "reason": "Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending."
     },
     {
       "path": "src/domain/special-duty-review.ts",
@@ -859,6 +859,78 @@
       "kind": "modified",
       "sha256": "d5c39f61ccba92a0edccdecbc1713b1ecf611ad2497bf32150b4524a1a99bf46",
       "reason": "User-authorized robustness maintenance on 2026-11-10: read SDK-57 streaming fetch bodies with a 524288-byte ceiling, cancel on overflow and enforce the deadline during body reads. Keep HTTPS/path/status/content-type/URL/UTF-8 checks and verification inputs unchanged; never fall back to unbounded arrayBuffer. Explicit streaming overflow, exact-boundary, UTF-8, timeout and transport regressions are added. Preview/iPhone network acceptance remains pending."
+    },
+    {
+      "path": "src/composition/private-cloud-provider.tsx",
+      "kind": "modified",
+      "sha256": "37ca3d1abe567457c28faae7c3e46d6b25f482f7abb92e74abf06c2824383d5f",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/composition/cloud-data-refresh-boundary.tsx",
+      "kind": "added",
+      "sha256": "f8c9a9098e3c07bd718fd5c77d4f325e9ac58754390232175358444dbf0915e5",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/application/entry-notification-queue.ts",
+      "kind": "modified",
+      "sha256": "a4ab6c643ce7399cbb4491d97be31c9529bad590f20f19f4f777d39f647fc930",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/use-pflegeshift-loading.ts",
+      "kind": "modified",
+      "sha256": "eb927d37246d6ca6cca1858b02f4593a81eca638f8c93c7535c75223ed5ed8a5",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/features/data-backup/use-local-backup-restore.ts",
+      "kind": "modified",
+      "sha256": "c6de3b88e907494133a5fa5d604ac4b38be82e92456bdf5c8042faa2d59ad472",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.native.ts",
+      "kind": "modified",
+      "sha256": "da1db120af99d509b995f7f1801b405ee8355f90af40b6ebe14fe04841b8faf3",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notifications.ts",
+      "kind": "modified",
+      "sha256": "9d56c9151a27986fd52947a40e9a9a67ac7aa1cbb6f224d8cfd36553f121d741",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending."
+    },
+    {
+      "path": "src/infrastructure/notifications/entry-notification-lifecycle.ts",
+      "kind": "added",
+      "sha256": "19ad5e3ede368e820c7e8bccf9c564937e900e7cafc6c8f57bd6b127f972710d",
+      "reason": " User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/composition/create-entry-notification-port.ts",
+      "kind": "added",
+      "sha256": "30a414d09e92f3b83633d67c6736b4a28e789dda6d32cabb81aedbb477ea7ab9",
+      "reason": " User-authorized Cloud crash prerequisite: extract the generation-scoped notification adapter to preserve the existing composition size budget; bind queued jobs to the captured database generation, while future jobs after rollback remain usable. No native binary or TestFlight release change; iPhone acceptance pending. R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/private-cloud-refresh-scope.ts",
+      "kind": "added",
+      "sha256": "8fe73e1fe4bf1f367e737f006b659932d8d0933a65ff4f8968cfc4be27e35044",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/application/private-cloud-runtime.ts",
+      "kind": "modified",
+      "sha256": "3d52e3aeb048e512969d4dd82ed262c944878c1569520c960a387558f4976e37",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending. Combine the already Preview-tested unchanged-sync fast path from PR #376; preserve fresh local capture, server-head validation, all activity/account guards and the current onApplied handler."
+    },
+    {
+      "path": "src/application/use-cloud-calendar-notifications.ts",
+      "kind": "added",
+      "sha256": "02f4f4e9fa9f1d8b3c4a1d1e2999053702ec32cd2fdd0b70876c0761a63fcadf",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
     }
   ]
 }

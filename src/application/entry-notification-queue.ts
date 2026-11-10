@@ -42,11 +42,13 @@ export function createEntryNotificationReconciler(
       timeZone: string,
       warning: (message: string) => void,
       restored = false,
+      captured?: PflegeShiftNotificationPort,
     ) {
+      const scoped = captured ?? notifications.capture?.() ?? notifications;
       queue.enqueue(
-        entry.id,
+        JSON.stringify([scoped.scopeKey ?? "unscoped", entry.kind, entry.id]),
         entry.revision,
-        () => notifications.syncEntry(entry, timeZone),
+        () => scoped.syncEntry(entry, timeZone),
         (error) => {
           const code = restored
             ? "ENTRY_NOTIFICATION_RESTORE_FAILED"
@@ -63,10 +65,11 @@ export function createEntryNotificationReconciler(
       );
     },
     cancel(entry: CalendarEntry, warning: (message: string) => void) {
+      const scoped = notifications.capture?.() ?? notifications;
       queue.enqueue(
-        entry.id,
+        JSON.stringify([scoped.scopeKey ?? "unscoped", entry.kind, entry.id]),
         entry.revision + 1,
-        () => notifications.cancelEntry(entry),
+        () => scoped.cancelEntry(entry),
         (error) => {
           diagnostics.record("notifications", "ENTRY_NOTIFICATION_CANCEL_FAILED", error);
           warning("Gelöscht. Eine geplante Erinnerung konnte nicht entfernt werden.");

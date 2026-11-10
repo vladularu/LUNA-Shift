@@ -4,6 +4,11 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import type { Appointment, CalendarEntry, EntryNotification, ShiftEntry } from "@/domain/types";
 import { reconcileLoadedEntryNotifications } from "@/application/pflegeshift-notifications";
 import {
+  captureEntryNotificationGeneration,
+  pauseEntryNotifications,
+} from "./entry-notification-lifecycle";
+import { withImmediateTransaction } from "@/infrastructure/database/transaction";
+import {
   cancelAllEntryNotifications,
   cancelEntryNotifications,
   syncEntryNotifications,
@@ -127,6 +132,97 @@ describe("entry alarms", () => {
     expect(notificationMocks.cancel).toHaveBeenNthCalledWith(1, "notification-2");
     expect(notificationMocks.cancel).toHaveBeenNthCalledWith(2, "notification-1");
     expect(repositoryMocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("ignores permission results belonging to data from before a restore", async () => {
+    const db = {} as SQLiteDatabase;
+    let resolvePermission!: (value: { granted: boolean }) => void;
+    notificationMocks.getPermissions.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolvePermission = resolve;
+      }),
+    );
+    const pending = syncEntryNotifications(db, baseShift, "Europe/Berlin");
+    await vi.waitFor(() => expect(notificationMocks.getPermissions).toHaveBeenCalledOnce());
+    await cancelAllEntryNotifications(db);
+    resolvePermission({ granted: true });
+    await pending;
+    expect(notificationMocks.schedule).not.toHaveBeenCalled();
+    expect(repositoryMocks.replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels a native reminder returned after restore without persisting it", async () => {
+    const db = {} as SQLiteDatabase;
+    let resolveSchedule!: (value: string) => void;
+    notificationMocks.schedule.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSchedule = resolve;
+      }),
+    );
+    const pending = syncEntryNotifications(db, baseShift, "Europe/Berlin");
+    await vi.waitFor(() => expect(notificationMocks.schedule).toHaveBeenCalledOnce());
+    // This barrier must finish while the native scheduling promise is still pending.
+    await cancelAllEntryNotifications(db);
+    resolveSchedule("late-native-id");
+    await pending;
+    expect(notificationMocks.cancel).toHaveBeenCalledWith("late-native-id");
+    expect(repositoryMocks.replace).toHaveBeenCalledTimes(1);
+    expect(repositoryMocks.replace).toHaveBeenLastCalledWith(db, baseShift, []);
+  });
+
+  it("drains a complete in-flight SQL replacement inside the existing transaction", async () => {
+    const db = { execAsync: vi.fn(async () => undefined) } as unknown as SQLiteDatabase;
+    let releaseWrite!: () => void;
+    const held = new Promise<void>((resolve) => {
+      releaseWrite = resolve;
+    });
+    let ids: string[] = [];
+    repositoryMocks.replace.mockImplementation(async (_db, _entry, schedules) => {
+      if (schedules.length) {
+        await held;
+        ids = schedules.map((item: { notificationId: string }) => item.notificationId);
+      }
+    });
+    repositoryMocks.listAllIds.mockImplementation(async () => ids);
+    const pending = syncEntryNotifications(db, baseShift, "Europe/Berlin");
+    await vi.waitFor(() => expect(repositoryMocks.replace).toHaveBeenCalledTimes(2));
+    const barrier = withImmediateTransaction(db, async () => {
+      await cancelAllEntryNotifications(db);
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(repositoryMocks.listAllIds).not.toHaveBeenCalled();
+    releaseWrite();
+    await Promise.all([pending, barrier]);
+    expect(notificationMocks.cancel).toHaveBeenCalledWith("notification-1");
+    expect(db.execAsync).toHaveBeenLastCalledWith("COMMIT;");
+  });
+
+  it("blocks work during restore and accepts fresh work after a rollback releases it", async () => {
+    const db = {} as SQLiteDatabase;
+    const before = captureEntryNotificationGeneration(db);
+    const resume = pauseEntryNotifications(db);
+    const during = captureEntryNotificationGeneration(db);
+    await cancelAllEntryNotifications(db);
+    resume();
+    resume();
+    await syncEntryNotifications(db, baseShift, "Europe/Berlin", before);
+    await syncEntryNotifications(db, baseShift, "Europe/Berlin", during);
+    expect(notificationMocks.schedule).not.toHaveBeenCalled();
+    await syncEntryNotifications(db, baseShift, "Europe/Berlin");
+    expect(notificationMocks.schedule).toHaveBeenCalledOnce();
+  });
+
+  it("does not let a stale cancellation clear new schedules or affect another database", async () => {
+    const db = {} as SQLiteDatabase;
+    const other = {} as SQLiteDatabase;
+    const stale = captureEntryNotificationGeneration(db);
+    const otherCurrent = captureEntryNotificationGeneration(other);
+    await cancelAllEntryNotifications(db);
+    await cancelEntryNotifications(db, baseShift, stale);
+    expect(repositoryMocks.listIds).not.toHaveBeenCalled();
+    expect(repositoryMocks.replace).not.toHaveBeenCalled();
+    expect(otherCurrent()).toBe(true);
   });
 
   it("schedules an audible alarm independently from an earlier notification", async () => {

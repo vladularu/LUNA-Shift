@@ -222,7 +222,7 @@ function EntryStateHarness() {
 
 function RangeHarness({ month }: { month: string }) {
   const { entries, upsertShift, removeEntry } = usePflegeShiftEntries();
-  const { ready, calendarRange, error, reload } = usePflegeShiftStatus();
+  const { ready, calendarRange, error, reload, refreshCalendar } = usePflegeShiftStatus();
   return (
     <>
       <Text>
@@ -233,6 +233,9 @@ function RangeHarness({ month }: { month: string }) {
       {error ? <Text>{error}</Text> : null}
       <Pressable onPress={() => void reload()}>
         <Text>Neu laden</Text>
+      </Pressable>
+      <Pressable onPress={() => void refreshCalendar()}>
+        <Text>Cloud auffrischen</Text>
       </Pressable>
       <Pressable onPress={() => void upsertShift(mockSavedShift)}>
         <Text>Ändern</Text>
@@ -308,6 +311,94 @@ function RemunerationIntegrationHarness() {
 }
 
 describe("PflegeShiftProvider notification feedback", () => {
+  it.each([false, true])(
+    "refreshes cloud entries in place and restores reminders with the pre-read scope (deleted=%s)",
+    async (deleted) => {
+      const pending = deferred<readonly CalendarEntry[]>();
+      const incoming = { ...mockSavedShift, title: "Cloud-Dienst", revision: 2 };
+      const list = jest
+        .fn<() => Promise<readonly CalendarEntry[]>>()
+        .mockResolvedValueOnce([mockSavedShift])
+        .mockReturnValueOnce(pending.promise);
+      const scheduled: { scope: number; entry: CalendarEntry }[] = [];
+      let generation = 0;
+      const capture = jest.fn(() => {
+        const scope = ++generation;
+        return {
+          scopeKey: String(scope),
+          syncEntry: async (entry: CalendarEntry) => {
+            scheduled.push({ scope, entry });
+          },
+          cancelEntry: async () => undefined,
+        };
+      });
+      const localPorts: PflegeShiftPorts = {
+        ...ports,
+        repository: { ...repository, loadProfile: async () => null, listCalendarEntries: list },
+        notifications: { ...notifications, capture },
+      };
+      const screen = await render(
+        <PflegeShiftProvider activeMonth="2026-08" ports={localPorts}>
+          <RangeHarness month="2026-08" />
+        </PflegeShiftProvider>,
+      );
+      await waitFor(() => expect(screen.getByText("Auswertung bereit")).toBeTruthy());
+      await waitFor(() => expect(scheduled).toHaveLength(1));
+      scheduled.length = 0;
+      await fireEvent.press(screen.getByText("Cloud auffrischen"));
+      expect(screen.getByText("Auswertung bereit")).toBeTruthy();
+      expect(screen.getByText("Kalender bereit")).toBeTruthy();
+      expect(screen.getByText(mockSavedShift.title)).toBeTruthy();
+      await act(async () => pending.resolve(deleted ? [] : [incoming]));
+      await waitFor(() => expect(screen.getByText(deleted ? "Leer" : "Cloud-Dienst")).toBeTruthy());
+      expect(screen.getByText("Auswertung bereit")).toBeTruthy();
+      if (!deleted) await waitFor(() => expect(scheduled).toEqual([{ scope: 2, entry: incoming }]));
+      else expect(scheduled).toEqual([]);
+      expect(capture).toHaveBeenCalledTimes(2);
+      await screen.unmount();
+    },
+  );
+
+  it("captures reminder scope before a delayed snapshot and accepts fresh work after restore", async () => {
+    let generation = 0;
+    const pending = deferred<readonly CalendarEntry[]>();
+    const effects = jest.fn();
+    const scopedSync = jest.fn(async (captured: number) => {
+      if (captured === generation) effects();
+    });
+    const capture = jest.fn(() => {
+      const captured = generation;
+      return {
+        syncEntry: async () => scopedSync(captured),
+        cancelEntry: async () => undefined,
+      };
+    });
+    const list = jest
+      .fn<() => Promise<readonly CalendarEntry[]>>()
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValue([mockSavedShift]);
+    const localPorts: PflegeShiftPorts = {
+      ...ports,
+      repository: { ...repository, loadProfile: async () => null, listCalendarEntries: list },
+      notifications: { ...notifications, capture },
+    };
+    const screen = await render(
+      <PflegeShiftProvider activeMonth="2026-08" ports={localPorts}>
+        <RangeHarness month="2026-08" />
+      </PflegeShiftProvider>,
+    );
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    expect(capture).toHaveBeenCalledTimes(1);
+    generation++;
+    await act(async () => pending.resolve([mockSavedShift]));
+    await waitFor(() => expect(scopedSync).toHaveBeenCalledWith(0));
+    expect(effects).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Neu laden"));
+    await waitFor(() => expect(scopedSync).toHaveBeenCalledWith(1));
+    expect(effects).toHaveBeenCalledTimes(1);
+    await screen.unmount();
+  });
+
   it("reloads history after full restore/profile reloads but remuneration writes do not reschedule reminders", async () => {
     const dated: DatedRemunerationProfile = {
       effectiveFrom: "2026-10-01",

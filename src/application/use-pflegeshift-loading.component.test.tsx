@@ -53,6 +53,140 @@ beforeEach(() => {
   jest.mocked(loadPflegeShiftSnapshot).mockReset().mockResolvedValue(snapshot);
 });
 describe("report readiness while extending the cached year range", () => {
+  it("keeps the calendar visible while a cloud refresh reads changes and deletions", async () => {
+    const original = forecastShift({ id: "old", date: "2026-10-01" });
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValue({ ...snapshot, entries: [original] });
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    const originalRange = state.calendarRange;
+    let finish!: (value: PflegeShiftSnapshot) => void;
+    jest.mocked(loadPflegeShiftSnapshot).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = state.refreshCalendar();
+    });
+    expect(screen.getByText("ready")).toBeTruthy();
+    expect(state.calendarRange).toEqual(originalRange);
+    expect(visibleEntries).toEqual([original]);
+    await act(async () => {
+      finish(snapshot);
+      await pending;
+    });
+    expect(screen.getByText("ready")).toBeTruthy();
+    expect(visibleEntries).toEqual([]);
+    await screen.unmount();
+  });
+
+  it("preserves a local edit, insertion and deletion completed during the background query", async () => {
+    const original = forecastShift({ id: "old", date: "2026-10-01" });
+    const deleted = forecastShift({ id: "removed", date: "2026-10-02" });
+    jest
+      .mocked(loadPflegeShiftSnapshot)
+      .mockResolvedValue({ ...snapshot, entries: [original, deleted] });
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    let finish!: (value: PflegeShiftSnapshot) => void;
+    jest.mocked(loadPflegeShiftSnapshot).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = state.refreshCalendar();
+    });
+    const edited = { ...original, revision: 2, title: "Lokale Änderung" };
+    const inserted = forecastShift({ id: "local", date: "2026-10-03" });
+    await act(async () => {
+      state.recordDeletion(deleted);
+      editEntries([edited, inserted]);
+    });
+    await act(async () => {
+      finish({ ...snapshot, entries: [original, deleted] });
+      await pending;
+    });
+    expect(visibleEntries).toEqual([edited, inserted]);
+    await screen.unmount();
+  });
+
+  it("discards an old background result after a later refresh finishes", async () => {
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    let finish!: (value: PflegeShiftSnapshot) => void;
+    jest.mocked(loadPflegeShiftSnapshot).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    let old!: Promise<void>;
+    await act(async () => {
+      old = state.refreshCalendar();
+    });
+    const current = forecastShift({ id: "current", date: "2026-10-01" });
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValueOnce({ ...snapshot, entries: [current] });
+    await act(async () => {
+      await state.refreshCalendar();
+    });
+    await act(async () => {
+      finish(snapshot);
+      await old;
+    });
+    expect(visibleEntries).toEqual([current]);
+    expect(state.notificationRefresh?.isCurrent()).toBe(true);
+    await screen.unmount();
+  });
+
+  it("invalidates previously cached years after a background cloud replacement", async () => {
+    const original = forecastShift({ id: "old", date: "2026-10-01" });
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValue({ ...snapshot, entries: [original] });
+    list.mockResolvedValue([original]);
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    await screen.rerender(<Page month="2027-06" />);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    await screen.rerender(<Page month="2026-10" />);
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValue(snapshot);
+    await act(async () => {
+      await state.refreshCalendar();
+    });
+    expect(visibleEntries).toEqual([]);
+    list.mockResolvedValue([]);
+    await screen.rerender(<Page month="2027-06" />);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    expect(visibleEntries).toEqual([]);
+    await screen.unmount();
+  });
+
+  it("keeps the new year's result when navigation overtakes a background cloud read", async () => {
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    let finish!: (value: PflegeShiftSnapshot) => void;
+    jest.mocked(loadPflegeShiftSnapshot).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    let old!: Promise<void>;
+    await act(async () => {
+      old = state.refreshCalendar();
+    });
+    const future = forecastShift({ id: "future", date: "2030-01-02" });
+    jest.mocked(loadPflegeShiftSnapshot).mockResolvedValueOnce({ ...snapshot, entries: [future] });
+    await screen.rerender(<Page month="2030-01" />);
+    await waitFor(() => expect(visibleEntries).toEqual([future]));
+    await act(async () => {
+      finish(snapshot);
+      await old;
+    });
+    expect(visibleEntries).toEqual([future]);
+    expect(state.ready).toBe(true);
+    await screen.unmount();
+  });
+
   it("returns across a year boundary immediately without querying again or dropping the previous lookback", async () => {
     const lookback = forecastShift({ id: "lookback", date: "2025-06-01" });
     const october = forecastShift({ id: "october", date: "2026-10-01" });
@@ -114,6 +248,39 @@ describe("report readiness while extending the cached year range", () => {
     expect(screen.getByText("ready")).toBeTruthy();
     await act(async () => finish([]));
     expect(screen.getByText("ready")).toBeTruthy();
+  });
+  it("keeps cached-year readiness when cloud refresh overtakes a range extension", async () => {
+    const screen = await render(<Page month="2026-10" />);
+    await waitFor(() => expect(state.ready).toBe(true));
+    let finishRange!: (entries: readonly CalendarEntry[]) => void;
+    list.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishRange = resolve;
+      }),
+    );
+    await screen.rerender(<Page month="2027-01" />);
+    expect(screen.getByText("ready")).toBeTruthy();
+    let finishCloud!: (value: PflegeShiftSnapshot) => void;
+    jest.mocked(loadPflegeShiftSnapshot).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishCloud = resolve;
+      }),
+    );
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = state.refreshCalendar();
+    });
+    expect(screen.getByText("ready")).toBeTruthy();
+    await act(async () => {
+      finishRange([]);
+    });
+    expect(screen.getByText("ready")).toBeTruthy();
+    await act(async () => {
+      finishCloud(snapshot);
+      await pending;
+    });
+    expect(screen.getByText("ready")).toBeTruthy();
+    await screen.unmount();
   });
   it("still waits for a year outside the loaded range", async () => {
     const screen = await render(<Page month="2026-10" />);
