@@ -62,7 +62,6 @@
     "test:decoder-hardening": "node --test scripts/decode-uri-component-hardening.test.mjs"
   },
   "dependencies": {
-    "@bsky.app/expo-scroll-edge-effect": "0.1.11",
     "@expo/ui": "~57.0.26",
     "@expo/vector-icons": "^15.0.3",
     "@js-temporal/polyfill": "^0.5.1",
@@ -74,7 +73,6 @@
     "canonicalize": "4.0.0",
     "expo": "~57.0.32",
     "expo-apple-authentication": "~57.0.2",
-    "expo-auth-session": "~57.0.16",
     "expo-constants": "~57.0.22",
     "expo-crypto": "~57.0.4",
     "expo-document-picker": "~57.0.3",

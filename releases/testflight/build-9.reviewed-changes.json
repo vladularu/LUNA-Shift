@@ -70,9 +70,9 @@
     },
     {
       "path": "src/features/analysis/analysis-overview-card.tsx",
-      "kind": "modified",
-      "sha256": "4622b7cfa28b2253ee45f2ae33505fc35bf70b2ce4cf7e4fc31b2c61061b04d3",
-      "reason": "Paket 2: Replace the monthly detail-card navigation disclosure with a chevron; retain all interaction and layout behavior. Preview device acceptance pending."
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
     },
     {
       "path": "src/features/analysis/annual-report-view.tsx",
@@ -179,8 +179,8 @@
     {
       "path": "src/navigation/routes.ts",
       "kind": "modified",
-      "sha256": "7ef05beea12c8c802b30c5ac1663ee4632a21ccb655badf8714f95df17f2749c",
-      "reason": "Paket 4C: extend typed annual detail section with NET while preserving existing selected-year validation and separated monthly salary/net routes. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior."
+      "sha256": "4c62436bb202937265f1ff859efab21f49103580d7995447e4180c6638278ba8",
+      "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending."
     },
     {
       "path": "src/domain/analysis-view.ts",
@@ -815,14 +815,44 @@
     {
       "path": "package.json",
       "kind": "modified",
-      "sha256": "aa0178e83ff199fc003c893ed47d7b59266a11dc5422049ceb1e7ed68b6e2d11",
-      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation. No major SDK migration or app data/schema/UI change. Native dependency and npm-script fingerprint changes require a new Preview build and iPhone acceptance before publication; this source review is not release or device approval."
+      "sha256": "32e44b903510f6a15ac73ea7155d8e83110d319c86afa34d9f7a74bfd45e132a",
+      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval."
     },
     {
       "path": "package-lock.json",
       "kind": "modified",
-      "sha256": "129c6126e2e533fa3c441c7598a5eede3e293e9d37a5fc09bc6a2b3913b94d0f",
-      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation. No major SDK migration or app data/schema/UI change. Native dependency and npm-script fingerprint changes require a new Preview build and iPhone acceptance before publication; this source review is not release or device approval."
+      "sha256": "1f11b73ff026e8e7ec3ad216e31f4175779e6ed754e83e61e47ea6e89764d107",
+      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval."
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-day.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/day-editor/day-editor-components.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/salary/remuneration-positions.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/settings/work-profile-card.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/ui/month-navigator.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
     }
   ]
 }
