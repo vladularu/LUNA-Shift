@@ -117,12 +117,40 @@ export function createRuleCatalogHttpClient({
 
       let bytes: Uint8Array;
       try {
-        bytes = new Uint8Array(await response.arrayBuffer());
-      } catch {
+        const reader = response.body?.getReader();
+        if (!reader) fail("NETWORK_FAILURE", `${label} has no readable response stream.`);
+        bytes = new Uint8Array(MAXIMUM_RULE_ARTIFACT_BYTES);
+        let length = 0;
+        let complete = false;
+        const cancelRead = () => {
+          // Cancellation must not wait for an unresponsive transport to acknowledge it.
+          void reader.cancel().catch(() => undefined);
+        };
+        controller.signal.addEventListener("abort", cancelRead, { once: true });
+        try {
+          if (controller.signal.aborted) throw new Error("Request deadline exceeded.");
+          while (true) {
+            const { done, value } = await reader.read();
+            if (controller.signal.aborted) throw new Error("Request deadline exceeded.");
+            if (done) {
+              complete = true;
+              break;
+            }
+            if (value.byteLength > MAXIMUM_RULE_ARTIFACT_BYTES - length) {
+              fail("ARTIFACT_TOO_LARGE", `${label} exceeds the maximum rule artifact size.`);
+            }
+            bytes.set(value, length);
+            length += value.byteLength;
+          }
+        } finally {
+          controller.signal.removeEventListener("abort", cancelRead);
+          if (!complete) cancelRead();
+          reader.releaseLock();
+        }
+        bytes = bytes.subarray(0, length);
+      } catch (error) {
+        if (error instanceof RuleCatalogHttpError) throw error;
         fail("NETWORK_FAILURE", `${label} could not be read completely.`);
-      }
-      if (bytes.byteLength > MAXIMUM_RULE_ARTIFACT_BYTES) {
-        fail("ARTIFACT_TOO_LARGE", `${label} exceeds the maximum rule artifact size.`);
       }
       try {
         return decoder.decode(bytes);
@@ -131,6 +159,7 @@ export function createRuleCatalogHttpClient({
       }
     } finally {
       clearTimeout(timeout);
+      controller.abort();
     }
   }
 

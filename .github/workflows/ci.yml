@@ -63,6 +63,17 @@ jobs:
           node --test scripts/testflight-baseline.test.mjs scripts/publish-testflight-ota.test.mjs scripts/accept-testflight-baseline.test.mjs
           node scripts/verify-testflight-baseline.mjs --contracts
       - run: npm run audit:production
+      - name: Audit all dependencies including development tools
+        if: always()
+        run: npm run audit:all -- --output artifacts/dependency-audit.json
+      - name: Preserve complete dependency audit
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dependency-audit-ci
+          path: artifacts/dependency-audit.json
+          retention-days: 30
+          if-no-files-found: warn
       - run: npm run release:check
       - name: Compare iOS runtime before and after native prebuild
         run: npm run test:runtime-prebuild
