@@ -6,6 +6,7 @@ export interface DeleteAccountDependencies {
   deleteUser(userId: string): Promise<void>;
 }
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+const MAXIMUM_REQUEST_BYTES = 8192;
 const response = (status: number, body: Record<string, unknown>) =>
   Response.json(body, {
     status,
@@ -21,13 +22,36 @@ export function createDeleteAccountHandler(deps: DeleteAccountDependencies) {
       const contentType = request.headers.get("content-type")?.split(";")[0].trim();
       if (contentType !== "application/json")
         return response(400, { code: "SHARE_INVALID_ARGUMENT" });
-      if (Number(request.headers.get("content-length") ?? 0) > 8192)
+      const declaredLength = request.headers.get("content-length");
+      if (
+        declaredLength !== null &&
+        (!/^[0-9]+$/.test(declaredLength) || Number(declaredLength) > MAXIMUM_REQUEST_BYTES)
+      )
         return response(400, { code: "SHARE_INVALID_ARGUMENT" });
-      const bytes = await request.arrayBuffer();
-      if (bytes.byteLength > 8192) return response(400, { code: "SHARE_INVALID_ARGUMENT" });
+      const reader = request.body?.getReader();
+      if (!reader) return response(400, { code: "SHARE_INVALID_ARGUMENT" });
+      const bytes = new Uint8Array(MAXIMUM_REQUEST_BYTES);
+      let length = 0;
+      let complete = false;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            complete = true;
+            break;
+          }
+          if (value.byteLength > bytes.byteLength - length)
+            return response(400, { code: "SHARE_INVALID_ARGUMENT" });
+          bytes.set(value, length);
+          length += value.byteLength;
+        }
+      } finally {
+        if (!complete) void reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
       let body: unknown;
       try {
-        body = JSON.parse(new TextDecoder().decode(bytes));
+        body = JSON.parse(new TextDecoder().decode(bytes.subarray(0, length)));
       } catch {
         return response(400, { code: "SHARE_INVALID_ARGUMENT" });
       }

@@ -15,7 +15,6 @@ function response(
     readonly url?: string;
     readonly contentType?: string | null;
     readonly contentLength?: string | null;
-    readonly arrayBuffer?: () => Promise<ArrayBuffer>;
   } = {},
 ): Response {
   const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;
@@ -26,14 +25,12 @@ function response(
   if (options.contentLength !== null) {
     headers.set("content-length", options.contentLength ?? String(bytes.byteLength));
   }
-  return {
+  const result = new Response(bytes.slice().buffer, {
     status: options.status ?? 200,
-    url: options.url ?? "",
     headers,
-    arrayBuffer:
-      options.arrayBuffer ??
-      (async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)),
-  } as Response;
+  });
+  Object.defineProperty(result, "url", { value: options.url ?? "" });
+  return result;
 }
 
 async function expectHttpError(
@@ -150,5 +147,112 @@ describe("rule catalog HTTP client", () => {
     });
 
     await expectHttpError(client.fetchCurrentManifest(), "NETWORK_FAILURE");
+  });
+});
+
+describe("bounded rule catalog response streams", () => {
+  it.each([null, "1"])(
+    "cancels at the first overflowing chunk with content-length %s",
+    async (declaredLength) => {
+      const maximum = ruleCatalogHttpConstants.maximumArtifactBytes;
+      const chunks = [new Uint8Array(maximum), Uint8Array.of(1), Uint8Array.of(2)];
+      let reads = 0;
+      const cancelled = vi.fn();
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            controller.enqueue(chunks[reads++]);
+            if (reads === chunks.length) controller.close();
+          },
+          cancel: cancelled,
+        },
+        { highWaterMark: 0 },
+      );
+      const headers = new Headers({ "content-type": "application/json" });
+      if (declaredLength !== null) headers.set("content-length", declaredLength);
+      const fetched = new Response(body, { headers });
+      const buffered = vi.spyOn(fetched, "arrayBuffer");
+      const fetchImplementation = vi.fn(
+        async (_input: string | URL | Request, _init?: RequestInit) => fetched,
+      );
+      const client = createRuleCatalogHttpClient({
+        baseUrl: BASE_URL,
+        fetchImplementation: fetchImplementation as typeof fetch,
+      });
+
+      await expectHttpError(client.fetchCurrentManifest(), "ARTIFACT_TOO_LARGE");
+      expect(reads).toBe(2);
+      expect(cancelled).toHaveBeenCalledOnce();
+      expect(buffered).not.toHaveBeenCalled();
+      expect(body.locked).toBe(false);
+      expect(fetchImplementation.mock.calls[0][1]?.signal?.aborted).toBe(true);
+    },
+  );
+
+  it("accepts the exact byte boundary and split UTF-8 characters", async () => {
+    const text = '"' + "ä".repeat((ruleCatalogHttpConstants.maximumArtifactBytes - 2) / 2) + '"';
+    const bytes = new TextEncoder().encode(text);
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(bytes.slice(0, 2));
+        controller.enqueue(bytes.slice(2));
+        controller.close();
+      },
+    });
+    const client = createRuleCatalogHttpClient({
+      baseUrl: BASE_URL,
+      fetchImplementation: vi.fn(
+        async () => new Response(body, { headers: { "content-type": "application/json" } }),
+      ) as typeof fetch,
+    });
+    expect(await client.fetchCurrentManifest()).toBe(text);
+    expect(body.locked).toBe(false);
+  });
+
+  it("applies the deadline while a response body is stalled", async () => {
+    const cancelled = vi.fn();
+    const body = new ReadableStream<Uint8Array>({ cancel: cancelled });
+    const client = createRuleCatalogHttpClient({
+      baseUrl: BASE_URL,
+      requestTimeoutMilliseconds: 5,
+      fetchImplementation: vi.fn(
+        async () => new Response(body, { headers: { "content-type": "application/json" } }),
+      ) as typeof fetch,
+    });
+    await expectHttpError(client.fetchCurrentManifest(), "NETWORK_FAILURE");
+    expect(cancelled).toHaveBeenCalledOnce();
+    expect(body.locked).toBe(false);
+  });
+
+  it("reports broken body streams without returning partial artifacts", async () => {
+    let reads = 0;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          if (reads++ === 0) controller.enqueue(new TextEncoder().encode('{"partial":'));
+          else controller.error(new Error("transport failure"));
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const client = createRuleCatalogHttpClient({
+      baseUrl: BASE_URL,
+      fetchImplementation: vi.fn(
+        async () => new Response(body, { headers: { "content-type": "application/json" } }),
+      ) as typeof fetch,
+    });
+    await expectHttpError(client.fetchCurrentManifest(), "NETWORK_FAILURE");
+    expect(body.locked).toBe(false);
+  });
+
+  it("fails closed without streaming support instead of fully buffering", async () => {
+    const fetched = new Response(null, { headers: { "content-type": "application/json" } });
+    const buffered = vi.spyOn(fetched, "arrayBuffer");
+    const client = createRuleCatalogHttpClient({
+      baseUrl: BASE_URL,
+      fetchImplementation: vi.fn(async () => fetched) as typeof fetch,
+    });
+    await expectHttpError(client.fetchCurrentManifest(), "NETWORK_FAILURE");
+    expect(buffered).not.toHaveBeenCalled();
   });
 });

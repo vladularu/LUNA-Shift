@@ -853,6 +853,12 @@
       "kind": "removed",
       "sha256": null,
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/infrastructure/rule-catalog-http-client.ts",
+      "kind": "modified",
+      "sha256": "d5c39f61ccba92a0edccdecbc1713b1ecf611ad2497bf32150b4524a1a99bf46",
+      "reason": "User-authorized robustness maintenance on 2026-11-10: read SDK-57 streaming fetch bodies with a 524288-byte ceiling, cancel on overflow and enforce the deadline during body reads. Keep HTTPS/path/status/content-type/URL/UTF-8 checks and verification inputs unchanged; never fall back to unbounded arrayBuffer. Explicit streaming overflow, exact-boundary, UTF-8, timeout and transport regressions are added. Preview/iPhone network acceptance remains pending."
     }
   ]
 }

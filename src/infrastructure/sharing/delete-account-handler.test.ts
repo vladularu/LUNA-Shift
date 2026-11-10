@@ -170,3 +170,113 @@ it("missing or malformed expected account ID never deletes authenticated caller"
   expect(f.revokeApple).not.toHaveBeenCalled();
   expect(f.deleteUser).not.toHaveBeenCalled();
 });
+
+function streamedRequest(body: ReadableStream<Uint8Array>, contentLength?: string) {
+  return new Request("https://example.invalid", {
+    method: "POST",
+    headers: {
+      authorization: "Bearer session",
+      "content-type": "application/json",
+      ...(contentLength === undefined ? {} : { "content-length": contentLength }),
+    },
+    body,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" });
+}
+
+describe("bounded self-deletion request streams", () => {
+  it.each([undefined, "1"])(
+    "cancels overflowing input before user lookup with content-length %s",
+    async (declaredLength) => {
+      const chunks = [new Uint8Array(8192), Uint8Array.of(1), Uint8Array.of(2)];
+      let reads = 0;
+      const cancelled = vi.fn();
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            controller.enqueue(chunks[reads++]);
+            if (reads === chunks.length) controller.close();
+          },
+          cancel: cancelled,
+        },
+        { highWaterMark: 0 },
+      );
+      const incoming = streamedRequest(body, declaredLength);
+      const buffered = vi.spyOn(incoming, "arrayBuffer");
+      const f = fixture();
+      const result = await f.handler(incoming);
+      expect(result.status).toBe(400);
+      expect(await result.json()).toEqual({ code: "SHARE_INVALID_ARGUMENT" });
+      expect(reads).toBe(2);
+      expect(cancelled).toHaveBeenCalledOnce();
+      expect(buffered).not.toHaveBeenCalled();
+      expect(body.locked).toBe(false);
+      expect(f.getUser).not.toHaveBeenCalled();
+      expect(f.revokeApple).not.toHaveBeenCalled();
+      expect(f.deleteUser).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["-1", "invalid", "8193", "Infinity"])(
+    "rejects invalid or excessive declared length %s before reading",
+    async (declaredLength) => {
+      const pull = vi.fn();
+      const body = new ReadableStream<Uint8Array>({ pull }, { highWaterMark: 0 });
+      const f = fixture();
+      expect((await f.handler(streamedRequest(body, declaredLength))).status).toBe(400);
+      expect(pull).not.toHaveBeenCalled();
+      expect(f.getUser).not.toHaveBeenCalled();
+      expect(f.deleteUser).not.toHaveBeenCalled();
+      await body.cancel();
+    },
+  );
+
+  it("accepts valid JSON at exactly 8192 bytes without a declared length", async () => {
+    const bytes = new TextEncoder().encode(JSON.stringify({ expectedAccountId: ID }).padEnd(8192));
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(bytes.slice(0, 4096));
+        controller.enqueue(bytes.slice(4096));
+        controller.close();
+      },
+    });
+    const f = fixture();
+    expect((await f.handler(streamedRequest(body))).status).toBe(200);
+    expect(f.deleteUser).toHaveBeenCalledWith(ID);
+    expect(body.locked).toBe(false);
+  });
+
+  it("preserves a valid multibyte Apple code split between chunks", async () => {
+    const code = "ä".repeat(100);
+    const bytes = new TextEncoder().encode(
+      JSON.stringify({ expectedAccountId: ID, appleAuthorizationCode: code }),
+    );
+    const split = bytes.indexOf(0xc3) + 1;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(bytes.slice(0, split));
+        controller.enqueue(bytes.slice(split));
+        controller.close();
+      },
+    });
+    const f = fixture();
+    expect((await f.handler(streamedRequest(body))).status).toBe(200);
+    expect(f.revokeApple).toHaveBeenCalledWith(code, "apple-subject");
+    expect(f.deleteUser).toHaveBeenCalledWith(ID);
+  });
+
+  it("never deletes an account after a request stream failure", async () => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new Error("private transport failure"));
+      },
+    });
+    const f = fixture();
+    const result = await f.handler(streamedRequest(body));
+    expect(result.status).toBe(503);
+    expect(await result.json()).toEqual({ code: "SHARE_DELETE_FAILED" });
+    expect(f.getUser).not.toHaveBeenCalled();
+    expect(f.deleteUser).not.toHaveBeenCalled();
+    expect(body.locked).toBe(false);
+  });
+});
