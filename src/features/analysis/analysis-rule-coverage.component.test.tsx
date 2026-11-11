@@ -210,7 +210,8 @@ let mockAnnualInputFailure: {
   readonly failure: RuleResolutionError["failure"];
 } | null = null;
 let mockAnnualReportValue: AnnualReport | null = null;
-const mockAnnualActivation = jest.fn<(input: { enabled: boolean; active?: boolean }) => void>();
+const mockAnnualActivation =
+  jest.fn<(input: { enabled: boolean; active?: boolean; year: number }) => void>();
 let mockAnnualCoreValue: AnnualReport | null = null;
 let mockAnnualRuleFailure: {
   readonly ok: false;
@@ -387,7 +388,7 @@ jest.mock("@/features/analysis/use-annual-report-inputs", () => ({
 }));
 
 jest.mock("@/features/analysis/use-simple-annual-report", () => ({
-  useSimpleAnnualReport: (input: { enabled: boolean; active?: boolean }) => {
+  useSimpleAnnualReport: (input: { enabled: boolean; active?: boolean; year: number }) => {
     mockAnnualActivation(input);
     return {
       error: null,
@@ -1454,6 +1455,73 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       );
     },
   );
+  it.each([2026, 2027, 2028])(
+    "limits foreground annual work to the selected year %i while neighbors remain mounted",
+    async (year) => {
+      mockRouteMonth = `${year}-01`;
+      mockRoutePeriod = "YEAR";
+      mockAnnualActivation.mockClear();
+      const screen = await render(<AnalysisScreen />);
+      await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+        nativeEvent: { layout: { width: 390, height: 700 } },
+      });
+
+      const pages = new Map(mockAnnualActivation.mock.calls.map(([input]) => [input.year, input]));
+      expect(pages.size).toBeGreaterThan(1);
+      expect([...pages.values()].every((input) => input.enabled)).toBe(true);
+      expect(
+        [...pages.values()].filter((input) => input.active).map((input) => input.year),
+      ).toEqual([year]);
+    },
+  );
+
+  it("moves foreground annual work with year navigation and pauses all pages on blur", async () => {
+    mockRoutePeriod = "YEAR";
+    mockAnnualActivation.mockClear();
+    const screen = await render(
+      <mockFocusContext.Provider value={true}>
+        <AnalysisScreen />
+      </mockFocusContext.Provider>,
+    );
+    await fireEvent(screen.getByTestId("report-period-pager"), "layout", {
+      nativeEvent: { layout: { width: 390, height: 700 } },
+    });
+    const initialOffset = screen.getByTestId("report-period-scroll").props.contentOffset.x;
+    const foregroundYears = () => {
+      const pages = new Map(mockAnnualActivation.mock.calls.map(([input]) => [input.year, input]));
+      return [...pages.values()]
+        .filter((input) => input.enabled && input.active)
+        .map((input) => input.year);
+    };
+    expect(foregroundYears()).toEqual([2027]);
+
+    await fireEvent.press(screen.getByLabelText(/Nächstes Jahr, aktuell/));
+    await fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { x: initialOffset + 390, y: 0 } },
+    });
+    expect(foregroundYears()).toEqual([2028]);
+    await fireEvent.press(screen.getByLabelText(/Vorheriges Jahr, aktuell/));
+    await fireEvent(screen.getByTestId("report-period-scroll"), "momentumScrollEnd", {
+      nativeEvent: { contentOffset: { x: initialOffset, y: 0 } },
+    });
+    expect(foregroundYears()).toEqual([2027]);
+
+    mockFocused = false;
+    await screen.rerender(
+      <mockFocusContext.Provider value={false}>
+        <AnalysisScreen />
+      </mockFocusContext.Provider>,
+    );
+    expect(foregroundYears()).toEqual([]);
+    mockFocused = true;
+    await screen.rerender(
+      <mockFocusContext.Provider value={true}>
+        <AnalysisScreen />
+      </mockFocusContext.Provider>,
+    );
+    expect(foregroundYears()).toEqual([2027]);
+  });
+
   it("retains a completed yearly report underneath a native detail page", async () => {
     mockAnnualCoreValue = buildAnnualCoreReport(2027, [januaryShift()], mockProfile);
     const screen = await render(
