@@ -10,6 +10,7 @@ import {
 } from "@/infrastructure/database/analysis-result-repository";
 
 type Accept<T> = (value: unknown) => value is T;
+let nextCacheInstance = 0;
 export interface PersistentAnalysisCache {
   claim?(kind: AnalysisResultKind, month: string): () => boolean;
   read<T>(
@@ -42,6 +43,7 @@ export function createPersistentAnalysisCache({
   readonly bundleId: string;
   readonly lookupTimeoutMs?: number;
 }): PersistentAnalysisCache {
+  const instance = ++nextCacheInstance;
   const catalogs = new WeakMap<RuleResolver, Promise<string | null>>();
   const writers = new Map<string, { active: boolean }>();
   const claim = (kind: AnalysisResultKind, month: string) => {
@@ -88,8 +90,10 @@ export function createPersistentAnalysisCache({
     ) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       let state = 0;
+      let fingerprint: number | undefined;
       const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
+        instance,
         month: Number(month.replace("-", "")),
         stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
       });
@@ -102,6 +106,7 @@ export function createPersistentAnalysisCache({
               state = 2;
               return null;
             }
+            fingerprint = Number.parseInt(hash.slice(0, 8), 16);
             phases.next(2);
             const saved = await repository.read(kind, month, hash);
             if (!saved) {
@@ -136,7 +141,7 @@ export function createPersistentAnalysisCache({
       } finally {
         if (timer !== undefined) clearTimeout(timer);
         phases.finish();
-        finish({ state, cache: state === 1 ? 1 : 0 });
+        finish({ state, cache: state === 1 ? 1 : 0, fingerprint });
       }
     },
     async write<T>(
@@ -149,33 +154,56 @@ export function createPersistentAnalysisCache({
       current = claim(kind, month),
     ) {
       let state = 8;
+      let reason = 0;
+      let fingerprint: number | undefined;
       const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
+        instance,
         month: Number(month.replace("-", "")),
         stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
       });
       try {
         phases.next(5);
-        if (!current() || !accept(value)) return;
+        if (!current()) {
+          reason = 1;
+          return;
+        }
+        if (!accept(value)) {
+          reason = 2;
+          return;
+        }
         phases.next(6);
         const hash = await requestHash(kind, month, key, resolver);
-        if (hash === null || !current()) return;
+        if (hash === null) {
+          reason = 4;
+          return;
+        }
+        fingerprint = Number.parseInt(hash.slice(0, 8), 16);
+        if (!current()) {
+          reason = 5;
+          return;
+        }
         phases.next(7);
         const payload = encodeAnalysisCacheValue(value);
-        if (payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) return;
+        if (payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) {
+          reason = 3;
+          return;
+        }
         phases.next(8);
         const digest = await sha256(payload);
         if (current()) {
           phases.next(9);
           await repository.write(kind, month, hash, { payload, digest }, current);
           if (current()) state = 9;
-        }
+          else reason = 5;
+        } else reason = 5;
       } catch {
         state = 7;
+        reason = 6;
         // Derived results are optional; normal computation and user data remain authoritative.
       } finally {
         phases.finish();
-        finish({ state });
+        finish({ state, reason, fingerprint });
       }
     },
   };

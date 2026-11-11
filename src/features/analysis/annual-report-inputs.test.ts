@@ -33,6 +33,15 @@ function decision(month: string): MonthlyTariffDecision {
 }
 
 describe("annual report input selection", () => {
+  it("reuses the same annual input when loading the same rows in another order", () => {
+    const earlier = appointment("earlier", "2026-03-01"),
+      later = appointment("later", "2026-08-01");
+    const first = selectAnnualReportInputs(null, 2026, [earlier, later], []);
+    const reordered = selectAnnualReportInputs(first, 2026, [later, earlier], []);
+    expect(reordered).toBe(first);
+    const reloaded = selectAnnualReportInputs(null, 2026, [{ ...later }, { ...earlier }], []);
+    expect(reloaded.entries).toEqual(first.entries);
+  });
   it("keeps stable identities when unrelated years change", () => {
     const relevant = appointment("relevant", "2026-06-01");
     const first = selectAnnualReportInputs(null, 2026, [relevant], [decision("2026-06")]);

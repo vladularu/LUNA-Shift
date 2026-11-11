@@ -26,6 +26,7 @@ export function ReportPeriodPager({
   enabled = true,
   onChange,
   renderPage,
+  renderPlaceholder,
   preparePage,
   preparationRadius = 1,
 }: {
@@ -34,6 +35,7 @@ export function ReportPeriodPager({
   readonly enabled?: boolean;
   readonly onChange: (month: string) => void;
   readonly renderPage: PageRenderer;
+  readonly renderPlaceholder?: (month: string, onMove: (delta: number) => void) => ReactNode;
   readonly preparePage?: PagePreparer;
   readonly preparationRadius?: number;
 }) {
@@ -43,6 +45,7 @@ export function ReportPeriodPager({
   const [layout, setLayout] = useState({ width: 0, height: 0 });
   const { width, height } = layout;
   const [destination, setDestination] = useState<string | null>(null);
+  const [viewport, setViewport] = useState<number | null>(null);
   const pages = useMemo(
     () =>
       Array.from({ length: RADIUS * 2 + 1 }, (_, index) =>
@@ -58,6 +61,7 @@ export function ReportPeriodPager({
   const currentLayout = useRef({ anchor, width, enabled });
   useLayoutEffect(() => {
     currentLayout.current = { anchor, width, enabled };
+    setViewport(null);
   }, [anchor, enabled, width]);
   const initialOffset = useMemo(() => ({ x: RADIUS * width, y: 0 }), [width]);
   useLayoutEffect(() => {
@@ -122,6 +126,7 @@ export function ReportPeriodPager({
     [enabled, onChange, pages, reduced, unit, width],
   );
   const destinationIndex = destination ? pages.indexOf(destination) : index;
+  const viewportIndex = viewport ?? destinationIndex;
   const radius = preparePage ? Math.max(1, Math.min(3, preparationRadius)) : 1;
   return (
     <View
@@ -167,6 +172,21 @@ export function ReportPeriodPager({
             setDestination(null);
           }}
           onMomentumScrollEnd={commit}
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            if (
+              !enabled ||
+              width <= 0 ||
+              currentLayout.current.anchor !== anchor ||
+              currentLayout.current.width !== width
+            )
+              return;
+            const next = Math.max(
+              0,
+              Math.min(pages.length - 1, Math.round(event.nativeEvent.contentOffset.x / width)),
+            );
+            setViewport((current) => (current === next ? current : next));
+          }}
           onScrollEndDrag={(event) => {
             if (Math.abs(event.nativeEvent.velocity?.x ?? 0) < 0.01) commit(event);
           }}
@@ -181,19 +201,33 @@ export function ReportPeriodPager({
               pointerEvents={month === value ? "auto" : "none"}
             >
               {Math.abs(pageIndex - index) <= radius ||
-              Math.abs(pageIndex - destinationIndex) <= radius ? (
+              Math.abs(pageIndex - destinationIndex) <= radius ||
+              Math.abs(pageIndex - viewportIndex) <= radius ? (
                 <PeriodPageContent
                   month={month}
                   onMove={move}
                   active={month === value}
                   distance={pageIndex - index}
                   visible={
-                    Math.abs(pageIndex - index) <= 1 || Math.abs(pageIndex - destinationIndex) <= 1
+                    Math.abs(pageIndex - index) <= 1 ||
+                    Math.abs(pageIndex - destinationIndex) <= 1 ||
+                    Math.abs(pageIndex - viewportIndex) <= 1
                   }
+                  renderPlaceholder={renderPlaceholder}
                   renderPage={renderPage}
                   preparePage={preparePage}
                 />
-              ) : null}
+              ) : (
+                <PeriodPageContent
+                  month={month}
+                  onMove={move}
+                  active={false}
+                  distance={pageIndex - index}
+                  visible={false}
+                  renderPage={renderPage}
+                  renderPlaceholder={renderPlaceholder}
+                />
+              )}
             </View>
           ))}
         </ScrollView>
@@ -210,6 +244,7 @@ function PeriodPageContent({
   preparePage,
   distance,
   visible,
+  renderPlaceholder,
 }: {
   readonly month: string;
   readonly onMove: (delta: number) => void;
@@ -218,7 +253,8 @@ function PeriodPageContent({
   readonly preparePage?: PagePreparer;
   readonly distance: number;
   readonly visible: boolean;
+  readonly renderPlaceholder?: (month: string, onMove: (delta: number) => void) => ReactNode;
 }) {
-  const content = visible ? renderPage(month, onMove, active) : null;
+  const content = visible ? renderPage(month, onMove, active) : renderPlaceholder?.(month, onMove);
   return preparePage ? preparePage(month, active, distance, content) : content;
 }

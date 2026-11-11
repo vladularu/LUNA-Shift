@@ -15,15 +15,13 @@ const numbers = (value: Record<string, unknown>, keys: readonly string[]) =>
 const success = (value: unknown): value is { ok: true; value: Record<string, unknown> } =>
   record(value) && value.ok === true && record(value.value);
 
-/** Persist finished time/check reports even when the tariff supports fewer salary months. */
+/** Finished coverage may be unavailable; an unfinished core has no monthly coverage flags. */
 export function persistentAnnualValue(value: unknown): value is AnnualReport {
   if (
     !record(value) ||
     !numbers(value, [
       "year",
       "actualMinutes",
-      "targetMinutes",
-      "balanceMinutes",
       "workMinutes",
       "trainingMinutes",
       "vacationDays",
@@ -42,8 +40,11 @@ export function persistentAnnualValue(value: unknown): value is AnnualReport {
     !Number.isInteger(value.year) ||
     Number(value.year) < 1900 ||
     Number(value.year) > 4099 ||
-    value.worktimeCoverageComplete !== true ||
-    value.complianceCoverageComplete !== true ||
+    typeof value.worktimeCoverageComplete !== "boolean" ||
+    typeof value.complianceCoverageComplete !== "boolean" ||
+    ![value.targetMinutes, value.balanceMinutes].every(
+      (item) => item === null || (typeof item === "number" && Number.isFinite(item)),
+    ) ||
     !Number.isInteger(value.availablePayMonthCount) ||
     Number(value.availablePayMonthCount) < 0 ||
     Number(value.availablePayMonthCount) > 12 ||
@@ -64,20 +65,30 @@ export function persistentAnnualValue(value: unknown): value is AnnualReport {
       (month: unknown, index: number) =>
         record(month) &&
         month.month === value.year + "-" + String(index + 1).padStart(2, "0") &&
-        month.complianceComplete === true &&
+        typeof month.complianceComplete === "boolean" &&
+        [month.targetMinutes, month.balanceMinutes].every(
+          (item) => item === null || (typeof item === "number" && Number.isFinite(item)),
+        ) &&
         (month.estimatedGrossAmount === null ||
           (typeof month.estimatedGrossAmount === "number" &&
             Number.isFinite(month.estimatedGrossAmount))) &&
         numbers(month, [
           "entryCount",
-          "targetMinutes",
           "actualMinutes",
-          "balanceMinutes",
           "premiumAmount",
           "criticalCount",
           "warningCount",
         ]),
     ) &&
+    value.months.every((month: Record<string, unknown>) => month.complianceComplete === true) ===
+      value.complianceCoverageComplete &&
+    value.months.every((month: Record<string, unknown>) => month.targetMinutes !== null) ===
+      value.worktimeCoverageComplete &&
+    (value.worktimeCoverageComplete
+      ? value.targetMinutes !== null
+      : value.targetMinutes === null) &&
+    (value.balanceMinutes === null ||
+      value.months.every((month: Record<string, unknown>) => month.balanceMinutes !== null)) &&
     value.months.filter(
       (month: unknown) => record(month) && typeof month.estimatedGrossAmount === "number",
     ).length === value.availablePayMonthCount

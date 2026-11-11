@@ -51,6 +51,7 @@ export function AnalysisScreen({
 }) {
   const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
   const profile = calculationProfile ?? savedProfile;
+  const palette = usePalette();
   const { ready, error } = usePflegeShiftStatus();
   const isFocused = useIsFocused();
   const activeMonthCoordinator = useActiveMonthCoordinator();
@@ -81,12 +82,34 @@ export function AnalysisScreen({
           enabled={isFocused}
           onChange={selectMonth}
           preparationRadius={period === "MONTH" ? 2 : 1}
+          renderPlaceholder={(pageMonth, move) => (
+            <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
+              {period === "YEAR" ? (
+                <AnalysisYearHeader
+                  year={Number(pageMonth.slice(0, 4))}
+                  onPrevious={() => move(-1)}
+                  onNext={() => move(1)}
+                  onOpenMonth={() => changePeriod("MONTH")}
+                />
+              ) : (
+                <AnalysisMonthHeader
+                  label={formatMonthRangeLabel(pageMonth)}
+                  onOpenYear={() => changePeriod("YEAR")}
+                  onPrevious={() => move(-1)}
+                  onNext={() => move(1)}
+                />
+              )}
+              <AnalysisCoverageNote message="Auswertung wird vorbereitet …" />
+            </View>
+          )}
           preparePage={(pageMonth, active, distance, content) => (
             <AnalysisMonthDataProvider
               month={pageMonth}
               active={active}
               distance={distance}
-              enabled={period === "MONTH"}
+              // Native swiping may reveal a distant page before selection commits.
+              // Its placeholder stays visible without starting more distant work.
+              enabled={period === "MONTH" && Math.abs(distance) <= 2}
             >
               {content}
             </AnalysisMonthDataProvider>

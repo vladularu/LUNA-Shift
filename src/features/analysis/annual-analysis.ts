@@ -80,6 +80,10 @@ export function retainAnnualAnalysis(
   entries.set(key, value);
   if (String(request.year) === request.referenceDate.slice(0, 4))
     state.retained.set(request.ruleResolver, key);
+  // Editing one year must not fill the snapshot budget with its obsolete
+  // versions and evict otherwise unchanged neighboring years.
+  const versions = [...entries].filter(([, report]) => report.year === request.year);
+  for (const [obsolete] of versions.slice(0, -2)) entries.delete(obsolete);
   if (entries.size > 6) {
     const oldest = [...entries.keys()].find(
       (candidate) => candidate !== state.retained.get(request.ruleResolver),

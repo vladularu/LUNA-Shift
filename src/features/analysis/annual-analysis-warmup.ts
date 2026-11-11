@@ -120,7 +120,9 @@ export function createAnnualAnalysisWarmupRuntime(
                 setups.delete(task);
                 recordDiagnostic("reporting", "ANNUAL_PREPARATION_FAILED", error);
               },
-              priority,
+              // Reconcile keys before busy visible work can starve replacement
+              // of an obsolete background lease. Actual calculation stays low priority.
+              -4,
             );
             setups.add(task);
           });

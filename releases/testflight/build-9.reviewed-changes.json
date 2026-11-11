@@ -257,8 +257,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "455525cd8223b505a035a75a43415b862e150605678a43e60ea59accd2915586",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending."
+      "sha256": "16297ebf5765ca51b5742e4580554bf39dbd080912ebefa2d79c513d5ab6d275",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -485,14 +485,14 @@
     {
       "path": "src/engine/planning-night-recovery.ts",
       "kind": "added",
-      "sha256": "72128cbac5b5ba19ee76ad7a882c8cb38954fdf5ce9e220a6863d4d55c38ac05",
-      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "7076580acb88e245f6449fe99227264dcd98a127e57a7002f13071e83349fe16",
+      "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Annual/swipe package 2026-11-11: Share bounded immutable clock/night-window and indexed night-evidence preparation across monthly checks, rebind current duty identities, and avoid idle yields for ineligible single-night blocks. Preserve every policy threshold, DST ambiguity, coverage and result. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/engine/planning-weekends.ts",
       "kind": "added",
-      "sha256": "6d7de370c201cea0e968635341d3619c8e708f4a731fa608cc544855a0a3e98c",
-      "reason": "User-requested local check correction: Recognize consecutive weekend duty commitments from actual recorded intervals across months and zones; blank dates never prove freedom. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Replace the three-weekend trigger with one monthly observation for fully assessable four-week windows below two free weekends; preserve uncertain coverage. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "c486e1beaa319d48daf6215bd52343b418c571209deaa82d076bbf4736d2a7b3",
+      "reason": "User-requested local check correction: Recognize consecutive weekend duty commitments from actual recorded intervals across months and zones; blank dates never prove freedom. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Replace the three-weekend trigger with one monthly observation for fully assessable four-week windows below two free weekends; preserve uncertain coverage. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Annual/swipe package 2026-11-11: Reuse per-duty weekend evidence with complete used-fact/time-zone signatures, same-revision/deletion invalidation, weak ownership and a bounded zone map. Preserve all weekend definitions and findings. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/engine/simple-youth-duty-week.ts",
@@ -611,8 +611,8 @@
     {
       "path": "src/features/analysis/persistent-analysis-values.ts",
       "kind": "modified",
-      "sha256": "a2b1580d04cd4cd95696b30a1f03e75a0e9f920685e6bc3df6dd59df31fa6258",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Reject malformed or month-inconsistent cached weekend models and new-rule facts using the shared validator. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized cold-start persistence package 2026-11-11: Package A: re-export the complete request-aware salary validator instead of trusting the prior shallow salary guard; leave month/check/year guards unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
+      "sha256": "0e1d76cc043025412f4c085800a79fd1a1a60e01e9d24a9e0506a08c5114d8cf",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Reject malformed or month-inconsistent cached weekend models and new-rule facts using the shared validator. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized cold-start persistence package 2026-11-11: Package A: re-export the complete request-aware salary validator instead of trusting the prior shallow salary guard; leave month/check/year guards unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual/swipe package 2026-11-11: Retain a fully finished annual report with explicitly unavailable coverage or nullable balance while preserving those statuses. Require all twelve final monthly coverage flags, consistent year coverage and available-pay counts; reject unfinished cores, nonfinite and contradictory data. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/features/analysis/planning-hint-details.tsx",
@@ -1019,14 +1019,14 @@
     {
       "path": "src/features/analysis/persistent-analysis-cache.ts",
       "kind": "modified",
-      "sha256": "93eb772666eb2269406099b1de9891e6daf5f27dad3bb64a32646ad6a6db128f",
-      "reason": "User-authorized Preview cache performance package 2026-11-11: Use the measured compatible codec and opt-in phase spans for request/payload hashing, repository access, JSON processing and validation. Keep every digest, validity, writer-currentness, restore/epoch and timeout protection unchanged. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+      "sha256": "e7610dff54fa86595f1d11a8bd12cd5d97a657575e189afa52622b675f88e937",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Use the measured compatible codec and opt-in phase spans for request/payload hashing, repository access, JSON processing and validation. Keep every digest, validity, writer-currentness, restore/epoch and timeout protection unchanged. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. Annual/swipe package 2026-11-11: Distinguish superseded writes, rejected shapes and oversized/unsupported payloads through numeric diagnostics; include diagnostic-only key prefix and local owner, without changing SQL, SHA-256 checks, restore epochs, limits or current-writer protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/application/calendar-performance.ts",
       "kind": "modified",
-      "sha256": "9fc91b9544cfac669ca4d9a648684f455c7a7b65081fa1f11c4d6ff6a025c10e",
-      "reason": "User-authorized Preview cache performance package 2026-11-11: Permit numeric cache phase events, capture stable diagnostic ownership across async navigation, and document phase/stage meanings. Retain the existing 2000-event/10-minute bounds and numeric-only allowlist. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. User-authorized Preview write-performance package 2026-11-11: Document cache subphases 11-18, including shared queue/batch waiting and result handover. Preserve the existing numeric allowlist, session/request ownership and 2000-event/10-minute cap. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+      "sha256": "0caed31a32084334691fd1f9bbdfd11a497a4f6581f3d10934d306ef9844ae13",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Permit numeric cache phase events, capture stable diagnostic ownership across async navigation, and document phase/stage meanings. Retain the existing 2000-event/10-minute bounds and numeric-only allowlist. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. User-authorized Preview write-performance package 2026-11-11: Document cache subphases 11-18, including shared queue/batch waiting and result handover. Preserve the existing numeric allowlist, session/request ownership and 2000-event/10-minute cap. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update. Annual/swipe package 2026-11-11: Expose bounded numeric cache-owner, diagnostic SHA-256-prefix and skipped-write-reason fields; preserve complete cryptographic keys and no free-text/domain logging. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/infrastructure/database/analysis-result-write-queue.ts",
@@ -1055,8 +1055,8 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "779539379d714d76f9ad0f8f22a6b7f2f3e4dbc939cb51106f48aac2c3973c39",
-      "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending."
+      "sha256": "49a16d2fd4be11d2fb3feb83991ad7c262f7f781ce5dc86665329d807645ffd7",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual/swipe package 2026-11-11: Regenerate the automatically checked calculation compatibility fingerprint for the reviewed annual lifecycle and pure evidence-cache changes; no dependency/native configuration or formula changes. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     },
     {
       "path": "src/features/analysis/analysis-salary.ts",
@@ -1087,6 +1087,30 @@
       "kind": "modified",
       "sha256": "29b91775cf6311bab1697768bc4259ad5fea34359f65b288875e6814f95665a1",
       "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: hydrate and store full payout results rather than discarding them on cold start; apply request-aware validation for read/write and retention. Keep visible input selection and formulas unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: hydrate and store full payout results rather than discarding them on cold start; apply request-aware validation for read/write and retention. Keep visible input selection and formulas unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/annual-analysis-warmup.ts",
+      "kind": "modified",
+      "sha256": "e1db7408a93e01c2b2d9fe69004cf75f86ff2adcbf49a1f0379de319ef260143",
+      "reason": "Annual/swipe package 2026-11-11: Run bounded annual-key reconciliation before visible work can starve cancellation of an obsolete background lease; actual background calculation retains its low priority and shared visible consumers. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+    },
+    {
+      "path": "src/features/analysis/annual-analysis.ts",
+      "kind": "modified",
+      "sha256": "9ef29134d757d48e1f4aaceca90d2006cd22d48392e0d87e35559af3ca766b28",
+      "reason": "Annual/swipe package 2026-11-11: Limit obsolete versions of one year so repeated edits cannot evict unchanged neighboring years; retain exact complete-input isolation and the current-year pin. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+    },
+    {
+      "path": "src/features/analysis/annual-report-inputs.ts",
+      "kind": "modified",
+      "sha256": "127df5c097be2a16b83221619250d0c306526a931ca1bac44787c5e170fa80a2",
+      "reason": "Annual/swipe package 2026-11-11: Use the existing canonical calendar-entry order before both visible/background annual keys and calculation, so a reload of the same rows in another order cannot trigger another full year. Preserve every complete entry value, selection horizon and actual edit invalidation. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+    },
+    {
+      "path": "src/ui/report-period-pager.tsx",
+      "kind": "modified",
+      "sha256": "41793bcee5fd74b2a400bf65f41e88e9ef87f27dda8f192e478d222999feb377",
+      "reason": "Annual/swipe package 2026-11-11: Track the bounded native viewport before scroll settles, retain correct visible/prepared pages, and render lightweight period placeholders on all distant pages. Commit navigation only on settling and preserve reduced motion, accessibility and stale-event protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
     }
   ]
 }

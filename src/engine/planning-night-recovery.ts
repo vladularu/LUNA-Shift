@@ -22,12 +22,41 @@ interface PlanningOptions {
   readonly coverageEnd: string;
 }
 
+// Only immutable time evidence is shared. Rebind indices to this call's shifts so
+// a restored or edited object can never inherit an earlier duty's IDs or facts.
+interface NightEvidenceSnapshot {
+  readonly qualified: readonly { readonly date: string; readonly indexes: readonly number[] }[];
+  readonly uncertain: readonly string[];
+  readonly ambiguous: readonly number[];
+  readonly blocks: readonly (readonly string[])[];
+}
+const evidenceCache = new Map<string, NightEvidenceSnapshot>();
+const windowCache = new Map<string, { readonly start: number; readonly end: number }>();
+const clockCache = new Map<string, boolean>();
+function zonedEvidence(value: Temporal.ZonedDateTime) {
+  return [value.epochNanoseconds.toString(), value.timeZoneId, value.calendarId] as const;
+}
+function remember<T>(cache: Map<string, T>, key: string, value: T, limit: number): T {
+  cache.delete(key);
+  cache.set(key, value);
+  if (cache.size > limit) cache.delete(cache.keys().next().value!);
+  return value;
+}
+
 function window(date: string, timeZone: string) {
+  const key = `${timeZone}|${policy.nightStart}|${policy.nightEnd}|${date}`;
+  const cached = windowCache.get(key);
+  if (cached) return cached;
   const day = Temporal.PlainDate.from(date);
-  return {
-    start: minute(day.toZonedDateTime({ timeZone, plainTime: policy.nightStart })),
-    end: minute(day.add({ days: 1 }).toZonedDateTime({ timeZone, plainTime: policy.nightEnd })),
-  };
+  return remember(
+    windowCache,
+    key,
+    {
+      start: minute(day.toZonedDateTime({ timeZone, plainTime: policy.nightStart })),
+      end: minute(day.add({ days: 1 }).toZonedDateTime({ timeZone, plainTime: policy.nightEnd })),
+    },
+    2048,
+  );
 }
 
 function mergedMinutes(ranges: readonly { start: number; end: number }[]) {
@@ -52,21 +81,30 @@ function deduplicate(intervals: readonly ComplianceInterval[]) {
 }
 
 function hasUnambiguousClocks(item: ComplianceInterval): boolean {
+  const key = JSON.stringify([
+    item.shift.startTime,
+    item.shift.endTime,
+    zonedEvidence(item.start),
+    zonedEvidence(item.end),
+  ]);
+  const cached = clockCache.get(key);
+  if (cached !== undefined) return cached;
   try {
     for (const [clock, zoned] of [
       [item.shift.startTime, item.start],
       [item.shift.endTime, item.end],
     ] as const) {
-      if (!clock) return false;
+      if (!clock) return remember(clockCache, key, false, 1024);
       const recorded = Temporal.PlainTime.from(clock);
-      if (recorded.hour !== zoned.hour || recorded.minute !== zoned.minute) return false;
+      if (recorded.hour !== zoned.hour || recorded.minute !== zoned.minute)
+        return remember(clockCache, key, false, 1024);
       zoned.toPlainDateTime().toZonedDateTime(zoned.timeZoneId, { disambiguation: "reject" });
     }
-    return true;
+    return remember(clockCache, key, true, 1024);
   } catch {
     // Legal checks retain their existing conservative interpretation. Guidance
     // must not present a guessed instant as a measured recovery duration.
-    return false;
+    return remember(clockCache, key, false, 1024);
   }
 }
 
@@ -162,6 +200,23 @@ export function* checkPlanningNightsSteps(
   options: PlanningOptions,
 ): Generator<number, ComplianceIssue[], void> {
   const work = deduplicate(intervals);
+  const evidence = [];
+  for (const [index, item] of work.entries()) {
+    evidence.push([
+      item.shift.startTime,
+      item.shift.endTime,
+      zonedEvidence(item.start),
+      zonedEvidence(item.end),
+      item.grossMinutes,
+      item.netMinutes,
+    ]);
+    if ((index + 1) % 32 === 0) yield 1;
+  }
+  const evidenceKey = JSON.stringify([timeZone, policy.version, evidence]);
+  const cacheable = work.every(
+    (item) => Number.isFinite(item.grossMinutes) && Number.isFinite(item.netMinutes),
+  );
+  const saved = cacheable ? evidenceCache.get(evidenceKey) : undefined;
   const windows = new Map<string, ReturnType<typeof window>>();
   const getWindow = (date: string) => {
     const cached = windows.get(date);
@@ -171,24 +226,55 @@ export function* checkPlanningNightsSteps(
     return value;
   };
   const ambiguous = new Set<ComplianceInterval>();
-  const { qualified, uncertain } = yield* nightEvidence(work, getWindow, ambiguous);
+  const { qualified, uncertain } = saved
+    ? {
+        qualified: new Map(
+          saved.qualified.map((night) => [
+            night.date,
+            { date: night.date, work: night.indexes.map((index) => work[index]!) },
+          ]),
+        ),
+        uncertain: new Set(saved.uncertain),
+      }
+    : yield* nightEvidence(work, getWindow, ambiguous);
+  if (saved) for (const index of saved.ambiguous) ambiguous.add(work[index]!);
   const blocks: Night[][] = [];
   let grouped = 0;
-  for (const night of [...qualified.values()].sort((a, b) => a.date.localeCompare(b.date))) {
-    const previous = blocks.at(-1);
-    if (
-      previous &&
-      Temporal.PlainDate.from(previous.at(-1)!.date).add({ days: 1 }).toString() === night.date
-    )
-      previous.push(night);
-    else blocks.push([night]);
-    if (++grouped % 4 === 0) yield 1;
+  if (saved) {
+    for (const block of saved.blocks) blocks.push(block.map((date) => qualified.get(date)!));
+  } else
+    for (const night of [...qualified.values()].sort((a, b) => a.date.localeCompare(b.date))) {
+      const previous = blocks.at(-1);
+      if (
+        previous &&
+        Temporal.PlainDate.from(previous.at(-1)!.date).add({ days: 1 }).toString() === night.date
+      )
+        previous.push(night);
+      else blocks.push([night]);
+      if (++grouped % 4 === 0) yield 1;
+    }
+  if (!saved && cacheable && evidenceKey.length <= 262144) {
+    const indexes = new Map(work.map((item, index) => [item, index]));
+    remember(
+      evidenceCache,
+      evidenceKey,
+      {
+        qualified: [...qualified.values()].map((night) => ({
+          date: night.date,
+          indexes: night.work.map((item) => indexes.get(item)!),
+        })),
+        uncertain: [...uncertain],
+        ambiguous: [...ambiguous].map((item) => indexes.get(item)!),
+        blocks: blocks.map((block) => block.map((night) => night.date)),
+      },
+      6,
+    );
   }
   const issues: ComplianceIssue[] = [];
   for (const block of blocks) {
-    yield 1;
     const count = block.length;
     if (count < policy.minimumSeriesForRecovery) continue;
+    yield 1;
     const first = block[0]!;
     const last = block.at(-1)!;
     const lastWork = [...last.work].sort((a, b) => minute(b.end) - minute(a.end))[0]!;
