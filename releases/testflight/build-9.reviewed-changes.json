@@ -985,6 +985,18 @@
       "kind": "removed",
       "sha256": null,
       "reason": "Remove the now-unreferenced NetPayAmountRow leaf module after deleting its sole obsolete wrapper caller. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized."
+    },
+    {
+      "path": "src/features/calendar/month-card.tsx",
+      "kind": "modified",
+      "sha256": "6297a84153eb7a22633abceb2b5e7ebfe7b091f69cd7c720e59b4266e37f215f",
+      "reason": "Follow-up cleanup: remove only the unused array-map index parameter; preserve all rendered elements, keys, styles and data. No stored-data, native, dependency or TestFlight change."
+    },
+    {
+      "path": "src/features/calendar/calendar-view-transition.tsx",
+      "kind": "modified",
+      "sha256": "6a7844b3efb07e778e89b6683bbb2427244d114febf0d8f4bd068e3f97b580a9",
+      "reason": "Follow-up cleanup: remove the never-mounted transition host/overlay and wrapper, retaining the active header helpers and constant exactly. No stored-data, native, dependency or TestFlight change."
     }
   ]
 }

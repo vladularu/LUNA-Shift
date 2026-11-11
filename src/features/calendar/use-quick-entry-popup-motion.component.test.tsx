@@ -12,7 +12,7 @@ const mockCancel = jest.fn();
 const mockTiming = jest.fn(
   (
     value: number,
-    config: { duration: number; easing: unknown },
+    _config: { duration: number; easing: unknown },
     complete?: (finished: boolean) => void,
   ) => {
     if (complete) mockCompletion = complete;
