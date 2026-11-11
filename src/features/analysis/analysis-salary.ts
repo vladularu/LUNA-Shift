@@ -71,7 +71,7 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
     dependencies = context.entries;
   }
   return entryKeys.stringify([
-    "salary-payment-v1",
+    "salary-payment-v2",
     month,
     profile,
     settings,

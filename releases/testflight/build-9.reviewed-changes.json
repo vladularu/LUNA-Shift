@@ -5,8 +5,8 @@
     {
       "path": "scripts/runtime-policy.test.mjs",
       "kind": "modified",
-      "sha256": "7d42622109f8517669d5e10a1a0dec98bb5ae7e8fd7f03ad8d1b0c5d595e9975",
-      "reason": "Integrate the mandatory source guard and release-regression tests through the existing verify:fast runtime-test entry, preserving the accepted npm-script fingerprint byte for byte."
+      "sha256": "d0acb225a7bc8d24c9955112f7b3540d2e1db883198e31d0eccd32eb0e35b1e1",
+      "reason": "Integrate the mandatory source guard and release-regression tests through the existing verify:fast runtime-test entry, preserving the accepted npm-script fingerprint byte for byte. User-authorized cold-start persistence package 2026-11-11: Package B: enforce calculation compatibility generation and run its regression suite from the existing verification entry without altering npm scripts/native fingerprint. Preview only; TestFlight remains unchanged and device acceptance is pending."
     },
     {
       "path": "src/application/rule-catalog-runtime-refresh.ts",
@@ -611,8 +611,8 @@
     {
       "path": "src/features/analysis/persistent-analysis-values.ts",
       "kind": "modified",
-      "sha256": "8159cd9b06994bc1127dd660fec72dc03dfb9c7236eb7f84d494e71d7df241c4",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Reject malformed or month-inconsistent cached weekend models and new-rule facts using the shared validator. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "a2b1580d04cd4cd95696b30a1f03e75a0e9f920685e6bc3df6dd59df31fa6258",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Reject malformed or month-inconsistent cached weekend models and new-rule facts using the shared validator. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized cold-start persistence package 2026-11-11: Package A: re-export the complete request-aware salary validator instead of trusting the prior shallow salary guard; leave month/check/year guards unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
     },
     {
       "path": "src/features/analysis/planning-hint-details.tsx",
@@ -1043,14 +1043,50 @@
     {
       "path": "src/features/analysis/analysis-persistent-results.tsx",
       "kind": "modified",
-      "sha256": "2a080fb13cda707d801fe3d70fa7e5308f2399613d3e4970be4ee1bdaceefeba",
-      "reason": "User-authorized Preview write-performance package 2026-11-11: Inject the opt-in diagnostic observer into the repository. Database/time-zone cache lifetime, bundle identity and SHA-256 configuration stay unchanged. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+      "sha256": "fc464aaf610be362b9c1bb0199523236d895b2c76890ab7550e61ad44854a07b",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Inject the opt-in diagnostic observer into the repository. Database/time-zone cache lifetime, bundle identity and SHA-256 configuration stay unchanged. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update. User-authorized cold-start persistence package 2026-11-11: Package B: use the checked calculation identity rather than a running OTA ID and enable the same guarded persistence for embedded starts. Keep database/time-zone scope, SHA-256 and write diagnostics unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
     },
     {
       "path": "src/features/analysis/shared-analysis-tasks.ts",
       "kind": "modified",
       "sha256": "e489e848348640e8ca257126bc68db1abb444a7d4e19a80ce44ec84026023f05",
       "reason": "User-authorized Preview write-performance package 2026-11-11: Add numeric timing around complete/progress callbacks, persistence kickoff and retention. Keep callback ordering, values, cancellation, persistence and exception propagation unchanged. These markers do not claim to measure React render time. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+    },
+    {
+      "path": "src/features/analysis/analysis-cache-version.generated.ts",
+      "kind": "added",
+      "sha256": "779539379d714d76f9ad0f8f22a6b7f2f3e4dbc939cb51106f48aac2c3973c39",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-salary.ts",
+      "kind": "modified",
+      "sha256": "de90224a0a3f1b53d260576848055995125f665bd7b12e0c9e3b73f3db32a6ca",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: version complete payout requests to reject legacy incomplete salary results. Full input dependencies, calculation formulas and existing preparation remain unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: version complete payout requests to reject legacy incomplete salary results. Full input dependencies, calculation formulas and existing preparation remain unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/analysis-warmup-runtime.ts",
+      "kind": "modified",
+      "sha256": "2848097eb4b6dae45bdcd723214e720d827fb95d79cd46b143a05b137390a1d4",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: persist and hydrate complete monthly payout salary with the same request-bound validator as visible consumers; retain current-writer, generation, epoch and cancellation guards. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: persist and hydrate complete monthly payout salary with the same request-bound validator as visible consumers; retain current-writer, generation, epoch and cancellation guards. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/persistent-salary-value.ts",
+      "kind": "added",
+      "sha256": "1f4c5027f37dac83a957369df9f2848b87843d9b85420b076ac88a6cd1eb80f4",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: validate full annual/forecast/payout results, dated source profiles/shifts, projection fields and complete deductions including cent totals. Preserve deterministic unavailable states and retry technical failures; no formula or user-data changes. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: validate full annual/forecast/payout results, dated source profiles/shifts, projection fields and complete deductions including cent totals. Preserve deterministic unavailable states and retry technical failures; no formula or user-data changes. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/salary-persistence-test-fixtures.ts",
+      "kind": "added",
+      "sha256": "8f0768d24b1224644e73acb273d710fe0ecf09cf0c13a367624423ec7141ea74",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: deterministic synthetic payout fixtures shared by regression tests only. No live user data; excluded from the calculation compatibility fingerprint. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: deterministic synthetic payout fixtures shared by regression tests only. No live user data; excluded from the calculation compatibility fingerprint. Preview only; TestFlight remains unchanged and device acceptance is pending."
+    },
+    {
+      "path": "src/features/analysis/use-prepared-analysis-salary.ts",
+      "kind": "modified",
+      "sha256": "29b91775cf6311bab1697768bc4259ad5fea34359f65b288875e6814f95665a1",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package A: hydrate and store full payout results rather than discarding them on cold start; apply request-aware validation for read/write and retention. Keep visible input selection and formulas unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package A: hydrate and store full payout results rather than discarding them on cold start; apply request-aware validation for read/write and retention. Keep visible input selection and formulas unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending."
     }
   ]
 }

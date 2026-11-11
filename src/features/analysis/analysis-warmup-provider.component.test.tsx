@@ -306,7 +306,7 @@ describe("calendar-first analysis preparation", () => {
     expect(annualObserved.error).toBeTruthy();
     expect(annualObserved.report).toBeNull();
   });
-  it("hydrates month/check results and recomputes payment salary before opening after a cold restart", async () => {
+  it("hydrates month/check and complete payment salary before opening after a cold restart", async () => {
     const rows = new Map<string, unknown>();
     mockPersistent = {
       read: async (kind, month, key, _resolver, accept) => {
@@ -322,11 +322,11 @@ describe("calendar-first analysis preparation", () => {
     await flush();
     await first.rerender(<Scene show />);
     const expected = observed.salary.result;
-    expect(rows.size).toBe(3);
+    expect(rows.size).toBe(4);
     expect(
       [...rows.keys()]
         .filter((key) => key.startsWith("salary:"))
-        .every((key) => key.startsWith("salary:2026:")),
+        .some((key) => key.startsWith("salary:2026-")),
     ).toBe(true);
     await first.unmount();
     mockDb = {} as SQLiteDatabase;
@@ -343,7 +343,7 @@ describe("calendar-first analysis preparation", () => {
     expect(frames[0]).toBe(true);
     expect(observed.salary.result).toEqual(expected);
     expect(monthWork).not.toHaveBeenCalled();
-    expect(payWork).toHaveBeenCalledTimes(1);
+    expect(payWork).not.toHaveBeenCalled();
     expect(checkWork).not.toHaveBeenCalled();
   });
   it("keeps the calendar visible if optional preparation fails", async () => {
