@@ -1,11 +1,12 @@
 import type { MonthlyComplianceResult } from "@/domain/types";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
-import type { PreparedAnalysisSalary } from "./analysis-salary";
 import type { AnnualReport } from "./annual-report";
 import { SHIFT_TYPES } from "@/domain/types";
 import { validTariffComplianceEvidence } from "@/domain/tariff-compliance-validation";
 import { validPlanningWeekendAssessment } from "@/domain/planning-weekend-policy";
 import { validComplianceIssueFacts } from "@/domain/compliance-issue-facts";
+
+export { persistentSalaryValue } from "./persistent-salary-value";
 
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -167,27 +168,5 @@ export function persistentCheckValue(value: unknown): value is MonthlyCompliance
                 )),
           )),
     )
-  );
-}
-export function persistentSalaryValue(value: unknown): value is PreparedAnalysisSalary {
-  if (
-    !record(value) ||
-    !record(value.annual) ||
-    !record(value.annual.proposal) ||
-    !Array.isArray(value.annual.payments) ||
-    typeof value.annual.automatic !== "boolean"
-  )
-    return false;
-  if (
-    !numbers(value.annual.proposal, ["grossCents", "basisCents", "rateBasisPoints"]) ||
-    !Array.isArray(value.annual.proposal.referenceMonths)
-  )
-    return false;
-  return (
-    value.forecast === null ||
-    (record(value.forecast) &&
-      record(value.forecast.result) &&
-      value.forecast.result.status === "available" &&
-      record(value.forecast.result.pay))
   );
 }

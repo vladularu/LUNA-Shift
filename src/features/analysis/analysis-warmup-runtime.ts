@@ -287,14 +287,12 @@ export function createAnalysisWarmupRuntime(
                 key: salaryKey,
                 month,
                 resolver: input.resolver,
-                // Payment projections require the same conservative persistence policy
-                // as the visible salary hook until a complete projection codec exists.
-                persistent: null,
+                persistent,
                 priority,
                 prepared: readAnalysisSalary(salary, salaryKey),
-                accept: persistentSalaryValue,
-                retain: (value) =>
-                  value.forecast?.result.status === "available" || persistentSalaryValue(value),
+                accept: (value): value is PreparedAnalysisSalary =>
+                  persistentSalaryValue(value, salary),
+                retain: (value) => persistentSalaryValue(value, salary),
                 steps: (progress) => prepareAnalysisSalarySteps(salary, salaryKey, progress),
                 complete: (result) => {
                   retainPreparedAnalysisSalary(salary, salaryKey, result);
