@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render } from "@testing-library/react-native";
+import { render } from "./check-issue-route.test";
+import { fireEvent } from "@testing-library/react-native";
 import type { ComplianceIssue } from "@/domain/types";
 import { forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { PlanningHintDetails } from "./planning-hint-details";

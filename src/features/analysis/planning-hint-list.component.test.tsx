@@ -1,5 +1,6 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { fireEvent, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
+import { render } from "./check-issue-route.test";
 import type { ComplianceIssue } from "@/domain/types";
 import { forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { PLANNING_NIGHT_POLICY } from "@/domain/planning-night-policy";

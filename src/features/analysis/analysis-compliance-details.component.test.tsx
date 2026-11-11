@@ -1,5 +1,6 @@
-import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
+import { fireEvent, waitFor, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
+import { render } from "./check-issue-route.test";
 
 import type { ComplianceIssue, MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { PLANNING_NIGHT_POLICY } from "@/domain/planning-night-policy";
@@ -244,7 +245,7 @@ describe("analysis compliance details", () => {
     expect(screen.getByTestId("check-shift-series-0")).toBeVisible();
     expect(screen.queryByTestId("check-shift-following")).toBeNull();
     expect(screen.getAllByLabelText(/^Nacht,/)).toHaveLength(4);
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     await waitFor(() => expect(screen.queryByTestId("planning-hint-detail-content")).toBeNull());
     await fireEvent.press(
       screen.getByRole("button", { name: "Details ansehen: 4 Nächte in Folge" }),

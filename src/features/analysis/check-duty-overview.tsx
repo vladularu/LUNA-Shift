@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 import type { ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
-import { RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
 import { Text } from "@/ui/text";
@@ -44,6 +44,7 @@ interface DutyCell {
     color: string;
     symbol: string;
     spoken: string;
+    time: string;
   }[];
 }
 
@@ -52,11 +53,13 @@ export function CheckDutyOverview({
   shifts,
   dates,
   compact,
+  showTimes = false,
   testID = "check-duty-overview",
 }: {
   readonly shifts: readonly ShiftEntry[];
   readonly dates?: readonly string[];
   readonly compact?: boolean;
+  readonly showTimes?: boolean;
   readonly timeZone?: string;
   readonly testID?: string;
 }) {
@@ -113,6 +116,7 @@ export function CheckDutyOverview({
             title: shift.title,
             color: shift.color,
             symbol: shift.symbol,
+            time,
             spoken: `${shift.title}, ${spokenDate(Temporal.PlainDate.from(shift.date))}, ${split ? "eingetragenes Zeitfenster " : ""}${spokenTime}${split ? ", mit Teilzeiten" : ""}`,
           };
         });
@@ -164,7 +168,8 @@ export function CheckDutyOverview({
                 paddingHorizontal: small ? SPACING.xxs : SPACING.sm,
                 borderWidth: 1,
                 borderColor: palette.border,
-                borderRadius: RADII.small,
+                borderRadius: small ? RADII.control : RADII.card,
+                borderCurve: CORNER_CURVE,
               }}
             >
               <Text
@@ -221,6 +226,11 @@ export function CheckDutyOverview({
                         {duty.title}
                       </Text>
                     </View>
+                    {showTimes ? (
+                      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>
+                        {duty.time}
+                      </Text>
+                    ) : null}
                   </View>
                 ))
               ) : (

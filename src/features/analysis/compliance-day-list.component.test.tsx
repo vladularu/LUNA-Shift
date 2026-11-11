@@ -1,5 +1,6 @@
-import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
+import { fireEvent, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { render } from "./check-issue-route.test";
 import type { ComplianceIssue, MonthlyComplianceResult, ShiftEntry } from "@/domain/types";
 import { Temporal } from "@js-temporal/polyfill";
 import { checkDate, checkDayParts, ComplianceIssueContent } from "./compliance-issue-content";
@@ -452,7 +453,11 @@ describe("visible check timelines", () => {
         expect(card.queryByText(finding.description)).toBeNull();
         expect(card.queryByRole("link")).toBeNull();
         await fireEvent.press(card.getByRole("button", { name: /Details ansehen:/ }));
-        expect(screen.getByText(finding.description)).toBeVisible();
+        expect(screen.getByText("Prüfmaßstab unterschritten")).toBeVisible();
+        await fireEvent.press(
+          screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
+        );
+        expect(screen.getByText("Betriebliche Ausnahmen sind nicht geprüft.")).toBeVisible();
         expect(screen.getByTestId("check-shift-late")).toBeVisible();
         await fireEvent.press(
           screen.getByRole("link", { name: "Arbeitszeitgesetz · § 5 Ruhezeit" }),
@@ -581,7 +586,7 @@ describe("visible check timelines", () => {
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
     expect(screen.queryByRole("button", { name: "7 Dienste anzeigen" })).toBeNull();
     expect(screen.getAllByTestId(/^check-shift-/)).toHaveLength(7);
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-series-0")).toBeNull());
     expect(screen.getByText("7 Diensttage in Folge")).toBeTruthy();
   });
@@ -641,7 +646,7 @@ describe("visible check timelines", () => {
     expect(screen.getByTestId("check-shift-late").props.accessibilityLabel).toMatch(
       /13:18 bis 21:30/,
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-late")).toBeNull());
     expect(screen.getByText("9:30 h")).toBeTruthy();
   });
