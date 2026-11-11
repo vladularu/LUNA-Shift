@@ -8,6 +8,7 @@ import {
   createPersistentAnalysisCache,
   type PersistentAnalysisCache,
 } from "./persistent-analysis-cache";
+import { measureAnalysisCache } from "./analysis-cache-performance";
 
 const Results = createContext<PersistentAnalysisCache | null>(null);
 export function AnalysisPersistentResultsProvider({
@@ -24,7 +25,11 @@ export function AnalysisPersistentResultsProvider({
         ? null
         : createPersistentAnalysisCache({
             bundleId: updateId,
-            repository: createAnalysisResultRepository(db, () => currentMonth(timeZone)),
+            repository: createAnalysisResultRepository(
+              db,
+              () => currentMonth(timeZone),
+              measureAnalysisCache,
+            ),
             sha256: (text) => digestStringAsync(CryptoDigestAlgorithm.SHA256, text),
           }),
     [db, timeZone],

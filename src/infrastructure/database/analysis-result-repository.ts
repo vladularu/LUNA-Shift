@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 import { withImmediateTransaction } from "./transaction";
+import { createAnalysisResultWriteQueue } from "./analysis-result-write-queue";
 
 export type AnalysisResultKind = "month" | "checks" | "salary" | "annual";
 export interface StoredAnalysisResult {
@@ -22,12 +23,21 @@ export const MAX_ANALYSIS_RESULT_CHARACTERS = 1_048_576;
 export const MAX_ANALYSIS_RESULT_ROWS = 72;
 export const MAX_ANALYSIS_RESULT_BYTES = 8_388_608;
 const writers = new WeakMap<SQLiteDatabase, Map<string, { active: boolean }>>();
+const unmeasured = { next: (_phase: number) => {}, finish: () => {} };
 
 /** Disposable derived data, intentionally outside user migrations, backup and sync. */
 export function createAnalysisResultRepository(
   db: SQLiteDatabase,
   currentMonth: () => string,
+  measureWrite?: (
+    kind: AnalysisResultKind,
+    month: string,
+  ) => {
+    next(phase: number): void;
+    finish(): void;
+  },
 ): AnalysisResultRepository {
+  const writeTransaction = createAnalysisResultWriteQueue(db);
   let ready: Promise<string> | null = null;
   const initialize = () =>
     (ready ??= withImmediateTransaction(db, async (transaction) => {
@@ -87,28 +97,39 @@ export function createAnalysisResultRepository(
     },
     async write(kind, month, key, value, current = () => true) {
       if (!current() || value.payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) return;
-      const epoch = await initialize();
-      await withImmediateTransaction(db, async (transaction) => {
-        if (!current()) return;
-        const inserted = await transaction.runAsync(
-          `INSERT INTO analysis_result_cache_v2(kind,month,request_hash,value_json,value_hash,saved_at)
+      const phases = measureWrite?.(kind, month) ?? unmeasured;
+      phases.next(11);
+      try {
+        const epoch = await initialize();
+        await writeTransaction(async (transaction) => {
+          phases.next(12);
+          if (!current()) {
+            phases.next(14);
+            return;
+          }
+          const inserted = await transaction.runAsync(
+            `INSERT INTO analysis_result_cache_v2(kind,month,request_hash,value_json,value_hash,saved_at)
            SELECT ?,?,?,?,?,? WHERE
            ?=(SELECT request_hash FROM analysis_result_cache_v2 WHERE kind='epoch' AND month='')
            ON CONFLICT(kind,month) DO UPDATE SET
            request_hash=excluded.request_hash,value_json=excluded.value_json,
            value_hash=excluded.value_hash,saved_at=excluded.saved_at`,
-          kind,
-          month,
-          key,
-          value.payload,
-          value.digest,
-          Date.now(),
-          epoch,
-        );
-        if (inserted.changes === 0) return;
-        const present = currentMonth();
-        await transaction.runAsync(
-          `WITH ranked AS (
+            kind,
+            month,
+            key,
+            value.payload,
+            value.digest,
+            Date.now(),
+            epoch,
+          );
+          if (inserted.changes === 0) {
+            phases.next(14);
+            return;
+          }
+          phases.next(13);
+          const present = currentMonth();
+          await transaction.runAsync(
+            `WITH ranked AS (
              SELECT rowid,ROW_NUMBER() OVER priority AS position,
                SUM(length(CAST(value_json AS BLOB))) OVER priority AS bytes
              FROM analysis_result_cache_v2 WHERE kind<>'epoch'
@@ -117,12 +138,16 @@ export function createAnalysisResultRepository(
            ) DELETE FROM analysis_result_cache_v2 WHERE rowid IN (
              SELECT rowid FROM ranked WHERE position>? OR bytes>?
            )`,
-          present,
-          present.slice(0, 4),
-          MAX_ANALYSIS_RESULT_ROWS,
-          MAX_ANALYSIS_RESULT_BYTES,
-        );
-      });
+            present,
+            present.slice(0, 4),
+            MAX_ANALYSIS_RESULT_ROWS,
+            MAX_ANALYSIS_RESULT_BYTES,
+          );
+          phases.next(14);
+        });
+      } finally {
+        phases.finish();
+      }
     },
   };
 }
