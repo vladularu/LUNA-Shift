@@ -1,4 +1,4 @@
-import { useState, type ComponentProps, type PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 import { Text } from "@/ui/text";
 import {
   ActionSheetIOS,
@@ -12,7 +12,7 @@ import Ionicons from "@/ui/icon";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
-import { RowButton } from "@/ui/design-system";
+
 import { Field, PrimaryButton } from "@/ui/form-controls";
 import { SelectionSheet } from "@/ui/selection-sheet";
 
@@ -32,63 +32,6 @@ export function NetPayWorkflowText({
     >
       {children}
     </Text>
-  );
-}
-
-export function NetPayWorkflowField(props: ComponentProps<typeof Field>) {
-  return <Field {...props} />;
-}
-
-export function NetPayWorkflowAmount({
-  title,
-  value,
-  caption,
-  prefix,
-  large = false,
-}: {
-  readonly title: string;
-  readonly value: string;
-  readonly caption?: string;
-  readonly prefix?: string;
-  readonly large?: boolean;
-}) {
-  const palette = usePalette();
-  return (
-    <View style={{ gap: SPACING.sm }}>
-      <Text
-        accessibilityRole="header"
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={{ color: palette.textMuted, ...TYPOGRAPHY.label }}
-      >
-        {title}
-      </Text>
-      <View
-        accessible
-        accessibilityLabel={`${title}: ${prefix ? `${prefix} ` : ""}${value}`}
-        style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", gap: SPACING.xs }}
-      >
-        {prefix ? (
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ color: palette.textMuted, ...TYPOGRAPHY.value }}
-          >
-            {prefix}
-          </Text>
-        ) : null}
-        <Text
-          selectable
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{
-            color: palette.text,
-            ...(large ? TYPOGRAPHY.hero : TYPOGRAPHY.highlightCount),
-            fontVariant: ["tabular-nums"],
-          }}
-        >
-          {value}
-        </Text>
-      </View>
-      {caption ? <NetPayWorkflowText>{caption}</NetPayWorkflowText> : null}
-    </View>
   );
 }
 
@@ -431,110 +374,6 @@ export function NetPayWorkflowSelect<T extends string>({
       ) : expanded ? (
         renderOptions(() => setExpanded(false))
       ) : null}
-    </View>
-  );
-}
-
-export function NetPayWorkflowTabs({
-  value,
-  onChange,
-  disabled,
-}: {
-  readonly value: number;
-  readonly onChange: (value: number) => void;
-  readonly disabled: boolean;
-}) {
-  const palette = usePalette();
-  return (
-    <View style={{ flexDirection: "row", gap: SPACING.xxs }}>
-      {["Steuern", "Familie", "Versicherung"].map((label, index) => (
-        <Pressable
-          key={label}
-          accessibilityRole="tab"
-          accessibilityLabel={label}
-          aria-selected={value === index}
-          accessibilityState={{ selected: value === index, disabled }}
-          onPress={() => onChange(index)}
-          disabled={disabled}
-          style={({ pressed }) => ({
-            flex: 1,
-            minHeight: 44,
-            paddingHorizontal: SPACING.xs,
-            paddingVertical: SPACING.sm,
-            borderRadius: RADII.control,
-            borderBottomWidth: 2,
-            borderBottomColor: value === index ? palette.accent : "transparent",
-            backgroundColor: value === index ? palette.surfaceMuted : palette.surfaceRaised,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
-          })}
-        >
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{
-              color: value === index ? palette.accent : palette.textMuted,
-              ...TYPOGRAPHY.label,
-              textAlign: "center",
-            }}
-          >
-            {label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-export function NetPayWorkflowRow({
-  title,
-  subtitle,
-  onPress,
-  disabled = false,
-  embedded = false,
-  expanded,
-  icon,
-}: {
-  readonly title: string;
-  readonly subtitle: string;
-  readonly onPress: () => void;
-  readonly disabled?: boolean;
-  readonly embedded?: boolean;
-  readonly expanded?: boolean;
-  readonly icon?: ComponentProps<typeof Ionicons>["name"];
-}) {
-  const palette = usePalette();
-  return (
-    <View
-      style={{
-        backgroundColor: embedded ? "transparent" : palette.surface,
-        borderRadius: embedded ? 0 : RADII.large,
-        overflow: "hidden",
-      }}
-    >
-      <RowButton
-        title={title}
-        subtitle={subtitle}
-        accessibilityLabel={`${title} · ${subtitle}`}
-        accessibilityState={expanded === undefined ? undefined : { expanded }}
-        disabled={disabled}
-        onPress={onPress}
-        leading={
-          icon ? (
-            <Ionicons accessibilityElementsHidden name={icon} size={24} color={palette.primary} />
-          ) : undefined
-        }
-        trailing={
-          <Ionicons
-            accessibilityElementsHidden
-            name={
-              expanded === undefined ? "chevron-forward" : expanded ? "chevron-up" : "chevron-down"
-            }
-            size={18}
-            color={palette.textMuted}
-          />
-        }
-      />
     </View>
   );
 }

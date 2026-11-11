@@ -10,7 +10,7 @@ import { SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { NetPayText } from "./net-pay-controls";
 import { netPayEuro, netPayForecastEuro, netPayForecastLabel } from "./net-pay-format";
-import { NetPayAmountRow } from "./net-pay-amount-row";
+
 import { CardSeparator } from "@/ui/design-system";
 import {
   SalaryAmountRow,
@@ -204,16 +204,6 @@ export function NetPaySummaryMetric({
       </Text>
     </Pressable>
   );
-}
-
-export function NetPayDetailAmount({
-  label,
-  cents,
-}: {
-  readonly label: string;
-  readonly cents: number;
-}) {
-  return <NetPayAmountRow label={label} value={netPayEuro(cents)} />;
 }
 
 export function NetPayDeductionDetails({

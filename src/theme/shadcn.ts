@@ -1,5 +1,3 @@
-import type { TextStyle } from "react-native";
-
 // Exact values read from a2xfLIanDJARWqLyPI4X1r, Colors and Typography.
 export const SHADCN_COLORS = {
   white: "#FFFFFF",
@@ -28,30 +26,3 @@ export const INTER_FONTS = {
   extraBold: "Inter-ExtraBold",
   italic: "Inter-Italic",
 } as const;
-
-export function interFontFamily(weight: TextStyle["fontWeight"], italic = false): string {
-  if (italic) return INTER_FONTS.italic;
-  const numeric = weight === "bold" ? 700 : Number(weight ?? 400);
-  if (numeric >= 800) return INTER_FONTS.extraBold;
-  if (numeric >= 700) return INTER_FONTS.bold;
-  if (numeric >= 600) return INTER_FONTS.semibold;
-  if (numeric >= 500) return INTER_FONTS.medium;
-  return INTER_FONTS.regular;
-}
-
-export const SHADCN_TYPOGRAPHY = {
-  h1: { fontSize: 48, lineHeight: 48, fontWeight: "800", letterSpacing: -1.2 },
-  h2: { fontSize: 30, lineHeight: 36, fontWeight: "600", letterSpacing: -0.75 },
-  h3: { fontSize: 24, lineHeight: 32, fontWeight: "600", letterSpacing: -0.6 },
-  h4: { fontSize: 20, lineHeight: 28, fontWeight: "600", letterSpacing: -0.5 },
-  p: { fontSize: 16, lineHeight: 28, fontWeight: "400" },
-  input: { fontSize: 16, lineHeight: 24, fontWeight: "400" },
-  bodyMedium: { fontSize: 14, lineHeight: 24, fontWeight: "500" },
-  subtle: { fontSize: 14, lineHeight: 20, fontWeight: "400" },
-  subtleMedium: { fontSize: 14, lineHeight: 20, fontWeight: "500" },
-  subtleSemibold: { fontSize: 14, lineHeight: 20, fontWeight: "600" },
-  large: { fontSize: 18, lineHeight: 28, fontWeight: "600" },
-  small: { fontSize: 14, lineHeight: 14, fontWeight: "500" },
-  detail: { fontSize: 12, lineHeight: 20, fontWeight: "500" },
-  lead: { fontSize: 20, lineHeight: 28, fontWeight: "400" },
-} as const satisfies Readonly<Record<string, TextStyle>>;

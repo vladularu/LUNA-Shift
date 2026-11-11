@@ -8,7 +8,7 @@ import type { PlanningHintPresentation } from "./planning-hint-presentation";
 export const PLANNING_TITLE = "Hinweise & Empfehlungen";
 export const PLANNING_SUBTITLE =
   "Empfehlungen zu Dienstfolgen, Dienstwechseln und Erholungszeiten.";
-export const PLANNING_KIND_LABEL = "Arbeitswissenschaftliche Hinweise";
+
 export const LEGAL_KIND_LABEL = "Gesetzliche Prüfung";
 export const TARIFF_KIND_LABEL = "Tarifliche Prüfung";
 
