@@ -87,7 +87,7 @@ export function PrivateCloudScreen() {
                         onPress={() =>
                           confirm(
                             "Cloud-Daten verwenden?",
-                            `${status.phase === "setup" || status.requiresFullChoice ? "Der Cloud-Stand ersetzt diesen Gerätestand" : "Bei unterschiedlichen Angaben werden die Cloud-Daten verwendet"}. Konto: ${user.email ?? user.displayName}.`,
+                            `Der Cloud-Stand ersetzt diesen Gerätestand. Konto: ${user.email ?? user.displayName}.`,
                             () => runtime.synchronize("cloud"),
                           )
                         }
@@ -100,7 +100,7 @@ export function PrivateCloudScreen() {
                       onPress={() =>
                         confirm(
                           "Gerätedaten verwenden?",
-                          `${status.hasCloudData ? (status.phase === "setup" || status.requiresFullChoice ? "Dieser Gerätestand ersetzt die Cloud-Daten" : "Bei unterschiedlichen Angaben werden die Gerätedaten verwendet") : "Dieser Gerätestand wird in deiner Cloud gesichert"}. Konto: ${user.email ?? user.displayName}. Die Daten werden auf deine Geräte übertragen.`,
+                          `${status.hasCloudData ? "Dieser Gerätestand ersetzt die Cloud-Daten" : "Dieser Gerätestand wird in deiner Cloud gesichert"}. Konto: ${user.email ?? user.displayName}. Die Daten werden auf deine Geräte übertragen.`,
                           () => runtime.synchronize("device"),
                         )
                       }
