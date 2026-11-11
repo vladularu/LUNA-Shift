@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import type { UserProfile, ShiftEntry } from "@/domain/types";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS } from "@/engine/simple-pay";
 import { useSimpleAnnualReport } from "./use-simple-annual-report";
+import { calendarPerformance } from "@/application/calendar-performance";
 jest.mock("./analysis-persistent-results", () => ({ useAnalysisPersistentResults: () => null }));
 
 jest.mock("@/application/remuneration-provider", () => ({
@@ -67,6 +68,39 @@ async function finish() {
 }
 
 describe("original annual salary flow", () => {
+  it("records committed annual readiness and activity only while diagnostics are enabled", async () => {
+    calendarPerformance.start(true);
+    try {
+      const screen = await renderHook(
+        ({ active, enabled }: { active: boolean; enabled: boolean }) =>
+          useSimpleAnnualReport({ ...input, year: 2037, active, enabled }),
+        { initialProps: { active: true, enabled: true } },
+      );
+      const commits = () =>
+        calendarPerformance
+          .report()
+          .events.filter(
+            (event) => event.kind === "analysis-result-commit" && event.values.month === 203701,
+          );
+      expect(commits()[0]?.values).toEqual({ month: 203701, stage: 4, mode: 1, state: 0 });
+      await finish();
+      expect(commits().at(-1)?.values).toEqual({ month: 203701, stage: 4, mode: 1, state: 2 });
+      const report = screen.result.current.report;
+      await screen.rerender({ active: false, enabled: true });
+      expect(screen.result.current.report).toBe(report);
+      expect(commits().at(-1)?.values.mode).toBe(0);
+      const count = commits().length;
+      await screen.rerender({ active: false, enabled: false });
+      expect(commits()).toHaveLength(count);
+      calendarPerformance.stop();
+      await screen.rerender({ active: true, enabled: true });
+      expect(commits()).toHaveLength(count);
+      await screen.unmount();
+    } finally {
+      calendarPerformance.stop();
+      calendarPerformance.clear();
+    }
+  });
   it("retains a finished report during inactive navigation and reuses it on return", async () => {
     const screen = await renderHook(
       ({ active, year }: { active: boolean; year: number }) =>
