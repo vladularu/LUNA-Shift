@@ -18,6 +18,7 @@ import {
   type AnnualAnalysisRequest,
 } from "./annual-analysis";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
+import { calendarPerformance } from "@/application/calendar-performance";
 interface AnnualReportState {
   readonly key: string;
   readonly resolver: RuleResolver;
@@ -146,11 +147,23 @@ export function useSimpleAnnualReport({
       lease.cancel();
     };
   }, [active, key, resolver, persistent, settled, retryRevision]);
+  const report = cached ?? matching?.report ?? null;
+  const coreReport = core?.report ?? null;
+  const fatalError = matching?.fatalError ?? null;
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    calendarPerformance.record("analysis-result-commit", {
+      month: year * 100 + 1,
+      stage: 4,
+      mode: active ? 1 : 0,
+      state: report !== null ? 2 : coreReport !== null ? 1 : fatalError !== null ? 3 : 0,
+    });
+  }, [enabled, active, year, key, report, coreReport, fatalError]);
   return {
-    coreReport: core?.report ?? null,
+    coreReport,
     error: youthEnabled === null ? preferenceError : null,
-    fatalError: matching?.fatalError ?? null,
-    report: cached ?? matching?.report ?? null,
+    fatalError,
+    report,
     ruleFailure: null,
     retry,
   };

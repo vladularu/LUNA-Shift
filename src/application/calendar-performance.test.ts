@@ -2,6 +2,22 @@ import { describe, it, expect } from "vitest";
 import { createCalendarPerformanceRecorder } from "./calendar-performance";
 
 describe("calendar performance recorder", () => {
+  it("keeps committed result states numeric and labels them separately from rendering or paint", () => {
+    const r = createCalendarPerformanceRecorder(() => 50);
+    r.start(true);
+    r.record("analysis-result-commit", {
+      month: 202501,
+      stage: 4,
+      mode: 1,
+      state: 2,
+      privateKey: "secret",
+    } as never);
+    expect(r.report().events[0]?.values).toEqual({ month: 202501, stage: 4, mode: 1, state: 2 });
+    expect(r.report().analysis.resultCommitStates).toContain(
+      "not render duration or native paint time",
+    );
+    expect(JSON.stringify(r.report())).not.toContain("secret");
+  });
   it("is opt-in and rejects unapproved starts", () => {
     const r = createCalendarPerformanceRecorder();
     r.start(false);
