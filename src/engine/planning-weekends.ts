@@ -46,8 +46,39 @@ function uncertainWeekends(
   return result;
 }
 
-/** Scheduled binding is broader than statutory working time; uncertainty is preserved. */
+const dutyEvidence = new WeakMap<
+  ShiftEntry,
+  Map<string, { readonly signature: string; readonly value: Map<string, Evidence> }>
+>();
 function weekendEvidence(shift: ShiftEntry, timeZone: string): Map<string, Evidence> {
+  let signature: string;
+  try {
+    signature = JSON.stringify([
+      shift.date,
+      shift.type,
+      shift.allDay,
+      shift.startTime,
+      shift.endTime,
+      shift.breakMinutes,
+      shift.deletedAt,
+      shift.specialDuty,
+    ]);
+  } catch {
+    return computeWeekendEvidence(shift, timeZone);
+  }
+  const zones = dutyEvidence.get(shift) ?? new Map();
+  const previous = zones.get(timeZone);
+  if (previous?.signature === signature) return previous.value;
+  const value = computeWeekendEvidence(shift, timeZone);
+  zones.delete(timeZone);
+  zones.set(timeZone, { signature, value });
+  if (zones.size > 4) zones.delete(zones.keys().next().value!);
+  dutyEvidence.set(shift, zones);
+  return value;
+}
+
+/** Scheduled binding is broader than statutory working time; uncertainty is preserved. */
+function computeWeekendEvidence(shift: ShiftEntry, timeZone: string): Map<string, Evidence> {
   if (shift.deletedAt !== null || ["FREE", "VACATION", "SICK"].includes(shift.type))
     return new Map();
   if (shift.allDay || !shift.startTime || !shift.endTime)
