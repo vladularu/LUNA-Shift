@@ -1003,6 +1003,30 @@
       "kind": "modified",
       "sha256": "2f71adf5c1d08929a84993eb3e3449fcf34fba0a855851078c6ba45dfbbaaf49",
       "reason": "Make the existing native confirmation consistently explain full Cloud/device snapshot replacement; retain layout and controls. No new screen or native integration; TestFlight is not published."
+    },
+    {
+      "path": "src/features/analysis/analysis-cache-codec.ts",
+      "kind": "added",
+      "sha256": "6e366e40a675fb3e1069331963e9f79944b0df365353a59c8839c1cf7c9e8bc4",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Restore the unchanged persisted Map format after native JSON parsing instead of invoking a reviver on every primitive. Preserve JSON bytes, Map validation and rejection of nonfinite written values. Two paired real-SQLite/SHA256 replay rounds retain exact decoded results and stored payload hashes. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+    },
+    {
+      "path": "src/features/analysis/analysis-cache-performance.ts",
+      "kind": "added",
+      "sha256": "28d1bb1f242f1e97e80c55ee667b5cfca55332d3b8457d069831b976fbd396a9",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Opt-in bounded numeric cache phase measurements preserve the originating session/request, ignore timed-out or completed operations and avoid capture while diagnostics are disabled. No domain content is recorded. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+    },
+    {
+      "path": "src/features/analysis/persistent-analysis-cache.ts",
+      "kind": "modified",
+      "sha256": "93eb772666eb2269406099b1de9891e6daf5f27dad3bb64a32646ad6a6db128f",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Use the measured compatible codec and opt-in phase spans for request/payload hashing, repository access, JSON processing and validation. Keep every digest, validity, writer-currentness, restore/epoch and timeout protection unchanged. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+    },
+    {
+      "path": "src/application/calendar-performance.ts",
+      "kind": "modified",
+      "sha256": "5c3d91f31cd3d44127911ea912ce5b26dd73c5bb2b0f84e1b7b9c6e5a5d0c16b",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Permit numeric cache phase events, capture stable diagnostic ownership across async navigation, and document phase/stage meanings. Retain the existing 2000-event/10-minute bounds and numeric-only allowlist. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
     }
   ]
 }

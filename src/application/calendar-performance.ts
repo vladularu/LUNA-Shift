@@ -29,6 +29,7 @@ const kinds = [
   "analysis-view",
   "analysis-commit",
   "analysis-cache",
+  "analysis-cache-phase",
   "analysis-prepare",
   "analysis-work",
   "analysis-lag",
@@ -62,6 +63,7 @@ const fields = [
   "state",
   "priority",
   "cache",
+  "phase",
 ] as const;
 export type CalendarPerformanceValues = Partial<Record<(typeof fields)[number], number>>;
 export function createCalendarPerformanceRecorder(now: () => number = () => performance.now()) {
@@ -134,6 +136,13 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       dropped = 0;
     },
     record,
+    capture: () => {
+      const id = active(),
+        owner = request;
+      return (kind: CalendarPerformanceKind, values: CalendarPerformanceValues = {}) => {
+        if (id) record(kind, values, id, owner);
+      };
+    },
     begin: (kind: CalendarPerformanceKind, month?: string) => {
       if (!active()) return;
       request++;
@@ -154,7 +163,10 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       schema: 2,
       baseline: "monthly-salary-v3",
       analysis: {
-        stages: "1 overview, 2 compliance, 3 annual salary and full net, 5 salary settings",
+        stages:
+          "1 overview, 2 compliance, 3 annual salary and full net, 4 annual analysis, 5 salary settings",
+        cachePhases:
+          "1 read request hash, 2 repository read, 3 decode, 4 read validation, 5 write validation, 6 write request hash, 7 encode, 8 payload hash, 9 repository write, 10 read payload hash; duration includes await time",
         workState:
           "1 completed, 2 cancelled, 3 failed; wait is enqueue to first step; cpu is sum of step times; maximum is longest step; duration includes queue waiting",
         commitFlags:
