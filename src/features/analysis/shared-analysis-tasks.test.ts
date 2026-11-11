@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { readSharedAnalysisResult, requestSharedAnalysis } from "./shared-analysis-tasks";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 const accept = (value: unknown): value is number => typeof value === "number" && value >= 0;
 const base = () => ({
@@ -18,10 +19,28 @@ beforeEach(() => {
   vi.useFakeTimers();
 });
 afterEach(() => {
+  calendarPerformance.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 describe("shared analysis jobs", () => {
+  it("separates result handover, persistence kickoff and retention in numeric diagnosis", () => {
+    calendarPerformance.start(true);
+    const lease = requestSharedAnalysis({
+      ...base(),
+      prepared: 7,
+      steps: function* () {
+        return 99;
+      },
+      complete: vi.fn(),
+    });
+    const phases = calendarPerformance
+      .report()
+      .events.filter((event) => event.kind === "analysis-cache-phase");
+    expect(phases.map((event) => event.values.phase)).toEqual([15, 16, 17]);
+    expect(phases.every((event) => Number.isFinite(event.values.duration))).toBe(true);
+    lease.cancel();
+  });
   it("publishes a memory-prepared success under its new write claim without another disk lookup", () => {
     const read = vi.fn(async () => null),
       write = vi.fn(async () => {}),

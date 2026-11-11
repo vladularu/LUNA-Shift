@@ -1025,8 +1025,32 @@
     {
       "path": "src/application/calendar-performance.ts",
       "kind": "modified",
-      "sha256": "5c3d91f31cd3d44127911ea912ce5b26dd73c5bb2b0f84e1b7b9c6e5a5d0c16b",
-      "reason": "User-authorized Preview cache performance package 2026-11-11: Permit numeric cache phase events, capture stable diagnostic ownership across async navigation, and document phase/stage meanings. Retain the existing 2000-event/10-minute bounds and numeric-only allowlist. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+      "sha256": "9fc91b9544cfac669ca4d9a648684f455c7a7b65081fa1f11c4d6ff6a025c10e",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Permit numeric cache phase events, capture stable diagnostic ownership across async navigation, and document phase/stage meanings. Retain the existing 2000-event/10-minute bounds and numeric-only allowlist. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. User-authorized Preview write-performance package 2026-11-11: Document cache subphases 11-18, including shared queue/batch waiting and result handover. Preserve the existing numeric allowlist, session/request ownership and 2000-event/10-minute cap. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+    },
+    {
+      "path": "src/infrastructure/database/analysis-result-write-queue.ts",
+      "kind": "added",
+      "sha256": "b35081806432fae7792a97c138636605c4917bd584add9dfb7655226122de076",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Group at most four adjacent repeatable analysis-cache SQL tasks in the existing shared transaction queue. Preserve FIFO order and yield between groups. After rollback, retry each item individually once so a bad optional result does not discard independent valid results. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+    },
+    {
+      "path": "src/infrastructure/database/analysis-result-repository.ts",
+      "kind": "modified",
+      "sha256": "f5ef37deaaeca0f82901849ecb5137c535c471cdbde3366754ffe0ce6a574f16",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Use the bounded analysis-only write queue while retaining every per-item epoch/current-writer check, upsert, recency timestamp and cleanup/row/byte limit. Expose optional injected numeric timing for write turn, SQL, cleanup and remaining batch/commit, with no feature dependency in the repository. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+    },
+    {
+      "path": "src/features/analysis/analysis-persistent-results.tsx",
+      "kind": "modified",
+      "sha256": "2a080fb13cda707d801fe3d70fa7e5308f2399613d3e4970be4ee1bdaceefeba",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Inject the opt-in diagnostic observer into the repository. Database/time-zone cache lifetime, bundle identity and SHA-256 configuration stay unchanged. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+    },
+    {
+      "path": "src/features/analysis/shared-analysis-tasks.ts",
+      "kind": "modified",
+      "sha256": "e489e848348640e8ca257126bc68db1abb444a7d4e19a80ce44ec84026023f05",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Add numeric timing around complete/progress callbacks, persistence kickoff and retention. Keep callback ordering, values, cancellation, persistence and exception propagation unchanged. These markers do not claim to measure React render time. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
     }
   ]
 }
