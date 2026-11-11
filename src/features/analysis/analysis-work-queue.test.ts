@@ -12,7 +12,7 @@ describe("cooperative analysis queue", () => {
   it("does no warm work with an exhausted idle budget and does not force an idle timeout", () => {
     vi.useFakeTimers();
     const callbacks: ((budget?: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];
-    const request = vi.fn((work: (typeof callbacks)[number], options?: { timeout?: number }) => {
+    const request = vi.fn((work: (typeof callbacks)[number], _options?: { timeout?: number }) => {
       callbacks.push(work);
       return callbacks.length;
     });

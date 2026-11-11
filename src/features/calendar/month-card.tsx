@@ -641,7 +641,7 @@ export const MonthCard = memo(function MonthCard({
               borderTopColor: palette.separator,
             }}
           >
-            {week.map((cell, dayIndex) => (
+            {week.map((cell) => (
               <DayCell
                 morphEnabled={accessibilityVisible && cell.inMonth}
                 key={cell.date}
