@@ -18,6 +18,7 @@ import { SecureDatabaseProvider } from "@/infrastructure/database/secure-databas
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { ActiveMonthProvider } from "@/navigation/active-month";
 import { horizontalBackGestureOptions } from "@/navigation/horizontal-back-gesture";
+import { analysisSheetOptions } from "@/navigation/analysis-sheet-options";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { PAGE_HEADER_OPTIONS, nativePageHeaderStyle } from "@/theme/page-header";
@@ -269,13 +270,14 @@ function ThemedApp() {
                             }}
                           />
                           <Stack.Screen
+                            name="check-issue"
+                            options={{ title: CHECK_TITLE, ...analysisSheetOptions() }}
+                          />
+                          <Stack.Screen
                             name="tariff-assessment"
                             options={{
                               title: "Schichtzulage",
-                              presentation: "formSheet",
-                              contentStyle: { backgroundColor: "transparent" },
-                              sheetAllowedDetents: [1],
-                              sheetGrabberVisible: true,
+                              ...analysisSheetOptions(),
                             }}
                           />
                           <Stack.Screen

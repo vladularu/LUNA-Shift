@@ -1,14 +1,20 @@
 import { Text } from "@/ui/text";
+import { useEffect, useRef } from "react";
 import Ionicons from "@/ui/icon";
-import { useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Alert, Pressable, View, useWindowDimensions } from "react-native";
+import { router } from "expo-router";
 import { Temporal } from "@js-temporal/polyfill";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { selectionFeedback } from "@/ui/haptics";
-import { SelectionSheet } from "@/ui/selection-sheet";
+import {
+  createCheckIssueSession,
+  invalidateCheckIssueSession,
+  releaseCheckIssueSession,
+  type CheckIssueInput,
+} from "@/navigation/check-issue-session";
 import { PlanningHintDetails } from "./planning-hint-details";
 import { planningHintPresentation } from "./planning-hint-presentation";
 import { TariffCheckDetails, tariffCheckStatus } from "./tariff-check-details";
@@ -24,6 +30,7 @@ import { legalCheckPresentation } from "./legal-check-presentation";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
 import { CheckDutyOverview } from "./check-duty-overview";
+import { CheckDetailCard, CheckDetailStack } from "./check-detail-layout";
 
 const MONTHS = [
   "Januar",
@@ -180,12 +187,124 @@ export function TariffObservationDetails({
     <View style={{ gap: SPACING.md }}>
       {members[0] ? original(members[0]) : null}
       {members.length > 1 ? (
-        <View style={{ paddingHorizontal: embedded ? 0 : SPACING.lg }}>
-          <CheckDetailDisclosure title={`Weitere Zeiträume (${members.length - 1})`}>
-            {members.slice(1).map(original)}
-          </CheckDetailDisclosure>
+        <CheckDetailStack embedded={embedded}>
+          <CheckDetailCard>
+            <CheckDetailDisclosure title={`Weitere Zeiträume (${members.length - 1})`}>
+              {members.slice(1).map(original)}
+            </CheckDetailDisclosure>
+          </CheckDetailCard>
+        </CheckDetailStack>
+      ) : null}
+    </View>
+  );
+}
+
+function checkIssueContext({ issue, relatedIssues = [], shifts, timeZone }: CheckIssueInput) {
+  const unique = new Map<string, ComplianceIssue>();
+  for (const member of [issue, ...relatedIssues])
+    if (!unique.has(member.id)) unique.set(member.id, member);
+  const members = [...unique.values()].map((member) => {
+    const timeline = complianceTimeline(member, shifts, timeZone);
+    return {
+      issue: member,
+      model: timeline,
+      hint: member.kind === "PLANNING" ? planningHintPresentation(member, timeline.title) : null,
+    };
+  });
+  const grouped = members.length > 1;
+  const shareDutyOverview = grouped && !members.some((member) => member.hint?.weekendPeriod);
+  const groupedTariff = grouped && members.every((member) => !!member.issue.tariff);
+  const groupLabel = groupedTariff
+    ? `${members.length} betroffene Zeiträume`
+    : `${members.length} Prüfpunkte`;
+  const allRelated = [
+    ...new Map(
+      members.flatMap((member) => member.model.related).map((shift) => [shift.id, shift]),
+    ).values(),
+  ].sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      (a.startTime ?? "").localeCompare(b.startTime ?? "") ||
+      a.id.localeCompare(b.id),
+  );
+  return { members, grouped, shareDutyOverview, groupLabel, allRelated };
+}
+
+export function openCheckIssueDetails(input: CheckIssueInput) {
+  const request = createCheckIssueSession(input);
+  if (!request) return null;
+  try {
+    router.push({ pathname: "/check-issue", params: { session: request.id } });
+    return request.id;
+  } catch {
+    releaseCheckIssueSession(request.id);
+    Alert.alert("Details nicht geöffnet", "Versuche es bitte erneut.");
+    return null;
+  }
+}
+
+export function ComplianceIssueDetails(input: CheckIssueInput) {
+  const { issue, shifts, timeZone } = input;
+  const { members, grouped, shareDutyOverview, allRelated } = checkIssueContext(input);
+  const tariff = issue.kind === "LEGAL" ? issue.tariff : null;
+  return (
+    <View style={{ gap: SPACING.md }}>
+      {shareDutyOverview && !tariff && allRelated.length ? (
+        <View style={{ paddingHorizontal: SPACING.lg }}>
+          <AffectedCheckShifts shifts={allRelated} timeZone={timeZone} />
         </View>
       ) : null}
+      {tariff ? (
+        <TariffObservationDetails
+          issues={members.map((member) => member.issue)}
+          shifts={shifts}
+          timeZone={timeZone}
+        />
+      ) : (
+        members.map((member) => {
+          const children =
+            !shareDutyOverview && (member.model.related.length || member.hint?.weekendPeriod) ? (
+              <AffectedCheckShifts
+                shifts={member.model.related}
+                timeZone={timeZone}
+                weekendPeriod={member.hint?.weekendPeriod}
+              />
+            ) : null;
+          return member.issue.tariff ? (
+            <TariffCheckDetails
+              key={member.issue.id}
+              evidence={member.issue.tariff}
+              title={member.model.title}
+              description={member.issue.description}
+              missing={member.model.missing}
+              shifts={member.model.related}
+              timeZone={timeZone}
+            />
+          ) : member.hint ? (
+            <PlanningHintDetails
+              key={member.issue.id}
+              hint={member.hint}
+              rest={member.model.rest}
+              series={member.model.series}
+              missing={member.model.missing}
+              originalDescription={member.issue.description}
+            >
+              {children}
+            </PlanningHintDetails>
+          ) : (
+            <LegalCheckDetails
+              key={member.issue.id}
+              issue={member.issue}
+              title={member.model.title}
+              missing={member.model.missing}
+              shifts={grouped ? undefined : member.model.related}
+              timeZone={timeZone}
+            >
+              {children}
+            </LegalCheckDetails>
+          );
+        })
+      )}
     </View>
   );
 }
@@ -206,21 +325,25 @@ export function ComplianceIssueContent({
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= 1.3 || width < 360;
-  const [showDetails, setShowDetails] = useState(false);
-  const unique = new Map<string, ComplianceIssue>();
-  for (const member of [issue, ...relatedIssues])
-    if (!unique.has(member.id)) unique.set(member.id, member);
-  const members = [...unique.values()].map((member) => {
-    const timeline = complianceTimeline(member, shifts, timeZone);
-    return {
-      issue: member,
-      model: timeline,
-      hint: member.kind === "PLANNING" ? planningHintPresentation(member, timeline.title) : null,
-    };
+  const openedSession = useRef<string | null>(null);
+  useEffect(
+    () => () => {
+      if (openedSession.current) invalidateCheckIssueSession(openedSession.current);
+    },
+    [],
+  );
+  const openDetails = () => {
+    const id = openCheckIssueDetails({ issue, relatedIssues, shifts, timeZone });
+    if (id) openedSession.current = id;
+  };
+  const { members, grouped, groupLabel } = checkIssueContext({
+    issue,
+    relatedIssues,
+    shifts,
+    timeZone,
   });
   const model = members[0].model;
   const planning = issue.kind === "PLANNING";
-  const tariffCategory = checkCategory(issue) === "tariff";
   const appearance = checkAppearance(issue, palette);
   const hint = members[0].hint;
   const tariff = issue.kind === "LEGAL" ? issue.tariff : null;
@@ -241,22 +364,6 @@ export function ComplianceIssueContent({
     compactCheckPeriod(rowPeriod) ??
     hint?.compactSummary ??
     (hint ? planningCardSummary(issue, hint).join(" ") : model.note);
-  const grouped = members.length > 1;
-  const shareDutyOverview = grouped && !members.some((member) => member.hint?.weekendPeriod);
-  const groupedTariff = grouped && members.every((member) => !!member.issue.tariff);
-  const groupLabel = groupedTariff
-    ? `${members.length} betroffene Zeiträume`
-    : `${members.length} Prüfpunkte`;
-  const allRelated = [
-    ...new Map(
-      members.flatMap((member) => member.model.related).map((shift) => [shift.id, shift]),
-    ).values(),
-  ].sort(
-    (a, b) =>
-      a.date.localeCompare(b.date) ||
-      (a.startTime ?? "").localeCompare(b.startTime ?? "") ||
-      a.id.localeCompare(b.id),
-  );
   const color =
     planning || needsTariffReview
       ? palette.textMuted
@@ -290,7 +397,7 @@ export function ComplianceIssueContent({
           accessibilityHint={`${issueCategory(issue)}. Zeigt die Erklärung, zugehörige Dienste und verfügbare Quellen`}
           onPress={() => {
             selectionFeedback();
-            setShowDetails(true);
+            openDetails();
           }}
           style={({ pressed }) => ({
             minHeight: MINIMUM_TOUCH_TARGET,
@@ -491,7 +598,7 @@ export function ComplianceIssueContent({
             accessibilityHint={"Zeigt die Erklärung, zugehörige Dienste und verfügbare Quellen"}
             onPress={() => {
               selectionFeedback();
-              setShowDetails(true);
+              openDetails();
             }}
             style={({ pressed }) => ({
               minHeight: MINIMUM_TOUCH_TARGET,
@@ -517,82 +624,6 @@ export function ComplianceIssueContent({
           </Pressable>
         </>
       )}
-      {showDetails ? (
-        <SelectionSheet
-          title={
-            grouped
-              ? "Details zu den Prüfpunkten"
-              : tariffCategory
-                ? "Details zur Tarifprüfung"
-                : planning
-                  ? "Details zum Hinweis"
-                  : "Details zur gesetzlichen Prüfung"
-          }
-          visible
-          cancelLabel="Schließen"
-          onClose={() => setShowDetails(false)}
-        >
-          {() => (
-            <View style={{ gap: SPACING.md }}>
-              {shareDutyOverview && !tariff && allRelated.length ? (
-                <View style={{ paddingHorizontal: SPACING.lg }}>
-                  <AffectedCheckShifts shifts={allRelated} timeZone={timeZone} />
-                </View>
-              ) : null}
-              {tariff ? (
-                <TariffObservationDetails
-                  issues={members.map((member) => member.issue)}
-                  shifts={shifts}
-                  timeZone={timeZone}
-                />
-              ) : (
-                members.map((member) => {
-                  const children =
-                    !shareDutyOverview &&
-                    (member.model.related.length || member.hint?.weekendPeriod) ? (
-                      <AffectedCheckShifts
-                        shifts={member.model.related}
-                        timeZone={timeZone}
-                        weekendPeriod={member.hint?.weekendPeriod}
-                      />
-                    ) : null;
-                  return member.issue.tariff ? (
-                    <TariffCheckDetails
-                      key={member.issue.id}
-                      evidence={member.issue.tariff}
-                      title={member.model.title}
-                      description={member.issue.description}
-                      missing={member.model.missing}
-                      shifts={member.model.related}
-                      timeZone={timeZone}
-                    />
-                  ) : member.hint ? (
-                    <PlanningHintDetails
-                      key={member.issue.id}
-                      hint={member.hint}
-                      rest={member.model.rest}
-                      series={member.model.series}
-                      missing={member.model.missing}
-                      originalDescription={member.issue.description}
-                    >
-                      {children}
-                    </PlanningHintDetails>
-                  ) : (
-                    <LegalCheckDetails
-                      key={member.issue.id}
-                      issue={member.issue}
-                      title={member.model.title}
-                      missing={member.model.missing}
-                    >
-                      {children}
-                    </LegalCheckDetails>
-                  );
-                })
-              )}
-            </View>
-          )}
-        </SelectionSheet>
-      ) : null}
     </View>
   );
 }

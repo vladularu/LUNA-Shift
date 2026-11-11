@@ -1,5 +1,6 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { fireEvent, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
+import { render } from "./check-issue-route.test";
 import type { ComplianceIssue } from "@/domain/types";
 import { forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { TARIFF_SCOPE_SOURCE, TARIFF_TIME_POLICIES } from "@/domain/tariff-time-policy";
@@ -8,7 +9,6 @@ import { ComplianceDetails } from "./compliance-details";
 import { countChecks } from "./check-visibility";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
 
-jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock(
   "react-native-safe-area-context",
   () => jest.requireActual<{ default: object }>("react-native-safe-area-context/jest/mock").default,

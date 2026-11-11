@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   type LayoutChangeEvent,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -136,7 +137,7 @@ export function SelectionSheet({
         reduceMotion: MOTION.reduceMotion,
       }),
     );
-    scheduleAccessibilityFocus(findNodeHandle(headingRef.current));
+    if (Platform.OS !== "web") scheduleAccessibilityFocus(findNodeHandle(headingRef.current));
   }
 
   function measureSheet(event: LayoutChangeEvent) {

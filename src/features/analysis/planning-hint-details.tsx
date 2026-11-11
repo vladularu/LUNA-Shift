@@ -8,6 +8,9 @@ import type { PlanningHintPresentation } from "./planning-hint-presentation";
 import { restDuration, type RestTimeline, type WorkSeries } from "./compliance-timeline";
 import { WeekendAssessmentWindows } from "./weekend-assessment-summary";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
+import { CheckDetailCard, CheckDetailStack } from "./check-detail-layout";
+import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
+import { checkPeriodLabel } from "./check-period-label";
 
 const dateLabel = (value: string) => value.split("-").reverse().join(".");
 
@@ -41,88 +44,115 @@ export function PlanningHintDetails({
           ),
         ),
       ];
+  const range = rest
+    ? { from: rest.endDate, until: rest.startDate }
+    : series?.from && series.until
+      ? { from: series.from, until: series.until }
+      : hint.weekendPeriod;
   return (
-    <View
-      testID="planning-hint-detail-content"
-      style={{ paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, gap: SPACING.md }}
-    >
-      <Text style={{ color: palette.text, ...TYPOGRAPHY.body, fontWeight: "500" }}>
-        {hint.title}
-      </Text>
-      {children}
-      <View style={{ gap: SPACING.sm }}>
+    <CheckDetailStack testID="planning-hint-detail-content">
+      <AnalysisDetailSummaryCard
+        period={range ? checkPeriodLabel(range.from, range.until) : "Dienstplanung"}
+        title={hint.title}
+        caption="Empfehlung · keine gesetzliche Mindestgrenze"
+      />
+      {children ? <CheckDetailCard>{children}</CheckDetailCard> : null}
+      <CheckDetailCard title="Einordnung">
         <Text style={body}>{explanation}</Text>
         {hint.recommendation ? <Text style={body}>{hint.recommendation}</Text> : null}
-      </View>
+        {rest ||
+        series?.dutyPeriod ||
+        (series?.from && series.until) ||
+        (hint.weekendPeriod && !hint.weekendAssessment) ? (
+          <View style={{ gap: SPACING.sm }}>
+            {rest ? (
+              <View style={{ gap: SPACING.xs }}>
+                <Text style={body}>
+                  {dateLabel(rest.endDate)} · {rest.previous.endTime} bis{" "}
+                  {dateLabel(rest.startDate)} · {rest.next.startTime}
+                </Text>
+                {!hint.scientificNight || !hint.compactTitle ? (
+                  <Text
+                    accessibilityLabel={restDuration(rest.minutes) + " arbeitsfreie Zeit"}
+                    style={body}
+                  >
+                    {restDuration(rest.minutes)}
+                  </Text>
+                ) : null}
+              </View>
+            ) : series?.dutyPeriod ? (
+              <Text style={body}>
+                {dateLabel(series.dutyPeriod.fromDate)} · {series.dutyPeriod.fromTime} bis{" "}
+                {dateLabel(series.dutyPeriod.untilDate)} · {series.dutyPeriod.untilTime}
+              </Text>
+            ) : series?.from && series.until ? (
+              <Text style={body}>
+                {dateLabel(series.from)} bis {dateLabel(series.until)}
+              </Text>
+            ) : hint.weekendPeriod && !hint.weekendAssessment ? (
+              <Text style={body}>
+                {dateLabel(hint.weekendPeriod.from)} bis {dateLabel(hint.weekendPeriod.until)}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+        {hint.recoveryNote ? <Text style={body}>{hint.recoveryNote}</Text> : null}
+      </CheckDetailCard>
       {additional.length ? (
-        <CheckDetailDisclosure title="Weitere Angaben" testID="planning-original-details">
-          {additional.map((text) => (
-            <Text key={text} style={body}>
-              {text}
-            </Text>
-          ))}
-        </CheckDetailDisclosure>
+        <CheckDetailCard>
+          <CheckDetailDisclosure title="Weitere Angaben" testID="planning-original-details">
+            {additional.map((text) => (
+              <Text key={text} style={body}>
+                {text}
+              </Text>
+            ))}
+          </CheckDetailDisclosure>
+        </CheckDetailCard>
       ) : null}
-      {rest ? (
-        <View style={{ gap: SPACING.xs }}>
-          <Text style={body}>
-            {dateLabel(rest.endDate)} · {rest.previous.endTime} bis {dateLabel(rest.startDate)} ·{" "}
-            {rest.next.startTime}
-          </Text>
-          {!hint.scientificNight || !hint.compactTitle ? (
-            <Text
-              accessibilityLabel={restDuration(rest.minutes) + " arbeitsfreie Zeit"}
-              style={body}
-            >
-              {restDuration(rest.minutes)}
-            </Text>
-          ) : null}
-        </View>
-      ) : series?.dutyPeriod ? (
-        <Text style={body}>
-          {dateLabel(series.dutyPeriod.fromDate)} · {series.dutyPeriod.fromTime} bis{" "}
-          {dateLabel(series.dutyPeriod.untilDate)} · {series.dutyPeriod.untilTime}
-        </Text>
-      ) : series?.from && series.until ? (
-        <Text style={body}>
-          {dateLabel(series.from)} bis {dateLabel(series.until)}
-        </Text>
-      ) : hint.weekendPeriod && !hint.weekendAssessment ? (
-        <Text style={body}>
-          {dateLabel(hint.weekendPeriod.from)} bis {dateLabel(hint.weekendPeriod.until)}
-        </Text>
-      ) : null}
-      {hint.recoveryNote ? <Text style={body}>{hint.recoveryNote}</Text> : null}
+
       {hint.weekendAssessment ? (
-        <WeekendAssessmentWindows assessment={hint.weekendAssessment} affectedOnly />
+        <CheckDetailCard>
+          <WeekendAssessmentWindows assessment={hint.weekendAssessment} affectedOnly />
+        </CheckDetailCard>
       ) : null}
       {missing ? (
-        <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
+        <CheckDetailCard>
+          <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
+        </CheckDetailCard>
       ) : null}
       {hint.sources.length || hint.policyNote ? (
-        <CheckDetailDisclosure title="Quelle und Prüfgrenzen" testID="planning-source-disclosure">
-          <Text style={body}>
-            {hint.policyNote ??
-              "Dieser Hinweis hilft bei der Dienstplanung. Gesetzliche und tarifliche Regeln werden zusätzlich geprüft."}
-          </Text>
-          {hint.sources.map((source) => (
-            <Pressable
-              key={source.url}
-              accessibilityRole="link"
-              accessibilityLabel={source.title}
-              onPress={() => {
-                void Linking.openURL(source.url).catch(() => {
-                  Alert.alert("Link nicht geöffnet", "Du kannst die Quelle später erneut öffnen.");
-                });
-              }}
-              style={{ minHeight: MINIMUM_TOUCH_TARGET, justifyContent: "center", gap: SPACING.xs }}
-            >
-              <Text style={{ color: palette.text, ...TYPOGRAPHY.body }}>{source.title}</Text>
-              <Text style={body}>{source.context}</Text>
-            </Pressable>
-          ))}
-        </CheckDetailDisclosure>
+        <CheckDetailCard>
+          <CheckDetailDisclosure title="Quelle und Prüfgrenzen" testID="planning-source-disclosure">
+            <Text style={body}>
+              {hint.policyNote ??
+                "Dieser Hinweis hilft bei der Dienstplanung. Gesetzliche und tarifliche Regeln werden zusätzlich geprüft."}
+            </Text>
+            {hint.sources.map((source) => (
+              <Pressable
+                key={source.url}
+                accessibilityRole="link"
+                accessibilityLabel={source.title}
+                onPress={() => {
+                  void Linking.openURL(source.url).catch(() => {
+                    Alert.alert(
+                      "Link nicht geöffnet",
+                      "Du kannst die Quelle später erneut öffnen.",
+                    );
+                  });
+                }}
+                style={{
+                  minHeight: MINIMUM_TOUCH_TARGET,
+                  justifyContent: "center",
+                  gap: SPACING.xs,
+                }}
+              >
+                <Text style={{ color: palette.text, ...TYPOGRAPHY.body }}>{source.title}</Text>
+                <Text style={body}>{source.context}</Text>
+              </Pressable>
+            ))}
+          </CheckDetailDisclosure>
+        </CheckDetailCard>
       ) : null}
-    </View>
+    </CheckDetailStack>
   );
 }

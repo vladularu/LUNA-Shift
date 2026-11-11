@@ -1,6 +1,7 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { fireEvent, within } from "@testing-library/react-native";
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it, jest } from "@jest/globals";
+import { render } from "./check-issue-route.test";
 import * as ReactNative from "react-native";
 import { LIGHT_PALETTE } from "@/theme/palette-values";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
@@ -496,8 +497,8 @@ describe("integrated tariff details", () => {
       const copy = tariffCheckPresentation(issue.tariff!, issue.title, issue.description);
       expect(body.getByText(copy.summary)).toBeVisible();
       expect(body.queryByText(copy.limitation)).toBeNull();
-      if (status === "PENDING") expect(body.getByText("Geplant oder noch laufend")).toBeVisible();
-      if (status === "DEVIATION") expect(body.getByText("Abweichung erkannt")).toBeVisible();
+      if (status === "PENDING") expect(body.getByText(/Geplant oder noch laufend/)).toBeVisible();
+      if (status === "DEVIATION") expect(body.getByText(/Abweichung erkannt/)).toBeVisible();
       expect(body.getByText("30.11.–06.12.2026")).toBeVisible();
       expect(body.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);

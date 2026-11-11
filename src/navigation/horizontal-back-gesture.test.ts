@@ -50,6 +50,7 @@ describe("horizontal card back gestures", () => {
     "day-details",
     "info-details",
     "tariff-assessment",
+    "check-issue",
     "shift-selection",
     "location-picker",
     "onboarding",

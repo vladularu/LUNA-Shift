@@ -158,3 +158,8 @@ export function useRuleCatalogRuntime(): RuleCatalogRuntimeContextValue {
   }
   return runtime;
 }
+
+/** Optional context for details which also render historical or standalone reports. */
+export function useOptionalRuleCatalogRuntime(): RuleCatalogRuntimeContextValue | null {
+  return React.use(RuleCatalogRuntimeContext);
+}
