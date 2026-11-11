@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { calendarPerformance } from "@/application/calendar-performance";
 import Database from "better-sqlite3";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -109,6 +110,32 @@ const salaryInput = (month: MonthlyAnalysisRequest): AnalysisSalaryRequest => ({
 });
 
 describe("persistent complete analysis", () => {
+  it("distinguishes rejected results from superseded writes and identifies equivalent requests without logging their contents", async () => {
+    calendarPerformance.start(true);
+    try {
+      const store = cache(),
+        resolver = createRuleResolver();
+      const accept = (value: unknown): value is number => typeof value === "number";
+      await store.write<unknown>(
+        "annual",
+        "2026-01",
+        "sensitive-input",
+        resolver,
+        "incomplete",
+        accept,
+      );
+      await store.write("annual", "2026-01", "sensitive-input", resolver, 1, accept, () => false);
+      await store.write("annual", "2026-01", "sensitive-input", resolver, 1, accept);
+      await cache().read("annual", "2026-01", "sensitive-input", createRuleResolver(), accept);
+      const events = calendarPerformance.report().events.filter((e) => e.kind === "analysis-cache");
+      expect(events.map((e) => e.values.reason)).toEqual([2, 1, 0, undefined]);
+      expect(events[2]!.values.fingerprint).toBe(events[3]!.values.fingerprint);
+      expect(events[2]!.values.instance).not.toBe(events[3]!.values.instance);
+      expect(JSON.stringify(events)).not.toContain("sensitive-input");
+    } finally {
+      calendarPerformance.clear();
+    }
+  });
   it("persists an entirely computed year with eight supported salary months across a cold cache restart", async () => {
     const rules = () =>
       createRuleResolver({

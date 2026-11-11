@@ -1,6 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { CalendarEntry, MonthlyTariffDecision } from "@/domain/types";
+import { sortCalendarEntries } from "@/engine/calendar-entry-order";
 import {
   getLegalCalculationEnd,
   getLegalCalculationWindow,
@@ -65,8 +66,10 @@ export function selectAnnualReportInputs(
   }
   const rangeStartValue = rangeStart.toString();
   const rangeEndValue = rangeEnd.toString();
-  const selectedEntries = entries.filter(
-    (entry) => entry.date >= rangeStartValue && entry.date <= rangeEndValue,
+  // Window reloads may return the same rows in another order. Both visible and
+  // background requests must hash and calculate the same canonical timeline.
+  const selectedEntries = sortCalendarEntries(
+    entries.filter((entry) => entry.date >= rangeStartValue && entry.date <= rangeEndValue),
   );
   const selectedDecisions = tariffDecisions.filter((decision) =>
     decision.month.startsWith(`${year}-`),

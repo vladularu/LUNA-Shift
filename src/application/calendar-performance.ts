@@ -64,6 +64,9 @@ const fields = [
   "priority",
   "cache",
   "phase",
+  "reason",
+  "fingerprint",
+  "instance",
 ] as const;
 export type CalendarPerformanceValues = Partial<Record<(typeof fields)[number], number>>;
 export function createCalendarPerformanceRecorder(now: () => number = () => performance.now()) {
@@ -167,6 +170,8 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
           "1 overview, 2 compliance, 3 annual salary and full net, 4 annual analysis, 5 salary settings",
         cachePhases:
           "1 read request hash, 2 repository read, 3 decode, 4 read validation, 5 write validation, 6 write request hash, 7 encode, 8 payload hash, 9 whole repository write, 10 read payload hash, 11 wait for write turn including initialization/BEGIN and earlier batch items, 12 SQL upsert, 13 SQL cleanup, 14 remaining batch and COMMIT, 15 completed result callbacks, 16 persistent write kickoff, 17 retention, 18 progress callbacks; duration includes await time; repository subphases overlap phase 9, callback phases measure handover not React render",
+        cacheWriteReasons:
+          "0 completed, 1 superseded before validation, 2 result not persistable, 3 payload too large, 4 no compatible request hash, 5 superseded during write, 6 exception; fingerprint is a diagnostic-only 32-bit SHA-256 prefix, instance identifies the local cache owner",
         workState:
           "1 completed, 2 cancelled, 3 failed; wait is enqueue to first step; cpu is sum of step times; maximum is longest step; duration includes queue waiting",
         commitFlags:
