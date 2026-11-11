@@ -33,11 +33,13 @@ export function checkPlanningSeries(
     }
   }
 
+  if (!includeLegacyNightSeries) return issues;
+
   const nightShifts = intervals
     .filter((item) => isNightWork(item, rules))
     .map((item) => item.shift);
   for (const streak of consecutiveDateStreaks(nightShifts)) {
-    if (includeLegacyNightSeries && streak.length >= PLANNING_NIGHT_POLICY.firstNightHint) {
+    if (streak.length >= PLANNING_NIGHT_POLICY.firstNightHint) {
       issues.push(
         issue(
           "warning",
