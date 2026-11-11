@@ -1,5 +1,7 @@
 import { serializeRuleResolverForCache, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarPerformance } from "@/application/calendar-performance";
+import { decodeAnalysisCacheValue, encodeAnalysisCacheValue } from "./analysis-cache-codec";
+import { measureAnalysisCache } from "./analysis-cache-performance";
 import {
   MAX_ANALYSIS_RESULT_CHARACTERS,
   MAX_ANALYSIS_RESULT_ROWS,
@@ -86,6 +88,7 @@ export function createPersistentAnalysisCache({
     ) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       let state = 0;
+      const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
         month: Number(month.replace("-", "")),
         stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
@@ -93,16 +96,19 @@ export function createPersistentAnalysisCache({
       try {
         return await Promise.race([
           (async () => {
+            phases.next(1);
             const hash = await requestHash(kind, month, key, resolver);
             if (hash === null) {
               state = 2;
               return null;
             }
+            phases.next(2);
             const saved = await repository.read(kind, month, hash);
             if (!saved) {
               state = 3;
               return null;
             }
+            phases.next(10);
             if (
               saved.payload.length > MAX_ANALYSIS_RESULT_CHARACTERS ||
               (await sha256(saved.payload)) !== saved.digest
@@ -110,25 +116,9 @@ export function createPersistentAnalysisCache({
               state = 4;
               return null;
             }
-            const value: unknown = JSON.parse(saved.payload, (_key, child: unknown) => {
-              if (
-                child !== null &&
-                typeof child === "object" &&
-                !Array.isArray(child) &&
-                "$lunaAnalysisMapV1" in child &&
-                Object.keys(child).length === 1 &&
-                Array.isArray(child.$lunaAnalysisMapV1)
-              ) {
-                if (
-                  !child.$lunaAnalysisMapV1.every(
-                    (item: unknown) => Array.isArray(item) && item.length === 2,
-                  )
-                )
-                  throw new Error("Invalid cached map");
-                return new Map(child.$lunaAnalysisMapV1);
-              }
-              return child;
-            });
+            phases.next(3);
+            const value = decodeAnalysisCacheValue(saved.payload);
+            phases.next(4);
             const accepted = accept(value);
             state = accepted ? 1 : 5;
             return accepted ? value : null;
@@ -145,6 +135,7 @@ export function createPersistentAnalysisCache({
         return null;
       } finally {
         if (timer !== undefined) clearTimeout(timer);
+        phases.finish();
         finish({ state, cache: state === 1 ? 1 : 0 });
       }
     },
@@ -158,23 +149,24 @@ export function createPersistentAnalysisCache({
       current = claim(kind, month),
     ) {
       let state = 8;
+      const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
         month: Number(month.replace("-", "")),
         stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
       });
       try {
+        phases.next(5);
         if (!current() || !accept(value)) return;
+        phases.next(6);
         const hash = await requestHash(kind, month, key, resolver);
         if (hash === null || !current()) return;
-        const payload = JSON.stringify(value, (_key, child: unknown) => {
-          if (typeof child === "number" && !Number.isFinite(child))
-            throw new Error("Non-finite cache value");
-          if (child instanceof Map) return { $lunaAnalysisMapV1: [...child] };
-          return child;
-        });
+        phases.next(7);
+        const payload = encodeAnalysisCacheValue(value);
         if (payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) return;
+        phases.next(8);
         const digest = await sha256(payload);
         if (current()) {
+          phases.next(9);
           await repository.write(kind, month, hash, { payload, digest }, current);
           if (current()) state = 9;
         }
@@ -182,6 +174,7 @@ export function createPersistentAnalysisCache({
         state = 7;
         // Derived results are optional; normal computation and user data remain authoritative.
       } finally {
+        phases.finish();
         finish({ state });
       }
     },
