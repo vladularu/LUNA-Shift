@@ -9,7 +9,6 @@ import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { SurfaceCard } from "@/ui/design-system";
-import { LoadFailureView } from "@/ui/loading-view";
 
 export interface RuleComputationFailure {
   readonly ok: false;
@@ -60,30 +59,6 @@ function ruleFailureMessage(failure: RuleComputationFailure["failure"]): string 
     return "Für diesen Zeitraum fehlen geprüfte Tarifdaten.";
   }
   return "Für diesen Zeitraum fehlen geprüfte Arbeitszeitregeln.";
-}
-
-export function RuleComputationFailureView({
-  failure,
-  onRetry,
-  title = "Auswertung nicht verfügbar",
-}: {
-  readonly failure: Pick<RuleComputationFailure, "error" | "failure">;
-  readonly onRetry: () => void;
-  readonly title?: string;
-}) {
-  const { code } = failure.failure;
-  useEffect(() => {
-    recordDiagnostic("reporting", code, failure.error);
-  }, [code, failure.error]);
-
-  return (
-    <LoadFailureView
-      diagnosticCode={code === "WORKING_TIME_TARGET_UNAVAILABLE" ? undefined : code}
-      message={ruleFailureMessage(failure.failure)}
-      onRetry={onRetry}
-      title={title}
-    />
-  );
 }
 
 export function RuleComputationNotice({

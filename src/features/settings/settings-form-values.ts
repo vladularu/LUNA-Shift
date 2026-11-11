@@ -64,10 +64,6 @@ export function evidenceFormValue(value: boolean | null): EvidenceFormValue {
   return value === null ? "UNKNOWN" : value ? "YES" : "NO";
 }
 
-export function evidenceBoolean(value: EvidenceFormValue): boolean | null {
-  return value === "UNKNOWN" ? null : value === "YES";
-}
-
 function formatHours(minutes: number): string {
   return String(minutes / 60).replace(".", ",");
 }

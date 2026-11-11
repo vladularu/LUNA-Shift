@@ -1,4 +1,3 @@
-import { holidayShortLabel } from "./holiday-label";
 import type { TargetAdjustment, WorkingTimeTargetProfile } from "@/domain/working-time-target";
 import { calculateMonthlyWorkingTimeTarget } from "@/engine/working-time-target";
 import type { RuleResolver } from "@/rules/rule-resolver";
@@ -36,11 +35,3 @@ export function resolveCalendarSpecialDays(
 }
 
 /** Shared presentation only; the day classification comes from separate engine maps. */
-export function calendarDayLabel(
-  holidayName: string | undefined,
-  specialDayName: string | undefined,
-  compactHoliday = false,
-): string | undefined {
-  if (holidayName) return compactHoliday ? holidayShortLabel(holidayName) : holidayName;
-  return specialDayName ? "◇ " + specialDayName.replace(" (tariflicher Sondertag)", "") : undefined;
-}

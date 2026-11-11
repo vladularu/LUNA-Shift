@@ -61,7 +61,6 @@ export interface Palette {
 }
 
 export const LUNA_LIGHT_BLUE = SHADCN_COLORS.slate900;
-export const LUNA_LIGHT_BLUE_TEXT = SHADCN_COLORS.slate900;
 
 export const LIGHT_PALETTE: Palette = {
   dark: false,

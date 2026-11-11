@@ -17,11 +17,7 @@ export const DEFAULT_SHARING_RIGHTS: SharingContentRights = Object.freeze({
   appointments: false,
   notes: false,
 });
-export const LEGACY_SHARING_RIGHTS: SharingContentRights = Object.freeze({
-  shifts: true,
-  appointments: true,
-  notes: false,
-});
+
 export function sharingContentSignature(content?: SharingSourceContent): string {
   return JSON.stringify(content ?? null);
 }

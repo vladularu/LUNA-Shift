@@ -10,7 +10,3 @@ export const THEME_OPTIONS = [
 export function resolvePalette(_themeId: ThemeId, dark: boolean): Palette {
   return dark ? DARK_PALETTE : LIGHT_PALETTE;
 }
-export function themeSwatches(themeId: ThemeId, dark: boolean): readonly string[] {
-  const palette = resolvePalette(themeId, dark);
-  return [palette.accent, palette.secondarySoft, palette.tertiarySoft];
-}

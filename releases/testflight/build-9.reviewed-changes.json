@@ -179,8 +179,8 @@
     {
       "path": "src/navigation/routes.ts",
       "kind": "modified",
-      "sha256": "4c62436bb202937265f1ff859efab21f49103580d7995447e4180c6638278ba8",
-      "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending."
+      "sha256": "5c19fa56b6539e8ac7778fc367f81a3872c44af8aa18de663d881778772a041b",
+      "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: salaryPaymentSettingsRoute."
     },
     {
       "path": "src/domain/analysis-view.ts",
@@ -359,8 +359,8 @@
     {
       "path": "src/features/analysis/check-presentation.ts",
       "kind": "added",
-      "sha256": "fb3ad30c867658f973430f52799cf5f4a5cdd7d18fc56d53b5c9dc2fcc25ffb4",
-      "reason": "Add the approved Dienstfolgen & Erholung labels and the planning-card renderer. Following iPhone feedback, render only a semantic petrol border on actual hints; retain standard muted labels and existing card fills. No check thresholds or persisted values change. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Use explicit result categories with neutral recommendations, blue tariff and warm statutory borders on neutral surfaces; preserve semantic status behavior elsewhere. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Present the new planning observation neutrally and retire the old three-weekend wording. Compact-list implementation: Keep fallback recovery recommendations consistent with the single applicable 24- or 48-hour tier. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "dc40750aaec155f5815c3e9231481b15bd1f33db7e4001fdacb09300cc60df8a",
+      "reason": "Add the approved Dienstfolgen & Erholung labels and the planning-card renderer. Following iPhone feedback, render only a semantic petrol border on actual hints; retain standard muted labels and existing card fills. No check thresholds or persisted values change. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Use explicit result categories with neutral recommendations, blue tariff and warm statutory borders on neutral surfaces; preserve semantic status behavior elsewhere. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Present the new planning observation neutrally and retire the old three-weekend wording. Compact-list implementation: Keep fallback recovery recommendations consistent with the single applicable 24- or 48-hour tier. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: PLANNING_KIND_LABEL."
     },
     {
       "path": "src/features/settings/check-settings-screen.tsx",
@@ -389,8 +389,8 @@
     {
       "path": "src/theme/palette-values.ts",
       "kind": "modified",
-      "sha256": "694cb7e1e23f4771110e3542cbcf8bcf00a1ce5d6f3441c2426e4bf31eea7612",
-      "reason": "Preserve the established light/dark palette and add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint card outlines. Remove the provisional violet planning fill/text tokens per iPhone feedback. Existing palette colors remain unchanged. iPhone visual acceptance of this correction pending. Dienstplan-Check local implementation: Add independent check-specific light/dark blue and warm border tokens; preserve the global status and palette values. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "d8b307ae8cdec2ce9290d6a22ffc245e43e8608487a10e11d5259569bbfb1ba3",
+      "reason": "Preserve the established light/dark palette and add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint card outlines. Remove the provisional violet planning fill/text tokens per iPhone feedback. Existing palette colors remain unchanged. iPhone visual acceptance of this correction pending. Dienstplan-Check local implementation: Add independent check-specific light/dark blue and warm border tokens; preserve the global status and palette values. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: LUNA_LIGHT_BLUE_TEXT."
     },
     {
       "path": "src/features/report-export/report-export-button.tsx",
@@ -809,8 +809,8 @@
     {
       "path": "src/features/salary/net-pay-workflow-controls.tsx",
       "kind": "modified",
-      "sha256": "bae0642e42af296bdd258653f5431906d6f6ad788e81795be84ce21ac0b899b3",
-      "reason": "User-authorized Git integration of Preview ec680935 on 2026-11-10: Add opt-in centered alignment while preserving every existing default hint style. Preserve unrelated master and Preview differences."
+      "sha256": "76a714ac635ced9b52f22c39536c93570b53bd0ccaa86b12865b79c0a93a989c",
+      "reason": "User-authorized Git integration of Preview ec680935 on 2026-11-10: Add opt-in centered alignment while preserving every existing default hint style. Preserve unrelated master and Preview differences. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: NetPayWorkflowField, NetPayWorkflowAmount, NetPayWorkflowTabs, NetPayWorkflowRow."
     },
     {
       "path": "package.json",
@@ -931,6 +931,60 @@
       "kind": "added",
       "sha256": "02f4f4e9fa9f1d8b3c4a1d1e2999053702ec32cd2fdd0b70876c0761a63fcadf",
       "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending."
+    },
+    {
+      "path": "src/domain/sharing-content.ts",
+      "kind": "modified",
+      "sha256": "4651337ffc9be3103b95faed8564e627c361eceeadbaf773a6fdaa58063c775d",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: LEGACY_SHARING_RIGHTS."
+    },
+    {
+      "path": "src/features/analysis/rule-computation.tsx",
+      "kind": "modified",
+      "sha256": "fb91bc4efc3bd885cfb0e51d5a85ed8c178327800c7fa3279dc048aa1a20e708",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: RuleComputationFailureView."
+    },
+    {
+      "path": "src/features/calendar/calendar-special-days.ts",
+      "kind": "modified",
+      "sha256": "9ef7ef7fcfe82f3471aa93cd7e3c365924970dc8ce6fc6c974010ebfef21da4b",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: calendarDayLabel."
+    },
+    {
+      "path": "src/features/day-editor/entry-options.tsx",
+      "kind": "modified",
+      "sha256": "0a6da096941418f80479455a8d8b0f48d36d65a2be4cb619d21af20e06f0ab2a",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: OptionRow, RecurrenceSheet."
+    },
+    {
+      "path": "src/features/salary/net-pay-salary-summary.tsx",
+      "kind": "modified",
+      "sha256": "d6f66b7af079506f9cdfd5c9d8fbecb0fbcb879e98fb82597dcc74b220b17cbe",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: NetPayDetailAmount."
+    },
+    {
+      "path": "src/features/settings/settings-form-values.ts",
+      "kind": "modified",
+      "sha256": "58b7ed10e8fce8475c6d8c9cc400da66d6693047c0409d77928ccc63ad1edc50",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: evidenceBoolean."
+    },
+    {
+      "path": "src/theme/shadcn.ts",
+      "kind": "modified",
+      "sha256": "2ed6cc295462f2e72983755f7c42defd42bbd229357279cd78446be25024a235",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: interFontFamily, SHADCN_TYPOGRAPHY."
+    },
+    {
+      "path": "src/theme/theme-catalog.ts",
+      "kind": "modified",
+      "sha256": "671f5fa48fd52e145bab49c002ef73bc4aecaa13d6bfc2aae4fc8f24596d51cd",
+      "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: themeSwatches."
+    },
+    {
+      "path": "src/features/salary/net-pay-amount-row.tsx",
+      "kind": "removed",
+      "sha256": null,
+      "reason": "Remove the now-unreferenced NetPayAmountRow leaf module after deleting its sole obsolete wrapper caller. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized."
     }
   ]
 }
