@@ -46,9 +46,9 @@ function setup(bound = true) {
     stage: vi.fn(async (accountId, pending, current) => {
       if (state && current() && state.accountId === accountId) state = { ...state, pending };
     }),
-    clearPending: async (accountId, current) => {
+    clearPending: vi.fn(async (accountId, current) => {
       if (state && current() && state.accountId === accountId) state = { ...state, pending: null };
-    },
+    }),
     recovery: async () => recovery,
     apply: vi.fn(async (accountId, expected, incoming, current) => {
       if (
@@ -100,6 +100,10 @@ function setup(bound = true) {
     setCloud: (value: PrivateCloudRevision | null) => {
       cloud = value;
     },
+    setState: (value: CloudDeviceState | null) => {
+      state = value;
+    },
+    getCloud: () => cloud,
     getDevice: () => device,
     getState: () => state,
   };
@@ -160,15 +164,23 @@ describe("private cloud account lifecycle", () => {
     expect(f.onApplied).toHaveBeenCalledTimes(1);
     expect(f.onApplied).toHaveBeenCalledWith(doc([]), doc(["original"]));
   });
-  it("merges independent first-device data without an initial setup choice", async () => {
+  it("requires a source choice before combining unrelated first-device data", async () => {
     const f = setup(false);
     f.setCloud(revision(doc(["other-device"])));
     const runtime = f.make();
     await runtime.synchronize();
-    expect(runtime.snapshot().phase).toBe("synced");
-    expect(f.getState()?.baseline?.document).toEqual(doc(["original", "other-device"]));
+    expect(runtime.snapshot()).toMatchObject({
+      phase: "conflict",
+      hasCloudData: true,
+      requiresFullChoice: true,
+    });
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.local.apply).not.toHaveBeenCalled();
+    expect(f.getDevice()).toEqual(doc(["original"]));
+    expect(f.getCloud()?.document).toEqual(doc(["other-device"]));
+    expect(f.getState()?.baseline).toBeNull();
   });
-  it("requires a choice only for competing initial edits and can resolve them", async () => {
+  it("requires a choice for competing initial edits and can resolve them", async () => {
     const f = setup(false);
     f.setCloud(
       revision({ ...doc([]), data: { shifts: [{ id: "original", title: "different" }] } }),
@@ -280,7 +292,7 @@ describe("private cloud account lifecycle", () => {
     expect(runtime.snapshot().phase).toBe("synced");
     expect(f.getState()?.pending).toBeNull();
   });
-  it("requires an explicit choice for competing edits and then preserves unrelated additions", async () => {
+  it("uses the complete selected cloud snapshot after competing edits", async () => {
     const f = setup();
     f.setDevice(doc(["device"]));
     f.setCloud(
@@ -305,8 +317,197 @@ describe("private cloud account lifecycle", () => {
     expect(runtime.snapshot().phase).toBe("synced");
     expect((f.getDevice().data.shifts as { id: string }[]).map((row) => row.id).sort()).toEqual([
       "cloud",
-      "device",
       "original",
     ]);
+  });
+  it("keeps repeated initial polls and restarts read-only until a source is chosen", async () => {
+    const f = setup(false);
+    f.setCloud(revision(doc(["cloud-plan"])));
+    const first = f.make();
+    await first.synchronize();
+    await first.synchronize();
+    const restarted = f.make();
+    await restarted.synchronize();
+    expect(restarted.snapshot().phase).toBe("conflict");
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.local.apply).not.toHaveBeenCalled();
+    expect(f.getState()?.baseline).toBeNull();
+  });
+  it("adopts a cloud snapshot already containing all device data without uploading a union", async () => {
+    const f = setup(false);
+    const cloud = doc(["cloud-plan", "original"]);
+    f.setCloud(revision(cloud));
+    const runtime = f.make();
+    await runtime.synchronize();
+    expect(runtime.snapshot().phase).toBe("synced");
+    expect(f.getDevice()).toEqual(cloud);
+    expect(f.remote.write).not.toHaveBeenCalled();
+  });
+  it("does not mix distinct same-day shift IDs or appointments when cloud data is selected", async () => {
+    const f = setup(false);
+    const cloud: PrivateCloudDocument = {
+      ...doc([]),
+      data: {
+        shifts: [
+          { id: "cloud-school", date: "2026-12-09", title: "Schule" },
+          { id: "cloud-am", date: "2026-12-14", title: "Früh" },
+          { id: "cloud-pm", date: "2026-12-14", title: "Spät" },
+        ],
+        appointments: [{ id: "cloud-appointment" }],
+      },
+    };
+    const device: PrivateCloudDocument = {
+      ...doc([]),
+      data: {
+        shifts: [
+          { id: "preview-school-copy", date: "2026-12-09", title: "Schule" },
+          { id: "preview-night", date: "2026-12-09", title: "Nacht" },
+        ],
+        appointments: [{ id: "preview-appointment" }],
+      },
+    };
+    f.setDevice(device);
+    f.setCloud(revision(cloud));
+    const runtime = f.make();
+    await runtime.synchronize();
+    expect(runtime.snapshot().phase).toBe("conflict");
+    expect(f.remote.write).not.toHaveBeenCalled();
+    await runtime.synchronize("cloud");
+    expect(f.getDevice()).toEqual(cloud);
+    expect(f.getCloud()?.document).toEqual(cloud);
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(await f.local.recovery()).toEqual(device);
+    await runtime.synchronize();
+    expect(f.getDevice()).toEqual(cloud);
+  });
+  it("uses only current device data after an explicit device source choice", async () => {
+    const f = setup(false);
+    f.setCloud(revision(doc(["cloud-plan"])));
+    const runtime = f.make();
+    await runtime.synchronize();
+    expect(f.remote.write).not.toHaveBeenCalled();
+    await runtime.synchronize("device");
+    expect(f.getCloud()?.document).toEqual(doc(["original"]));
+    expect(f.remote.write).toHaveBeenCalledTimes(1);
+  });
+  it("does not retain unsynced device additions after a complete cloud source choice", async () => {
+    const f = setup();
+    f.setDevice(doc(["original", "device-only"]));
+    f.setCloud(revision(doc(["cloud-only", "original"]), 2));
+    const runtime = f.make();
+    await runtime.synchronize("cloud");
+    expect(f.getDevice()).toEqual(doc(["cloud-only", "original"]));
+    expect(f.remote.write).not.toHaveBeenCalled();
+  });
+  it("uses the complete device snapshot after an explicit choice with a shared baseline", async () => {
+    const f = setup();
+    const device = doc(["original", "device-only"]);
+    f.setDevice(device);
+    f.setCloud(revision(doc(["cloud-only", "original"]), 2));
+    await f.make().synchronize("device");
+    expect(f.getDevice()).toEqual(device);
+    expect(f.getCloud()?.document).toEqual(device);
+    expect(f.remote.write).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(f.remote.write).mock.calls[0][0].expectedRevision).toBe(2);
+  });
+  it("does not replay a legacy unbased union upload before initial source selection", async () => {
+    const f = setup(false);
+    const cloud = revision(doc(["cloud-plan"]));
+    f.setCloud(cloud);
+    f.setState({
+      accountId: "a",
+      baseline: null,
+      pending: {
+        expectedRevision: 1,
+        mutationId: "legacy-union",
+        document: doc(["cloud-plan", "original"]),
+        sourceDocument: doc(["original"]),
+      },
+    });
+    const runtime = f.make();
+    await runtime.synchronize();
+    await runtime.synchronize();
+    expect(runtime.snapshot().phase).toBe("conflict");
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.getCloud()).toEqual(cloud);
+    await runtime.synchronize("cloud");
+    expect(f.local.clearPending).toHaveBeenCalledTimes(1);
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.getDevice()).toEqual(cloud.document);
+    expect(f.getState()?.pending).toBeNull();
+  });
+  it("abandons a pending upload before an explicit cloud source choice", async () => {
+    const f = setup();
+    const baseline = f.getState()!.baseline;
+    f.setDevice(doc(["original", "unwanted-device-plan"]));
+    f.setState({
+      accountId: "a",
+      baseline,
+      pending: {
+        expectedRevision: 1,
+        mutationId: "abandoned-upload",
+        document: f.getDevice(),
+        sourceDocument: f.getDevice(),
+      },
+    });
+    const runtime = f.make();
+    await runtime.synchronize("cloud");
+    expect(f.local.clearPending).toHaveBeenCalledTimes(1);
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.getDevice()).toEqual(doc(["original"]));
+    expect(f.getState()?.pending).toBeNull();
+  });
+  it("drops an unbased abandoned union when device and cloud already agree", async () => {
+    const f = setup(false);
+    f.setState({
+      accountId: "a",
+      baseline: null,
+      pending: {
+        expectedRevision: 1,
+        mutationId: "obsolete-union",
+        document: doc(["original", "obsolete-extra"]),
+        sourceDocument: doc(["original"]),
+      },
+    });
+    const runtime = f.make();
+    await runtime.synchronize();
+    expect(runtime.snapshot().phase).toBe("synced");
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.getCloud()?.document).toEqual(doc(["original"]));
+    expect(f.getState()?.pending).toBeNull();
+  });
+  it("does not recreate a missing cloud from an abandoned unbased union", async () => {
+    const f = setup(false);
+    f.setCloud(null);
+    f.setState({
+      accountId: "a",
+      baseline: null,
+      pending: {
+        expectedRevision: 1,
+        mutationId: "missing-cloud-union",
+        document: doc(["original", "obsolete-extra"]),
+        sourceDocument: doc(["original"]),
+      },
+    });
+    const runtime = f.make();
+    await runtime.synchronize();
+    expect(runtime.snapshot().phase).toBe("error");
+    expect(f.remote.write).not.toHaveBeenCalled();
+    expect(f.getDevice()).toEqual(doc(["original"]));
+    await runtime.synchronize("device");
+    expect(runtime.snapshot().phase).toBe("synced");
+    expect(f.getCloud()?.document).toEqual(doc(["original"]));
+  });
+  it("replays a safe first-backup upload with the same mutation after an offline failure", async () => {
+    const f = setup(false);
+    f.setCloud(null);
+    vi.mocked(f.remote.write).mockRejectedValueOnce(new Error("offline"));
+    await f.make().synchronize();
+    const pending = f.getState()!.pending!;
+    expect(pending.expectedRevision).toBe(0);
+    const restarted = f.make();
+    await restarted.synchronize();
+    expect(restarted.snapshot().phase).toBe("synced");
+    expect(vi.mocked(f.remote.write).mock.calls[1][0].mutationId).toBe(pending.mutationId);
   });
 });

@@ -923,8 +923,8 @@
     {
       "path": "src/application/private-cloud-runtime.ts",
       "kind": "modified",
-      "sha256": "3d52e3aeb048e512969d4dd82ed262c944878c1569520c960a387558f4976e37",
-      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending. Combine the already Preview-tested unchanged-sync fast path from PR #376; preserve fresh local capture, server-head validation, all activity/account guards and the current onApplied handler."
+      "sha256": "a54eac19971abb9d6691c1866a26120447d040915db88a202ff78a245ee8fb23",
+      "reason": " R2 after iPhone feedback: calendar-only Cloud changes use a stable background read and keep the existing screen/tab/month visible. Committed-state reminder reconciliation uses the pre-read generation and shared per-entry queue; retired/paused generations cannot block fresh restore revisions. Other document changes retain the full React refresh. Preserve native SQLite lifetime guards, schema, packages and the accepted TestFlight baseline. Preview-only candidate; iPhone visual acceptance pending. Combine the already Preview-tested unchanged-sync fast path from PR #376; preserve fresh local capture, server-head validation, all activity/account guards and the current onApplied handler. Guard divergent first sign-in without publishing a union; explicit Cloud/device choices use the complete selected snapshot and skip abandoned pending uploads. Preserve ordinary shared-baseline offline merges, idempotent retries, safe empty-device adoption and unchanged-head performance. No native, dependency or schema change; TestFlight is not published."
     },
     {
       "path": "src/application/use-cloud-calendar-notifications.ts",
@@ -997,6 +997,12 @@
       "kind": "modified",
       "sha256": "6a7844b3efb07e778e89b6683bbb2427244d114febf0d8f4bd068e3f97b580a9",
       "reason": "Follow-up cleanup: remove the never-mounted transition host/overlay and wrapper, retaining the active header helpers and constant exactly. No stored-data, native, dependency or TestFlight change."
+    },
+    {
+      "path": "src/features/private-cloud/private-cloud-screen.tsx",
+      "kind": "modified",
+      "sha256": "2f71adf5c1d08929a84993eb3e3449fcf34fba0a855851078c6ba45dfbbaaf49",
+      "reason": "Make the existing native confirmation consistently explain full Cloud/device snapshot replacement; retain layout and controls. No new screen or native integration; TestFlight is not published."
     }
   ]
 }

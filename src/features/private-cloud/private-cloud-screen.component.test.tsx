@@ -81,6 +81,9 @@ describe("required cloud data choice without manual backups", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Daten aus der Cloud" }));
     expect(mockSync).not.toHaveBeenCalled();
     expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[1]).toContain("luna@example.test");
+    expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[1]).toContain(
+      "Der Cloud-Stand ersetzt diesen Gerätestand",
+    );
     expect(screen.queryByText("Frühere Sicherungen")).toBeNull();
     expect(screen.queryByText("Vorherigen Gerätestand")).toBeNull();
     await confirm();
@@ -89,6 +92,19 @@ describe("required cloud data choice without manual backups", () => {
   it("explains replacement before a destructive device choice", async () => {
     mockUser = { id: "a", email: "luna@example.test", displayName: "Luna" };
     mockStatus = { ...mockStatus, phase: "setup", hasCloudData: true };
+    const screen = await render(<PrivateCloudScreen />);
+    await fireEvent.press(screen.getByRole("button", { name: "Daten dieses Geräts" }));
+    expect(mockSync).not.toHaveBeenCalled();
+    expect(jest.mocked(Alert.alert).mock.calls.at(-1)?.[1]).toContain("ersetzt die Cloud-Daten");
+  });
+  it("also explains full device replacement for a previously based conflict", async () => {
+    mockUser = { id: "a", email: "luna@example.test", displayName: "Luna" };
+    mockStatus = {
+      ...mockStatus,
+      phase: "conflict",
+      hasCloudData: true,
+      requiresFullChoice: false,
+    };
     const screen = await render(<PrivateCloudScreen />);
     await fireEvent.press(screen.getByRole("button", { name: "Daten dieses Geräts" }));
     expect(mockSync).not.toHaveBeenCalled();

@@ -86,8 +86,18 @@ export function createPrivateCloudRuntime(options: {
           state = await options.local.state();
         }
         if (!current() || state?.accountId !== actor) return;
+        // A deliberate source choice supersedes an abandoned upload. Replaying it
+        // first could replace the very Cloud snapshot the user wants to keep.
+        if (state.pending && choice) {
+          await options.local.clearPending(actor, current);
+          if (!current()) return;
+          state = await options.local.state();
+          if (!current() || state?.accountId !== actor) return;
+        }
         let mergeBase = state.baseline?.document ?? null;
-        if (state.pending) {
+        // Legacy first-sync unions have no shared baseline. Do not retry them
+        // against an existing account until the user has chosen a source.
+        if (state.pending && (state.baseline !== null || state.pending.expectedRevision === 0)) {
           try {
             const receipt = await remote.write({ accountId: actor, ...state.pending });
             mergeBase = state.pending.sourceDocument;
@@ -103,6 +113,10 @@ export function createPrivateCloudRuntime(options: {
         if (!current()) return;
         const device = await options.local.capture();
         if (!current()) return;
+        if (!cloud && state.pending && state.pending.expectedRevision > 0)
+          throw new UserFacingError(
+            "Der bisherige Cloud-Stand fehlt. Deine Gerätedaten bleiben erhalten.",
+          );
         // No durable state changes are needed when the server confirms our baseline
         // and a fresh local snapshot still matches it. Keep validation below.
         const unchanged =
@@ -112,13 +126,13 @@ export function createPrivateCloudRuntime(options: {
           cloud === state.baseline &&
           sameCloudValue(device, cloud.document);
         let merged = device;
-        if (!state.baseline) {
-          if (choice === "cloud") {
-            if (!cloud) throw new UserFacingError("Für dieses Konto gibt es noch keine Sicherung.");
-            merged = cloud.document;
-          } else if (!choice && cloud) {
-            // No previous shared baseline: additions can merge, competing values cannot.
-            // Empty keyed collections do not infer deletions on either device.
+        if (choice === "cloud") {
+          if (!cloud) throw new UserFacingError("Für dieses Konto gibt es noch keine Sicherung.");
+          merged = cloud.document;
+        } else if (!choice && !state.baseline) {
+          if (cloud) {
+            // Compare without publishing. Automatic adoption is safe only when
+            // the Cloud already contains the device data: it must not gain rows.
             const initialBase: PrivateCloudDocument = {
               ...device,
               data: Object.fromEntries(
@@ -129,43 +143,34 @@ export function createPrivateCloudRuntime(options: {
               presentation: { calendarImage: null, calendarImageStrength: "medium" },
             };
             const result = mergePrivateCloudDocuments(initialBase, device, cloud.document);
-            if (result.conflicts.length) {
+            if (result.conflicts.length || !sameCloudValue(result.document, cloud.document)) {
               update({
                 phase: "conflict",
-                conflictCount: result.conflicts.length,
+                conflictCount: Math.max(1, result.conflicts.length),
                 hasCloudData: true,
                 requiresFullChoice: true,
               });
               return;
             }
-            merged = result.document;
+            merged = cloud.document;
           }
-        } else if (cloud && choice && status.requiresFullChoice) {
-          merged = choice === "cloud" ? cloud.document : device;
-        } else if (cloud && !unchanged) {
-          const result =
-            choice === "cloud"
-              ? mergePrivateCloudDocuments(
-                  mergeBase ?? state.baseline.document,
-                  cloud.document,
-                  device,
-                )
-              : mergePrivateCloudDocuments(
-                  mergeBase ?? state.baseline.document,
-                  device,
-                  cloud.document,
-                );
-          if (result.conflicts.length && !choice) {
+        } else if (!choice && cloud && !unchanged && state.baseline) {
+          const result = mergePrivateCloudDocuments(
+            mergeBase ?? state.baseline.document,
+            device,
+            cloud.document,
+          );
+          if (result.conflicts.length) {
             update({
               phase: "conflict",
               conflictCount: result.conflicts.length,
               hasCloudData: true,
-              requiresFullChoice: false,
+              requiresFullChoice: true,
             });
             return;
           }
           merged = result.document;
-        } else if (!cloud) {
+        } else if (!choice && !cloud) {
           throw new UserFacingError(
             "Der bisherige Cloud-Stand fehlt. Deine Gerätedaten bleiben erhalten.",
           );
