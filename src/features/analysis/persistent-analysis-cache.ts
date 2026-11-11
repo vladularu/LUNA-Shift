@@ -10,6 +10,15 @@ import {
 } from "@/infrastructure/database/analysis-result-repository";
 
 type Accept<T> = (value: unknown) => value is T;
+interface PersistedProof {
+  readonly key: string;
+  readonly resolver: RuleResolver;
+  readonly hash: string;
+  readonly payload: string;
+  readonly digest: string;
+}
+const MAX_PERSISTED_PROOFS = 24;
+const MAX_PROOF_CHARACTERS = 1_000_000;
 let nextCacheInstance = 0;
 export interface PersistentAnalysisCache {
   claim?(kind: AnalysisResultKind, month: string): () => boolean;
@@ -46,6 +55,22 @@ export function createPersistentAnalysisCache({
   const instance = ++nextCacheInstance;
   const catalogs = new WeakMap<RuleResolver, Promise<string | null>>();
   const writers = new Map<string, { active: boolean }>();
+  const proofs = new Map<string, PersistedProof>();
+  let proofCharacters = 0;
+  const forget = (id: string) => {
+    const previous = proofs.get(id);
+    if (previous) proofCharacters -= previous.key.length + previous.payload.length;
+    proofs.delete(id);
+  };
+  const remember = (id: string, proof: PersistedProof) => {
+    forget(id);
+    const size = proof.key.length + proof.payload.length;
+    if (size > MAX_PROOF_CHARACTERS) return;
+    proofs.set(id, proof);
+    proofCharacters += size;
+    while (proofs.size > MAX_PERSISTED_PROOFS || proofCharacters > MAX_PROOF_CHARACTERS)
+      forget(proofs.keys().next().value!);
+  };
   const claim = (kind: AnalysisResultKind, month: string) => {
     const id = `${kind}:${month}`,
       previous = writers.get(id);
@@ -90,6 +115,7 @@ export function createPersistentAnalysisCache({
     ) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       let state = 0;
+      let reading = true;
       let fingerprint: number | undefined;
       const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
@@ -126,6 +152,8 @@ export function createPersistentAnalysisCache({
             phases.next(4);
             const accepted = accept(value);
             state = accepted ? 1 : 5;
+            if (accepted && reading)
+              remember(`${kind}:${month}`, { key, resolver, hash, ...saved });
             return accepted ? value : null;
           })(),
           new Promise<null>((resolve) => {
@@ -139,6 +167,7 @@ export function createPersistentAnalysisCache({
         state = 7;
         return null;
       } finally {
+        reading = false;
         if (timer !== undefined) clearTimeout(timer);
         phases.finish();
         finish({ state, cache: state === 1 ? 1 : 0, fingerprint });
@@ -156,6 +185,7 @@ export function createPersistentAnalysisCache({
       let state = 8;
       let reason = 0;
       let fingerprint: number | undefined;
+      let encoded: string | undefined;
       const phases = measureAnalysisCache(kind, month);
       const finish = calendarPerformance.span("analysis-cache", {
         instance,
@@ -172,6 +202,39 @@ export function createPersistentAnalysisCache({
           reason = 2;
           return;
         }
+        const id = `${kind}:${month}`;
+        const proof = proofs.get(id);
+        if (proof?.key === key && proof.resolver === resolver) {
+          phases.next(7);
+          encoded = encodeAnalysisCacheValue(value);
+          if (encoded.length > MAX_ANALYSIS_RESULT_CHARACTERS) {
+            reason = 3;
+            return;
+          }
+          if (encoded === proof.payload) {
+            fingerprint = Number.parseInt(proof.hash.slice(0, 8), 16);
+            // Proofs only avoid hashing. Confirm the exact row again because a
+            // different owner, cleanup or restore may have replaced/deleted it.
+            phases.next(19);
+            let saved = null;
+            try {
+              saved = await repository.read(kind, month, proof.hash);
+            } catch {
+              // An optional recheck failure falls back to normal persistence.
+            }
+            if (!current()) {
+              reason = 5;
+              return;
+            }
+            if (saved?.payload === proof.payload && saved.digest === proof.digest) {
+              remember(id, proof);
+              state = 10;
+              reason = 7;
+              return;
+            }
+            if (proofs.get(id) === proof) forget(id);
+          }
+        }
         phases.next(6);
         const hash = await requestHash(kind, month, key, resolver);
         if (hash === null) {
@@ -184,7 +247,7 @@ export function createPersistentAnalysisCache({
           return;
         }
         phases.next(7);
-        const payload = encodeAnalysisCacheValue(value);
+        const payload = encoded ?? encodeAnalysisCacheValue(value);
         if (payload.length > MAX_ANALYSIS_RESULT_CHARACTERS) {
           reason = 3;
           return;
@@ -194,8 +257,10 @@ export function createPersistentAnalysisCache({
         if (current()) {
           phases.next(9);
           await repository.write(kind, month, hash, { payload, digest }, current);
-          if (current()) state = 9;
-          else reason = 5;
+          if (current()) {
+            state = 9;
+            remember(id, { key, resolver, hash, payload, digest });
+          } else reason = 5;
         } else reason = 5;
       } catch {
         state = 7;
