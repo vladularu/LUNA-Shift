@@ -1,10 +1,11 @@
 import { serializeRuleResolverForCache, type RuleResolver } from "@/rules/rule-resolver";
 import { calendarPerformance } from "@/application/calendar-performance";
 import { decodeAnalysisCacheValue, encodeAnalysisCacheValue } from "./analysis-cache-codec";
-import { measureAnalysisCache } from "./analysis-cache-performance";
+import { analysisCacheStage, measureAnalysisCache } from "./analysis-cache-performance";
 import {
   MAX_ANALYSIS_RESULT_CHARACTERS,
   MAX_ANALYSIS_RESULT_ROWS,
+  MAX_ANALYSIS_MONTH_PART_ROWS,
   type AnalysisResultKind,
   type AnalysisResultRepository,
 } from "@/infrastructure/database/analysis-result-repository";
@@ -79,7 +80,7 @@ export function createPersistentAnalysisCache({
       current = repository.claim?.(kind, month);
     writers.delete(id);
     writers.set(id, token);
-    if (writers.size > MAX_ANALYSIS_RESULT_ROWS) {
+    if (writers.size > MAX_ANALYSIS_RESULT_ROWS + MAX_ANALYSIS_MONTH_PART_ROWS) {
       const oldest = writers.keys().next().value!;
       writers.get(oldest)!.active = false;
       writers.delete(oldest);
@@ -121,7 +122,7 @@ export function createPersistentAnalysisCache({
       const finish = calendarPerformance.span("analysis-cache", {
         instance,
         month: Number(month.replace("-", "")),
-        stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
+        stage: analysisCacheStage(kind),
       });
       try {
         return await Promise.race([
@@ -190,7 +191,7 @@ export function createPersistentAnalysisCache({
       const finish = calendarPerformance.span("analysis-cache", {
         instance,
         month: Number(month.replace("-", "")),
-        stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3,
+        stage: analysisCacheStage(kind),
       });
       try {
         phases.next(5);
