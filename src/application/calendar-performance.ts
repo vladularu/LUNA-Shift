@@ -31,6 +31,8 @@ const kinds = [
   "analysis-result-commit",
   "analysis-cache",
   "analysis-cache-phase",
+  "analysis-cache-row",
+  "analysis-parts",
   "analysis-prepare",
   "analysis-work",
   "analysis-lag",
@@ -169,6 +171,12 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       analysis: {
         stages:
           "1 overview, 2 compliance, 3 annual salary and full net, 4 annual analysis, 5 salary settings",
+        cacheStages:
+          "For analysis-cache, analysis-cache-phase and analysis-parts: 1 month, 2 compliance, 3 salary, 4 annual, 5 annual-month parts. These differ from work stages.",
+        annualCacheRow:
+          "analysis-cache-row inspects row and owner epoch in the same SQLite snapshot: state 1 exact row, 2 missing row, 3 different request hash, 4 invalidated owner epoch; valid 1 means full request hash matches, epoch 1 means owner matches. This precedes payload integrity/shape validation in analysis-cache; no raw keys are exported.",
+        annualParts:
+          "analysis-parts compares a monthly write attempt with the last restored candidate in this recording: input previous-part mask, valid new-part mask, cache equal-key mask, state changed-key mask. Part bits: 1 summary, 2 shift types, 4 compliance, 8 pay, 16 remuneration. Reason bits for changed keys: 1 shifts, 2 profile, 4 reference date, 8 youth protection, 16 tariff decision, 32 work-pattern settings, 64 calculation contract, 128 unknown format. Equality indicates reuse eligibility, not timed work or a confirmed database write. Missing/evicted diagnostic baselines are not changes. Baselines are session-scoped and bounded to 36 months / 1 million key characters.",
         cachePhases:
           "1 read request hash, 2 repository read, 3 decode, 4 read validation, 5 write validation, 6 write request hash, 7 encode, 8 payload hash, 9 whole repository write, 10 read payload hash, 11 wait for write turn including initialization/BEGIN and earlier batch items, 12 SQL upsert, 13 SQL cleanup, 14 remaining batch and COMMIT, 15 completed result callbacks, 16 persistent write kickoff, 17 retention, 18 progress callbacks, 19 exact persisted-row recheck; duration includes await time; repository subphases overlap phase 9, callback phases measure handover not React render",
         cacheWriteReasons:

@@ -9,6 +9,10 @@ import {
 } from "./persistent-analysis-cache";
 import { measureAnalysisCache } from "./analysis-cache-performance";
 import { ANALYSIS_RESULT_CALCULATION_VERSION } from "./analysis-cache-version.generated";
+import {
+  observeAnnualCacheRead,
+  observeAnnualMonthCache,
+} from "@/composition/analysis-cache-diagnostics";
 
 const Results = createContext<PersistentAnalysisCache | null>(null);
 export function AnalysisPersistentResultsProvider({
@@ -21,15 +25,18 @@ export function AnalysisPersistentResultsProvider({
   const db = useSQLiteContext();
   const cache = useMemo(
     () =>
-      createPersistentAnalysisCache({
-        bundleId: ANALYSIS_RESULT_CALCULATION_VERSION,
-        repository: createAnalysisResultRepository(
-          db,
-          () => currentMonth(timeZone),
-          measureAnalysisCache,
-        ),
-        sha256: (text) => digestStringAsync(CryptoDigestAlgorithm.SHA256, text),
-      }),
+      observeAnnualMonthCache(
+        createPersistentAnalysisCache({
+          bundleId: ANALYSIS_RESULT_CALCULATION_VERSION,
+          repository: createAnalysisResultRepository(
+            db,
+            () => currentMonth(timeZone),
+            measureAnalysisCache,
+            observeAnnualCacheRead,
+          ),
+          sha256: (text) => digestStringAsync(CryptoDigestAlgorithm.SHA256, text),
+        }),
+      ),
     [db, timeZone],
   );
   return <Results.Provider value={cache}>{children}</Results.Provider>;
