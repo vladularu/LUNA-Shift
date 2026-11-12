@@ -16,12 +16,21 @@ export function observeAnnualCacheRead(month: string) {
     record("analysis-cache-row", { month: Number(month.replace("-", "")), stage: 4, ...value });
 }
 
-function keysOf(value: unknown): Keys {
+function keysOf(value: unknown, month: string): Keys {
   const keys: Keys = {};
-  if (!value || typeof value !== "object") return keys;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return keys;
+  const envelope = value as Record<string, unknown>;
+  if (
+    !Object.hasOwn(envelope, "month") ||
+    envelope.month !== month ||
+    !Object.hasOwn(envelope, "parts")
+  )
+    return keys;
+  const stored = envelope.parts;
+  if (!stored || typeof stored !== "object" || Array.isArray(stored)) return keys;
   for (const part of parts) {
-    if (!Object.hasOwn(value, part)) continue;
-    const item = (value as Record<string, unknown>)[part];
+    if (!Object.hasOwn(stored, part)) continue;
+    const item = (stored as Record<string, unknown>)[part];
     if (item && typeof item === "object" && Object.hasOwn(item, "key")) {
       const key = (item as { key?: unknown }).key;
       if (typeof key === "string") keys[part] = key;
@@ -82,7 +91,7 @@ export function observeAnnualMonthCache(
     return next;
   }
   function remember(month: string, resolver: RuleResolver, value: unknown) {
-    const keys = keysOf(value);
+    const keys = keysOf(value, month);
     const size = Object.values(keys).reduce((sum, key) => sum + key.length, 0);
     const old = restored.get(month);
     if (old) characters -= old.size;
@@ -114,7 +123,7 @@ export function observeAnnualMonthCache(
         if (kind === "annual-month" && active()) {
           const previous = restored.get(month);
           const before = previous?.resolver === resolver ? previous.keys : {};
-          const after = keysOf(value);
+          const after = keysOf(value, month);
           let input = 0,
             valid = 0,
             reused = 0,
