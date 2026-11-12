@@ -191,7 +191,7 @@ interface CachedPart<T> {
   readonly value: T;
 }
 
-interface AvailableMonthCache {
+export interface AvailableMonthCache {
   remuneration?: CachedPart<AnnualMonthlyRemuneration | null>;
   shiftTypeAnalysis?: CachedPart<MonthlyShiftTypeAnalysis | null>;
   summary?: CachedPart<ReturnType<typeof calculateMonthlySummary> | null>;
@@ -224,6 +224,7 @@ interface AnnualComputationOptions {
   readonly remuneration?: AnnualRemunerationInput;
   readonly cache?: ReturnType<typeof createAnnualAvailableReportCache>;
   readonly onCore?: (report: AnnualReport) => void;
+  readonly onMonth?: (month: string, parts: AvailableMonthCache) => void;
 }
 
 function* calculateAvailableMonth(
@@ -450,6 +451,7 @@ export function* buildAnnualAvailableReportSteps(
 
   for (const coreMonth of core.months) {
     const cached = monthsCache.get(coreMonth.month) ?? {};
+    const previous = { ...cached };
     if (!monthsCache.has(coreMonth.month) && monthsCache.size >= 36) {
       monthsCache.delete(monthsCache.keys().next().value!);
     }
@@ -475,6 +477,14 @@ export function* buildAnnualAvailableReportSteps(
       }
       yield step.value;
     }
+    if (
+      (["summary", "shiftTypeAnalysis", "compliance", "pay", "remuneration"] as const).some(
+        (part) =>
+          previous[part]?.key !== cached[part]?.key ||
+          previous[part]?.value !== cached[part]?.value,
+      )
+    )
+      options.onMonth?.(coreMonth.month, cached);
 
     // Keep the cached ArbZG result unmodified. Training profiles and actual pauses
     // can change independently, including a same-revision backup restoration.

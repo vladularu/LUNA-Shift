@@ -146,7 +146,8 @@ describe("annual background preparation and visible consumers", () => {
     await flush();
     const original = first.result.current.report;
     expect(original?.complianceCoverageComplete).toBe(false);
-    expect(rows.size).toBe(1);
+    expect([...rows.keys()].filter((key) => key.startsWith("annual:"))).toHaveLength(1);
+    expect([...rows.keys()].filter((key) => key.startsWith("annual-month:"))).toHaveLength(12);
     await first.rerender({ year: 2025 });
     await flush();
     const count = calculate.mock.calls.length;
@@ -191,7 +192,8 @@ describe("annual background preparation and visible consumers", () => {
       mockPersistent = storage();
       const first = await renderHook(() => useYear(2026, false), { wrapper: Wrapper });
       await flush();
-      expect(rows.size).toBe(1);
+      expect([...rows.keys()].filter((key) => key.startsWith("annual:"))).toHaveLength(1);
+      expect([...rows.keys()].filter((key) => key.startsWith("annual-month:"))).toHaveLength(12);
       await first.unmount();
       mockPersistent = storage();
       mockResolver = rules();

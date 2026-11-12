@@ -9,6 +9,83 @@ afterEach(() => {
 });
 
 describe("cooperative analysis queue", () => {
+  it("also enforces the timer boundary when completion immediately enqueues more warm work", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    type IdleCallback = (budget: { didTimeout: boolean; timeRemaining(): number }) => void;
+    const idle = new Map<number, IdleCallback>();
+    let nextId = 0;
+    vi.stubGlobal("requestIdleCallback", (callback: IdleCallback) => {
+      idle.set(++nextId, callback);
+      return nextId;
+    });
+    vi.stubGlobal("cancelIdleCallback", (id: number) => idle.delete(id));
+    const enqueue = createAnalysisWorkQueue(),
+      completed = vi.fn();
+    enqueue(
+      (function* () {
+        return 1;
+      })(),
+      () => {
+        enqueue(
+          (function* () {
+            yield 1;
+            return 2;
+          })(),
+          completed,
+          vi.fn(),
+          20,
+        );
+      },
+      vi.fn(),
+      20,
+    );
+    const first = idle.values().next().value!;
+    idle.clear();
+    first({ didTimeout: false, timeRemaining: () => 50 });
+    expect(idle.size).toBe(0);
+    expect(completed).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    const second = idle.values().next().value!;
+    idle.clear();
+    second({ didTimeout: false, timeRemaining: () => 50 });
+    expect(completed).toHaveBeenCalledExactlyOnceWith(2);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("crosses a timer boundary between native warm idle slices and allows immediate promotion", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    const callbacks: ((budget: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];
+    vi.stubGlobal("requestIdleCallback", (callback: (typeof callbacks)[number]) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.stubGlobal("cancelIdleCallback", vi.fn());
+    let advanced = 0;
+    const done = vi.fn();
+    const lease = createAnalysisWorkQueue()(
+      (function* () {
+        for (let i = 0; i < 100; i++) {
+          advanced++;
+          yield 1;
+        }
+        return 100;
+      })(),
+      done,
+      vi.fn(),
+      20,
+    );
+    const heartbeat = vi.fn();
+    setTimeout(heartbeat, 0);
+    callbacks.shift()!({ didTimeout: false, timeRemaining: () => 50 });
+    expect(advanced).toBe(32);
+    expect(callbacks).toHaveLength(0);
+    vi.advanceTimersToNextTimer();
+    expect(heartbeat).toHaveBeenCalledOnce();
+    lease.setPriority(-1);
+    vi.runAllTimers();
+    expect(done).toHaveBeenCalledExactlyOnceWith(100);
+  });
   it("does no warm work with an exhausted idle budget and does not force an idle timeout", () => {
     vi.useFakeTimers();
     const callbacks: ((budget?: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];

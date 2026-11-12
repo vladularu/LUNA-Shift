@@ -14,6 +14,7 @@ import type { AnnualReport } from "./annual-report";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { persistentAnnualValue } from "./persistent-analysis-values";
 import { readSharedAnalysisResult, requestSharedAnalysis } from "./shared-analysis-tasks";
+import { annualMonthPartsSession } from "./annual-month-parts";
 
 export interface AnnualAnalysisRequest {
   readonly year: number;
@@ -97,6 +98,7 @@ export function* prepareAnnualAnalysisSteps(
   key: string,
   persistent: PersistentAnalysisCache | null,
   onCore?: (value: AnnualReport) => void,
+  onMonth?: (month: string, parts: import("./annual-core-report").AvailableMonthCache) => void,
 ): Generator<number, AnnualReport, void> {
   const cached = readAnnualAnalysis(request, key, persistent);
   if (cached) return cached;
@@ -108,7 +110,12 @@ export function* prepareAnnualAnalysisSteps(
     request.workPatternSettings,
     request.referenceDate,
     request.ruleResolver,
-    { cache: scope(persistent).calculation, youthProtection: request.youthProtection, onCore },
+    {
+      cache: scope(persistent).calculation,
+      youthProtection: request.youthProtection,
+      onCore,
+      onMonth,
+    },
   );
   return retainAnnualAnalysis(request, key, persistent, value);
 }
@@ -121,6 +128,12 @@ export function requestAnnualAnalysis(
   fail: (error: unknown) => void,
   progress?: (value: AnnualReport) => void,
 ) {
+  const parts = annualMonthPartsSession(
+    request.year,
+    request.ruleResolver,
+    scope(persistent).calculation,
+    persistent,
+  );
   return requestSharedAnalysis<AnnualReport, AnnualReport>({
     kind: "annual",
     month: request.year + "-01",
@@ -131,7 +144,8 @@ export function requestAnnualAnalysis(
     prepared: readAnnualAnalysis(request, key, persistent),
     accept: persistentAnnualValue,
     retain: () => true,
-    steps: (onCore) => prepareAnnualAnalysisSteps(request, key, persistent, onCore),
+    restore: parts.restore,
+    steps: (onCore) => prepareAnnualAnalysisSteps(request, key, persistent, onCore, parts.save),
     complete: (value) => complete(retainAnnualAnalysis(request, key, persistent, value)),
     fail,
     progress,

@@ -527,8 +527,8 @@
     {
       "path": "src/features/analysis/annual-core-report.ts",
       "kind": "modified",
-      "sha256": "a06b31b33c3ededed8c5dc199ef61189bf6a13e537de39491028f10eca0d1d34",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied."
+      "sha256": "735ff9d8c4e914d0f91e42a65230c99e384a0aa783e23c1583bb28fd8a272bdc",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Annual-parts package 2026-11-12: Expose monthly calculation parts and notify only after a completed month changed. Existing per-part full input keys, complete legal horizons, partial-catalog coverage, calculation formulas, training overlays and core-first generator boundary remain unchanged. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/annual-report.ts",
@@ -1013,14 +1013,14 @@
     {
       "path": "src/features/analysis/analysis-cache-performance.ts",
       "kind": "added",
-      "sha256": "28d1bb1f242f1e97e80c55ee667b5cfca55332d3b8457d069831b976fbd396a9",
-      "reason": "User-authorized Preview cache performance package 2026-11-11: Opt-in bounded numeric cache phase measurements preserve the originating session/request, ignore timed-out or completed operations and avoid capture while diagnostics are disabled. No domain content is recorded. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change."
+      "sha256": "aef22aec4d50cc0605f8fc09631ea47fefa57d5aa830b5235af124a70f92a4e2",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Opt-in bounded numeric cache phase measurements preserve the originating session/request, ignore timed-out or completed operations and avoid capture while diagnostics are disabled. No domain content is recorded. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. Annual-parts package 2026-11-12: Give annual-month intermediate I/O its own numeric diagnostic stage 5 so it is not reported as salary work; preserve opt-in bounded spans and awaited-time semantics. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/persistent-analysis-cache.ts",
       "kind": "modified",
-      "sha256": "bf735f4337d4545094fa468f78a15232cafdb9421cfb2349f59a4e4f7d0e4360",
-      "reason": "User-authorized Preview cache performance package 2026-11-11: Use the measured compatible codec and opt-in phase spans for request/payload hashing, repository access, JSON processing and validation. Keep every digest, validity, writer-currentness, restore/epoch and timeout protection unchanged. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. Annual/swipe package 2026-11-11: Distinguish superseded writes, rejected shapes and oversized/unsupported payloads through numeric diagnostics; include diagnostic-only key prefix and local owner, without changing SQL, SHA-256 checks, restore epochs, limits or current-writer protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Cache/handover package 2026-11-12: Keep bounded proof of validated read/completed-write payloads. Compare complete input identity, resolver and serialized result, then recheck the exact current database row before skipping redundant SHA-256 operations and SQL writes. Preserve changed/tampered/deleted row repair, write claims, restore epochs, timeout exclusion and fallback after optional recheck failure. No stored-result schema or calculation changes. Authorized iOS Preview only; TestFlight/Production unchanged; device acceptance pending."
+      "sha256": "9db55c76ada31d2a303d054e02c7d3cb7e682a90c21be1deb9fb6cedff3ab490",
+      "reason": "User-authorized Preview cache performance package 2026-11-11: Use the measured compatible codec and opt-in phase spans for request/payload hashing, repository access, JSON processing and validation. Keep every digest, validity, writer-currentness, restore/epoch and timeout protection unchanged. No UI, calendar/cloud data, legal/pay-rule, dependency, schema, native or TestFlight software change. Annual/swipe package 2026-11-11: Distinguish superseded writes, rejected shapes and oversized/unsupported payloads through numeric diagnostics; include diagnostic-only key prefix and local owner, without changing SQL, SHA-256 checks, restore epochs, limits or current-writer protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Cache/handover package 2026-11-12: Keep bounded proof of validated read/completed-write payloads. Compare complete input identity, resolver and serialized result, then recheck the exact current database row before skipping redundant SHA-256 operations and SQL writes. Preserve changed/tampered/deleted row repair, write claims, restore epochs, timeout exclusion and fallback after optional recheck failure. No stored-result schema or calculation changes. Authorized iOS Preview only; TestFlight/Production unchanged; device acceptance pending. Annual-parts package 2026-11-12: Support explicit annual-month storage kind with the existing complete bundle/catalog SHA256 namespace, payload integrity checks, bounded lookup, current-writer proofs and write deduplication; expand bounded claim capacity for separately limited monthly parts. No abbreviated functional keys. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/application/calendar-performance.ts",
@@ -1037,8 +1037,8 @@
     {
       "path": "src/infrastructure/database/analysis-result-repository.ts",
       "kind": "modified",
-      "sha256": "f5ef37deaaeca0f82901849ecb5137c535c471cdbde3366754ffe0ce6a574f16",
-      "reason": "User-authorized Preview write-performance package 2026-11-11: Use the bounded analysis-only write queue while retaining every per-item epoch/current-writer check, upsert, recency timestamp and cleanup/row/byte limit. Expose optional injected numeric timing for write turn, SQL, cleanup and remaining batch/commit, with no feature dependency in the repository. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+      "sha256": "503b9d755189f2ac5acc66fd45e5bfae4e91d2a8351c5eee99d6274a032521a2",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Use the bounded analysis-only write queue while retaining every per-item epoch/current-writer check, upsert, recency timestamp and cleanup/row/byte limit. Expose optional injected numeric timing for write turn, SQL, cleanup and remaining batch/commit, with no feature dependency in the repository. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update. Annual-parts package 2026-11-12: Add a separate bounded disposable annual-month parts table (48 rows, 8 MiB). Keep all existing finished-cache rows and schemas. Bind each intermediate row and all reads/writes to the authoritative restore epoch, purge stale rows after restore, preserve atomic write claims and isolate cleanup budgets. No user migration, backup or cloud format change. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/analysis-persistent-results.tsx",
@@ -1049,14 +1049,14 @@
     {
       "path": "src/features/analysis/shared-analysis-tasks.ts",
       "kind": "modified",
-      "sha256": "e489e848348640e8ca257126bc68db1abb444a7d4e19a80ce44ec84026023f05",
-      "reason": "User-authorized Preview write-performance package 2026-11-11: Add numeric timing around complete/progress callbacks, persistence kickoff and retention. Keep callback ordering, values, cancellation, persistence and exception propagation unchanged. These markers do not claim to measure React render time. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update."
+      "sha256": "8c607498c587b3f78994f13b4ed56828cce0721bf4b92e9f4bccbe9dbc43313f",
+      "reason": "User-authorized Preview write-performance package 2026-11-11: Add numeric timing around complete/progress callbacks, persistence kickoff and retention. Keep callback ordering, values, cancellation, persistence and exception propagation unchanged. These markers do not claim to measure React render time. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update. Annual-parts package 2026-11-12: Add an optional asynchronous intermediate-restore prerequisite after a finished-cache miss. Share it under the existing lease, preserve immediate prepared/disk hits, cancellation and priority promotion, and fall back to calculation after an optional restore failure. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "69f839ed9403936026bec6f7d12550ba983fd015793d00419d2d8291e7a01165",
-      "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual/swipe package 2026-11-11: Regenerate the automatically checked calculation compatibility fingerprint for the reviewed annual lifecycle and pure evidence-cache changes; no dependency/native configuration or formula changes. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Cache/handover package 2026-11-12: Regenerate the automatically verified complete calculation compatibility contract after the reviewed persistence helper change; existing cache schemas and mathematical results remain unchanged. Authorized iOS Preview only; TestFlight/Production unchanged; device acceptance pending."
+      "sha256": "38a48cf68acd524613b297e1e603be0065d10046cedcc2406844af4ce1e2d79a",
+      "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual/swipe package 2026-11-11: Regenerate the automatically checked calculation compatibility fingerprint for the reviewed annual lifecycle and pure evidence-cache changes; no dependency/native configuration or formula changes. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Cache/handover package 2026-11-12: Regenerate the automatically verified complete calculation compatibility contract after the reviewed persistence helper change; existing cache schemas and mathematical results remain unchanged. Authorized iOS Preview only; TestFlight/Production unchanged; device acceptance pending. Annual-parts package 2026-11-12: Regenerate the complete calculation compatibility contract for monthly-part persistence and scheduler support, so old finished snapshots cannot bypass the new producer contract. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/analysis-salary.ts",
@@ -1097,8 +1097,8 @@
     {
       "path": "src/features/analysis/annual-analysis.ts",
       "kind": "modified",
-      "sha256": "9ef29134d757d48e1f4aaceca90d2006cd22d48392e0d87e35559af3ca766b28",
-      "reason": "Annual/swipe package 2026-11-11: Limit obsolete versions of one year so repeated edits cannot evict unchanged neighboring years; retain exact complete-input isolation and the current-year pin. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+      "sha256": "28a684df29d2f77f692abc24e70c228ecb3cb4ccf3b897b19181a7f88d910965",
+      "reason": "Annual/swipe package 2026-11-11: Limit obsolete versions of one year so repeated edits cannot evict unchanged neighboring years; retain exact complete-input isolation and the current-year pin. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Annual-parts package 2026-11-12: On a finished-year disk miss, restore validated monthly candidate parts before calculation, and save changed completed months. Keep finished-year memory/disk fast paths, exact input retention and current-year/neighbor limits. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/annual-report-inputs.ts",
@@ -1111,6 +1111,18 @@
       "kind": "modified",
       "sha256": "41793bcee5fd74b2a400bf65f41e88e9ef87f27dda8f192e478d222999feb377",
       "reason": "Annual/swipe package 2026-11-11: Track the bounded native viewport before scroll settles, retain correct visible/prepared pages, and render lightweight period placeholders on all distant pages. Commit navigation only on settling and preserve reduced motion, accessibility and stale-event protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+    },
+    {
+      "path": "src/features/analysis/analysis-work-queue.ts",
+      "kind": "modified",
+      "sha256": "08356e79ee9e8307459932641770cffe9c151ada1b46a367a9c67e7354ecc840",
+      "reason": "Annual-parts package 2026-11-12: Cross a real timer boundary between productive native idle warmup slices to prevent same-idle-turn chaining. Cancel any next warm idle callback registered reentrantly by completion before installing the timer boundary. Keep the 4 ms/32-step cooperative bound, exhausted-idle behavior, visible priority promotion and cancellation. No forced synchronous background execution or UI/navigation change. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
+    },
+    {
+      "path": "src/features/analysis/annual-month-parts.ts",
+      "kind": "added",
+      "sha256": "312494829ad6227cf0fef4c366bfa9bc1ab3950b3783afae2803cc3a1efa9d90",
+      "reason": "Annual-parts package 2026-11-12: Restore up to twelve month snapshots under a full bundle/catalog namespace. Validate nested annual-consumed fields, require matching month and keep each complete part input key. Ignore canceled/late reads and newer in-memory parts, cap RAM at 36 months, use per-month current write claims, and let the existing engine revalidate dependencies before reuse. Detailed remuneration snapshots are intentionally rejected. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     }
   ]
 }

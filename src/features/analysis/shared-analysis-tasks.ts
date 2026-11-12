@@ -1,7 +1,7 @@
 import type { RuleResolver } from "@/rules/rule-resolver";
 import type { AnalysisResultKind } from "@/infrastructure/database/analysis-result-repository";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
-import { measureAnalysisCache } from "./analysis-cache-performance";
+import { analysisCacheStage, measureAnalysisCache } from "./analysis-cache-performance";
 import { scheduleAnalysisWork } from "./analysis-work-queue";
 
 interface Listener {
@@ -57,6 +57,7 @@ export function requestSharedAnalysis<T, P = never>({
   accept,
   retain = accept,
   prepared = null,
+  restore,
 }: {
   readonly kind: AnalysisResultKind;
   readonly key: string;
@@ -71,6 +72,7 @@ export function requestSharedAnalysis<T, P = never>({
   readonly accept: (value: unknown) => value is T;
   readonly retain?: (value: T) => boolean;
   readonly prepared?: T | null;
+  readonly restore?: (current: () => boolean) => Promise<void>;
 }) {
   const entries = tasks.get(resolver) ?? new Map<string, Entry>();
   tasks.set(resolver, entries);
@@ -152,13 +154,20 @@ export function requestSharedAnalysis<T, P = never>({
       finished(stored, true);
       return;
     }
-    entry.work = scheduleAnalysisWork(
-      steps(reportProgress),
-      (value) => finished(value, false),
-      failed,
-      Math.min(...[...entry.listeners].map((item) => item.priority)),
-      { month, stage: kind === "month" ? 1 : kind === "checks" ? 2 : kind === "annual" ? 4 : 3 },
-    );
+    const calculate = () => {
+      if (!entry.active) return;
+      entry.work = scheduleAnalysisWork(
+        steps(reportProgress),
+        (value) => finished(value, false),
+        failed,
+        Math.min(...[...entry.listeners].map((item) => item.priority)),
+        { month, stage: analysisCacheStage(kind) },
+      );
+    };
+    // Intermediate-cache failure is optional. A canceled lookup must never
+    // start a generator, install stale parts or notify a later consumer.
+    if (restore) void restore(() => entry.active).then(calculate, calculate);
+    else calculate();
   };
   if (existing) {
     promote();
