@@ -21,6 +21,8 @@ import {
 import { buildAnnualAvailableReportSteps } from "./annual-core-report";
 import type { AnnualReport } from "./annual-report";
 import { encodeAnalysisCacheValue } from "./analysis-cache-codec";
+import { createCalendarPerformanceRecorder } from "@/application/calendar-performance";
+import { observeAnnualMonthCache } from "@/composition/analysis-cache-diagnostics";
 
 const databases = new Set<Database.Database>(),
   directories: string[] = [];
@@ -81,7 +83,7 @@ const input = (): AnnualAnalysisRequest => ({
 });
 const digest = (value: unknown) =>
   createHash("sha256").update(encodeAnalysisCacheValue(value)).digest("hex");
-function storage(filename: string, bundleId = "parts-test") {
+function storage(filename: string, bundleId = "parts-test", observe = false) {
   const raw = new Database(filename),
     pending = new Set<Promise<void>>();
   databases.add(raw);
@@ -93,7 +95,7 @@ function storage(filename: string, bundleId = "parts-test") {
     getFirstAsync: async <T>(sql: string, ...args: unknown[]) =>
       (raw.prepare(sql).get(...args) as T) ?? null,
   };
-  const cache = createPersistentAnalysisCache({
+  const baseCache = createPersistentAnalysisCache({
     repository: createAnalysisResultRepository(
       adapter as unknown as SQLiteDatabase,
       () => "2026-11",
@@ -102,6 +104,9 @@ function storage(filename: string, bundleId = "parts-test") {
     sha256: async (text) => createHash("sha256").update(text).digest("hex"),
     lookupTimeoutMs: 1000,
   });
+  const recorder = createCalendarPerformanceRecorder();
+  if (observe) recorder.start(true);
+  const cache = observe ? observeAnnualMonthCache(baseCache, recorder) : baseCache;
   const persistent: PersistentAnalysisCache = {
     ...cache,
     write(...args) {
@@ -114,6 +119,7 @@ function storage(filename: string, bundleId = "parts-test") {
   return {
     raw,
     persistent,
+    recorder,
     async flush() {
       while (pending.size) await Promise.all([...pending]);
     },
@@ -174,7 +180,7 @@ describe("monthly annual parts across real SQLite restarts", () => {
       first.raw.prepare("SELECT count(*) AS n FROM analysis_month_parts_cache_v1").get(),
     ).toEqual({ n: 12 });
     first.close();
-    const reopened = storage(filename),
+    const reopened = storage(filename, "parts-test", true),
       restored = { ...request, ruleResolver: createRuleResolver() };
     const known = await run(reopened, restored);
     expect(known.steps).toBe(0);
@@ -188,6 +194,22 @@ describe("monthly annual parts across real SQLite restarts", () => {
     const changed = await run(reopened, edited);
     expect(changed.steps).toBeLessThan(cold.steps);
     expect(digest(changed.value)).toBe(digest(fresh(edited)));
+    const comparisons = reopened.recorder
+      .report()
+      .events.filter((event) => event.kind === "analysis-parts");
+    expect(comparisons).toHaveLength(12);
+    // The observer must consume real persisted { month, parts } values, not a
+    // test-only direct parts object. All restored candidates contain four parts.
+    expect(
+      comparisons.every((event) => event.values.input === 15 && event.values.valid === 15),
+    ).toBe(true);
+    expect(comparisons.find((event) => event.values.month === 202606)?.values.state! & 3).toBe(3);
+    expect(
+      comparisons
+        .filter((event) => event.values.month !== 202606)
+        .every((event) => (event.values.cache! & 3) === 3),
+    ).toBe(true);
+    expect(comparisons.every((event) => (event.values.reason! & 2) === 0)).toBe(true);
   });
   it.each(["date", "profile", "youth", "catalog", "bundle", "corrupt"])(
     "revalidates %s changes against a fresh calculation",

@@ -1127,8 +1127,8 @@
     {
       "path": "src/composition/analysis-cache-diagnostics.ts",
       "kind": "added",
-      "sha256": "1b58e7525bff3b9839fb8eeace4206aa26b68604607138f957e5580007c4334f",
-      "reason": "Annual restart diagnosis 2026-11-12: Opt-in bounded numeric observation of restored annual-month keys and subsequent write attempts at the composition boundary, with session isolation, 36-month/1-million-character caps, no raw keys or domain data in exports, and no mutation of values, claims or complete calculation keys. Authorized iOS Preview only; no performance-fix claim; TestFlight/Production unchanged; device cause diagnosis pending."
+      "sha256": "e52237300d21ec659d5ffcb9e514c9a24f19b1bc570d7d9dd6d999a2386e3708",
+      "reason": "Annual restart diagnosis 2026-11-12: Opt-in bounded numeric observation of restored annual-month keys and subsequent write attempts at the composition boundary, with session isolation, 36-month/1-million-character caps, no raw keys or domain data in exports, and no mutation of values, claims or complete calculation keys. Authorized iOS Preview only; no performance-fix claim; TestFlight/Production unchanged; device cause diagnosis pending. Annual edit diagnosis correction 2026-11-12: inspect the actual {month,parts} persisted snapshot envelope, require the matching month and own properties, and keep complete calculation keys, values, write claims, numeric-only bounded recording and all storage semantics unchanged. A real SQLite restart/edit regression now exercises the observer, validates nonzero candidate masks, unchanged other-month summaries and parity with a fresh annual calculation. Preview only; this corrects measurement and does not claim a speed improvement; TestFlight unchanged."
     }
   ]
 }
