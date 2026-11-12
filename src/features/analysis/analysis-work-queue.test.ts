@@ -9,6 +9,49 @@ afterEach(() => {
 });
 
 describe("cooperative analysis queue", () => {
+  it("also enforces the timer boundary when completion immediately enqueues more warm work", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    type IdleCallback = (budget: { didTimeout: boolean; timeRemaining(): number }) => void;
+    const idle = new Map<number, IdleCallback>();
+    let nextId = 0;
+    vi.stubGlobal("requestIdleCallback", (callback: IdleCallback) => {
+      idle.set(++nextId, callback);
+      return nextId;
+    });
+    vi.stubGlobal("cancelIdleCallback", (id: number) => idle.delete(id));
+    const enqueue = createAnalysisWorkQueue(),
+      completed = vi.fn();
+    enqueue(
+      (function* () {
+        return 1;
+      })(),
+      () => {
+        enqueue(
+          (function* () {
+            yield 1;
+            return 2;
+          })(),
+          completed,
+          vi.fn(),
+          20,
+        );
+      },
+      vi.fn(),
+      20,
+    );
+    const first = idle.values().next().value!;
+    idle.clear();
+    first({ didTimeout: false, timeRemaining: () => 50 });
+    expect(idle.size).toBe(0);
+    expect(completed).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    const second = idle.values().next().value!;
+    idle.clear();
+    second({ didTimeout: false, timeRemaining: () => 50 });
+    expect(completed).toHaveBeenCalledExactlyOnceWith(2);
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it("crosses a timer boundary between native warm idle slices and allows immediate promotion", () => {
     vi.useFakeTimers();
     vi.stubGlobal("performance", { now: () => 0 });

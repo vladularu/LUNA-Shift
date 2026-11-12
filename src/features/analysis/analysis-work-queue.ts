@@ -12,6 +12,10 @@ export function createAnalysisWorkQueue() {
   const jobs: Job[] = [];
   let cancelScheduled: (() => void) | null = null;
   let idleOnlyScheduled = false;
+  const cancelWakeup = () => {
+    cancelScheduled?.();
+    cancelScheduled = null;
+  };
   const schedule = () => {
     if (cancelScheduled !== null || jobs.length === 0) return;
     const advance = (budget?: IdleWorkBudget) => {
@@ -43,6 +47,8 @@ export function createAnalysisWorkQueue() {
         // Some native idle implementations can run newly registered callbacks
         // in the same idle turn. Cross a real timer boundary before requesting
         // another warm slice, so input/timers are not starved by that chain.
+        // Completion may already have enqueued and scheduled the next job.
+        cancelWakeup();
         idleOnlyScheduled = true;
         const handle = setTimeout(() => {
           cancelScheduled = null;
@@ -150,8 +156,7 @@ export function createAnalysisWorkQueue() {
       (priority <= 0 || (idleOnlyScheduled && priority < ANALYSIS_WARMUP_PRIORITY)) &&
       cancelScheduled !== null
     ) {
-      cancelScheduled();
-      cancelScheduled = null;
+      cancelWakeup();
     }
     schedule();
     return {
@@ -159,8 +164,7 @@ export function createAnalysisWorkQueue() {
         if (job.priority === next) return;
         job.priority = next;
         if (active && cancelScheduled !== null) {
-          cancelScheduled();
-          cancelScheduled = null;
+          cancelWakeup();
           schedule();
         }
       },
@@ -170,8 +174,7 @@ export function createAnalysisWorkQueue() {
         const index = jobs.indexOf(job);
         if (index >= 0) jobs.splice(index, 1);
         if (cancelScheduled !== null) {
-          cancelScheduled();
-          cancelScheduled = null;
+          cancelWakeup();
         }
         schedule();
       },

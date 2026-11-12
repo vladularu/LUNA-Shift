@@ -1055,7 +1055,7 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "ecbe7ff363c7424f50fe5929beb7174ac44782b692a98d903e5271b422d82662",
+      "sha256": "38a48cf68acd524613b297e1e603be0065d10046cedcc2406844af4ce1e2d79a",
       "reason": "User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. User-authorized cold-start persistence package 2026-11-11: Package B: generated deterministic compatibility identity for 385 calculation/domain/rule/validation sources and resolved calculator dependencies. verify:fast rejects drift; presentation-only OTA identity changes retain compatible results. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual/swipe package 2026-11-11: Regenerate the automatically checked calculation compatibility fingerprint for the reviewed annual lifecycle and pure evidence-cache changes; no dependency/native configuration or formula changes. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Cache/handover package 2026-11-12: Regenerate the automatically verified complete calculation compatibility contract after the reviewed persistence helper change; existing cache schemas and mathematical results remain unchanged. Authorized iOS Preview only; TestFlight/Production unchanged; device acceptance pending. Annual-parts package 2026-11-12: Regenerate the complete calculation compatibility contract for monthly-part persistence and scheduler support, so old finished snapshots cannot bypass the new producer contract. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
@@ -1115,8 +1115,8 @@
     {
       "path": "src/features/analysis/analysis-work-queue.ts",
       "kind": "modified",
-      "sha256": "bd8e1d3012ccece8376e2daa4756f34954c92dca12d87c43510d23d375a00e6c",
-      "reason": "Annual-parts package 2026-11-12: Cross a real timer boundary between productive native idle warmup slices to prevent same-idle-turn chaining. Keep the 4 ms/32-step cooperative bound, exhausted-idle behavior, visible priority promotion and cancellation. No forced synchronous background execution or UI/navigation change. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
+      "sha256": "08356e79ee9e8307459932641770cffe9c151ada1b46a367a9c67e7354ecc840",
+      "reason": "Annual-parts package 2026-11-12: Cross a real timer boundary between productive native idle warmup slices to prevent same-idle-turn chaining. Cancel any next warm idle callback registered reentrantly by completion before installing the timer boundary. Keep the 4 ms/32-step cooperative bound, exhausted-idle behavior, visible priority promotion and cancellation. No forced synchronous background execution or UI/navigation change. Authorized iOS Preview only; TestFlight/Production unchanged; iPhone acceptance pending."
     },
     {
       "path": "src/features/analysis/annual-month-parts.ts",
