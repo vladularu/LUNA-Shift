@@ -1063,6 +1063,12 @@
       "kind": "modified",
       "sha256": "2d4d3a6bda09ed776810d1af47ccea7e744a15ad0849924008a5eab2f9f626f9",
       "reason": " User-authorized Git delivery: native Dienstplan-Check formSheet shared with Schichtzulage, rounded read-only duty/finding/source cards, robust iOS date labels, transient navigation handoff and header/pull-down dismissal without a fixed bottom footer. Exact product/test files from iPhone-accepted Preview 01a1cc7f-3e48-7ac1-bc58-acb0bdffeba2. Keep all unrelated master paths and separate performance drafts unchanged. No native binary, stored-data or calculation change in this feature; incompatible TestFlight OTA is not published."
+    },
+    {
+      "path": "src/features/templates/template-editor-screen.tsx",
+      "kind": "modified",
+      "sha256": "3a9d6d0a15f16a01952d9c671514d036c8fdde29322f81d732efc415c60c7114",
+      "reason": "Requested template-delete button alignment with CalendarAccessScreen: replace only the legacy DestructiveFormAction call with the existing PrimaryButton using danger and shape=pill. Preserve the label, disabled saving state, confirmArchive callback and confirmation/archive logic; no sharing, stored-data, other-button or native changes."
     }
   ]
 }
