@@ -7,6 +7,12 @@ export interface StoredAnalysisResult {
   readonly payload: string;
   readonly digest: string;
 }
+export interface AnnualCacheRowDiagnosis {
+  /** 1 exact row, 2 missing row, 3 different request, 4 invalidated owner epoch. */
+  readonly state: number;
+  readonly valid: number;
+  readonly epoch: number;
+}
 export interface AnalysisResultRepository {
   claim?(kind: AnalysisResultKind, month: string): () => boolean;
   read(kind: AnalysisResultKind, month: string, key: string): Promise<StoredAnalysisResult | null>;
@@ -38,6 +44,7 @@ export function createAnalysisResultRepository(
     next(phase: number): void;
     finish(): void;
   },
+  observeAnnualRead?: (month: string) => ((value: AnnualCacheRowDiagnosis) => void) | null,
 ): AnalysisResultRepository {
   const writeTransaction = createAnalysisResultWriteQueue(db);
   let ready: Promise<string> | null = null;
@@ -114,6 +121,49 @@ export function createAnalysisResultRepository(
           epoch,
           epoch,
         );
+      // Opt-in diagnostics use the same SQL snapshot for row presence, request
+      // equality and epoch. Never export a key or read an incompatible payload.
+      let observe: ReturnType<NonNullable<typeof observeAnnualRead>> = null;
+      try {
+        if (kind === "annual") observe = observeAnnualRead?.(month) ?? null;
+      } catch {
+        // Optional instrumentation must not affect cache behavior.
+      }
+      if (observe) {
+        const row = await db.getFirstAsync<{
+          payload: string | null;
+          digest: string | null;
+          present: number;
+          valid: number;
+          epoch: number;
+        }>(
+          `WITH owner AS (
+             SELECT ?=(SELECT request_hash FROM analysis_result_cache_v2 WHERE kind='epoch' AND month='') AS epoch
+           ) SELECT c.rowid IS NOT NULL AS present,COALESCE(c.request_hash=?,0) AS valid,
+             COALESCE(owner.epoch,0) AS epoch,
+             CASE WHEN c.request_hash=? AND owner.epoch THEN c.value_json END AS payload,
+             CASE WHEN c.request_hash=? AND owner.epoch THEN c.value_hash END AS digest
+           FROM owner LEFT JOIN analysis_result_cache_v2 c ON c.kind=? AND c.month=?`,
+          epoch,
+          key,
+          key,
+          key,
+          kind,
+          month,
+        );
+        try {
+          observe({
+            state: !row?.epoch ? 4 : !row.present ? 2 : !row.valid ? 3 : 1,
+            valid: row?.valid ?? 0,
+            epoch: row?.epoch ?? 0,
+          });
+        } catch {
+          // Keep diagnostics isolated from user-visible reporting.
+        }
+        return row?.payload !== null && row?.payload !== undefined && row.digest !== null
+          ? { payload: row.payload, digest: row.digest }
+          : null;
+      }
       return db.getFirstAsync<StoredAnalysisResult>(
         `SELECT value_json AS payload,value_hash AS digest FROM analysis_result_cache_v2
          WHERE kind=? AND month=? AND request_hash=? AND
