@@ -175,7 +175,7 @@ function AnalysisPage({
   );
   const annualReport = useDeferredAnnualReport({
     enabled: ready && !error && period === "YEAR" && annualInputs !== null,
-    active: isFocused,
+    active: active && isFocused,
     entries: annualInputs?.ok ? annualInputs.value.entries : entries,
     profile,
     ruleResolver,
