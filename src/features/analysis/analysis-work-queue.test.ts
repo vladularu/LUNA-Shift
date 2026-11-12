@@ -9,6 +9,40 @@ afterEach(() => {
 });
 
 describe("cooperative analysis queue", () => {
+  it("crosses a timer boundary between native warm idle slices and allows immediate promotion", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    const callbacks: ((budget: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];
+    vi.stubGlobal("requestIdleCallback", (callback: (typeof callbacks)[number]) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.stubGlobal("cancelIdleCallback", vi.fn());
+    let advanced = 0;
+    const done = vi.fn();
+    const lease = createAnalysisWorkQueue()(
+      (function* () {
+        for (let i = 0; i < 100; i++) {
+          advanced++;
+          yield 1;
+        }
+        return 100;
+      })(),
+      done,
+      vi.fn(),
+      20,
+    );
+    const heartbeat = vi.fn();
+    setTimeout(heartbeat, 0);
+    callbacks.shift()!({ didTimeout: false, timeRemaining: () => 50 });
+    expect(advanced).toBe(32);
+    expect(callbacks).toHaveLength(0);
+    vi.advanceTimersToNextTimer();
+    expect(heartbeat).toHaveBeenCalledOnce();
+    lease.setPriority(-1);
+    vi.runAllTimers();
+    expect(done).toHaveBeenCalledExactlyOnceWith(100);
+  });
   it("does no warm work with an exhausted idle budget and does not force an idle timeout", () => {
     vi.useFakeTimers();
     const callbacks: ((budget?: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];

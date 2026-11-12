@@ -34,7 +34,23 @@ export function createAnalysisWorkQueue() {
         count += 1;
         if (state !== "more" || performance.now() >= deadline) break;
       }
-      schedule();
+      if (
+        budget &&
+        count > 0 &&
+        jobs.length > 0 &&
+        jobs.every((job) => job.priority >= ANALYSIS_WARMUP_PRIORITY)
+      ) {
+        // Some native idle implementations can run newly registered callbacks
+        // in the same idle turn. Cross a real timer boundary before requesting
+        // another warm slice, so input/timers are not starved by that chain.
+        idleOnlyScheduled = true;
+        const handle = setTimeout(() => {
+          cancelScheduled = null;
+          idleOnlyScheduled = false;
+          schedule();
+        }, 0);
+        cancelScheduled = () => clearTimeout(handle);
+      } else schedule();
     };
     if (jobs.some((job) => job.priority <= 0)) {
       const handle = setTimeout(advance, 0);
