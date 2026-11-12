@@ -24,6 +24,48 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("shared analysis jobs", () => {
+  it("restores only after a disk miss and cancels before starting late work", async () => {
+    let release!: () => void;
+    const restore = vi.fn(
+      () =>
+        new Promise<void>((done) => {
+          release = done;
+        }),
+    );
+    const steps = vi.fn(function* () {
+        return 7;
+      }),
+      complete = vi.fn();
+    const pending = requestSharedAnalysis({ ...base(), restore, steps, complete });
+    expect(restore).toHaveBeenCalledOnce();
+    expect(steps).not.toHaveBeenCalled();
+    pending.cancel();
+    release();
+    await vi.runAllTimersAsync();
+    expect(steps).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+    const cached = requestSharedAnalysis({ ...base(), prepared: 9, restore, steps, complete });
+    expect(complete).toHaveBeenCalledWith(9);
+    expect(restore).toHaveBeenCalledOnce();
+    cached.cancel();
+  });
+  it("falls back to calculation when an optional restore fails", async () => {
+    const complete = vi.fn();
+    const lease = requestSharedAnalysis({
+      ...base(),
+      priority: 0,
+      restore: async () => {
+        throw new Error("unavailable");
+      },
+      steps: function* () {
+        return 7;
+      },
+      complete,
+    });
+    await vi.runAllTimersAsync();
+    expect(complete).toHaveBeenCalledWith(7);
+    lease.cancel();
+  });
   it("separates result handover, persistence kickoff and retention in numeric diagnosis", () => {
     calendarPerformance.start(true);
     const lease = requestSharedAnalysis({
