@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { before, beforeEach, after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -12,6 +12,14 @@ test("private cloud security contract runs in an isolated process", async (conte
   const { stdout } = await promisify(execFile)(process.execPath, [
     "--test",
     fileURLToPath(new URL("./private-cloud-security.test.mjs", import.meta.url)),
+  ]);
+  context.diagnostic(stdout.trim());
+});
+
+test("disabled Data API operations run in an isolated process", async (context) => {
+  const { stdout } = await promisify(execFile)(process.execPath, [
+    "--test",
+    fileURLToPath(new URL("./disabled-data-api.test.mjs", import.meta.url)),
   ]);
   context.diagnostic(stdout.trim());
 });
@@ -143,8 +151,8 @@ before(async () => {
   await db.exec(`
     create role anon nologin; create role authenticated nologin; create role service_role nologin;
     create schema auth; create schema extensions;
-    create table auth.users (id uuid primary key, banned_until timestamptz, deleted_at timestamptz, email_confirmed_at timestamptz default now());
-    create table auth.sessions (id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade, not_after timestamptz);
+    create table auth.users (id uuid primary key, email text, banned_until timestamptz, deleted_at timestamptz, email_confirmed_at timestamptz default now());
+    create table auth.sessions (id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade, not_after timestamptz, created_at timestamptz, updated_at timestamptz);
     create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, provider text not null);
     create function auth.jwt() returns jsonb language sql stable as
       $$ select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb) $$;
@@ -177,6 +185,11 @@ before(async () => {
   await db.exec(
     await readFile("supabase/migrations/20261030071015_shared_profile_photo_consent.sql", "utf8"),
   );
+  const timezoneMigrations = (await readdir("supabase/migrations")).filter((file) =>
+    file.endsWith("_sharing_publish_timezone_cache.sql"),
+  );
+  assert.equal(timezoneMigrations.length, 1);
+  await db.exec(await readFile(`supabase/migrations/${timezoneMigrations[0]}`, "utf8"));
 });
 beforeEach(async () => {
   await db.exec("reset role; truncate realtime.messages");
@@ -428,6 +441,71 @@ const publishV3 = (
     revision,
     JSON.stringify(entries),
   ]);
+
+test("large v3 calendar publishes within the existing eight-second server budget", async (context) => {
+  await create();
+  const entries = Array.from({ length: 1000 }, (_, index) => ({
+    ...entry(crypto.randomUUID()),
+    timeZone: ["Europe/Berlin", "UTC", "America/New_York", "Asia/Kolkata"][index % 4],
+    kind: "SHIFT",
+    note: "Dienstnotiz",
+    breakMinutes: 45,
+  }));
+  const started = performance.now();
+  const published = await publishV3(entries);
+  const elapsed = performance.now() - started;
+  context.diagnostic(`1000 entries published in ${elapsed.toFixed(0)} ms`);
+  assert.ok(elapsed < 8000, `publication took ${elapsed.toFixed(0)} ms`);
+  const snapshot = await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null]);
+  assert.equal(snapshot.entries.length, entries.length);
+  assert.equal(snapshot.revision, published.revision);
+  assert.ok(
+    snapshot.entries.every((item) => item.note === "Dienstnotiz" && item.breakMinutes === 45),
+  );
+  assert.deepEqual(await publishV3(entries), published);
+});
+
+test("server publication verification uses synthetic data and rolls fixtures back", async () => {
+  const results = await db.exec(
+    await readFile("supabase/operations/sharing-publish-timezone-cache-verification.sql", "utf8"),
+  );
+  const verification = results.find((result) => result.rows[0]?.verification)?.rows[0].verification;
+  assert.ok(verification);
+  assert.equal(verification.entries, 1000);
+  assert.ok(verification.publication_ms < 8000);
+  assert.equal(verification.retry_idempotent, true);
+  assert.equal(verification.invalid_timezone_rejected, true);
+  assert.equal(verification.snapshot_preserved, true);
+  assert.equal(
+    (await db.query("select count(*)::integer as count from auth.users")).rows[0].count,
+    3,
+  );
+  assert.equal(
+    (await db.query("select count(*)::integer as count from luna_sharing.calendars")).rows[0].count,
+    0,
+  );
+});
+
+test("v3 rejects invalid timezone values atomically after a valid snapshot", async () => {
+  await create();
+  await publishV3();
+  const before = await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null]);
+  for (const timeZone of [null, false, 7, [], {}, "", "Bad/Zone"]) {
+    await assert.rejects(
+      publishV3([{ ...durationEntries()[0], timeZone }], 1, crypto.randomUUID()),
+      failure("SHARE_INVALID_ARGUMENT"),
+    );
+  }
+  const missing = { ...durationEntries()[0] };
+  delete missing.timeZone;
+  await assert.rejects(
+    publishV3([missing], 1, crypto.randomUUID()),
+    failure("SHARE_INVALID_ARGUMENT"),
+  );
+  const after = await rpc(OWNER, "sharing_fetch_calendar_v3", [CALENDAR, null]);
+  assert.equal(after.revision, before.revision);
+  assert.deepEqual(after.entries, before.entries);
+});
 
 test("v3 automatically includes pauses within existing shift rights and retains legacy response shapes", async () => {
   await create();
