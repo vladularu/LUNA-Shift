@@ -16,7 +16,7 @@ jobs:
   fast:
     name: fast-feedback
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,7 +32,10 @@ jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    env:
+      # Keep CPU-heavy instrumented annual lifecycle cases inside their unchanged timeout.
+      VITEST_MAX_WORKERS: 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
