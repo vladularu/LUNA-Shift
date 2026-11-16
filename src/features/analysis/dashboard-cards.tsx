@@ -11,6 +11,7 @@ import { REPORT_CARD_GAP, SPACING } from "@/theme/tokens";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { useAnalysisView } from "./analysis-view-preferences";
 import { isCheckLimited, type CheckCounts, type ClassifiedCheckCounts } from "./check-visibility";
+import { CARD_METRICS } from "@/theme/card-layout";
 import { formatEuro } from "./salary-summary-card";
 import { PLANNING_TITLE } from "./check-presentation";
 import { CHECK_TITLE, LEGAL_TARIFF_TITLE } from "./check-copy";
@@ -328,7 +329,11 @@ export function PayListCard({
       onPress={onPress}
       caption={caption}
       busy={loading}
-      bodyMinHeight={!reserveLoadingSpace || status || fontScale > 1.2 ? undefined : rows * 47}
+      bodyMinHeight={
+        !reserveLoadingSpace || status || fontScale > 1.2
+          ? undefined
+          : rows * CARD_METRICS.rowMinHeight
+      }
     >
       {status ? (
         <AnalysisValueRow reserveDisclosure first label="Status" value={status} />

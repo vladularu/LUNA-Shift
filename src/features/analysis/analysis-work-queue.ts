@@ -3,8 +3,9 @@ import { calendarPerformance } from "@/application/calendar-performance";
 
 interface Job {
   priority: number;
-  advance: () => "more" | "yield" | "done";
+  advance: () => "more" | "yield" | "wait" | "done";
 }
+export type AnalysisWorkYield = number | Promise<void>;
 export const ANALYSIS_WARMUP_PRIORITY = 10;
 
 /** One cooperative queue for visible work and speculative neighbouring months. */
@@ -12,6 +13,10 @@ export function createAnalysisWorkQueue() {
   const jobs: Job[] = [];
   let cancelScheduled: (() => void) | null = null;
   let idleOnlyScheduled = false;
+  const cancelWakeup = () => {
+    cancelScheduled?.();
+    cancelScheduled = null;
+  };
   const schedule = () => {
     if (cancelScheduled !== null || jobs.length === 0) return;
     const advance = (budget?: IdleWorkBudget) => {
@@ -30,11 +35,29 @@ export function createAnalysisWorkQueue() {
         const index = jobs.findIndex((job) => job.priority === priority);
         const [job] = jobs.splice(index, 1);
         const state = job.advance();
-        if (state !== "done") jobs.push(job);
+        if (state === "more" || state === "yield") jobs.push(job);
         count += 1;
         if (state !== "more" || performance.now() >= deadline) break;
       }
-      schedule();
+      if (
+        budget &&
+        count > 0 &&
+        jobs.length > 0 &&
+        jobs.every((job) => job.priority >= ANALYSIS_WARMUP_PRIORITY)
+      ) {
+        // Some native idle implementations can run newly registered callbacks
+        // in the same idle turn. Cross a real timer boundary before requesting
+        // another warm slice, so input/timers are not starved by that chain.
+        // Completion may already have enqueued and scheduled the next job.
+        cancelWakeup();
+        idleOnlyScheduled = true;
+        const handle = setTimeout(() => {
+          cancelScheduled = null;
+          idleOnlyScheduled = false;
+          schedule();
+        }, 0);
+        cancelScheduled = () => clearTimeout(handle);
+      } else schedule();
     };
     if (jobs.some((job) => job.priority <= 0)) {
       const handle = setTimeout(advance, 0);
@@ -66,7 +89,7 @@ export function createAnalysisWorkQueue() {
     }
   };
   return function enqueue<T>(
-    steps: Generator<number, T, void>,
+    steps: Generator<AnalysisWorkYield, T, void>,
     complete: (result: T) => void,
     fail: (error: unknown) => void,
     priority = 0,
@@ -117,6 +140,23 @@ export function createAnalysisWorkQueue() {
             return "done";
           }
           measuredStep();
+          if (typeof step.value !== "number") {
+            // Remove this job while native work runs; do not poll/yield timers.
+            void step.value.then(
+              () => {
+                if (!active) return;
+                jobs.push(job);
+                schedule();
+              },
+              (error) => {
+                if (!active) return;
+                active = false;
+                end(3);
+                fail(error);
+              },
+            );
+            return "wait";
+          }
           // Warm-only jobs may use the remainder of an idle slice across cheap stage boundaries.
           // Visible work keeps its existing yields; both paths retain the 4ms/32-step outer limit.
           return step.value === 0 && job.priority < ANALYSIS_WARMUP_PRIORITY ? "yield" : "more";
@@ -134,8 +174,7 @@ export function createAnalysisWorkQueue() {
       (priority <= 0 || (idleOnlyScheduled && priority < ANALYSIS_WARMUP_PRIORITY)) &&
       cancelScheduled !== null
     ) {
-      cancelScheduled();
-      cancelScheduled = null;
+      cancelWakeup();
     }
     schedule();
     return {
@@ -143,19 +182,23 @@ export function createAnalysisWorkQueue() {
         if (job.priority === next) return;
         job.priority = next;
         if (active && cancelScheduled !== null) {
-          cancelScheduled();
-          cancelScheduled = null;
+          cancelWakeup();
           schedule();
         }
       },
       cancel: () => {
         if (active) end(2);
         active = false;
+        // Run request-local cleanup even when the generator awaits native work.
+        try {
+          steps.return(undefined as T);
+        } catch {
+          /* cancellation owns no result */
+        }
         const index = jobs.indexOf(job);
         if (index >= 0) jobs.splice(index, 1);
         if (cancelScheduled !== null) {
-          cancelScheduled();
-          cancelScheduled = null;
+          cancelWakeup();
         }
         schedule();
       },

@@ -89,9 +89,10 @@ export function ReorderableRow({
           flexDirection: item.content ? "column" : "row",
           alignItems: item.content ? "stretch" : "center",
           gap: item.content ? 0 : SPACING.md,
+          // Keep measured row heights stable while leaving the list visually open.
           borderTopWidth: item.content ? 0 : 1,
-          borderTopColor: index > 0 && !lifted ? p.separator : "transparent",
-          borderRadius: lifted || index === 0 || index === count - 1 ? RADII.card : 0,
+          borderTopColor: "transparent",
+          borderRadius: RADII.card,
           borderCurve: CORNER_CURVE,
           backgroundColor: p.surface,
           zIndex: lifted ? 10 : 0,

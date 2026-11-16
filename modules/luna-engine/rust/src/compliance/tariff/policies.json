@@ -1,0 +1,223 @@
+{
+  "policies": {
+    "TVAL_GENERAL": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVAL_GENERAL",
+      "freeRuleText": "Bei entsprechender Verweisung auf diesen Beschäftigtenbereich gilt: ",
+      "freeSource": null,
+      "label": "TVA-L Pflege",
+      "ruleText": "Für Erwachsene gilt das Beschäftigten-Arbeitszeitrecht des Ausbildenden. Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern dringende betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "dringende",
+      "source": {
+        "section": "§ 7 Abs. 1 in Verbindung mit § 6 TV-L",
+        "title": "TVA-L Pflege",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TVA_L_Pflege-7",
+        "version": "§ 7 Abs. 1; ÄTV 13 vom 14.02.2026 gegengeprüft"
+      }
+    },
+    "TVAL_KR": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVAL_KR",
+      "freeRuleText": "Bei entsprechender Verweisung auf diesen Beschäftigtenbereich gilt: Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 43 Nr. 3",
+        "title": "TV-L – Sonderregelungen Krankenhäuser",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TV_L-43",
+        "version": "01.07.2026"
+      },
+      "label": "TVA-L Pflege · § 43",
+      "ruleText": "Für Erwachsene gilt das Beschäftigten-Arbeitszeitrecht des Ausbildenden. Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern dringende betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "dringende",
+      "source": {
+        "section": "§ 7 Abs. 1 in Verbindung mit § 6 TV-L",
+        "title": "TVA-L Pflege",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TVA_L_Pflege-7",
+        "version": "§ 7 Abs. 1; ÄTV 13 vom 14.02.2026 gegengeprüft"
+      }
+    },
+    "TVAOED_B": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVAOED_B",
+      "freeRuleText": "Bei entsprechender Verweisung auf diesen Beschäftigtenbereich gilt: Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 49 Abs. 3",
+        "title": "TVöD – Besonderer Teil Pflege und Betreuung",
+        "url": "https://www.kavsh.de/download/lesefassung-tvoed-bt-b-01012026",
+        "version": "01.01.2026"
+      },
+      "label": "TVAöD Pflege · BT-B",
+      "ruleText": "Für Erwachsene gilt das Beschäftigten-Arbeitszeitrecht des Ausbildenden. Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern notwendige betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "notwendige",
+      "source": {
+        "section": "§ 7 Abs. 1 in Verbindung mit § 6 TVöD",
+        "title": "TVAöD – Besonderer Teil Pflege",
+        "url": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf",
+        "version": "ÄTV 18, Stand 01.07.2025"
+      }
+    },
+    "TVAOED_K": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVAOED_K",
+      "freeRuleText": "Bei entsprechender Verweisung auf diesen Beschäftigtenbereich gilt: Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 49 Abs. 3",
+        "title": "TVöD – Besonderer Teil Krankenhäuser",
+        "url": "https://www.kavsh.de/download/lesefassung-tvoed-bt-k-01012026",
+        "version": "01.01.2026"
+      },
+      "label": "TVAöD Pflege · BT-K",
+      "ruleText": "Für Erwachsene gilt das Beschäftigten-Arbeitszeitrecht des Ausbildenden. Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern notwendige betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "notwendige",
+      "source": {
+        "section": "§ 7 Abs. 1 in Verbindung mit § 6 TVöD",
+        "title": "TVAöD – Besonderer Teil Pflege",
+        "url": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf",
+        "version": "ÄTV 18, Stand 01.07.2025"
+      }
+    },
+    "TVH_KR": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVH_KR",
+      "freeRuleText": "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 43 Nr. 3",
+        "title": "TV-H",
+        "url": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf",
+        "version": "Mantel 2024; Einigung 27.03.2026 geprüft"
+      },
+      "label": "TV-H · Pflege",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern dringende betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "dringende",
+      "source": {
+        "section": "§ 6 Abs. 1 und § 43",
+        "title": "TV-H",
+        "url": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf",
+        "version": "Mantel 2024; Einigung 27.03.2026 geprüft"
+      }
+    },
+    "TVL_GENERAL": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVL_GENERAL",
+      "freeRuleText": "",
+      "freeSource": null,
+      "label": "TV-L",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern dringende betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "dringende",
+      "source": {
+        "section": "§ 6 Abs. 1 Satz 3",
+        "title": "TV-L",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TV_L-6",
+        "version": "01.07.2026"
+      }
+    },
+    "TVL_KR": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVL_KR",
+      "freeRuleText": "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 43 Nr. 3",
+        "title": "TV-L – Sonderregelungen Krankenhäuser",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TV_L-43",
+        "version": "01.07.2026"
+      },
+      "label": "TV-L · Pflege",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern dringende betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "dringende",
+      "source": {
+        "section": "§ 6 Abs. 1 Satz 3",
+        "title": "TV-L",
+        "url": "https://www.gesetze-bayern.de/Content/Document/TV_L-6",
+        "version": "01.07.2026"
+      }
+    },
+    "TVOED_B": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVOED_B",
+      "freeRuleText": "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 49 Abs. 3",
+        "title": "TVöD – Besonderer Teil Pflege und Betreuung",
+        "url": "https://www.kavsh.de/download/lesefassung-tvoed-bt-b-01012026",
+        "version": "01.01.2026"
+      },
+      "label": "TVöD · BT-B",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern notwendige betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "notwendige",
+      "source": {
+        "section": "§ 6 Abs. 1 Satz 3",
+        "title": "TVöD – Allgemeiner Teil",
+        "url": "https://www.vka.de/assets/media/docs/0/Tarifvertr%C3%A4ge/TVoeD_AT_AETV_22_Lesefassung_Stand_01_01_2026.pdf",
+        "version": "01.01.2026"
+      }
+    },
+    "TVOED_K": {
+      "averageFive": false,
+      "consecutiveFreeDays": false,
+      "family": "TVOED_K",
+      "freeRuleText": "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen zwei arbeitsfreie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 49 Abs. 3",
+        "title": "TVöD – Besonderer Teil Krankenhäuser",
+        "url": "https://www.kavsh.de/download/lesefassung-tvoed-bt-k-01012026",
+        "version": "01.01.2026"
+      },
+      "label": "TVöD · BT-K",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf fünf Tage verteilt. Sechs Tage erfordern notwendige betriebliche oder dienstliche Gründe.",
+      "sixthDayReason": "notwendige",
+      "source": {
+        "section": "§ 6 Abs. 1 Satz 3",
+        "title": "TVöD – Allgemeiner Teil",
+        "url": "https://www.vka.de/assets/media/docs/0/Tarifvertr%C3%A4ge/TVoeD_AT_AETV_22_Lesefassung_Stand_01_01_2026.pdf",
+        "version": "01.01.2026"
+      }
+    },
+    "TVUK": {
+      "averageFive": true,
+      "consecutiveFreeDays": true,
+      "family": "TVUK",
+      "freeRuleText": "Bei regelmäßiger Sonn- und Feiertagsarbeit sind innerhalb von zwei Wochen mindestens zwei zusammenhängende freie Tage vorgesehen. Einer soll auf einen Sonntag fallen.",
+      "freeSource": {
+        "section": "§ 11 Abs. 2",
+        "title": "TV-UK Baden-Württemberg",
+        "url": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf",
+        "version": "ÄTV 9, gültig ab 01.01.2025"
+      },
+      "label": "TV-UK · Pflege BW",
+      "ruleText": "Die regelmäßige Arbeitszeit wird auf durchschnittlich fünf Tage verteilt. Aus notwendigen betrieblichen Gründen sind bis zu sechs Tage pro Woche möglich.",
+      "sixthDayReason": "notwendige",
+      "source": {
+        "section": "§ 8 Abs. 2",
+        "title": "TV-UK Baden-Württemberg",
+        "url": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf",
+        "version": "ÄTV 9, gültig ab 01.01.2025"
+      }
+    }
+  },
+  "review": { "from": "2026-01-01", "until": "2026-12-31", "version": "2026-11-08" },
+  "salaryBasisKeys": [
+    "tariff",
+    "manualMonthlyGrossCents",
+    "nursingTrainingTariff",
+    "vkaETariff",
+    "tvlKrTariff",
+    "tvUkNursingTariff",
+    "tvhKrTariff",
+    "tvalPflegeTariff"
+  ],
+  "scopeSource": {
+    "section": "Keine hinreichend bestimmte Tarifgrundlage",
+    "title": "LUNA – Umfang der Tarifprüfung",
+    "url": "https://github.com/vladularu/LUNA-Shift",
+    "version": "2026-11-08"
+  },
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "weeklyAssumption": "LUNA zählt Dienste am Startdatum und setzt die betrieblichen Gründe für einen sechsten Arbeitstag voraus."
+}

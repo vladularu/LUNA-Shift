@@ -5,6 +5,9 @@ import type { UserProfile } from "@/domain/types";
 
 import { SettingsScreen } from "@/features/settings/settings-screen";
 import { SPACING } from "@/theme/tokens";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { AppearanceContext, type AppearanceValue } from "@/theme/appearance-context";
+import { resolvePalette } from "@/theme/theme-catalog";
 import {
   isDeveloperModeEnabled,
   setDeveloperMode,
@@ -79,6 +82,43 @@ jest.mock("@/infrastructure/dev-tools-policy", () => ({
 }));
 
 describe("SettingsScreen production gates", () => {
+  it.each(["light", "dark"] as const)(
+    "uses primary text for More card titles while preserving secondary lines in %s mode",
+    async (mode) => {
+      const palette = resolvePalette("standard", mode === "dark");
+      const appearance: AppearanceValue = {
+        themeId: "standard",
+        mode,
+        ready: true,
+        saving: false,
+        error: null,
+        setMode: jest.fn(),
+        setTheme: jest.fn(),
+        reset: jest.fn(),
+        retry: jest.fn(),
+      };
+      const screen = await render(
+        <AppearanceContext value={appearance}>
+          <SettingsScreen />
+        </AppearanceContext>,
+      );
+      for (const title of [
+        "Arbeitgeber",
+        "Arbeit & Gehalt",
+        "Kalender gestalten",
+        "Datensicherung",
+        "Lokale Datenspeicherung",
+        "Berechnungshinweise",
+        "Über LUNA Shift",
+      ]) {
+        expect(screen.getByText(title)).toHaveStyle({ ...TYPOGRAPHY.body, color: palette.text });
+      }
+      expect(screen.getByText("Deine Daten auf diesem Gerät")).toHaveStyle({
+        ...TYPOGRAPHY.caption,
+        color: palette.textMuted,
+      });
+    },
+  );
   it("opens the shared account from the LUNA Cloud section", async () => {
     const screen = await render(<SettingsScreen />);
     expect(screen.getAllByText("LUNA Cloud")).toHaveLength(2);

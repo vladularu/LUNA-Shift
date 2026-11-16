@@ -1,3 +1,4 @@
+import { useMonthlyRustNetCalculator } from "./use-monthly-rust-net-calculator";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useIsFocused } from "expo-router";
 import {
@@ -16,6 +17,7 @@ import { useDeferredMonthlyCompliance } from "./use-monthly-compliance";
 import { analysisWorkPriority } from "./analysis-work-queue";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
 import { useSalaryPaymentPreferences } from "@/features/salary/salary-payment-preferences";
+import { useMonthlyRustCalculator } from "./use-monthly-rust-calculator";
 const EMPTY_SHIFTS: readonly ShiftEntry[] = Object.freeze([]);
 
 function usePrepareMonth(month: string, active: boolean, enabled: boolean, distance: number) {
@@ -26,7 +28,9 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
-  const { resolver: ruleResolver } = useRuleCatalogRuntime();
+  const { resolver: ruleResolver, diagnosis } = useRuleCatalogRuntime();
+  const rust = useMonthlyRustCalculator(diagnosis);
+  const netCalculator = useMonthlyRustNetCalculator(diagnosis);
   const canPrepare = enabled && isFocused && status.ready && status.error === null;
   const storedResults = useAnalysisPersistentResults();
   const persistent = canPrepare && !testMonths.includes(month) ? storedResults : null;
@@ -75,7 +79,13 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
     workPatternSettings,
     ruleResolver,
   ]);
-  const salary = usePreparedAnalysisSalary(salaryRequest, active, distance, persistent);
+  const salary = usePreparedAnalysisSalary(
+    salaryRequest,
+    active,
+    distance,
+    persistent,
+    netCalculator,
+  );
   const monthlyRequest = useMemo(
     () =>
       canPrepare && profile !== null
@@ -83,7 +93,13 @@ function usePrepareMonth(month: string, active: boolean, enabled: boolean, dista
         : null,
     [canPrepare, profile, month, entries, tariffDecisions, workPatternSettings, ruleResolver],
   );
-  const monthlyData = usePreparedMonthlyAnalysis(monthlyRequest, active, distance, persistent);
+  const monthlyData = usePreparedMonthlyAnalysis(
+    monthlyRequest,
+    active,
+    distance,
+    persistent,
+    rust,
+  );
   const monthlyCompliance = useDeferredMonthlyCompliance({
     enabled: canPrepare && monthlyData !== null && monthlyData.complianceShifts.ok,
     month,

@@ -12,6 +12,11 @@ import { calendarPerformance } from "@/application/calendar-performance";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { persistentMonthValue } from "./persistent-analysis-values";
 import { readSharedAnalysisResult, requestSharedAnalysis } from "./shared-analysis-tasks";
+import {
+  monthlyRustRequest,
+  monthlyRustSteps,
+  type MonthlyRustCalculator,
+} from "./monthly-rust-bridge";
 
 /** Cached months are immediate; every uncached month is computed outside rendering. */
 export function usePreparedMonthlyAnalysis(
@@ -19,7 +24,12 @@ export function usePreparedMonthlyAnalysis(
   active: boolean,
   distance = 1,
   persistent: PersistentAnalysisCache | null = null,
+  rust: MonthlyRustCalculator | null = null,
 ) {
+  const effectiveRequest = useMemo(
+    () => (request === null ? null : monthlyRustRequest(request, rust)),
+    [request, rust],
+  );
   const [prepared, setPrepared] = useState<{
     key: string;
     resolver: RuleResolver;
@@ -27,27 +37,27 @@ export function usePreparedMonthlyAnalysis(
     failure?: unknown;
   } | null>(null);
   const task = useRef<ReturnType<typeof requestSharedAnalysis> | null>(null);
-  const input = useRef(request);
+  const input = useRef(effectiveRequest);
   const priority = useRef(analysisWorkPriority(1, active, distance));
   useLayoutEffect(() => {
-    input.current = request;
+    input.current = effectiveRequest;
     priority.current = analysisWorkPriority(1, active, distance);
-  }, [request, active, distance]);
+  }, [effectiveRequest, active, distance]);
   const inspection = useMemo(() => {
-    if (request === null) return null;
+    if (effectiveRequest === null) return null;
     const finish = calendarPerformance.span("analysis-prepare", {
-      month: Number(request.month.replace("-", "")),
+      month: Number(effectiveRequest.month.replace("-", "")),
       stage: 1,
     });
     try {
-      return inspectMonthlyAnalysis(request);
+      return inspectMonthlyAnalysis(effectiveRequest);
     } finally {
       finish();
     }
-  }, [request]);
+  }, [effectiveRequest]);
   const cached = inspection?.cached ?? null;
   const key = inspection?.key ?? null;
-  const resolver = request?.ruleResolver ?? null;
+  const resolver = effectiveRequest?.ruleResolver ?? null;
   const shared =
     key === null || resolver === null
       ? null
@@ -66,7 +76,8 @@ export function usePreparedMonthlyAnalysis(
       prepared: shared,
       priority: priority.current,
       accept: persistentMonthValue,
-      steps: () => calculateMonthlyAnalysisSteps(current),
+      steps: () =>
+        rust ? monthlyRustSteps(current, rust) : calculateMonthlyAnalysisSteps(current),
       complete: (value) =>
         setPrepared({
           key,
@@ -80,7 +91,7 @@ export function usePreparedMonthlyAnalysis(
       task.current?.cancel();
       task.current = null;
     };
-  }, [key, resolver, settled, persistent, shared]);
+  }, [key, resolver, settled, persistent, shared, rust]);
   useEffect(
     () => task.current?.setPriority(analysisWorkPriority(1, active, distance)),
     [active, distance, key, resolver],

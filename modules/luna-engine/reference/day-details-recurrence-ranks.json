@@ -1,0 +1,432 @@
+{
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "originalSourceSha256": "a599f4972f9e35b8856d77a354bba5ee0266a87fa9ee929a216312b73d165f76",
+  "cases": [
+    {
+      "id": "ONCE/false/2026-07-01",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8
+      }
+    },
+    {
+      "id": "ONCE/false/2026-07-02",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "2026-07-02": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "ONCE/true/2026-07-01",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-07-01": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "details-appointment": 5,
+        "details-appointment-second": 6,
+        "Termin 🌙": 7
+      }
+    },
+    {
+      "id": "ONCE/true/2026-07-02",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-07-01": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "2026-07-02": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8
+      }
+    },
+    {
+      "id": "DAY/false/2026-07-01",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "DAY": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "DAY/false/2026-07-02",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "2026-07-02": 6,
+        "DAY": 7,
+        "details-appointment": 8,
+        "details-appointment-second": 9,
+        "Termin 🌙": 10
+      }
+    },
+    {
+      "id": "DAY/false/2026-07-20",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "2026-07-20": 6,
+        "DAY": 7,
+        "details-appointment": 8,
+        "details-appointment-second": 9,
+        "Termin 🌙": 10
+      }
+    },
+    {
+      "id": "DAY/true/2026-07-01",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-07-01": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "DAY": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8
+      }
+    },
+    {
+      "id": "DAY/true/2026-07-02",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-07-01": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "2026-07-02": 5,
+        "DAY": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "DAY/true/2026-07-20",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-07-01": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "2026-07-20": 5,
+        "DAY": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "WEEK/false/2026-03-29",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-03-22": 4,
+        "2026-03-29": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "WEEK": 10
+      }
+    },
+    {
+      "id": "WEEK/false/2026-04-05",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-03-22": 4,
+        "2026-04-05": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "WEEK": 10
+      }
+    },
+    {
+      "id": "WEEK/false/2026-07-01",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-03-22": 4,
+        "2026-07-01": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "WEEK": 10
+      }
+    },
+    {
+      "id": "WEEK/true/2026-03-29",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-03-22": 3,
+        "2026-03-29": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "WEEK": 9
+      }
+    },
+    {
+      "id": "WEEK/true/2026-04-05",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-03-22": 3,
+        "2026-04-05": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "WEEK": 9
+      }
+    },
+    {
+      "id": "WEEK/true/2026-07-01",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-03-22": 3,
+        "2026-07-01": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "WEEK": 9
+      }
+    },
+    {
+      "id": "MONTH/false/2026-02-28",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-01-31": 4,
+        "2026-02-28": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "MONTH": 9,
+        "Termin 🌙": 10
+      }
+    },
+    {
+      "id": "MONTH/false/2026-03-31",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-01-31": 4,
+        "2026-03-31": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "MONTH": 9,
+        "Termin 🌙": 10
+      }
+    },
+    {
+      "id": "MONTH/false/2026-04-30",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-01-31": 4,
+        "2026-04-30": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "MONTH": 9,
+        "Termin 🌙": 10
+      }
+    },
+    {
+      "id": "MONTH/true/2026-02-28",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-01-31": 3,
+        "2026-02-28": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "MONTH": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "MONTH/true/2026-03-31",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-01-31": 3,
+        "2026-03-31": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "MONTH": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "MONTH/true/2026-04-30",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2026-01-01T00:00:00.123456789Z": 2,
+        "2026-01-31": 3,
+        "2026-04-30": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "MONTH": 8,
+        "Termin 🌙": 9
+      }
+    },
+    {
+      "id": "YEAR/false/2025-02-28",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2024-02-29": 3,
+        "2025-02-28": 4,
+        "2026-01-01T00:00:00.123456789Z": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "YEAR": 10
+      }
+    },
+    {
+      "id": "YEAR/false/2026-02-28",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2024-02-29": 3,
+        "2026-01-01T00:00:00.123456789Z": 4,
+        "2026-02-28": 5,
+        "2026-07-01T00:00:00Z": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "YEAR": 10
+      }
+    },
+    {
+      "id": "YEAR/false/2028-02-29",
+      "ranks": {
+        "#ABCDEF": 0,
+        "08:00": 1,
+        "09:15": 2,
+        "2024-02-29": 3,
+        "2026-01-01T00:00:00.123456789Z": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "2028-02-29": 6,
+        "details-appointment": 7,
+        "details-appointment-second": 8,
+        "Termin 🌙": 9,
+        "YEAR": 10
+      }
+    },
+    {
+      "id": "YEAR/true/2025-02-28",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2024-02-29": 2,
+        "2025-02-28": 3,
+        "2026-01-01T00:00:00.123456789Z": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "YEAR": 9
+      }
+    },
+    {
+      "id": "YEAR/true/2026-02-28",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2024-02-29": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-02-28": 4,
+        "2026-07-01T00:00:00Z": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "YEAR": 9
+      }
+    },
+    {
+      "id": "YEAR/true/2028-02-29",
+      "ranks": {
+        "": 0,
+        "#ABCDEF": 1,
+        "2024-02-29": 2,
+        "2026-01-01T00:00:00.123456789Z": 3,
+        "2026-07-01T00:00:00Z": 4,
+        "2028-02-29": 5,
+        "details-appointment": 6,
+        "details-appointment-second": 7,
+        "Termin 🌙": 8,
+        "YEAR": 9
+      }
+    }
+  ]
+}

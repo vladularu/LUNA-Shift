@@ -1,0 +1,1144 @@
+{
+  "request": {
+    "month": "2026-07",
+    "profile": {
+      "displayName": null,
+      "employerName": null,
+      "federalState": "NW",
+      "holidayRegion": "NONE",
+      "weeklyMinutes": 2310,
+      "timeZone": "Europe/Berlin",
+      "industry": null,
+      "manualMonthlyGrossCents": null,
+      "regularRotatingNightWork": null,
+      "sundayHolidayWorkEligible": null,
+      "allEmploymentWorkRecorded": null,
+      "tariff": {
+        "payGroup": "P8",
+        "payLevel": 3,
+        "sector": "BT_K",
+        "tariffRegion": "OTHER",
+        "fullTimeWeeklyMinutes": 2310
+      },
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-07-01T00:00:00Z",
+      "employmentTimeline": [],
+      "workingTimeTarget": {
+        "status": "ready",
+        "notices": [
+          {
+            "date": null,
+            "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+            "affectsTarget": true,
+            "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage."
+          }
+        ],
+        "mode": "FORECAST",
+        "context": {
+          "periods": [
+            {
+              "validFrom": "1900-01-01",
+              "validTo": null,
+              "weeklyMinutes": 2310,
+              "federalState": "NW",
+              "holidayRegion": "NONE",
+              "model": {
+                "kind": "UNKNOWN"
+              },
+              "tariff": {
+                "kind": "TVOED_K",
+                "version": "2026-01-01",
+                "scopeConfirmed": null
+              }
+            }
+          ],
+          "days": []
+        }
+      }
+    },
+    "entries": [
+      {
+        "kind": "SHIFT",
+        "specialDuty": null,
+        "id": "entry-0",
+        "date": "2026-07-01",
+        "templateId": null,
+        "title": "Dienst",
+        "type": "EARLY",
+        "allDay": false,
+        "startTime": "06:00",
+        "endTime": "14:00",
+        "breakMinutes": 30,
+        "color": "#ABCDEF",
+        "symbol": "F",
+        "note": "Hallo",
+        "notification": null,
+        "alarmEnabled": false,
+        "location": null,
+        "overtimeMinutes": 0,
+        "tariffOvertimeConfirmed": false,
+        "holidayPremiumMode": "WITH_TIME_OFF",
+        "revision": 1,
+        "createdAt": "2026-01-01T00:00:00.123456789Z",
+        "updatedAt": "2026-07-01T00:00:00Z",
+        "deletedAt": null
+      }
+    ],
+    "tariffDecisions": []
+  },
+  "value": {
+    "complianceShifts": {
+      "ok": true,
+      "value": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "entry-0",
+          "date": "2026-07-01",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "EARLY",
+          "allDay": false,
+          "startTime": "06:00",
+          "endTime": "14:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ]
+    },
+    "monthShifts": [
+      {
+        "kind": "SHIFT",
+        "specialDuty": null,
+        "id": "entry-0",
+        "date": "2026-07-01",
+        "templateId": null,
+        "title": "Dienst",
+        "type": "EARLY",
+        "allDay": false,
+        "startTime": "06:00",
+        "endTime": "14:00",
+        "breakMinutes": 30,
+        "color": "#ABCDEF",
+        "symbol": "F",
+        "note": "Hallo",
+        "notification": null,
+        "alarmEnabled": false,
+        "location": null,
+        "overtimeMinutes": 0,
+        "tariffOvertimeConfirmed": false,
+        "holidayPremiumMode": "WITH_TIME_OFF",
+        "revision": 1,
+        "createdAt": "2026-01-01T00:00:00.123456789Z",
+        "updatedAt": "2026-07-01T00:00:00Z",
+        "deletedAt": null
+      }
+    ],
+    "summary": {
+      "ok": true,
+      "value": {
+        "month": "2026-07",
+        "targetMinutes": 10626,
+        "actualMinutes": 450,
+        "balanceMinutes": -10176,
+        "overlapMinutes": 0,
+        "work": {
+          "minutes": 450,
+          "entryCount": 1
+        },
+        "training": {
+          "minutes": 0,
+          "entryCount": 0
+        },
+        "vacation": {
+          "minutes": 0,
+          "entryCount": 0
+        },
+        "sick": {
+          "minutes": 0,
+          "entryCount": 0
+        },
+        "free": {
+          "minutes": 0,
+          "entryCount": 0
+        },
+        "targetCalculation": {
+          "month": "2026-07",
+          "status": "PROVISIONAL",
+          "baseMinutes": 10626,
+          "statutoryReductionMinutes": 0,
+          "tariffReductionMinutes": 0,
+          "roundingMinutes": 0,
+          "targetMinutes": 10626,
+          "adjustments": [],
+          "notices": [
+            {
+              "date": null,
+              "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+              "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage.",
+              "affectsTarget": true
+            },
+            {
+              "date": null,
+              "code": "CONTRACTUAL_TARGET_FORECAST",
+              "message": "Sollzeit-Prognose aus den Beschäftigungsangaben. Einzelne Dienste, Zeitgutschriften und Freizeitausgleich werden getrennt berechnet.",
+              "affectsTarget": true
+            },
+            {
+              "date": "1900-01-01",
+              "code": "WORK_MODEL_UNKNOWN",
+              "message": "Die Verteilung der Arbeitszeit ist nicht bestätigt; nur Referenzberechnung.",
+              "affectsTarget": true
+            },
+            {
+              "date": "1900-01-01",
+              "code": "TARIFF_SCOPE_UNCONFIRMED",
+              "message": "Die Geltung des TVöD-K / BT-K ist nicht bestätigt.",
+              "affectsTarget": true
+            }
+          ],
+          "days": [
+            {
+              "date": "2026-07-01",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-02",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-03",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-04",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-05",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-06",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-07",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-08",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-09",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-10",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-11",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-12",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-13",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-14",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-15",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-16",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-17",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-18",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-19",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-20",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-21",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-22",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-23",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-24",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-25",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-26",
+              "baseMinutes": 0,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 0
+            },
+            {
+              "date": "2026-07-27",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-28",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-29",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-30",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            },
+            {
+              "date": "2026-07-31",
+              "baseMinutes": 462,
+              "statutoryReductionMinutes": 0,
+              "tariffReductionMinutes": 0,
+              "roundingMinutes": 0,
+              "targetMinutes": 462
+            }
+          ]
+        }
+      }
+    },
+    "shiftTypeAnalysis": {
+      "items": [
+        {
+          "type": "EARLY",
+          "count": 1,
+          "minutes": 450
+        }
+      ],
+      "totalCount": 1,
+      "totalMinutes": 450,
+      "groups": [
+        {
+          "title": "Dienst",
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "key": "[\"Dienst\",\"#ABCDEF\",\"F\"]",
+          "types": ["EARLY"],
+          "count": 1,
+          "minutes": 450,
+          "entries": [
+            {
+              "id": "entry-0",
+              "date": "2026-07-01",
+              "minutes": 450
+            }
+          ]
+        }
+      ],
+      "appearances": {
+        "EARLY": [
+          {
+            "title": "Dienst",
+            "color": "#ABCDEF",
+            "symbol": "F"
+          }
+        ]
+      }
+    },
+    "pay": {
+      "ok": true,
+      "value": {
+        "month": "2026-07",
+        "tariffLabel": "TVöD-P VKA · 01.05.2026–31.03.2027",
+        "available": true,
+        "fullTimeTableAmount": 3862.8,
+        "personalBaseAmount": 3862.8,
+        "shiftBreakdowns": [
+          {
+            "shiftId": "entry-0",
+            "date": "2026-07-01",
+            "netMinutes": 450,
+            "premiumLines": [],
+            "overtimeBaseAmount": 0,
+            "overtimePremiumAmount": 0,
+            "totalAmount": 0
+          }
+        ],
+        "timePremiumAmount": 0,
+        "overtimeAmount": 0,
+        "allowanceAmount": 0,
+        "tvoedAllowanceAmount": 25,
+        "careAllowanceAmount": 141.82,
+        "estimatedGrossAmount": 4029.62,
+        "assessment": {
+          "shiftWork": "REVIEW",
+          "alternatingShiftWork": "NOT_DETECTED",
+          "suggestedAllowance": "NONE",
+          "requiresConfirmation": false,
+          "evidence": [
+            "1 Arbeitsdienste",
+            "1 Dienstlagen: Früh",
+            "0 Wechsel der Dienstlage",
+            "Keine tarifliche Nachtschicht erkannt"
+          ],
+          "criteria": [
+            {
+              "key": "SHIFT_CHANGES",
+              "label": "Regelmäßiger Wechsel",
+              "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+              "state": "OPEN"
+            },
+            {
+              "key": "NIGHT_SHIFTS",
+              "label": "Wiederkehrende Nachtschichten",
+              "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+              "state": "OPEN"
+            },
+            {
+              "key": "AROUND_THE_CLOCK",
+              "label": "Arbeitsbereich rund um die Uhr",
+              "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+              "state": "OPEN"
+            },
+            {
+              "key": "ASSIGNMENT",
+              "label": "Dauerhafte Zuordnung",
+              "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+              "state": "OPEN"
+            }
+          ],
+          "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+        },
+        "confirmedAllowance": null
+      }
+    }
+  },
+  "edited": {
+    "request": {
+      "month": "2026-07",
+      "profile": {
+        "displayName": null,
+        "employerName": null,
+        "federalState": "NW",
+        "holidayRegion": "NONE",
+        "weeklyMinutes": 2310,
+        "timeZone": "Europe/Berlin",
+        "industry": null,
+        "manualMonthlyGrossCents": null,
+        "regularRotatingNightWork": null,
+        "sundayHolidayWorkEligible": null,
+        "allEmploymentWorkRecorded": null,
+        "tariff": {
+          "payGroup": "P8",
+          "payLevel": 3,
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "fullTimeWeeklyMinutes": 2310
+        },
+        "createdAt": "2026-01-01T00:00:00Z",
+        "updatedAt": "2026-07-01T00:00:00Z",
+        "employmentTimeline": [],
+        "workingTimeTarget": {
+          "status": "ready",
+          "notices": [
+            {
+              "date": null,
+              "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+              "affectsTarget": true,
+              "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage."
+            }
+          ],
+          "mode": "FORECAST",
+          "context": {
+            "periods": [
+              {
+                "validFrom": "1900-01-01",
+                "validTo": null,
+                "weeklyMinutes": 2310,
+                "federalState": "NW",
+                "holidayRegion": "NONE",
+                "model": {
+                  "kind": "UNKNOWN"
+                },
+                "tariff": {
+                  "kind": "TVOED_K",
+                  "version": "2026-01-01",
+                  "scopeConfirmed": null
+                }
+              }
+            ],
+            "days": []
+          }
+        }
+      },
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "entry-0",
+          "date": "2026-07-01",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "EARLY",
+          "allDay": false,
+          "startTime": "06:00",
+          "endTime": "15:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 2,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "tariffDecisions": []
+    },
+    "value": {
+      "complianceShifts": {
+        "ok": true,
+        "value": [
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "entry-0",
+            "date": "2026-07-01",
+            "templateId": null,
+            "title": "Dienst",
+            "type": "EARLY",
+            "allDay": false,
+            "startTime": "06:00",
+            "endTime": "15:00",
+            "breakMinutes": 30,
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "note": "Hallo",
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 2,
+            "createdAt": "2026-01-01T00:00:00.123456789Z",
+            "updatedAt": "2026-07-01T00:00:00Z",
+            "deletedAt": null
+          }
+        ]
+      },
+      "monthShifts": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "entry-0",
+          "date": "2026-07-01",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "EARLY",
+          "allDay": false,
+          "startTime": "06:00",
+          "endTime": "15:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 2,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "summary": {
+        "ok": true,
+        "value": {
+          "month": "2026-07",
+          "targetMinutes": 10626,
+          "actualMinutes": 510,
+          "balanceMinutes": -10116,
+          "overlapMinutes": 0,
+          "work": {
+            "minutes": 510,
+            "entryCount": 1
+          },
+          "training": {
+            "minutes": 0,
+            "entryCount": 0
+          },
+          "vacation": {
+            "minutes": 0,
+            "entryCount": 0
+          },
+          "sick": {
+            "minutes": 0,
+            "entryCount": 0
+          },
+          "free": {
+            "minutes": 0,
+            "entryCount": 0
+          },
+          "targetCalculation": {
+            "month": "2026-07",
+            "status": "PROVISIONAL",
+            "baseMinutes": 10626,
+            "statutoryReductionMinutes": 0,
+            "tariffReductionMinutes": 0,
+            "roundingMinutes": 0,
+            "targetMinutes": 10626,
+            "adjustments": [],
+            "notices": [
+              {
+                "date": null,
+                "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+                "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage.",
+                "affectsTarget": true
+              },
+              {
+                "date": null,
+                "code": "CONTRACTUAL_TARGET_FORECAST",
+                "message": "Sollzeit-Prognose aus den Beschäftigungsangaben. Einzelne Dienste, Zeitgutschriften und Freizeitausgleich werden getrennt berechnet.",
+                "affectsTarget": true
+              },
+              {
+                "date": "1900-01-01",
+                "code": "WORK_MODEL_UNKNOWN",
+                "message": "Die Verteilung der Arbeitszeit ist nicht bestätigt; nur Referenzberechnung.",
+                "affectsTarget": true
+              },
+              {
+                "date": "1900-01-01",
+                "code": "TARIFF_SCOPE_UNCONFIRMED",
+                "message": "Die Geltung des TVöD-K / BT-K ist nicht bestätigt.",
+                "affectsTarget": true
+              }
+            ],
+            "days": [
+              {
+                "date": "2026-07-01",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-02",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-03",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-04",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-05",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-06",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-07",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-08",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-09",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-10",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-11",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-12",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-13",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-14",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-15",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-16",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-17",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-18",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-19",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-20",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-21",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-22",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-23",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-24",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-25",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-26",
+                "baseMinutes": 0,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 0
+              },
+              {
+                "date": "2026-07-27",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-28",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-29",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-30",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              },
+              {
+                "date": "2026-07-31",
+                "baseMinutes": 462,
+                "statutoryReductionMinutes": 0,
+                "tariffReductionMinutes": 0,
+                "roundingMinutes": 0,
+                "targetMinutes": 462
+              }
+            ]
+          }
+        }
+      },
+      "shiftTypeAnalysis": {
+        "items": [
+          {
+            "type": "EARLY",
+            "count": 1,
+            "minutes": 510
+          }
+        ],
+        "totalCount": 1,
+        "totalMinutes": 510,
+        "groups": [
+          {
+            "title": "Dienst",
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "key": "[\"Dienst\",\"#ABCDEF\",\"F\"]",
+            "types": ["EARLY"],
+            "count": 1,
+            "minutes": 510,
+            "entries": [
+              {
+                "id": "entry-0",
+                "date": "2026-07-01",
+                "minutes": 510
+              }
+            ]
+          }
+        ],
+        "appearances": {
+          "EARLY": [
+            {
+              "title": "Dienst",
+              "color": "#ABCDEF",
+              "symbol": "F"
+            }
+          ]
+        }
+      },
+      "pay": {
+        "ok": true,
+        "value": {
+          "month": "2026-07",
+          "tariffLabel": "TVöD-P VKA · 01.05.2026–31.03.2027",
+          "available": true,
+          "fullTimeTableAmount": 3862.8,
+          "personalBaseAmount": 3862.8,
+          "shiftBreakdowns": [
+            {
+              "shiftId": "entry-0",
+              "date": "2026-07-01",
+              "netMinutes": 510,
+              "premiumLines": [],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 0
+            }
+          ],
+          "timePremiumAmount": 0,
+          "overtimeAmount": 0,
+          "allowanceAmount": 0,
+          "tvoedAllowanceAmount": 25,
+          "careAllowanceAmount": 141.82,
+          "estimatedGrossAmount": 4029.62,
+          "assessment": {
+            "shiftWork": "REVIEW",
+            "alternatingShiftWork": "NOT_DETECTED",
+            "suggestedAllowance": "NONE",
+            "requiresConfirmation": false,
+            "evidence": [
+              "1 Arbeitsdienste",
+              "1 Dienstlagen: Früh",
+              "0 Wechsel der Dienstlage",
+              "Keine tarifliche Nachtschicht erkannt"
+            ],
+            "criteria": [
+              {
+                "key": "SHIFT_CHANGES",
+                "label": "Regelmäßiger Wechsel",
+                "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                "state": "OPEN"
+              },
+              {
+                "key": "NIGHT_SHIFTS",
+                "label": "Wiederkehrende Nachtschichten",
+                "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                "state": "OPEN"
+              },
+              {
+                "key": "AROUND_THE_CLOCK",
+                "label": "Arbeitsbereich rund um die Uhr",
+                "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                "state": "OPEN"
+              },
+              {
+                "key": "ASSIGNMENT",
+                "label": "Dauerhafte Zuordnung",
+                "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                "state": "OPEN"
+              }
+            ],
+            "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          },
+          "confirmedAllowance": null
+        }
+      }
+    }
+  },
+  "engineVersion": "luna-engine-v1:469b8dbefebaaf6a6acd4161f07f7245bb6d19ff8b3b0f13818d936f745be86a",
+  "id": "month-p9-h0-plan1-trainingfalse"
+}

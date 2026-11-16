@@ -13,6 +13,7 @@ import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { useLocalReferenceDate } from "./use-local-reference-date";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
 import { createAnnualAnalysisWarmupRuntime } from "./annual-analysis-warmup";
+import { useAnnualRustCalculator } from "./use-annual-rust-calculator";
 /** Lower priority than prepared months; active app time only, after the startup barrier. */
 export default function AnnualAnalysisBackgroundPreparation() {
   const status = usePflegeShiftStatus();
@@ -32,7 +33,11 @@ export default function AnnualAnalysisBackgroundPreparation() {
     coordinator.analysisRequests.getMonth,
   );
   const persistent = useAnalysisPersistentResults();
-  const runtime = useMemo(() => createAnnualAnalysisWarmupRuntime(persistent), [persistent]);
+  const calculator = useAnnualRustCalculator();
+  const runtime = useMemo(
+    () => createAnnualAnalysisWarmupRuntime(persistent, 120, calculator),
+    [persistent, calculator],
+  );
   const [active, setActive] = useState(AppState.currentState === "active");
   useEffect(() => () => runtime.stop(), [runtime]);
   useEffect(() => {

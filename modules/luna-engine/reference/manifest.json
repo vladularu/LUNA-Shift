@@ -1,0 +1,662 @@
+{
+  "baselineVersion": "preview-52-frozen-v1",
+  "canonicalization": {
+    "arrays": "original order retained",
+    "errors": "explicit tagged exception name/message for boundary fixtures only",
+    "mapsAndSets": "tagged and sorted by canonical key/value",
+    "negativeZero": "JSON zero",
+    "nonFiniteAndUnsupportedValues": "rejected",
+    "objectKeys": "sorted code-point order",
+    "temporalValues": "existing toJSON representation",
+    "undefinedObjectFields": "omitted"
+  },
+  "cases": [
+    {
+      "id": "money-zero",
+      "operation": "money.roundRatio",
+      "sha256": "2f7d2e7c9b1422f1d0d70bd84ebc19f3b2fb5e0d2897c9543a7206406793ee1b"
+    },
+    {
+      "id": "money-below-half",
+      "operation": "money.roundRatio",
+      "sha256": "c3c376646977d000360e92821f87b38093403bde4c611f1ee75c088e5f259198"
+    },
+    {
+      "id": "money-exact-half",
+      "operation": "money.roundRatio",
+      "sha256": "9d3c8b056c81535f2fa81c985202b5f2d5b53fe0122ec6e6273635105c6fe63c"
+    },
+    {
+      "id": "money-round-up",
+      "operation": "money.roundRatio",
+      "sha256": "29568b9fbfe46f150fdbcb7e5be1b27a4ced4c82dd959da63ed8a4f8fff1b38c"
+    },
+    {
+      "id": "money-large-safe",
+      "operation": "money.roundRatio",
+      "sha256": "10625662b141cd0d68368c173829feec21c6e12feb9872ce9029c2dd65596748"
+    },
+    {
+      "id": "money-invalid-negative",
+      "operation": "money.roundRatio",
+      "sha256": "4a189a59b37aeb3672331e91b3e84875d67f6444dbb2505435d87e88fad3df4c"
+    },
+    {
+      "id": "money-invalid-denominator",
+      "operation": "money.roundRatio",
+      "sha256": "5bd3325b75a2efa4a49b2e814a58025f41a19da45847b6b95dd89a317dbad8eb"
+    },
+    {
+      "id": "money-unsafe-integer",
+      "operation": "money.roundRatio",
+      "sha256": "247010f09797184a501285dbf89b5276790f7a23eaa1b47714b82cb10caae64b"
+    },
+    {
+      "id": "range-1900-02",
+      "operation": "calendar.monthRange",
+      "sha256": "4450da637a62729422dac579e89285ac9eeefb4476bdd8015e12e28a4ecf1c32"
+    },
+    {
+      "id": "grid-1900-02",
+      "operation": "calendar.monthGrid",
+      "sha256": "42eaaf7404f11b05ce3603476bf00519b82f6343393c86328fe02620a82d9304"
+    },
+    {
+      "id": "range-2000-02",
+      "operation": "calendar.monthRange",
+      "sha256": "1530a883a25126e573c1bf7db74dee9bdc0f0b4c4374a2b1a9316c370c83efd0"
+    },
+    {
+      "id": "grid-2000-02",
+      "operation": "calendar.monthGrid",
+      "sha256": "bcde122d856a94a1f0ddf49c96d81b332a54b2ecfffeeb217dafcb4e26c9d9a6"
+    },
+    {
+      "id": "range-2024-02",
+      "operation": "calendar.monthRange",
+      "sha256": "6501ff31d58a1a46842576014917ca8a7c95cc2afd32813a9e41ea7e3ddfea59"
+    },
+    {
+      "id": "grid-2024-02",
+      "operation": "calendar.monthGrid",
+      "sha256": "ea994b46ec040a3abe8a61b852037e52509bb5d451a09b03de722ce974fb4257"
+    },
+    {
+      "id": "range-2026-12",
+      "operation": "calendar.monthRange",
+      "sha256": "5a3cc5a33f7dce5860a859ce938faf9cf2d6747a6a28d6f005b543f0bec2d08b"
+    },
+    {
+      "id": "grid-2026-12",
+      "operation": "calendar.monthGrid",
+      "sha256": "4edc339efe87bfaf4faa2680f52d66c6594c1832f43f299c91c96d48ede0ccd5"
+    },
+    {
+      "id": "range-2027-01",
+      "operation": "calendar.monthRange",
+      "sha256": "64c2f76925be16fc1bbe4004fa6b3cfa9bb73a07b75d76269de60df1e6d6a476"
+    },
+    {
+      "id": "grid-2027-01",
+      "operation": "calendar.monthGrid",
+      "sha256": "cfcdc34303af96d7454cd5419a9f0f6ca3025b837b0c72bafac69fe765167b57"
+    },
+    {
+      "id": "add-month-2026-12-1",
+      "operation": "calendar.addMonths",
+      "sha256": "b5658d435563edb141d3ba8d55235b13244d5f829f557f40c013841b1d8315ff"
+    },
+    {
+      "id": "add-month-2027-01--1",
+      "operation": "calendar.addMonths",
+      "sha256": "99cff9e44919ce18ba8ed2a64efedc22c242f097c7d9f2400b7355a1c2136f20"
+    },
+    {
+      "id": "add-month-2000-02-12",
+      "operation": "calendar.addMonths",
+      "sha256": "8d51d86764ff06706a5d38cbe818db2f3f27a2ac7ca84ace2ea475fddfbd203d"
+    },
+    {
+      "id": "iso-week-2026-01-01",
+      "operation": "calendar.isoWeek",
+      "sha256": "a7f0f19bd0c5729a9a1e88d6972d8ca639605136495c4a7c4bb4585c57685b4f"
+    },
+    {
+      "id": "iso-week-2027-01-01",
+      "operation": "calendar.isoWeek",
+      "sha256": "bb0a7bef1d08b914c11dccc41127d04101f6989d0a2cfc3416126c0ebaa0623b"
+    },
+    {
+      "id": "iso-week-2026-12-31",
+      "operation": "calendar.isoWeek",
+      "sha256": "c237f442e46b2709eb9badc46b447a688b12ca19ff4dd73d4e91775e87462ac9"
+    },
+    {
+      "id": "bounds-day",
+      "operation": "time.shiftBounds",
+      "sha256": "15c32b7b1472e0f267070773852def667481cfe934bffc5c6fca62b5e7f39a01"
+    },
+    {
+      "id": "minutes-day",
+      "operation": "time.shiftMinutes",
+      "sha256": "9a8e12544736bc6f73ea7e3251871f716d54675ecd47d57dd8d72be4dc954ae6"
+    },
+    {
+      "id": "bounds-overnight",
+      "operation": "time.shiftBounds",
+      "sha256": "64213dae623a909cb891903dd55d51812d056c8fdb2efa553e7f9850c36a7efc"
+    },
+    {
+      "id": "minutes-overnight",
+      "operation": "time.shiftMinutes",
+      "sha256": "12b14eb1535c0fb98d9d70c00559bc3f4a0bb1b0bb4a31a1c367299837e53df2"
+    },
+    {
+      "id": "bounds-dst-spring",
+      "operation": "time.shiftBounds",
+      "sha256": "2f88fc90a6fd87bf7a8e6f0f7ca4e488affd521d04f3833e2c03071cd312c35c"
+    },
+    {
+      "id": "minutes-dst-spring",
+      "operation": "time.shiftMinutes",
+      "sha256": "f5b974ccce3ef9b5ba361a8dbe41777d7cac1c2d7f09fec0d084b5c83c3d96e7"
+    },
+    {
+      "id": "bounds-dst-fall",
+      "operation": "time.shiftBounds",
+      "sha256": "56caaf367c6ccdcb2f4c2ed215d1e34b50637cec7fa0d0ca5ec067081c2dabb3"
+    },
+    {
+      "id": "minutes-dst-fall",
+      "operation": "time.shiftMinutes",
+      "sha256": "e4a3cd85911e107c8551e4b7c2ca69d166debd5813a504c6de3b8a3d26a53591"
+    },
+    {
+      "id": "bounds-dst-overlap",
+      "operation": "time.shiftBounds",
+      "sha256": "39b2c62c10dacec509813d20a302d51a0c0d1538dade4fbb476bdf0cf39decd9"
+    },
+    {
+      "id": "minutes-dst-overlap",
+      "operation": "time.shiftMinutes",
+      "sha256": "b5fd87cfc6a209716b5501adc32cdf29c5ee5d49b71e77298a2a2e262b6f3d8e"
+    },
+    {
+      "id": "bounds-dst-gap",
+      "operation": "time.shiftBounds",
+      "sha256": "8bf3fe398d2910ad013b8ba2fac368fe06bb2f60c4c02e4a8af058da1704c26f"
+    },
+    {
+      "id": "minutes-dst-gap",
+      "operation": "time.shiftMinutes",
+      "sha256": "7935bf4b7c011c9d5480a76cec75b812dcfa70cdf9081bdaea1c9499c0693779"
+    },
+    {
+      "id": "bounds-new-york-spring",
+      "operation": "time.shiftBounds",
+      "sha256": "2d61c97230055085513fb564bdebade4ff87a7bd95a27777408347923da72bbb"
+    },
+    {
+      "id": "minutes-new-york-spring",
+      "operation": "time.shiftMinutes",
+      "sha256": "622705bd50c7ebee7e2626a06106846ef6eec8a4fae6f289484050651a372bc0"
+    },
+    {
+      "id": "bounds-half-hour-zone",
+      "operation": "time.shiftBounds",
+      "sha256": "5fa8ddcf75dfbd8a6a467344d5956bca11b0dc1cc0314e7b843c881e57f93cbf"
+    },
+    {
+      "id": "minutes-half-hour-zone",
+      "operation": "time.shiftMinutes",
+      "sha256": "340e0b4e341b709ed5d98a3e0d256a50d9f772455e63fe106623dbdad0b472cf"
+    },
+    {
+      "id": "bounds-equal-clock-next-day",
+      "operation": "time.shiftBounds",
+      "sha256": "ccbb69c3ce0d311aee36e457aac4406dd07d86530ab178e9d5d1ca99957ca820"
+    },
+    {
+      "id": "minutes-equal-clock-next-day",
+      "operation": "time.shiftMinutes",
+      "sha256": "e89c09df99c5bb2455f8759dd1ecfa629e3c1fe4deee94848bdc7543465929ae"
+    },
+    {
+      "id": "bounds-all-day",
+      "operation": "time.shiftBounds",
+      "sha256": "5c1ffebfcb7a82a6100f48171fb84616795e7aaa288c46c7b9ef8b0a6cc7e098"
+    },
+    {
+      "id": "minutes-all-day",
+      "operation": "time.shiftMinutes",
+      "sha256": "de6b9b51f793b78432b7bd370e6afa6526d9d03a0a53ff826ddd74c0a85295fd"
+    },
+    {
+      "id": "bounds-missing-clock",
+      "operation": "time.shiftBounds",
+      "sha256": "e62d127b387a72b5030ed3cc1665fbdea329560265f8f871b8536141591d54d4"
+    },
+    {
+      "id": "minutes-missing-clock",
+      "operation": "time.shiftMinutes",
+      "sha256": "627bcdd4820971dd664caa4f64338093d9783a0df811383c7243fbc7b23bdf07"
+    },
+    {
+      "id": "bounds-leap-day",
+      "operation": "time.shiftBounds",
+      "sha256": "7da25e0e254af9111e989a97b4d402d6d575071f494acc5d363e03aa8cf4ce13"
+    },
+    {
+      "id": "minutes-leap-day",
+      "operation": "time.shiftMinutes",
+      "sha256": "2f880d2c9377722d1bfe59fadec17cd77a7f47215cecd930a7b984c675b592d1"
+    },
+    {
+      "id": "bounds-end-time-plus-five",
+      "operation": "time.shiftBounds",
+      "sha256": "d260770a561cb332327c81e35cf6e448d6c43d83bc7c0ec291741d46ee6925f8"
+    },
+    {
+      "id": "minutes-end-time-plus-five",
+      "operation": "time.shiftMinutes",
+      "sha256": "b0163b5287864b710712d14a9161fad71136af99e7e6016ccf17fccca2232079"
+    },
+    {
+      "id": "bounds-special-duty-zone-override",
+      "operation": "time.shiftBounds",
+      "sha256": "7e98bf6f7b0d91c7dd94c9141644a4a7d4861944e75019818f94df5f69a76820"
+    },
+    {
+      "id": "minutes-special-duty-zone-override",
+      "operation": "time.shiftMinutes",
+      "sha256": "398ced2ffb105cc8731f3d586675219503d743ec724494e4d94b3b94d1b53637"
+    },
+    {
+      "id": "bounds-special-duty-split",
+      "operation": "time.shiftBounds",
+      "sha256": "01aff4a76345598fa7bd6316739a0e4ea7360066819353bf4a2fa21904b86d21"
+    },
+    {
+      "id": "minutes-special-duty-split",
+      "operation": "time.shiftMinutes",
+      "sha256": "9e899b126dd8cc2cfdf8e5e1153df6dfe6913e8c583a38342c37bf5b9bc80aeb"
+    },
+    {
+      "id": "target-qualified-december",
+      "operation": "time.calculateMonthlyWorkingTimeTarget",
+      "sha256": "e4f647e842069f8b0b3afe14078e64ea350b5ececbff992048126788edb329b2"
+    },
+    {
+      "id": "target-missing-evidence",
+      "operation": "time.calculateMonthlyWorkingTimeTarget",
+      "sha256": "4a0c15eb4a4ecded79a7eba74d7f60ee91a1bd8c6d5d723e41643149f464d71f"
+    },
+    {
+      "id": "summary-empty",
+      "operation": "time.calculateMonthlySummary",
+      "sha256": "d12bc3f5f7ea2caa93aef01804a18cec4990114017f9cc68de2d3b210bae5691"
+    },
+    {
+      "id": "gross-empty",
+      "operation": "gross.calculateMonthlyPayEstimate",
+      "sha256": "b074e7dddde95980c66726ac046c3d7d4d73be6abe804f5d3ec8413de4230fdc"
+    },
+    {
+      "id": "summary-two-duties",
+      "operation": "time.calculateMonthlySummary",
+      "sha256": "fda3a374fd697b6a4ff69a7861ba615f21e02e351331114fa64b24d53e0077c3"
+    },
+    {
+      "id": "gross-two-duties",
+      "operation": "gross.calculateMonthlyPayEstimate",
+      "sha256": "d29a1a8a07b508b033a74c5e33b142dbcf66a2488c2051d6af1b77fa22b24703"
+    },
+    {
+      "id": "summary-end-time-plus-five",
+      "operation": "time.calculateMonthlySummary",
+      "sha256": "ac74b2a67b304bd0d3d0258095bc7cfdc3f8eeaaf8aa36879181183fc9cde8ef"
+    },
+    {
+      "id": "gross-end-time-plus-five",
+      "operation": "gross.calculateMonthlyPayEstimate",
+      "sha256": "07737c97d163ab4918470dea2c83dcc2f8501d499c7355451baccad222eeb912"
+    },
+    {
+      "id": "remuneration-own-monthly",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "a7b96786a6e1ef02bf98c9da84f86966ae63a8b91fc64c615993926dc64b3f12"
+    },
+    {
+      "id": "remuneration-own-partial",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "329124961fe766ff2be581f5e94c54961f12251f0a219a4e2d70eb336e683e18"
+    },
+    {
+      "id": "remuneration-missing-history",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "1280a26cbf09f1fb9d7551cec7c0a77ceaf64c8616d8cd635b050088bd25353c"
+    },
+    {
+      "id": "remuneration-own-hourly",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "bf929a6a438c50e7bda850149f747bbec7b9336ca007266c16a32ef9d32ff1c8"
+    },
+    {
+      "id": "remuneration-tariff-history-change",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "315b77d969f745a9c6c23a48a9d70adfda2d5fb8a8cf4d7a3bcf834dad68b0b5"
+    },
+    {
+      "id": "remuneration-own-annual-payout",
+      "operation": "gross.calculateAssessedMonthlyRemuneration",
+      "sha256": "d2e26a307fb430db507ccc9ca70b4d6b4be69956acdc07cb09becc611b7d3f52"
+    },
+    {
+      "id": "net-bmf-class-1",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "42283d388318798e1312848250f41fe20f0d0cc35e4829bd224c9faa00af8023"
+    },
+    {
+      "id": "net-bmf-class-2",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "452d5077faa025300449c780e7f5fa192b72f34d9af0af1a5269af7d813b8e5e"
+    },
+    {
+      "id": "net-bmf-class-3",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "ccec28195cbc33812757bd06c46d1f5f278a0a12749bfa5c9d91ab7d424db94f"
+    },
+    {
+      "id": "net-bmf-class-4",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "83b1290f5e0f7bfb2dc05edb216df530c6e625f052c36a4e6c1d4f993ccf1c4f"
+    },
+    {
+      "id": "net-bmf-class-5",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "6b20543f708d9647addd94d8d1bfc0ad43cf7a13824eb565538c1ded0b864a3e"
+    },
+    {
+      "id": "net-bmf-class-6",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "f3e7a8cd31ad80950c6689eeacc1edbbc9e286652200a807081fa4df75fff68d"
+    },
+    {
+      "id": "net-bmf-gross-200001",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "7034829f0e33785ae08de064e38cc5bee9d364d4e1066053fbb27ae684f39a46"
+    },
+    {
+      "id": "net-bmf-gross-300000",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "b86c21197b8f6a82705a401b3f55b11ec0c7aed26164d584118dc7fd8d493dec"
+    },
+    {
+      "id": "net-bmf-gross-400000",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "ec98385e2c7de404a3ce21275c3ae47730b716a073fd69027e45c336b5fd0c85"
+    },
+    {
+      "id": "net-bmf-gross-581249",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "9f278955f6bb562318706bebc9f459c4ab3add641f8b488c8f7a67efd3315598"
+    },
+    {
+      "id": "net-bmf-gross-581250",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "134d7dab0fb6b36945fa84802042e3c85bb2aa9036bfd2d9899d82c458b9c85c"
+    },
+    {
+      "id": "net-bmf-gross-581251",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "b71e5f8bc46f37ed6aced9af700f7251bba934b0b3effba407fb3f4fa152f640"
+    },
+    {
+      "id": "net-bmf-gross-845000",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "00800ee6f12c32f691376daaa03a0239828d9484ce567739b26e7970ed175433"
+    },
+    {
+      "id": "net-bmf-gross-845001",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "94a13d4dd273c6f5d36ef15a7568b70770b7a79560e2c8477506f1ba7fef6e76"
+    },
+    {
+      "id": "net-bmf-gross-1000000",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "ee046b2180386be08f45c8a4e0ffc477606c0d95e13a2540885c4ae441d71722"
+    },
+    {
+      "id": "net-bmf-no-church",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "0914d983c1374a70e4ca6f7b439348e9601deb26101262d6b6496755382aa52a"
+    },
+    {
+      "id": "net-bmf-church-eight",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "2707fd1cb6da2ed5d9ec14caa2da70d88bf0620852a8c75bb7f9939e35479ec1"
+    },
+    {
+      "id": "net-bmf-factor-800",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "dac5f438c5b0a7bbc4be537b6454e168e02ef897962264c5037436928f6cd48f"
+    },
+    {
+      "id": "net-bmf-factor-001",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "93df18201a8825eb3c20189d079bf6374752f1bac6446303a7ed6376b64099e8"
+    },
+    {
+      "id": "net-bmf-factor-999",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "50ea5b359f91c2ca0a2de9686021ae0897521eeb9f1235976d974b69f3633d88"
+    },
+    {
+      "id": "net-bmf-half-child-allowance",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "8250f51b6d15d6ed62101952a76776b475ad38c11ba1ddc353b150c1459b17ae"
+    },
+    {
+      "id": "net-bmf-full-child-allowance",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "fb474a2e8b325db673f818e507d451f2fc932aff6d829bbd767a80f8a587ba84"
+    },
+    {
+      "id": "net-bmf-parent-0",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "00b2051747bd051093e8bb4c6bcacd713be02937405b3523743af91f48e10160"
+    },
+    {
+      "id": "net-bmf-parent-1",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "e4e188dbe7b77cbb36a77b4287269c469891af001292a8429cd99deb21085d22"
+    },
+    {
+      "id": "net-bmf-parent-2",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "72b47a84778d14b9c1653f78d94538bd8d243089f525eb182c4be2d5fdbb3771"
+    },
+    {
+      "id": "net-bmf-parent-3",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "c8ed26af67acd0f1123f66624aee8ee0adcf80bd0abaec59014cb36d42bf4fef"
+    },
+    {
+      "id": "net-bmf-parent-4",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "241d61192d5815e1dde28e314d9692f5b529a98014bb326d24a369acf2b91165"
+    },
+    {
+      "id": "net-bmf-parent-5",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "8db29fd0ae18a038ed70bf761baeb9fe3514544af18a446b94712a8cdc486188"
+    },
+    {
+      "id": "net-bmf-parent-6",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "c0a2c285c976e6dad336fa3bb910abb3def264f327ecaf7d35e4fab0c3ecef18"
+    },
+    {
+      "id": "net-bmf-saxony-childless",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "5c2249bc4727ca96d6813bbd6bf573155a3bc6bda003719e4090c1139df2937d"
+    },
+    {
+      "id": "net-bmf-saxony-two-children",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "6ae068a9304290ad776faae58ab19b1ce8bbe7af83d6d6bc7ee0608ac52e46c7"
+    },
+    {
+      "id": "net-bmf-tk-additional-rate",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "77afd0d3db2c9d9e3f498624aeb3f839c0eb770fbd012a4d3b56dc346e6715f2"
+    },
+    {
+      "id": "net-bmf-zero-additional-rate",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "a9d8d48ee0c8ae05192c7a30618c9b5fd37012ce10274d821ab37ad07b8d7af0"
+    },
+    {
+      "id": "net-bmf-monthly-tax-allowance",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "6190774861f6d161e2a3e9b7aa407c34bfbec532885529f92ce7233ccfece2d5"
+    },
+    {
+      "id": "net-bmf-before-23",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "fe51abdc59430eb206bd8762848d9f41f64d68e7a0165a4e2ba24a62f98970ff"
+    },
+    {
+      "id": "net-bmf-birthday-month-23",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "cada0061fcd2000f04f9f13caff382832a887821f8df6dc0a95a019abe47be6e"
+    },
+    {
+      "id": "net-bmf-after-23",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "f36919bf1378b6fa510bcf2cc7e1315c88c76ab0fe911fe5dce9e3b1d5dbb879"
+    },
+    {
+      "id": "net-bmf-birthday-first-day",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "1c4c8251230f520223a0db86b3c190c4af0fd8e6778c22676d286bb7babc52d9"
+    },
+    {
+      "id": "net-missing-profile",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "0b63a1f29a088e7239c2a1abf3c6abdde9f336c42016a50d7576b834a1eaad71"
+    },
+    {
+      "id": "net-unsupported-year",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "ed49ee800567bf00f148967a38692c407ab1f48fa1300c1b3b145edbee9fdc61"
+    },
+    {
+      "id": "net-invalid-gross",
+      "operation": "net.calculateMonthlyNetPay",
+      "sha256": "0ccf5446729afbda098295eca2e11fe940437f7eb2732f833d9d8aad68ed7a52"
+    },
+    {
+      "id": "sfn-night-free",
+      "operation": "net.calculateMonthlyNetPayWithSfn",
+      "sha256": "bb1732e1146f63a8e915827e120f4eb23c7c35e15620f9d947d641aee6f9a3b8"
+    },
+    {
+      "id": "sfn-sv-cap",
+      "operation": "net.calculateMonthlyNetPayWithSfn",
+      "sha256": "f9294b34f738127fcebd82bebbc29ecee11735f6e5d9ce67e6391fe7e600db5c"
+    },
+    {
+      "id": "annual-normal",
+      "operation": "reports.buildAnnualAvailableReport",
+      "sha256": "7da5d48782f34a4b78581559db2a06c51a20a147a6085ad3a6416edbae2e35c9"
+    },
+    {
+      "id": "annual-end-time-plus-five",
+      "operation": "reports.buildAnnualAvailableReport",
+      "sha256": "46d683f68da23b3b9dcbc2eaef9b1c74233a44fcd17420d8b8cee47934991f22"
+    },
+    {
+      "id": "annual-employment-timezone-change",
+      "operation": "reports.buildAnnualAvailableReport",
+      "sha256": "b4e36598a2ae9ae9e5ac8d7c145f6a57ea5990ebfc4ce997f6ecb5222e067996"
+    },
+    {
+      "id": "annual-net-lag-0",
+      "operation": "reports.annualNetPay",
+      "sha256": "bd292b864f740b03e61a5ceb13a8d2915675c770519a3d3c5f8e8e7b9cdf504d"
+    },
+    {
+      "id": "annual-net-lag-1",
+      "operation": "reports.annualNetPay",
+      "sha256": "0775239fe3f44e992880bd4806a59c9cb4b55aa1f4a29bae33c2708d1f6148b4"
+    },
+    {
+      "id": "annual-net-lag-2",
+      "operation": "reports.annualNetPay",
+      "sha256": "6b1e64bbdd99deb0b1b99e9830a81f99b7f0feef040ed3667b0f3222c2572dce"
+    },
+    {
+      "id": "compliance-empty",
+      "operation": "compliance.calculateMonthlyCompliance",
+      "sha256": "6ccd0f793337493f6c0afaf688b67f9eedb05a02938bf6309794dcde23d524dd"
+    },
+    {
+      "id": "compliance-normal",
+      "operation": "compliance.calculateMonthlyCompliance",
+      "sha256": "07ef38959d1e2ca2012fd3a693863bac9982aed203d844427d8e5363a56752d5"
+    },
+    {
+      "id": "compliance-overlap",
+      "operation": "compliance.calculateMonthlyCompliance",
+      "sha256": "822ee9a3a58189d3e1c7b8b8b0f1a9bc2a7ef36d0e6130c571cb8c997eb93c13"
+    },
+    {
+      "id": "compliance-incomplete-holiday-catalog",
+      "operation": "compliance.calculateMonthlyCompliance",
+      "sha256": "d6933f5032185bfbadd5741b253c41c391036c5320e22ec3e5cf5a8935499587"
+    },
+    {
+      "id": "compliance-youth",
+      "operation": "compliance.calculateMonthlyCompliance",
+      "sha256": "19648d50a7d48e1bb99c40ea85fe6b3cc07c71f55cce14dda0674458d9454577"
+    }
+  ],
+  "coverageGaps": [
+    "Representative seed baseline, not a claim of complete coverage of every tariff family or saved-evidence branch.",
+    "Special-duty contracts, every tariff/draft branch and all cache/lifecycle cases must be expanded in their implementation packages.",
+    "Clock.Now-dependent helpers are excluded; reference dates and all timestamps are explicit.",
+    "No physical iPhone performance assertion; these are functional golden outputs."
+  ],
+  "fixture": {
+    "caseCount": 122,
+    "file": "cases.json",
+    "fileSha256": "451dcdce012aaa5ef6354608f6921473f48bb8279e11309bb0dba27601215739",
+    "hashEncoding": "canonical JSON, sorted object/map/set keys, two-space indentation, LF",
+    "operations": [
+      "calendar.addMonths",
+      "calendar.isoWeek",
+      "calendar.monthGrid",
+      "calendar.monthRange",
+      "compliance.calculateMonthlyCompliance",
+      "gross.calculateAssessedMonthlyRemuneration",
+      "gross.calculateMonthlyPayEstimate",
+      "money.roundRatio",
+      "net.calculateMonthlyNetPay",
+      "net.calculateMonthlyNetPayWithSfn",
+      "reports.annualNetPay",
+      "reports.buildAnnualAvailableReport",
+      "time.calculateMonthlySummary",
+      "time.calculateMonthlyWorkingTimeTarget",
+      "time.shiftBounds",
+      "time.shiftMinutes"
+    ],
+    "sha256": "1f85c040eb4476131cc65a2d1e9a50326cda176bce50b78d66b43ad231dcdf59"
+  },
+  "schemaVersion": 1,
+  "source": {
+    "previewBuild": 52,
+    "releaseSourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+    "releaseSourceFiles": 1253
+  }
+}

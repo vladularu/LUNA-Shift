@@ -3,6 +3,12 @@ import { forecastProfile } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS } from "@/engine/simple-pay";
 import { createRuleResolver } from "@/rules/rule-resolver";
 import { createAnalysisWarmupRuntime, type AnalysisWarmupInput } from "./analysis-warmup-runtime";
+import type { MonthlyRustCalculator } from "./monthly-rust-bridge";
+import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
+import fixture from "./monthly-rust-native.fixture.json";
+import checksFixture from "./monthly-rust-checks.fixture.json";
+import type { MonthlyRustChecksCalculator } from "./monthly-rust-checks";
+import type { MonthlyComplianceResult } from "@/domain/types";
 
 const mock = vi.hoisted(() => ({
   month: 0,
@@ -88,6 +94,69 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("reconciled background stages", () => {
+  it("prepares native checks once and isolates a changed engine without TS checks", async () => {
+    mock.blockMonth = false;
+    const calculate = Object.assign(
+      vi
+        .fn<MonthlyRustChecksCalculator>()
+        .mockResolvedValue(checksFixture.value as unknown as MonthlyComplianceResult),
+      { cacheIdentity: "checks-a" },
+    );
+    const input: AnalysisWarmupInput = {
+      ...fresh(),
+      months: [checksFixture.request.month],
+      checksCalculator: calculate,
+      timeline: null,
+      annualPayments: null,
+    };
+    const background = runtime();
+    background.prepare(input);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(calculate).toHaveBeenCalledTimes(1);
+    expect(mock.checks).toBe(0);
+    background.prepare({ ...input });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(calculate).toHaveBeenCalledTimes(1);
+    const next = Object.assign(
+      vi
+        .fn<MonthlyRustChecksCalculator>()
+        .mockResolvedValue(checksFixture.value as unknown as MonthlyComplianceResult),
+      { cacheIdentity: "checks-b" },
+    );
+    background.prepare({ ...input, checksCalculator: next });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(mock.checks).toBe(0);
+  });
+  it("prepares a Rust month in the existing background queue without TS month math", async () => {
+    const rust = Object.assign(
+      vi
+        .fn<MonthlyRustCalculator>()
+        .mockResolvedValue(fixture.value as unknown as MonthlyAnalysisCalculation),
+      { cacheIdentity: fixture.engineVersion },
+    );
+    const input: AnalysisWarmupInput = {
+      ...fresh(),
+      months: [fixture.request.month],
+      profile: fixture.request.profile as unknown as AnalysisWarmupInput["profile"],
+      savedProfile: fixture.request.profile as unknown as AnalysisWarmupInput["savedProfile"],
+      entries: fixture.request.entries as unknown as AnalysisWarmupInput["entries"],
+      monthlyCalculator: rust,
+      timeline: null,
+      annualPayments: null,
+      payment: null,
+      youthProtection: null,
+    };
+    const background = runtime();
+    background.prepare(input);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(rust).toHaveBeenCalledTimes(1);
+    expect(mock.month).toBe(0);
+    background.prepare({ ...input });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(rust).toHaveBeenCalledTimes(1);
+    expect(mock.month).toBe(0);
+  });
   it("retains in-flight generators and their progress for equivalent new input objects", () => {
     const input = fresh(),
       value = runtime();

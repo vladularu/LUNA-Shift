@@ -32,6 +32,7 @@ export function AccountSummaryCard() {
   return (
     <SurfaceCard>
       <RowButton
+        titleColor={palette.text}
         accessibilityLabel="Konto"
         accessibilityHint={`${title}. Cloud: ${syncLabel}`}
         title={title}

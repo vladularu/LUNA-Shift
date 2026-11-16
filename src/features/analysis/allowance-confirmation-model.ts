@@ -17,14 +17,6 @@ import { hasTrainingShiftAllowances } from "@/engine/remuneration-training-allow
 import { hasTvlShiftAllowances } from "@/engine/remuneration-tvl-allowances";
 import { hasTvalShiftAllowances } from "@/engine/remuneration-tval-allowances";
 
-export const ALLOWANCE_CONFIRMATION_LABELS: Readonly<Record<AllowanceStatus, string>> = {
-  NONE: "Keine Zulage",
-  SHIFT_MONTHLY: "Ständige Schichtarbeit",
-  SHIFT_HOURLY: "Nichtständige Schichtarbeit",
-  ALTERNATING_MONTHLY: "Ständige Wechselschicht",
-  ALTERNATING_HOURLY: "Nichtständige Wechselschicht",
-};
-
 export function allowanceConfirmationPeriods(
   month: string,
   history: readonly DatedRemunerationProfile[],

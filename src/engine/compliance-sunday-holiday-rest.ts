@@ -1,3 +1,10 @@
+import type {
+  HolidayCoverage,
+  RestObligation,
+  ReplacementCandidate,
+  ObligationMatch,
+  PreparedRestProvider,
+} from "./compliance-rest-kernel";
 import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 
@@ -10,40 +17,29 @@ import type {
   ShiftEntry,
 } from "@/domain/types";
 import type { ComplianceInterval as Interval } from "@/engine/compliance-sequences";
+import {
+  calendarDate,
+  calendarDayBounds,
+  calendarDayIndex,
+  calendarValueDay,
+  isSundayDay,
+} from "@/engine/compliance-rest-calendar";
+import {
+  indexRestIntervals,
+  observedRestMinutes,
+  type RestIntervalIndex,
+} from "@/engine/compliance-rest-intervals";
 import { getPublicHolidays } from "@/engine/holidays";
 import type { RuleLegalRules } from "@/rules/contracts.generated";
 import { RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
 
 interface SundayHolidayRestOptions {
+  readonly restKernel?: PreparedRestProvider;
   readonly employmentProfile?: UserProfile;
   readonly federalState?: FederalState;
   readonly holidayRegion?: HolidayRegion;
   readonly sundayHolidayWorkEligible?: boolean | null;
   readonly sectorId?: string;
-}
-
-interface HolidayCoverage {
-  readonly dates: ReadonlySet<string>;
-  readonly missingYears: ReadonlySet<number>;
-}
-
-interface RestObligation {
-  readonly kind: "SUNDAY" | "WEEKDAY_HOLIDAY";
-  readonly date: Temporal.PlainDate;
-  readonly windowStart: Temporal.PlainDate;
-  readonly windowEnd: Temporal.PlainDate;
-  readonly related: readonly ShiftEntry[];
-}
-
-interface ReplacementCandidate {
-  readonly date: Temporal.PlainDate;
-  readonly evidence: readonly ShiftEntry[];
-  readonly observedRestMinutes: null | number;
-}
-
-interface ObligationMatch {
-  readonly obligation: RestObligation;
-  readonly candidate: ReplacementCandidate;
 }
 
 function stableId(rule: string, date: string, shiftIds: readonly string[]): string {
@@ -75,30 +71,6 @@ function dateLabel(date: Temporal.PlainDate): string {
   return `${String(date.day).padStart(2, "0")}.${String(date.month).padStart(2, "0")}.${date.year}`;
 }
 
-// Calendar boundaries do not depend on shifts or rules. Share this expensive
-// timezone conversion across all twelve monthly checks, including a cold report.
-const dayStarts = new Map<string, Temporal.ZonedDateTime>();
-
-function dayStart(date: Temporal.PlainDate, timeZone: string): Temporal.ZonedDateTime {
-  const key = `${timeZone}:${date.toString()}`;
-  const cached = dayStarts.get(key);
-  if (cached) return cached;
-  const value = Temporal.ZonedDateTime.from(
-    {
-      timeZone,
-      year: date.year,
-      month: date.month,
-      day: date.day,
-      hour: 0,
-      minute: 0,
-    },
-    { disambiguation: "earlier" },
-  );
-  if (dayStarts.size >= 2048) dayStarts.delete(dayStarts.keys().next().value!);
-  dayStarts.set(key, value);
-  return value;
-}
-
 const intervalCalendarDates = new WeakMap<
   Interval,
   {
@@ -115,6 +87,7 @@ function* workByCalendarDateIncrementally(
 ): Generator<number, ReadonlyMap<string, readonly Interval[]>, void> {
   const result = new Map<string, Interval[]>();
   let processed = 0;
+  let sliceStarted = performance.now();
   for (const interval of intervals) {
     const cached = intervalCalendarDates.get(interval);
     let dates: readonly string[];
@@ -128,11 +101,10 @@ function* workByCalendarDateIncrementally(
       const computed: string[] = [];
       const intervalStart = interval.start.epochMilliseconds;
       const intervalEnd = interval.end.epochMilliseconds;
-      for (let date = interval.start.toPlainDate(); ; date = date.add({ days: 1 })) {
-        const start = dayStart(date, timeZone).epochMilliseconds;
+      for (let day = calendarDayIndex(interval.start.toPlainDate()); ; day++) {
+        const { start, end } = calendarDayBounds(day, timeZone);
         if (start >= intervalEnd) break;
-        const end = dayStart(date.add({ days: 1 }), timeZone).epochMilliseconds;
-        if (intervalStart < end && intervalEnd > start) computed.push(date.toString());
+        if (intervalStart < end && intervalEnd > start) computed.push(calendarDate(day).value);
       }
       dates = computed;
       intervalCalendarDates.set(interval, {
@@ -148,12 +120,15 @@ function* workByCalendarDateIncrementally(
       result.set(date, entries);
     }
     processed += 1;
-    if (processed % 8 === 0) yield processed;
+    if (processed % 64 === 0 || performance.now() - sliceStarted >= 3) {
+      yield processed;
+      sliceStarted = performance.now();
+    }
   }
   return result;
 }
 
-function* knownHolidayDatesIncrementally(
+export function* knownHolidayDatesIncrementally(
   years: ReadonlySet<number>,
   federalState: FederalState,
   holidayRegion: HolidayRegion,
@@ -199,38 +174,25 @@ function* knownHolidayDatesIncrementally(
 
 function observedRestAroundCalendarDay(
   date: Temporal.PlainDate,
-  intervals: readonly { readonly start: number; readonly end: number }[],
+  intervals: RestIntervalIndex,
   timeZone: string,
 ): number | null {
-  const start = dayStart(date, timeZone).epochMilliseconds;
-  const end = dayStart(date.add({ days: 1 }), timeZone).epochMilliseconds;
-  let previousEnd: number | null = null;
-  let nextStart: number | null = null;
-  for (const interval of intervals) {
-    if (interval.end <= start) {
-      if (previousEnd === null || interval.end > previousEnd) {
-        previousEnd = interval.end;
-      }
-    } else if (nextStart === null && interval.start >= end) {
-      nextStart = interval.start;
-    }
-  }
-  return previousEnd === null || nextStart === null
-    ? null
-    : Math.round((nextStart - previousEnd) / 60_000);
+  const { start, end } = calendarDayBounds(calendarDayIndex(date), timeZone);
+  return observedRestMinutes(start, end, intervals);
 }
 
 function replacementCandidate(
   date: Temporal.PlainDate,
   entriesByDate: ReadonlyMap<string, readonly ShiftEntry[]>,
-  intervals: readonly { readonly start: number; readonly end: number }[],
+  intervals: RestIntervalIndex,
   workDates: ReadonlyMap<string, readonly Interval[]>,
   holidayDates: ReadonlySet<string>,
   evidenceShiftType: ShiftEntry["type"],
   timeZone: string,
 ): ReplacementCandidate | null {
-  const value = date.toString();
-  if (date.dayOfWeek === 7 || holidayDates.has(value) || workDates.has(value)) return null;
+  const day = calendarDayIndex(date);
+  const value = calendarDate(day).value;
+  if (isSundayDay(day) || holidayDates.has(value) || workDates.has(value)) return null;
   const entries = entriesByDate.get(value) ?? [];
   if (
     entries.some(
@@ -241,30 +203,11 @@ function replacementCandidate(
     return null;
   }
 
-  const start = dayStart(date, timeZone).epochMilliseconds;
-  const end = dayStart(date.add({ days: 1 }), timeZone).epochMilliseconds;
-  let previousEnd: number | null = null;
-  let nextStart: number | null = null;
-  for (const interval of intervals) {
-    if (interval.end <= start) {
-      if (previousEnd === null || interval.end > previousEnd) {
-        previousEnd = interval.end;
-      }
-      continue;
-    }
-    if (interval.start >= end) {
-      nextStart = interval.start;
-      break;
-    }
-  }
-
+  const { start, end } = calendarDayBounds(day, timeZone);
   return {
     date,
     evidence: entries,
-    observedRestMinutes:
-      previousEnd === null || nextStart === null
-        ? null
-        : Math.round((nextStart - previousEnd) / 60_000),
+    observedRestMinutes: observedRestMinutes(start, end, intervals),
   };
 }
 
@@ -273,24 +216,26 @@ function* replacementCandidateDates(
   coverageStart: Temporal.PlainDate,
   coverageEnd: Temporal.PlainDate,
 ): Generator<number, readonly Temporal.PlainDate[], void> {
-  const dates = new Map<string, Temporal.PlainDate>();
+  const dates = new Set<number>();
+  const first = calendarDayIndex(coverageStart);
+  const last = calendarDayIndex(coverageEnd);
   let processed = 0;
   for (const obligation of obligations) {
-    let date =
-      Temporal.PlainDate.compare(obligation.windowStart, coverageStart) < 0
-        ? coverageStart
-        : obligation.windowStart;
-    const end =
-      Temporal.PlainDate.compare(obligation.windowEnd, coverageEnd) > 0
-        ? coverageEnd
-        : obligation.windowEnd;
-    for (; Temporal.PlainDate.compare(date, end) <= 0; date = date.add({ days: 1 })) {
-      if (date.dayOfWeek !== 7) dates.set(date.toString(), date);
+    const end = Math.min(calendarDayIndex(obligation.windowEnd), last);
+    for (let day = Math.max(calendarDayIndex(obligation.windowStart), first); day <= end; day++) {
+      if (!isSundayDay(day)) dates.add(day);
       processed += 1;
-      if (processed % 16 === 0) yield processed;
+      // These are primitive integer visits; retain bounded cancellation points
+      // without scheduling a separate idle pause for every sixteen cheap visits.
+      if (processed % 256 === 0) yield processed;
     }
   }
-  return [...dates.values()].sort(Temporal.PlainDate.compare);
+  const result: Temporal.PlainDate[] = [];
+  for (const day of [...dates].sort((a, b) => a - b)) {
+    result.push(calendarDate(day).date);
+    if (result.length % 64 === 0) yield processed + result.length;
+  }
+  return result;
 }
 
 function replacementObligations(
@@ -301,24 +246,24 @@ function replacementObligations(
 ): readonly RestObligation[] {
   const obligations: RestObligation[] = [];
   for (const [dateValue, work] of workDates) {
-    const date = Temporal.PlainDate.from(dateValue);
-    const isSunday = date.dayOfWeek === 7;
+    const day = calendarValueDay(dateValue);
+    const isSunday = isSundayDay(day);
     const isWeekdayHoliday = !isSunday && holidayDates.has(dateValue);
     if (!isSunday && !isWeekdayHoliday) continue;
     const periodDays = isSunday ? sundayPeriodDays : holidayPeriodDays;
     const reachDays = periodDays - 1;
     obligations.push({
       kind: isSunday ? "SUNDAY" : "WEEKDAY_HOLIDAY",
-      date,
-      windowStart: date.subtract({ days: reachDays }),
-      windowEnd: date.add({ days: reachDays }),
+      date: calendarDate(day).date,
+      windowStart: calendarDate(day - reachDays).date,
+      windowEnd: calendarDate(day + reachDays).date,
       related: work.map((item) => item.shift),
     });
   }
   return obligations.sort(
     (left, right) =>
-      Temporal.PlainDate.compare(left.windowEnd, right.windowEnd) ||
-      Temporal.PlainDate.compare(left.date, right.date) ||
+      calendarDayIndex(left.windowEnd) - calendarDayIndex(right.windowEnd) ||
+      calendarDayIndex(left.date) - calendarDayIndex(right.date) ||
       left.kind.localeCompare(right.kind),
   );
 }
@@ -332,10 +277,9 @@ function matchObligations(
   const available = new Set(candidates);
   const matched: ObligationMatch[] = [];
   // Calendar-day distance, not elapsed hours: preserve matching across DST changes.
-  const epoch = Temporal.PlainDate.from("1970-01-01");
   const ranked = candidates.map((candidate) => ({
     candidate,
-    day: candidate.date.since(epoch).days,
+    day: calendarDayIndex(candidate.date),
     quality:
       candidate.observedRestMinutes === null
         ? 2
@@ -344,9 +288,9 @@ function matchObligations(
           : 1,
   }));
   for (const obligation of obligations) {
-    const start = obligation.windowStart.since(epoch).days;
-    const end = obligation.windowEnd.since(epoch).days;
-    const day = obligation.date.since(epoch).days;
+    const start = calendarDayIndex(obligation.windowStart);
+    const end = calendarDayIndex(obligation.windowEnd);
+    const day = calendarDayIndex(obligation.date);
     let best: (typeof ranked)[number] | undefined;
     for (const item of ranked) {
       if (!available.has(item.candidate) || item.day < start || item.day > end) continue;
@@ -432,34 +376,47 @@ export function* checkSundayHolidayRestIncrementally(
     return [];
   }
 
-  const workDateSteps = workByCalendarDateIncrementally(intervals, timeZone);
-  let workDates: ReadonlyMap<string, readonly Interval[]>;
-  while (true) {
-    const step = workDateSteps.next();
-    if (step.done) {
-      workDates = step.value;
-      break;
-    }
-    yield step.value;
-  }
-  const years = new Set<number>([Number(month.slice(0, 4))]);
-  for (const date of workDates.keys()) years.add(Number(date.slice(0, 4)));
-  for (const shift of shifts) years.add(Number(shift.date.slice(0, 4)));
-  const holidaySteps = knownHolidayDatesIncrementally(
-    years,
+  const prepared = options.restKernel?.get(
+    intervals,
+    month,
     options.federalState,
-    options.holidayRegion ?? "NONE",
-    ruleResolver,
-    options.employmentProfile,
+    options.holidayRegion,
+    coverageStartValue,
+    coverageEndValue,
   );
+  let workDates: ReadonlyMap<string, readonly Interval[]>;
   let holidayCoverage: HolidayCoverage;
-  while (true) {
-    const step = holidaySteps.next();
-    if (step.done) {
-      holidayCoverage = step.value;
-      break;
+  if (prepared) {
+    workDates = prepared.workDates;
+    holidayCoverage = prepared.holidayCoverage;
+  } else {
+    const workDateSteps = workByCalendarDateIncrementally(intervals, timeZone);
+    while (true) {
+      const step = workDateSteps.next();
+      if (step.done) {
+        workDates = step.value;
+        break;
+      }
+      yield step.value;
     }
-    yield step.value;
+    const years = new Set<number>([Number(month.slice(0, 4))]);
+    for (const date of workDates.keys()) years.add(Number(date.slice(0, 4)));
+    for (const shift of shifts) years.add(Number(shift.date.slice(0, 4)));
+    const holidaySteps = knownHolidayDatesIncrementally(
+      years,
+      options.federalState,
+      options.holidayRegion ?? "NONE",
+      ruleResolver,
+      options.employmentProfile,
+    );
+    while (true) {
+      const step = holidaySteps.next();
+      if (step.done) {
+        holidayCoverage = step.value;
+        break;
+      }
+      yield step.value;
+    }
   }
   const holidayDates = holidayCoverage.dates;
   if (intervals.length === 0 && shifts.length === 0) {
@@ -486,47 +443,65 @@ export function* checkSundayHolidayRestIncrementally(
     return issues;
   }
   const requiredRestMinutes = restRules.replacementDayMinutes + restRules.connectedRestMinutes;
-  const entriesByDate = new Map<string, ShiftEntry[]>();
-  for (const shift of shifts) {
-    if (shift.deletedAt !== null) continue;
-    const entries = entriesByDate.get(shift.date) ?? [];
-    entries.push(shift);
-    entriesByDate.set(shift.date, entries);
-  }
-  const obligations = replacementObligations(
-    workDates,
-    holidayDates,
-    restRules.sundayCompensationPeriodDays,
-    restRules.weekdayHolidayCompensationPeriodDays,
-  );
-  const candidateDates = yield* replacementCandidateDates(
-    obligations,
-    Temporal.PlainDate.from(coverageStartValue),
-    Temporal.PlainDate.from(coverageEndValue),
-  );
-  const candidates: ReplacementCandidate[] = [];
   // Inputs are minute-precision instants; convert once, outside the candidate loop.
   // Day boundaries still use Temporal in the profile's time zone (including DST).
-  const restIntervals = intervals.map((interval) => ({
-    start: interval.start.epochMilliseconds,
-    end: interval.end.epochMilliseconds,
-  }));
-  let processedCandidates = 0;
-  for (const date of candidateDates) {
-    const candidate = replacementCandidate(
-      date,
-      entriesByDate,
-      restIntervals,
+  const restIntervals =
+    prepared?.restIntervals ??
+    indexRestIntervals(
+      intervals.map((interval) => ({
+        start: interval.start.epochMilliseconds,
+        end: interval.end.epochMilliseconds,
+      })),
+    );
+  let obligations: readonly RestObligation[];
+  let matches: {
+    readonly unmatched: readonly RestObligation[];
+    readonly matched: readonly ObligationMatch[];
+  };
+  if (prepared) {
+    obligations = prepared.obligations;
+    matches = prepared.matches;
+  } else {
+    const entriesByDate = new Map<string, ShiftEntry[]>();
+    for (const shift of shifts) {
+      if (shift.deletedAt !== null) continue;
+      const entries = entriesByDate.get(shift.date) ?? [];
+      entries.push(shift);
+      entriesByDate.set(shift.date, entries);
+    }
+    obligations = replacementObligations(
       workDates,
       holidayDates,
-      restRules.evidenceShiftType,
-      timeZone,
+      restRules.sundayCompensationPeriodDays,
+      restRules.weekdayHolidayCompensationPeriodDays,
     );
-    if (candidate !== null) candidates.push(candidate);
-    processedCandidates += 1;
-    if (processedCandidates % 8 === 0) yield processedCandidates;
+    const candidateDates = yield* replacementCandidateDates(
+      obligations,
+      Temporal.PlainDate.from(coverageStartValue),
+      Temporal.PlainDate.from(coverageEndValue),
+    );
+    const candidates: ReplacementCandidate[] = [];
+    let processedCandidates = 0;
+    let candidateSliceStarted = performance.now();
+    for (const date of candidateDates) {
+      const candidate = replacementCandidate(
+        date,
+        entriesByDate,
+        restIntervals,
+        workDates,
+        holidayDates,
+        restRules.evidenceShiftType,
+        timeZone,
+      );
+      if (candidate !== null) candidates.push(candidate);
+      processedCandidates += 1;
+      if (processedCandidates % 64 === 0 || performance.now() - candidateSliceStarted >= 3) {
+        yield processedCandidates;
+        candidateSliceStarted = performance.now();
+      }
+    }
+    matches = matchObligations(obligations, candidates, requiredRestMinutes);
   }
-  const matches = matchObligations(obligations, candidates, requiredRestMinutes);
   const issues: ComplianceIssue[] = [];
   if (holidayCoverage.missingYears.size > 0) {
     issues.push(

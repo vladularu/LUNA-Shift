@@ -503,6 +503,7 @@ export function SalaryPayrollContent({
     data.annualPayments,
     !blocked && data.status === "ready",
     testMonths,
+    month,
   );
   const forecast = useAutomaticNetPay(
     month,

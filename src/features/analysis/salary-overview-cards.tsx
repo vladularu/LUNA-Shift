@@ -24,7 +24,6 @@ export function EarnedPremiumsCard({
     >
       <AnalysisValueRow
         first
-        total
         label={status ? "Status" : "Zeitzuschläge · brutto"}
         value={status ?? formatEuro(amount)}
       />

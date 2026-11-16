@@ -114,6 +114,60 @@ afterEach(() => {
 });
 
 describe("annual background preparation and visible consumers", () => {
+  it("revisits a finished limited year without work and restores it after a fresh cache/catalog and screen mount", async () => {
+    const rows = new Map<string, unknown>();
+    const store = (): PersistentAnalysisCache => ({
+      read: async (kind, month, key, _resolver, accept) => {
+        const value = rows.get(`${kind}:${month}:${key}`);
+        return accept(value) ? value : null;
+      },
+      write: async (kind, month, key, _resolver, value, accept) => {
+        if (accept(value)) rows.set(`${kind}:${month}:${key}`, value);
+      },
+    });
+    const rules = () => createRuleResolver({ ...BUNDLED_RULE_CATALOG, legal: [] });
+    mockPersistent = store();
+    mockResolver = rules();
+    const useLimitedYear = ({ year }: { year: number }) =>
+      useSimpleAnnualReport({
+        year,
+        enabled: true,
+        entries: mockEntries,
+        profile: mockProfile,
+        ruleResolver: mockResolver,
+        tariffDecisions: mockDecisions,
+        workPatternSettings: mockPattern,
+      });
+    const calculate = jest.spyOn(engine, "buildAnnualAvailableReportSteps");
+    const first = await renderHook(useLimitedYear, {
+      initialProps: { year: 2027 },
+      wrapper: Wrapper,
+    });
+    await flush();
+    const original = first.result.current.report;
+    expect(original?.complianceCoverageComplete).toBe(false);
+    expect([...rows.keys()].filter((key) => key.startsWith("annual:"))).toHaveLength(1);
+    expect([...rows.keys()].filter((key) => key.startsWith("annual-month:"))).toHaveLength(12);
+    await first.rerender({ year: 2025 });
+    await flush();
+    const count = calculate.mock.calls.length;
+    await first.rerender({ year: 2027 });
+    await flush();
+    expect(first.result.current.report).toBe(original);
+    expect(calculate).toHaveBeenCalledTimes(count);
+    await first.unmount();
+    mockPersistent = store();
+    mockResolver = rules();
+    calculate.mockClear();
+    const restarted = await renderHook(useLimitedYear, {
+      initialProps: { year: 2027 },
+      wrapper: Wrapper,
+    });
+    await flush();
+    expect(restarted.result.current.report).toEqual(original);
+    expect(calculate).not.toHaveBeenCalled();
+    await restarted.unmount();
+  });
   it.each([12, 8])(
     "hydrates a persisted year with %i available salary months after a fresh cache and catalog instance",
     async (salaryMonths) => {
@@ -138,7 +192,8 @@ describe("annual background preparation and visible consumers", () => {
       mockPersistent = storage();
       const first = await renderHook(() => useYear(2026, false), { wrapper: Wrapper });
       await flush();
-      expect(rows.size).toBe(1);
+      expect([...rows.keys()].filter((key) => key.startsWith("annual:"))).toHaveLength(1);
+      expect([...rows.keys()].filter((key) => key.startsWith("annual-month:"))).toHaveLength(12);
       await first.unmount();
       mockPersistent = storage();
       mockResolver = rules();
@@ -168,6 +223,7 @@ describe("annual background preparation and visible consumers", () => {
     );
     await flush();
     expect(calculate).toHaveBeenCalledTimes(1);
+    mockEntries = [...mockEntries].reverse();
     frames.length = 0;
     await screen.rerender({ show: true });
     expect(frames[0]).toBe(true);

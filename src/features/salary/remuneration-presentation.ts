@@ -1,13 +1,8 @@
-import type { RemunerationPosition, RemunerationStatus } from "@/domain/remuneration-result";
+import type { RemunerationPosition } from "@/domain/remuneration-result";
 import type { calculateAssessedMonthlyRemuneration } from "@/engine/remuneration-month";
 import { formatRemunerationDate } from "@/features/settings/remuneration-editor-values";
 
 export type MonthlyRemuneration = ReturnType<typeof calculateAssessedMonthlyRemuneration>;
-export const REMUNERATION_STATUS: Readonly<Record<RemunerationStatus, string>> = {
-  calculated: "Berechnet",
-  estimated: "Geschätzt",
-  unavailable: "Nicht berechenbar",
-};
 export function remunerationEuro(cents: number | null): string {
   return cents === null
     ? "Nicht berechenbar"

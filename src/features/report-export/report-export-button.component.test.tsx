@@ -153,6 +153,42 @@ describe("Exportbedienung", () => {
       );
     },
   );
+  it("exportiert den gewählten Monat mit derselben gespeicherten Auszahlungszuordnung wie die Gehaltsansicht", async () => {
+    const preferences = setSalaryPaymentLag(DEFAULT_SALARY_PAYMENT_PREFERENCES, "2026-01", 2);
+    mockLoadPaymentPreferences.mockResolvedValue(preferences);
+    mockCalculationProfile = { timeZone: "Europe/Berlin", manualMonthlyGrossCents: 900000 };
+    const screen = await render(<ReportExportButton period="2026-11" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+    await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
+    await act(async () => {
+      mockSchedule?.();
+    });
+    expect(mockLoadPaymentPreferences).toHaveBeenCalledTimes(1);
+    expect(mockBuild).toHaveBeenCalledWith(
+      expect.objectContaining({
+        period: "2026-11",
+        salaryPaymentPreferences: preferences,
+        profile: mockCalculationProfile,
+        netPayProfile: mockSavedProfile,
+      }),
+    );
+    expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({ period: "2026-11" }), "PDF", {
+      layout: "standard",
+      includeSalary: true,
+    });
+  });
+  it("verhindert ein Monats-PDF mit Gehalt wenn Auszahlungsangaben nicht geladen werden können", async () => {
+    mockLoadPaymentPreferences.mockRejectedValue(new Error("private payment database path"));
+    const screen = await render(<ReportExportButton period="2026-11" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Bericht exportieren" }));
+    await fireEvent.press(screen.getByRole("button", { name: "PDF erstellen und teilen" }));
+    expect(mockBuild).not.toHaveBeenCalled();
+    expect(mockShare).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenLastCalledWith("Export nicht möglich", expect.any(String));
+    expect(JSON.stringify(jest.mocked(Alert.alert).mock.calls)).not.toContain(
+      "private payment database path",
+    );
+  });
   it("exportiert das gewählte Jahr mit den gespeicherten Netto-Grundlagen", async () => {
     const preferences = setSalaryPaymentLag(DEFAULT_SALARY_PAYMENT_PREFERENCES, "2026-01", 2);
     mockLoadPaymentPreferences.mockResolvedValue(preferences);

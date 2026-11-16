@@ -1,0 +1,788 @@
+{
+  "base": {
+    "fixedHoliday": {
+      "legalBasis": "§ 2 Abs. 1 EFZG (Abbildung der ausgefallenen festen Arbeitszeit)",
+      "ruleId": "fixed-schedule-holiday-relief-v1",
+      "sourceUrl": "https://www.gesetze-im-internet.de/entgfg/__2.html"
+    },
+    "fixedHolidayForecast": {
+      "legalBasis": "Planungsreferenz zu § 2 Abs. 1 EFZG; kein bestätigter Tagesanspruch",
+      "ruleId": "fixed-schedule-holiday-forecast-v1",
+      "sourceUrl": "https://www.gesetze-im-internet.de/entgfg/__2.html"
+    },
+    "legacyHoliday": {
+      "legalBasis": "Bisheriges LUNA-Referenzmodell; kein bestätigter individueller Tarifanspruch",
+      "ruleId": "legacy-weekday-holiday-estimate-v1",
+      "sourceUrl": "https://github.com/vladularu/LUNA-Shift"
+    },
+    "tvoedKHoliday": {
+      "legalBasis": "§ 49 Abs. 2 BT-K (durchgeschrieben § 6.1 Abs. 2 TVöD-K); BAG 6 AZR 143/16",
+      "ruleId": "tvoed-k-2026-btk-49-2",
+      "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+    },
+    "tvoedKHolidayForecast": {
+      "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+      "ruleId": "tvoed-k-2026-btk-49-2-forecast",
+      "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+    },
+    "tvoedKSpecial": {
+      "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-K; BAG 6 AZR 143/16",
+      "ruleId": "tvoed-k-2026-at-6-3",
+      "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+    },
+    "tvoedKSpecialForecast": {
+      "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-K; kein bestätigter Tagesanspruch",
+      "ruleId": "tvoed-k-2026-at-6-3-forecast",
+      "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+    }
+  },
+  "legacyPackageId": "tvoed-p-vka-legacy",
+  "profileNotices": {
+    "EMPLOYMENT_REFERENCE_UNCONFIRMED": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage.",
+    "FIXED_DISTRIBUTION_CHANGED": "Die Wochenstunden haben sich geÃ¤ndert. Die feste Verteilung auf Wochentage ist noch offen."
+  },
+  "reviews": [
+    {
+      "from": "2026-01-01",
+      "kind": "TVOED_K",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-K (durchgeschrieben § 6.1 Abs. 2 TVöD-K); BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2026-btk-49-2",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2026-btk-49-2-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-K / BT-K",
+        "part": "BT-K",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-K; BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2026-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2026-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2026-01-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVOED_K",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-K (durchgeschrieben § 6.1 Abs. 2 TVöD-K); BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2027-btk-49-2",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2027-btk-49-2-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-K / BT-K",
+        "part": "BT-K",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-K; BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2027-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2027-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2026-01-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVOED_K",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-K (durchgeschrieben § 6.1 Abs. 2 TVöD-K); BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2027-btk-49-2",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2027-btk-49-2-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/979d02cb9b03b2676c0cf0c73671e000/bt-k_ifv_aetv-15_1-1-26.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-K / BT-K",
+        "part": "BT-K",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-K; BAG 6 AZR 143/16",
+          "ruleId": "tvoed-k-2027-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-k-2027-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2027-01-01"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVOED_B",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B)",
+          "ruleId": "tvoed-b-2026-btb-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B); kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2026-btb-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-B / BT-B",
+        "part": "BT-B",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-B",
+          "ruleId": "tvoed-b-2026-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-B; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2026-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-11/2fc7b3ed3c5d1eb8f6d08a3898a6af26/tvoed-at_ifv_aetv-22_1-1-26.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2026-01-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVOED_B",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B)",
+          "ruleId": "tvoed-b-2027-btb-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B); kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2027-btb-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-B / BT-B",
+        "part": "BT-B",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-B",
+          "ruleId": "tvoed-b-2027-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-B; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2027-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2026-01-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVOED_B",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B)",
+          "ruleId": "tvoed-b-2027-btb-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 49 Abs. 2 BT-B (durchgeschrieben § 6.1 Abs. 2 TVöD-B); kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2027-btb-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/BT-B_AETV_19_Lesefassung_Stand-01_01_2026.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVöD-B / BT-B",
+        "part": "BT-B",
+        "special": {
+          "legalBasis": "§ 6 Abs. 3 TVöD-AT i.V.m. BT-B",
+          "ruleId": "tvoed-b-2027-at-6-3",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 6 Abs. 3 TVöD-AT i.V.m. BT-B; kein bestätigter Tagesanspruch",
+          "ruleId": "tvoed-b-2027-at-6-3-forecast",
+          "sourceUrl": "https://www.kav-hessen.de/sites/default/files/2025-10/3822d822d89695ead0c2eed7e8b1f1aa/tvoed-at_ifv_aetv-22_1-1-27.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2027-01-01"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVL_KR",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; BAG 6 AZR 465/15",
+          "ruleId": "tvl-kr-2026-43-6-3-8",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; BAG 6 AZR 465/15; kein bestätigter Tagesanspruch",
+          "ruleId": "tvl-kr-2026-43-6-3-8-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L; BAG 6 AZR 465/15"
+        },
+        "label": "TV-L/KR / § 43",
+        "part": "TV-L § 43",
+        "special": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tvl-kr-2026-43-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tvl-kr-2026-43-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVL_KR",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; BAG 6 AZR 465/15",
+          "ruleId": "tvl-kr-2027-43-6-3-8",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; BAG 6 AZR 465/15; kein bestätigter Tagesanspruch",
+          "ruleId": "tvl-kr-2027-43-6-3-8-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L; BAG 6 AZR 465/15"
+        },
+        "label": "TV-L/KR / § 43",
+        "part": "TV-L § 43",
+        "special": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tvl-kr-2027-43-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tvl-kr-2027-43-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-L/260812_TV-L__i.d.F._des_%C3%84TV_Nr._14_VT_neu.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVH_KR",
+      "rules": {
+        "forecastQualifier": "Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich bleiben getrennt.",
+        "holiday": {
+          "legalBasis": "§ 43 Nr. 1 und Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-H (Justizvollzug)",
+          "ruleId": "tvh-kr-2026-43-6-3-8",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 1 und Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-H (Justizvollzug); kein bestätigter Tagesanspruch",
+          "ruleId": "tvh-kr-2026-43-6-3-8-forecast",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-H"
+        },
+        "label": "TV-H (Justizvollzug)",
+        "part": "TV-H § 43",
+        "special": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-H",
+          "ruleId": "tvh-kr-2026-43-6-3-1-3",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-H; kein bestätigter Tagesanspruch",
+          "ruleId": "tvh-kr-2026-43-6-3-1-3-forecast",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2026-03-27"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVH_KR",
+      "rules": {
+        "forecastQualifier": "Planwert für dienstplanmäßig freie Feiertage. Feiertagsarbeit und Freizeitausgleich bleiben getrennt.",
+        "holiday": {
+          "legalBasis": "§ 43 Nr. 1 und Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-H (Justizvollzug)",
+          "ruleId": "tvh-kr-2027-43-6-3-8",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 1 und Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-H (Justizvollzug); kein bestätigter Tagesanspruch",
+          "ruleId": "tvh-kr-2027-43-6-3-8-forecast",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-H"
+        },
+        "label": "TV-H (Justizvollzug)",
+        "part": "TV-H § 43",
+        "special": {
+          "legalBasis": "§ 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-H",
+          "ruleId": "tvh-kr-2027-43-6-3-1-3",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-H; kein bestätigter Tagesanspruch",
+          "ruleId": "tvh-kr-2027-43-6-3-1-3-forecast",
+          "sourceUrl": "https://innen.hessen.de/sites/innen.hessen.de/files/2023-01/tv-h_fassung_aendtv_nr._20_vom_15.10.2021.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2026-03-27"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVAOED_K",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-K",
+          "ruleId": "tvaoed-pflege-btk-2026-7-1-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btk-2026-7-1-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVAöD Pflege / BT-K",
+        "part": "BT-K",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-K)",
+          "ruleId": "tvaoed-pflege-btk-2026-7-1-12a-6-3",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-K); kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btk-2026-7-1-12a-6-3-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2025-07-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVAOED_K",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-K",
+          "ruleId": "tvaoed-pflege-btk-2027-7-1-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-K; kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btk-2027-7-1-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVAöD Pflege / BT-K",
+        "part": "BT-K",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-K)",
+          "ruleId": "tvaoed-pflege-btk-2027-7-1-12a-6-3",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-K); kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btk-2027-7-1-12a-6-3-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2025-07-01"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVAOED_B",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-B",
+          "ruleId": "tvaoed-pflege-btb-2026-7-1-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-B; kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btb-2026-7-1-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVAöD Pflege / BT-B",
+        "part": "BT-B",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-B)",
+          "ruleId": "tvaoed-pflege-btb-2026-7-1-12a-6-3",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-B); kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btb-2026-7-1-12a-6-3-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2025-07-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVAOED_B",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-B",
+          "ruleId": "tvaoed-pflege-btb-2027-7-1-49-2",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege i.V.m. § 49 Abs. 2 BT-B; kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btb-2027-7-1-49-2-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TVAöD Pflege / BT-B",
+        "part": "BT-B",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-B)",
+          "ruleId": "tvaoed-pflege-btb-2027-7-1-12a-6-3",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVAöD-BT Pflege und § 12a Abs. 3 TVAöD-AT i.V.m. § 6 Abs. 3 TVöD-AT (BT-B); kein bestätigter Tagesanspruch",
+          "ruleId": "tvaoed-pflege-btb-2027-7-1-12a-6-3-forecast",
+          "sourceUrl": "https://vka.de/wp-content/uploads/2026/04/TVAOED_BT-Pflege_AETV_18_Lesefassung_Stand_01_07_2025.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2025-07-01"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVAL_COMMON",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch",
+          "ruleId": "tval-pflege-common-2026-7-1-6-3-loss",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-common-2026-7-1-6-3-loss-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 TV-L und § 8 TV-L"
+        },
+        "label": "TVA-L Pflege",
+        "part": "TV-L § 6",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-common-2026-7-1-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-common-2026-7-1-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "trainingQualifier": "Arbeitgeberregel offen; Referenz ohne Jugendschutz und pauschalen Fünftelabzug."
+      },
+      "to": "2026-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVAL_COMMON",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch",
+          "ruleId": "tval-pflege-common-2027-7-1-6-3-loss",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-common-2027-7-1-6-3-loss-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 TV-L und § 8 TV-L"
+        },
+        "label": "TVA-L Pflege",
+        "part": "TV-L § 6",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-common-2027-7-1-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-common-2027-7-1-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "trainingQualifier": "Arbeitgeberregel offen; Referenz ohne Jugendschutz und pauschalen Fünftelabzug."
+      },
+      "to": "2027-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVAL_GENERAL",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch",
+          "ruleId": "tval-pflege-general-2026-7-1-6-3-loss",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-general-2026-7-1-6-3-loss-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 TV-L und § 8 TV-L"
+        },
+        "label": "TVA-L Pflege / TV-L § 6",
+        "part": "TV-L § 6",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-general-2026-7-1-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-general-2026-7-1-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVAL_GENERAL",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch",
+          "ruleId": "tval-pflege-general-2027-7-1-6-3-loss",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Satz 3 TV-L; Referenz ausgefallener Stunden, kein pauschaler Fünftelanspruch; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-general-2027-7-1-6-3-loss-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 TV-L und § 8 TV-L"
+        },
+        "label": "TVA-L Pflege / TV-L § 6",
+        "part": "TV-L § 6",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-general-2027-7-1-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-general-2027-7-1-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVAL_KR",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L",
+          "ruleId": "tval-pflege-section_43-2026-7-1-43-6-3-8",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-section_43-2026-7-1-43-6-3-8-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L"
+        },
+        "label": "TVA-L Pflege / § 43",
+        "part": "TV-L § 43",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-section_43-2026-7-1-43-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-section_43-2026-7-1-43-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "trainingQualifier": "Planwert für planfreie Feiertage ohne Jugendschutz. Unterricht und Ausgleich separat."
+      },
+      "to": "2026-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVAL_KR",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L",
+          "ruleId": "tval-pflege-section_43-2027-7-1-43-6-3-8",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Satz 8 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-section_43-2027-7-1-43-6-3-8-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "holidayWork": {
+          "kind": "SEPARATE_COMPENSATION",
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 4–7 TV-L"
+        },
+        "label": "TVA-L Pflege / § 43",
+        "part": "TV-L § 43",
+        "special": {
+          "legalBasis": "§ 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L",
+          "ruleId": "tval-pflege-section_43-2027-7-1-43-6-3-1-3",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 7 Abs. 1 TVA-L Pflege i.V.m. § 43 Nr. 3 Ziff. 2 zu § 6 Abs. 3 Sätze 1–3 TV-L; kein bestätigter Tagesanspruch",
+          "ruleId": "tval-pflege-section_43-2027-7-1-43-6-3-1-3-forecast",
+          "sourceUrl": "https://www.tdl-online.de/fileadmin/downloads/TV-Ausbildung/TVA-L-Pflege/260804_TVA-L_Pflege_i.d.F._des_%C3%84TV_Nr._13.pdf"
+        },
+        "trainingQualifier": "Planwert für planfreie Feiertage ohne Jugendschutz. Unterricht und Ausgleich separat."
+      },
+      "to": "2027-12-31",
+      "version": "2026-02-14"
+    },
+    {
+      "from": "2026-01-01",
+      "kind": "TVUK_NURSING",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag)",
+          "ruleId": "tvuk-2026-13-4-b",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag); kein bestätigter Tagesanspruch",
+          "ruleId": "tvuk-2026-13-4-b-forecast",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TV-UK Pflege BW",
+        "part": "TV-UK",
+        "special": {
+          "legalBasis": "§ 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag)",
+          "ruleId": "tvuk-2026-13-4-b",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag); kein bestätigter Tagesanspruch",
+          "ruleId": "tvuk-2026-13-4-b-forecast",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "tvUkLoss": {
+          "actual": {
+            "legalBasis": "§ 8 Abs. 3 Sätze 1–2 TV-UK (ausgefallene Stunden außerhalb des Kontenbereichs)",
+            "ruleId": "tvuk-2026-8-3",
+            "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+          },
+          "forecast": {
+            "legalBasis": "Planungsreferenz zu § 8 Abs. 3 Sätze 1–2 TV-UK (ausgefallene Stunden außerhalb des Kontenbereichs); kein bestätigter Tagesanspruch",
+            "ruleId": "tvuk-2026-8-3-forecast",
+            "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+          }
+        }
+      },
+      "to": "2026-12-31",
+      "version": "2025-01-01"
+    },
+    {
+      "from": "2027-01-01",
+      "kind": "TVUK_NURSING",
+      "rules": {
+        "holiday": {
+          "legalBasis": "§ 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag)",
+          "ruleId": "tvuk-2027-13-4-b",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "holidayForecast": {
+          "legalBasis": "Planungsreferenz zu § 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag); kein bestätigter Tagesanspruch",
+          "ruleId": "tvuk-2027-13-4-b-forecast",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "holidayWork": { "kind": "TARGET_REDUCTION" },
+        "label": "TV-UK Pflege BW",
+        "part": "TV-UK",
+        "special": {
+          "legalBasis": "§ 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag)",
+          "ruleId": "tvuk-2027-13-4-b",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "specialForecast": {
+          "legalBasis": "Planungsreferenz zu § 13 Abs. 1 und Abs. 4 Buchst. b TV-UK (Kontenbereich, Montag bis Freitag); kein bestätigter Tagesanspruch",
+          "ruleId": "tvuk-2027-13-4-b-forecast",
+          "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+        },
+        "tvUkLoss": {
+          "actual": {
+            "legalBasis": "§ 8 Abs. 3 Sätze 1–2 TV-UK (ausgefallene Stunden außerhalb des Kontenbereichs)",
+            "ruleId": "tvuk-2027-8-3",
+            "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+          },
+          "forecast": {
+            "legalBasis": "Planungsreferenz zu § 8 Abs. 3 Sätze 1–2 TV-UK (ausgefallene Stunden außerhalb des Kontenbereichs); kein bestätigter Tagesanspruch",
+            "ruleId": "tvuk-2027-8-3-forecast",
+            "sourceUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf"
+          }
+        }
+      },
+      "to": "2027-12-31",
+      "version": "2025-01-01"
+    }
+  ]
+}

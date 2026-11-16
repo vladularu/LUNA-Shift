@@ -1,0 +1,3010 @@
+{
+  "engineVersion": "luna-engine-v1:469b8dbefebaaf6a6acd4161f07f7245bb6d19ff8b3b0f13818d936f745be86a",
+  "request": {
+    "month": "2026-07",
+    "profile": {
+      "displayName": null,
+      "employerName": null,
+      "federalState": "NW",
+      "holidayRegion": "NONE",
+      "weeklyMinutes": 1200,
+      "timeZone": "Europe/Berlin",
+      "industry": null,
+      "manualMonthlyGrossCents": null,
+      "regularRotatingNightWork": true,
+      "sundayHolidayWorkEligible": true,
+      "allEmploymentWorkRecorded": true,
+      "tariff": null,
+      "createdAt": "2026-11-16T03:07:51.174Z",
+      "updatedAt": "2026-11-16T03:07:51.174Z",
+      "vkaETariff": {
+        "payGroup": "E9a",
+        "payLevel": 3,
+        "sector": "BT_K",
+        "tariffRegion": "OTHER"
+      }
+    },
+    "settings": {
+      "version": 2,
+      "month": "2026-01",
+      "profile": {
+        "birthDate": "1990-01-15",
+        "taxClass": 1,
+        "factorPermille": null,
+        "churchTaxRatePercent": 0,
+        "childAllowanceHalfUnits": 0,
+        "isParent": false,
+        "childrenUnder25": 0,
+        "worksInSaxony": false,
+        "healthAdditionalRateBps": 290,
+        "monthlyTaxAllowanceCents": 0
+      },
+      "specialCases": [],
+      "sfnBasicHourlyPayCents": null,
+      "automation": {
+        "fullMonthAndPayConfirmed": true,
+        "plannedWorkConfirmed": true,
+        "additionalRecurringGrossCents": 0,
+        "additionalNetDeductionCents": 0,
+        "pensionScheme": "NONE"
+      }
+    },
+    "annualPayments": [],
+    "payment": {
+      "preferences": {
+        "version": 1,
+        "periods": [
+          {
+            "effectiveMonth": "2025-01",
+            "delays": {
+              "PREMIUMS": 0,
+              "MONTHLY_ALLOWANCE": 0,
+              "HOURLY_ALLOWANCE": 0,
+              "OVERTIME": 0,
+              "SPECIAL_DUTY": 0
+            }
+          }
+        ],
+        "reviewedEmptyMonths": [],
+        "socialInsuranceAttribution": "CASH_VARIABLE"
+      },
+      "perspective": "PAYOUT",
+      "sourceSettings": [
+        {
+          "settings": {
+            "version": 2,
+            "month": "2026-01",
+            "profile": {
+              "birthDate": "1990-01-15",
+              "taxClass": 1,
+              "factorPermille": null,
+              "churchTaxRatePercent": 0,
+              "childAllowanceHalfUnits": 0,
+              "isParent": false,
+              "childrenUnder25": 0,
+              "worksInSaxony": false,
+              "healthAdditionalRateBps": 290,
+              "monthlyTaxAllowanceCents": 0
+            },
+            "specialCases": [],
+            "sfnBasicHourlyPayCents": null,
+            "automation": {
+              "fullMonthAndPayConfirmed": true,
+              "plannedWorkConfirmed": true,
+              "additionalRecurringGrossCents": 0,
+              "additionalNetDeductionCents": 0,
+              "pensionScheme": "NONE"
+            }
+          },
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00Z",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      ]
+    },
+    "context": {
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "shift-mwioo3k7-vxyn4ewi",
+          "date": "2026-05-05",
+          "templateId": null,
+          "title": "Nachtdienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "20:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#EA5B55",
+          "symbol": "N",
+          "note": null,
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-11-16T03:07:51.175Z",
+          "updatedAt": "2026-11-16T03:07:51.175Z",
+          "deletedAt": null
+        },
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "shift-mwioo3k7-vponclak",
+          "date": "2026-06-05",
+          "templateId": null,
+          "title": "Nachtdienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "20:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#EA5B55",
+          "symbol": "N",
+          "note": null,
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-11-16T03:07:51.175Z",
+          "updatedAt": "2026-11-16T03:07:51.175Z",
+          "deletedAt": null
+        },
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "shift-mwioo3k7-d36x89zp",
+          "date": "2026-07-05",
+          "templateId": null,
+          "title": "Nachtdienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "20:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#EA5B55",
+          "symbol": "N",
+          "note": null,
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-11-16T03:07:51.175Z",
+          "updatedAt": "2026-11-16T03:07:51.175Z",
+          "deletedAt": null
+        },
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "shift-mwioo3k7-wpamy9q6",
+          "date": "2026-12-20",
+          "templateId": null,
+          "title": "Nachtdienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "20:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#EA5B55",
+          "symbol": "N",
+          "note": null,
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-11-16T03:07:51.175Z",
+          "updatedAt": "2026-11-16T03:07:51.175Z",
+          "deletedAt": null
+        },
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "shift-mwioo3k7-hqv5080w",
+          "date": "2027-01-03",
+          "templateId": null,
+          "title": "Nachtdienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "20:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#EA5B55",
+          "symbol": "N",
+          "note": null,
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-11-16T03:07:51.175Z",
+          "updatedAt": "2026-11-16T03:07:51.175Z",
+          "deletedAt": null
+        }
+      ],
+      "tariffDecisions": [],
+      "workPatternSettings": {
+        "workplaceCoverage": "UNKNOWN",
+        "assignment": "UNKNOWN",
+        "updatedAt": null
+      },
+      "resolver": {
+        "tariffPackageIds": ["tvoed-p-vka-legacy"]
+      },
+      "testMonths": []
+    }
+  },
+  "value": {
+    "annual": {
+      "payments": [
+        {
+          "revision": 1,
+          "payoutMonth": "2026-11",
+          "grossCents": 183913,
+          "netBasis": {
+            "kind": "CONSTANT_PAY"
+          }
+        }
+      ],
+      "proposal": {
+        "grossCents": 183913,
+        "basisCents": 216368,
+        "rateBasisPoints": 8500,
+        "referenceMonths": ["2026-07", "2026-08", "2026-09"],
+        "note": "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen."
+      },
+      "automatic": true,
+      "issue": null
+    },
+    "forecast": {
+      "sourceMonth": "2026-01",
+      "basicHourlyPayCents": 2462,
+      "regularGrossCents": 214165,
+      "pensionOmitted": false,
+      "result": {
+        "status": "available",
+        "classification": {
+          "status": "available",
+          "ruleVersion": "DE-SFN-2026-PROTOTYPE",
+          "calculationBasis": {
+            "payrollYear": 2026,
+            "rulesYear": 2026,
+            "status": "VERIFIED",
+            "revision": "DE-NET-2026-VERIFIED-v1"
+          },
+          "workEvidence": "PLANNED",
+          "amounts": {
+            "grossCents": 220775,
+            "taxableGrossCents": 214165,
+            "socialInsuranceGrossCents": 214165,
+            "regularMonthlySocialInsuranceGrossCents": 214165
+          },
+          "shifts": [
+            {
+              "shiftId": "shift-mwioo3k7-d36x89zp",
+              "workedMinutes": 570,
+              "nightMinutes": 570,
+              "dayMinutes": 450,
+              "paidPremiumCents": 6610,
+              "taxFreeCents": 6610,
+              "socialInsuranceFreeCents": 6610,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 4162,
+                  "taxFreeCents": 4162,
+                  "taxablePremiumCents": 0
+                },
+                {
+                  "category": "SUNDAY",
+                  "paidPremiumCents": 2448,
+                  "taxFreeCents": 2448,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            }
+          ],
+          "paidPremiumCents": 6610,
+          "taxFreeCents": 6610,
+          "socialInsuranceFreeCents": 6610
+        },
+        "pay": {
+          "status": "available",
+          "month": "2026-07",
+          "ruleVersion": "DE-2026-PAP1-SV2026-PROTOTYPE",
+          "calculationBasis": {
+            "payrollYear": 2026,
+            "rulesYear": 2026,
+            "status": "VERIFIED",
+            "revision": "DE-NET-2026-VERIFIED-v1"
+          },
+          "amounts": {
+            "grossCents": 220775,
+            "regularMonthlySocialInsuranceGrossCents": 214165,
+            "socialInsuranceGrossCents": 214165,
+            "taxableGrossCents": 214165
+          },
+          "tax": {
+            "wageTaxCents": 11558,
+            "solidarityCents": 0,
+            "churchTaxBasisCents": 0,
+            "churchTaxCents": 0,
+            "totalCents": 11558
+          },
+          "socialInsurance": {
+            "healthBasisCents": 214165,
+            "pensionBasisCents": 214165,
+            "healthStandardCents": 15634,
+            "healthAdditionalCents": 3105,
+            "healthCents": 18739,
+            "careCents": 5140,
+            "pensionCents": 19917,
+            "unemploymentCents": 2784,
+            "totalCents": 46580
+          },
+          "pension": {
+            "scheme": "NONE",
+            "contributionBasisCents": 214165,
+            "employeeCents": 0,
+            "taxableAdjustmentCents": 0,
+            "socialInsuranceAdjustmentCents": 0
+          },
+          "netCents": 162637
+        }
+      }
+    },
+    "projection": {
+      "month": "2026-07",
+      "perspective": "PAYOUT",
+      "pay": {
+        "month": "2026-07",
+        "tariffLabel": "TVöD VKA · E-Tabelle",
+        "available": true,
+        "fullTimeTableAmount": 4097.67,
+        "personalBaseAmount": 2128.66,
+        "shiftBreakdowns": [
+          {
+            "shiftId": "shift-mwioo3k7-d36x89zp",
+            "date": "2026-07-05",
+            "netMinutes": 570,
+            "premiumLines": [
+              {
+                "key": "sunday",
+                "label": "Sonntag",
+                "minutes": 240,
+                "percentage": 25,
+                "hourlyRate": 24.48,
+                "amount": 24.48
+              },
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 24.48,
+                "amount": 41.62
+              }
+            ],
+            "overtimeBaseAmount": 0,
+            "overtimePremiumAmount": 0,
+            "totalAmount": 66.1
+          }
+        ],
+        "timePremiumAmount": 66.1,
+        "overtimeAmount": 0,
+        "allowanceAmount": 0,
+        "tvoedAllowanceAmount": 12.99,
+        "careAllowanceAmount": 0,
+        "estimatedGrossAmount": 2207.75,
+        "assessment": {
+          "shiftWork": "REVIEW",
+          "alternatingShiftWork": "NOT_DETECTED",
+          "suggestedAllowance": "NONE",
+          "requiresConfirmation": false,
+          "evidence": [
+            "3 Arbeitsdienste",
+            "1 Dienstlagen: Nacht",
+            "0 Wechsel der Dienstlage",
+            "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+          ],
+          "criteria": [
+            {
+              "key": "SHIFT_CHANGES",
+              "label": "Regelmäßiger Wechsel",
+              "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+              "state": "OPEN"
+            },
+            {
+              "key": "NIGHT_SHIFTS",
+              "label": "Wiederkehrende Nachtschichten",
+              "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+              "state": "OPEN"
+            },
+            {
+              "key": "AROUND_THE_CLOCK",
+              "label": "Arbeitsbereich rund um die Uhr",
+              "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+              "state": "OPEN"
+            },
+            {
+              "key": "ASSIGNMENT",
+              "label": "Dauerhafte Zuordnung",
+              "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+              "state": "OPEN"
+            }
+          ],
+          "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+        },
+        "confirmedAllowance": null
+      },
+      "contributions": [
+        {
+          "group": "BASE",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 212866
+        },
+        {
+          "group": "CARE_ALLOWANCE",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 0
+        },
+        {
+          "group": "TARIFF_ALLOWANCE",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 1299
+        },
+        {
+          "group": "PREMIUMS",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 6610
+        },
+        {
+          "group": "MONTHLY_ALLOWANCE",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 0
+        },
+        {
+          "group": "HOURLY_ALLOWANCE",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 0
+        },
+        {
+          "group": "OVERTIME",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 0
+        },
+        {
+          "group": "SPECIAL_DUTY",
+          "claimMonth": "2026-07",
+          "paymentMonth": "2026-07",
+          "amountCents": 0
+        }
+      ],
+      "outgoingContributions": [],
+      "issues": [],
+      "warnings": [
+        "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+        "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+      ],
+      "available": true,
+      "sources": [
+        {
+          "month": "2026-07",
+          "pay": {
+            "month": "2026-07",
+            "tariffLabel": "TVöD VKA · E-Tabelle",
+            "available": true,
+            "fullTimeTableAmount": 4097.67,
+            "personalBaseAmount": 2128.66,
+            "shiftBreakdowns": [
+              {
+                "shiftId": "shift-mwioo3k7-d36x89zp",
+                "date": "2026-07-05",
+                "netMinutes": 570,
+                "premiumLines": [
+                  {
+                    "key": "sunday",
+                    "label": "Sonntag",
+                    "minutes": 240,
+                    "percentage": 25,
+                    "hourlyRate": 24.48,
+                    "amount": 24.48
+                  },
+                  {
+                    "key": "night",
+                    "label": "Nacht",
+                    "minutes": 510,
+                    "percentage": 20,
+                    "hourlyRate": 24.48,
+                    "amount": 41.62
+                  }
+                ],
+                "overtimeBaseAmount": 0,
+                "overtimePremiumAmount": 0,
+                "totalAmount": 66.1
+              }
+            ],
+            "timePremiumAmount": 66.1,
+            "overtimeAmount": 0,
+            "allowanceAmount": 0,
+            "tvoedAllowanceAmount": 12.99,
+            "careAllowanceAmount": 0,
+            "estimatedGrossAmount": 2207.75,
+            "assessment": {
+              "shiftWork": "REVIEW",
+              "alternatingShiftWork": "NOT_DETECTED",
+              "suggestedAllowance": "NONE",
+              "requiresConfirmation": false,
+              "evidence": [
+                "3 Arbeitsdienste",
+                "1 Dienstlagen: Nacht",
+                "0 Wechsel der Dienstlage",
+                "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+              ],
+              "criteria": [
+                {
+                  "key": "SHIFT_CHANGES",
+                  "label": "Regelmäßiger Wechsel",
+                  "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                  "state": "OPEN"
+                },
+                {
+                  "key": "NIGHT_SHIFTS",
+                  "label": "Wiederkehrende Nachtschichten",
+                  "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                  "state": "OPEN"
+                },
+                {
+                  "key": "AROUND_THE_CLOCK",
+                  "label": "Arbeitsbereich rund um die Uhr",
+                  "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                  "state": "OPEN"
+                },
+                {
+                  "key": "ASSIGNMENT",
+                  "label": "Dauerhafte Zuordnung",
+                  "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                  "state": "OPEN"
+                }
+              ],
+              "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+            },
+            "confirmedAllowance": null
+          },
+          "profile": {
+            "displayName": null,
+            "employerName": null,
+            "federalState": "NW",
+            "holidayRegion": "NONE",
+            "weeklyMinutes": 1200,
+            "timeZone": "Europe/Berlin",
+            "industry": null,
+            "manualMonthlyGrossCents": null,
+            "regularRotatingNightWork": true,
+            "sundayHolidayWorkEligible": true,
+            "allEmploymentWorkRecorded": true,
+            "tariff": null,
+            "createdAt": "2026-11-16T03:07:51.174Z",
+            "updatedAt": "2026-11-16T03:07:51.174Z",
+            "vkaETariff": {
+              "payGroup": "E9a",
+              "payLevel": 3,
+              "sector": "BT_K",
+              "tariffRegion": "OTHER"
+            }
+          },
+          "shifts": [
+            {
+              "kind": "SHIFT",
+              "specialDuty": null,
+              "id": "shift-mwioo3k7-d36x89zp",
+              "date": "2026-07-05",
+              "templateId": null,
+              "title": "Nachtdienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "20:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#EA5B55",
+              "symbol": "N",
+              "note": null,
+              "notification": null,
+              "alarmEnabled": false,
+              "location": null,
+              "overtimeMinutes": 0,
+              "tariffOvertimeConfirmed": false,
+              "holidayPremiumMode": "WITH_TIME_OFF",
+              "revision": 1,
+              "createdAt": "2026-11-16T03:07:51.175Z",
+              "updatedAt": "2026-11-16T03:07:51.175Z",
+              "deletedAt": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "report": {
+    "period": {
+      "kind": "MONTH",
+      "month": "2026-07"
+    },
+    "sections": {
+      "gross": {
+        "state": "READY",
+        "value": {
+          "legacy": {
+            "state": "READY",
+            "value": {
+              "month": "2026-07",
+              "perspective": "PAYOUT",
+              "pay": {
+                "month": "2026-07",
+                "tariffLabel": "TVöD VKA · E-Tabelle",
+                "available": true,
+                "fullTimeTableAmount": 4097.67,
+                "personalBaseAmount": 2128.66,
+                "shiftBreakdowns": [
+                  {
+                    "shiftId": "shift-mwioo3k7-d36x89zp",
+                    "date": "2026-07-05",
+                    "netMinutes": 570,
+                    "premiumLines": [
+                      {
+                        "key": "sunday",
+                        "label": "Sonntag",
+                        "minutes": 240,
+                        "percentage": 25,
+                        "hourlyRate": 24.48,
+                        "amount": 24.48
+                      },
+                      {
+                        "key": "night",
+                        "label": "Nacht",
+                        "minutes": 510,
+                        "percentage": 20,
+                        "hourlyRate": 24.48,
+                        "amount": 41.62
+                      }
+                    ],
+                    "overtimeBaseAmount": 0,
+                    "overtimePremiumAmount": 0,
+                    "totalAmount": 66.1
+                  }
+                ],
+                "timePremiumAmount": 66.1,
+                "overtimeAmount": 0,
+                "allowanceAmount": 0,
+                "tvoedAllowanceAmount": 12.99,
+                "careAllowanceAmount": 0,
+                "estimatedGrossAmount": 2207.75,
+                "assessment": {
+                  "shiftWork": "REVIEW",
+                  "alternatingShiftWork": "NOT_DETECTED",
+                  "suggestedAllowance": "NONE",
+                  "requiresConfirmation": false,
+                  "evidence": [
+                    "3 Arbeitsdienste",
+                    "1 Dienstlagen: Nacht",
+                    "0 Wechsel der Dienstlage",
+                    "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+                  ],
+                  "criteria": [
+                    {
+                      "key": "SHIFT_CHANGES",
+                      "label": "Regelmäßiger Wechsel",
+                      "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                      "state": "OPEN"
+                    },
+                    {
+                      "key": "NIGHT_SHIFTS",
+                      "label": "Wiederkehrende Nachtschichten",
+                      "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                      "state": "OPEN"
+                    },
+                    {
+                      "key": "AROUND_THE_CLOCK",
+                      "label": "Arbeitsbereich rund um die Uhr",
+                      "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                      "state": "OPEN"
+                    },
+                    {
+                      "key": "ASSIGNMENT",
+                      "label": "Dauerhafte Zuordnung",
+                      "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                      "state": "OPEN"
+                    }
+                  ],
+                  "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+                },
+                "confirmedAllowance": null
+              },
+              "contributions": [
+                {
+                  "group": "BASE",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 212866
+                },
+                {
+                  "group": "CARE_ALLOWANCE",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 0
+                },
+                {
+                  "group": "TARIFF_ALLOWANCE",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 1299
+                },
+                {
+                  "group": "PREMIUMS",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 6610
+                },
+                {
+                  "group": "MONTHLY_ALLOWANCE",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 0
+                },
+                {
+                  "group": "HOURLY_ALLOWANCE",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 0
+                },
+                {
+                  "group": "OVERTIME",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 0
+                },
+                {
+                  "group": "SPECIAL_DUTY",
+                  "claimMonth": "2026-07",
+                  "paymentMonth": "2026-07",
+                  "amountCents": 0
+                }
+              ],
+              "outgoingContributions": [],
+              "issues": [],
+              "warnings": [
+                "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+                "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+              ],
+              "available": true,
+              "sources": [
+                {
+                  "month": "2026-07",
+                  "pay": {
+                    "month": "2026-07",
+                    "tariffLabel": "TVöD VKA · E-Tabelle",
+                    "available": true,
+                    "fullTimeTableAmount": 4097.67,
+                    "personalBaseAmount": 2128.66,
+                    "shiftBreakdowns": [
+                      {
+                        "shiftId": "shift-mwioo3k7-d36x89zp",
+                        "date": "2026-07-05",
+                        "netMinutes": 570,
+                        "premiumLines": [
+                          {
+                            "key": "sunday",
+                            "label": "Sonntag",
+                            "minutes": 240,
+                            "percentage": 25,
+                            "hourlyRate": 24.48,
+                            "amount": 24.48
+                          },
+                          {
+                            "key": "night",
+                            "label": "Nacht",
+                            "minutes": 510,
+                            "percentage": 20,
+                            "hourlyRate": 24.48,
+                            "amount": 41.62
+                          }
+                        ],
+                        "overtimeBaseAmount": 0,
+                        "overtimePremiumAmount": 0,
+                        "totalAmount": 66.1
+                      }
+                    ],
+                    "timePremiumAmount": 66.1,
+                    "overtimeAmount": 0,
+                    "allowanceAmount": 0,
+                    "tvoedAllowanceAmount": 12.99,
+                    "careAllowanceAmount": 0,
+                    "estimatedGrossAmount": 2207.75,
+                    "assessment": {
+                      "shiftWork": "REVIEW",
+                      "alternatingShiftWork": "NOT_DETECTED",
+                      "suggestedAllowance": "NONE",
+                      "requiresConfirmation": false,
+                      "evidence": [
+                        "3 Arbeitsdienste",
+                        "1 Dienstlagen: Nacht",
+                        "0 Wechsel der Dienstlage",
+                        "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+                      ],
+                      "criteria": [
+                        {
+                          "key": "SHIFT_CHANGES",
+                          "label": "Regelmäßiger Wechsel",
+                          "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                          "state": "OPEN"
+                        },
+                        {
+                          "key": "NIGHT_SHIFTS",
+                          "label": "Wiederkehrende Nachtschichten",
+                          "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                          "state": "OPEN"
+                        },
+                        {
+                          "key": "AROUND_THE_CLOCK",
+                          "label": "Arbeitsbereich rund um die Uhr",
+                          "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                          "state": "OPEN"
+                        },
+                        {
+                          "key": "ASSIGNMENT",
+                          "label": "Dauerhafte Zuordnung",
+                          "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                          "state": "OPEN"
+                        }
+                      ],
+                      "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+                    },
+                    "confirmedAllowance": null
+                  }
+                }
+              ]
+            }
+          },
+          "assessedPerspective": "EARNED",
+          "assessed": {
+            "state": "READY",
+            "value": {
+              "month": "2026-07",
+              "complete": false,
+              "status": "unavailable",
+              "knownSubtotalCents": 0,
+              "estimatedGrossCents": null,
+              "base": {
+                "month": "2026-07",
+                "status": "unavailable",
+                "complete": false,
+                "totalCents": null,
+                "knownSubtotalCents": 0,
+                "positions": [
+                  {
+                    "id": "base:2026-07-01",
+                    "kind": "base",
+                    "label": "Grundvergütung",
+                    "from": "2026-07-01",
+                    "through": "2026-07-31",
+                    "status": "unavailable",
+                    "amountCents": null,
+                    "source": {
+                      "kind": "profile",
+                      "profileEffectiveFrom": null,
+                      "profileRevision": null,
+                      "requestedPackageId": null,
+                      "packageId": null,
+                      "versionId": null,
+                      "packageValidFrom": null,
+                      "packageValidTo": null,
+                      "references": []
+                    },
+                    "basis": {
+                      "fullTimeMonthlyCents": null,
+                      "personalMonthlyCents": null,
+                      "weeklyMinutes": null,
+                      "fullTimeWeeklyMinutes": null,
+                      "calendarDays": 31,
+                      "monthDays": 31,
+                      "proration": "unconfirmed"
+                    },
+                    "issue": {
+                      "code": "PROFILE_MISSING",
+                      "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                    }
+                  }
+                ]
+              },
+              "timePremiums": {
+                "positions": [
+                  {
+                    "id": "shift-mwioo3k7-d36x89zp:29721240",
+                    "kind": "time-premium",
+                    "label": "Zeitzuschläge",
+                    "from": "2026-07-05",
+                    "through": "2026-07-05",
+                    "fromEpochMinutes": 29721240,
+                    "untilEpochMinutes": 29721480,
+                    "shiftId": "shift-mwioo3k7-d36x89zp",
+                    "source": {
+                      "kind": "profile",
+                      "profileEffectiveFrom": null,
+                      "profileRevision": null,
+                      "requestedPackageId": null,
+                      "packageId": null,
+                      "versionId": null,
+                      "packageValidFrom": null,
+                      "packageValidTo": null,
+                      "references": []
+                    },
+                    "status": "unavailable",
+                    "amountCents": null,
+                    "issue": {
+                      "code": "PROFILE_MISSING",
+                      "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                    },
+                    "basis": {
+                      "ruleId": null,
+                      "minutes": 240,
+                      "hourlyRateCents": null,
+                      "percentageBasisPoints": null,
+                      "pauseMethod": "centered-duration-estimate"
+                    }
+                  },
+                  {
+                    "id": "shift-mwioo3k7-d36x89zp:29721480",
+                    "kind": "time-premium",
+                    "label": "Zeitzuschläge",
+                    "from": "2026-07-06",
+                    "through": "2026-07-06",
+                    "fromEpochMinutes": 29721480,
+                    "untilEpochMinutes": 29721840,
+                    "shiftId": "shift-mwioo3k7-d36x89zp",
+                    "source": {
+                      "kind": "profile",
+                      "profileEffectiveFrom": null,
+                      "profileRevision": null,
+                      "requestedPackageId": null,
+                      "packageId": null,
+                      "versionId": null,
+                      "packageValidFrom": null,
+                      "packageValidTo": null,
+                      "references": []
+                    },
+                    "status": "unavailable",
+                    "amountCents": null,
+                    "issue": {
+                      "code": "PROFILE_MISSING",
+                      "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                    },
+                    "basis": {
+                      "ruleId": null,
+                      "minutes": 330,
+                      "hourlyRateCents": null,
+                      "percentageBasisPoints": null,
+                      "pauseMethod": "centered-duration-estimate"
+                    }
+                  }
+                ],
+                "netMinutes": 570,
+                "complete": false,
+                "totalCents": null,
+                "knownSubtotalCents": 0,
+                "status": "unavailable"
+              },
+              "allowances": {
+                "status": "unavailable",
+                "complete": false,
+                "totalCents": null,
+                "knownSubtotalCents": 0,
+                "positions": [
+                  {
+                    "id": "allowance:unknown:2026-07-01",
+                    "kind": "allowance",
+                    "label": "Zulagen",
+                    "from": "2026-07-01",
+                    "through": "2026-07-31",
+                    "amountCents": null,
+                    "status": "unavailable",
+                    "source": {
+                      "kind": "profile",
+                      "profileEffectiveFrom": null,
+                      "profileRevision": null,
+                      "requestedPackageId": null,
+                      "packageId": null,
+                      "versionId": null,
+                      "packageValidFrom": null,
+                      "packageValidTo": null,
+                      "references": []
+                    },
+                    "basis": {
+                      "ruleId": null,
+                      "shiftId": null,
+                      "allowanceType": null,
+                      "rateCents": null,
+                      "personalMonthlyCents": null,
+                      "percentageBasisPoints": null,
+                      "minutes": 0,
+                      "calendarDays": 31,
+                      "monthDays": 31,
+                      "entitlement": null,
+                      "pauseMethod": "none",
+                      "proration": "none"
+                    },
+                    "issue": {
+                      "code": "PROFILE_MISSING",
+                      "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                    }
+                  }
+                ]
+              },
+              "overtime": {
+                "status": "calculated",
+                "complete": true,
+                "totalCents": 0,
+                "knownSubtotalCents": 0,
+                "positions": []
+              },
+              "annualPayments": {
+                "positions": [],
+                "complete": true,
+                "status": "calculated",
+                "knownSubtotalCents": 0,
+                "totalCents": 0
+              },
+              "positions": [
+                {
+                  "id": "base:2026-07-01",
+                  "kind": "base",
+                  "label": "Grundvergütung",
+                  "from": "2026-07-01",
+                  "through": "2026-07-31",
+                  "status": "unavailable",
+                  "amountCents": null,
+                  "source": {
+                    "kind": "profile",
+                    "profileEffectiveFrom": null,
+                    "profileRevision": null,
+                    "requestedPackageId": null,
+                    "packageId": null,
+                    "versionId": null,
+                    "packageValidFrom": null,
+                    "packageValidTo": null,
+                    "references": []
+                  },
+                  "basis": {
+                    "fullTimeMonthlyCents": null,
+                    "personalMonthlyCents": null,
+                    "weeklyMinutes": null,
+                    "fullTimeWeeklyMinutes": null,
+                    "calendarDays": 31,
+                    "monthDays": 31,
+                    "proration": "unconfirmed"
+                  },
+                  "issue": {
+                    "code": "PROFILE_MISSING",
+                    "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                  }
+                },
+                {
+                  "id": "shift-mwioo3k7-d36x89zp:29721240",
+                  "kind": "time-premium",
+                  "label": "Zeitzuschläge",
+                  "from": "2026-07-05",
+                  "through": "2026-07-05",
+                  "fromEpochMinutes": 29721240,
+                  "untilEpochMinutes": 29721480,
+                  "shiftId": "shift-mwioo3k7-d36x89zp",
+                  "source": {
+                    "kind": "profile",
+                    "profileEffectiveFrom": null,
+                    "profileRevision": null,
+                    "requestedPackageId": null,
+                    "packageId": null,
+                    "versionId": null,
+                    "packageValidFrom": null,
+                    "packageValidTo": null,
+                    "references": []
+                  },
+                  "status": "unavailable",
+                  "amountCents": null,
+                  "issue": {
+                    "code": "PROFILE_MISSING",
+                    "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                  },
+                  "basis": {
+                    "ruleId": null,
+                    "minutes": 240,
+                    "hourlyRateCents": null,
+                    "percentageBasisPoints": null,
+                    "pauseMethod": "centered-duration-estimate"
+                  }
+                },
+                {
+                  "id": "shift-mwioo3k7-d36x89zp:29721480",
+                  "kind": "time-premium",
+                  "label": "Zeitzuschläge",
+                  "from": "2026-07-06",
+                  "through": "2026-07-06",
+                  "fromEpochMinutes": 29721480,
+                  "untilEpochMinutes": 29721840,
+                  "shiftId": "shift-mwioo3k7-d36x89zp",
+                  "source": {
+                    "kind": "profile",
+                    "profileEffectiveFrom": null,
+                    "profileRevision": null,
+                    "requestedPackageId": null,
+                    "packageId": null,
+                    "versionId": null,
+                    "packageValidFrom": null,
+                    "packageValidTo": null,
+                    "references": []
+                  },
+                  "status": "unavailable",
+                  "amountCents": null,
+                  "issue": {
+                    "code": "PROFILE_MISSING",
+                    "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                  },
+                  "basis": {
+                    "ruleId": null,
+                    "minutes": 330,
+                    "hourlyRateCents": null,
+                    "percentageBasisPoints": null,
+                    "pauseMethod": "centered-duration-estimate"
+                  }
+                },
+                {
+                  "id": "allowance:unknown:2026-07-01",
+                  "kind": "allowance",
+                  "label": "Zulagen",
+                  "from": "2026-07-01",
+                  "through": "2026-07-31",
+                  "amountCents": null,
+                  "status": "unavailable",
+                  "source": {
+                    "kind": "profile",
+                    "profileEffectiveFrom": null,
+                    "profileRevision": null,
+                    "requestedPackageId": null,
+                    "packageId": null,
+                    "versionId": null,
+                    "packageValidFrom": null,
+                    "packageValidTo": null,
+                    "references": []
+                  },
+                  "basis": {
+                    "ruleId": null,
+                    "shiftId": null,
+                    "allowanceType": null,
+                    "rateCents": null,
+                    "personalMonthlyCents": null,
+                    "percentageBasisPoints": null,
+                    "minutes": 0,
+                    "calendarDays": 31,
+                    "monthDays": 31,
+                    "entitlement": null,
+                    "pauseMethod": "none",
+                    "proration": "none"
+                  },
+                  "issue": {
+                    "code": "PROFILE_MISSING",
+                    "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                  }
+                }
+              ],
+              "allowanceAssessment": {
+                "periods": [
+                  {
+                    "tariff": null,
+                    "nightSequence": null,
+                    "from": "2026-07-01",
+                    "through": "2026-07-31",
+                    "source": {
+                      "kind": "profile",
+                      "profileEffectiveFrom": null,
+                      "profileRevision": null,
+                      "requestedPackageId": null,
+                      "packageId": null,
+                      "versionId": null,
+                      "packageValidFrom": null,
+                      "packageValidTo": null,
+                      "references": []
+                    },
+                    "assessment": null,
+                    "entitlement": null,
+                    "observedFrom": null,
+                    "observedThrough": null,
+                    "settingsUpdatedAt": null,
+                    "issue": {
+                      "code": "PROFILE_MISSING",
+                      "message": "Für diesen Zeitraum fehlt ein Vergütungsstand."
+                    }
+                  }
+                ],
+                "entitlements": [],
+                "complete": false,
+                "legacyDecision": null
+              }
+            }
+          },
+          "drafts": {
+            "state": "READY",
+            "value": []
+          },
+          "monthlyDashboard": {
+            "state": "READY",
+            "value": {
+              "manualSalary": false,
+              "salaryReady": true,
+              "premium": {
+                "month": "2026-07",
+                "amount": 66.1
+              },
+              "pay": {
+                "reserveLoadingSpace": true,
+                "loading": false,
+                "base": 2128.66,
+                "premiums": 66.1,
+                "overtime": 0,
+                "allowances": 12.99,
+                "partial": false,
+                "duties": [],
+                "gross": 2207.75,
+                "annualPayments": 0,
+                "annualIssue": null,
+                "annualPaymentPresent": false,
+                "annualPaymentExpected": false,
+                "manual": false,
+                "caption": "Unverbindliche Schätzung"
+              },
+              "kind": "PAYOUT",
+              "policy": {
+                "isTestMonth": false,
+                "allowNet": true,
+                "allowProjection": true,
+                "allowRecurring": true
+              },
+              "annualState": {
+                "state": "READY",
+                "value": {
+                  "known": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "net": {
+        "state": "READY",
+        "value": {
+          "sourceMonth": "2026-01",
+          "basicHourlyPayCents": 2462,
+          "regularGrossCents": 214165,
+          "pensionOmitted": false,
+          "result": {
+            "status": "available",
+            "classification": {
+              "status": "available",
+              "ruleVersion": "DE-SFN-2026-PROTOTYPE",
+              "calculationBasis": {
+                "payrollYear": 2026,
+                "rulesYear": 2026,
+                "status": "VERIFIED",
+                "revision": "DE-NET-2026-VERIFIED-v1"
+              },
+              "workEvidence": "PLANNED",
+              "amounts": {
+                "grossCents": 220775,
+                "taxableGrossCents": 214165,
+                "socialInsuranceGrossCents": 214165,
+                "regularMonthlySocialInsuranceGrossCents": 214165
+              },
+              "shifts": [
+                {
+                  "shiftId": "shift-mwioo3k7-d36x89zp",
+                  "workedMinutes": 570,
+                  "nightMinutes": 570,
+                  "dayMinutes": 450,
+                  "paidPremiumCents": 6610,
+                  "taxFreeCents": 6610,
+                  "socialInsuranceFreeCents": 6610,
+                  "taxablePremiumCents": 0,
+                  "socialInsuranceLiablePremiumCents": 0,
+                  "premiumBreakdown": [
+                    {
+                      "category": "NIGHT",
+                      "paidPremiumCents": 4162,
+                      "taxFreeCents": 4162,
+                      "taxablePremiumCents": 0
+                    },
+                    {
+                      "category": "SUNDAY",
+                      "paidPremiumCents": 2448,
+                      "taxFreeCents": 2448,
+                      "taxablePremiumCents": 0
+                    }
+                  ]
+                }
+              ],
+              "paidPremiumCents": 6610,
+              "taxFreeCents": 6610,
+              "socialInsuranceFreeCents": 6610
+            },
+            "pay": {
+              "status": "available",
+              "month": "2026-07",
+              "ruleVersion": "DE-2026-PAP1-SV2026-PROTOTYPE",
+              "calculationBasis": {
+                "payrollYear": 2026,
+                "rulesYear": 2026,
+                "status": "VERIFIED",
+                "revision": "DE-NET-2026-VERIFIED-v1"
+              },
+              "amounts": {
+                "grossCents": 220775,
+                "regularMonthlySocialInsuranceGrossCents": 214165,
+                "socialInsuranceGrossCents": 214165,
+                "taxableGrossCents": 214165
+              },
+              "tax": {
+                "wageTaxCents": 11558,
+                "solidarityCents": 0,
+                "churchTaxBasisCents": 0,
+                "churchTaxCents": 0,
+                "totalCents": 11558
+              },
+              "socialInsurance": {
+                "healthBasisCents": 214165,
+                "pensionBasisCents": 214165,
+                "healthStandardCents": 15634,
+                "healthAdditionalCents": 3105,
+                "healthCents": 18739,
+                "careCents": 5140,
+                "pensionCents": 19917,
+                "unemploymentCents": 2784,
+                "totalCents": 46580
+              },
+              "pension": {
+                "scheme": "NONE",
+                "contributionBasisCents": 214165,
+                "employeeCents": 0,
+                "taxableAdjustmentCents": 0,
+                "socialInsuranceAdjustmentCents": 0
+              },
+              "netCents": 162637
+            }
+          }
+        }
+      }
+    },
+    "salaryForecast": {
+      "payments": [
+        {
+          "revision": 1,
+          "payoutMonth": "2026-11",
+          "grossCents": 183913,
+          "netBasis": {
+            "kind": "CONSTANT_PAY"
+          }
+        }
+      ],
+      "proposal": {
+        "grossCents": 183913,
+        "basisCents": 216368,
+        "rateBasisPoints": 8500,
+        "referenceMonths": ["2026-07", "2026-08", "2026-09"],
+        "note": "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen."
+      },
+      "automatic": true,
+      "issue": null
+    }
+  },
+  "edited": {
+    "request": {
+      "month": "2026-07",
+      "profile": {
+        "displayName": null,
+        "employerName": null,
+        "federalState": "NW",
+        "holidayRegion": "NONE",
+        "weeklyMinutes": 1200,
+        "timeZone": "Europe/Berlin",
+        "industry": null,
+        "manualMonthlyGrossCents": null,
+        "regularRotatingNightWork": true,
+        "sundayHolidayWorkEligible": true,
+        "allEmploymentWorkRecorded": true,
+        "tariff": null,
+        "createdAt": "2026-11-16T03:07:51.174Z",
+        "updatedAt": "2026-11-16T03:07:51.174Z",
+        "vkaETariff": {
+          "payGroup": "E9a",
+          "payLevel": 3,
+          "sector": "BT_K",
+          "tariffRegion": "OTHER"
+        }
+      },
+      "settings": {
+        "version": 2,
+        "month": "2026-01",
+        "profile": {
+          "birthDate": "1990-01-15",
+          "taxClass": 1,
+          "factorPermille": null,
+          "churchTaxRatePercent": 0,
+          "childAllowanceHalfUnits": 0,
+          "isParent": false,
+          "childrenUnder25": 0,
+          "worksInSaxony": false,
+          "healthAdditionalRateBps": 290,
+          "monthlyTaxAllowanceCents": 0
+        },
+        "specialCases": [],
+        "sfnBasicHourlyPayCents": null,
+        "automation": {
+          "fullMonthAndPayConfirmed": true,
+          "plannedWorkConfirmed": true,
+          "additionalRecurringGrossCents": 0,
+          "additionalNetDeductionCents": 0,
+          "pensionScheme": "NONE"
+        }
+      },
+      "annualPayments": [],
+      "payment": {
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "perspective": "PAYOUT",
+        "sourceSettings": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "context": {
+        "entries": [
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vxyn4ewi",
+            "date": "2026-05-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vponclak",
+            "date": "2026-06-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-d36x89zp",
+            "date": "2026-07-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "23:50",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 2,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-wpamy9q6",
+            "date": "2026-12-20",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-hqv5080w",
+            "date": "2027-01-03",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          }
+        ],
+        "tariffDecisions": [],
+        "workPatternSettings": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "resolver": {
+          "tariffPackageIds": ["tvoed-p-vka-legacy"]
+        },
+        "testMonths": []
+      }
+    },
+    "value": {
+      "annual": {
+        "payments": [
+          {
+            "revision": 1,
+            "payoutMonth": "2026-11",
+            "grossCents": 182942,
+            "netBasis": {
+              "kind": "CONSTANT_PAY"
+            }
+          }
+        ],
+        "proposal": {
+          "grossCents": 182942,
+          "basisCents": 215226,
+          "rateBasisPoints": 8500,
+          "referenceMonths": ["2026-07", "2026-08", "2026-09"],
+          "note": "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen."
+        },
+        "automatic": true,
+        "issue": null
+      },
+      "forecast": {
+        "sourceMonth": "2026-01",
+        "basicHourlyPayCents": 2462,
+        "regularGrossCents": 214165,
+        "pensionOmitted": false,
+        "result": {
+          "status": "available",
+          "classification": {
+            "status": "available",
+            "ruleVersion": "DE-SFN-2026-PROTOTYPE",
+            "calculationBasis": {
+              "payrollYear": 2026,
+              "rulesYear": 2026,
+              "status": "VERIFIED",
+              "revision": "DE-NET-2026-VERIFIED-v1"
+            },
+            "workEvidence": "PLANNED",
+            "amounts": {
+              "grossCents": 217347,
+              "taxableGrossCents": 214165,
+              "socialInsuranceGrossCents": 214165,
+              "regularMonthlySocialInsuranceGrossCents": 214165
+            },
+            "shifts": [
+              {
+                "shiftId": "shift-mwioo3k7-d36x89zp",
+                "workedMinutes": 200,
+                "nightMinutes": 200,
+                "dayMinutes": 200,
+                "paidPremiumCents": 3182,
+                "taxFreeCents": 3182,
+                "socialInsuranceFreeCents": 3182,
+                "taxablePremiumCents": 0,
+                "socialInsuranceLiablePremiumCents": 0,
+                "premiumBreakdown": [
+                  {
+                    "category": "NIGHT",
+                    "paidPremiumCents": 1142,
+                    "taxFreeCents": 1142,
+                    "taxablePremiumCents": 0
+                  },
+                  {
+                    "category": "SUNDAY",
+                    "paidPremiumCents": 2040,
+                    "taxFreeCents": 2040,
+                    "taxablePremiumCents": 0
+                  }
+                ]
+              }
+            ],
+            "paidPremiumCents": 3182,
+            "taxFreeCents": 3182,
+            "socialInsuranceFreeCents": 3182
+          },
+          "pay": {
+            "status": "available",
+            "month": "2026-07",
+            "ruleVersion": "DE-2026-PAP1-SV2026-PROTOTYPE",
+            "calculationBasis": {
+              "payrollYear": 2026,
+              "rulesYear": 2026,
+              "status": "VERIFIED",
+              "revision": "DE-NET-2026-VERIFIED-v1"
+            },
+            "amounts": {
+              "grossCents": 217347,
+              "regularMonthlySocialInsuranceGrossCents": 214165,
+              "socialInsuranceGrossCents": 214165,
+              "taxableGrossCents": 214165
+            },
+            "tax": {
+              "wageTaxCents": 11558,
+              "solidarityCents": 0,
+              "churchTaxBasisCents": 0,
+              "churchTaxCents": 0,
+              "totalCents": 11558
+            },
+            "socialInsurance": {
+              "healthBasisCents": 214165,
+              "pensionBasisCents": 214165,
+              "healthStandardCents": 15634,
+              "healthAdditionalCents": 3105,
+              "healthCents": 18739,
+              "careCents": 5140,
+              "pensionCents": 19917,
+              "unemploymentCents": 2784,
+              "totalCents": 46580
+            },
+            "pension": {
+              "scheme": "NONE",
+              "contributionBasisCents": 214165,
+              "employeeCents": 0,
+              "taxableAdjustmentCents": 0,
+              "socialInsuranceAdjustmentCents": 0
+            },
+            "netCents": 159209
+          }
+        }
+      },
+      "projection": {
+        "month": "2026-07",
+        "perspective": "PAYOUT",
+        "pay": {
+          "month": "2026-07",
+          "tariffLabel": "TVöD VKA · E-Tabelle",
+          "available": true,
+          "fullTimeTableAmount": 4097.67,
+          "personalBaseAmount": 2128.66,
+          "shiftBreakdowns": [
+            {
+              "shiftId": "shift-mwioo3k7-d36x89zp",
+              "date": "2026-07-05",
+              "netMinutes": 200,
+              "premiumLines": [
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 200,
+                  "percentage": 25,
+                  "hourlyRate": 24.48,
+                  "amount": 20.4
+                },
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 140,
+                  "percentage": 20,
+                  "hourlyRate": 24.48,
+                  "amount": 11.42
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 31.82
+            }
+          ],
+          "timePremiumAmount": 31.82,
+          "overtimeAmount": 0,
+          "allowanceAmount": 0,
+          "tvoedAllowanceAmount": 12.99,
+          "careAllowanceAmount": 0,
+          "estimatedGrossAmount": 2173.47,
+          "assessment": {
+            "shiftWork": "REVIEW",
+            "alternatingShiftWork": "NOT_DETECTED",
+            "suggestedAllowance": "NONE",
+            "requiresConfirmation": false,
+            "evidence": [
+              "3 Arbeitsdienste",
+              "1 Dienstlagen: Nacht",
+              "0 Wechsel der Dienstlage",
+              "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+            ],
+            "criteria": [
+              {
+                "key": "SHIFT_CHANGES",
+                "label": "Regelmäßiger Wechsel",
+                "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                "state": "OPEN"
+              },
+              {
+                "key": "NIGHT_SHIFTS",
+                "label": "Wiederkehrende Nachtschichten",
+                "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                "state": "OPEN"
+              },
+              {
+                "key": "AROUND_THE_CLOCK",
+                "label": "Arbeitsbereich rund um die Uhr",
+                "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                "state": "OPEN"
+              },
+              {
+                "key": "ASSIGNMENT",
+                "label": "Dauerhafte Zuordnung",
+                "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                "state": "OPEN"
+              }
+            ],
+            "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          },
+          "confirmedAllowance": null
+        },
+        "contributions": [
+          {
+            "group": "BASE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 212866
+          },
+          {
+            "group": "CARE_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "TARIFF_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 1299
+          },
+          {
+            "group": "PREMIUMS",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 3182
+          },
+          {
+            "group": "MONTHLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "HOURLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "OVERTIME",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "SPECIAL_DUTY",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          }
+        ],
+        "outgoingContributions": [],
+        "issues": [],
+        "warnings": [
+          "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+          "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+        ],
+        "available": true,
+        "sources": [
+          {
+            "month": "2026-07",
+            "pay": {
+              "month": "2026-07",
+              "tariffLabel": "TVöD VKA · E-Tabelle",
+              "available": true,
+              "fullTimeTableAmount": 4097.67,
+              "personalBaseAmount": 2128.66,
+              "shiftBreakdowns": [
+                {
+                  "shiftId": "shift-mwioo3k7-d36x89zp",
+                  "date": "2026-07-05",
+                  "netMinutes": 200,
+                  "premiumLines": [
+                    {
+                      "key": "sunday",
+                      "label": "Sonntag",
+                      "minutes": 200,
+                      "percentage": 25,
+                      "hourlyRate": 24.48,
+                      "amount": 20.4
+                    },
+                    {
+                      "key": "night",
+                      "label": "Nacht",
+                      "minutes": 140,
+                      "percentage": 20,
+                      "hourlyRate": 24.48,
+                      "amount": 11.42
+                    }
+                  ],
+                  "overtimeBaseAmount": 0,
+                  "overtimePremiumAmount": 0,
+                  "totalAmount": 31.82
+                }
+              ],
+              "timePremiumAmount": 31.82,
+              "overtimeAmount": 0,
+              "allowanceAmount": 0,
+              "tvoedAllowanceAmount": 12.99,
+              "careAllowanceAmount": 0,
+              "estimatedGrossAmount": 2173.47,
+              "assessment": {
+                "shiftWork": "REVIEW",
+                "alternatingShiftWork": "NOT_DETECTED",
+                "suggestedAllowance": "NONE",
+                "requiresConfirmation": false,
+                "evidence": [
+                  "3 Arbeitsdienste",
+                  "1 Dienstlagen: Nacht",
+                  "0 Wechsel der Dienstlage",
+                  "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+                ],
+                "criteria": [
+                  {
+                    "key": "SHIFT_CHANGES",
+                    "label": "Regelmäßiger Wechsel",
+                    "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "NIGHT_SHIFTS",
+                    "label": "Wiederkehrende Nachtschichten",
+                    "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "AROUND_THE_CLOCK",
+                    "label": "Arbeitsbereich rund um die Uhr",
+                    "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "ASSIGNMENT",
+                    "label": "Dauerhafte Zuordnung",
+                    "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                    "state": "OPEN"
+                  }
+                ],
+                "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+              },
+              "confirmedAllowance": null
+            },
+            "profile": {
+              "displayName": null,
+              "employerName": null,
+              "federalState": "NW",
+              "holidayRegion": "NONE",
+              "weeklyMinutes": 1200,
+              "timeZone": "Europe/Berlin",
+              "industry": null,
+              "manualMonthlyGrossCents": null,
+              "regularRotatingNightWork": true,
+              "sundayHolidayWorkEligible": true,
+              "allEmploymentWorkRecorded": true,
+              "tariff": null,
+              "createdAt": "2026-11-16T03:07:51.174Z",
+              "updatedAt": "2026-11-16T03:07:51.174Z",
+              "vkaETariff": {
+                "payGroup": "E9a",
+                "payLevel": 3,
+                "sector": "BT_K",
+                "tariffRegion": "OTHER"
+              }
+            },
+            "shifts": [
+              {
+                "kind": "SHIFT",
+                "specialDuty": null,
+                "id": "shift-mwioo3k7-d36x89zp",
+                "date": "2026-07-05",
+                "templateId": null,
+                "title": "Nachtdienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "20:00",
+                "endTime": "23:50",
+                "breakMinutes": 30,
+                "color": "#EA5B55",
+                "symbol": "N",
+                "note": null,
+                "notification": null,
+                "alarmEnabled": false,
+                "location": null,
+                "overtimeMinutes": 0,
+                "tariffOvertimeConfirmed": false,
+                "holidayPremiumMode": "WITH_TIME_OFF",
+                "revision": 2,
+                "createdAt": "2026-11-16T03:07:51.175Z",
+                "updatedAt": "2026-11-16T03:07:51.175Z",
+                "deletedAt": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "empty": {
+    "request": {
+      "month": "2026-07",
+      "profile": {
+        "displayName": null,
+        "employerName": null,
+        "federalState": "NW",
+        "holidayRegion": "NONE",
+        "weeklyMinutes": 1200,
+        "timeZone": "Europe/Berlin",
+        "industry": null,
+        "manualMonthlyGrossCents": null,
+        "regularRotatingNightWork": true,
+        "sundayHolidayWorkEligible": true,
+        "allEmploymentWorkRecorded": true,
+        "tariff": null,
+        "createdAt": "2026-11-16T03:07:51.174Z",
+        "updatedAt": "2026-11-16T03:07:51.174Z",
+        "vkaETariff": {
+          "payGroup": "E9a",
+          "payLevel": 3,
+          "sector": "BT_K",
+          "tariffRegion": "OTHER"
+        }
+      },
+      "settings": null,
+      "annualPayments": [],
+      "payment": {
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "perspective": "PAYOUT",
+        "sourceSettings": []
+      },
+      "context": {
+        "entries": [
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vxyn4ewi",
+            "date": "2026-05-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vponclak",
+            "date": "2026-06-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-d36x89zp",
+            "date": "2026-07-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "23:50",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 2,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-wpamy9q6",
+            "date": "2026-12-20",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-hqv5080w",
+            "date": "2027-01-03",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          }
+        ],
+        "tariffDecisions": [],
+        "workPatternSettings": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "resolver": {
+          "tariffPackageIds": ["tvoed-p-vka-legacy"]
+        },
+        "testMonths": []
+      }
+    },
+    "value": {
+      "annual": {
+        "payments": [
+          {
+            "revision": 1,
+            "payoutMonth": "2026-11",
+            "grossCents": 182942,
+            "netBasis": {
+              "kind": "CONSTANT_PAY"
+            }
+          }
+        ],
+        "proposal": {
+          "grossCents": 182942,
+          "basisCents": 215226,
+          "rateBasisPoints": 8500,
+          "referenceMonths": ["2026-07", "2026-08", "2026-09"],
+          "note": "Vorschlag bei vollem Jahresanspruch und unveränderter gewählter Gehaltsbasis. Dienstplan und enthaltene Zulagen sind berücksichtigt, Überstunden ausgenommen. Beschäftigung am Stichtag, Fehlzeiten, Stufenwechsel und dienstplanmäßige Überstunden bitte prüfen; den Betrag gegebenenfalls anpassen."
+        },
+        "automatic": true,
+        "issue": null
+      },
+      "forecast": null,
+      "projection": {
+        "month": "2026-07",
+        "perspective": "PAYOUT",
+        "pay": {
+          "month": "2026-07",
+          "tariffLabel": "TVöD VKA · E-Tabelle",
+          "available": true,
+          "fullTimeTableAmount": 4097.67,
+          "personalBaseAmount": 2128.66,
+          "shiftBreakdowns": [
+            {
+              "shiftId": "shift-mwioo3k7-d36x89zp",
+              "date": "2026-07-05",
+              "netMinutes": 200,
+              "premiumLines": [
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 200,
+                  "percentage": 25,
+                  "hourlyRate": 24.48,
+                  "amount": 20.4
+                },
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 140,
+                  "percentage": 20,
+                  "hourlyRate": 24.48,
+                  "amount": 11.42
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 31.82
+            }
+          ],
+          "timePremiumAmount": 31.82,
+          "overtimeAmount": 0,
+          "allowanceAmount": 0,
+          "tvoedAllowanceAmount": 12.99,
+          "careAllowanceAmount": 0,
+          "estimatedGrossAmount": 2173.47,
+          "assessment": {
+            "shiftWork": "REVIEW",
+            "alternatingShiftWork": "NOT_DETECTED",
+            "suggestedAllowance": "NONE",
+            "requiresConfirmation": false,
+            "evidence": [
+              "3 Arbeitsdienste",
+              "1 Dienstlagen: Nacht",
+              "0 Wechsel der Dienstlage",
+              "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+            ],
+            "criteria": [
+              {
+                "key": "SHIFT_CHANGES",
+                "label": "Regelmäßiger Wechsel",
+                "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                "state": "OPEN"
+              },
+              {
+                "key": "NIGHT_SHIFTS",
+                "label": "Wiederkehrende Nachtschichten",
+                "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                "state": "OPEN"
+              },
+              {
+                "key": "AROUND_THE_CLOCK",
+                "label": "Arbeitsbereich rund um die Uhr",
+                "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                "state": "OPEN"
+              },
+              {
+                "key": "ASSIGNMENT",
+                "label": "Dauerhafte Zuordnung",
+                "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                "state": "OPEN"
+              }
+            ],
+            "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          },
+          "confirmedAllowance": null
+        },
+        "contributions": [
+          {
+            "group": "BASE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 212866
+          },
+          {
+            "group": "CARE_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "TARIFF_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 1299
+          },
+          {
+            "group": "PREMIUMS",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 3182
+          },
+          {
+            "group": "MONTHLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "HOURLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "OVERTIME",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "SPECIAL_DUTY",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          }
+        ],
+        "outgoingContributions": [],
+        "issues": [],
+        "warnings": [
+          "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+          "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+        ],
+        "available": true,
+        "sources": [
+          {
+            "month": "2026-07",
+            "pay": {
+              "month": "2026-07",
+              "tariffLabel": "TVöD VKA · E-Tabelle",
+              "available": true,
+              "fullTimeTableAmount": 4097.67,
+              "personalBaseAmount": 2128.66,
+              "shiftBreakdowns": [
+                {
+                  "shiftId": "shift-mwioo3k7-d36x89zp",
+                  "date": "2026-07-05",
+                  "netMinutes": 200,
+                  "premiumLines": [
+                    {
+                      "key": "sunday",
+                      "label": "Sonntag",
+                      "minutes": 200,
+                      "percentage": 25,
+                      "hourlyRate": 24.48,
+                      "amount": 20.4
+                    },
+                    {
+                      "key": "night",
+                      "label": "Nacht",
+                      "minutes": 140,
+                      "percentage": 20,
+                      "hourlyRate": 24.48,
+                      "amount": 11.42
+                    }
+                  ],
+                  "overtimeBaseAmount": 0,
+                  "overtimePremiumAmount": 0,
+                  "totalAmount": 31.82
+                }
+              ],
+              "timePremiumAmount": 31.82,
+              "overtimeAmount": 0,
+              "allowanceAmount": 0,
+              "tvoedAllowanceAmount": 12.99,
+              "careAllowanceAmount": 0,
+              "estimatedGrossAmount": 2173.47,
+              "assessment": {
+                "shiftWork": "REVIEW",
+                "alternatingShiftWork": "NOT_DETECTED",
+                "suggestedAllowance": "NONE",
+                "requiresConfirmation": false,
+                "evidence": [
+                  "3 Arbeitsdienste",
+                  "1 Dienstlagen: Nacht",
+                  "0 Wechsel der Dienstlage",
+                  "3 Nachtschichten mit mindestens 2 Stunden Nachtarbeit"
+                ],
+                "criteria": [
+                  {
+                    "key": "SHIFT_CHANGES",
+                    "label": "Regelmäßiger Wechsel",
+                    "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "NIGHT_SHIFTS",
+                    "label": "Wiederkehrende Nachtschichten",
+                    "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "AROUND_THE_CLOCK",
+                    "label": "Arbeitsbereich rund um die Uhr",
+                    "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "ASSIGNMENT",
+                    "label": "Dauerhafte Zuordnung",
+                    "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                    "state": "OPEN"
+                  }
+                ],
+                "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+              },
+              "confirmedAllowance": null
+            },
+            "profile": {
+              "displayName": null,
+              "employerName": null,
+              "federalState": "NW",
+              "holidayRegion": "NONE",
+              "weeklyMinutes": 1200,
+              "timeZone": "Europe/Berlin",
+              "industry": null,
+              "manualMonthlyGrossCents": null,
+              "regularRotatingNightWork": true,
+              "sundayHolidayWorkEligible": true,
+              "allEmploymentWorkRecorded": true,
+              "tariff": null,
+              "createdAt": "2026-11-16T03:07:51.174Z",
+              "updatedAt": "2026-11-16T03:07:51.174Z",
+              "vkaETariff": {
+                "payGroup": "E9a",
+                "payLevel": 3,
+                "sector": "BT_K",
+                "tariffRegion": "OTHER"
+              }
+            },
+            "shifts": [
+              {
+                "kind": "SHIFT",
+                "specialDuty": null,
+                "id": "shift-mwioo3k7-d36x89zp",
+                "date": "2026-07-05",
+                "templateId": null,
+                "title": "Nachtdienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "20:00",
+                "endTime": "23:50",
+                "breakMinutes": 30,
+                "color": "#EA5B55",
+                "symbol": "N",
+                "note": null,
+                "notification": null,
+                "alarmEnabled": false,
+                "location": null,
+                "overtimeMinutes": 0,
+                "tariffOvertimeConfirmed": false,
+                "holidayPremiumMode": "WITH_TIME_OFF",
+                "revision": 2,
+                "createdAt": "2026-11-16T03:07:51.175Z",
+                "updatedAt": "2026-11-16T03:07:51.175Z",
+                "deletedAt": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "testMonth": {
+    "request": {
+      "month": "2026-07",
+      "profile": {
+        "displayName": null,
+        "employerName": null,
+        "federalState": "NW",
+        "holidayRegion": "NONE",
+        "weeklyMinutes": 1200,
+        "timeZone": "Europe/Berlin",
+        "industry": null,
+        "manualMonthlyGrossCents": null,
+        "regularRotatingNightWork": true,
+        "sundayHolidayWorkEligible": true,
+        "allEmploymentWorkRecorded": true,
+        "tariff": null,
+        "createdAt": "2026-11-16T03:07:51.174Z",
+        "updatedAt": "2026-11-16T03:07:51.174Z",
+        "vkaETariff": {
+          "payGroup": "E9a",
+          "payLevel": 3,
+          "sector": "BT_K",
+          "tariffRegion": "OTHER"
+        }
+      },
+      "settings": null,
+      "annualPayments": [],
+      "payment": {
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "perspective": "PAYOUT",
+        "sourceSettings": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "context": {
+        "entries": [
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vxyn4ewi",
+            "date": "2026-05-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-vponclak",
+            "date": "2026-06-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-d36x89zp",
+            "date": "2026-07-05",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "23:50",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 2,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-wpamy9q6",
+            "date": "2026-12-20",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          },
+          {
+            "kind": "SHIFT",
+            "specialDuty": null,
+            "id": "shift-mwioo3k7-hqv5080w",
+            "date": "2027-01-03",
+            "templateId": null,
+            "title": "Nachtdienst",
+            "type": "NIGHT",
+            "allDay": false,
+            "startTime": "20:00",
+            "endTime": "06:00",
+            "breakMinutes": 30,
+            "color": "#EA5B55",
+            "symbol": "N",
+            "note": null,
+            "notification": null,
+            "alarmEnabled": false,
+            "location": null,
+            "overtimeMinutes": 0,
+            "tariffOvertimeConfirmed": false,
+            "holidayPremiumMode": "WITH_TIME_OFF",
+            "revision": 1,
+            "createdAt": "2026-11-16T03:07:51.175Z",
+            "updatedAt": "2026-11-16T03:07:51.175Z",
+            "deletedAt": null
+          }
+        ],
+        "tariffDecisions": [],
+        "workPatternSettings": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "resolver": {
+          "tariffPackageIds": ["tvoed-p-vka-legacy"]
+        },
+        "testMonths": ["2026-07"]
+      }
+    },
+    "value": {
+      "annual": {
+        "payments": [],
+        "proposal": null,
+        "automatic": false,
+        "issue": {
+          "code": "TEST_DATA"
+        }
+      },
+      "forecast": null,
+      "projection": {
+        "month": "2026-07",
+        "perspective": "PAYOUT",
+        "pay": {
+          "month": "2026-07",
+          "tariffLabel": "TVöD VKA · E-Tabelle",
+          "available": false,
+          "fullTimeTableAmount": 4097.67,
+          "personalBaseAmount": 2128.66,
+          "shiftBreakdowns": [],
+          "timePremiumAmount": 0,
+          "overtimeAmount": 0,
+          "allowanceAmount": 0,
+          "tvoedAllowanceAmount": 12.99,
+          "careAllowanceAmount": 0,
+          "estimatedGrossAmount": null,
+          "assessment": {
+            "shiftWork": "NOT_DETECTED",
+            "alternatingShiftWork": "NOT_DETECTED",
+            "suggestedAllowance": "NONE",
+            "requiresConfirmation": false,
+            "evidence": [
+              "0 Arbeitsdienste",
+              "0 Dienstlagen",
+              "0 Wechsel der Dienstlage",
+              "Keine tarifliche Nachtschicht erkannt"
+            ],
+            "criteria": [
+              {
+                "key": "SHIFT_CHANGES",
+                "label": "Regelmäßiger Wechsel",
+                "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                "state": "NOT_MET"
+              },
+              {
+                "key": "NIGHT_SHIFTS",
+                "label": "Wiederkehrende Nachtschichten",
+                "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                "state": "OPEN"
+              },
+              {
+                "key": "AROUND_THE_CLOCK",
+                "label": "Arbeitsbereich rund um die Uhr",
+                "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                "state": "OPEN"
+              },
+              {
+                "key": "ASSIGNMENT",
+                "label": "Dauerhafte Zuordnung",
+                "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                "state": "OPEN"
+              }
+            ],
+            "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          },
+          "confirmedAllowance": null
+        },
+        "contributions": [
+          {
+            "group": "BASE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 212866
+          },
+          {
+            "group": "CARE_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "TARIFF_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 1299
+          },
+          {
+            "group": "PREMIUMS",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "MONTHLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "HOURLY_ALLOWANCE",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "OVERTIME",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          },
+          {
+            "group": "SPECIAL_DUTY",
+            "claimMonth": "2026-07",
+            "paymentMonth": "2026-07",
+            "amountCents": 0
+          }
+        ],
+        "outgoingContributions": [],
+        "issues": [
+          {
+            "kind": "UNAVAILABLE",
+            "month": "2026-07",
+            "message": "Für 2026-07 ist ein Testmonat aktiv. Beende den Testlauf, um tatsächliche Gehaltsansprüche zu berechnen."
+          }
+        ],
+        "warnings": [
+          "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+          "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+        ],
+        "available": false,
+        "sources": [
+          {
+            "month": "2026-07",
+            "pay": {
+              "month": "2026-07",
+              "tariffLabel": "TVöD VKA · E-Tabelle",
+              "available": true,
+              "fullTimeTableAmount": 4097.67,
+              "personalBaseAmount": 2128.66,
+              "shiftBreakdowns": [],
+              "timePremiumAmount": 0,
+              "overtimeAmount": 0,
+              "allowanceAmount": 0,
+              "tvoedAllowanceAmount": 12.99,
+              "careAllowanceAmount": 0,
+              "estimatedGrossAmount": 2141.65,
+              "assessment": {
+                "shiftWork": "NOT_DETECTED",
+                "alternatingShiftWork": "NOT_DETECTED",
+                "suggestedAllowance": "NONE",
+                "requiresConfirmation": false,
+                "evidence": [
+                  "0 Arbeitsdienste",
+                  "0 Dienstlagen",
+                  "0 Wechsel der Dienstlage",
+                  "Keine tarifliche Nachtschicht erkannt"
+                ],
+                "criteria": [
+                  {
+                    "key": "SHIFT_CHANGES",
+                    "label": "Regelmäßiger Wechsel",
+                    "detail": "Für eine belastbare Erkennung fehlen regelmäßige Wechsel",
+                    "state": "NOT_MET"
+                  },
+                  {
+                    "key": "NIGHT_SHIFTS",
+                    "label": "Wiederkehrende Nachtschichten",
+                    "detail": "Monatsfolge offen; fehlende Einträge sind keine Anspruchsablehnung",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "AROUND_THE_CLOCK",
+                    "label": "Arbeitsbereich rund um die Uhr",
+                    "detail": "Kann nicht aus Dienstzeiten abgeleitet werden",
+                    "state": "OPEN"
+                  },
+                  {
+                    "key": "ASSIGNMENT",
+                    "label": "Dauerhafte Zuordnung",
+                    "detail": "Kann nicht aus Kalendereinträgen abgeleitet werden",
+                    "state": "OPEN"
+                  }
+                ],
+                "estimateNote": "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+              },
+              "confirmedAllowance": null
+            },
+            "profile": {
+              "displayName": null,
+              "employerName": null,
+              "federalState": "NW",
+              "holidayRegion": "NONE",
+              "weeklyMinutes": 1200,
+              "timeZone": "Europe/Berlin",
+              "industry": null,
+              "manualMonthlyGrossCents": null,
+              "regularRotatingNightWork": true,
+              "sundayHolidayWorkEligible": true,
+              "allEmploymentWorkRecorded": true,
+              "tariff": null,
+              "createdAt": "2026-11-16T03:07:51.174Z",
+              "updatedAt": "2026-11-16T03:07:51.174Z",
+              "vkaETariff": {
+                "payGroup": "E9a",
+                "payLevel": 3,
+                "sector": "BT_K",
+                "tariffRegion": "OTHER"
+              }
+            },
+            "shifts": []
+          }
+        ]
+      }
+    }
+  }
+}

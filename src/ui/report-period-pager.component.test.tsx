@@ -23,6 +23,7 @@ function Pager({
       value={value}
       unit={unit}
       enabled={enabled}
+      renderPlaceholder={(month) => <Text testID={`pending-${month}`}>Vorbereitung {month}</Text>}
       onChange={(next) => {
         changed(next);
         setValue(next);
@@ -59,6 +60,39 @@ beforeEach(() => {
 });
 
 describe("native chronological report paging", () => {
+  it.each(["MONTH", "YEAR"] as const)(
+    "keeps every traversable %s page nonblank before native scrolling settles",
+    async (unit) => {
+      const screen = await render(<Pager unit={unit} />);
+      await measure(screen);
+      const far = reportPeriodOffset("2030-12", 5, unit);
+      expect(screen.getByTestId(`pending-${far}`, { includeHiddenElements: true })).toBeTruthy();
+      await fireEvent(screen.getByTestId("report-period-scroll"), "scroll", {
+        nativeEvent: { contentOffset: { x: 16.6 * 390, y: 0 } },
+      });
+      expect(screen.getByText(far, { includeHiddenElements: true })).toBeTruthy();
+      expect(changed).not.toHaveBeenCalled();
+      expect(screen.queryByTestId(`pending-${far}`, { includeHiddenElements: true })).toBeNull();
+      await settle(screen, 17);
+      expect(screen.getByText(far)).toBeTruthy();
+      expect(changed).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("bounds real report mounts while following distant scrolling and returning before commit", async () => {
+    const screen = await render(<Pager />);
+    await measure(screen);
+    for (const index of [20, 4, 19, 12]) {
+      await fireEvent(screen.getByTestId("report-period-scroll"), "scroll", {
+        nativeEvent: { contentOffset: { x: index * 390, y: 0 } },
+      });
+      expect(
+        screen.getAllByText(/^\d{4}-\d{2}$/, { includeHiddenElements: true }).length,
+      ).toBeLessThanOrEqual(6);
+    }
+    expect(changed).not.toHaveBeenCalled();
+    await settle(screen, 12);
+    expect(screen.getByText("2030-12")).toBeTruthy();
+  });
   it("retains headless preparation when it becomes a visible and active page", async () => {
     const tokens = new Map<string, number>();
     const Prepared = createContext(0);

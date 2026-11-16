@@ -4,7 +4,7 @@ import Swipeable, { type SwipeableMethods } from "react-native-gesture-handler/R
 import { ReduceMotion } from "react-native-reanimated";
 
 import { useInversePalette } from "@/theme/palette";
-import { SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 
@@ -67,6 +67,10 @@ export function QuickEntrySwipeRow({
           style={({ pressed }) => ({
             minWidth: 88,
             minHeight: 44,
+            marginVertical: SPACING.xxs,
+            marginRight: SPACING.xs,
+            borderRadius: RADII.control,
+            borderCurve: CORNER_CURVE,
             paddingHorizontal: SPACING.lg,
             alignItems: "center",
             justifyContent: "center",

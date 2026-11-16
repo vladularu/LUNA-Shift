@@ -3,7 +3,7 @@ import { findNodeHandle, Pressable, View, type LayoutChangeEvent } from "react-n
 import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 
 import { useInversePalette } from "@/theme/palette";
-import { SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY, TEXT_MAX_SCALE } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import Ionicons from "@/ui/icon";
@@ -62,7 +62,14 @@ export function QuickEntryDeleteConfirmation({
           {error}
         </Text>
       ) : null}
-      <View style={{ flexDirection: "row", minHeight: minHeight - 1 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          minHeight: minHeight - 1,
+          padding: SPACING.sm,
+          gap: SPACING.sm,
+        }}
+      >
         <Pressable
           ref={cancel}
           accessibilityRole="button"
@@ -73,6 +80,9 @@ export function QuickEntryDeleteConfirmation({
           style={({ pressed }) => ({
             flex: 1,
             minHeight: 44,
+            borderRadius: RADII.pill,
+            borderCurve: CORNER_CURVE,
+            backgroundColor: palette.surfaceMuted,
             paddingHorizontal: SPACING.lg,
             paddingVertical: SPACING.sm,
             alignItems: "center",
@@ -101,6 +111,8 @@ export function QuickEntryDeleteConfirmation({
           style={({ pressed }) => ({
             flex: 1,
             minHeight: 44,
+            borderRadius: RADII.pill,
+            borderCurve: CORNER_CURVE,
             paddingHorizontal: SPACING.lg,
             paddingVertical: SPACING.sm,
             flexDirection: "row",

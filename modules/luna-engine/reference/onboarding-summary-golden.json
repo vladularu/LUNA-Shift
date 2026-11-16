@@ -1,0 +1,1813 @@
+{
+  "cases": [
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10570",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10571",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10572",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10573",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10574",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10575",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10576",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10577",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10578",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10579",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": null,
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10580",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10581",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10582",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10583",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10584",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10585",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10586",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10587",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10588",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10589",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "P8",
+          "level": 4,
+          "mode": "TVOED_P",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10590",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10591",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10592",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10593",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10594",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10595",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10596",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10597",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10598",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10599",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "E9b",
+          "level": 3,
+          "mode": "TVOED_E",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10600",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10601",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10602",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10603",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10604",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10605",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10606",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10607",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10608",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10609",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "KR8",
+          "level": 4,
+          "mode": "TVL_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10610",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10611",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10612",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10613",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10614",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10615",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10616",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10617",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10618",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10619",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": 2310,
+          "group": "KR5",
+          "level": "1a",
+          "mode": "TVH_KR",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10620",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10621",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10622",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10623",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10624",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10625",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10626",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10627",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10628",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10629",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": "PUK8",
+          "level": 7,
+          "mode": "TVUK_NURSING",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10630",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": true },
+      "id": "SUMMARY-10631",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10632",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": true },
+      "id": "SUMMARY-10633",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10634",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": true },
+      "id": "SUMMARY-10635",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": true },
+      "id": "SUMMARY-10636",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10637",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": true },
+      "id": "SUMMARY-10638",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10639",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAOED_PFLEGE",
+          "sector": "BT_K",
+          "tariffRegion": "OTHER",
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10640",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": true },
+      "id": "SUMMARY-10641",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10642",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": true },
+      "id": "SUMMARY-10643",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10644",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": true },
+      "id": "SUMMARY-10645",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": true },
+      "id": "SUMMARY-10646",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10647",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": true },
+      "id": "SUMMARY-10648",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": true },
+      "id": "SUMMARY-10649",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "TVAL_PFLEGE",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": 2,
+          "tvalEmployerScope": "SECTION_43",
+          "universityRegion": "WEST"
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10650",
+      "input": {
+        "gross": "",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345050, "training": false },
+      "id": "SUMMARY-10651",
+      "input": {
+        "gross": "3.450,50",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10652",
+      "input": {
+        "gross": "1.234.567,89",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 123456, "training": false },
+      "id": "SUMMARY-10653",
+      "input": {
+        "gross": "1234.56",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10654",
+      "input": {
+        "gross": "1.23,45",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 1, "training": false },
+      "id": "SUMMARY-10655",
+      "input": {
+        "gross": "0,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 10000000, "training": false },
+      "id": "SUMMARY-10656",
+      "input": {
+        "gross": "100.000,00",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10657",
+      "input": {
+        "gross": "100.000,01",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": 345000, "training": false },
+      "id": "SUMMARY-10658",
+      "input": {
+        "gross": " 3.450 ",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    },
+    {
+      "expected": { "grossCents": null, "training": false },
+      "id": "SUMMARY-10659",
+      "input": {
+        "gross": "bad",
+        "instant": "2026-07-15T12:00:00Z",
+        "selection": {
+          "fullTime": null,
+          "group": null,
+          "level": null,
+          "mode": "UNKNOWN",
+          "sector": null,
+          "tariffRegion": null,
+          "trainingYear": null,
+          "universityRegion": null
+        }
+      },
+      "operation": "SUMMARY"
+    }
+  ],
+  "casesSha256": "b7edfb6b92e27f638c75c8634408e93c9d213465bd261c8bab4033255a73c3cc",
+  "expressions": {
+    "advanceBody": "const nextErrors: Errors = {};\nif (step === 3) {\n      if (!salaryMode) nextErrors.salary = \"Bitte wähle eine Gehaltsgrundlage aus.\";\n      if (salaryMode === \"MANUAL\")\n        nextErrors.gross =\n          manualMonthlyGrossFieldError(normalizeOnboardingGross(gross)) ?? undefined;\n      if (salaryMode === \"TARIFF\")\n        Object.assign(\n          nextErrors,\n          onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours)),\n        );\n    }\nif (step === 4) {\n      nextErrors.hours = /^\\d+(?:[,.]\\d{1,2})?$/.test(weeklyHours.trim())\n        ? (weeklyHoursFieldError(weeklyHours.trim()) ?? undefined)\n        : \"Bitte gültige Wochenstunden angeben.\";\n      const numericHours = Number(weeklyHours.trim().replace(\",\", \".\"));\n      if (!nextErrors.hours && (numericHours < 1 || numericHours > 80))\n        nextErrors.hours = \"Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.\";\n      if (!federalState) nextErrors.state = \"Bitte wähle das Bundesland deines Arbeitsorts.\";\n      if (federalState && holidayRegion === \"UNKNOWN\")\n        nextErrors.region = \"Bitte die Feiertagsregion am Arbeitsort auswählen.\";\n    }",
+    "normalizeOnboardingGross": "{\n  const trimmed = value.trim();\n  return /^\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?$/.test(trimmed) ? trimmed.replace(/\\./g, \"\") : trimmed;\n}",
+    "parseWeeklyHours": "{\n  const hours = Number(value.trim().replace(\",\", \".\"));\n  if (!Number.isFinite(hours)) throw new Error(\"Bitte gültige Wochenstunden angeben.\");\n  return Math.round(hours * 60);\n}",
+    "prepareExpression": "{\n        industry: \"HEALTHCARE\",\n        federalState,\n        holidayRegion,\n        weeklyMinutes: parseWeeklyHours(weeklyHours),\n        timeZone: \"Europe/Berlin\",\n        ...(salaryMode === \"TARIFF\"\n          ? onboardingTariffProfile(tariffSelection, parseWeeklyHours(weeklyHours))\n          : {\n              tariff: null,\n              manualMonthlyGrossCents:\n                salaryMode === \"MANUAL\"\n                  ? parseManualMonthlyGrossCents(normalizeOnboardingGross(gross))\n                  : null,\n            }),\n      }",
+    "weeklyHoursFieldError": "{\n  const hours = Number(value.replace(\",\", \".\"));\n  if (!Number.isFinite(hours)) return \"Bitte gültige Wochenstunden angeben.\";\n  const minutes = Math.round(hours * 60);\n  if (minutes < 60 || minutes > 80 * 60) {\n    return \"Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.\";\n  }\n  return null;\n}"
+  },
+  "modules": [
+    {
+      "file": "src/features/onboarding/onboarding-screen.tsx",
+      "sha256": "579ecbf8a9ae4d48f2f90810163769d7a17e070106f3841e6ccb6d2bbcbde588"
+    },
+    {
+      "file": "src/ui/form-validation.ts",
+      "sha256": "66624a2ac6106b404afe49d0bb20d0b7aafa80919c58987a39de0e5992afd265"
+    },
+    {
+      "file": "src/features/onboarding/onboarding-tariff-values.ts",
+      "sha256": "b7e20c3f30df9196f02789e603ae848a827efa447b02bf486006e6b2bdda2d5d"
+    },
+    {
+      "file": "src/features/settings/settings-form-values.ts",
+      "sha256": "58b7ed10e8fce8475c6d8c9cc400da66d6693047c0409d77928ccc63ad1edc50"
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "sourceFiles": 1253
+}

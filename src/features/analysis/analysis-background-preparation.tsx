@@ -1,3 +1,5 @@
+import { useMonthlyRustNetCalculator } from "./use-monthly-rust-net-calculator";
+import { useMonthlyRustChecksCalculator } from "./use-monthly-rust-checks-calculator";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
@@ -19,6 +21,7 @@ import { analysisSalaryInputStore } from "./analysis-salary-input-store";
 import { createAnalysisWarmupRuntime } from "./analysis-warmup-runtime";
 import { usePreparedAnnualNetPay } from "./use-annual-net-pay";
 import type { AnnualNetPayRequest } from "./annual-net-pay";
+import { useMonthlyRustCalculator } from "./use-monthly-rust-calculator";
 
 export default function AnalysisBackgroundPreparation() {
   const db = useSQLiteContext();
@@ -28,7 +31,10 @@ export default function AnalysisBackgroundPreparation() {
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
-  const { resolver } = useRuleCatalogRuntime();
+  const { resolver, diagnosis } = useRuleCatalogRuntime();
+  const monthlyCalculator = useMonthlyRustCalculator(diagnosis);
+  const netCalculator = useMonthlyRustNetCalculator(diagnosis);
+  const checksCalculator = useMonthlyRustChecksCalculator();
   const { youthEnabled } = useCheckPreferences();
   const payment = useSalaryPaymentPreferences();
   const referenceDate = useLocalReferenceDate(profile?.timeZone ?? "Europe/Berlin");
@@ -121,6 +127,9 @@ export default function AnalysisBackgroundPreparation() {
       return;
     }
     runtime.prepare({
+      monthlyCalculator,
+      netCalculator,
+      checksCalculator,
       months,
       profile,
       savedProfile,
@@ -136,6 +145,8 @@ export default function AnalysisBackgroundPreparation() {
       youthProtection: youthEnabled ?? null,
     });
   }, [
+    netCalculator,
+    checksCalculator,
     active,
     started,
     status.ready,
@@ -151,6 +162,7 @@ export default function AnalysisBackgroundPreparation() {
     workPatternSettings,
     testMonths,
     resolver,
+    monthlyCalculator,
     referenceDate,
     youthEnabled,
     runtime,

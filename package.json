@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "0.1.0",
   "scripts": {
+    "eas-build-pre-install": "node modules/luna-rest-pilot/scripts/build-ios.mjs",
     "test:widget-runtime": "node scripts/verify-calendar-widget-runtime.mjs",
     "test:build-dependencies": "node --test scripts/build-dependencies.test.mjs",
     "test:calendar-worklets": "node --test scripts/calendar-worklet-runtime.test.mjs",

@@ -1,0 +1,389 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10660",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x_28" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10661",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x_28" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10662",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x+28" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10663",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x+28" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10664",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0b10_1000" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10665",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0b10_1000" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10666",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0o_50" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10667",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0o_50" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 2400,
+      "id": "PARSE_WEEKLY-10668",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x00028" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": null,
+      "id": "WEEKLY_ERROR-10669",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x00028" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10670",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "-0x28" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10671",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "-0x28" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10672",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "+0x28" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10673",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "+0x28" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 1.770887431076117e22,
+      "id": "PARSE_WEEKLY-10674",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xfffffffffffffffff"
+      },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.",
+      "id": "WEEKLY_ERROR-10675",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xfffffffffffffffff"
+      },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 1080863910568919000,
+      "id": "PARSE_WEEKLY-10676",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0b111111111111111111111111111111111111111111111111111111"
+      },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.",
+      "id": "WEEKLY_ERROR-10677",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0b111111111111111111111111111111111111111111111111111111"
+      },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 5.5043966783761716e107,
+      "id": "PARSE_WEEKLY-10678",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.",
+      "id": "WEEKLY_ERROR-10679",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10680",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "inf" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10681",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "inf" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10682",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "Inf" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10683",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "Inf" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10684",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "INFINITY" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10685",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "INFINITY" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10686",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "+inf" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10687",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "+inf" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10688",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "-inf" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10689",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "-inf" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10690",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10691",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0x" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10692",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0b2" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10693",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0b2" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10694",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0o8" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10695",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "0o8" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 2310,
+      "id": "PARSE_WEEKLY-10696",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "﻿38,5 " },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": null,
+      "id": "WEEKLY_ERROR-10697",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "﻿38,5 " },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": 2310,
+      "id": "PARSE_WEEKLY-10698",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": " +38.5 " },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": null,
+      "id": "WEEKLY_ERROR-10699",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": " +38.5 " },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10700",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "38.5" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10701",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "38.5" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10702",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "᠎38.5" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10703",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "᠎38.5" },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10704",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10705",
+      "input": {
+        "instant": "2026-07-15T12:00:00Z",
+        "numericProbe": true,
+        "text": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "operation": "WEEKLY_ERROR"
+    },
+    {
+      "expected": {
+        "$error": { "message": "Bitte gültige Wochenstunden angeben.", "name": "Error" }
+      },
+      "id": "PARSE_WEEKLY-10706",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "1e309" },
+      "operation": "PARSE_WEEKLY"
+    },
+    {
+      "expected": "Bitte gültige Wochenstunden angeben.",
+      "id": "WEEKLY_ERROR-10707",
+      "input": { "instant": "2026-07-15T12:00:00Z", "numericProbe": true, "text": "1e309" },
+      "operation": "WEEKLY_ERROR"
+    }
+  ],
+  "casesSha256": "557d0aa46fe3dc41e7d45050c3a2aba7f1947063c3cdac5b7ce8339ec20ea2ec",
+  "expressions": {
+    "advanceBody": "const nextErrors: Errors = {};\nif (step === 3) {\n      if (!salaryMode) nextErrors.salary = \"Bitte wähle eine Gehaltsgrundlage aus.\";\n      if (salaryMode === \"MANUAL\")\n        nextErrors.gross =\n          manualMonthlyGrossFieldError(normalizeOnboardingGross(gross)) ?? undefined;\n      if (salaryMode === \"TARIFF\")\n        Object.assign(\n          nextErrors,\n          onboardingTariffErrors(tariffSelection, parseWeeklyHours(weeklyHours)),\n        );\n    }\nif (step === 4) {\n      nextErrors.hours = /^\\d+(?:[,.]\\d{1,2})?$/.test(weeklyHours.trim())\n        ? (weeklyHoursFieldError(weeklyHours.trim()) ?? undefined)\n        : \"Bitte gültige Wochenstunden angeben.\";\n      const numericHours = Number(weeklyHours.trim().replace(\",\", \".\"));\n      if (!nextErrors.hours && (numericHours < 1 || numericHours > 80))\n        nextErrors.hours = \"Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.\";\n      if (!federalState) nextErrors.state = \"Bitte wähle das Bundesland deines Arbeitsorts.\";\n      if (federalState && holidayRegion === \"UNKNOWN\")\n        nextErrors.region = \"Bitte die Feiertagsregion am Arbeitsort auswählen.\";\n    }",
+    "normalizeOnboardingGross": "{\n  const trimmed = value.trim();\n  return /^\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?$/.test(trimmed) ? trimmed.replace(/\\./g, \"\") : trimmed;\n}",
+    "parseWeeklyHours": "{\n  const hours = Number(value.trim().replace(\",\", \".\"));\n  if (!Number.isFinite(hours)) throw new Error(\"Bitte gültige Wochenstunden angeben.\");\n  return Math.round(hours * 60);\n}",
+    "prepareExpression": "{\n        industry: \"HEALTHCARE\",\n        federalState,\n        holidayRegion,\n        weeklyMinutes: parseWeeklyHours(weeklyHours),\n        timeZone: \"Europe/Berlin\",\n        ...(salaryMode === \"TARIFF\"\n          ? onboardingTariffProfile(tariffSelection, parseWeeklyHours(weeklyHours))\n          : {\n              tariff: null,\n              manualMonthlyGrossCents:\n                salaryMode === \"MANUAL\"\n                  ? parseManualMonthlyGrossCents(normalizeOnboardingGross(gross))\n                  : null,\n            }),\n      }",
+    "weeklyHoursFieldError": "{\n  const hours = Number(value.replace(\",\", \".\"));\n  if (!Number.isFinite(hours)) return \"Bitte gültige Wochenstunden angeben.\";\n  const minutes = Math.round(hours * 60);\n  if (minutes < 60 || minutes > 80 * 60) {\n    return \"Die Wochenarbeitszeit muss zwischen 1 und 80 Stunden liegen.\";\n  }\n  return null;\n}"
+  },
+  "modules": [
+    {
+      "file": "src/features/onboarding/onboarding-screen.tsx",
+      "sha256": "579ecbf8a9ae4d48f2f90810163769d7a17e070106f3841e6ccb6d2bbcbde588"
+    },
+    {
+      "file": "src/ui/form-validation.ts",
+      "sha256": "66624a2ac6106b404afe49d0bb20d0b7aafa80919c58987a39de0e5992afd265"
+    },
+    {
+      "file": "src/features/onboarding/onboarding-tariff-values.ts",
+      "sha256": "b7e20c3f30df9196f02789e603ae848a827efa447b02bf486006e6b2bdda2d5d"
+    },
+    {
+      "file": "src/features/settings/settings-form-values.ts",
+      "sha256": "58b7ed10e8fce8475c6d8c9cc400da66d6693047c0409d77928ccc63ad1edc50"
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "sourceFiles": 1253
+}

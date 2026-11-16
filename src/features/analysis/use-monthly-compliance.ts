@@ -13,8 +13,11 @@ import {
 } from "./analysis-compliance-cache";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { persistentCheckValue } from "./persistent-analysis-values";
+import { useMonthlyRustChecksCalculator } from "./use-monthly-rust-checks-calculator";
+import { monthlyRustChecksKey, monthlyRustChecksSteps } from "./monthly-rust-checks";
 
 interface MonthlyComplianceState {
+  readonly key: string;
   readonly error: string | null;
   readonly youthProtection: boolean;
   readonly month: string;
@@ -48,6 +51,7 @@ export function useDeferredMonthlyCompliance({
   readonly priority?: number;
   readonly persistent?: PersistentAnalysisCache | null;
 }): DeferredMonthlyComplianceResult {
+  const calculator = useMonthlyRustChecksCalculator();
   const {
     youthEnabled = false,
     error: preferenceError,
@@ -69,8 +73,11 @@ export function useDeferredMonthlyCompliance({
     () =>
       profile === null || youthEnabled === null
         ? null
-        : monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled),
-    [month, profile, referenceDate, shifts, youthEnabled],
+        : monthlyRustChecksKey(
+            monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled),
+            calculator,
+          ),
+    [month, profile, referenceDate, shifts, youthEnabled, calculator],
   );
   const cached =
     requestKey === null
@@ -87,6 +94,7 @@ export function useDeferredMonthlyCompliance({
         );
   const matchesRequest =
     state !== null &&
+    state.key === requestKey &&
     profile !== null &&
     youthEnabled !== null &&
     state.youthProtection === youthEnabled &&
@@ -109,6 +117,7 @@ export function useDeferredMonthlyCompliance({
       return;
     const complete = (result: MonthlyComplianceResult) => {
       setState({
+        key: requestKey,
         error: null,
         month,
         youthProtection: youthEnabled,
@@ -135,21 +144,27 @@ export function useDeferredMonthlyCompliance({
       accept: persistentCheckValue,
       complete,
       steps: () =>
-        calculateMonthlyComplianceSteps(month, shifts, profile.timeZone, {
-          employmentProfile: profile,
-          federalState: profile.federalState,
-          holidayRegion: profile.holidayRegion,
-          weeklyMinutes: profile.weeklyMinutes,
-          regularRotatingNightWork: profile.regularRotatingNightWork,
-          sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
-          allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
-          referenceDate,
-          ruleResolver,
-          youthProtection: youthEnabled,
-        }),
+        calculator
+          ? monthlyRustChecksSteps(
+              { month, shifts, profile, referenceDate, youthProtection: youthEnabled },
+              calculator,
+            )
+          : calculateMonthlyComplianceSteps(month, shifts, profile.timeZone, {
+              employmentProfile: profile,
+              federalState: profile.federalState,
+              holidayRegion: profile.holidayRegion,
+              weeklyMinutes: profile.weeklyMinutes,
+              regularRotatingNightWork: profile.regularRotatingNightWork,
+              sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
+              allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
+              referenceDate,
+              ruleResolver,
+              youthProtection: youthEnabled,
+            }),
       fail: (complianceError) => {
         recordDiagnostic("reporting", "MONTHLY_COMPLIANCE_FAILED", complianceError);
         setState({
+          key: requestKey,
           error: "Die Arbeitszeitprüfung konnte nicht berechnet werden.",
           month,
           youthProtection: youthEnabled,
@@ -166,6 +181,7 @@ export function useDeferredMonthlyCompliance({
       task.current = null;
     };
   }, [
+    calculator,
     completedRequest,
     enabled,
     month,

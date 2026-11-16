@@ -82,6 +82,7 @@ export function SettingsScreen() {
           <SectionHeader title="Arbeit" />
           <SurfaceCard>
             <RowButton
+              titleColor={palette.text}
               title="Arbeitgeber"
               subtitle={profile.employerName || "Ergänzen"}
               subtitleBelow={subtitleBelow}
@@ -90,6 +91,7 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
+              titleColor={palette.text}
               title="Arbeit & Gehalt"
               subtitle={`${profileWorkLabel(profile)} · ${profileSalaryLabel(profile).split(" · ").slice(0, 2).join(" · ")}`}
               subtitleBelow={subtitleBelow}
@@ -102,6 +104,7 @@ export function SettingsScreen() {
           <SectionHeader title="Deine App" />
           <SurfaceCard>
             <RowButton
+              titleColor={palette.text}
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="color-palette-outline" />}
               title="Kalender gestalten"
@@ -109,6 +112,7 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
+              titleColor={palette.text}
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="shield-checkmark-outline" />}
               title={CHECK_TITLE}
@@ -123,6 +127,7 @@ export function SettingsScreen() {
             <SectionHeader title="Intern" />
             <SurfaceCard>
               <RowButton
+                titleColor={palette.text}
                 subtitleBelow={subtitleBelow}
                 leading={<SettingsIcon name="sparkles-outline" />}
                 onPress={() => router.push({ pathname: "/onboarding", params: { preview: "1" } })}
@@ -133,6 +138,7 @@ export function SettingsScreen() {
                 <>
                   <CardSeparator />
                   <RowButton
+                    titleColor={palette.text}
                     subtitleBelow={subtitleBelow}
                     leading={<SettingsIcon name="flask-outline" />}
                     onPress={() => router.push("/dev-tools")}
@@ -151,6 +157,7 @@ export function SettingsScreen() {
             {Platform.OS === "ios" ? (
               <>
                 <RowButton
+                  titleColor={palette.text}
                   subtitleBelow={subtitleBelow}
                   leading={<SettingsIcon name="archive-outline" />}
                   onPress={() => router.push(localBackupRoute())}
@@ -161,6 +168,7 @@ export function SettingsScreen() {
               </>
             ) : null}
             <RowButton
+              titleColor={palette.text}
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="phone-portrait-outline" />}
               onPress={() => router.push(settingsInfoRoute("STORAGE"))}
@@ -169,6 +177,7 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
+              titleColor={palette.text}
               subtitleBelow={subtitleBelow}
               leading={<SettingsIcon name="calculator-outline" />}
               onPress={() => router.push(settingsInfoRoute("CALCULATION"))}
@@ -177,6 +186,7 @@ export function SettingsScreen() {
             />
             <CardSeparator />
             <RowButton
+              titleColor={palette.text}
               subtitleBelow={subtitleBelow}
               accessibilityHint={
                 DEV_TOOLS_AVAILABLE

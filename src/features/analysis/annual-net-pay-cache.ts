@@ -4,6 +4,7 @@ import {
   type AnnualNetPayMonth,
   type AnnualNetPayRequest,
 } from "./annual-net-pay";
+import { isAnnualSalaryForecast } from "./persistent-salary-value";
 
 /** Complete inputs, including dated settings and restrictions; catalog is hashed separately. */
 export function annualNetPayKey(request: AnnualNetPayRequest) {
@@ -28,7 +29,11 @@ const notes = (value: unknown): value is string[] =>
   value.every((note: unknown) => typeof note === "string" && note.length <= 1000);
 
 /** Reject incomplete/corrupt financial snapshots, including totals inconsistent with month rows. */
-export function persistentAnnualNetPay(value: unknown, year: number): value is AnnualNetPay {
+export function persistentAnnualNetPay(
+  value: unknown,
+  year: number,
+  requireForecast = false,
+): value is AnnualNetPay {
   if (
     !record(value) ||
     value.year !== year ||
@@ -37,7 +42,9 @@ export function persistentAnnualNetPay(value: unknown, year: number): value is A
     value.months.length !== 12 ||
     !cents(value.netCents) ||
     !notes(value.notes) ||
-    typeof value.preliminary !== "boolean"
+    typeof value.preliminary !== "boolean" ||
+    ((requireForecast || value.salaryForecast !== undefined) &&
+      !isAnnualSalaryForecast(value.salaryForecast))
   )
     return false;
   const months: AnnualNetPayMonth[] = [];

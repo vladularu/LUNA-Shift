@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "oracle": [
+    {
+      "file": "src/domain/errors.ts",
+      "sha256": "82387bf723e3421543646d60391300a14943d700757c804265146023b0abdfa5"
+    },
+    {
+      "file": "src/domain/validation.ts",
+      "sha256": "e30a553d2fe36ade5069a0289cdf1c125ae334c916e84827631496f311ee3d00"
+    }
+  ],
+  "cases": [
+    {
+      "input": {
+        "kind": "ERROR",
+        "name": "Error",
+        "message": "private diagnostic details"
+      },
+      "expected": {
+        "name": "Error",
+        "message": "Fallback."
+      }
+    },
+    {
+      "input": {
+        "kind": "ERROR",
+        "name": "Error",
+        "message": "private diagnostic details"
+      },
+      "expected": {
+        "name": "Error",
+        "message": "Fallback."
+      }
+    },
+    {
+      "input": {
+        "kind": "ERROR",
+        "name": "ValidationError",
+        "message": "private diagnostic details"
+      },
+      "expected": {
+        "name": "ValidationError",
+        "message": "Fallback."
+      }
+    },
+    {
+      "input": {
+        "kind": "USER_FACING",
+        "name": "UserFacingError",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "UserFacingError",
+        "message": "Öffentliche Angabe"
+      }
+    },
+    {
+      "input": {
+        "kind": "USER_FACING",
+        "name": "Error",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "Error",
+        "message": "Öffentliche Angabe"
+      }
+    },
+    {
+      "input": {
+        "kind": "USER_FACING",
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      }
+    },
+    {
+      "input": {
+        "kind": "VALIDATION",
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      }
+    },
+    {
+      "input": {
+        "kind": "VALIDATION",
+        "name": "Error",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "Error",
+        "message": "Öffentliche Angabe"
+      }
+    },
+    {
+      "input": {
+        "kind": "VALIDATION",
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      },
+      "expected": {
+        "name": "ValidationError",
+        "message": "Öffentliche Angabe"
+      }
+    }
+  ],
+  "expectedSha256": "cd3fa1251eb3afb5f125a0b4472f09228151e24a0ad8f19fcff307df181c6ad6"
+}

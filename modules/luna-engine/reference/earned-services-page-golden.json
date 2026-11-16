@@ -1,0 +1,956 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": {},
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": {},
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "tariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": {},
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "tariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": {},
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "nursingTrainingTariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": {},
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "nursingTrainingTariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": {},
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "nursingTrainingTariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": {},
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "nursingTrainingTariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": {},
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "vkaETariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": {}
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "vkaETariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": {}
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "vkaETariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": {}
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "vkaETariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": {}
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvlKrTariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": {},
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvlKrTariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": {},
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "tvlKrTariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": {},
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "tvlKrTariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": {},
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvUkNursingTariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": {},
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvUkNursingTariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": {},
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "tvUkNursingTariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": {},
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "tvUkNursingTariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": {},
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvhKrTariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": {},
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvhKrTariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": {},
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "tvhKrTariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": {},
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "tvhKrTariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": {},
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvalPflegeTariff-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": {},
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_PAY",
+        "message": "Für diesen Zeitraum fehlen geprüfte Tarifdaten.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Nicht verfügbar"
+      },
+      "id": "tvalPflegeTariff-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": {},
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": "Die Angaben für die steuerliche Aufteilung konnten nicht geladen werden.",
+        "title": null
+      },
+      "id": "tvalPflegeTariff-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": {},
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "SERVICES",
+        "message": null,
+        "month": "2026-11",
+        "taxNotice": "Für Testdaten wird keine steuerliche Aufteilung berechnet.",
+        "taxReadErrorNotice": null,
+        "title": null
+      },
+      "id": "tvalPflegeTariff-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": {},
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "MANUAL-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": 400000,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "MANUAL-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": 400000,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "MANUAL-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": 400000,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "MANUAL-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": 400000,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "UNSET-false-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "UNSET-false-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": false, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "UNSET-true-false",
+      "input": {
+        "blocked": false,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    },
+    {
+      "expected": {
+        "kind": "NO_TARIFF",
+        "message": "Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
+        "month": "2026-11",
+        "taxNotice": null,
+        "taxReadErrorNotice": null,
+        "title": "Keine tarifliche Berechnung"
+      },
+      "id": "UNSET-true-true",
+      "input": {
+        "blocked": true,
+        "month": "2026-11",
+        "pay": { "available": true, "nightCompensatoryMinutes": 0 },
+        "profile": {
+          "manualMonthlyGrossCents": null,
+          "nursingTrainingTariff": null,
+          "tariff": null,
+          "tvUkNursingTariff": null,
+          "tvalPflegeTariff": null,
+          "tvhKrTariff": null,
+          "tvlKrTariff": null,
+          "vkaETariff": null
+        }
+      }
+    }
+  ],
+  "casesSha256": "d9ebffbb595651e76f5b9b679e7dfb90a177d8352483ca8a86168e82a2fa2a60",
+  "coverage": {
+    "availableUnavailable": true,
+    "cases": 36,
+    "families": 7,
+    "manualUnset": true,
+    "netReadyError": true,
+    "scope": "Original route JSX policy with controlled native-output presenter inputs; does not substitute raw-source finance join proof",
+    "testMonths": true
+  },
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "sourceModule": {
+    "file": "src/features/analysis/premium-details-screen.tsx",
+    "sha256": "56b0f04a2e007b4f7be4b410da953ff22023fef67214a3a94213608081f82cd9"
+  }
+}

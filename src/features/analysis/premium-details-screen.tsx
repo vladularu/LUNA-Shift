@@ -12,6 +12,7 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import { employmentProfileAt } from "@/domain/employment-history";
 import { formatMonthTitle } from "@/engine/calendar";
 import { prepareAutomaticNetPay } from "@/features/salary/automatic-net-pay-preparation";
+import { useOptionalRustAutomaticNetPay } from "@/features/salary/use-rust-automatic-net-pay";
 import { NetPayServiceDetails } from "@/features/salary/net-pay-service-details";
 import { NetPayText } from "@/features/salary/net-pay-controls";
 import { salaryMonthInput } from "@/features/salary/salary-month-input";
@@ -54,6 +55,18 @@ export function PremiumDetailsScreen() {
       profile: employmentProfileAt(profile, `${month}-01`),
     }));
   }, [context, error, month, profile, ready, ruleRetryRevision, valid]);
+  const nativeForecast = useOptionalRustAutomaticNetPay(
+    month,
+    settings,
+    enabled &&
+      calculation?.ok === true &&
+      calculation.value.pay.available &&
+      data.status === "ready" &&
+      settings?.version === 2,
+    testMonths,
+    data.timeline,
+    "EARNED",
+  );
   const classification = useMemo(() => {
     if (
       !enabled ||
@@ -65,9 +78,12 @@ export function PremiumDetailsScreen() {
     )
       return null;
     // Keep original service dates and ignore payment preferences on this earned-month page.
-    const forecast = prepareAutomaticNetPay(month, settings, profile, context);
-    return forecast.result.status === "available" ? forecast.result.classification : null;
-  }, [calculation, context, data.status, enabled, month, profile, settings]);
+    const forecast =
+      process.env.EXPO_PUBLIC_RUST_NET_BRIDGE === "1"
+        ? nativeForecast
+        : prepareAutomaticNetPay(month, settings, profile, context);
+    return forecast?.result.status === "available" ? forecast.result.classification : null;
+  }, [calculation, context, data.status, enabled, month, profile, settings, nativeForecast]);
   const page = (content: ReactNode) => (
     <SalaryPage
       title="Zuschläge je Dienst"

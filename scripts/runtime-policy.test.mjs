@@ -3,8 +3,10 @@ import "./calendar-worklet-runtime.test.mjs";
 import "./testflight-baseline.test.mjs";
 import "./publish-testflight-ota.test.mjs";
 import "./accept-testflight-baseline.test.mjs";
+import "./analysis-cache-contract.test.mjs";
 import { spawnSync } from "node:child_process";
 import { checkCandidate } from "./testflight-baseline.mjs";
+import { verifyContract } from "./analysis-cache-contract.mjs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -13,6 +15,12 @@ import test from "node:test";
 import { validateIosRuntimePolicy, validateResolvedIosRuntimePolicies } from "./runtime-policy.mjs";
 
 const fingerprint = { policy: "fingerprint" };
+
+test("keeps persisted calculations compatible with the exact current calculation sources", () => {
+  assert(
+    verifyContract(resolve(import.meta.dirname, "..")).version.startsWith("luna-analysis-v3:"),
+  );
+});
 
 test("preserves the accepted TestFlight app sources and mandatory regression tests", () => {
   assert.equal(checkCandidate(resolve(import.meta.dirname, "..")).report.ok, true);

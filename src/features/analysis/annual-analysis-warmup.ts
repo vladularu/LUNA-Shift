@@ -7,6 +7,7 @@ import {
 } from "./annual-analysis";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { ANALYSIS_WARMUP_PRIORITY, scheduleAnalysisWork } from "./analysis-work-queue";
+import { annualRustRequest, type AnnualRustCalculator } from "./annual-rust-bridge";
 
 export type AnnualPreparationInput = Omit<AnnualAnalysisRequest, "year" | "youthProtection"> & {
   readonly years: readonly number[];
@@ -16,6 +17,7 @@ export type AnnualPreparationInput = Omit<AnnualAnalysisRequest, "year" | "youth
 export function createAnnualAnalysisWarmupRuntime(
   persistent: PersistentAnalysisCache | null,
   editDelayMs = 120,
+  calculator: AnnualRustCalculator | null = null,
 ) {
   let generation = 0,
     started = false,
@@ -75,16 +77,19 @@ export function createAnnualAnalysisWarmupRuntime(
                   input.ruleResolver,
                   input.profile.tariff !== null,
                 );
-                const request: AnnualAnalysisRequest = {
-                  year,
-                  entries: selected.entries,
-                  tariffDecisions: selected.tariffDecisions,
-                  profile: input.profile,
-                  referenceDate: input.referenceDate,
-                  workPatternSettings: input.workPatternSettings,
-                  ruleResolver: input.ruleResolver,
-                  youthProtection: input.youthProtection ?? false,
-                };
+                const request: AnnualAnalysisRequest = annualRustRequest(
+                  {
+                    year,
+                    entries: selected.entries,
+                    tariffDecisions: selected.tariffDecisions,
+                    profile: input.profile,
+                    referenceDate: input.referenceDate,
+                    workPatternSettings: input.workPatternSettings,
+                    ruleResolver: input.ruleResolver,
+                    youthProtection: input.youthProtection ?? false,
+                  },
+                  calculator,
+                );
                 const key = annualAnalysisKey(request);
                 yield 0;
                 if (current !== generation) return;
@@ -110,6 +115,8 @@ export function createAnnualAnalysisWarmupRuntime(
                       if (active?.key === key) active.failed = true;
                       recordDiagnostic("reporting", "ANNUAL_PREPARATION_FAILED", error);
                     },
+                    undefined,
+                    calculator,
                   ),
                 };
                 stages.set(year, stage);
@@ -120,7 +127,9 @@ export function createAnnualAnalysisWarmupRuntime(
                 setups.delete(task);
                 recordDiagnostic("reporting", "ANNUAL_PREPARATION_FAILED", error);
               },
-              priority,
+              // Reconcile keys before busy visible work can starve replacement
+              // of an obsolete background lease. Actual calculation stays low priority.
+              -4,
             );
             setups.add(task);
           });

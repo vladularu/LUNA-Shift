@@ -14,14 +14,14 @@ import type {
 } from "@/domain/types";
 import {
   annualInputKey,
-  buildAnnualAvailableReportSteps,
   createAnnualAvailableReportCache,
 } from "@/features/analysis/annual-core-report";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import type { RuleComputationFailure } from "@/features/analysis/rule-computation";
 import { useLocalReferenceDate } from "@/features/analysis/use-local-reference-date";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
-import { scheduleIdleWork } from "@/ui/schedule-idle-work";
+import { scheduleAnalysisWork } from "./analysis-work-queue";
+import { buildAnnualNativeReportSteps } from "./annual-native-report";
 
 interface AnnualReportState {
   readonly inputKey: string;
@@ -170,7 +170,7 @@ export function useDeferredAnnualReport({
     let cancelScheduledWork = () => {};
     requestRevision.current += 1;
     const currentRequest = requestRevision.current;
-    const steps = buildAnnualAvailableReportSteps(
+    const steps = buildAnnualNativeReportSteps(
       year,
       entries,
       profile,
@@ -196,57 +196,46 @@ export function useDeferredAnnualReport({
         },
       },
     );
-    const advance = () => {
-      try {
+    const work = scheduleAnalysisWork(
+      steps,
+      (value) => {
         if (!active || requestRevision.current !== currentRequest) return;
-        // Amortize idle callbacks, but yield back to input/rendering after a small slice.
-        // The step cap also bounds work with coarse/fake clocks.
-        const deadline = performance.now() + 4;
-        let step = steps.next();
-        let count = 1;
-        while (!step.done && step.value !== 0 && count < 32 && performance.now() < deadline) {
-          step = steps.next();
-          count += 1;
-        }
+        const next: AnnualReportState = {
+          inputKey,
+          error: null,
+          fatalError: null,
+          report: value,
+          ruleFailure: null,
+          ruleResolver,
+          year,
+        };
+        setStates((previous) =>
+          [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
+        );
+      },
+      (reportError) => {
         if (!active || requestRevision.current !== currentRequest) return;
-        if (step.done) {
-          const next: AnnualReportState = {
-            inputKey,
-            error: null,
-            fatalError: null,
-            report: step.value,
-            ruleFailure: null,
-            ruleResolver,
-            year,
-          };
-          setStates((previous) =>
-            [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
-          );
-        } else {
-          cancelScheduledWork = scheduleIdleWork(advance);
-        }
-      } catch (reportError) {
         const fatalError =
           reportError instanceof Error
             ? reportError
             : new Error("Annual report computation failed.");
-        if (active) {
-          const next: AnnualReportState = {
-            inputKey,
-            error: null,
-            fatalError,
-            report: null,
-            ruleFailure: null,
-            ruleResolver,
-            year,
-          };
-          setStates((previous) =>
-            [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
-          );
-        }
-      }
-    };
-    cancelScheduledWork = scheduleIdleWork(advance);
+        const next: AnnualReportState = {
+          inputKey,
+          error: null,
+          fatalError,
+          report: null,
+          ruleFailure: null,
+          ruleResolver,
+          year,
+        };
+        setStates((previous) =>
+          [next, ...previous.filter((item) => item.year !== year)].slice(0, 3),
+        );
+      },
+      -1,
+      { month: year + "-01", stage: 4 },
+    );
+    cancelScheduledWork = work.cancel;
     return () => {
       active = false;
       cancelScheduledWork();

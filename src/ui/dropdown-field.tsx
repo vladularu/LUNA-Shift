@@ -138,8 +138,8 @@ export function DropdownField<T extends string | number>({
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      borderTopWidth: index === 0 || startsGroup ? 0 : 1,
-                      borderTopColor: palette.separator,
+                      borderRadius: RADII.control,
+                      borderCurve: CORNER_CURVE,
                       backgroundColor: isSelected
                         ? palette.primarySoft
                         : pressed

@@ -1,5 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import { TYPOGRAPHY } from "@/theme/typography";
 
 import {
   ShiftTemplateAddRow,
@@ -8,6 +10,12 @@ import {
 
 const title = "Frühdienst auf der interdisziplinären Station";
 const subtitle = "07:00–15:12 · 30 Min. Pause · Übergabe auf Station 3";
+let mockPalette = LIGHT_PALETTE;
+
+jest.mock("@/theme/palette", () => ({
+  ...jest.requireActual<typeof import("@/theme/palette")>("@/theme/palette"),
+  usePalette: () => mockPalette,
+}));
 
 async function renderRow(disabled = false, withMoreAction = true) {
   const onPress = jest.fn();
@@ -37,23 +45,39 @@ async function renderRow(disabled = false, withMoreAction = true) {
 }
 
 describe("shift template list text reflow", () => {
-  it("allows full names and descriptions to wrap without limiting Dynamic Type", async () => {
-    const { screen } = await renderRow();
-    for (const text of [title, subtitle]) {
-      const label = screen.getByText(text);
-      expect(label.props.numberOfLines).toBeUndefined();
-      expect(label.props.adjustsFontSizeToFit).not.toBe(true);
-      expect(label.props.allowFontScaling).not.toBe(false);
-      expect(label).toHaveProp("maxFontSizeMultiplier", 0);
-      expect(label.parent).toHaveStyle({ minWidth: 0, flex: 1 });
-    }
-    expect(screen.getByTestId("template-row")).toHaveStyle({ minHeight: 72 });
-    expect(screen.getByTestId("template-row")).not.toHaveStyle({ height: 72 });
-    expect(screen.getByRole("button", { name: "Vorlage verwalten" })).toHaveStyle({
-      width: 44,
-      height: 44,
-    });
+  beforeEach(() => {
+    mockPalette = LIGHT_PALETTE;
   });
+
+  it.each([
+    { mode: "light", palette: LIGHT_PALETTE },
+    { mode: "dark", palette: DARK_PALETTE },
+  ])(
+    "keeps primary names, muted descriptions and unrestricted text wrapping in $mode",
+    async ({ palette }) => {
+      mockPalette = palette;
+      const { screen } = await renderRow();
+      expect(screen.getByText(title)).toHaveStyle({ ...TYPOGRAPHY.body, color: palette.text });
+      expect(screen.getByText(subtitle)).toHaveStyle({
+        ...TYPOGRAPHY.caption,
+        color: palette.textMuted,
+      });
+      for (const text of [title, subtitle]) {
+        const label = screen.getByText(text);
+        expect(label.props.numberOfLines).toBeUndefined();
+        expect(label.props.adjustsFontSizeToFit).not.toBe(true);
+        expect(label.props.allowFontScaling).not.toBe(false);
+        expect(label).toHaveProp("maxFontSizeMultiplier", 0);
+        expect(label.parent).toHaveStyle({ minWidth: 0, flex: 1 });
+      }
+      expect(screen.getByTestId("template-row")).toHaveStyle({ minHeight: 72 });
+      expect(screen.getByTestId("template-row")).not.toHaveStyle({ height: 72 });
+      expect(screen.getByRole("button", { name: "Vorlage verwalten" })).toHaveStyle({
+        width: 44,
+        height: 44,
+      });
+    },
+  );
 
   it("keeps editing and management as separate actions with complete labels", async () => {
     const { screen, onPress, onMorePress } = await renderRow();

@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
   },
   label: { flexShrink: 0, ...TYPOGRAPHY.bodyStrong },
   compact: { flexDirection: "column", alignItems: "flex-start", borderBottomWidth: 0, gap: 0 },

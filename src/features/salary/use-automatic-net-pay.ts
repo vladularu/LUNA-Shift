@@ -9,10 +9,11 @@ import type { MonthlyNetPaySettings, SavedMonthlyNetPaySettings } from "@/domain
 import { type AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { prepareAutomaticNetPay } from "./automatic-net-pay-preparation";
 import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
+import { useRustAutomaticNetPay } from "./use-rust-automatic-net-pay";
 const EMPTY_TEST_MONTHS: readonly string[] = Object.freeze([]);
 const EMPTY_SOURCE_SETTINGS: readonly SavedMonthlyNetPaySettings[] = Object.freeze([]);
 
-export function useAutomaticNetPay(
+function useOriginalAutomaticNetPay(
   month: string,
   settings: MonthlyNetPaySettings | null,
   enabled: boolean,
@@ -53,3 +54,8 @@ export function useAutomaticNetPay(
     payment.preferences,
   ]);
 }
+
+export const useAutomaticNetPay: typeof useOriginalAutomaticNetPay =
+  process.env.EXPO_PUBLIC_RUST_NET_BRIDGE === "1"
+    ? useRustAutomaticNetPay
+    : useOriginalAutomaticNetPay;

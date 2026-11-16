@@ -14,6 +14,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 
 import { Field, PrimaryButton } from "@/ui/form-controls";
+
 import { SelectionSheet } from "@/ui/selection-sheet";
 
 export function NetPayWorkflowText({
@@ -185,7 +186,7 @@ export function NetPayWorkflowSelect<T extends string>({
   disabled = false,
   searchable = false,
   compact = false,
-  separator = false,
+  separator: _separator,
 }: {
   readonly label: string;
   readonly value: T | null;
@@ -282,7 +283,7 @@ export function NetPayWorkflowSelect<T extends string>({
     <View
       style={{
         gap: compact ? 0 : SPACING.sm,
-        borderTopWidth: compact && separator ? 1 : 0,
+        borderTopWidth: 0,
         borderTopColor: palette.separator,
       }}
     >

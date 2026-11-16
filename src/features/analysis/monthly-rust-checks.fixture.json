@@ -1,0 +1,653 @@
+{
+  "engineVersion": "luna-engine-v1:469b8dbefebaaf6a6acd4161f07f7245bb6d19ff8b3b0f13818d936f745be86a",
+  "request": {
+    "month": "2026-07",
+    "profile": {
+      "allEmploymentWorkRecorded": null,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "displayName": null,
+      "employerName": null,
+      "employmentTimeline": [],
+      "federalState": "NW",
+      "holidayRegion": "NONE",
+      "industry": null,
+      "manualMonthlyGrossCents": null,
+      "regularRotatingNightWork": null,
+      "sundayHolidayWorkEligible": null,
+      "tariff": null,
+      "timeZone": "Europe/Berlin",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "weeklyMinutes": 2310,
+      "workPattern": {
+        "assignment": "PERMANENT",
+        "workplaceCoverage": "AROUND_THE_CLOCK"
+      },
+      "workingTimeTarget": {
+        "context": {
+          "days": [],
+          "periods": [
+            {
+              "federalState": "NW",
+              "holidayRegion": "NONE",
+              "model": {
+                "kind": "UNKNOWN"
+              },
+              "tariff": {
+                "id": "CURRENT_SALARY_SELECTION",
+                "kind": "UNVERIFIED"
+              },
+              "validFrom": "1900-01-01",
+              "validTo": null,
+              "weeklyMinutes": 2310
+            }
+          ]
+        },
+        "mode": "FORECAST",
+        "notices": [
+          {
+            "affectsTarget": true,
+            "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+            "date": null,
+            "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage."
+          }
+        ],
+        "status": "ready",
+        "youthProtection": false,
+        "youthProtectionStatus": "ready"
+      }
+    },
+    "shifts": [
+      {
+        "kind": "SHIFT",
+        "specialDuty": null,
+        "id": "entry-0",
+        "date": "2026-07-01",
+        "templateId": null,
+        "title": "Dienst",
+        "type": "EARLY",
+        "allDay": false,
+        "startTime": "06:00",
+        "endTime": "14:00",
+        "breakMinutes": 30,
+        "color": "#ABCDEF",
+        "symbol": "F",
+        "note": "Hallo",
+        "notification": null,
+        "alarmEnabled": false,
+        "location": null,
+        "overtimeMinutes": 0,
+        "tariffOvertimeConfirmed": false,
+        "holidayPremiumMode": "WITH_TIME_OFF",
+        "revision": 1,
+        "createdAt": "2026-01-01T00:00:00.123456789Z",
+        "updatedAt": "2026-07-01T00:00:00Z",
+        "deletedAt": null
+      }
+    ],
+    "referenceDate": "2026-11-12",
+    "youthProtection": false
+  },
+  "value": {
+    "month": "2026-07",
+    "assessmentRange": {
+      "from": "2026-01-01",
+      "through": "2027-02-01"
+    },
+    "issues": [
+      {
+        "id": "ARBZG_DATA_ALL_EMPLOYMENT:2026-07-01:entry-0",
+        "severity": "warning",
+        "kind": "LEGAL",
+        "rule": "ARBZG_DATA_ALL_EMPLOYMENT",
+        "title": "Arbeitszeiten aus allen Jobs erfasst?",
+        "description": "Für eine vollständige Prüfung müssen die Arbeitszeiten aus allen Jobs erfasst sein.",
+        "relatedShiftIds": ["entry-0"],
+        "date": "2026-07-01"
+      }
+    ],
+    "criticalCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "affectedDates": ["2026-07-01"],
+    "weekendAssessment": {
+      "policyVersion": "2026-11-09-four-weeks",
+      "month": "2026-07",
+      "weekends": [
+        {
+          "saturday": "2026-07-04",
+          "sunday": "2026-07-05",
+          "status": "UNKNOWN",
+          "relatedShiftIds": [],
+          "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+        },
+        {
+          "saturday": "2026-07-11",
+          "sunday": "2026-07-12",
+          "status": "UNKNOWN",
+          "relatedShiftIds": [],
+          "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+        },
+        {
+          "saturday": "2026-07-18",
+          "sunday": "2026-07-19",
+          "status": "UNKNOWN",
+          "relatedShiftIds": [],
+          "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+        },
+        {
+          "saturday": "2026-07-25",
+          "sunday": "2026-07-26",
+          "status": "UNKNOWN",
+          "relatedShiftIds": [],
+          "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+        }
+      ],
+      "totalCount": 4,
+      "windows": [
+        {
+          "from": "2026-06-08",
+          "until": "2026-07-05",
+          "weekends": [
+            {
+              "saturday": "2026-06-13",
+              "sunday": "2026-06-14",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-06-20",
+              "sunday": "2026-06-21",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-06-27",
+              "sunday": "2026-06-28",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-04",
+              "sunday": "2026-07-05",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            }
+          ],
+          "assessmentComplete": false,
+          "freeCount": 0,
+          "occupiedCount": 0,
+          "unknownCount": 4
+        },
+        {
+          "from": "2026-06-15",
+          "until": "2026-07-12",
+          "weekends": [
+            {
+              "saturday": "2026-06-20",
+              "sunday": "2026-06-21",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-06-27",
+              "sunday": "2026-06-28",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-04",
+              "sunday": "2026-07-05",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-11",
+              "sunday": "2026-07-12",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            }
+          ],
+          "assessmentComplete": false,
+          "freeCount": 0,
+          "occupiedCount": 0,
+          "unknownCount": 4
+        },
+        {
+          "from": "2026-06-22",
+          "until": "2026-07-19",
+          "weekends": [
+            {
+              "saturday": "2026-06-27",
+              "sunday": "2026-06-28",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-04",
+              "sunday": "2026-07-05",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-11",
+              "sunday": "2026-07-12",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-18",
+              "sunday": "2026-07-19",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            }
+          ],
+          "assessmentComplete": false,
+          "freeCount": 0,
+          "occupiedCount": 0,
+          "unknownCount": 4
+        },
+        {
+          "from": "2026-06-29",
+          "until": "2026-07-26",
+          "weekends": [
+            {
+              "saturday": "2026-07-04",
+              "sunday": "2026-07-05",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-11",
+              "sunday": "2026-07-12",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-18",
+              "sunday": "2026-07-19",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            },
+            {
+              "saturday": "2026-07-25",
+              "sunday": "2026-07-26",
+              "status": "UNKNOWN",
+              "relatedShiftIds": [],
+              "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+            }
+          ],
+          "assessmentComplete": false,
+          "freeCount": 0,
+          "occupiedCount": 0,
+          "unknownCount": 4
+        }
+      ],
+      "freeCount": 0,
+      "occupiedCount": 0,
+      "unknownCount": 4
+    }
+  },
+  "edited": {
+    "request": {
+      "month": "2026-07",
+      "profile": {
+        "allEmploymentWorkRecorded": null,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "displayName": null,
+        "employerName": null,
+        "employmentTimeline": [],
+        "federalState": "NW",
+        "holidayRegion": "NONE",
+        "industry": null,
+        "manualMonthlyGrossCents": null,
+        "regularRotatingNightWork": null,
+        "sundayHolidayWorkEligible": null,
+        "tariff": null,
+        "timeZone": "Europe/Berlin",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "weeklyMinutes": 2310,
+        "workPattern": {
+          "assignment": "PERMANENT",
+          "workplaceCoverage": "AROUND_THE_CLOCK"
+        },
+        "workingTimeTarget": {
+          "context": {
+            "days": [],
+            "periods": [
+              {
+                "federalState": "NW",
+                "holidayRegion": "NONE",
+                "model": {
+                  "kind": "UNKNOWN"
+                },
+                "tariff": {
+                  "id": "CURRENT_SALARY_SELECTION",
+                  "kind": "UNVERIFIED"
+                },
+                "validFrom": "1900-01-01",
+                "validTo": null,
+                "weeklyMinutes": 2310
+              }
+            ]
+          },
+          "mode": "FORECAST",
+          "notices": [
+            {
+              "affectsTarget": true,
+              "code": "EMPLOYMENT_REFERENCE_UNCONFIRMED",
+              "date": null,
+              "message": "Wochenstunden, Arbeitsort und Tarif wurden Ã¼bernommen. FÃ¼r nicht dokumentierte frÃ¼here ZeitrÃ¤ume dient dein aktuelles Profil als Planungsgrundlage."
+            }
+          ],
+          "status": "ready",
+          "youthProtection": false,
+          "youthProtectionStatus": "ready"
+        }
+      },
+      "shifts": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "entry-0",
+          "date": "2026-07-01",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "EARLY",
+          "allDay": false,
+          "startTime": "06:00",
+          "endTime": "23:50",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 2,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "referenceDate": "2026-11-12",
+      "youthProtection": false
+    },
+    "value": {
+      "month": "2026-07",
+      "assessmentRange": {
+        "from": "2026-01-01",
+        "through": "2027-02-01"
+      },
+      "issues": [
+        {
+          "id": "ARBZG_DATA_ALL_EMPLOYMENT:2026-07-01:entry-0",
+          "severity": "warning",
+          "kind": "LEGAL",
+          "rule": "ARBZG_DATA_ALL_EMPLOYMENT",
+          "title": "Arbeitszeiten aus allen Jobs erfasst?",
+          "description": "Für eine vollständige Prüfung müssen die Arbeitszeiten aus allen Jobs erfasst sein.",
+          "relatedShiftIds": ["entry-0"],
+          "date": "2026-07-01"
+        },
+        {
+          "id": "ARBZG_3_MAX_10H:2026-07-01:entry-0",
+          "severity": "critical",
+          "kind": "LEGAL",
+          "rule": "ARBZG_3_MAX_10H",
+          "title": "Tagesarbeitszeit über 10 Stunden",
+          "description": "17.33 h Nettoarbeitszeit überschreiten die 10-Stunden-Grenze.",
+          "relatedShiftIds": ["entry-0"],
+          "date": "2026-07-01",
+          "facts": {
+            "rule": "ARBZG_3_MAX_10H",
+            "netMinutes": 1040,
+            "maximumMinutes": 600
+          }
+        },
+        {
+          "id": "ARBZG_4_BREAK:2026-07-01:entry-0",
+          "severity": "critical",
+          "kind": "LEGAL",
+          "rule": "ARBZG_4_BREAK",
+          "title": "Pause zu kurz",
+          "description": "Erfasst sind 30 Minuten Pause; erforderlich sind mindestens 45 Minuten.",
+          "relatedShiftIds": ["entry-0"],
+          "date": "2026-07-01",
+          "facts": {
+            "rule": "ARBZG_4_BREAK",
+            "recordedBreakMinutes": 30,
+            "requiredBreakMinutes": 45
+          }
+        },
+        {
+          "id": "TIME_GROSS_OVER_16H:2026-07-01:entry-0",
+          "severity": "warning",
+          "kind": "PLANNING",
+          "rule": "TIME_GROSS_OVER_16H",
+          "title": "Dienst länger als 16 Stunden",
+          "description": "Die Brutto-Dienstzeit beträgt 17.83 h und sollte auf einen Eingabefehler geprüft werden.",
+          "relatedShiftIds": ["entry-0"],
+          "date": "2026-07-01",
+          "facts": {
+            "rule": "TIME_GROSS_OVER_16H",
+            "grossMinutes": 1070
+          }
+        }
+      ],
+      "criticalCount": 2,
+      "warningCount": 2,
+      "infoCount": 0,
+      "affectedDates": ["2026-07-01"],
+      "weekendAssessment": {
+        "policyVersion": "2026-11-09-four-weeks",
+        "month": "2026-07",
+        "weekends": [
+          {
+            "saturday": "2026-07-04",
+            "sunday": "2026-07-05",
+            "status": "UNKNOWN",
+            "relatedShiftIds": [],
+            "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+          },
+          {
+            "saturday": "2026-07-11",
+            "sunday": "2026-07-12",
+            "status": "UNKNOWN",
+            "relatedShiftIds": [],
+            "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+          },
+          {
+            "saturday": "2026-07-18",
+            "sunday": "2026-07-19",
+            "status": "UNKNOWN",
+            "relatedShiftIds": [],
+            "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+          },
+          {
+            "saturday": "2026-07-25",
+            "sunday": "2026-07-26",
+            "status": "UNKNOWN",
+            "relatedShiftIds": [],
+            "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+          }
+        ],
+        "totalCount": 4,
+        "windows": [
+          {
+            "from": "2026-06-08",
+            "until": "2026-07-05",
+            "weekends": [
+              {
+                "saturday": "2026-06-13",
+                "sunday": "2026-06-14",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-06-20",
+                "sunday": "2026-06-21",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-06-27",
+                "sunday": "2026-06-28",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-04",
+                "sunday": "2026-07-05",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              }
+            ],
+            "assessmentComplete": false,
+            "freeCount": 0,
+            "occupiedCount": 0,
+            "unknownCount": 4
+          },
+          {
+            "from": "2026-06-15",
+            "until": "2026-07-12",
+            "weekends": [
+              {
+                "saturday": "2026-06-20",
+                "sunday": "2026-06-21",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-06-27",
+                "sunday": "2026-06-28",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-04",
+                "sunday": "2026-07-05",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-11",
+                "sunday": "2026-07-12",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              }
+            ],
+            "assessmentComplete": false,
+            "freeCount": 0,
+            "occupiedCount": 0,
+            "unknownCount": 4
+          },
+          {
+            "from": "2026-06-22",
+            "until": "2026-07-19",
+            "weekends": [
+              {
+                "saturday": "2026-06-27",
+                "sunday": "2026-06-28",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-04",
+                "sunday": "2026-07-05",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-11",
+                "sunday": "2026-07-12",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-18",
+                "sunday": "2026-07-19",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              }
+            ],
+            "assessmentComplete": false,
+            "freeCount": 0,
+            "occupiedCount": 0,
+            "unknownCount": 4
+          },
+          {
+            "from": "2026-06-29",
+            "until": "2026-07-26",
+            "weekends": [
+              {
+                "saturday": "2026-07-04",
+                "sunday": "2026-07-05",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-11",
+                "sunday": "2026-07-12",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-18",
+                "sunday": "2026-07-19",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              },
+              {
+                "saturday": "2026-07-25",
+                "sunday": "2026-07-26",
+                "status": "UNKNOWN",
+                "relatedShiftIds": [],
+                "reasons": ["WORK_NOT_CONFIRMED_COMPLETE"]
+              }
+            ],
+            "assessmentComplete": false,
+            "freeCount": 0,
+            "occupiedCount": 0,
+            "unknownCount": 4
+          }
+        ],
+        "freeCount": 0,
+        "occupiedCount": 0,
+        "unknownCount": 4
+      }
+    }
+  }
+}

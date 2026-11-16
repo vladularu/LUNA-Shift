@@ -158,7 +158,7 @@ describe("CalendarViewScreen", () => {
         screen.getAllByTestId(/^calendar-adjacent-\d{4}/, hidden).length,
     ).toBe(14);
     expect(screen.getByTestId("calendar-date-marker-2026-10-01", hidden)).toBeTruthy();
-    expect(screen.getByRole("switch", { name: "Dienste & Abwesenheiten" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Dienste & Abwesenheiten" })).toBeTruthy();
     expect(screen.getByText("Dienstbezeichnung")).toBeTruthy();
     expect(screen.getByText("Zeitangabe")).toBeTruthy();
     expect(screen.getAllByText("Frei")).toHaveLength(4);
@@ -205,7 +205,7 @@ describe("CalendarViewScreen", () => {
     const message = "Feiertagsregeln für den gewählten Monat sind nicht verfügbar.";
     const screen = await renderView(message);
     expect(screen.getByText(message)).toBeVisible();
-    expect(screen.getByRole("switch", { name: "Dienste & Abwesenheiten" })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Dienste & Abwesenheiten" })).toBeVisible();
   });
 
   it("shows total duration instead of start time in the preview", async () => {

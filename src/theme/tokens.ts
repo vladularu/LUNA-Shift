@@ -9,9 +9,9 @@ export const SPACING = {
 } as const;
 
 export const RADII = {
-  small: 3,
-  control: 12,
-  card: 16,
+  small: 8,
+  control: 16,
+  card: 24,
   sheet: 24,
   large: 24,
   pill: 999,
@@ -68,19 +68,21 @@ export const SCREEN_LAYOUT = {
   headerAccessoryStackFontScale: 1.6,
 } as const;
 
-export const REPORT_CARD_GAP = 36;
+export const REPORT_CARD_GAP = 28;
 
-export const CARD_HEADER_INSET = 4;
+export const CARD_HEADER_INSET = 0;
 
 export const SHADOWS = {
   card: "0 0 0 rgba(0, 0, 0, 0)",
-  cardLight: "0 4px 14px rgba(24, 24, 27, 0.08)",
+  cardLight: "0 6px 20px rgba(42, 35, 65, 0.07)",
   raised: "0 4px 6px rgba(0, 0, 0, 0.09)",
   overlay: "0 4px 6px rgba(0, 0, 0, 0.09)",
 } as const;
 
 export const CALENDAR_METRICS = {
   chipRadius: 2,
+  dayRadius: 3,
+  dayNumberRadius: 12,
   chipGap: 1,
   sharedCalendarStripeWidth: 6,
   chipHorizontalInset: 1,

@@ -1,7 +1,7 @@
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { usePflegeShiftStatus, usePflegeShiftTemplates } from "@/application/pflegeshift-provider";
 import { userFacingErrorMessage } from "@/domain/errors";
@@ -88,34 +88,26 @@ export function TemplatesManagerScreen() {
           {sorting ? (
             <ReorderableList
               testID="template-manager-sort"
-              cardStyle={{
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: palette.cardSeparator,
-                boxShadow: "none",
-              }}
               scroll={reorderScroll.controller}
               disabled={busyTemplateId !== null}
-              items={templates.map((template, index) => ({
+              items={templates.map((template) => ({
                 id: template.id,
                 title: template.name,
                 subtitle: shiftTemplateSubtitle(template),
-                estimatedHeight: 68 + (index > 0 ? StyleSheet.hairlineWidth : 0),
+                estimatedHeight: 68,
                 content: (
-                  <View>
-                    {index > 0 ? <ShiftTemplateListSeparator /> : null}
-                    <ShiftTemplateListRow
-                      compact
-                      showChevron
-                      sorting
-                      accessibilityLabel={`${template.name}, ${shiftTemplateSubtitle(template)}, Vorlage bearbeiten`}
-                      color={template.color}
-                      onPress={() => router.push(templateEditorRoute(template.id))}
-                      subtitle={shiftTemplateSubtitle(template)}
-                      symbol={template.symbol}
-                      testID={`template-manager-row-${template.id}`}
-                      title={template.name}
-                    />
-                  </View>
+                  <ShiftTemplateListRow
+                    compact
+                    showChevron
+                    sorting
+                    accessibilityLabel={`${template.name}, ${shiftTemplateSubtitle(template)}, Vorlage bearbeiten`}
+                    color={template.color}
+                    onPress={() => router.push(templateEditorRoute(template.id))}
+                    subtitle={shiftTemplateSubtitle(template)}
+                    symbol={template.symbol}
+                    testID={`template-manager-row-${template.id}`}
+                    title={template.name}
+                  />
                 ),
               }))}
               onMove={async (id, index) => {

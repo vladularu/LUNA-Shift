@@ -1,0 +1,7 @@
+/rust/target/
+/.build/
+/ios/LunaEngineCore.xcframework/
+/ios/LunaEngine.h
+/android/src/main/jniLibs/
+/android/.cxx/
+/android/build/

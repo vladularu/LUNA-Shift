@@ -45,6 +45,7 @@ export interface MonthlyAnalysisCalculation {
 }
 
 export interface MonthlyAnalysisRequest {
+  readonly calculationIdentity?: string;
   readonly month: string;
   readonly entries: readonly CalendarEntry[];
   readonly profile: UserProfile;
@@ -111,6 +112,7 @@ function prepare(request: MonthlyAnalysisRequest) {
           entryKeys.entries(allowanceShifts.value),
           decision,
           workPatternSettings,
+          ...(request.calculationIdentity ? [request.calculationIdentity] : []),
         ])
       : null;
   return { profile, monthlyEntries, complianceShifts, allowanceShifts, decision, key };
@@ -147,6 +149,7 @@ export function inspectMonthlyAnalysis(request: MonthlyAnalysisRequest) {
         request.entries,
         request.tariffDecisions,
         request.workPatternSettings,
+        ...(request.calculationIdentity ? [request.calculationIdentity] : []),
       ]),
     cached:
       input.key === null

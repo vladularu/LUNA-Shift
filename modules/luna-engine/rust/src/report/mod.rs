@@ -1,0 +1,19 @@
+//! Shared native reporting over immutable raw snapshots.
+pub(crate) mod cache_budget;
+pub mod computation;
+pub mod core;
+pub mod day_details;
+pub mod ecma_number;
+pub mod export_candidates;
+pub mod export_csv;
+pub mod export_document;
+pub mod export_pdf;
+pub mod export_rows;
+pub mod export_view;
+pub mod financial;
+pub mod records;
+pub mod tariff_assessment;
+pub mod time;
+pub mod time_details;
+pub mod time_display;
+pub mod view;

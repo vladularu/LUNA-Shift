@@ -24,6 +24,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { createAnalysisResultRepository } from "@/infrastructure/database/analysis-result-repository";
 import { persistentCheckValue } from "./persistent-analysis-values";
 import type { MonthlyComplianceResult } from "@/domain/types";
+import { salaryPersistenceRequest } from "./salary-persistence-test-fixtures";
 
 let mockDb = {} as SQLiteDatabase,
   mockUpdateId: string | null = "same-release";
@@ -149,6 +150,29 @@ afterEach(() => {
 });
 
 describe("persisted result lifecycle", () => {
+  it.each(["2026-10", "2027-10"])(
+    "restores complete payout %s after remount without salary calculation",
+    async (month) => {
+      const disk = storage(),
+        input = salaryPersistenceRequest(month),
+        firstCache = disk.fresh();
+      const first = await renderHook(() => usePreparedAnalysisSalary(input, true, 1, firstCache));
+      await finish();
+      const value = first.result.current.result;
+      expect(value?.projection?.perspective).toBe("PAYOUT");
+      expect(disk.data.size).toBe(1);
+      await first.unmount();
+      const calculate = jest.spyOn(salary, "prepareAnalysisSalarySteps"),
+        restarted = salaryPersistenceRequest(month),
+        cache = disk.fresh();
+      const next = await renderHook(() => usePreparedAnalysisSalary(restarted, true, 1, cache));
+      await finish();
+      expect(next.result.current.result).toEqual(value);
+      expect(next.result.current.pending).toBe(false);
+      expect(calculate).not.toHaveBeenCalled();
+      await next.unmount();
+    },
+  );
   it("wires the actual provider to one keyed database and never carries rows to a replacement database", async () => {
     function Wrapper({ children }: PropsWithChildren) {
       return (
@@ -190,8 +214,8 @@ describe("persisted result lifecycle", () => {
     ).toBeNull();
     expect(createAnalysisResultRepository).toHaveBeenCalledTimes(2);
   });
-  it("disables persistence when an app bundle identity is unavailable", async () => {
-    mockUpdateId = null;
+  it("reuses the calculation contract across OTA identities and an embedded launch", async () => {
+    mockUpdateId = "presentation-a";
     function Wrapper({ children }: PropsWithChildren) {
       return (
         <AnalysisPersistentResultsProvider timeZone="Europe/Berlin">
@@ -200,8 +224,40 @@ describe("persisted result lifecycle", () => {
       );
     }
     const hook = await renderHook(() => useAnalysisPersistentResults(), { wrapper: Wrapper });
-    expect(hook.result.current).toBeNull();
-    expect(createAnalysisResultRepository).not.toHaveBeenCalled();
+    const value: MonthlyComplianceResult = {
+      month: "2026-10",
+      issues: [],
+      criticalCount: 0,
+      warningCount: 0,
+      infoCount: 0,
+      affectedDates: [],
+    };
+    await hook.result.current!.write(
+      "checks",
+      "2026-10",
+      "same-input",
+      createRuleResolver(),
+      value,
+      persistentCheckValue,
+    );
+    const first = hook.result.current;
+    await hook.unmount();
+    for (const updateId of ["presentation-b", null]) {
+      mockUpdateId = updateId;
+      const next = await renderHook(() => useAnalysisPersistentResults(), { wrapper: Wrapper });
+      expect(next.result.current).not.toBe(first);
+      expect(
+        await next.result.current!.read(
+          "checks",
+          "2026-10",
+          "same-input",
+          createRuleResolver(),
+          persistentCheckValue,
+        ),
+      ).toEqual(value);
+      await next.unmount();
+    }
+    expect(createAnalysisResultRepository).toHaveBeenCalledTimes(3);
   });
   it("reopens complete month, salary and checks with fresh resolver/cache objects without any calculation", async () => {
     const disk = storage(),

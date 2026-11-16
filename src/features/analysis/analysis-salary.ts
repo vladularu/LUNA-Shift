@@ -21,8 +21,11 @@ import {
 } from "@/features/salary/salary-month-input";
 import { createAnalysisResultCache, isCurrentAnalysisMonth } from "./analysis-result-cache";
 import { createAnalysisEntryKeys } from "./analysis-entry-keys";
+import type { AnalysisWorkYield } from "./analysis-work-queue";
+import { monthlyRustNetSteps, type MonthlyRustNetCalculator } from "./monthly-rust-net";
 
 export interface AnalysisSalaryRequest {
+  readonly netCalculationIdentity?: string;
   readonly month: string;
   readonly profile: UserProfile;
   readonly settings: MonthlyNetPaySettings | null;
@@ -71,7 +74,7 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
     dependencies = context.entries;
   }
   return entryKeys.stringify([
-    "salary-payment-v1",
+    "salary-payment-v2",
     month,
     profile,
     settings,
@@ -81,6 +84,7 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
     context.workPatternSettings,
     context.testMonths,
     request.payment,
+    ...(request.netCalculationIdentity ? [request.netCalculationIdentity] : []),
   ]);
 }
 
@@ -110,11 +114,32 @@ export function retainPreparedAnalysisSalary(
 }
 
 /** Preserve the two existing annual-payment inputs: timeline for gross, settings for net. */
+export function prepareAnalysisSalarySteps(
+  request: AnalysisSalaryRequest,
+  key: string,
+  onAnnualReady?: (annual: PreparedAnalysisSalary["annual"]) => void,
+): Generator<number, PreparedAnalysisSalary, void>;
+export function prepareAnalysisSalarySteps(
+  request: AnalysisSalaryRequest,
+  key: string,
+  onAnnualReady: ((annual: PreparedAnalysisSalary["annual"]) => void) | undefined,
+  netCalculator: MonthlyRustNetCalculator | null | undefined,
+): Generator<AnalysisWorkYield, PreparedAnalysisSalary, void>;
 export function* prepareAnalysisSalarySteps(
   request: AnalysisSalaryRequest,
   key: string,
   onAnnualReady?: (annual: PreparedAnalysisSalary["annual"]) => void,
-): Generator<number, PreparedAnalysisSalary, void> {
+  netCalculator?: MonthlyRustNetCalculator | null,
+): Generator<AnalysisWorkYield, PreparedAnalysisSalary, void> {
+  if (netCalculator?.prepare && request.payment?.perspective !== "EARNED") {
+    let prepared: PreparedAnalysisSalary | undefined;
+    yield netCalculator.prepare(request).then((value) => {
+      prepared = value;
+    });
+    if (!prepared) throw new Error("RUST_SALARY_OUTPUT_INVALID");
+    onAnnualReady?.(prepared.annual);
+    return retainPreparedAnalysisSalary(request, key, prepared);
+  }
   const { month, profile, context, settings, annualPayments } = request;
   const annual = yield* annualSalaryForecastSteps(
     Number(month.slice(0, 4)),
@@ -136,7 +161,9 @@ export function* prepareAnalysisSalarySteps(
   const payment = request.payment ? { ...request.payment, projection } : undefined;
   const forecast =
     settings?.version === 2 && request.payment?.perspective !== "EARNED"
-      ? yield* prepareAutomaticNetPaySteps(month, settings, profile, context, payment)
+      ? netCalculator
+        ? yield* monthlyRustNetSteps(request, netCalculator)
+        : yield* prepareAutomaticNetPaySteps(month, settings, profile, context, payment)
       : null;
   const result = { annual, forecast, ...(projection ? { projection } : {}) };
   // Unavailable calculations stay retryable when a page is mounted again.

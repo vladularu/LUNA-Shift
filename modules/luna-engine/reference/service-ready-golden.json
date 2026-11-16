@@ -1,0 +1,3349 @@
+{
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "source": "Frozen original complete S6 and display helpers; raw preferences deliberately choose zero cash delay, so the requested paid month is fully covered. Native results never participate in expected values or readiness.",
+  "cases": [
+    {
+      "id": "services-ready-2026-11-PAYOUT-false",
+      "input": {
+        "work": {
+          "profileRow": {
+            "display_name": null,
+            "employer_name": null,
+            "federal_state": "NW",
+            "holiday_region": "NONE",
+            "weekly_minutes": 2310,
+            "time_zone": "Europe/Berlin",
+            "industry": null,
+            "manual_monthly_gross_cents": null,
+            "pay_group": "P8",
+            "pay_level": 3,
+            "tariff_sector": "BT_K",
+            "tariff_region": "OTHER",
+            "full_time_weekly_minutes": 2310,
+            "regular_rotating_night_work": null,
+            "sunday_holiday_work_eligible": null,
+            "all_employment_work_recorded": null,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-07-01T00:00:00Z"
+          },
+          "salaryRows": []
+        },
+        "shiftRows": [
+          {
+            "special_duty_json": null,
+            "id": "2026-11-10-z",
+            "date": "2026-11-10",
+            "template_id": null,
+            "title": "Dienst",
+            "type": "NIGHT",
+            "all_day": 0,
+            "start_time": "21:00",
+            "end_time": "06:00",
+            "break_minutes": 30,
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "note": "Hallo",
+            "notification_json": null,
+            "alarm_enabled": 0,
+            "location_json": null,
+            "overtime_minutes": 0,
+            "tariff_overtime_confirmed": 0,
+            "holiday_premium_mode": "WITH_TIME_OFF",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00.123456789Z",
+            "updated_at": "2026-07-01T00:00:00Z",
+            "deleted_at": null
+          }
+        ],
+        "appointmentRows": [],
+        "platformCollationRanks": {
+          "": 0,
+          "#ABCDEF": 1,
+          "06:00": 2,
+          "14:00": 3,
+          "2026-01-01T00:00:00.123456789Z": 4,
+          "2026-01-10": 5,
+          "2026-01-10-ä": 6,
+          "2026-01-10-ä": 6,
+          "2026-01-10-z": 7,
+          "2026-07-01T00:00:00Z": 8,
+          "2026-07-10": 9,
+          "2026-07-10-ä": 10,
+          "2026-07-10-ä": 10,
+          "2026-07-10-z": 11,
+          "2026-11-10": 12,
+          "2026-11-10-ä": 13,
+          "2026-11-10-ä": 13,
+          "2026-11-10-z": 14,
+          "21:00": 15,
+          "Dienst": 16,
+          "EARLY": 17,
+          "F": 18,
+          "Hallo": 19,
+          "NIGHT": 20,
+          "SHIFT": 21,
+          "WITH_TIME_OFF": 22
+        },
+        "pattern": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "timeline": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "month": "2026-11",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": false
+      },
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "2026-11-10-z",
+          "date": "2026-11-10",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "21:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "baseCandidates": [
+        "2026-01-01T00:00:00.123456789Z",
+        "2026-11-10",
+        "2026-11-10-z",
+        "21:00",
+        "Dienst"
+      ],
+      "requiredComparisonStrings": ["", "2026-11-10", "2026-11-10-z", "21:00"],
+      "platformCollationRanks": {
+        "": 0,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 1,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"SPLIT\",\"parts\":[{\"breakMinutes\":15,\"end\":1200,\"start\":960}],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 2,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"America/New_York\",\"version\":1}": 3,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 4,
+        "{\"callouts\":[],\"calloutsComplete\":true,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 5,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":19000,\"end\":19030,\"kind\":\"REMOTE\",\"returned\":19030,\"start\":19000}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 6,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":20130,\"end\":20160,\"kind\":\"REMOTE\",\"returned\":20160,\"start\":20130}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 7,
+        "{\"callouts\":[{\"breakMinutes\":5,\"departure\":1430,\"end\":1470,\"kind\":\"ON_SITE\",\"returned\":1480,\"start\":1445}],\"calloutsComplete\":true,\"endDay\":1,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 8,
+        "{\"callouts\":[{\"start\":0,\"end\":30,\"kind\":\"REMOTE\",\"departure\":0,\"returned\":30,\"breakMinutes\":0},{\"start\":120,\"end\":150,\"kind\":\"REMOTE\",\"departure\":120,\"returned\":150,\"breakMinutes\":0},{\"start\":240,\"end\":270,\"kind\":\"REMOTE\",\"departure\":240,\"returned\":270,\"breakMinutes\":0},{\"start\":360,\"end\":390,\"kind\":\"REMOTE\",\"departure\":360,\"returned\":390,\"breakMinutes\":0},{\"start\":480,\"end\":510,\"kind\":\"REMOTE\",\"departure\":480,\"returned\":510,\"breakMinutes\":0},{\"start\":600,\"end\":630,\"kind\":\"REMOTE\",\"departure\":600,\"returned\":630,\"breakMinutes\":0},{\"start\":720,\"end\":750,\"kind\":\"REMOTE\",\"departure\":720,\"returned\":750,\"breakMinutes\":0},{\"start\":840,\"end\":870,\"kind\":\"REMOTE\",\"departure\":840,\"returned\":870,\"breakMinutes\":0},{\"start\":960,\"end\":990,\"kind\":\"REMOTE\",\"departure\":960,\"returned\":990,\"breakMinutes\":0},{\"start\":1080,\"end\":1110,\"kind\":\"REMOTE\",\"departure\":1080,\"returned\":1110,\"breakMinutes\":0},{\"start\":1200,\"end\":1230,\"kind\":\"REMOTE\",\"departure\":1200,\"returned\":1230,\"breakMinutes\":0},{\"start\":1320,\"end\":1350,\"kind\":\"REMOTE\",\"departure\":1320,\"returned\":1350,\"breakMinutes\":0},{\"start\":1440,\"end\":1470,\"kind\":\"REMOTE\",\"departure\":1440,\"returned\":1470,\"breakMinutes\":0},{\"start\":1560,\"end\":1590,\"kind\":\"REMOTE\",\"departure\":1560,\"returned\":1590,\"breakMinutes\":0},{\"start\":1680,\"end\":1710,\"kind\":\"REMOTE\",\"departure\":1680,\"returned\":1710,\"breakMinutes\":0},{\"start\":1800,\"end\":1830,\"kind\":\"REMOTE\",\"departure\":1800,\"returned\":1830,\"breakMinutes\":0},{\"start\":1920,\"end\":1950,\"kind\":\"REMOTE\",\"departure\":1920,\"returned\":1950,\"breakMinutes\":0},{\"start\":2040,\"end\":2070,\"kind\":\"REMOTE\",\"departure\":2040,\"returned\":2070,\"breakMinutes\":0},{\"start\":2160,\"end\":2190,\"kind\":\"REMOTE\",\"departure\":2160,\"returned\":2190,\"breakMinutes\":0},{\"start\":2280,\"end\":2310,\"kind\":\"REMOTE\",\"departure\":2280,\"returned\":2310,\"breakMinutes\":0},{\"start\":2400,\"end\":2430,\"kind\":\"REMOTE\",\"departure\":2400,\"returned\":2430,\"breakMinutes\":0},{\"start\":2520,\"end\":2550,\"kind\":\"REMOTE\",\"departure\":2520,\"returned\":2550,\"breakMinutes\":0},{\"start\":2640,\"end\":2670,\"kind\":\"REMOTE\",\"departure\":2640,\"returned\":2670,\"breakMinutes\":0},{\"start\":2760,\"end\":2790,\"kind\":\"REMOTE\",\"departure\":2760,\"returned\":2790,\"breakMinutes\":0},{\"start\":2880,\"end\":2910,\"kind\":\"REMOTE\",\"departure\":2880,\"returned\":2910,\"breakMinutes\":0},{\"start\":3000,\"end\":3030,\"kind\":\"REMOTE\",\"departure\":3000,\"returned\":3030,\"breakMinutes\":0},{\"start\":3120,\"end\":3150,\"kind\":\"REMOTE\",\"departure\":3120,\"returned\":3150,\"breakMinutes\":0},{\"start\":3240,\"end\":3270,\"kind\":\"REMOTE\",\"departure\":3240,\"returned\":3270,\"breakMinutes\":0},{\"start\":3360,\"end\":3390,\"kind\":\"REMOTE\",\"departure\":3360,\"returned\":3390,\"breakMinutes\":0},{\"start\":3480,\"end\":3510,\"kind\":\"REMOTE\",\"departure\":3480,\"returned\":3510,\"breakMinutes\":0},{\"start\":3600,\"end\":3630,\"kind\":\"REMOTE\",\"departure\":3600,\"returned\":3630,\"breakMinutes\":0},{\"start\":3720,\"end\":3750,\"kind\":\"REMOTE\",\"departure\":3720,\"returned\":3750,\"breakMinutes\":0},{\"start\":3840,\"end\":3870,\"kind\":\"REMOTE\",\"departure\":3840,\"returned\":3870,\"breakMinutes\":0},{\"start\":3960,\"end\":3990,\"kind\":\"REMOTE\",\"departure\":3960,\"returned\":3990,\"breakMinutes\":0},{\"start\":4080,\"end\":4110,\"kind\":\"REMOTE\",\"departure\":4080,\"returned\":4110,\"breakMinutes\":0},{\"start\":4200,\"end\":4230,\"kind\":\"REMOTE\",\"departure\":4200,\"returned\":4230,\"breakMinutes\":0},{\"start\":4320,\"end\":4350,\"kind\":\"REMOTE\",\"departure\":4320,\"returned\":4350,\"breakMinutes\":0},{\"start\":4440,\"end\":4470,\"kind\":\"REMOTE\",\"departure\":4440,\"returned\":4470,\"breakMinutes\":0},{\"start\":4560,\"end\":4590,\"kind\":\"REMOTE\",\"departure\":4560,\"returned\":4590,\"breakMinutes\":0},{\"start\":4680,\"end\":4710,\"kind\":\"REMOTE\",\"departure\":4680,\"returned\":4710,\"breakMinutes\":0},{\"start\":4800,\"end\":4830,\"kind\":\"REMOTE\",\"departure\":4800,\"returned\":4830,\"breakMinutes\":0},{\"start\":4920,\"end\":4950,\"kind\":\"REMOTE\",\"departure\":4920,\"returned\":4950,\"breakMinutes\":0},{\"start\":5040,\"end\":5070,\"kind\":\"REMOTE\",\"departure\":5040,\"returned\":5070,\"breakMinutes\":0},{\"start\":5160,\"end\":5190,\"kind\":\"REMOTE\",\"departure\":5160,\"returned\":5190,\"breakMinutes\":0},{\"start\":5280,\"end\":5310,\"kind\":\"REMOTE\",\"departure\":5280,\"returned\":5310,\"breakMinutes\":0},{\"start\":5400,\"end\":5430,\"kind\":\"REMOTE\",\"departure\":5400,\"returned\":5430,\"breakMinutes\":0},{\"start\":5520,\"end\":5550,\"kind\":\"REMOTE\",\"departure\":5520,\"returned\":5550,\"breakMinutes\":0},{\"start\":5640,\"end\":5670,\"kind\":\"REMOTE\",\"departure\":5640,\"returned\":5670,\"breakMinutes\":0},{\"start\":5760,\"end\":5790,\"kind\":\"REMOTE\",\"departure\":5760,\"returned\":5790,\"breakMinutes\":0},{\"start\":5880,\"end\":5910,\"kind\":\"REMOTE\",\"departure\":5880,\"returned\":5910,\"breakMinutes\":0},{\"start\":6000,\"end\":6030,\"kind\":\"REMOTE\",\"departure\":6000,\"returned\":6030,\"breakMinutes\":0},{\"start\":6120,\"end\":6150,\"kind\":\"REMOTE\",\"departure\":6120,\"returned\":6150,\"breakMinutes\":0},{\"start\":6240,\"end\":6270,\"kind\":\"REMOTE\",\"departure\":6240,\"returned\":6270,\"breakMinutes\":0},{\"start\":6360,\"end\":6390,\"kind\":\"REMOTE\",\"departure\":6360,\"returned\":6390,\"breakMinutes\":0},{\"start\":6480,\"end\":6510,\"kind\":\"REMOTE\",\"departure\":6480,\"returned\":6510,\"breakMinutes\":0},{\"start\":6600,\"end\":6630,\"kind\":\"REMOTE\",\"departure\":6600,\"returned\":6630,\"breakMinutes\":0},{\"start\":6720,\"end\":6750,\"kind\":\"REMOTE\",\"departure\":6720,\"returned\":6750,\"breakMinutes\":0},{\"start\":6840,\"end\":6870,\"kind\":\"REMOTE\",\"departure\":6840,\"returned\":6870,\"breakMinutes\":0},{\"start\":6960,\"end\":6990,\"kind\":\"REMOTE\",\"departure\":6960,\"returned\":6990,\"breakMinutes\":0},{\"start\":7080,\"end\":7110,\"kind\":\"REMOTE\",\"departure\":7080,\"returned\":7110,\"breakMinutes\":0},{\"start\":7200,\"end\":7230,\"kind\":\"REMOTE\",\"departure\":7200,\"returned\":7230,\"breakMinutes\":0},{\"start\":7320,\"end\":7350,\"kind\":\"REMOTE\",\"departure\":7320,\"returned\":7350,\"breakMinutes\":0},{\"start\":7440,\"end\":7470,\"kind\":\"REMOTE\",\"departure\":7440,\"returned\":7470,\"breakMinutes\":0},{\"start\":7560,\"end\":7590,\"kind\":\"REMOTE\",\"departure\":7560,\"returned\":7590,\"breakMinutes\":0}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 9,
+        "{\"payGroup\":\"E9a\",\"payLevel\":3,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 10,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"fullTimeWeeklyMinutes\":2310}": 11,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"universityRegion\":\"WEST\"}": 12,
+        "{\"payGroup\":\"PUK7\",\"payLevel\":3}": 13,
+        "{\"trainingYear\":2,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 14,
+        "{\"trainingYear\":2,\"universityRegion\":\"WEST\",\"employerScope\":\"SECTION_43\"}": 15,
+        "{\"version\":1,\"kind\":\"SPLIT\",\"timeZone\":\"UTC\",\"endDay\":0,\"parts\":[{\"start\":1440,\"end\":1500,\"breakMinutes\":0},{\"start\":1560,\"end\":1620,\"breakMinutes\":0},{\"start\":1680,\"end\":1740,\"breakMinutes\":0},{\"start\":1800,\"end\":1860,\"breakMinutes\":0},{\"start\":1920,\"end\":1980,\"breakMinutes\":0},{\"start\":2040,\"end\":2100,\"breakMinutes\":0},{\"start\":2160,\"end\":2220,\"breakMinutes\":0},{\"start\":2280,\"end\":2340,\"breakMinutes\":0}],\"callouts\":[],\"calloutsComplete\":false,\"standbyLevel\":\"UNKNOWN\",\"settlement\":\"UNKNOWN\"}": 16,
+        "§ 8 Abs. 3 TVöD AT": 17,
+        "#123456": 18,
+        "#ABCDEF": 19,
+        "#EA5B55": 20,
+        "00:00": 21,
+        "02:00": 22,
+        "04:00": 23,
+        "06:00": 24,
+        "07:00": 25,
+        "08:00": 26,
+        "10:00": 27,
+        "12:00": 28,
+        "14:00": 29,
+        "16:00": 30,
+        "18:00": 31,
+        "1990-01-15": 32,
+        "2025-01": 33,
+        "2025-11": 34,
+        "2025-12": 35,
+        "2026-01": 36,
+        "2026-01-01T00:00:00.123456789Z": 37,
+        "2026-01-01T00:00:00Z": 38,
+        "2026-01-10": 39,
+        "2026-01-10-ä": 40,
+        "2026-01-10-ä": 40,
+        "2026-01-10-z": 41,
+        "2026-03-07": 42,
+        "2026-03-28": 43,
+        "2026-05": 44,
+        "2026-06": 45,
+        "2026-07": 46,
+        "2026-07-01": 47,
+        "2026-07-01T00:00:00Z": 48,
+        "2026-07-02": 49,
+        "2026-07-03": 50,
+        "2026-07-04": 51,
+        "2026-07-05": 52,
+        "2026-07-06": 53,
+        "2026-07-07": 54,
+        "2026-07-08": 55,
+        "2026-07-09": 56,
+        "2026-07-10": 57,
+        "2026-07-10-ä": 58,
+        "2026-07-10-ä": 58,
+        "2026-07-10-z": 59,
+        "2026-07-11": 60,
+        "2026-07-12": 61,
+        "2026-07-13": 62,
+        "2026-07-14": 63,
+        "2026-07-15": 64,
+        "2026-07-31": 65,
+        "2026-08": 66,
+        "2026-08-01": 67,
+        "2026-08-12": 68,
+        "2026-09": 69,
+        "2026-10": 70,
+        "2026-10-24": 71,
+        "2026-10-31": 72,
+        "2026-11": 73,
+        "2026-11-01": 74,
+        "2026-11-10": 75,
+        "2026-11-10-ä": 76,
+        "2026-11-10-ä": 76,
+        "2026-11-10-z": 77,
+        "21:00": 78,
+        "22:00": 79,
+        "23:00": 80,
+        "23:30": 81,
+        "ä": 82,
+        "ä": 82,
+        "Ansprüche aus 2025-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 83,
+        "Ansprüche aus 2025-12 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 84,
+        "Ansprüche aus 2026-01 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 85,
+        "Ansprüche aus 2026-09 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 86,
+        "Ansprüche aus 2026-10 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 87,
+        "Ansprüche aus 2026-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 88,
+        "Arbeitslosenversicherung": 89,
+        "available": 90,
+        "Bereitschaften": 91,
+        "Bestätige noch, ob alle Einsätze erfasst sind oder kein Einsatz stattgefunden hat.": 92,
+        "BT_K": 93,
+        "care-insurance": 94,
+        "CASH_VARIABLE": 95,
+        "credit-base": 96,
+        "credit-base:part:0": 97,
+        "credit-base:part:1": 98,
+        "cross-month:ä": 99,
+        "cross-month:ä:part:0": 100,
+        "cross-month:ä:part:1": 101,
+        "cross-month:ä:part:2": 102,
+        "cross-month:ä:part:3": 103,
+        "cross-month:ä:part:4": 104,
+        "cross-month:ä:part:5": 105,
+        "cross-month:ä:part:6": 106,
+        "cross-month:ä:part:7": 107,
+        "cross-month:ä:part:8": 108,
+        "CUSTOM": 109,
+        "Die Gehaltsgrundlage für 2026-01 fehlt. Prüfe deine Gehaltsangaben.": 110,
+        "Die Gehaltsgrundlage für 2026-11 fehlt. Prüfe deine Gehaltsangaben.": 111,
+        "Dienst": 112,
+        "Dienst 0": 113,
+        "duty-callout:credit-base:0": 114,
+        "duty-callout:maximum-callouts:0": 115,
+        "duty-callout:maximum-callouts:1": 116,
+        "duty-callout:maximum-callouts:10": 117,
+        "duty-callout:maximum-callouts:11": 118,
+        "duty-callout:maximum-callouts:12": 119,
+        "duty-callout:maximum-callouts:13": 120,
+        "duty-callout:maximum-callouts:14": 121,
+        "duty-callout:maximum-callouts:15": 122,
+        "duty-callout:maximum-callouts:16": 123,
+        "duty-callout:maximum-callouts:17": 124,
+        "duty-callout:maximum-callouts:18": 125,
+        "duty-callout:maximum-callouts:19": 126,
+        "duty-callout:maximum-callouts:2": 127,
+        "duty-callout:maximum-callouts:20": 128,
+        "duty-callout:maximum-callouts:21": 129,
+        "duty-callout:maximum-callouts:22": 130,
+        "duty-callout:maximum-callouts:23": 131,
+        "duty-callout:maximum-callouts:24": 132,
+        "duty-callout:maximum-callouts:25": 133,
+        "duty-callout:maximum-callouts:26": 134,
+        "duty-callout:maximum-callouts:27": 135,
+        "duty-callout:maximum-callouts:28": 136,
+        "duty-callout:maximum-callouts:29": 137,
+        "duty-callout:maximum-callouts:3": 138,
+        "duty-callout:maximum-callouts:30": 139,
+        "duty-callout:maximum-callouts:31": 140,
+        "duty-callout:maximum-callouts:32": 141,
+        "duty-callout:maximum-callouts:33": 142,
+        "duty-callout:maximum-callouts:34": 143,
+        "duty-callout:maximum-callouts:35": 144,
+        "duty-callout:maximum-callouts:36": 145,
+        "duty-callout:maximum-callouts:37": 146,
+        "duty-callout:maximum-callouts:38": 147,
+        "duty-callout:maximum-callouts:39": 148,
+        "duty-callout:maximum-callouts:4": 149,
+        "duty-callout:maximum-callouts:40": 150,
+        "duty-callout:maximum-callouts:41": 151,
+        "duty-callout:maximum-callouts:42": 152,
+        "duty-callout:maximum-callouts:43": 153,
+        "duty-callout:maximum-callouts:44": 154,
+        "duty-callout:maximum-callouts:45": 155,
+        "duty-callout:maximum-callouts:46": 156,
+        "duty-callout:maximum-callouts:47": 157,
+        "duty-callout:maximum-callouts:48": 158,
+        "duty-callout:maximum-callouts:49": 159,
+        "duty-callout:maximum-callouts:5": 160,
+        "duty-callout:maximum-callouts:50": 161,
+        "duty-callout:maximum-callouts:51": 162,
+        "duty-callout:maximum-callouts:52": 163,
+        "duty-callout:maximum-callouts:53": 164,
+        "duty-callout:maximum-callouts:54": 165,
+        "duty-callout:maximum-callouts:55": 166,
+        "duty-callout:maximum-callouts:56": 167,
+        "duty-callout:maximum-callouts:57": 168,
+        "duty-callout:maximum-callouts:58": 169,
+        "duty-callout:maximum-callouts:59": 170,
+        "duty-callout:maximum-callouts:6": 171,
+        "duty-callout:maximum-callouts:60": 172,
+        "duty-callout:maximum-callouts:61": 173,
+        "duty-callout:maximum-callouts:62": 174,
+        "duty-callout:maximum-callouts:63": 175,
+        "duty-callout:maximum-callouts:7": 176,
+        "duty-callout:maximum-callouts:8": 177,
+        "duty-callout:maximum-callouts:9": 178,
+        "EARLY": 179,
+        "EARNED": 180,
+        "Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.": 181,
+        "Europe/Berlin": 182,
+        "F": 183,
+        "Feiertag": 184,
+        "Für 2025-11 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 185,
+        "Für 2025-12 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 186,
+        "Für 2026-05 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 187,
+        "Für 2026-06 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 188,
+        "Für 2026-07 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 189,
+        "Für 2026-09 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 190,
+        "Für 2026-10 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 191,
+        "Für Bereitschaften aus 2026-07 fehlen noch Abrechnungsangaben.": 192,
+        "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.": 193,
+        "Hallo": 194,
+        "health-insurance": 195,
+        "HOLIDAY": 196,
+        "HOURLY_ALLOWANCE": 197,
+        "Kirchensteuer": 198,
+        "Krankenversicherung": 199,
+        "Lohnsteuer": 200,
+        "maximum-callouts": 201,
+        "Mehrtägige Rufbereitschaft: die Aufteilung der Pauschalen ist noch offen.": 202,
+        "MISSING_MONTH": 203,
+        "MONTHLY_ALLOWANCE": 204,
+        "N": 205,
+        "Nacht": 206,
+        "night": 207,
+        "NIGHT": 208,
+        "NONE": 209,
+        "NW": 210,
+        "OTHER": 211,
+        "OVERTIME": 212,
+        "P8": 213,
+        "PAYOUT": 214,
+        "pension-insurance": 215,
+        "Pflegeversicherung": 216,
+        "PREMIUMS": 217,
+        "READY": 218,
+        "Rentenversicherung": 219,
+        "Rufbereitschaft": 220,
+        "salary_nursing_training": 221,
+        "salary_tval_pflege": 222,
+        "salary_tvl_kr": 223,
+        "salary_tvuk_nursing": 224,
+        "salary_vka_e": 225,
+        "Samstag": 226,
+        "Samstag 13–21 Uhr": 227,
+        "saturday": 228,
+        "SATURDAY": 229,
+        "Schichtdienst (6–20 Uhr)": 230,
+        "Schichtdienst aus den erfassten Diensten geschätzt. Nachtpausen werden als unbezahlte Pausen berücksichtigt, solange die Voraussetzung für eine bezahlte Pause nicht bestätigt ist.": 231,
+        "Schichtmuster aus den erfassten Diensten geschätzt; keine Arbeitgeberentscheidung.": 232,
+        "sfn": 233,
+        "shift": 234,
+        "simpleSalary.tvhKr": 235,
+        "Solidaritätszuschlag": 236,
+        "Sonntag": 237,
+        "SPECIAL_DUTY": 238,
+        "special-duty": 239,
+        "sunday": 240,
+        "SUNDAY": 241,
+        "sunrise": 242,
+        "tval-night": 243,
+        "tval-saturday": 244,
+        "tval-sunday": 245,
+        "tvh-night": 246,
+        "tvh-saturday": 247,
+        "tvh-sunday": 248,
+        "tvl-night": 249,
+        "tvl-saturday": 250,
+        "tvl-sunday": 251,
+        "tvuk-night-2000": 252,
+        "tvuk-night-3500": 253,
+        "tvuk-shift-280": 254,
+        "tvuk-sunday-4000": 255,
+        "unavailable": 256,
+        "UNAVAILABLE": 257,
+        "unemployment-insurance": 258,
+        "UNKNOWN": 259,
+        "Vorfeiertag": 260,
+        "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch.": 261,
+        "wage-tax": 262,
+        "Wähle für deine Einsätze Auszahlung oder den vereinbarten Freizeitausgleich.": 263,
+        "Weitere": 264,
+        "Weitere Netto-Abzüge": 265,
+        "WITH_TIME_OFF": 266,
+        "Zusatzversorgung": 267
+      },
+      "expected": {
+        "month": "2026-11",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": false,
+        "payAvailable": true,
+        "projectionState": {
+          "available": true,
+          "issues": [],
+          "warnings": [
+            "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+            "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          ]
+        },
+        "breakdown": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "shiftId": "2026-11-10-z",
+              "date": "2026-11-10",
+              "netMinutes": 510,
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 39.24,
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2026-11-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "premiumAmount": 39.24
+            }
+          ],
+          "amount": 39.24
+        },
+        "salaryRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2026-11-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2026-11-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 0,
+              "paidPremiumCents": 3924,
+              "taxFreeCents": 3924,
+              "socialInsuranceFreeCents": 3924,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 3924,
+            "premiumAmount": 39.24
+          }
+        ],
+        "earnedRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2026-11-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2026-11-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 0,
+              "paidPremiumCents": 3924,
+              "taxFreeCents": 3924,
+              "socialInsuranceFreeCents": 3924,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 3924,
+            "premiumAmount": 39.24
+          }
+        ],
+        "serviceSummary": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "id": "2026-11-10-z",
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2026-11-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "date": "2026-11-10",
+              "tax": {
+                "shiftId": "2026-11-10-z",
+                "workedMinutes": 510,
+                "nightMinutes": 510,
+                "dayMinutes": 0,
+                "paidPremiumCents": 3924,
+                "taxFreeCents": 3924,
+                "socialInsuranceFreeCents": 3924,
+                "taxablePremiumCents": 0,
+                "socialInsuranceLiablePremiumCents": 0,
+                "premiumBreakdown": [
+                  {
+                    "category": "NIGHT",
+                    "paidPremiumCents": 3924,
+                    "taxFreeCents": 3924,
+                    "taxablePremiumCents": 0
+                  }
+                ]
+              },
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "amountCents": 3924,
+              "premiumAmount": 39.24
+            }
+          ],
+          "totalCents": 3924,
+          "taxFreeCents": 3924
+        },
+        "premiumSummary": {
+          "rows": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "HOLIDAY",
+              "label": "Feiertag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "SATURDAY",
+              "label": "Samstag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "OTHER",
+              "label": "Weitere",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            }
+          ],
+          "relevant": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            }
+          ],
+          "paidPremiumCents": 3924,
+          "taxFreeCents": 3924,
+          "socialInsuranceFreeCents": 3924,
+          "socialInsuranceLiablePremiumCents": 0
+        },
+        "specialAmounts": [],
+        "deductions": {
+          "totalCents": 310200,
+          "rows": [
+            {
+              "id": "wage-tax",
+              "label": "Lohnsteuer",
+              "amountCents": 143675
+            },
+            {
+              "id": "pension-insurance",
+              "label": "Rentenversicherung",
+              "amountCents": 71203
+            },
+            {
+              "id": "unemployment-insurance",
+              "label": "Arbeitslosenversicherung",
+              "amountCents": 9954
+            },
+            {
+              "id": "health-insurance",
+              "label": "Krankenversicherung",
+              "amountCents": 66993
+            },
+            {
+              "id": "care-insurance",
+              "label": "Pflegeversicherung",
+              "amountCents": 18375
+            }
+          ]
+        },
+        "netState": {
+          "state": "READY",
+          "value": {
+            "status": "available"
+          }
+        }
+      },
+      "sourceNetReason": null,
+      "expectedPresentation": {
+        "serviceDisplay": {
+          "forecastLabel": null,
+          "nightCompensatoryMinutes": 0,
+          "rows": [
+            {
+              "premiumHours": ["8:30"],
+              "specialTax": null,
+              "id": "2026-11-10-z",
+              "dateLabel": "10.11.",
+              "weekdayDateLabel": "Di. 10.11.",
+              "time": {
+                "interval": "21:00–06:00",
+                "endDate": "2026-11-11",
+                "nextDay": true,
+                "endDateLabel": "11.11.",
+                "endWeekdayDateLabel": "Mi. 11.11."
+              }
+            }
+          ],
+          "premiumCard": {
+            "title": "Zeitzuschläge",
+            "totalCents": 3924,
+            "taxFreeCents": 3924,
+            "taxableCents": 0
+          },
+          "showFilters": false
+        }
+      }
+    },
+    {
+      "id": "services-ready-2026-11-PAYOUT-true",
+      "input": {
+        "work": {
+          "profileRow": {
+            "display_name": null,
+            "employer_name": null,
+            "federal_state": "NW",
+            "holiday_region": "NONE",
+            "weekly_minutes": 2310,
+            "time_zone": "Europe/Berlin",
+            "industry": null,
+            "manual_monthly_gross_cents": null,
+            "pay_group": "P8",
+            "pay_level": 3,
+            "tariff_sector": "BT_K",
+            "tariff_region": "OTHER",
+            "full_time_weekly_minutes": 2310,
+            "regular_rotating_night_work": null,
+            "sunday_holiday_work_eligible": null,
+            "all_employment_work_recorded": null,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-07-01T00:00:00Z"
+          },
+          "salaryRows": []
+        },
+        "shiftRows": [
+          {
+            "special_duty_json": null,
+            "id": "2026-11-10-z",
+            "date": "2026-11-10",
+            "template_id": null,
+            "title": "Dienst",
+            "type": "NIGHT",
+            "all_day": 0,
+            "start_time": "21:00",
+            "end_time": "06:00",
+            "break_minutes": 30,
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "note": "Hallo",
+            "notification_json": null,
+            "alarm_enabled": 0,
+            "location_json": null,
+            "overtime_minutes": 0,
+            "tariff_overtime_confirmed": 0,
+            "holiday_premium_mode": "WITH_TIME_OFF",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00.123456789Z",
+            "updated_at": "2026-07-01T00:00:00Z",
+            "deleted_at": null
+          }
+        ],
+        "appointmentRows": [],
+        "platformCollationRanks": {
+          "": 0,
+          "#ABCDEF": 1,
+          "06:00": 2,
+          "14:00": 3,
+          "2026-01-01T00:00:00.123456789Z": 4,
+          "2026-01-10": 5,
+          "2026-01-10-ä": 6,
+          "2026-01-10-ä": 6,
+          "2026-01-10-z": 7,
+          "2026-07-01T00:00:00Z": 8,
+          "2026-07-10": 9,
+          "2026-07-10-ä": 10,
+          "2026-07-10-ä": 10,
+          "2026-07-10-z": 11,
+          "2026-11-10": 12,
+          "2026-11-10-ä": 13,
+          "2026-11-10-ä": 13,
+          "2026-11-10-z": 14,
+          "21:00": 15,
+          "Dienst": 16,
+          "EARLY": 17,
+          "F": 18,
+          "Hallo": 19,
+          "NIGHT": 20,
+          "SHIFT": 21,
+          "WITH_TIME_OFF": 22
+        },
+        "pattern": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "timeline": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "month": "2026-11",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": true
+      },
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "2026-11-10-z",
+          "date": "2026-11-10",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "21:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "baseCandidates": [
+        "2026-01-01T00:00:00.123456789Z",
+        "2026-11-10",
+        "2026-11-10-z",
+        "21:00",
+        "Dienst"
+      ],
+      "requiredComparisonStrings": ["", "2026-11-10", "2026-11-10-z", "21:00"],
+      "platformCollationRanks": {
+        "": 0,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 1,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"SPLIT\",\"parts\":[{\"breakMinutes\":15,\"end\":1200,\"start\":960}],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 2,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"America/New_York\",\"version\":1}": 3,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 4,
+        "{\"callouts\":[],\"calloutsComplete\":true,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 5,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":19000,\"end\":19030,\"kind\":\"REMOTE\",\"returned\":19030,\"start\":19000}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 6,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":20130,\"end\":20160,\"kind\":\"REMOTE\",\"returned\":20160,\"start\":20130}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 7,
+        "{\"callouts\":[{\"breakMinutes\":5,\"departure\":1430,\"end\":1470,\"kind\":\"ON_SITE\",\"returned\":1480,\"start\":1445}],\"calloutsComplete\":true,\"endDay\":1,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 8,
+        "{\"callouts\":[{\"start\":0,\"end\":30,\"kind\":\"REMOTE\",\"departure\":0,\"returned\":30,\"breakMinutes\":0},{\"start\":120,\"end\":150,\"kind\":\"REMOTE\",\"departure\":120,\"returned\":150,\"breakMinutes\":0},{\"start\":240,\"end\":270,\"kind\":\"REMOTE\",\"departure\":240,\"returned\":270,\"breakMinutes\":0},{\"start\":360,\"end\":390,\"kind\":\"REMOTE\",\"departure\":360,\"returned\":390,\"breakMinutes\":0},{\"start\":480,\"end\":510,\"kind\":\"REMOTE\",\"departure\":480,\"returned\":510,\"breakMinutes\":0},{\"start\":600,\"end\":630,\"kind\":\"REMOTE\",\"departure\":600,\"returned\":630,\"breakMinutes\":0},{\"start\":720,\"end\":750,\"kind\":\"REMOTE\",\"departure\":720,\"returned\":750,\"breakMinutes\":0},{\"start\":840,\"end\":870,\"kind\":\"REMOTE\",\"departure\":840,\"returned\":870,\"breakMinutes\":0},{\"start\":960,\"end\":990,\"kind\":\"REMOTE\",\"departure\":960,\"returned\":990,\"breakMinutes\":0},{\"start\":1080,\"end\":1110,\"kind\":\"REMOTE\",\"departure\":1080,\"returned\":1110,\"breakMinutes\":0},{\"start\":1200,\"end\":1230,\"kind\":\"REMOTE\",\"departure\":1200,\"returned\":1230,\"breakMinutes\":0},{\"start\":1320,\"end\":1350,\"kind\":\"REMOTE\",\"departure\":1320,\"returned\":1350,\"breakMinutes\":0},{\"start\":1440,\"end\":1470,\"kind\":\"REMOTE\",\"departure\":1440,\"returned\":1470,\"breakMinutes\":0},{\"start\":1560,\"end\":1590,\"kind\":\"REMOTE\",\"departure\":1560,\"returned\":1590,\"breakMinutes\":0},{\"start\":1680,\"end\":1710,\"kind\":\"REMOTE\",\"departure\":1680,\"returned\":1710,\"breakMinutes\":0},{\"start\":1800,\"end\":1830,\"kind\":\"REMOTE\",\"departure\":1800,\"returned\":1830,\"breakMinutes\":0},{\"start\":1920,\"end\":1950,\"kind\":\"REMOTE\",\"departure\":1920,\"returned\":1950,\"breakMinutes\":0},{\"start\":2040,\"end\":2070,\"kind\":\"REMOTE\",\"departure\":2040,\"returned\":2070,\"breakMinutes\":0},{\"start\":2160,\"end\":2190,\"kind\":\"REMOTE\",\"departure\":2160,\"returned\":2190,\"breakMinutes\":0},{\"start\":2280,\"end\":2310,\"kind\":\"REMOTE\",\"departure\":2280,\"returned\":2310,\"breakMinutes\":0},{\"start\":2400,\"end\":2430,\"kind\":\"REMOTE\",\"departure\":2400,\"returned\":2430,\"breakMinutes\":0},{\"start\":2520,\"end\":2550,\"kind\":\"REMOTE\",\"departure\":2520,\"returned\":2550,\"breakMinutes\":0},{\"start\":2640,\"end\":2670,\"kind\":\"REMOTE\",\"departure\":2640,\"returned\":2670,\"breakMinutes\":0},{\"start\":2760,\"end\":2790,\"kind\":\"REMOTE\",\"departure\":2760,\"returned\":2790,\"breakMinutes\":0},{\"start\":2880,\"end\":2910,\"kind\":\"REMOTE\",\"departure\":2880,\"returned\":2910,\"breakMinutes\":0},{\"start\":3000,\"end\":3030,\"kind\":\"REMOTE\",\"departure\":3000,\"returned\":3030,\"breakMinutes\":0},{\"start\":3120,\"end\":3150,\"kind\":\"REMOTE\",\"departure\":3120,\"returned\":3150,\"breakMinutes\":0},{\"start\":3240,\"end\":3270,\"kind\":\"REMOTE\",\"departure\":3240,\"returned\":3270,\"breakMinutes\":0},{\"start\":3360,\"end\":3390,\"kind\":\"REMOTE\",\"departure\":3360,\"returned\":3390,\"breakMinutes\":0},{\"start\":3480,\"end\":3510,\"kind\":\"REMOTE\",\"departure\":3480,\"returned\":3510,\"breakMinutes\":0},{\"start\":3600,\"end\":3630,\"kind\":\"REMOTE\",\"departure\":3600,\"returned\":3630,\"breakMinutes\":0},{\"start\":3720,\"end\":3750,\"kind\":\"REMOTE\",\"departure\":3720,\"returned\":3750,\"breakMinutes\":0},{\"start\":3840,\"end\":3870,\"kind\":\"REMOTE\",\"departure\":3840,\"returned\":3870,\"breakMinutes\":0},{\"start\":3960,\"end\":3990,\"kind\":\"REMOTE\",\"departure\":3960,\"returned\":3990,\"breakMinutes\":0},{\"start\":4080,\"end\":4110,\"kind\":\"REMOTE\",\"departure\":4080,\"returned\":4110,\"breakMinutes\":0},{\"start\":4200,\"end\":4230,\"kind\":\"REMOTE\",\"departure\":4200,\"returned\":4230,\"breakMinutes\":0},{\"start\":4320,\"end\":4350,\"kind\":\"REMOTE\",\"departure\":4320,\"returned\":4350,\"breakMinutes\":0},{\"start\":4440,\"end\":4470,\"kind\":\"REMOTE\",\"departure\":4440,\"returned\":4470,\"breakMinutes\":0},{\"start\":4560,\"end\":4590,\"kind\":\"REMOTE\",\"departure\":4560,\"returned\":4590,\"breakMinutes\":0},{\"start\":4680,\"end\":4710,\"kind\":\"REMOTE\",\"departure\":4680,\"returned\":4710,\"breakMinutes\":0},{\"start\":4800,\"end\":4830,\"kind\":\"REMOTE\",\"departure\":4800,\"returned\":4830,\"breakMinutes\":0},{\"start\":4920,\"end\":4950,\"kind\":\"REMOTE\",\"departure\":4920,\"returned\":4950,\"breakMinutes\":0},{\"start\":5040,\"end\":5070,\"kind\":\"REMOTE\",\"departure\":5040,\"returned\":5070,\"breakMinutes\":0},{\"start\":5160,\"end\":5190,\"kind\":\"REMOTE\",\"departure\":5160,\"returned\":5190,\"breakMinutes\":0},{\"start\":5280,\"end\":5310,\"kind\":\"REMOTE\",\"departure\":5280,\"returned\":5310,\"breakMinutes\":0},{\"start\":5400,\"end\":5430,\"kind\":\"REMOTE\",\"departure\":5400,\"returned\":5430,\"breakMinutes\":0},{\"start\":5520,\"end\":5550,\"kind\":\"REMOTE\",\"departure\":5520,\"returned\":5550,\"breakMinutes\":0},{\"start\":5640,\"end\":5670,\"kind\":\"REMOTE\",\"departure\":5640,\"returned\":5670,\"breakMinutes\":0},{\"start\":5760,\"end\":5790,\"kind\":\"REMOTE\",\"departure\":5760,\"returned\":5790,\"breakMinutes\":0},{\"start\":5880,\"end\":5910,\"kind\":\"REMOTE\",\"departure\":5880,\"returned\":5910,\"breakMinutes\":0},{\"start\":6000,\"end\":6030,\"kind\":\"REMOTE\",\"departure\":6000,\"returned\":6030,\"breakMinutes\":0},{\"start\":6120,\"end\":6150,\"kind\":\"REMOTE\",\"departure\":6120,\"returned\":6150,\"breakMinutes\":0},{\"start\":6240,\"end\":6270,\"kind\":\"REMOTE\",\"departure\":6240,\"returned\":6270,\"breakMinutes\":0},{\"start\":6360,\"end\":6390,\"kind\":\"REMOTE\",\"departure\":6360,\"returned\":6390,\"breakMinutes\":0},{\"start\":6480,\"end\":6510,\"kind\":\"REMOTE\",\"departure\":6480,\"returned\":6510,\"breakMinutes\":0},{\"start\":6600,\"end\":6630,\"kind\":\"REMOTE\",\"departure\":6600,\"returned\":6630,\"breakMinutes\":0},{\"start\":6720,\"end\":6750,\"kind\":\"REMOTE\",\"departure\":6720,\"returned\":6750,\"breakMinutes\":0},{\"start\":6840,\"end\":6870,\"kind\":\"REMOTE\",\"departure\":6840,\"returned\":6870,\"breakMinutes\":0},{\"start\":6960,\"end\":6990,\"kind\":\"REMOTE\",\"departure\":6960,\"returned\":6990,\"breakMinutes\":0},{\"start\":7080,\"end\":7110,\"kind\":\"REMOTE\",\"departure\":7080,\"returned\":7110,\"breakMinutes\":0},{\"start\":7200,\"end\":7230,\"kind\":\"REMOTE\",\"departure\":7200,\"returned\":7230,\"breakMinutes\":0},{\"start\":7320,\"end\":7350,\"kind\":\"REMOTE\",\"departure\":7320,\"returned\":7350,\"breakMinutes\":0},{\"start\":7440,\"end\":7470,\"kind\":\"REMOTE\",\"departure\":7440,\"returned\":7470,\"breakMinutes\":0},{\"start\":7560,\"end\":7590,\"kind\":\"REMOTE\",\"departure\":7560,\"returned\":7590,\"breakMinutes\":0}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 9,
+        "{\"payGroup\":\"E9a\",\"payLevel\":3,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 10,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"fullTimeWeeklyMinutes\":2310}": 11,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"universityRegion\":\"WEST\"}": 12,
+        "{\"payGroup\":\"PUK7\",\"payLevel\":3}": 13,
+        "{\"trainingYear\":2,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 14,
+        "{\"trainingYear\":2,\"universityRegion\":\"WEST\",\"employerScope\":\"SECTION_43\"}": 15,
+        "{\"version\":1,\"kind\":\"SPLIT\",\"timeZone\":\"UTC\",\"endDay\":0,\"parts\":[{\"start\":1440,\"end\":1500,\"breakMinutes\":0},{\"start\":1560,\"end\":1620,\"breakMinutes\":0},{\"start\":1680,\"end\":1740,\"breakMinutes\":0},{\"start\":1800,\"end\":1860,\"breakMinutes\":0},{\"start\":1920,\"end\":1980,\"breakMinutes\":0},{\"start\":2040,\"end\":2100,\"breakMinutes\":0},{\"start\":2160,\"end\":2220,\"breakMinutes\":0},{\"start\":2280,\"end\":2340,\"breakMinutes\":0}],\"callouts\":[],\"calloutsComplete\":false,\"standbyLevel\":\"UNKNOWN\",\"settlement\":\"UNKNOWN\"}": 16,
+        "§ 8 Abs. 3 TVöD AT": 17,
+        "#123456": 18,
+        "#ABCDEF": 19,
+        "#EA5B55": 20,
+        "00:00": 21,
+        "02:00": 22,
+        "04:00": 23,
+        "06:00": 24,
+        "07:00": 25,
+        "08:00": 26,
+        "10:00": 27,
+        "12:00": 28,
+        "14:00": 29,
+        "16:00": 30,
+        "18:00": 31,
+        "1990-01-15": 32,
+        "2025-01": 33,
+        "2025-11": 34,
+        "2025-12": 35,
+        "2026-01": 36,
+        "2026-01-01T00:00:00.123456789Z": 37,
+        "2026-01-01T00:00:00Z": 38,
+        "2026-01-10": 39,
+        "2026-01-10-ä": 40,
+        "2026-01-10-ä": 40,
+        "2026-01-10-z": 41,
+        "2026-03-07": 42,
+        "2026-03-28": 43,
+        "2026-05": 44,
+        "2026-06": 45,
+        "2026-07": 46,
+        "2026-07-01": 47,
+        "2026-07-01T00:00:00Z": 48,
+        "2026-07-02": 49,
+        "2026-07-03": 50,
+        "2026-07-04": 51,
+        "2026-07-05": 52,
+        "2026-07-06": 53,
+        "2026-07-07": 54,
+        "2026-07-08": 55,
+        "2026-07-09": 56,
+        "2026-07-10": 57,
+        "2026-07-10-ä": 58,
+        "2026-07-10-ä": 58,
+        "2026-07-10-z": 59,
+        "2026-07-11": 60,
+        "2026-07-12": 61,
+        "2026-07-13": 62,
+        "2026-07-14": 63,
+        "2026-07-15": 64,
+        "2026-07-31": 65,
+        "2026-08": 66,
+        "2026-08-01": 67,
+        "2026-08-12": 68,
+        "2026-09": 69,
+        "2026-10": 70,
+        "2026-10-24": 71,
+        "2026-10-31": 72,
+        "2026-11": 73,
+        "2026-11-01": 74,
+        "2026-11-10": 75,
+        "2026-11-10-ä": 76,
+        "2026-11-10-ä": 76,
+        "2026-11-10-z": 77,
+        "21:00": 78,
+        "22:00": 79,
+        "23:00": 80,
+        "23:30": 81,
+        "ä": 82,
+        "ä": 82,
+        "Ansprüche aus 2025-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 83,
+        "Ansprüche aus 2025-12 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 84,
+        "Ansprüche aus 2026-01 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 85,
+        "Ansprüche aus 2026-09 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 86,
+        "Ansprüche aus 2026-10 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 87,
+        "Ansprüche aus 2026-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 88,
+        "Arbeitslosenversicherung": 89,
+        "available": 90,
+        "Bereitschaften": 91,
+        "Bestätige noch, ob alle Einsätze erfasst sind oder kein Einsatz stattgefunden hat.": 92,
+        "BT_K": 93,
+        "care-insurance": 94,
+        "CASH_VARIABLE": 95,
+        "credit-base": 96,
+        "credit-base:part:0": 97,
+        "credit-base:part:1": 98,
+        "cross-month:ä": 99,
+        "cross-month:ä:part:0": 100,
+        "cross-month:ä:part:1": 101,
+        "cross-month:ä:part:2": 102,
+        "cross-month:ä:part:3": 103,
+        "cross-month:ä:part:4": 104,
+        "cross-month:ä:part:5": 105,
+        "cross-month:ä:part:6": 106,
+        "cross-month:ä:part:7": 107,
+        "cross-month:ä:part:8": 108,
+        "CUSTOM": 109,
+        "Die Gehaltsgrundlage für 2026-01 fehlt. Prüfe deine Gehaltsangaben.": 110,
+        "Die Gehaltsgrundlage für 2026-11 fehlt. Prüfe deine Gehaltsangaben.": 111,
+        "Dienst": 112,
+        "Dienst 0": 113,
+        "duty-callout:credit-base:0": 114,
+        "duty-callout:maximum-callouts:0": 115,
+        "duty-callout:maximum-callouts:1": 116,
+        "duty-callout:maximum-callouts:10": 117,
+        "duty-callout:maximum-callouts:11": 118,
+        "duty-callout:maximum-callouts:12": 119,
+        "duty-callout:maximum-callouts:13": 120,
+        "duty-callout:maximum-callouts:14": 121,
+        "duty-callout:maximum-callouts:15": 122,
+        "duty-callout:maximum-callouts:16": 123,
+        "duty-callout:maximum-callouts:17": 124,
+        "duty-callout:maximum-callouts:18": 125,
+        "duty-callout:maximum-callouts:19": 126,
+        "duty-callout:maximum-callouts:2": 127,
+        "duty-callout:maximum-callouts:20": 128,
+        "duty-callout:maximum-callouts:21": 129,
+        "duty-callout:maximum-callouts:22": 130,
+        "duty-callout:maximum-callouts:23": 131,
+        "duty-callout:maximum-callouts:24": 132,
+        "duty-callout:maximum-callouts:25": 133,
+        "duty-callout:maximum-callouts:26": 134,
+        "duty-callout:maximum-callouts:27": 135,
+        "duty-callout:maximum-callouts:28": 136,
+        "duty-callout:maximum-callouts:29": 137,
+        "duty-callout:maximum-callouts:3": 138,
+        "duty-callout:maximum-callouts:30": 139,
+        "duty-callout:maximum-callouts:31": 140,
+        "duty-callout:maximum-callouts:32": 141,
+        "duty-callout:maximum-callouts:33": 142,
+        "duty-callout:maximum-callouts:34": 143,
+        "duty-callout:maximum-callouts:35": 144,
+        "duty-callout:maximum-callouts:36": 145,
+        "duty-callout:maximum-callouts:37": 146,
+        "duty-callout:maximum-callouts:38": 147,
+        "duty-callout:maximum-callouts:39": 148,
+        "duty-callout:maximum-callouts:4": 149,
+        "duty-callout:maximum-callouts:40": 150,
+        "duty-callout:maximum-callouts:41": 151,
+        "duty-callout:maximum-callouts:42": 152,
+        "duty-callout:maximum-callouts:43": 153,
+        "duty-callout:maximum-callouts:44": 154,
+        "duty-callout:maximum-callouts:45": 155,
+        "duty-callout:maximum-callouts:46": 156,
+        "duty-callout:maximum-callouts:47": 157,
+        "duty-callout:maximum-callouts:48": 158,
+        "duty-callout:maximum-callouts:49": 159,
+        "duty-callout:maximum-callouts:5": 160,
+        "duty-callout:maximum-callouts:50": 161,
+        "duty-callout:maximum-callouts:51": 162,
+        "duty-callout:maximum-callouts:52": 163,
+        "duty-callout:maximum-callouts:53": 164,
+        "duty-callout:maximum-callouts:54": 165,
+        "duty-callout:maximum-callouts:55": 166,
+        "duty-callout:maximum-callouts:56": 167,
+        "duty-callout:maximum-callouts:57": 168,
+        "duty-callout:maximum-callouts:58": 169,
+        "duty-callout:maximum-callouts:59": 170,
+        "duty-callout:maximum-callouts:6": 171,
+        "duty-callout:maximum-callouts:60": 172,
+        "duty-callout:maximum-callouts:61": 173,
+        "duty-callout:maximum-callouts:62": 174,
+        "duty-callout:maximum-callouts:63": 175,
+        "duty-callout:maximum-callouts:7": 176,
+        "duty-callout:maximum-callouts:8": 177,
+        "duty-callout:maximum-callouts:9": 178,
+        "EARLY": 179,
+        "EARNED": 180,
+        "Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.": 181,
+        "Europe/Berlin": 182,
+        "F": 183,
+        "Feiertag": 184,
+        "Für 2025-11 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 185,
+        "Für 2025-12 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 186,
+        "Für 2026-05 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 187,
+        "Für 2026-06 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 188,
+        "Für 2026-07 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 189,
+        "Für 2026-09 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 190,
+        "Für 2026-10 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 191,
+        "Für Bereitschaften aus 2026-07 fehlen noch Abrechnungsangaben.": 192,
+        "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.": 193,
+        "Hallo": 194,
+        "health-insurance": 195,
+        "HOLIDAY": 196,
+        "HOURLY_ALLOWANCE": 197,
+        "Kirchensteuer": 198,
+        "Krankenversicherung": 199,
+        "Lohnsteuer": 200,
+        "maximum-callouts": 201,
+        "Mehrtägige Rufbereitschaft: die Aufteilung der Pauschalen ist noch offen.": 202,
+        "MISSING_MONTH": 203,
+        "MONTHLY_ALLOWANCE": 204,
+        "N": 205,
+        "Nacht": 206,
+        "night": 207,
+        "NIGHT": 208,
+        "NONE": 209,
+        "NW": 210,
+        "OTHER": 211,
+        "OVERTIME": 212,
+        "P8": 213,
+        "PAYOUT": 214,
+        "pension-insurance": 215,
+        "Pflegeversicherung": 216,
+        "PREMIUMS": 217,
+        "READY": 218,
+        "Rentenversicherung": 219,
+        "Rufbereitschaft": 220,
+        "salary_nursing_training": 221,
+        "salary_tval_pflege": 222,
+        "salary_tvl_kr": 223,
+        "salary_tvuk_nursing": 224,
+        "salary_vka_e": 225,
+        "Samstag": 226,
+        "Samstag 13–21 Uhr": 227,
+        "saturday": 228,
+        "SATURDAY": 229,
+        "Schichtdienst (6–20 Uhr)": 230,
+        "Schichtdienst aus den erfassten Diensten geschätzt. Nachtpausen werden als unbezahlte Pausen berücksichtigt, solange die Voraussetzung für eine bezahlte Pause nicht bestätigt ist.": 231,
+        "Schichtmuster aus den erfassten Diensten geschätzt; keine Arbeitgeberentscheidung.": 232,
+        "sfn": 233,
+        "shift": 234,
+        "simpleSalary.tvhKr": 235,
+        "Solidaritätszuschlag": 236,
+        "Sonntag": 237,
+        "SPECIAL_DUTY": 238,
+        "special-duty": 239,
+        "sunday": 240,
+        "SUNDAY": 241,
+        "sunrise": 242,
+        "tval-night": 243,
+        "tval-saturday": 244,
+        "tval-sunday": 245,
+        "tvh-night": 246,
+        "tvh-saturday": 247,
+        "tvh-sunday": 248,
+        "tvl-night": 249,
+        "tvl-saturday": 250,
+        "tvl-sunday": 251,
+        "tvuk-night-2000": 252,
+        "tvuk-night-3500": 253,
+        "tvuk-shift-280": 254,
+        "tvuk-sunday-4000": 255,
+        "unavailable": 256,
+        "UNAVAILABLE": 257,
+        "unemployment-insurance": 258,
+        "UNKNOWN": 259,
+        "Vorfeiertag": 260,
+        "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch.": 261,
+        "wage-tax": 262,
+        "Wähle für deine Einsätze Auszahlung oder den vereinbarten Freizeitausgleich.": 263,
+        "Weitere": 264,
+        "Weitere Netto-Abzüge": 265,
+        "WITH_TIME_OFF": 266,
+        "Zusatzversorgung": 267
+      },
+      "expected": {
+        "month": "2026-11",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": true,
+        "payAvailable": true,
+        "projectionState": {
+          "available": true,
+          "issues": [],
+          "warnings": [
+            "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+            "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          ]
+        },
+        "breakdown": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "shiftId": "2026-11-10-z",
+              "date": "2026-11-10",
+              "netMinutes": 510,
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 39.24,
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2026-11-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "premiumAmount": 39.24
+            }
+          ],
+          "amount": 39.24
+        },
+        "salaryRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2026-11-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2026-11-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 0,
+              "paidPremiumCents": 3924,
+              "taxFreeCents": 3924,
+              "socialInsuranceFreeCents": 3924,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 3924,
+            "premiumAmount": 39.24
+          }
+        ],
+        "earnedRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2026-11-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2026-11-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 0,
+              "paidPremiumCents": 3924,
+              "taxFreeCents": 3924,
+              "socialInsuranceFreeCents": 3924,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 3924,
+            "premiumAmount": 39.24
+          }
+        ],
+        "serviceSummary": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "id": "2026-11-10-z",
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2026-11-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "date": "2026-11-10",
+              "tax": {
+                "shiftId": "2026-11-10-z",
+                "workedMinutes": 510,
+                "nightMinutes": 510,
+                "dayMinutes": 0,
+                "paidPremiumCents": 3924,
+                "taxFreeCents": 3924,
+                "socialInsuranceFreeCents": 3924,
+                "taxablePremiumCents": 0,
+                "socialInsuranceLiablePremiumCents": 0,
+                "premiumBreakdown": [
+                  {
+                    "category": "NIGHT",
+                    "paidPremiumCents": 3924,
+                    "taxFreeCents": 3924,
+                    "taxablePremiumCents": 0
+                  }
+                ]
+              },
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "amountCents": 3924,
+              "premiumAmount": 39.24
+            }
+          ],
+          "totalCents": 3924,
+          "taxFreeCents": 3924
+        },
+        "premiumSummary": {
+          "rows": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "HOLIDAY",
+              "label": "Feiertag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "SATURDAY",
+              "label": "Samstag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "OTHER",
+              "label": "Weitere",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            }
+          ],
+          "relevant": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            }
+          ],
+          "paidPremiumCents": 3924,
+          "taxFreeCents": 3924,
+          "socialInsuranceFreeCents": 3924,
+          "socialInsuranceLiablePremiumCents": 0
+        },
+        "specialAmounts": [],
+        "deductions": {
+          "totalCents": 310200,
+          "rows": [
+            {
+              "id": "wage-tax",
+              "label": "Lohnsteuer",
+              "amountCents": 143675
+            },
+            {
+              "id": "pension-insurance",
+              "label": "Rentenversicherung",
+              "amountCents": 71203
+            },
+            {
+              "id": "unemployment-insurance",
+              "label": "Arbeitslosenversicherung",
+              "amountCents": 9954
+            },
+            {
+              "id": "health-insurance",
+              "label": "Krankenversicherung",
+              "amountCents": 66993
+            },
+            {
+              "id": "care-insurance",
+              "label": "Pflegeversicherung",
+              "amountCents": 18375
+            }
+          ]
+        },
+        "netState": {
+          "state": "READY",
+          "value": {
+            "status": "available"
+          }
+        }
+      },
+      "sourceNetReason": null,
+      "expectedPresentation": {
+        "serviceDisplay": {
+          "forecastLabel": null,
+          "nightCompensatoryMinutes": 0,
+          "rows": [
+            {
+              "premiumHours": ["8:30"],
+              "specialTax": null,
+              "id": "2026-11-10-z",
+              "dateLabel": "10.11.",
+              "weekdayDateLabel": "Di. 10.11.",
+              "time": {
+                "interval": "21:00–06:00",
+                "endDate": "2026-11-11",
+                "nextDay": true,
+                "endDateLabel": "11.11.",
+                "endWeekdayDateLabel": "Mi. 11.11."
+              }
+            }
+          ],
+          "premiumCard": {
+            "title": "Zeitzuschläge",
+            "totalCents": 3924,
+            "taxFreeCents": 3924,
+            "taxableCents": 0
+          },
+          "showFilters": false
+        }
+      }
+    },
+    {
+      "id": "services-ready-2027-01-PAYOUT-false",
+      "input": {
+        "work": {
+          "profileRow": {
+            "display_name": null,
+            "employer_name": null,
+            "federal_state": "NW",
+            "holiday_region": "NONE",
+            "weekly_minutes": 2310,
+            "time_zone": "Europe/Berlin",
+            "industry": null,
+            "manual_monthly_gross_cents": null,
+            "pay_group": "P8",
+            "pay_level": 3,
+            "tariff_sector": "BT_K",
+            "tariff_region": "OTHER",
+            "full_time_weekly_minutes": 2310,
+            "regular_rotating_night_work": null,
+            "sunday_holiday_work_eligible": null,
+            "all_employment_work_recorded": null,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-07-01T00:00:00Z"
+          },
+          "salaryRows": []
+        },
+        "shiftRows": [
+          {
+            "special_duty_json": null,
+            "id": "2026-11-10-z",
+            "date": "2027-01-10",
+            "template_id": null,
+            "title": "Dienst",
+            "type": "NIGHT",
+            "all_day": 0,
+            "start_time": "21:00",
+            "end_time": "06:00",
+            "break_minutes": 30,
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "note": "Hallo",
+            "notification_json": null,
+            "alarm_enabled": 0,
+            "location_json": null,
+            "overtime_minutes": 0,
+            "tariff_overtime_confirmed": 0,
+            "holiday_premium_mode": "WITH_TIME_OFF",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00.123456789Z",
+            "updated_at": "2026-07-01T00:00:00Z",
+            "deleted_at": null
+          }
+        ],
+        "appointmentRows": [],
+        "platformCollationRanks": {
+          "": 0,
+          "#ABCDEF": 1,
+          "06:00": 2,
+          "14:00": 3,
+          "2026-01-01T00:00:00.123456789Z": 4,
+          "2026-01-10": 5,
+          "2026-01-10-ä": 6,
+          "2026-01-10-ä": 6,
+          "2026-01-10-z": 7,
+          "2026-07-01T00:00:00Z": 8,
+          "2026-07-10": 9,
+          "2026-07-10-ä": 10,
+          "2026-07-10-ä": 10,
+          "2026-07-10-z": 11,
+          "2026-11-10": 12,
+          "2026-11-10-ä": 13,
+          "2026-11-10-ä": 13,
+          "2026-11-10-z": 14,
+          "21:00": 15,
+          "Dienst": 16,
+          "EARLY": 17,
+          "F": 18,
+          "Hallo": 19,
+          "NIGHT": 20,
+          "SHIFT": 21,
+          "WITH_TIME_OFF": 22
+        },
+        "pattern": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "timeline": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "month": "2027-01",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": false
+      },
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "2026-11-10-z",
+          "date": "2027-01-10",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "21:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "baseCandidates": [
+        "2026-01-01T00:00:00.123456789Z",
+        "2026-11-10-z",
+        "2027-01-10",
+        "21:00",
+        "Dienst"
+      ],
+      "requiredComparisonStrings": ["", "2026-11-10-z", "2027-01-10", "21:00"],
+      "platformCollationRanks": {
+        "": 0,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 1,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"SPLIT\",\"parts\":[{\"breakMinutes\":15,\"end\":1200,\"start\":960}],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 2,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"America/New_York\",\"version\":1}": 3,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 4,
+        "{\"callouts\":[],\"calloutsComplete\":true,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 5,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":19000,\"end\":19030,\"kind\":\"REMOTE\",\"returned\":19030,\"start\":19000}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 6,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":20130,\"end\":20160,\"kind\":\"REMOTE\",\"returned\":20160,\"start\":20130}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 7,
+        "{\"callouts\":[{\"breakMinutes\":5,\"departure\":1430,\"end\":1470,\"kind\":\"ON_SITE\",\"returned\":1480,\"start\":1445}],\"calloutsComplete\":true,\"endDay\":1,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 8,
+        "{\"callouts\":[{\"start\":0,\"end\":30,\"kind\":\"REMOTE\",\"departure\":0,\"returned\":30,\"breakMinutes\":0},{\"start\":120,\"end\":150,\"kind\":\"REMOTE\",\"departure\":120,\"returned\":150,\"breakMinutes\":0},{\"start\":240,\"end\":270,\"kind\":\"REMOTE\",\"departure\":240,\"returned\":270,\"breakMinutes\":0},{\"start\":360,\"end\":390,\"kind\":\"REMOTE\",\"departure\":360,\"returned\":390,\"breakMinutes\":0},{\"start\":480,\"end\":510,\"kind\":\"REMOTE\",\"departure\":480,\"returned\":510,\"breakMinutes\":0},{\"start\":600,\"end\":630,\"kind\":\"REMOTE\",\"departure\":600,\"returned\":630,\"breakMinutes\":0},{\"start\":720,\"end\":750,\"kind\":\"REMOTE\",\"departure\":720,\"returned\":750,\"breakMinutes\":0},{\"start\":840,\"end\":870,\"kind\":\"REMOTE\",\"departure\":840,\"returned\":870,\"breakMinutes\":0},{\"start\":960,\"end\":990,\"kind\":\"REMOTE\",\"departure\":960,\"returned\":990,\"breakMinutes\":0},{\"start\":1080,\"end\":1110,\"kind\":\"REMOTE\",\"departure\":1080,\"returned\":1110,\"breakMinutes\":0},{\"start\":1200,\"end\":1230,\"kind\":\"REMOTE\",\"departure\":1200,\"returned\":1230,\"breakMinutes\":0},{\"start\":1320,\"end\":1350,\"kind\":\"REMOTE\",\"departure\":1320,\"returned\":1350,\"breakMinutes\":0},{\"start\":1440,\"end\":1470,\"kind\":\"REMOTE\",\"departure\":1440,\"returned\":1470,\"breakMinutes\":0},{\"start\":1560,\"end\":1590,\"kind\":\"REMOTE\",\"departure\":1560,\"returned\":1590,\"breakMinutes\":0},{\"start\":1680,\"end\":1710,\"kind\":\"REMOTE\",\"departure\":1680,\"returned\":1710,\"breakMinutes\":0},{\"start\":1800,\"end\":1830,\"kind\":\"REMOTE\",\"departure\":1800,\"returned\":1830,\"breakMinutes\":0},{\"start\":1920,\"end\":1950,\"kind\":\"REMOTE\",\"departure\":1920,\"returned\":1950,\"breakMinutes\":0},{\"start\":2040,\"end\":2070,\"kind\":\"REMOTE\",\"departure\":2040,\"returned\":2070,\"breakMinutes\":0},{\"start\":2160,\"end\":2190,\"kind\":\"REMOTE\",\"departure\":2160,\"returned\":2190,\"breakMinutes\":0},{\"start\":2280,\"end\":2310,\"kind\":\"REMOTE\",\"departure\":2280,\"returned\":2310,\"breakMinutes\":0},{\"start\":2400,\"end\":2430,\"kind\":\"REMOTE\",\"departure\":2400,\"returned\":2430,\"breakMinutes\":0},{\"start\":2520,\"end\":2550,\"kind\":\"REMOTE\",\"departure\":2520,\"returned\":2550,\"breakMinutes\":0},{\"start\":2640,\"end\":2670,\"kind\":\"REMOTE\",\"departure\":2640,\"returned\":2670,\"breakMinutes\":0},{\"start\":2760,\"end\":2790,\"kind\":\"REMOTE\",\"departure\":2760,\"returned\":2790,\"breakMinutes\":0},{\"start\":2880,\"end\":2910,\"kind\":\"REMOTE\",\"departure\":2880,\"returned\":2910,\"breakMinutes\":0},{\"start\":3000,\"end\":3030,\"kind\":\"REMOTE\",\"departure\":3000,\"returned\":3030,\"breakMinutes\":0},{\"start\":3120,\"end\":3150,\"kind\":\"REMOTE\",\"departure\":3120,\"returned\":3150,\"breakMinutes\":0},{\"start\":3240,\"end\":3270,\"kind\":\"REMOTE\",\"departure\":3240,\"returned\":3270,\"breakMinutes\":0},{\"start\":3360,\"end\":3390,\"kind\":\"REMOTE\",\"departure\":3360,\"returned\":3390,\"breakMinutes\":0},{\"start\":3480,\"end\":3510,\"kind\":\"REMOTE\",\"departure\":3480,\"returned\":3510,\"breakMinutes\":0},{\"start\":3600,\"end\":3630,\"kind\":\"REMOTE\",\"departure\":3600,\"returned\":3630,\"breakMinutes\":0},{\"start\":3720,\"end\":3750,\"kind\":\"REMOTE\",\"departure\":3720,\"returned\":3750,\"breakMinutes\":0},{\"start\":3840,\"end\":3870,\"kind\":\"REMOTE\",\"departure\":3840,\"returned\":3870,\"breakMinutes\":0},{\"start\":3960,\"end\":3990,\"kind\":\"REMOTE\",\"departure\":3960,\"returned\":3990,\"breakMinutes\":0},{\"start\":4080,\"end\":4110,\"kind\":\"REMOTE\",\"departure\":4080,\"returned\":4110,\"breakMinutes\":0},{\"start\":4200,\"end\":4230,\"kind\":\"REMOTE\",\"departure\":4200,\"returned\":4230,\"breakMinutes\":0},{\"start\":4320,\"end\":4350,\"kind\":\"REMOTE\",\"departure\":4320,\"returned\":4350,\"breakMinutes\":0},{\"start\":4440,\"end\":4470,\"kind\":\"REMOTE\",\"departure\":4440,\"returned\":4470,\"breakMinutes\":0},{\"start\":4560,\"end\":4590,\"kind\":\"REMOTE\",\"departure\":4560,\"returned\":4590,\"breakMinutes\":0},{\"start\":4680,\"end\":4710,\"kind\":\"REMOTE\",\"departure\":4680,\"returned\":4710,\"breakMinutes\":0},{\"start\":4800,\"end\":4830,\"kind\":\"REMOTE\",\"departure\":4800,\"returned\":4830,\"breakMinutes\":0},{\"start\":4920,\"end\":4950,\"kind\":\"REMOTE\",\"departure\":4920,\"returned\":4950,\"breakMinutes\":0},{\"start\":5040,\"end\":5070,\"kind\":\"REMOTE\",\"departure\":5040,\"returned\":5070,\"breakMinutes\":0},{\"start\":5160,\"end\":5190,\"kind\":\"REMOTE\",\"departure\":5160,\"returned\":5190,\"breakMinutes\":0},{\"start\":5280,\"end\":5310,\"kind\":\"REMOTE\",\"departure\":5280,\"returned\":5310,\"breakMinutes\":0},{\"start\":5400,\"end\":5430,\"kind\":\"REMOTE\",\"departure\":5400,\"returned\":5430,\"breakMinutes\":0},{\"start\":5520,\"end\":5550,\"kind\":\"REMOTE\",\"departure\":5520,\"returned\":5550,\"breakMinutes\":0},{\"start\":5640,\"end\":5670,\"kind\":\"REMOTE\",\"departure\":5640,\"returned\":5670,\"breakMinutes\":0},{\"start\":5760,\"end\":5790,\"kind\":\"REMOTE\",\"departure\":5760,\"returned\":5790,\"breakMinutes\":0},{\"start\":5880,\"end\":5910,\"kind\":\"REMOTE\",\"departure\":5880,\"returned\":5910,\"breakMinutes\":0},{\"start\":6000,\"end\":6030,\"kind\":\"REMOTE\",\"departure\":6000,\"returned\":6030,\"breakMinutes\":0},{\"start\":6120,\"end\":6150,\"kind\":\"REMOTE\",\"departure\":6120,\"returned\":6150,\"breakMinutes\":0},{\"start\":6240,\"end\":6270,\"kind\":\"REMOTE\",\"departure\":6240,\"returned\":6270,\"breakMinutes\":0},{\"start\":6360,\"end\":6390,\"kind\":\"REMOTE\",\"departure\":6360,\"returned\":6390,\"breakMinutes\":0},{\"start\":6480,\"end\":6510,\"kind\":\"REMOTE\",\"departure\":6480,\"returned\":6510,\"breakMinutes\":0},{\"start\":6600,\"end\":6630,\"kind\":\"REMOTE\",\"departure\":6600,\"returned\":6630,\"breakMinutes\":0},{\"start\":6720,\"end\":6750,\"kind\":\"REMOTE\",\"departure\":6720,\"returned\":6750,\"breakMinutes\":0},{\"start\":6840,\"end\":6870,\"kind\":\"REMOTE\",\"departure\":6840,\"returned\":6870,\"breakMinutes\":0},{\"start\":6960,\"end\":6990,\"kind\":\"REMOTE\",\"departure\":6960,\"returned\":6990,\"breakMinutes\":0},{\"start\":7080,\"end\":7110,\"kind\":\"REMOTE\",\"departure\":7080,\"returned\":7110,\"breakMinutes\":0},{\"start\":7200,\"end\":7230,\"kind\":\"REMOTE\",\"departure\":7200,\"returned\":7230,\"breakMinutes\":0},{\"start\":7320,\"end\":7350,\"kind\":\"REMOTE\",\"departure\":7320,\"returned\":7350,\"breakMinutes\":0},{\"start\":7440,\"end\":7470,\"kind\":\"REMOTE\",\"departure\":7440,\"returned\":7470,\"breakMinutes\":0},{\"start\":7560,\"end\":7590,\"kind\":\"REMOTE\",\"departure\":7560,\"returned\":7590,\"breakMinutes\":0}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 9,
+        "{\"payGroup\":\"E9a\",\"payLevel\":3,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 10,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"fullTimeWeeklyMinutes\":2310}": 11,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"universityRegion\":\"WEST\"}": 12,
+        "{\"payGroup\":\"PUK7\",\"payLevel\":3}": 13,
+        "{\"trainingYear\":2,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 14,
+        "{\"trainingYear\":2,\"universityRegion\":\"WEST\",\"employerScope\":\"SECTION_43\"}": 15,
+        "{\"version\":1,\"kind\":\"SPLIT\",\"timeZone\":\"UTC\",\"endDay\":0,\"parts\":[{\"start\":1440,\"end\":1500,\"breakMinutes\":0},{\"start\":1560,\"end\":1620,\"breakMinutes\":0},{\"start\":1680,\"end\":1740,\"breakMinutes\":0},{\"start\":1800,\"end\":1860,\"breakMinutes\":0},{\"start\":1920,\"end\":1980,\"breakMinutes\":0},{\"start\":2040,\"end\":2100,\"breakMinutes\":0},{\"start\":2160,\"end\":2220,\"breakMinutes\":0},{\"start\":2280,\"end\":2340,\"breakMinutes\":0}],\"callouts\":[],\"calloutsComplete\":false,\"standbyLevel\":\"UNKNOWN\",\"settlement\":\"UNKNOWN\"}": 16,
+        "§ 8 Abs. 3 TVöD AT": 17,
+        "#123456": 18,
+        "#ABCDEF": 19,
+        "#EA5B55": 20,
+        "00:00": 21,
+        "02:00": 22,
+        "04:00": 23,
+        "06:00": 24,
+        "07:00": 25,
+        "08:00": 26,
+        "10:00": 27,
+        "12:00": 28,
+        "14:00": 29,
+        "16:00": 30,
+        "18:00": 31,
+        "1990-01-15": 32,
+        "2025-01": 33,
+        "2025-11": 34,
+        "2025-12": 35,
+        "2026-01": 36,
+        "2026-01-01T00:00:00.123456789Z": 37,
+        "2026-01-01T00:00:00Z": 38,
+        "2026-01-10": 39,
+        "2026-01-10-ä": 40,
+        "2026-01-10-ä": 40,
+        "2026-01-10-z": 41,
+        "2026-03-07": 42,
+        "2026-03-28": 43,
+        "2026-05": 44,
+        "2026-06": 45,
+        "2026-07": 46,
+        "2026-07-01": 47,
+        "2026-07-01T00:00:00Z": 48,
+        "2026-07-02": 49,
+        "2026-07-03": 50,
+        "2026-07-04": 51,
+        "2026-07-05": 52,
+        "2026-07-06": 53,
+        "2026-07-07": 54,
+        "2026-07-08": 55,
+        "2026-07-09": 56,
+        "2026-07-10": 57,
+        "2026-07-10-ä": 58,
+        "2026-07-10-ä": 58,
+        "2026-07-10-z": 59,
+        "2026-07-11": 60,
+        "2026-07-12": 61,
+        "2026-07-13": 62,
+        "2026-07-14": 63,
+        "2026-07-15": 64,
+        "2026-07-31": 65,
+        "2026-08": 66,
+        "2026-08-01": 67,
+        "2026-08-12": 68,
+        "2026-09": 69,
+        "2026-10": 70,
+        "2026-10-24": 71,
+        "2026-10-31": 72,
+        "2026-11": 73,
+        "2026-11-01": 74,
+        "2026-11-10": 75,
+        "2026-11-10-ä": 76,
+        "2026-11-10-ä": 76,
+        "2026-11-10-z": 77,
+        "2027-01": 78,
+        "2027-01-10": 79,
+        "21:00": 80,
+        "22:00": 81,
+        "23:00": 82,
+        "23:30": 83,
+        "ä": 84,
+        "ä": 84,
+        "Ansprüche aus 2025-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 85,
+        "Ansprüche aus 2025-12 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 86,
+        "Ansprüche aus 2026-01 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 87,
+        "Ansprüche aus 2026-09 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 88,
+        "Ansprüche aus 2026-10 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 89,
+        "Ansprüche aus 2026-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 90,
+        "Arbeitslosenversicherung": 91,
+        "available": 92,
+        "Bereitschaften": 93,
+        "Bestätige noch, ob alle Einsätze erfasst sind oder kein Einsatz stattgefunden hat.": 94,
+        "BT_K": 95,
+        "care-insurance": 96,
+        "CASH_VARIABLE": 97,
+        "credit-base": 98,
+        "credit-base:part:0": 99,
+        "credit-base:part:1": 100,
+        "cross-month:ä": 101,
+        "cross-month:ä:part:0": 102,
+        "cross-month:ä:part:1": 103,
+        "cross-month:ä:part:2": 104,
+        "cross-month:ä:part:3": 105,
+        "cross-month:ä:part:4": 106,
+        "cross-month:ä:part:5": 107,
+        "cross-month:ä:part:6": 108,
+        "cross-month:ä:part:7": 109,
+        "cross-month:ä:part:8": 110,
+        "CUSTOM": 111,
+        "Die Gehaltsgrundlage für 2026-01 fehlt. Prüfe deine Gehaltsangaben.": 112,
+        "Die Gehaltsgrundlage für 2026-11 fehlt. Prüfe deine Gehaltsangaben.": 113,
+        "Dienst": 114,
+        "Dienst 0": 115,
+        "duty-callout:credit-base:0": 116,
+        "duty-callout:maximum-callouts:0": 117,
+        "duty-callout:maximum-callouts:1": 118,
+        "duty-callout:maximum-callouts:10": 119,
+        "duty-callout:maximum-callouts:11": 120,
+        "duty-callout:maximum-callouts:12": 121,
+        "duty-callout:maximum-callouts:13": 122,
+        "duty-callout:maximum-callouts:14": 123,
+        "duty-callout:maximum-callouts:15": 124,
+        "duty-callout:maximum-callouts:16": 125,
+        "duty-callout:maximum-callouts:17": 126,
+        "duty-callout:maximum-callouts:18": 127,
+        "duty-callout:maximum-callouts:19": 128,
+        "duty-callout:maximum-callouts:2": 129,
+        "duty-callout:maximum-callouts:20": 130,
+        "duty-callout:maximum-callouts:21": 131,
+        "duty-callout:maximum-callouts:22": 132,
+        "duty-callout:maximum-callouts:23": 133,
+        "duty-callout:maximum-callouts:24": 134,
+        "duty-callout:maximum-callouts:25": 135,
+        "duty-callout:maximum-callouts:26": 136,
+        "duty-callout:maximum-callouts:27": 137,
+        "duty-callout:maximum-callouts:28": 138,
+        "duty-callout:maximum-callouts:29": 139,
+        "duty-callout:maximum-callouts:3": 140,
+        "duty-callout:maximum-callouts:30": 141,
+        "duty-callout:maximum-callouts:31": 142,
+        "duty-callout:maximum-callouts:32": 143,
+        "duty-callout:maximum-callouts:33": 144,
+        "duty-callout:maximum-callouts:34": 145,
+        "duty-callout:maximum-callouts:35": 146,
+        "duty-callout:maximum-callouts:36": 147,
+        "duty-callout:maximum-callouts:37": 148,
+        "duty-callout:maximum-callouts:38": 149,
+        "duty-callout:maximum-callouts:39": 150,
+        "duty-callout:maximum-callouts:4": 151,
+        "duty-callout:maximum-callouts:40": 152,
+        "duty-callout:maximum-callouts:41": 153,
+        "duty-callout:maximum-callouts:42": 154,
+        "duty-callout:maximum-callouts:43": 155,
+        "duty-callout:maximum-callouts:44": 156,
+        "duty-callout:maximum-callouts:45": 157,
+        "duty-callout:maximum-callouts:46": 158,
+        "duty-callout:maximum-callouts:47": 159,
+        "duty-callout:maximum-callouts:48": 160,
+        "duty-callout:maximum-callouts:49": 161,
+        "duty-callout:maximum-callouts:5": 162,
+        "duty-callout:maximum-callouts:50": 163,
+        "duty-callout:maximum-callouts:51": 164,
+        "duty-callout:maximum-callouts:52": 165,
+        "duty-callout:maximum-callouts:53": 166,
+        "duty-callout:maximum-callouts:54": 167,
+        "duty-callout:maximum-callouts:55": 168,
+        "duty-callout:maximum-callouts:56": 169,
+        "duty-callout:maximum-callouts:57": 170,
+        "duty-callout:maximum-callouts:58": 171,
+        "duty-callout:maximum-callouts:59": 172,
+        "duty-callout:maximum-callouts:6": 173,
+        "duty-callout:maximum-callouts:60": 174,
+        "duty-callout:maximum-callouts:61": 175,
+        "duty-callout:maximum-callouts:62": 176,
+        "duty-callout:maximum-callouts:63": 177,
+        "duty-callout:maximum-callouts:7": 178,
+        "duty-callout:maximum-callouts:8": 179,
+        "duty-callout:maximum-callouts:9": 180,
+        "EARLY": 181,
+        "EARNED": 182,
+        "Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.": 183,
+        "Europe/Berlin": 184,
+        "F": 185,
+        "Feiertag": 186,
+        "Für 2025-11 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 187,
+        "Für 2025-12 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 188,
+        "Für 2026-05 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 189,
+        "Für 2026-06 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 190,
+        "Für 2026-07 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 191,
+        "Für 2026-09 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 192,
+        "Für 2026-10 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 193,
+        "Für Bereitschaften aus 2026-07 fehlen noch Abrechnungsangaben.": 194,
+        "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.": 195,
+        "Hallo": 196,
+        "health-insurance": 197,
+        "HOLIDAY": 198,
+        "HOURLY_ALLOWANCE": 199,
+        "Kirchensteuer": 200,
+        "Krankenversicherung": 201,
+        "Lohnsteuer": 202,
+        "maximum-callouts": 203,
+        "Mehrtägige Rufbereitschaft: die Aufteilung der Pauschalen ist noch offen.": 204,
+        "MISSING_MONTH": 205,
+        "MONTHLY_ALLOWANCE": 206,
+        "N": 207,
+        "Nacht": 208,
+        "night": 209,
+        "NIGHT": 210,
+        "NONE": 211,
+        "NW": 212,
+        "OTHER": 213,
+        "OVERTIME": 214,
+        "P8": 215,
+        "PAYOUT": 216,
+        "pension-insurance": 217,
+        "Pflegeversicherung": 218,
+        "PREMIUMS": 219,
+        "READY": 220,
+        "Rentenversicherung": 221,
+        "Rufbereitschaft": 222,
+        "salary_nursing_training": 223,
+        "salary_tval_pflege": 224,
+        "salary_tvl_kr": 225,
+        "salary_tvuk_nursing": 226,
+        "salary_vka_e": 227,
+        "Samstag": 228,
+        "Samstag 13–21 Uhr": 229,
+        "saturday": 230,
+        "SATURDAY": 231,
+        "Schichtdienst (6–20 Uhr)": 232,
+        "Schichtdienst aus den erfassten Diensten geschätzt. Nachtpausen werden als unbezahlte Pausen berücksichtigt, solange die Voraussetzung für eine bezahlte Pause nicht bestätigt ist.": 233,
+        "Schichtmuster aus den erfassten Diensten geschätzt; keine Arbeitgeberentscheidung.": 234,
+        "sfn": 235,
+        "shift": 236,
+        "simpleSalary.tvhKr": 237,
+        "Solidaritätszuschlag": 238,
+        "Sonntag": 239,
+        "SPECIAL_DUTY": 240,
+        "special-duty": 241,
+        "sunday": 242,
+        "SUNDAY": 243,
+        "sunrise": 244,
+        "tval-night": 245,
+        "tval-saturday": 246,
+        "tval-sunday": 247,
+        "tvh-night": 248,
+        "tvh-saturday": 249,
+        "tvh-sunday": 250,
+        "tvl-night": 251,
+        "tvl-saturday": 252,
+        "tvl-sunday": 253,
+        "tvuk-night-2000": 254,
+        "tvuk-night-3500": 255,
+        "tvuk-shift-280": 256,
+        "tvuk-sunday-4000": 257,
+        "unavailable": 258,
+        "UNAVAILABLE": 259,
+        "unemployment-insurance": 260,
+        "UNKNOWN": 261,
+        "Vorfeiertag": 262,
+        "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch.": 263,
+        "wage-tax": 264,
+        "Wähle für deine Einsätze Auszahlung oder den vereinbarten Freizeitausgleich.": 265,
+        "Weitere": 266,
+        "Weitere Netto-Abzüge": 267,
+        "WITH_TIME_OFF": 268,
+        "Zusatzversorgung": 269
+      },
+      "expected": {
+        "month": "2027-01",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": false,
+        "payAvailable": true,
+        "projectionState": {
+          "available": true,
+          "issues": [],
+          "warnings": [
+            "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+            "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          ]
+        },
+        "breakdown": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            },
+            {
+              "key": "sunday",
+              "label": "Sonntag",
+              "amount": 17.31
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "shiftId": "2026-11-10-z",
+              "date": "2027-01-10",
+              "netMinutes": 510,
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                },
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 180,
+                  "percentage": 25,
+                  "hourlyRate": 23.08,
+                  "amount": 17.31,
+                  "amountCents": 1731,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 56.55,
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2027-01-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "premiumAmount": 56.55
+            }
+          ],
+          "amount": 56.55
+        },
+        "salaryRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2027-01-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2027-01-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 390,
+              "paidPremiumCents": 5655,
+              "taxFreeCents": 5655,
+              "socialInsuranceFreeCents": 5655,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                },
+                {
+                  "category": "SUNDAY",
+                  "paidPremiumCents": 1731,
+                  "taxFreeCents": 1731,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              },
+              {
+                "key": "sunday",
+                "label": "Sonntag",
+                "minutes": 180,
+                "percentage": 25,
+                "hourlyRate": 23.08,
+                "amount": 17.31,
+                "amountCents": 1731,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 5655,
+            "premiumAmount": 56.55
+          }
+        ],
+        "earnedRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2027-01-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2027-01-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 390,
+              "paidPremiumCents": 5655,
+              "taxFreeCents": 5655,
+              "socialInsuranceFreeCents": 5655,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                },
+                {
+                  "category": "SUNDAY",
+                  "paidPremiumCents": 1731,
+                  "taxFreeCents": 1731,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              },
+              {
+                "key": "sunday",
+                "label": "Sonntag",
+                "minutes": 180,
+                "percentage": 25,
+                "hourlyRate": 23.08,
+                "amount": 17.31,
+                "amountCents": 1731,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 5655,
+            "premiumAmount": 56.55
+          }
+        ],
+        "serviceSummary": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            },
+            {
+              "key": "sunday",
+              "label": "Sonntag",
+              "amount": 17.31
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "id": "2026-11-10-z",
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2027-01-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "date": "2027-01-10",
+              "tax": {
+                "shiftId": "2026-11-10-z",
+                "workedMinutes": 510,
+                "nightMinutes": 510,
+                "dayMinutes": 390,
+                "paidPremiumCents": 5655,
+                "taxFreeCents": 5655,
+                "socialInsuranceFreeCents": 5655,
+                "taxablePremiumCents": 0,
+                "socialInsuranceLiablePremiumCents": 0,
+                "premiumBreakdown": [
+                  {
+                    "category": "NIGHT",
+                    "paidPremiumCents": 3924,
+                    "taxFreeCents": 3924,
+                    "taxablePremiumCents": 0
+                  },
+                  {
+                    "category": "SUNDAY",
+                    "paidPremiumCents": 1731,
+                    "taxFreeCents": 1731,
+                    "taxablePremiumCents": 0
+                  }
+                ]
+              },
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                },
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 180,
+                  "percentage": 25,
+                  "hourlyRate": 23.08,
+                  "amount": 17.31,
+                  "amountCents": 1731,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "amountCents": 5655,
+              "premiumAmount": 56.55
+            }
+          ],
+          "totalCents": 5655,
+          "taxFreeCents": 5655
+        },
+        "premiumSummary": {
+          "rows": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 1731,
+              "free": 1731,
+              "taxable": 0
+            },
+            {
+              "category": "HOLIDAY",
+              "label": "Feiertag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "SATURDAY",
+              "label": "Samstag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "OTHER",
+              "label": "Weitere",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            }
+          ],
+          "relevant": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 1731,
+              "free": 1731,
+              "taxable": 0
+            }
+          ],
+          "paidPremiumCents": 5655,
+          "taxFreeCents": 5655,
+          "socialInsuranceFreeCents": 5655,
+          "socialInsuranceLiablePremiumCents": 0
+        },
+        "specialAmounts": [],
+        "deductions": {
+          "totalCents": 140819,
+          "rows": [
+            {
+              "id": "wage-tax",
+              "label": "Lohnsteuer",
+              "amountCents": 53175
+            },
+            {
+              "id": "pension-insurance",
+              "label": "Rentenversicherung",
+              "amountCents": 37475
+            },
+            {
+              "id": "unemployment-insurance",
+              "label": "Arbeitslosenversicherung",
+              "amountCents": 5239
+            },
+            {
+              "id": "health-insurance",
+              "label": "Krankenversicherung",
+              "amountCents": 35259
+            },
+            {
+              "id": "care-insurance",
+              "label": "Pflegeversicherung",
+              "amountCents": 9671
+            }
+          ]
+        },
+        "netState": {
+          "state": "READY",
+          "value": {
+            "status": "available"
+          }
+        }
+      },
+      "sourceNetReason": null,
+      "expectedPresentation": {
+        "serviceDisplay": {
+          "forecastLabel": "2027 vorläufig · Abzüge nach Stand 2026",
+          "nightCompensatoryMinutes": 0,
+          "rows": [
+            {
+              "premiumHours": ["8:30", "3:00"],
+              "specialTax": null,
+              "id": "2026-11-10-z",
+              "dateLabel": "10.01.",
+              "weekdayDateLabel": "So. 10.01.",
+              "time": {
+                "interval": "21:00–06:00",
+                "endDate": "2027-01-11",
+                "nextDay": true,
+                "endDateLabel": "11.01.",
+                "endWeekdayDateLabel": "Mo. 11.01."
+              }
+            }
+          ],
+          "premiumCard": {
+            "title": "Zeitzuschläge",
+            "totalCents": 5655,
+            "taxFreeCents": 5655,
+            "taxableCents": 0
+          },
+          "showFilters": true
+        }
+      }
+    },
+    {
+      "id": "services-ready-2027-01-PAYOUT-true",
+      "input": {
+        "work": {
+          "profileRow": {
+            "display_name": null,
+            "employer_name": null,
+            "federal_state": "NW",
+            "holiday_region": "NONE",
+            "weekly_minutes": 2310,
+            "time_zone": "Europe/Berlin",
+            "industry": null,
+            "manual_monthly_gross_cents": null,
+            "pay_group": "P8",
+            "pay_level": 3,
+            "tariff_sector": "BT_K",
+            "tariff_region": "OTHER",
+            "full_time_weekly_minutes": 2310,
+            "regular_rotating_night_work": null,
+            "sunday_holiday_work_eligible": null,
+            "all_employment_work_recorded": null,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-07-01T00:00:00Z"
+          },
+          "salaryRows": []
+        },
+        "shiftRows": [
+          {
+            "special_duty_json": null,
+            "id": "2026-11-10-z",
+            "date": "2027-01-10",
+            "template_id": null,
+            "title": "Dienst",
+            "type": "NIGHT",
+            "all_day": 0,
+            "start_time": "21:00",
+            "end_time": "06:00",
+            "break_minutes": 30,
+            "color": "#ABCDEF",
+            "symbol": "F",
+            "note": "Hallo",
+            "notification_json": null,
+            "alarm_enabled": 0,
+            "location_json": null,
+            "overtime_minutes": 0,
+            "tariff_overtime_confirmed": 0,
+            "holiday_premium_mode": "WITH_TIME_OFF",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00.123456789Z",
+            "updated_at": "2026-07-01T00:00:00Z",
+            "deleted_at": null
+          }
+        ],
+        "appointmentRows": [],
+        "platformCollationRanks": {
+          "": 0,
+          "#ABCDEF": 1,
+          "06:00": 2,
+          "14:00": 3,
+          "2026-01-01T00:00:00.123456789Z": 4,
+          "2026-01-10": 5,
+          "2026-01-10-ä": 6,
+          "2026-01-10-ä": 6,
+          "2026-01-10-z": 7,
+          "2026-07-01T00:00:00Z": 8,
+          "2026-07-10": 9,
+          "2026-07-10-ä": 10,
+          "2026-07-10-ä": 10,
+          "2026-07-10-z": 11,
+          "2026-11-10": 12,
+          "2026-11-10-ä": 13,
+          "2026-11-10-ä": 13,
+          "2026-11-10-z": 14,
+          "21:00": 15,
+          "Dienst": 16,
+          "EARLY": 17,
+          "F": 18,
+          "Hallo": 19,
+          "NIGHT": 20,
+          "SHIFT": 21,
+          "WITH_TIME_OFF": 22
+        },
+        "pattern": {
+          "workplaceCoverage": "UNKNOWN",
+          "assignment": "UNKNOWN",
+          "updatedAt": null
+        },
+        "timeline": [
+          {
+            "settings": {
+              "version": 2,
+              "month": "2026-01",
+              "profile": {
+                "birthDate": "1990-01-15",
+                "taxClass": 1,
+                "factorPermille": null,
+                "churchTaxRatePercent": 0,
+                "childAllowanceHalfUnits": 0,
+                "isParent": false,
+                "childrenUnder25": 0,
+                "worksInSaxony": false,
+                "healthAdditionalRateBps": 290,
+                "monthlyTaxAllowanceCents": 0
+              },
+              "specialCases": [],
+              "sfnBasicHourlyPayCents": null,
+              "automation": {
+                "fullMonthAndPayConfirmed": true,
+                "plannedWorkConfirmed": true,
+                "additionalRecurringGrossCents": 0,
+                "additionalNetDeductionCents": 0,
+                "pensionScheme": "NONE"
+              }
+            },
+            "revision": 1,
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "preferences": {
+          "version": 1,
+          "periods": [
+            {
+              "effectiveMonth": "2025-01",
+              "delays": {
+                "PREMIUMS": 0,
+                "MONTHLY_ALLOWANCE": 0,
+                "HOURLY_ALLOWANCE": 0,
+                "OVERTIME": 0,
+                "SPECIAL_DUTY": 0
+              }
+            }
+          ],
+          "reviewedEmptyMonths": [],
+          "socialInsuranceAttribution": "CASH_VARIABLE"
+        },
+        "month": "2027-01",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": true
+      },
+      "entries": [
+        {
+          "kind": "SHIFT",
+          "specialDuty": null,
+          "id": "2026-11-10-z",
+          "date": "2027-01-10",
+          "templateId": null,
+          "title": "Dienst",
+          "type": "NIGHT",
+          "allDay": false,
+          "startTime": "21:00",
+          "endTime": "06:00",
+          "breakMinutes": 30,
+          "color": "#ABCDEF",
+          "symbol": "F",
+          "note": "Hallo",
+          "notification": null,
+          "alarmEnabled": false,
+          "location": null,
+          "overtimeMinutes": 0,
+          "tariffOvertimeConfirmed": false,
+          "holidayPremiumMode": "WITH_TIME_OFF",
+          "revision": 1,
+          "createdAt": "2026-01-01T00:00:00.123456789Z",
+          "updatedAt": "2026-07-01T00:00:00Z",
+          "deletedAt": null
+        }
+      ],
+      "baseCandidates": [
+        "2026-01-01T00:00:00.123456789Z",
+        "2026-11-10-z",
+        "2027-01-10",
+        "21:00",
+        "Dienst"
+      ],
+      "requiredComparisonStrings": ["", "2026-11-10-z", "2027-01-10", "21:00"],
+      "platformCollationRanks": {
+        "": 0,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 1,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":0,\"kind\":\"SPLIT\",\"parts\":[{\"breakMinutes\":15,\"end\":1200,\"start\":960}],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 2,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"America/New_York\",\"version\":1}": 3,
+        "{\"callouts\":[],\"calloutsComplete\":false,\"endDay\":1,\"kind\":\"STANDBY\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 4,
+        "{\"callouts\":[],\"calloutsComplete\":true,\"endDay\":0,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 5,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":19000,\"end\":19030,\"kind\":\"REMOTE\",\"returned\":19030,\"start\":19000}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 6,
+        "{\"callouts\":[{\"breakMinutes\":0,\"departure\":20130,\"end\":20160,\"kind\":\"REMOTE\",\"returned\":20160,\"start\":20130}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 7,
+        "{\"callouts\":[{\"breakMinutes\":5,\"departure\":1430,\"end\":1470,\"kind\":\"ON_SITE\",\"returned\":1480,\"start\":1445}],\"calloutsComplete\":true,\"endDay\":1,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 8,
+        "{\"callouts\":[{\"start\":0,\"end\":30,\"kind\":\"REMOTE\",\"departure\":0,\"returned\":30,\"breakMinutes\":0},{\"start\":120,\"end\":150,\"kind\":\"REMOTE\",\"departure\":120,\"returned\":150,\"breakMinutes\":0},{\"start\":240,\"end\":270,\"kind\":\"REMOTE\",\"departure\":240,\"returned\":270,\"breakMinutes\":0},{\"start\":360,\"end\":390,\"kind\":\"REMOTE\",\"departure\":360,\"returned\":390,\"breakMinutes\":0},{\"start\":480,\"end\":510,\"kind\":\"REMOTE\",\"departure\":480,\"returned\":510,\"breakMinutes\":0},{\"start\":600,\"end\":630,\"kind\":\"REMOTE\",\"departure\":600,\"returned\":630,\"breakMinutes\":0},{\"start\":720,\"end\":750,\"kind\":\"REMOTE\",\"departure\":720,\"returned\":750,\"breakMinutes\":0},{\"start\":840,\"end\":870,\"kind\":\"REMOTE\",\"departure\":840,\"returned\":870,\"breakMinutes\":0},{\"start\":960,\"end\":990,\"kind\":\"REMOTE\",\"departure\":960,\"returned\":990,\"breakMinutes\":0},{\"start\":1080,\"end\":1110,\"kind\":\"REMOTE\",\"departure\":1080,\"returned\":1110,\"breakMinutes\":0},{\"start\":1200,\"end\":1230,\"kind\":\"REMOTE\",\"departure\":1200,\"returned\":1230,\"breakMinutes\":0},{\"start\":1320,\"end\":1350,\"kind\":\"REMOTE\",\"departure\":1320,\"returned\":1350,\"breakMinutes\":0},{\"start\":1440,\"end\":1470,\"kind\":\"REMOTE\",\"departure\":1440,\"returned\":1470,\"breakMinutes\":0},{\"start\":1560,\"end\":1590,\"kind\":\"REMOTE\",\"departure\":1560,\"returned\":1590,\"breakMinutes\":0},{\"start\":1680,\"end\":1710,\"kind\":\"REMOTE\",\"departure\":1680,\"returned\":1710,\"breakMinutes\":0},{\"start\":1800,\"end\":1830,\"kind\":\"REMOTE\",\"departure\":1800,\"returned\":1830,\"breakMinutes\":0},{\"start\":1920,\"end\":1950,\"kind\":\"REMOTE\",\"departure\":1920,\"returned\":1950,\"breakMinutes\":0},{\"start\":2040,\"end\":2070,\"kind\":\"REMOTE\",\"departure\":2040,\"returned\":2070,\"breakMinutes\":0},{\"start\":2160,\"end\":2190,\"kind\":\"REMOTE\",\"departure\":2160,\"returned\":2190,\"breakMinutes\":0},{\"start\":2280,\"end\":2310,\"kind\":\"REMOTE\",\"departure\":2280,\"returned\":2310,\"breakMinutes\":0},{\"start\":2400,\"end\":2430,\"kind\":\"REMOTE\",\"departure\":2400,\"returned\":2430,\"breakMinutes\":0},{\"start\":2520,\"end\":2550,\"kind\":\"REMOTE\",\"departure\":2520,\"returned\":2550,\"breakMinutes\":0},{\"start\":2640,\"end\":2670,\"kind\":\"REMOTE\",\"departure\":2640,\"returned\":2670,\"breakMinutes\":0},{\"start\":2760,\"end\":2790,\"kind\":\"REMOTE\",\"departure\":2760,\"returned\":2790,\"breakMinutes\":0},{\"start\":2880,\"end\":2910,\"kind\":\"REMOTE\",\"departure\":2880,\"returned\":2910,\"breakMinutes\":0},{\"start\":3000,\"end\":3030,\"kind\":\"REMOTE\",\"departure\":3000,\"returned\":3030,\"breakMinutes\":0},{\"start\":3120,\"end\":3150,\"kind\":\"REMOTE\",\"departure\":3120,\"returned\":3150,\"breakMinutes\":0},{\"start\":3240,\"end\":3270,\"kind\":\"REMOTE\",\"departure\":3240,\"returned\":3270,\"breakMinutes\":0},{\"start\":3360,\"end\":3390,\"kind\":\"REMOTE\",\"departure\":3360,\"returned\":3390,\"breakMinutes\":0},{\"start\":3480,\"end\":3510,\"kind\":\"REMOTE\",\"departure\":3480,\"returned\":3510,\"breakMinutes\":0},{\"start\":3600,\"end\":3630,\"kind\":\"REMOTE\",\"departure\":3600,\"returned\":3630,\"breakMinutes\":0},{\"start\":3720,\"end\":3750,\"kind\":\"REMOTE\",\"departure\":3720,\"returned\":3750,\"breakMinutes\":0},{\"start\":3840,\"end\":3870,\"kind\":\"REMOTE\",\"departure\":3840,\"returned\":3870,\"breakMinutes\":0},{\"start\":3960,\"end\":3990,\"kind\":\"REMOTE\",\"departure\":3960,\"returned\":3990,\"breakMinutes\":0},{\"start\":4080,\"end\":4110,\"kind\":\"REMOTE\",\"departure\":4080,\"returned\":4110,\"breakMinutes\":0},{\"start\":4200,\"end\":4230,\"kind\":\"REMOTE\",\"departure\":4200,\"returned\":4230,\"breakMinutes\":0},{\"start\":4320,\"end\":4350,\"kind\":\"REMOTE\",\"departure\":4320,\"returned\":4350,\"breakMinutes\":0},{\"start\":4440,\"end\":4470,\"kind\":\"REMOTE\",\"departure\":4440,\"returned\":4470,\"breakMinutes\":0},{\"start\":4560,\"end\":4590,\"kind\":\"REMOTE\",\"departure\":4560,\"returned\":4590,\"breakMinutes\":0},{\"start\":4680,\"end\":4710,\"kind\":\"REMOTE\",\"departure\":4680,\"returned\":4710,\"breakMinutes\":0},{\"start\":4800,\"end\":4830,\"kind\":\"REMOTE\",\"departure\":4800,\"returned\":4830,\"breakMinutes\":0},{\"start\":4920,\"end\":4950,\"kind\":\"REMOTE\",\"departure\":4920,\"returned\":4950,\"breakMinutes\":0},{\"start\":5040,\"end\":5070,\"kind\":\"REMOTE\",\"departure\":5040,\"returned\":5070,\"breakMinutes\":0},{\"start\":5160,\"end\":5190,\"kind\":\"REMOTE\",\"departure\":5160,\"returned\":5190,\"breakMinutes\":0},{\"start\":5280,\"end\":5310,\"kind\":\"REMOTE\",\"departure\":5280,\"returned\":5310,\"breakMinutes\":0},{\"start\":5400,\"end\":5430,\"kind\":\"REMOTE\",\"departure\":5400,\"returned\":5430,\"breakMinutes\":0},{\"start\":5520,\"end\":5550,\"kind\":\"REMOTE\",\"departure\":5520,\"returned\":5550,\"breakMinutes\":0},{\"start\":5640,\"end\":5670,\"kind\":\"REMOTE\",\"departure\":5640,\"returned\":5670,\"breakMinutes\":0},{\"start\":5760,\"end\":5790,\"kind\":\"REMOTE\",\"departure\":5760,\"returned\":5790,\"breakMinutes\":0},{\"start\":5880,\"end\":5910,\"kind\":\"REMOTE\",\"departure\":5880,\"returned\":5910,\"breakMinutes\":0},{\"start\":6000,\"end\":6030,\"kind\":\"REMOTE\",\"departure\":6000,\"returned\":6030,\"breakMinutes\":0},{\"start\":6120,\"end\":6150,\"kind\":\"REMOTE\",\"departure\":6120,\"returned\":6150,\"breakMinutes\":0},{\"start\":6240,\"end\":6270,\"kind\":\"REMOTE\",\"departure\":6240,\"returned\":6270,\"breakMinutes\":0},{\"start\":6360,\"end\":6390,\"kind\":\"REMOTE\",\"departure\":6360,\"returned\":6390,\"breakMinutes\":0},{\"start\":6480,\"end\":6510,\"kind\":\"REMOTE\",\"departure\":6480,\"returned\":6510,\"breakMinutes\":0},{\"start\":6600,\"end\":6630,\"kind\":\"REMOTE\",\"departure\":6600,\"returned\":6630,\"breakMinutes\":0},{\"start\":6720,\"end\":6750,\"kind\":\"REMOTE\",\"departure\":6720,\"returned\":6750,\"breakMinutes\":0},{\"start\":6840,\"end\":6870,\"kind\":\"REMOTE\",\"departure\":6840,\"returned\":6870,\"breakMinutes\":0},{\"start\":6960,\"end\":6990,\"kind\":\"REMOTE\",\"departure\":6960,\"returned\":6990,\"breakMinutes\":0},{\"start\":7080,\"end\":7110,\"kind\":\"REMOTE\",\"departure\":7080,\"returned\":7110,\"breakMinutes\":0},{\"start\":7200,\"end\":7230,\"kind\":\"REMOTE\",\"departure\":7200,\"returned\":7230,\"breakMinutes\":0},{\"start\":7320,\"end\":7350,\"kind\":\"REMOTE\",\"departure\":7320,\"returned\":7350,\"breakMinutes\":0},{\"start\":7440,\"end\":7470,\"kind\":\"REMOTE\",\"departure\":7440,\"returned\":7470,\"breakMinutes\":0},{\"start\":7560,\"end\":7590,\"kind\":\"REMOTE\",\"departure\":7560,\"returned\":7590,\"breakMinutes\":0}],\"calloutsComplete\":true,\"endDay\":14,\"kind\":\"ON_CALL\",\"parts\":[],\"settlement\":\"UNKNOWN\",\"standbyLevel\":\"UNKNOWN\",\"timeZone\":\"Europe/Berlin\",\"version\":1}": 9,
+        "{\"payGroup\":\"E9a\",\"payLevel\":3,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 10,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"fullTimeWeeklyMinutes\":2310}": 11,
+        "{\"payGroup\":\"KR7\",\"payLevel\":3,\"universityRegion\":\"WEST\"}": 12,
+        "{\"payGroup\":\"PUK7\",\"payLevel\":3}": 13,
+        "{\"trainingYear\":2,\"sector\":\"BT_K\",\"tariffRegion\":\"OTHER\"}": 14,
+        "{\"trainingYear\":2,\"universityRegion\":\"WEST\",\"employerScope\":\"SECTION_43\"}": 15,
+        "{\"version\":1,\"kind\":\"SPLIT\",\"timeZone\":\"UTC\",\"endDay\":0,\"parts\":[{\"start\":1440,\"end\":1500,\"breakMinutes\":0},{\"start\":1560,\"end\":1620,\"breakMinutes\":0},{\"start\":1680,\"end\":1740,\"breakMinutes\":0},{\"start\":1800,\"end\":1860,\"breakMinutes\":0},{\"start\":1920,\"end\":1980,\"breakMinutes\":0},{\"start\":2040,\"end\":2100,\"breakMinutes\":0},{\"start\":2160,\"end\":2220,\"breakMinutes\":0},{\"start\":2280,\"end\":2340,\"breakMinutes\":0}],\"callouts\":[],\"calloutsComplete\":false,\"standbyLevel\":\"UNKNOWN\",\"settlement\":\"UNKNOWN\"}": 16,
+        "§ 8 Abs. 3 TVöD AT": 17,
+        "#123456": 18,
+        "#ABCDEF": 19,
+        "#EA5B55": 20,
+        "00:00": 21,
+        "02:00": 22,
+        "04:00": 23,
+        "06:00": 24,
+        "07:00": 25,
+        "08:00": 26,
+        "10:00": 27,
+        "12:00": 28,
+        "14:00": 29,
+        "16:00": 30,
+        "18:00": 31,
+        "1990-01-15": 32,
+        "2025-01": 33,
+        "2025-11": 34,
+        "2025-12": 35,
+        "2026-01": 36,
+        "2026-01-01T00:00:00.123456789Z": 37,
+        "2026-01-01T00:00:00Z": 38,
+        "2026-01-10": 39,
+        "2026-01-10-ä": 40,
+        "2026-01-10-ä": 40,
+        "2026-01-10-z": 41,
+        "2026-03-07": 42,
+        "2026-03-28": 43,
+        "2026-05": 44,
+        "2026-06": 45,
+        "2026-07": 46,
+        "2026-07-01": 47,
+        "2026-07-01T00:00:00Z": 48,
+        "2026-07-02": 49,
+        "2026-07-03": 50,
+        "2026-07-04": 51,
+        "2026-07-05": 52,
+        "2026-07-06": 53,
+        "2026-07-07": 54,
+        "2026-07-08": 55,
+        "2026-07-09": 56,
+        "2026-07-10": 57,
+        "2026-07-10-ä": 58,
+        "2026-07-10-ä": 58,
+        "2026-07-10-z": 59,
+        "2026-07-11": 60,
+        "2026-07-12": 61,
+        "2026-07-13": 62,
+        "2026-07-14": 63,
+        "2026-07-15": 64,
+        "2026-07-31": 65,
+        "2026-08": 66,
+        "2026-08-01": 67,
+        "2026-08-12": 68,
+        "2026-09": 69,
+        "2026-10": 70,
+        "2026-10-24": 71,
+        "2026-10-31": 72,
+        "2026-11": 73,
+        "2026-11-01": 74,
+        "2026-11-10": 75,
+        "2026-11-10-ä": 76,
+        "2026-11-10-ä": 76,
+        "2026-11-10-z": 77,
+        "2027-01": 78,
+        "2027-01-10": 79,
+        "21:00": 80,
+        "22:00": 81,
+        "23:00": 82,
+        "23:30": 83,
+        "ä": 84,
+        "ä": 84,
+        "Ansprüche aus 2025-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 85,
+        "Ansprüche aus 2025-12 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 86,
+        "Ansprüche aus 2026-01 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 87,
+        "Ansprüche aus 2026-09 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 88,
+        "Ansprüche aus 2026-10 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 89,
+        "Ansprüche aus 2026-11 konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.": 90,
+        "Arbeitslosenversicherung": 91,
+        "available": 92,
+        "Bereitschaften": 93,
+        "Bestätige noch, ob alle Einsätze erfasst sind oder kein Einsatz stattgefunden hat.": 94,
+        "BT_K": 95,
+        "care-insurance": 96,
+        "CASH_VARIABLE": 97,
+        "credit-base": 98,
+        "credit-base:part:0": 99,
+        "credit-base:part:1": 100,
+        "cross-month:ä": 101,
+        "cross-month:ä:part:0": 102,
+        "cross-month:ä:part:1": 103,
+        "cross-month:ä:part:2": 104,
+        "cross-month:ä:part:3": 105,
+        "cross-month:ä:part:4": 106,
+        "cross-month:ä:part:5": 107,
+        "cross-month:ä:part:6": 108,
+        "cross-month:ä:part:7": 109,
+        "cross-month:ä:part:8": 110,
+        "CUSTOM": 111,
+        "Die Gehaltsgrundlage für 2026-01 fehlt. Prüfe deine Gehaltsangaben.": 112,
+        "Die Gehaltsgrundlage für 2026-11 fehlt. Prüfe deine Gehaltsangaben.": 113,
+        "Dienst": 114,
+        "Dienst 0": 115,
+        "duty-callout:credit-base:0": 116,
+        "duty-callout:maximum-callouts:0": 117,
+        "duty-callout:maximum-callouts:1": 118,
+        "duty-callout:maximum-callouts:10": 119,
+        "duty-callout:maximum-callouts:11": 120,
+        "duty-callout:maximum-callouts:12": 121,
+        "duty-callout:maximum-callouts:13": 122,
+        "duty-callout:maximum-callouts:14": 123,
+        "duty-callout:maximum-callouts:15": 124,
+        "duty-callout:maximum-callouts:16": 125,
+        "duty-callout:maximum-callouts:17": 126,
+        "duty-callout:maximum-callouts:18": 127,
+        "duty-callout:maximum-callouts:19": 128,
+        "duty-callout:maximum-callouts:2": 129,
+        "duty-callout:maximum-callouts:20": 130,
+        "duty-callout:maximum-callouts:21": 131,
+        "duty-callout:maximum-callouts:22": 132,
+        "duty-callout:maximum-callouts:23": 133,
+        "duty-callout:maximum-callouts:24": 134,
+        "duty-callout:maximum-callouts:25": 135,
+        "duty-callout:maximum-callouts:26": 136,
+        "duty-callout:maximum-callouts:27": 137,
+        "duty-callout:maximum-callouts:28": 138,
+        "duty-callout:maximum-callouts:29": 139,
+        "duty-callout:maximum-callouts:3": 140,
+        "duty-callout:maximum-callouts:30": 141,
+        "duty-callout:maximum-callouts:31": 142,
+        "duty-callout:maximum-callouts:32": 143,
+        "duty-callout:maximum-callouts:33": 144,
+        "duty-callout:maximum-callouts:34": 145,
+        "duty-callout:maximum-callouts:35": 146,
+        "duty-callout:maximum-callouts:36": 147,
+        "duty-callout:maximum-callouts:37": 148,
+        "duty-callout:maximum-callouts:38": 149,
+        "duty-callout:maximum-callouts:39": 150,
+        "duty-callout:maximum-callouts:4": 151,
+        "duty-callout:maximum-callouts:40": 152,
+        "duty-callout:maximum-callouts:41": 153,
+        "duty-callout:maximum-callouts:42": 154,
+        "duty-callout:maximum-callouts:43": 155,
+        "duty-callout:maximum-callouts:44": 156,
+        "duty-callout:maximum-callouts:45": 157,
+        "duty-callout:maximum-callouts:46": 158,
+        "duty-callout:maximum-callouts:47": 159,
+        "duty-callout:maximum-callouts:48": 160,
+        "duty-callout:maximum-callouts:49": 161,
+        "duty-callout:maximum-callouts:5": 162,
+        "duty-callout:maximum-callouts:50": 163,
+        "duty-callout:maximum-callouts:51": 164,
+        "duty-callout:maximum-callouts:52": 165,
+        "duty-callout:maximum-callouts:53": 166,
+        "duty-callout:maximum-callouts:54": 167,
+        "duty-callout:maximum-callouts:55": 168,
+        "duty-callout:maximum-callouts:56": 169,
+        "duty-callout:maximum-callouts:57": 170,
+        "duty-callout:maximum-callouts:58": 171,
+        "duty-callout:maximum-callouts:59": 172,
+        "duty-callout:maximum-callouts:6": 173,
+        "duty-callout:maximum-callouts:60": 174,
+        "duty-callout:maximum-callouts:61": 175,
+        "duty-callout:maximum-callouts:62": 176,
+        "duty-callout:maximum-callouts:63": 177,
+        "duty-callout:maximum-callouts:7": 178,
+        "duty-callout:maximum-callouts:8": 179,
+        "duty-callout:maximum-callouts:9": 180,
+        "EARLY": 181,
+        "EARNED": 182,
+        "Einsatzvergütung und Zuschläge sind zusätzlich zur Pauschale noch offen.": 183,
+        "Europe/Berlin": 184,
+        "F": 185,
+        "Feiertag": 186,
+        "Für 2025-11 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 187,
+        "Für 2025-12 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 188,
+        "Für 2026-05 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 189,
+        "Für 2026-06 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 190,
+        "Für 2026-07 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 191,
+        "Für 2026-09 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 192,
+        "Für 2026-10 fehlen Dienste. Ergänze den Monat oder bestätige ausdrücklich, dass keine Dienste vorliegen.": 193,
+        "Für Bereitschaften aus 2026-07 fehlen noch Abrechnungsangaben.": 194,
+        "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.": 195,
+        "Hallo": 196,
+        "health-insurance": 197,
+        "HOLIDAY": 198,
+        "HOURLY_ALLOWANCE": 199,
+        "Kirchensteuer": 200,
+        "Krankenversicherung": 201,
+        "Lohnsteuer": 202,
+        "maximum-callouts": 203,
+        "Mehrtägige Rufbereitschaft: die Aufteilung der Pauschalen ist noch offen.": 204,
+        "MISSING_MONTH": 205,
+        "MONTHLY_ALLOWANCE": 206,
+        "N": 207,
+        "Nacht": 208,
+        "night": 209,
+        "NIGHT": 210,
+        "NONE": 211,
+        "NW": 212,
+        "OTHER": 213,
+        "OVERTIME": 214,
+        "P8": 215,
+        "PAYOUT": 216,
+        "pension-insurance": 217,
+        "Pflegeversicherung": 218,
+        "PREMIUMS": 219,
+        "READY": 220,
+        "Rentenversicherung": 221,
+        "Rufbereitschaft": 222,
+        "salary_nursing_training": 223,
+        "salary_tval_pflege": 224,
+        "salary_tvl_kr": 225,
+        "salary_tvuk_nursing": 226,
+        "salary_vka_e": 227,
+        "Samstag": 228,
+        "Samstag 13–21 Uhr": 229,
+        "saturday": 230,
+        "SATURDAY": 231,
+        "Schichtdienst (6–20 Uhr)": 232,
+        "Schichtdienst aus den erfassten Diensten geschätzt. Nachtpausen werden als unbezahlte Pausen berücksichtigt, solange die Voraussetzung für eine bezahlte Pause nicht bestätigt ist.": 233,
+        "Schichtmuster aus den erfassten Diensten geschätzt; keine Arbeitgeberentscheidung.": 234,
+        "sfn": 235,
+        "shift": 236,
+        "simpleSalary.tvhKr": 237,
+        "Solidaritätszuschlag": 238,
+        "Sonntag": 239,
+        "SPECIAL_DUTY": 240,
+        "special-duty": 241,
+        "sunday": 242,
+        "SUNDAY": 243,
+        "sunrise": 244,
+        "tval-night": 245,
+        "tval-saturday": 246,
+        "tval-sunday": 247,
+        "tvh-night": 248,
+        "tvh-saturday": 249,
+        "tvh-sunday": 250,
+        "tvl-night": 251,
+        "tvl-saturday": 252,
+        "tvl-sunday": 253,
+        "tvuk-night-2000": 254,
+        "tvuk-night-3500": 255,
+        "tvuk-shift-280": 256,
+        "tvuk-sunday-4000": 257,
+        "unavailable": 258,
+        "UNAVAILABLE": 259,
+        "unemployment-insurance": 260,
+        "UNKNOWN": 261,
+        "Vorfeiertag": 262,
+        "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch.": 263,
+        "wage-tax": 264,
+        "Wähle für deine Einsätze Auszahlung oder den vereinbarten Freizeitausgleich.": 265,
+        "Weitere": 266,
+        "Weitere Netto-Abzüge": 267,
+        "WITH_TIME_OFF": 268,
+        "Zusatzversorgung": 269
+      },
+      "expected": {
+        "month": "2027-01",
+        "perspective": "PAYOUT",
+        "filter": null,
+        "includeSpecialDutyPay": true,
+        "payAvailable": true,
+        "projectionState": {
+          "available": true,
+          "issues": [],
+          "warnings": [
+            "Gehaltsbeträge sind Prognosen. Prüfe die Ansprüche und Auszahlungsmonate anhand deiner Abrechnung.",
+            "Vorläufig: Keine eindeutige Nachtdienstfolge für diesen Monat. Die Muster-Schätzung ist kein bestätigter Anspruch."
+          ]
+        },
+        "breakdown": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            },
+            {
+              "key": "sunday",
+              "label": "Sonntag",
+              "amount": 17.31
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "shiftId": "2026-11-10-z",
+              "date": "2027-01-10",
+              "netMinutes": 510,
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                },
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 180,
+                  "percentage": 25,
+                  "hourlyRate": 23.08,
+                  "amount": 17.31,
+                  "amountCents": 1731,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "overtimeBaseAmount": 0,
+              "overtimePremiumAmount": 0,
+              "totalAmount": 56.55,
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2027-01-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "premiumAmount": 56.55
+            }
+          ],
+          "amount": 56.55
+        },
+        "salaryRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2027-01-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2027-01-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 390,
+              "paidPremiumCents": 5655,
+              "taxFreeCents": 5655,
+              "socialInsuranceFreeCents": 5655,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                },
+                {
+                  "category": "SUNDAY",
+                  "paidPremiumCents": 1731,
+                  "taxFreeCents": 1731,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              },
+              {
+                "key": "sunday",
+                "label": "Sonntag",
+                "minutes": 180,
+                "percentage": 25,
+                "hourlyRate": 23.08,
+                "amount": 17.31,
+                "amountCents": 1731,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 5655,
+            "premiumAmount": 56.55
+          }
+        ],
+        "earnedRows": [
+          {
+            "id": "2026-11-10-z",
+            "shift": {
+              "id": "2026-11-10-z",
+              "date": "2027-01-10",
+              "title": "Dienst",
+              "type": "NIGHT",
+              "allDay": false,
+              "startTime": "21:00",
+              "endTime": "06:00",
+              "breakMinutes": 30,
+              "color": "#ABCDEF",
+              "symbol": "F"
+            },
+            "date": "2027-01-10",
+            "tax": {
+              "shiftId": "2026-11-10-z",
+              "workedMinutes": 510,
+              "nightMinutes": 510,
+              "dayMinutes": 390,
+              "paidPremiumCents": 5655,
+              "taxFreeCents": 5655,
+              "socialInsuranceFreeCents": 5655,
+              "taxablePremiumCents": 0,
+              "socialInsuranceLiablePremiumCents": 0,
+              "premiumBreakdown": [
+                {
+                  "category": "NIGHT",
+                  "paidPremiumCents": 3924,
+                  "taxFreeCents": 3924,
+                  "taxablePremiumCents": 0
+                },
+                {
+                  "category": "SUNDAY",
+                  "paidPremiumCents": 1731,
+                  "taxFreeCents": 1731,
+                  "taxablePremiumCents": 0
+                }
+              ]
+            },
+            "premiumLines": [
+              {
+                "key": "night",
+                "label": "Nacht",
+                "minutes": 510,
+                "percentage": 20,
+                "hourlyRate": 23.08,
+                "amount": 39.24,
+                "amountCents": 3924,
+                "hourlyRateCents": 2308
+              },
+              {
+                "key": "sunday",
+                "label": "Sonntag",
+                "minutes": 180,
+                "percentage": 25,
+                "hourlyRate": 23.08,
+                "amount": 17.31,
+                "amountCents": 1731,
+                "hourlyRateCents": 2308
+              }
+            ],
+            "amountCents": 5655,
+            "premiumAmount": 56.55
+          }
+        ],
+        "serviceSummary": {
+          "categories": [
+            {
+              "key": "night",
+              "label": "Nacht",
+              "amount": 39.24
+            },
+            {
+              "key": "sunday",
+              "label": "Sonntag",
+              "amount": 17.31
+            }
+          ],
+          "activeFilter": null,
+          "rows": [
+            {
+              "id": "2026-11-10-z",
+              "shift": {
+                "id": "2026-11-10-z",
+                "date": "2027-01-10",
+                "title": "Dienst",
+                "type": "NIGHT",
+                "allDay": false,
+                "startTime": "21:00",
+                "endTime": "06:00",
+                "breakMinutes": 30,
+                "color": "#ABCDEF",
+                "symbol": "F"
+              },
+              "date": "2027-01-10",
+              "tax": {
+                "shiftId": "2026-11-10-z",
+                "workedMinutes": 510,
+                "nightMinutes": 510,
+                "dayMinutes": 390,
+                "paidPremiumCents": 5655,
+                "taxFreeCents": 5655,
+                "socialInsuranceFreeCents": 5655,
+                "taxablePremiumCents": 0,
+                "socialInsuranceLiablePremiumCents": 0,
+                "premiumBreakdown": [
+                  {
+                    "category": "NIGHT",
+                    "paidPremiumCents": 3924,
+                    "taxFreeCents": 3924,
+                    "taxablePremiumCents": 0
+                  },
+                  {
+                    "category": "SUNDAY",
+                    "paidPremiumCents": 1731,
+                    "taxFreeCents": 1731,
+                    "taxablePremiumCents": 0
+                  }
+                ]
+              },
+              "premiumLines": [
+                {
+                  "key": "night",
+                  "label": "Nacht",
+                  "minutes": 510,
+                  "percentage": 20,
+                  "hourlyRate": 23.08,
+                  "amount": 39.24,
+                  "amountCents": 3924,
+                  "hourlyRateCents": 2308
+                },
+                {
+                  "key": "sunday",
+                  "label": "Sonntag",
+                  "minutes": 180,
+                  "percentage": 25,
+                  "hourlyRate": 23.08,
+                  "amount": 17.31,
+                  "amountCents": 1731,
+                  "hourlyRateCents": 2308
+                }
+              ],
+              "amountCents": 5655,
+              "premiumAmount": 56.55
+            }
+          ],
+          "totalCents": 5655,
+          "taxFreeCents": 5655
+        },
+        "premiumSummary": {
+          "rows": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 1731,
+              "free": 1731,
+              "taxable": 0
+            },
+            {
+              "category": "HOLIDAY",
+              "label": "Feiertag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "SATURDAY",
+              "label": "Samstag",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            },
+            {
+              "category": "OTHER",
+              "label": "Weitere",
+              "paid": 0,
+              "free": 0,
+              "taxable": 0
+            }
+          ],
+          "relevant": [
+            {
+              "category": "NIGHT",
+              "label": "Nacht",
+              "paid": 3924,
+              "free": 3924,
+              "taxable": 0
+            },
+            {
+              "category": "SUNDAY",
+              "label": "Sonntag",
+              "paid": 1731,
+              "free": 1731,
+              "taxable": 0
+            }
+          ],
+          "paidPremiumCents": 5655,
+          "taxFreeCents": 5655,
+          "socialInsuranceFreeCents": 5655,
+          "socialInsuranceLiablePremiumCents": 0
+        },
+        "specialAmounts": [],
+        "deductions": {
+          "totalCents": 140819,
+          "rows": [
+            {
+              "id": "wage-tax",
+              "label": "Lohnsteuer",
+              "amountCents": 53175
+            },
+            {
+              "id": "pension-insurance",
+              "label": "Rentenversicherung",
+              "amountCents": 37475
+            },
+            {
+              "id": "unemployment-insurance",
+              "label": "Arbeitslosenversicherung",
+              "amountCents": 5239
+            },
+            {
+              "id": "health-insurance",
+              "label": "Krankenversicherung",
+              "amountCents": 35259
+            },
+            {
+              "id": "care-insurance",
+              "label": "Pflegeversicherung",
+              "amountCents": 9671
+            }
+          ]
+        },
+        "netState": {
+          "state": "READY",
+          "value": {
+            "status": "available"
+          }
+        }
+      },
+      "sourceNetReason": null,
+      "expectedPresentation": {
+        "serviceDisplay": {
+          "forecastLabel": "2027 vorläufig · Abzüge nach Stand 2026",
+          "nightCompensatoryMinutes": 0,
+          "rows": [
+            {
+              "premiumHours": ["8:30", "3:00"],
+              "specialTax": null,
+              "id": "2026-11-10-z",
+              "dateLabel": "10.01.",
+              "weekdayDateLabel": "So. 10.01.",
+              "time": {
+                "interval": "21:00–06:00",
+                "endDate": "2027-01-11",
+                "nextDay": true,
+                "endDateLabel": "11.01.",
+                "endWeekdayDateLabel": "Mo. 11.01."
+              }
+            }
+          ],
+          "premiumCard": {
+            "title": "Zeitzuschläge",
+            "totalCents": 5655,
+            "taxFreeCents": 5655,
+            "taxableCents": 0
+          },
+          "showFilters": true
+        }
+      }
+    }
+  ]
+}
