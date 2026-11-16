@@ -42,7 +42,11 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "env": {
+          "LUNA_FULL_ENGINE": "1",
+          "LUNA_IOS_TARGETS": "aarch64-apple-ios"
+        }
       },
       "channel": "preview"
     },

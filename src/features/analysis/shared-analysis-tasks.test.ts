@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { readSharedAnalysisResult, requestSharedAnalysis } from "./shared-analysis-tasks";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 const accept = (value: unknown): value is number => typeof value === "number" && value >= 0;
 const base = () => ({
@@ -18,10 +19,70 @@ beforeEach(() => {
   vi.useFakeTimers();
 });
 afterEach(() => {
+  calendarPerformance.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 describe("shared analysis jobs", () => {
+  it("restores only after a disk miss and cancels before starting late work", async () => {
+    let release!: () => void;
+    const restore = vi.fn(
+      () =>
+        new Promise<void>((done) => {
+          release = done;
+        }),
+    );
+    const steps = vi.fn(function* () {
+        return 7;
+      }),
+      complete = vi.fn();
+    const pending = requestSharedAnalysis({ ...base(), restore, steps, complete });
+    expect(restore).toHaveBeenCalledOnce();
+    expect(steps).not.toHaveBeenCalled();
+    pending.cancel();
+    release();
+    await vi.runAllTimersAsync();
+    expect(steps).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+    const cached = requestSharedAnalysis({ ...base(), prepared: 9, restore, steps, complete });
+    expect(complete).toHaveBeenCalledWith(9);
+    expect(restore).toHaveBeenCalledOnce();
+    cached.cancel();
+  });
+  it("falls back to calculation when an optional restore fails", async () => {
+    const complete = vi.fn();
+    const lease = requestSharedAnalysis({
+      ...base(),
+      priority: 0,
+      restore: async () => {
+        throw new Error("unavailable");
+      },
+      steps: function* () {
+        return 7;
+      },
+      complete,
+    });
+    await vi.runAllTimersAsync();
+    expect(complete).toHaveBeenCalledWith(7);
+    lease.cancel();
+  });
+  it("separates result handover, persistence kickoff and retention in numeric diagnosis", () => {
+    calendarPerformance.start(true);
+    const lease = requestSharedAnalysis({
+      ...base(),
+      prepared: 7,
+      steps: function* () {
+        return 99;
+      },
+      complete: vi.fn(),
+    });
+    const phases = calendarPerformance
+      .report()
+      .events.filter((event) => event.kind === "analysis-cache-phase");
+    expect(phases.map((event) => event.values.phase)).toEqual([15, 16, 17]);
+    expect(phases.every((event) => Number.isFinite(event.values.duration))).toBe(true);
+    lease.cancel();
+  });
   it("publishes a memory-prepared success under its new write claim without another disk lookup", () => {
     const read = vi.fn(async () => null),
       write = vi.fn(async () => {}),

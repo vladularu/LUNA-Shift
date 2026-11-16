@@ -7,3 +7,6 @@ ios/
 assets/
 package-lock.json
 /supabase/.temp/
+
+# Frozen byte artifacts: exact hashes are checked by verify-preview-recovery-scope.mjs.
+/modules/luna-engine/reference/

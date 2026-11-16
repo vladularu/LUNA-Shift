@@ -2,7 +2,7 @@ import type { StyleProp, ViewStyle } from "react-native";
 import { Pressable, View } from "react-native";
 
 import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, SELECTION_METRICS, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SELECTION_METRICS, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
@@ -98,7 +98,6 @@ export function SelectionRow({
   accessibilityLabel,
   testID,
   style,
-  separator = false,
   navigation = false,
 }: SelectionOptionProps & { readonly separator?: boolean; readonly navigation?: boolean }) {
   const palette = usePalette();
@@ -119,8 +118,8 @@ export function SelectionRow({
           gap: SPACING.lg,
           paddingHorizontal: SPACING.lg,
           paddingVertical: SPACING.md,
-          borderBottomWidth: separator ? 1 : 0,
-          borderBottomColor: palette.separator,
+          borderRadius: RADII.control,
+          borderCurve: CORNER_CURVE,
           backgroundColor: selected ? palette.selectionTrack : "transparent",
           opacity: disabled
             ? SELECTION_METRICS.disabledOpacity

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AccessibilityInfo, Animated, type ViewStyle } from "react-native";
+import { AccessibilityInfo, Animated } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { moveListItem } from "@/domain/reorder";
@@ -47,7 +47,6 @@ export function ReorderableList({
   onMove,
   disabled = false,
   saveFailed = false,
-  cardStyle,
   scroll,
   testID,
 }: {
@@ -55,7 +54,6 @@ export function ReorderableList({
   readonly onMove: (id: string, index: number) => void | Promise<void>;
   readonly disabled?: boolean;
   readonly saveFailed?: boolean;
-  readonly cardStyle?: ViewStyle;
   readonly scroll?: ReorderScroll;
   readonly testID: string;
 }) {
@@ -257,12 +255,8 @@ export function ReorderableList({
       <SurfaceCard
         testID={testID}
         // Keep Fabric from reparenting shadow-clipping containers while a native
-        // row gesture is active. Preserve custom card geometry from master.
-        style={{
-          ...cardStyle,
-          height: layout.height + 2 * (cardStyle?.borderWidth ?? 1),
-          overflow: "visible",
-        }}
+        // row gesture is active.
+        style={{ height: layout.height + 2, overflow: "visible" }}
       >
         {order.map((id, index) => {
           const item = items.find((candidate) => candidate.id === id);

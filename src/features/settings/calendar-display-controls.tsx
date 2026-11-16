@@ -1,70 +1,16 @@
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
-import type { ComponentProps } from "react";
 import { Pressable, View } from "react-native";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { CALENDAR_HOLIDAY_COLORS } from "@/theme/calendar-day-tints";
 import { readableTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
-import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
+import { RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
+import { SurfaceCard } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
 import { ShiftColorSchemePicker } from "./shift-color-scheme-picker";
 import { CalendarChoiceRows } from "./calendar-choice-rows";
-import { LabeledSwitch } from "@/ui/labeled-switch";
-
-function DisplaySwitch({
-  label,
-  icon,
-  value,
-  onChange,
-  disabled,
-}: {
-  readonly label: string;
-  readonly icon: ComponentProps<typeof Ionicons>["name"];
-  readonly value: boolean;
-  readonly onChange: (value: boolean) => void;
-  readonly disabled: boolean;
-}) {
-  const palette = usePalette();
-  return (
-    <RowButton
-      title={label}
-      leading={
-        <Ionicons
-          name={icon}
-          size={24}
-          color={disabled ? palette.textMuted : palette.primary}
-          accessible={false}
-        />
-      }
-      trailing={
-        <Pressable
-          hitSlop={2}
-          accessibilityRole="switch"
-          accessibilityLabel={label}
-          accessibilityState={{ checked: value, disabled }}
-          disabled={disabled}
-          onPress={() => onChange(!value)}
-          style={{
-            minHeight: CONTROL_HEIGHT.regular,
-            minWidth: CONTROL_HEIGHT.regular,
-            justifyContent: "center",
-          }}
-        >
-          <View
-            pointerEvents="none"
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-          >
-            <LabeledSwitch label={label} value={value} disabled={disabled} accessible={false} />
-          </View>
-        </Pressable>
-      }
-    />
-  );
-}
 
 export function CalendarDisplayControls() {
   const preferences = useCalendarPreferences();
@@ -130,27 +76,25 @@ export function CalendarDisplayControls() {
       </SelectionGroup>
       <SelectionGroup title="Kalenderinhalt" testID="calendar-content-settings">
         <SurfaceCard>
-          <DisplaySwitch
-            label="Dienste & Abwesenheiten"
-            icon="briefcase-outline"
-            value={preferences.showShifts}
-            onChange={preferences.setShowShifts}
-            disabled={!preferences.ready}
-          />
-          <CardSeparator />
-          <DisplaySwitch
-            label="Termine"
-            icon="calendar-outline"
-            value={preferences.showAppointments}
-            onChange={preferences.setShowAppointments}
-            disabled={!preferences.ready}
-          />
-          <CardSeparator />
-          <DisplaySwitch
-            label="Feiertage"
-            icon="sparkles-outline"
-            value={preferences.showHolidays}
-            onChange={preferences.setShowHolidays}
+          <CalendarChoiceRows
+            label="Kalenderinhalt"
+            multiple
+            options={[
+              { value: "SHIFTS", label: "Dienste & Abwesenheiten" },
+              { value: "APPOINTMENTS", label: "Termine" },
+              { value: "HOLIDAYS", label: "Feiertage" },
+            ]}
+            value={[
+              ...(preferences.showShifts ? ["SHIFTS"] : []),
+              ...(preferences.showAppointments ? ["APPOINTMENTS"] : []),
+              ...(preferences.showHolidays ? ["HOLIDAYS"] : []),
+            ]}
+            onChange={(value) => {
+              if (value === "SHIFTS") preferences.setShowShifts(!preferences.showShifts);
+              if (value === "APPOINTMENTS")
+                preferences.setShowAppointments(!preferences.showAppointments);
+              if (value === "HOLIDAYS") preferences.setShowHolidays(!preferences.showHolidays);
+            }}
             disabled={!preferences.ready}
           />
         </SurfaceCard>

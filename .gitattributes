@@ -2,3 +2,6 @@
 
 .githooks/* text eol=lf
 .github/workflows/*.yml text eol=lf
+
+# Rust engine identity hashes exact source bytes; preserve the accepted inputs.
+modules/luna-engine/rust/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

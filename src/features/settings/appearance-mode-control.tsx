@@ -56,7 +56,7 @@ export function AppearanceModeControl({
         padding: inset,
         borderRadius: RADII.pill,
         borderCurve: CORNER_CURVE,
-        backgroundColor: palette.selectionTrack,
+        backgroundColor: palette.surface,
         opacity: disabled ? SELECTION_METRICS.disabledOpacity : 1,
       }}
     >

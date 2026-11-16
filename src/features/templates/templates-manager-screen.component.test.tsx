@@ -133,9 +133,7 @@ describe("TemplatesManagerScreen", () => {
       ...card,
       overflow: "visible",
     });
-    expect(screen.getByTestId("template-manager-sort")).toHaveStyle({
-      height: 136 + 3 * StyleSheet.hairlineWidth,
-    });
+    expect(screen.getByTestId("template-manager-sort")).toHaveStyle({ height: 138 });
     expect(screen.getByTestId("template-manager-sort-row-early")).toHaveStyle({
       paddingHorizontal: 0,
       paddingVertical: 0,

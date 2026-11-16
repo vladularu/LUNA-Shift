@@ -43,6 +43,19 @@ function check(entries: readonly ShiftEntry[], month = "2026-11", options = comp
 const last = (result: ReturnType<typeof check>) => result.assessment.windows.at(-1)!;
 
 describe("two complete free weekends in four calendar weeks", () => {
+  it("reuses duty evidence across months without retaining same-revision edits or deleted work", () => {
+    const duty = shift("2026-11-07");
+    const first = check([duty]);
+    expect(first.assessment.occupiedCount).toBe(1);
+    check([duty], "2026-12");
+    expect(check([duty])).toEqual(first);
+    Object.assign(duty, { type: "FREE", startTime: null, endTime: null });
+    expect(check([duty]).assessment.occupiedCount).toBe(0);
+    Object.assign(duty, { type: "DAY", startTime: "08:00", endTime: "16:00" });
+    expect(check([duty])).toEqual(first);
+    Object.assign(duty, { deletedAt: "2026-11-10" });
+    expect(check([duty]).assessment.occupiedCount).toBe(0);
+  });
   it("counts Sunday-owned month weekends and four complete Monday-Sunday weeks", () => {
     const { assessment, issues } = check([]);
     expect(assessment).toMatchObject({

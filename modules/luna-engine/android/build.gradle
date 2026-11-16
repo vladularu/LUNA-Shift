@@ -1,0 +1,25 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+group = 'app.luna.engine'
+version = '0.1.0'
+expoModule { canBePublished false }
+def engineArchitectures = (project.findProperty('reactNativeArchitectures') ?: 'armeabi-v7a,x86,x86_64,arm64-v8a').split(',')
+if (engineArchitectures.any { !['armeabi-v7a','x86','x86_64','arm64-v8a'].contains(it) }) {
+  throw new GradleException('Unsupported LUNA engine ABI')
+}
+android {
+  namespace 'app.luna.engine'
+  ndkVersion '27.1.12297006'
+  // Imported CMake dependencies are packaged once by externalNativeBuild.
+  sourceSets { main { jniLibs.srcDirs = [] } }
+  defaultConfig {
+    consumerProguardFiles 'consumer-rules.pro'
+    ndk { abiFilters(*engineArchitectures) }
+    externalNativeBuild { cmake { cppFlags '-std=c++17'; arguments '-DANDROID_STL=c++_static' } }
+  }
+  externalNativeBuild {
+    cmake { path 'CMakeLists.txt'; version '3.22.1' }
+  }
+}

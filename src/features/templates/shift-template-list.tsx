@@ -9,6 +9,7 @@ import { usePalette } from "@/theme/palette";
 import { cardTextStyle } from "@/theme/card-typography";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
+import { SurfaceCard } from "@/ui/design-system";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 
 export function shiftTemplateSubtitle(template: ShiftTemplate): string {
@@ -32,18 +33,7 @@ export function ShiftTemplateListCard({
   children,
   testID,
 }: PropsWithChildren<{ readonly testID?: string }>) {
-  const palette = usePalette();
-  return (
-    <View
-      style={[
-        styles.card,
-        { borderColor: palette.cardSeparator, backgroundColor: palette.surface },
-      ]}
-      testID={testID}
-    >
-      {children}
-    </View>
-  );
+  return <SurfaceCard testID={testID}>{children}</SurfaceCard>;
 }
 
 type ShiftTemplateRowMoreAction =
@@ -108,7 +98,7 @@ export function ShiftTemplateListRow({
         <View style={styles.copy}>
           <Text
             maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[styles.title, cardTextStyle(palette, "label")]}
+            style={[styles.title, { color: palette.text }]}
           >
             {title}
           </Text>
@@ -266,7 +256,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   separator: {
-    height: StyleSheet.hairlineWidth,
+    height: 0,
     marginLeft: 66,
   },
   addRow: {

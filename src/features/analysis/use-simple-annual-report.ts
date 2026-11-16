@@ -18,6 +18,9 @@ import {
   type AnnualAnalysisRequest,
 } from "./annual-analysis";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
+import { calendarPerformance } from "@/application/calendar-performance";
+import { annualRustRequest } from "./annual-rust-bridge";
+import { useAnnualRustCalculator } from "./use-annual-rust-calculator";
 interface AnnualReportState {
   readonly key: string;
   readonly resolver: RuleResolver;
@@ -63,6 +66,7 @@ export function useSimpleAnnualReport({
     retry: retryPreferences,
   } = useCheckPreferences();
   const stored = useAnalysisPersistentResults();
+  const calculator = useAnnualRustCalculator();
   const persistent = testMonths.length === 0 ? stored : null;
   const [retryRevision, setRetryRevision] = useState(0);
   const [state, setState] = useState<AnnualReportState | null>(null);
@@ -75,16 +79,19 @@ export function useSimpleAnnualReport({
   const request = useMemo<AnnualAnalysisRequest | null>(
     () =>
       enabled && profile !== null && youthEnabled !== null
-        ? {
-            year,
-            entries,
-            profile,
-            ruleResolver,
-            tariffDecisions,
-            workPatternSettings,
-            referenceDate,
-            youthProtection: youthEnabled,
-          }
+        ? annualRustRequest(
+            {
+              year,
+              entries,
+              profile,
+              ruleResolver,
+              tariffDecisions,
+              workPatternSettings,
+              referenceDate,
+              youthProtection: youthEnabled,
+            },
+            calculator,
+          )
         : null,
     [
       enabled,
@@ -96,6 +103,7 @@ export function useSimpleAnnualReport({
       tariffDecisions,
       workPatternSettings,
       referenceDate,
+      calculator,
     ],
   );
   const input = useRef(request);
@@ -140,17 +148,30 @@ export function useSimpleAnnualReport({
       (report) => {
         if (subscribed) setCoreState({ ...snapshot, report, fatalError: null });
       },
+      calculator,
     );
     return () => {
       subscribed = false;
       lease.cancel();
     };
-  }, [active, key, resolver, persistent, settled, retryRevision]);
+  }, [active, key, resolver, persistent, settled, retryRevision, calculator]);
+  const report = cached ?? matching?.report ?? null;
+  const coreReport = core?.report ?? null;
+  const fatalError = matching?.fatalError ?? null;
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    calendarPerformance.record("analysis-result-commit", {
+      month: year * 100 + 1,
+      stage: 4,
+      mode: active ? 1 : 0,
+      state: report !== null ? 2 : coreReport !== null ? 1 : fatalError !== null ? 3 : 0,
+    });
+  }, [enabled, active, year, key, report, coreReport, fatalError]);
   return {
-    coreReport: core?.report ?? null,
+    coreReport,
     error: youthEnabled === null ? preferenceError : null,
-    fatalError: matching?.fatalError ?? null,
-    report: cached ?? matching?.report ?? null,
+    fatalError,
+    report,
     ruleFailure: null,
     retry,
   };

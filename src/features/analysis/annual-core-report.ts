@@ -1,4 +1,6 @@
 import { employmentProfileAt } from "@/domain/employment-history";
+import type { CompliancePreparation } from "@/engine/compliance-preparation";
+import type { PreparedRestProvider } from "@/engine/compliance-rest-kernel";
 import { WorkingTimeTargetError } from "@/domain/working-time-target-validation";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
@@ -191,7 +193,7 @@ interface CachedPart<T> {
   readonly value: T;
 }
 
-interface AvailableMonthCache {
+export interface AvailableMonthCache {
   remuneration?: CachedPart<AnnualMonthlyRemuneration | null>;
   shiftTypeAnalysis?: CachedPart<MonthlyShiftTypeAnalysis | null>;
   summary?: CachedPart<ReturnType<typeof calculateMonthlySummary> | null>;
@@ -215,7 +217,34 @@ export function annualInputKey(value: unknown): string {
   });
 }
 
-interface AnnualComputationOptions {
+export interface AnnualRestPreparation {
+  readonly inputs: Map<string, ReturnType<typeof annualComplianceInput>>;
+  readonly contexts: CompliancePreparation;
+  readonly provider: PreparedRestProvider;
+}
+
+export function annualComplianceInput(
+  month: string,
+  entries: readonly CalendarEntry[],
+  profile: UserProfile,
+  referenceDate: string,
+  ruleResolver: RuleResolver,
+  youthProtection = false,
+) {
+  profile = employmentProfileAt(profile, month + "-01");
+  const shifts = captureRuleValue(() => {
+    requireResolvedPackage(ruleResolver.resolveHoliday(`${month}-01`));
+    return selectComplianceShifts(entries, month, ruleResolver);
+  });
+  return {
+    profile,
+    shifts,
+    key: annualInputKey([shifts, profile, referenceDate, youthProtection]),
+  };
+}
+
+export interface AnnualComputationOptions {
+  readonly restPreparation?: AnnualRestPreparation;
   readonly youthProtection?: boolean;
   readonly training?: {
     readonly data: TrainingComplianceData;
@@ -224,6 +253,7 @@ interface AnnualComputationOptions {
   readonly remuneration?: AnnualRemunerationInput;
   readonly cache?: ReturnType<typeof createAnnualAvailableReportCache>;
   readonly onCore?: (report: AnnualReport) => void;
+  readonly onMonth?: (month: string, parts: AvailableMonthCache) => void;
 }
 
 function* calculateAvailableMonth(
@@ -237,8 +267,12 @@ function* calculateAvailableMonth(
   cached: AvailableMonthCache,
   remuneration?: AnnualRemunerationInput,
   youthProtection = false,
+  restPreparation?: AnnualRestPreparation,
 ): Generator<number, AvailableMonthCalculation, void> {
-  profile = employmentProfileAt(profile, month + "-01");
+  const restInput =
+    restPreparation?.inputs.get(month) ??
+    annualComplianceInput(month, entries, profile, referenceDate, ruleResolver, youthProtection);
+  profile = restInput.profile;
   const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
   const summaryKey = annualInputKey([monthlyEntries.monthShifts, profile]);
   const summary =
@@ -263,17 +297,16 @@ function* calculateAvailableMonth(
   yield 1;
 
   let compliance: MonthlyComplianceResult | null = null;
-  const complianceShifts = captureRuleValue(() => {
-    requireResolvedPackage(ruleResolver.resolveHoliday(`${month}-01`));
-    return selectComplianceShifts(entries, month, ruleResolver);
-  });
+  const complianceShifts = restInput.shifts;
   // Use the engine's complete legal window, not merely the edited month.
-  const complianceKey = annualInputKey([complianceShifts, profile, referenceDate, youthProtection]);
+  const complianceKey = restInput.key;
   if (cached.compliance?.key === complianceKey) {
     compliance = cached.compliance.value;
   } else if (complianceShifts !== null) {
     try {
       const steps = calculateMonthlyComplianceSteps(month, complianceShifts, profile.timeZone, {
+        preparation: restPreparation?.contexts,
+        restKernel: restPreparation?.provider,
         employmentProfile: profile,
         federalState: profile.federalState,
         holidayRegion: profile.holidayRegion,
@@ -450,6 +483,7 @@ export function* buildAnnualAvailableReportSteps(
 
   for (const coreMonth of core.months) {
     const cached = monthsCache.get(coreMonth.month) ?? {};
+    const previous = { ...cached };
     if (!monthsCache.has(coreMonth.month) && monthsCache.size >= 36) {
       monthsCache.delete(monthsCache.keys().next().value!);
     }
@@ -465,6 +499,7 @@ export function* buildAnnualAvailableReportSteps(
       cached,
       options.remuneration,
       options.youthProtection,
+      options.restPreparation,
     );
     let available: AvailableMonthCalculation;
     while (true) {
@@ -475,6 +510,14 @@ export function* buildAnnualAvailableReportSteps(
       }
       yield step.value;
     }
+    if (
+      (["summary", "shiftTypeAnalysis", "compliance", "pay", "remuneration"] as const).some(
+        (part) =>
+          previous[part]?.key !== cached[part]?.key ||
+          previous[part]?.value !== cached[part]?.value,
+      )
+    )
+      options.onMonth?.(coreMonth.month, cached);
 
     // Keep the cached ArbZG result unmodified. Training profiles and actual pauses
     // can change independently, including a same-revision backup restoration.

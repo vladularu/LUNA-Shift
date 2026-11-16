@@ -4,6 +4,7 @@ import { SettingsEditorTestFlow } from "./settings-choice-test-helpers";
 
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 import { pageBackButtonOptions } from "@/ui/native-page-header";
+import { TYPOGRAPHY } from "@/theme/typography";
 
 let mockPalette = LIGHT_PALETTE;
 let mockSection = "WORK";
@@ -88,6 +89,16 @@ describe("settings native header theme", () => {
         expect(mockOptions.headerTintColor).toBe(palette.text);
         expect(mockOptions.headerTitleStyle).toEqual({ color: palette.text });
         expect(mockOptions.statusBarStyle).toBe(palette.dark ? "light" : "dark");
+        if (section === "WORK") {
+          expect(screen.getByText("Bundesland")).toHaveStyle({
+            ...TYPOGRAPHY.body,
+            color: palette.text,
+          });
+          expect(screen.getByText("Nordrhein-Westfalen")).toHaveStyle({
+            ...TYPOGRAPHY.caption,
+            color: palette.textMuted,
+          });
+        }
       }
       expect(mockUpdateProfile).not.toHaveBeenCalled();
     },

@@ -58,6 +58,7 @@ export function NetPayAutomaticEntryCard({
     data.annualPayments,
     !blocked && data.status === "ready",
     testMonths,
+    month,
   );
   const settings = data.saved?.settings ?? null;
   const configured = settings?.version === 2;

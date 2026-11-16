@@ -60,14 +60,9 @@ describe("ReorderableList", () => {
       jest.advanceTimersByTime(500);
     });
   }
-  it.each<[boolean, number | undefined]>([
-    [false, undefined],
-    [true, undefined],
-    [false, 0.5],
-    [true, 0.5],
-  ])(
-    "keeps native clipping stable and preserves custom card geometry (content: %s, border: %s)",
-    async (customContent, borderWidth) => {
+  it.each([false, true])(
+    "keeps the shadow card's native clipping container stable throughout a drag (content: %s)",
+    async (customContent) => {
       const screen = await render(
         <ReorderableList
           items={
@@ -76,13 +71,10 @@ describe("ReorderableList", () => {
               : items
           }
           onMove={mockMove}
-          cardStyle={borderWidth === undefined ? undefined : { borderWidth }}
           testID="sort"
         />,
       );
       const restingStyle = { ...screen.getByTestId("sort").props.style };
-      expect(restingStyle.height).toBe(288 + 2 * (borderWidth ?? 1));
-      if (borderWidth !== undefined) expect(restingStyle.borderWidth).toBe(borderWidth);
       const event = { translationX: 0, translationY: 0, absoluteY: 250 };
       const gesture = getByGestureTestId("sort-drag-0") as PanGesture;
       await act(async () => {

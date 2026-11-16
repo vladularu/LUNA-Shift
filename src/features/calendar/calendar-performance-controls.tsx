@@ -6,14 +6,17 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert, Platform } from "react-native";
 import { calendarPerformance } from "@/application/calendar-performance";
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
+import { usePalette } from "@/theme/palette";
 import { RowButton, SurfaceCard } from "@/ui/design-system";
 import { shareCalendarPerformanceFile } from "./share-calendar-performance";
+import { RustPilotControls } from "./rust-pilot-controls";
 
 export function CalendarPerformanceControls({
   subtitleBelow = false,
 }: {
   readonly subtitleBelow?: boolean;
 }) {
+  const palette = usePalette();
   const session = useSyncExternalStore(
     calendarPerformance.subscribe,
     calendarPerformance.getSnapshot,
@@ -59,13 +62,16 @@ export function CalendarPerformanceControls({
   };
   return (
     <SurfaceCard>
+      <RustPilotControls subtitleBelow={subtitleBelow} />
       <RowButton
+        titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title="Kalender-Prototyp öffnen"
         subtitle="Phase 2: neue Animation mit Beispieldiensten. Der Hauptkalender und deine Daten bleiben unverändert."
         onPress={() => router.push("/calendar-prototype")}
       />
       <RowButton
+        titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title={session ? "Performancediagnose läuft – stoppen" : "Performancediagnose starten"}
         subtitle="Misst Kalender, Auswertung und Gehaltsberechnung: nur lokale Zeiten und Anzahlen, keine Titel oder Gehälter. Maximal 10 Minuten. Ein neuer Start ersetzt die vorige Messung."
@@ -74,6 +80,7 @@ export function CalendarPerformanceControls({
         }
       />
       <RowButton
+        titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title={busy ? "Diagnose wird geteilt …" : "Diagnosebericht teilen"}
         subtitle="Stoppt die Messung und öffnet das Teilen-Menü für eine JSON-Datei."
@@ -82,6 +89,7 @@ export function CalendarPerformanceControls({
         }}
       />
       <RowButton
+        titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title="Diagnosebericht verwerfen"
         onPress={calendarPerformance.clear}

@@ -1,0 +1,31 @@
+{
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "collationRanks": {
+    "1. Weihnachtstag": 0,
+    "2. Weihnachtstag": 1,
+    "75. Jahrestag des Volksaufstands vom 17. Juni 1953": 2,
+    "Allerheiligen": 3,
+    "Augsburger Friedensfest": 4,
+    "Buss- und Bettag": 5,
+    "Buß- und Bettag": 6,
+    "Christi Himmelfahrt": 7,
+    "Fronleichnam": 8,
+    "Heilige Drei Könige": 9,
+    "Internationaler Frauentag": 10,
+    "Karfreitag": 11,
+    "Mariä Himmelfahrt": 12,
+    "NATIONWIDE": 13,
+    "Neujahr": 14,
+    "Ostermontag": 15,
+    "Ostersonntag": 16,
+    "Pfingstmontag": 17,
+    "Pfingstsonntag": 18,
+    "Reformationstag": 19,
+    "REGIONAL": 20,
+    "STATEWIDE": 21,
+    "Tag der Arbeit": 22,
+    "Tag der Befreiung": 23,
+    "Tag der Deutschen Einheit": 24,
+    "Weltkindertag": 25
+  }
+}

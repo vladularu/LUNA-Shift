@@ -1,0 +1,1688 @@
+{
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "method": "Direct unchanged Original widget range and midnight producers, before any Native implementation; genuine Temporal time zones and DST/midnight/leap/1900/Apia skip-day instants.",
+  "cases": [
+    {
+      "id": "Europe/Berlin/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208906000000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709247600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709247600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-01-26",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769986800000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774821600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774821600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774821600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792969200000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792969200000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792969200000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793574000000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793574000000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-12-28",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798844400000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325199600000
+      }
+    },
+    {
+      "id": "Europe/Berlin/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "Europe/Berlin"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325286000000
+      }
+    },
+    {
+      "id": "America/New_York/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208884400000
+      }
+    },
+    {
+      "id": "America/New_York/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709182800000
+      }
+    },
+    {
+      "id": "America/New_York/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709269200000
+      }
+    },
+    {
+      "id": "America/New_York/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2025-12-29",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769922000000
+      }
+    },
+    {
+      "id": "America/New_York/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/New_York/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793595600000
+      }
+    },
+    {
+      "id": "America/New_York/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793595600000
+      }
+    },
+    {
+      "id": "America/New_York/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-11-30",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798779600000
+      }
+    },
+    {
+      "id": "America/New_York/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325221200000
+      }
+    },
+    {
+      "id": "America/New_York/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "America/New_York"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325307600000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208864640000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709200800000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-02-26",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709287200000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-01-26",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769940000000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774778400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774778400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774778400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792922400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792922400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792922400000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793527200000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793527200000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-12-28",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798797600000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325239200000
+      }
+    },
+    {
+      "id": "Pacific/Kiritimati/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "Pacific/Kiritimati"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325325600000
+      }
+    },
+    {
+      "id": "Pacific/Apia/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208861184000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709204400000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-02-26",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709290800000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-01-26",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769943600000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774782000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774782000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774782000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792926000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792926000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792926000000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793530800000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793530800000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-12-28",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798801200000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325239200000
+      }
+    },
+    {
+      "id": "Pacific/Apia/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "Pacific/Apia"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325325600000
+      }
+    },
+    {
+      "id": "America/Havana/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208882624000
+      }
+    },
+    {
+      "id": "America/Havana/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709182800000
+      }
+    },
+    {
+      "id": "America/Havana/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709269200000
+      }
+    },
+    {
+      "id": "America/Havana/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2025-12-29",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769922000000
+      }
+    },
+    {
+      "id": "America/Havana/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774756800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792900800000
+      }
+    },
+    {
+      "id": "America/Havana/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793595600000
+      }
+    },
+    {
+      "id": "America/Havana/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793595600000
+      }
+    },
+    {
+      "id": "America/Havana/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-11-30",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798779600000
+      }
+    },
+    {
+      "id": "America/Havana/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325221200000
+      }
+    },
+    {
+      "id": "America/Havana/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "America/Havana"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325307600000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208922876000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709230500000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709230500000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-01-26",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769969700000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774808100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774808100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774808100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792952100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792952100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792952100000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793556900000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793556900000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-12-28",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798827300000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325182500000
+      }
+    },
+    {
+      "id": "Asia/Kathmandu/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "Asia/Kathmandu"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325268900000
+      }
+    },
+    {
+      "id": "UTC/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208902400000
+      }
+    },
+    {
+      "id": "UTC/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709164800000
+      }
+    },
+    {
+      "id": "UTC/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709251200000
+      }
+    },
+    {
+      "id": "UTC/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2025-12-29",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769904000000
+      }
+    },
+    {
+      "id": "UTC/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774742400000
+      }
+    },
+    {
+      "id": "UTC/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774828800000
+      }
+    },
+    {
+      "id": "UTC/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774828800000
+      }
+    },
+    {
+      "id": "UTC/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792886400000
+      }
+    },
+    {
+      "id": "UTC/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792972800000
+      }
+    },
+    {
+      "id": "UTC/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792972800000
+      }
+    },
+    {
+      "id": "UTC/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793577600000
+      }
+    },
+    {
+      "id": "UTC/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793577600000
+      }
+    },
+    {
+      "id": "UTC/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-11-30",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798761600000
+      }
+    },
+    {
+      "id": "UTC/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325203200000
+      }
+    },
+    {
+      "id": "UTC/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "UTC"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325289600000
+      }
+    },
+    {
+      "id": "+05:30/1900-01-01T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": -2208945600000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "1900-01-01",
+          "endDate": "1900-02-04"
+        },
+        "nextMidnight": -2208922200000
+      }
+    },
+    {
+      "id": "+05:30/2024-02-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1709164799999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709231400000
+      }
+    },
+    {
+      "id": "+05:30/2024-02-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1709208000000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2024-01-29",
+          "endDate": "2024-04-07"
+        },
+        "nextMidnight": 1709231400000
+      }
+    },
+    {
+      "id": "+05:30/2026-01-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1769902200000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-01-26",
+          "endDate": "2026-03-08"
+        },
+        "nextMidnight": 1769970600000
+      }
+    },
+    {
+      "id": "+05:30/2026-03-28T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774742399999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774809000000
+      }
+    },
+    {
+      "id": "+05:30/2026-03-29T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1774745999999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774809000000
+      }
+    },
+    {
+      "id": "+05:30/2026-03-29T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1774746000000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-02-23",
+          "endDate": "2026-05-03"
+        },
+        "nextMidnight": 1774809000000
+      }
+    },
+    {
+      "id": "+05:30/2026-10-24T23:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792886399999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792953000000
+      }
+    },
+    {
+      "id": "+05:30/2026-10-25T00:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1792889999999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792953000000
+      }
+    },
+    {
+      "id": "+05:30/2026-10-25T01:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1792890000000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-09-28",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1792953000000
+      }
+    },
+    {
+      "id": "+05:30/2026-11-01T05:59:59.999Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512799999,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793557800000
+      }
+    },
+    {
+      "id": "+05:30/2026-11-01T06:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1793512800000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-10-26",
+          "endDate": "2026-12-06"
+        },
+        "nextMidnight": 1793557800000
+      }
+    },
+    {
+      "id": "+05:30/2026-12-31T23:30:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1798759800000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2026-12-28",
+          "endDate": "2027-02-07"
+        },
+        "nextMidnight": 1798828200000
+      }
+    },
+    {
+      "id": "+05:30/2011-12-29T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325160000000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325183400000
+      }
+    },
+    {
+      "id": "+05:30/2011-12-30T12:00:00Z",
+      "input": {
+        "observedEpochMilliseconds": 1325246400000,
+        "timeZone": "+05:30"
+      },
+      "expected": {
+        "range": {
+          "startDate": "2011-11-28",
+          "endDate": "2012-02-05"
+        },
+        "nextMidnight": 1325269800000
+      }
+    }
+  ],
+  "expectedSha256": "44492d703223cdc169b8714042e4c948c453e8ce6c13892b1e987cdb67a76931"
+}

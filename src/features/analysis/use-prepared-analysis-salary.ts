@@ -1,3 +1,4 @@
+import { monthlyRustNetRequest, type MonthlyRustNetCalculator } from "./monthly-rust-net";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { calendarPerformance } from "@/application/calendar-performance";
@@ -20,29 +21,32 @@ export function usePreparedAnalysisSalary(
   active: boolean,
   distance = 1,
   persistent: PersistentAnalysisCache | null = null,
+  netCalculator: MonthlyRustNetCalculator | null = null,
 ) {
-  // Payment projections contain dated source evidence. Keep them in memory until a
-  // complete persistent codec exists rather than trusting the legacy shallow codec.
-  const salaryPersistent = request?.payment ? null : persistent;
+  const [retryRevision, setRetryRevision] = useState(0);
+  const effectiveRequest = useMemo(
+    () => (request === null ? null : monthlyRustNetRequest(request, netCalculator)),
+    [request, netCalculator],
+  );
   const key = useMemo(() => {
-    if (request === null) return null;
+    if (effectiveRequest === null) return null;
     const finish = calendarPerformance.span("analysis-prepare", {
-      month: Number(request.month.replace("-", "")),
+      month: Number(effectiveRequest.month.replace("-", "")),
       stage: 3,
     });
     try {
-      return analysisSalaryKey(request);
+      return analysisSalaryKey(effectiveRequest);
     } finally {
       finish();
     }
-  }, [request]);
-  const resolver = request?.context.resolver ?? null;
-  const currentRequest = useRef(request);
+  }, [effectiveRequest]);
+  const resolver = effectiveRequest?.context.resolver ?? null;
+  const currentRequest = useRef(effectiveRequest);
   const priority = useRef(analysisWorkPriority(3, active, distance));
   useLayoutEffect(() => {
-    currentRequest.current = request;
+    currentRequest.current = effectiveRequest;
     priority.current = analysisWorkPriority(3, active, distance);
-  }, [request, active, distance]);
+  }, [effectiveRequest, active, distance]);
   const task = useRef<ReturnType<typeof requestSharedAnalysis> | null>(null);
   const [state, setState] = useState<{
     key: string;
@@ -51,11 +55,12 @@ export function usePreparedAnalysisSalary(
     error: string | null;
     annual?: PreparedAnalysisSalary["annual"];
   } | null>(null);
-  const cached = request === null || key === null ? null : readAnalysisSalary(request, key);
+  const cached =
+    effectiveRequest === null || key === null ? null : readAnalysisSalary(effectiveRequest, key);
   const shared =
     key === null || resolver === null
       ? null
-      : readSharedAnalysisResult<PreparedAnalysisSalary>("salary", key, resolver, salaryPersistent);
+      : readSharedAnalysisResult<PreparedAnalysisSalary>("salary", key, resolver, persistent);
   const matching = state?.key === key && state?.resolver === resolver ? state : null;
   const result = cached ?? shared ?? matching?.result ?? null;
   const settled =
@@ -76,13 +81,12 @@ export function usePreparedAnalysisSalary(
       key,
       month: input.month,
       resolver: input.context.resolver,
-      persistent: salaryPersistent,
+      persistent,
       prepared: shared,
       priority: priority.current,
-      accept: persistentSalaryValue,
-      retain: (value) =>
-        value.forecast?.result.status === "available" || persistentSalaryValue(value),
-      steps: (progress) => prepareAnalysisSalarySteps(input, key, progress),
+      accept: (value): value is PreparedAnalysisSalary => persistentSalaryValue(value, input),
+      retain: (value) => persistentSalaryValue(value, input),
+      steps: (progress) => prepareAnalysisSalarySteps(input, key, progress, netCalculator),
       progress: (annual) => {
         if (analysisSalaryKey(input) === key)
           setState({ key, resolver: input.context.resolver, annual, result: null, error: null });
@@ -108,18 +112,22 @@ export function usePreparedAnalysisSalary(
       task.current?.cancel();
       task.current = null;
     };
-    // Equal SQL/profile snapshots must not cancel or restart the same request.
-  }, [key, resolver, settled, salaryPersistent, shared]);
+    // Equal SQL/profile snapshots must not cancel or restart the same effectiveRequest.
+  }, [key, resolver, settled, persistent, shared, netCalculator, retryRevision]);
   useEffect(
     () => task.current?.setPriority(analysisWorkPriority(3, active, distance)),
     [active, distance, key],
   );
   const annual = result?.annual ?? matching?.annual ?? null;
   return {
+    retry: () => {
+      setState(null);
+      setRetryRevision((value) => value + 1);
+    },
     result,
     annual,
-    annualPending: request !== null && !settled && result === null && annual === null,
-    pending: request !== null && !settled && result === null,
+    annualPending: effectiveRequest !== null && !settled && result === null && annual === null,
+    pending: effectiveRequest !== null && !settled && result === null,
     error: matching?.error ?? null,
   };
 }

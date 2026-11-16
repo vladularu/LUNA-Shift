@@ -75,7 +75,7 @@ export function ReportExportButton({
           ? await loadNetPayProfileTimeline(db)
           : [];
       let salaryPaymentPreferences: SalaryPaymentPreferences | undefined;
-      if (format === "PDF" && selectedOptions.includeSalary && period.length === 4) {
+      if (format === "PDF" && selectedOptions.includeSalary) {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const { loadSalaryPaymentPreferences } =
           require("@/infrastructure/database/salary-payment-repository") as typeof import("@/infrastructure/database/salary-payment-repository");

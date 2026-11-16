@@ -11,6 +11,33 @@ const tabControllerPath = "node_modules/react-native-screens/ios/tabs/host/RNSTa
 module.exports = {
   // The transform itself must participate in compatibility decisions too.
   extraSources: [
+    ...[
+      "modules/luna-rest-pilot/rust/Cargo.toml",
+      "modules/luna-rest-pilot/rust/Cargo.lock",
+      "modules/luna-rest-pilot/rust/rust-toolchain.toml",
+      "modules/luna-rest-pilot/rust/src/lib.rs",
+      "modules/luna-rest-pilot/rust/src/ffi.rs",
+      "modules/luna-rest-pilot/rust/src/year.rs",
+      "modules/luna-rest-pilot/scripts/build-ios.mjs",
+    ].map((filePath) => ({ type: "file", filePath, reasons: ["rustPilotNativeSource"] })),
+    ...["modules/luna-engine/rust/src", "modules/luna-engine/rust/build_support"].map(
+      (filePath) => ({ type: "dir", filePath, reasons: ["rustEngineNativeSource"] }),
+    ),
+    ...[
+      "modules/luna-engine/rust/build.rs",
+      "modules/luna-engine/rust/Cargo.toml",
+      "modules/luna-engine/rust/Cargo.lock",
+      "modules/luna-engine/rust/rust-toolchain.toml",
+      "modules/luna-engine/rust/include/LunaEngine.h",
+      "modules/luna-engine/scripts/build-ios.mjs",
+      "modules/luna-engine/scripts/native-config.mjs",
+      "rules/schema/manifest.schema.json",
+      "rules/schema/rule-package.schema.json",
+      "rules/schema/publication-request.schema.json",
+      "rules/schema/production-channel-config.schema.json",
+      "src/rules/simple-tariff-table-layout.json",
+      "src/engine/standby-tables.json",
+    ].map((filePath) => ({ type: "file", filePath, reasons: ["rustEngineNativeSource"] })),
     { type: "file", filePath: "fingerprint.config.js", reasons: ["fingerprintConfig"] },
     {
       type: "file",
@@ -27,6 +54,17 @@ module.exports = {
       filePath: "plugins/luna-calendar-widget/LUNAShiftCalendar.swift",
       reasons: ["nativeWidgetRenderer"],
     },
+  ],
+  // Generated libraries vary by toolchain/build path. Their reviewed sources,
+  // locked dependencies and compiler version above define compatibility.
+  ignorePaths: [
+    "modules/luna-rest-pilot/.build/**",
+    "modules/luna-rest-pilot/rust/target/**",
+    "modules/luna-rest-pilot/ios/LunaRestCore.xcframework/**",
+    "modules/luna-engine/.build/**",
+    "modules/luna-engine/rust/target/**",
+    "modules/luna-engine/ios/LunaEngineCore.xcframework/**",
+    "modules/luna-engine/ios/LunaEngine.h",
   ],
   fileHookTransform(source, chunk, isEndOfFile, encoding) {
     if (source.type !== "file" || source.filePath.replaceAll("\\", "/") !== tabControllerPath) {

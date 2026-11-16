@@ -14,6 +14,7 @@ export interface AnnualNetPayMonth {
   readonly preliminary: boolean;
 }
 export interface AnnualNetPay {
+  readonly salaryForecast?: import("./analysis-salary").PreparedAnalysisSalary["annual"];
   readonly year: number;
   readonly months: readonly AnnualNetPayMonth[];
   readonly netCents: number | null;
@@ -22,6 +23,7 @@ export interface AnnualNetPay {
   readonly preliminary: boolean;
 }
 export interface AnnualNetPayRequest {
+  readonly calculationIdentity?: string;
   readonly year: number;
   readonly profile: UserProfile;
   readonly timeline: readonly SavedMonthlyNetPaySettings[];

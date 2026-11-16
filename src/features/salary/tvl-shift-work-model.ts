@@ -2,7 +2,6 @@ import {
   resolveRemunerationProfile,
   type DatedRemunerationProfile,
 } from "@/domain/remuneration-profile";
-import type { SavedTvlShiftWork } from "@/domain/saved-tvl-shift-work";
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { remunerationMonthShifts, remunerationShiftDays } from "@/engine/remuneration-shift-days";
 
@@ -13,9 +12,6 @@ export interface TvlShiftWorkChoice {
   readonly profile: DatedRemunerationProfile;
   readonly timeZone: string;
   readonly dates: readonly string[];
-}
-export interface TvlShiftWorkSession extends TvlShiftWorkChoice {
-  readonly saved: SavedTvlShiftWork | null;
 }
 /** No tariff inference from names; include carry-in and split profile periods. */
 export function tvlShiftWorkChoices(

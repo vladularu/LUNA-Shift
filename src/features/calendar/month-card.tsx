@@ -45,7 +45,7 @@ import { calendarChipPalette } from "@/theme/color-contrast";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { COMPACT_TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, CALENDAR_METRICS, RADII, SPACING } from "@/theme/tokens";
+import { CORNER_CURVE, CALENDAR_METRICS, SPACING } from "@/theme/tokens";
 import { usePressMotion } from "@/ui/press-motion";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { useMorphDayStyle, useCalendarMorphMeasurement } from "./calendar-morph-measurement";
@@ -356,7 +356,7 @@ const DayCell = memo(
                   justifyContent: "center",
                   borderWidth: isSelected && !isToday ? 1 : 0,
                   borderColor: isSelected && !isToday ? palette.calendarSelection : "transparent",
-                  borderRadius: RADII.control,
+                  borderRadius: CALENDAR_METRICS.dayNumberRadius,
                   backgroundColor: isToday
                     ? palette.calendarToday
                     : isSelected

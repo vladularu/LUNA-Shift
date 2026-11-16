@@ -48,7 +48,7 @@ import { RADII, SPACING } from "@/theme/tokens";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 import { CardSeparator, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { ColorPicker, PrimaryButton, SecondaryButton, TimePickerField } from "@/ui/form-controls";
-import { DestructiveFormAction, FormScreen, FormStatus, HeaderSaveAction } from "@/ui/form-layout";
+import { FormScreen, FormStatus, HeaderSaveAction } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { deletionFeedback, successFeedback, warningFeedback } from "@/ui/haptics";
 import { LabeledSwitch } from "@/ui/labeled-switch";
@@ -657,7 +657,9 @@ function TemplateEditorForm({
         </PrimaryButton>
       ) : null}
       {existing ? (
-        <DestructiveFormAction disabled={saving} label="Vorlage löschen" onPress={confirmArchive} />
+        <PrimaryButton danger shape="pill" disabled={saving} onPress={confirmArchive}>
+          Vorlage löschen
+        </PrimaryButton>
       ) : null}
       {notificationOpen ? (
         Platform.OS === "ios" ? (

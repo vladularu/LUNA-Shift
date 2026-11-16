@@ -11,8 +11,9 @@ import { captureRuleComputation } from "@/features/analysis/rule-computation";
 import { salaryPaymentInput } from "./salary-payment-input";
 import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
 import { salaryPaymentHint } from "./salary-composition";
+import { useRustSalaryPreparation } from "./use-rust-salary-preparation";
 
-export function useSalaryReport(month: string, enabled = true) {
+function useOriginalSalaryReport(month: string, enabled = true) {
   const { error, ready, reload } = usePflegeShiftStatus();
   const { profile } = usePflegeShiftProfile();
   const { entries } = usePflegeShiftEntries();
@@ -92,3 +93,79 @@ export function useSalaryReport(month: string, enabled = true) {
     retryRules: () => setRuleRetryRevision((value) => value + 1),
   };
 }
+
+export function useNativeSalaryReport(
+  month: string,
+  enabled = true,
+): ReturnType<typeof useOriginalSalaryReport> {
+  const prepared = useRustSalaryPreparation(month, enabled);
+  const [previous, setPrevious] = useState<{
+    key: string;
+    resolver: typeof prepared.resolver;
+    projection: NonNullable<typeof prepared.result>["projection"];
+  } | null>(null);
+  const currentProjection = prepared.result?.projection;
+  if (
+    currentProjection &&
+    prepared.projectionIdentity &&
+    (previous?.key !== prepared.projectionIdentity ||
+      previous.resolver !== prepared.resolver ||
+      previous.projection !== currentProjection)
+  ) {
+    setPrevious({
+      key: prepared.projectionIdentity,
+      resolver: prepared.resolver,
+      projection: currentProjection,
+    });
+  }
+  const projection =
+    currentProjection ??
+    (previous?.key === prepared.projectionIdentity && previous.resolver === prepared.resolver
+      ? previous.projection
+      : undefined);
+  const calculation = useMemo(() => {
+    if (!projection) return null;
+    const premiums = new Set(
+      projection.contributions
+        .filter((part) => part.group === "PREMIUMS")
+        .map((part) => part.claimMonth),
+    );
+    const allowances = [
+      ...new Set(
+        projection.contributions
+          .filter((part) => part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE")
+          .map((part) => part.claimMonth),
+      ),
+    ];
+    return {
+      ok: true as const,
+      value: {
+        monthShifts: projection.sources.find((source) => source.month === month)?.shifts ?? [],
+        premiumShifts: projection.sources
+          .filter((source) => premiums.has(source.month))
+          .flatMap((source) => source.shifts),
+        pay: projection.pay,
+        projection,
+        paymentHint: salaryPaymentHint(projection),
+        allowanceMonth: allowances.length === 1 ? allowances[0] : null,
+      },
+    };
+  }, [projection, month]);
+  return {
+    error: prepared.sourceError ?? (projection ? null : prepared.error),
+    ready: prepared.sourceReady && (prepared.ready || projection !== undefined),
+    reload: prepared.reload,
+    profile:
+      projection?.sources.find((source) => source.month === month)?.profile ?? prepared.profile,
+    entries: prepared.entries,
+    calculation,
+    testMonths: prepared.testMonths,
+    payment: prepared.payment,
+    retryRules: prepared.retry,
+  };
+}
+
+export const useSalaryReport: typeof useOriginalSalaryReport =
+  process.env.EXPO_PUBLIC_RUST_SALARY_PREPARATION === "1"
+    ? useNativeSalaryReport
+    : useOriginalSalaryReport;

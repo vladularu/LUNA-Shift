@@ -1,6 +1,10 @@
+import {
+  prepareComplianceCalendarSteps,
+  type CompliancePreparation,
+} from "./compliance-preparation";
+import type { PreparedRestProvider } from "./compliance-rest-kernel";
 import { checkPlanningSeries } from "./compliance-planning-series";
 import { specialDutyComplianceIssues } from "./special-duty-compliance";
-import { projectDutyShifts } from "./special-duty";
 import {
   createSplitDutyBreakCheck,
   interruptionMinutes,
@@ -13,7 +17,6 @@ import { finishMonthlyCompliance } from "./compliance-result";
 import { checkPlanningNightsSteps } from "./planning-night-recovery";
 import { checkTariffWorkingTimeSteps } from "./tariff-compliance";
 import { checkPlanningWeekendsSteps } from "./planning-weekends";
-import { planningWeekendCoverageStart } from "@/domain/planning-weekend-policy";
 
 import type {
   UserProfile,
@@ -38,25 +41,17 @@ import {
 } from "@/engine/compliance-night-work";
 import { checkWorkingTimeAverageIncrementally } from "@/engine/compliance-working-time-average";
 import { checkSundayHolidayRestIncrementally } from "@/engine/compliance-sunday-holiday-rest";
-import { calculateTimedShiftMinutes } from "@/engine/working-time";
 import type { RuleLegalRules } from "@/rules/contracts.generated";
-import { getLegalCalculationEnd, getLegalCalculationWindow } from "@/rules/calculation-windows";
-import {
-  bundledRuleResolver,
-  requireResolvedPackage,
-  type RuleResolver,
-} from "@/rules/rule-resolver";
+import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 
-const RELEVANT_TYPES = new Set(["EARLY", "LATE", "NIGHT", "DAY", "TRAINING", "CUSTOM"]);
-
-interface CachedInterval {
-  readonly signature: string;
-  readonly value: Interval;
-}
-
-const INTERVAL_CACHE = new WeakMap<ShiftEntry, Map<string, CachedInterval>>();
+export {
+  prepareComplianceCalendarSteps,
+  prepareComplianceIntervalsIncrementally,
+} from "./compliance-preparation";
 
 export interface ComplianceOptions {
+  readonly restKernel?: PreparedRestProvider;
+  readonly preparation?: CompliancePreparation;
   /** The dated orchestrator assesses weekends once with the original full timeline. */
   readonly skipWeekendAssessment?: boolean;
   readonly employmentProfile?: UserProfile;
@@ -71,101 +66,6 @@ export interface ComplianceOptions {
   readonly ruleResolver?: RuleResolver;
   readonly sectorId?: string;
   readonly youthProtection?: boolean;
-}
-
-function isRelevant(shift: ShiftEntry): boolean {
-  return (
-    shift.deletedAt === null &&
-    !shift.allDay &&
-    RELEVANT_TYPES.has(shift.type) &&
-    shift.startTime !== null &&
-    shift.endTime !== null
-  );
-}
-
-function compareIntervalsByRecordedStart(left: Interval, right: Interval): number {
-  return (
-    left.shift.date.localeCompare(right.shift.date) ||
-    (left.shift.startTime ?? "").localeCompare(right.shift.startTime ?? "") ||
-    left.shift.id.localeCompare(right.shift.id)
-  );
-}
-
-function intervalSignature(shift: ShiftEntry): string {
-  return [
-    shift.revision,
-    shift.date,
-    shift.type,
-    shift.startTime,
-    shift.endTime,
-    shift.breakMinutes,
-    shift.deletedAt,
-  ].join("|");
-}
-
-function toInterval(shift: ShiftEntry, timeZone: string): Interval {
-  const signature = intervalSignature(shift);
-  const cachedByTimeZone = INTERVAL_CACHE.get(shift);
-  const cached = cachedByTimeZone?.get(timeZone);
-  if (cached?.signature === signature) return cached.value;
-
-  const date = Temporal.PlainDate.from(shift.date);
-  const startTime = Temporal.PlainTime.from(shift.startTime!);
-  const endTime = Temporal.PlainTime.from(shift.endTime!);
-  const endDate =
-    Temporal.PlainTime.compare(endTime, startTime) <= 0 ? date.add({ days: 1 }) : date;
-  const start = Temporal.ZonedDateTime.from(
-    {
-      timeZone,
-      year: date.year,
-      month: date.month,
-      day: date.day,
-      hour: startTime.hour,
-      minute: startTime.minute,
-    },
-    { disambiguation: "earlier" },
-  );
-  const end = Temporal.ZonedDateTime.from(
-    {
-      timeZone,
-      year: endDate.year,
-      month: endDate.month,
-      day: endDate.day,
-      hour: endTime.hour,
-      minute: endTime.minute,
-    },
-    { disambiguation: "later" },
-  );
-  const value = Object.freeze({
-    shift,
-    start,
-    end,
-    grossMinutes: Math.max(
-      0,
-      Math.round(Number(end.epochMilliseconds - start.epochMilliseconds) / 60_000),
-    ),
-    netMinutes: calculateTimedShiftMinutes(shift, timeZone),
-  });
-  const nextCache = cachedByTimeZone ?? new Map<string, CachedInterval>();
-  nextCache.set(timeZone, Object.freeze({ signature, value }));
-  if (!cachedByTimeZone) INTERVAL_CACHE.set(shift, nextCache);
-  return value;
-}
-
-export function* prepareComplianceIntervalsIncrementally(
-  shifts: readonly ShiftEntry[],
-  timeZone: string,
-  batchSize = 4,
-): Generator<number, void, void> {
-  const safeBatchSize = Math.max(1, Math.floor(batchSize));
-  let prepared = 0;
-  for (const shift of shifts) {
-    if (!isRelevant(shift)) continue;
-    toInterval(shift, timeZone);
-    prepared += 1;
-    if (prepared % safeBatchSize === 0) yield prepared;
-  }
-  if (prepared % safeBatchSize !== 0) yield prepared;
 }
 
 const hours = (minutes: number): string => `${Math.round((minutes / 60) * 100) / 100} h`;
@@ -523,45 +423,22 @@ function* calculateMonthlyComplianceCoreSteps(
   const originalShifts = shifts;
   const dutyIssues = specialDutyComplianceIssues(shifts, month);
   const isPlannedSplitBreak = createSplitDutyBreakCheck(shifts);
-  shifts = projectDutyShifts(shifts);
+  const context = yield* prepareComplianceCalendarSteps(month, shifts, timeZone, options);
+  const {
+    referenceDate,
+    first,
+    legalPackage,
+    rules,
+    baseEnd,
+    shortAssessmentStart,
+    shortAssessmentEnd,
+    start,
+    end,
+    intervals,
+    calculationShifts,
+  } = context;
   const ruleResolver = options.ruleResolver ?? bundledRuleResolver;
-  const referenceDate = Temporal.PlainDate.from(
-    options.referenceDate ?? Temporal.Now.plainDateISO(timeZone).toString(),
-  );
-  const first = Temporal.PlainDate.from(`${month}-01`);
-  const legalPackage = requireResolvedPackage(ruleResolver.resolveLegal(first.toString()));
-  const rules = legalPackage.rules;
-  const calculationWindow = getLegalCalculationWindow(first.toString(), ruleResolver);
-  const baseStart = first.subtract({ days: calculationWindow.lookbackDays });
-  const monthEnd = first.add({ months: 1 }).subtract({ days: 1 });
-  const shortAssessmentStart = first.subtract({
-    days: calculationWindow.shortAssessmentLookbackDays,
-  });
-  const shortDayAssessmentEnd = monthEnd.add({
-    days: calculationWindow.shortAssessmentLookaheadDays,
-  });
-  const shortMonthAssessmentEnd = monthEnd.add({
-    months: calculationWindow.shortAssessmentLookaheadCalendarMonths,
-  });
-  const shortAssessmentEnd =
-    Temporal.PlainDate.compare(shortDayAssessmentEnd, shortMonthAssessmentEnd) >= 0
-      ? shortDayAssessmentEnd
-      : shortMonthAssessmentEnd;
-  const baseEnd = getLegalCalculationEnd(monthEnd, calculationWindow);
-  const yearStart = Temporal.PlainDate.from({ year: first.year, month: 1, day: 1 });
-  const yearEnd = Temporal.PlainDate.from({ year: first.year, month: 12, day: 31 });
-  const legalStart = (
-    calculationWindow.calendarYearCoverage && Temporal.PlainDate.compare(yearStart, baseStart) < 0
-      ? yearStart
-      : baseStart
-  ).toString();
-  const weekendStart = planningWeekendCoverageStart(month);
-  const start = legalStart < weekendStart ? legalStart : weekendStart;
-  const end = (
-    calculationWindow.calendarYearCoverage && Temporal.PlainDate.compare(yearEnd, baseEnd) > 0
-      ? yearEnd
-      : baseEnd
-  ).toString();
+  shifts = context.shifts;
   const weekend = options.skipWeekendAssessment
     ? null
     : yield* checkPlanningWeekendsSteps(month, originalShifts, timeZone, {
@@ -587,16 +464,6 @@ function* calculateMonthlyComplianceCoreSteps(
           : end,
     },
   });
-  const preparation = prepareComplianceIntervalsIncrementally(shifts, timeZone);
-  while (true) {
-    const step = preparation.next();
-    if (step.done) break;
-    yield step.value;
-  }
-  const intervals = shifts
-    .filter((shift) => isRelevant(shift) && shift.date >= start && shift.date <= end)
-    .map((shift) => toInterval(shift, timeZone))
-    .sort(compareIntervalsByRecordedStart);
   const assessmentStart = shortAssessmentStart.toString();
   const assessmentEnd = shortAssessmentEnd.toString();
   const assessmentIntervals = intervals.filter(
@@ -604,9 +471,6 @@ function* calculateMonthlyComplianceCoreSteps(
   );
   const workingTimeAverageIntervals = intervals.filter(
     (item) => item.shift.date >= first.toString() && item.shift.date <= baseEnd.toString(),
-  );
-  const calculationShifts = shifts.filter(
-    (shift) => shift.deletedAt === null && shift.date >= start && shift.date <= end,
   );
   if (options.youthProtection === true) {
     return withWeekends(

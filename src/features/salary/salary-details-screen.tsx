@@ -89,6 +89,7 @@ function SalaryDetailsMonthPage({
     data.annualPayments,
     valid && !blocked && data.status === "ready",
     report.testMonths,
+    month,
   );
   const forecast = useAutomaticNetPay(
     month,

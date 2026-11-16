@@ -87,6 +87,24 @@ test("keeps concurrent streams for the same path independent", () => {
 
 test("includes the transform configuration in fingerprint sources", () => {
   assert.ok(config.extraSources.some((source) => source.filePath === "fingerprint.config.js"));
-  assert.equal(config.ignorePaths, undefined);
+  assert.deepEqual(config.ignorePaths, [
+    "modules/luna-rest-pilot/.build/**",
+    "modules/luna-rest-pilot/rust/target/**",
+    "modules/luna-rest-pilot/ios/LunaRestCore.xcframework/**",
+    "modules/luna-engine/.build/**",
+    "modules/luna-engine/rust/target/**",
+    "modules/luna-engine/ios/LunaEngineCore.xcframework/**",
+    "modules/luna-engine/ios/LunaEngine.h",
+  ]);
+  for (const filePath of [
+    "modules/luna-rest-pilot/rust/Cargo.toml",
+    "modules/luna-rest-pilot/rust/Cargo.lock",
+    "modules/luna-rest-pilot/rust/rust-toolchain.toml",
+    "modules/luna-rest-pilot/rust/src/lib.rs",
+    "modules/luna-rest-pilot/rust/src/ffi.rs",
+    "modules/luna-rest-pilot/rust/src/year.rs",
+    "modules/luna-rest-pilot/scripts/build-ios.mjs",
+  ])
+    assert.ok(config.extraSources.some((source) => source.filePath === filePath));
   assert.equal(config.sourceSkips, undefined);
 });

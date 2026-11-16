@@ -1,0 +1,389 @@
+{
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "legal": {
+    "sourceRules": {
+      "ARBZG_3_MAX_10H": [
+        {
+          "title": "Arbeitszeitgesetz · § 3 Arbeitszeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__3.html"
+        }
+      ],
+      "ARBZG_3_OVER_8H": [
+        {
+          "title": "Arbeitszeitgesetz · § 3 Arbeitszeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__3.html"
+        }
+      ],
+      "ARBZG_4_BREAK": [
+        {
+          "title": "Arbeitszeitgesetz · § 4 Ruhepausen",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__4.html"
+        }
+      ],
+      "ARBZG_4_CONTINUOUS": [
+        {
+          "title": "Arbeitszeitgesetz · § 4 Ruhepausen",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__4.html"
+        }
+      ],
+      "ARBZG_4_INTERRUPTION": [
+        {
+          "title": "Arbeitszeitgesetz · § 4 Ruhepausen",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__4.html"
+        }
+      ],
+      "ARBZG_5_REST_10H": [
+        {
+          "title": "Arbeitszeitgesetz · § 5 Ruhezeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__5.html"
+        }
+      ],
+      "ARBZG_5_REST_11H": [
+        {
+          "title": "Arbeitszeitgesetz · § 5 Ruhezeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__5.html"
+        }
+      ],
+      "ARBZG_6_NIGHT_AVERAGE": [
+        {
+          "title": "Arbeitszeitgesetz · § 6 Nacht- und Schichtarbeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__6.html"
+        }
+      ],
+      "ARBZG_10_ELIGIBILITY": [
+        {
+          "title": "Arbeitszeitgesetz · § 10 Sonn- und Feiertagsbeschäftigung",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__10.html"
+        }
+      ],
+      "ARBZG_11_SUNDAY_REST": [
+        {
+          "title": "Arbeitszeitgesetz · § 11 Ausgleich",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__11.html"
+        }
+      ],
+      "ARBZG_11_HOLIDAY_REST": [
+        {
+          "title": "Arbeitszeitgesetz · § 11 Ausgleich",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__11.html"
+        }
+      ],
+      "ARBZG_11_REST_CONNECTION": [
+        {
+          "title": "Arbeitszeitgesetz · § 11 Ausgleich",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__11.html"
+        },
+        {
+          "title": "Arbeitszeitgesetz · § 5 Ruhezeit",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__5.html"
+        }
+      ],
+      "ARBZG_11_FREE_SUNDAYS": [
+        {
+          "title": "Arbeitszeitgesetz · § 11 Ausgleich",
+          "url": "https://www.gesetze-im-internet.de/arbzg/__11.html"
+        }
+      ],
+      "JARBSCHG_8_DAILY": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_8_WEEK": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_11_BREAK_DURATION": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_11_BREAK_PLACEMENT": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_12_SPAN": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_13_REST": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_14_NIGHT": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_15_FIVE_DAYS": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_16_17_WEEKEND": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_17_FREE_SUNDAYS": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_18_PROTECTED": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JARBSCHG_18_HOLIDAY": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "JArbSchG": [
+        {
+          "title": "Jugendarbeitsschutzgesetz",
+          "url": "https://www.gesetze-im-internet.de/jarbschg/BJNR009650976.html"
+        }
+      ],
+      "§ 15 BBiG": [
+        {
+          "title": "Berufsbildungsgesetz · § 15 Freistellung und Anrechnung",
+          "url": "https://www.gesetze-im-internet.de/bbig_2005/__15.html"
+        }
+      ],
+      "§§ 18, 63 PflBG": [
+        {
+          "title": "Pflegeberufegesetz · § 18 Pflichten des Ausbildungsträgers",
+          "url": "https://www.gesetze-im-internet.de/pflbg/__18.html"
+        }
+      ]
+    },
+    "youthSections": [
+      "§ 2 JArbSchG",
+      "§ 4 JArbSchG",
+      "§ 4 Abs. 4 JArbSchG",
+      "§ 4 Abs. 5 JArbSchG",
+      "§§ 2, 5–7 JArbSchG",
+      "§§ 2, 4, 8 JArbSchG",
+      "§§ 4, 11 JArbSchG",
+      "§§ 8–10 JArbSchG",
+      "§§ 8, 9 JArbSchG",
+      "§§ 4, 8, 9 JArbSchG",
+      "§§ 8, 14, 21–21b JArbSchG",
+      "§§ 9, 11, 13 JArbSchG",
+      "§§ 10, 11, 13 JArbSchG",
+      "§ 9 JArbSchG",
+      "§ 9 Abs. 1 Nr. 1 JArbSchG",
+      "§ 10 JArbSchG",
+      "§ 10 Abs. 1 Nr. 2 JArbSchG",
+      "§ 10 Abs. 2 Nr. 2 JArbSchG",
+      "§ 11 JArbSchG",
+      "§ 11 Abs. 1 JArbSchG",
+      "§ 11 Abs. 2 JArbSchG",
+      "§ 12 JArbSchG",
+      "§ 13 JArbSchG",
+      "§ 14 JArbSchG",
+      "§ 15 JArbSchG",
+      "§ 16 JArbSchG",
+      "§ 16 Abs. 2 JArbSchG",
+      "§ 16 Abs. 3 JArbSchG",
+      "§ 17 JArbSchG",
+      "§ 17 Abs. 2 JArbSchG",
+      "§ 17 Abs. 3 JArbSchG",
+      "§ 18 JArbSchG",
+      "§ 18 Abs. 1 JArbSchG",
+      "§ 18 Abs. 2 JArbSchG",
+      "§ 18 Abs. 3 JArbSchG",
+      "§§ 10, 15 JArbSchG",
+      "§§ 10, 16–18 JArbSchG"
+    ]
+  },
+  "tariff": {
+    "translations": [
+      [
+        "LUNA zählt Dienste am Startdatum und setzt die betrieblichen Gründe für einen sechsten Arbeitstag voraus.",
+        []
+      ],
+      [
+        "Die Tarifregeln sind für diesen Zeitraum noch nicht in dieser Prüffassung geprüft.",
+        ["Für diesen Zeitraum sind die Tarifregeln in LUNA noch nicht geprüft."]
+      ],
+      [
+        "Wähle eine eindeutige Tarifgrundlage für diesen Zeitraum.",
+        ["Die Tarifzuordnung für diesen Zeitraum ist widersprüchlich."]
+      ],
+      [
+        "Die Arbeitszeit-Tarifgrundlage wird noch geladen.",
+        ["Die Tarifdaten für diesen Zeitraum werden noch geladen."]
+      ],
+      [
+        "Die Arbeitszeit-Tarifgrundlage konnte nicht geladen werden. Bitte prüfe die Arbeitszeitdaten.",
+        ["Die Tarifdaten für diesen Zeitraum konnten nicht geladen werden."]
+      ],
+      [
+        "Für die bereitgestellten Arbeitszeitdaten ist kein Tarifzeitraum verfügbar.",
+        ["Die gespeicherten Tarifdaten decken diesen Zeitraum nicht ab."]
+      ],
+      [
+        "Die erfassten Dienste liegen außerhalb des hinterlegten Beschäftigungszeitraums.",
+        ["Die Dienste liegen außerhalb des gespeicherten Beschäftigungszeitraums."]
+      ],
+      [
+        "Die vorhandenen Arbeitszeit-Tarifzeiträume decken dieses Datum nicht ab.",
+        ["Die gespeicherten Tarifzeiträume decken diesen Zeitraum nicht ab."]
+      ],
+      [
+        "Mehrere Arbeitszeit-Tarifzeiträume gelten zugleich. Die Zuordnung ist zu klären.",
+        ["Mehrere Tarifzeiträume überschneiden sich hier."]
+      ],
+      [
+        "Die Tarifzuordnung ist für diesen Zeitraum nicht hinreichend bestimmt.",
+        ["Die vorhandenen Angaben reichen für diese Tarifprüfung nicht aus."]
+      ],
+      [
+        "Der Beschäftigtentarif des Ausbildenden ist noch zu bestätigen.",
+        ["Der Beschäftigtentarif des ausbildenden Betriebs ist nicht bekannt."]
+      ],
+      [
+        "Der Geltungsbereich wurde in den Arbeitszeitdaten ausgeschlossen; die Tarifzuordnung ist zu klären.",
+        ["Diese Tarifregel ist in den Arbeitszeitdaten für deinen Bereich ausgeschlossen."]
+      ],
+      [
+        "Alter, Schulzeiten und der Beschäftigtentarif des Ausbildenden sind für die Ausbildungsprüfung zu bestätigen.",
+        [
+          "Bei Auszubildenden hängt die Anwendung zusätzlich von Alter, Schulzeiten und dem Beschäftigtentarif des Betriebs ab."
+        ]
+      ],
+      [
+        "Die Zuordnung zum Krankenpflegedienst im Justizvollzug und der abschließende ÄTV-25-Abgleich bleiben zu prüfen.",
+        [
+          "Diese TV-H-Sonderregel betrifft den Krankenpflegedienst des Justizvollzugs.",
+          "Der Abgleich späterer Tarifänderungen ist noch nicht abgeschlossen."
+        ]
+      ],
+      [
+        "Die Zuordnung des tariflichen Zweiwochen-Bezugszeitraums ist zu bestätigen; dieses Fenster ist ein Beobachtungszeitraum.",
+        [
+          "Verglichen werden die gezeigten zwei Wochen. Ein abweichender betrieblicher Bezugszeitraum kann die Einordnung ändern."
+        ]
+      ],
+      [
+        "Prüfe, ob regelmäßig Sonn- und Feiertagsarbeit im Sinne der Tarifregel geleistet wird. Die Zulässigkeit von Sonntagsarbeit allein bestätigt diese Regelmäßigkeit nicht.",
+        ["In deinem Arbeitsmodell ist Sonn- und Feiertagsarbeit noch nicht hinterlegt."]
+      ],
+      [
+        "Leere Kalendertage sind kein Nachweis tatsächlich arbeitsfreier Tage.",
+        ["Ein leerer Kalendertag ist kein bestätigter freier Tag."]
+      ],
+      [
+        "Der persönliche Geltungsbereich dieser Tarifregel ist zu bestätigen.",
+        [
+          "Ob die Regel für dich gilt, lässt sich aus deinen gespeicherten Tarifangaben nicht sicher erkennen."
+        ]
+      ],
+      [
+        "Der persönliche Geltungsbereich der gewählten Tarifregel ist zu bestätigen.",
+        [
+          "Ob die Regel für dich gilt, lässt sich aus deinen gespeicherten Tarifangaben nicht sicher erkennen."
+        ]
+      ],
+      [
+        "Ein Tarifwechsel innerhalb des Beobachtungszeitraums muss gesondert geprüft werden.",
+        ["Innerhalb des Zeitraums ändert sich die Tarifzuordnung oder eine Prüfgrundlage."]
+      ],
+      [
+        "Innerhalb dieser Woche ändert sich die Tarifzuordnung oder eine Prüfgrundlage. Die Teilzeiträume sind getrennt zu beurteilen.",
+        ["Innerhalb des Zeitraums ändert sich die Tarifzuordnung oder eine Prüfgrundlage."]
+      ],
+      [
+        "Prüfe, welche erfassten Tätigkeiten regelmäßige Arbeitszeit und welche zusätzliche Arbeit sind.",
+        ["Die Wochenprüfung berücksichtigt alle zugehörigen Dienste."]
+      ],
+      [
+        "Bestätige den Zeitraum für den Fünftagedurchschnitt und die notwendigen betrieblichen Gründe für eine Sechstagewoche.",
+        [
+          "Beim Fünftagedurchschnitt kommt es zusätzlich auf den betrieblichen Ausgleichszeitraum an.",
+          "Betriebliche Gründe für einen sechsten Arbeitstag sind nicht automatisch belegt."
+        ]
+      ],
+      [
+        "Die notwendigen betrieblichen oder dienstlichen Gründe für einen sechsten Tag sind zu prüfen.",
+        ["Betriebliche Gründe für einen sechsten Arbeitstag sind nicht automatisch belegt."]
+      ],
+      [
+        "Die dringenden betrieblichen oder dienstlichen Gründe für einen sechsten Tag sind zu prüfen.",
+        [
+          "Dringende betriebliche Gründe für einen sechsten Arbeitstag sind nicht automatisch belegt."
+        ]
+      ]
+    ],
+    "unavailableCauses": [
+      "Die Tarifregeln sind für diesen Zeitraum noch nicht in dieser Prüffassung geprüft.",
+      "Wähle eine eindeutige Tarifgrundlage für diesen Zeitraum.",
+      "Die Arbeitszeit-Tarifgrundlage wird noch geladen.",
+      "Die Arbeitszeit-Tarifgrundlage konnte nicht geladen werden. Bitte prüfe die Arbeitszeitdaten.",
+      "Für die bereitgestellten Arbeitszeitdaten ist kein Tarifzeitraum verfügbar.",
+      "Die erfassten Dienste liegen außerhalb des hinterlegten Beschäftigungszeitraums.",
+      "Die vorhandenen Arbeitszeit-Tarifzeiträume decken dieses Datum nicht ab.",
+      "Mehrere Arbeitszeit-Tarifzeiträume gelten zugleich. Die Zuordnung ist zu klären.",
+      "Die Tarifzuordnung ist für diesen Zeitraum nicht hinreichend bestimmt.",
+      "Der Beschäftigtentarif des Ausbildenden ist noch zu bestätigen.",
+      "Der Geltungsbereich wurde in den Arbeitszeitdaten ausgeschlossen; die Tarifzuordnung ist zu klären."
+    ],
+    "regularWork": "Die Wochenprüfung berücksichtigt alle zugehörigen Dienste.",
+    "scope": "Ob die Regel für dich gilt, lässt sich aus deinen gespeicherten Tarifangaben nicht sicher erkennen.",
+    "fortnight": "Verglichen werden die gezeigten zwei Wochen. Ein abweichender betrieblicher Bezugszeitraum kann die Einordnung ändern.",
+    "regularSundays": "In deinem Arbeitsmodell ist Sonn- und Feiertagsarbeit noch nicht hinterlegt.",
+    "unrecordedFree": "Ein leerer Kalendertag ist kein bestätigter freier Tag.",
+    "insufficient": "Die vorhandenen Angaben reichen für diese Tarifprüfung nicht aus.",
+    "scopeUrl": "https://github.com/vladularu/LUNA-Shift",
+    "tvukUrl": "https://agu-uniklinika.de/wp-content/uploads/2025/07/01_TV-UK_durchgeschrieben-Fassung-Ae9-vom-03.07.2024.pdf",
+    "weeklyAssumption": "LUNA zählt Dienste am Startdatum und setzt die betrieblichen Gründe für einen sechsten Arbeitstag voraus."
+  },
+  "planning": {
+    "nightSources": [
+      {
+        "title": "BGW: Nacht- und Schichtarbeit",
+        "url": "https://www.bgw-online.de/bgw-online-de/themen/sicher-mit-system/gesundheit-managen/schichtarbeit/schichtarbeit-verlaesslich-planen-und-beschaeftigte-einbinden-24194",
+        "context": "Empfehlung zur Anzahl aufeinanderfolgender Nachtdienste."
+      },
+      {
+        "title": "BAuA: Gestaltung von Nacht- und Schichtarbeit",
+        "url": "https://www.baua.de/DE/Themen/Arbeitsgestaltung/Arbeitszeit/Nacht-und-Schichtarbeit",
+        "context": "Empfehlung zur freien Zeit nach einer Nachtphase."
+      },
+      {
+        "title": "Garde et al. (2020): Empfehlungen zur Nachtarbeit",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7737811/",
+        "context": "Forschungsempfehlungen zu Anzahl und Dauer von Nachtschichten."
+      }
+    ],
+    "bauaHandbook": {
+      "title": "BAuA: Arbeitszeitgestaltung – Handbuch zur Gefährdungsbeurteilung",
+      "url": "https://www.baua.de/DE/Themen/Arbeitsgestaltung/Gefaehrdungsbeurteilung/Handbuch-Gefaehrdungsbeurteilung/Expertenwissen/Arbeitszeitgestaltung/Arbeitszeitgestaltung?view=pdfViewExt",
+      "context": "Kapitel 10.2.5: Prüfliste zur Schichtarbeit; Herausgeberjahr 2023."
+    },
+    "weekendSource": {
+      "title": "BAuA: Handbuch zur Gefährdungsbeurteilung Arbeitszeit",
+      "url": "https://www.baua.de/DE/Themen/Arbeitsgestaltung/Arbeitszeit/pdf/handbuch-gfb.pdf?__blob=publicationFile&v=1",
+      "context": "Frage 42, Seite 33; Stand März 2016: mindestens zwei vollständig freie Wochenenden (Samstag und Sonntag) in vier Wochen."
+    }
+  }
+}

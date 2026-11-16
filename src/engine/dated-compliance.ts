@@ -10,6 +10,35 @@ type Steps = (
   timeZone: string,
   options?: ComplianceOptions,
 ) => Generator<number, MonthlyComplianceResult, void>;
+
+export function datedComplianceInputs(month: string, timeZone: string, options: ComplianceOptions) {
+  if (!options.employmentProfile?.employmentTimeline?.some((item) => item.employment))
+    return [{ timeZone, options, from: null, until: null }];
+  const start = Temporal.PlainDate.from(month + "-01");
+  return employmentMonthPeriods(
+    options.employmentProfile,
+    month,
+    start.with({ day: start.daysInMonth }).toString(),
+  ).map((period) => {
+    const p = period.profile;
+    return {
+      timeZone: p.timeZone,
+      from: period.from,
+      until: period.until,
+      options: {
+        ...options,
+        skipWeekendAssessment: true,
+        employmentAssessmentPeriod: { from: period.from, until: period.until },
+        federalState: p.federalState,
+        holidayRegion: p.holidayRegion,
+        weeklyMinutes: p.weeklyMinutes,
+        regularRotatingNightWork: p.regularRotatingNightWork,
+        sundayHolidayWorkEligible: p.sundayHolidayWorkEligible,
+        allEmploymentWorkRecorded: p.allEmploymentWorkRecorded,
+      },
+    };
+  });
+}
 export function createDatedComplianceCalculator(core: Steps) {
   /** Keep complete assessment windows; only dated input facts and displayed findings vary. */
   function* steps(
@@ -21,30 +50,16 @@ export function createDatedComplianceCalculator(core: Steps) {
     const history = options.employmentProfile?.employmentTimeline;
     if (!history?.some((item) => item.employment))
       return yield* core(month, shifts, timeZone, options);
-    const start = Temporal.PlainDate.from(month + "-01");
-    const periods = employmentMonthPeriods(
-      options.employmentProfile!,
-      month,
-      start.with({ day: start.daysInMonth }).toString(),
-    );
+    const periods = datedComplianceInputs(month, timeZone, options);
     const results: MonthlyComplianceResult[] = [];
     for (const period of periods) {
-      const p = period.profile;
-      const result = yield* core(month, shifts, p.timeZone, {
-        ...options,
-        skipWeekendAssessment: true,
-        employmentAssessmentPeriod: { from: period.from, until: period.until },
-        federalState: p.federalState,
-        holidayRegion: p.holidayRegion,
-        weeklyMinutes: p.weeklyMinutes,
-        regularRotatingNightWork: p.regularRotatingNightWork,
-        sundayHolidayWorkEligible: p.sundayHolidayWorkEligible,
-        allEmploymentWorkRecorded: p.allEmploymentWorkRecorded,
-      });
+      const result = yield* core(month, shifts, period.timeZone, period.options);
       results.push({
         ...result,
         issues: result.issues.filter(
-          (issue) => issue.date >= period.from && (!period.until || issue.date < period.until),
+          (issue) =>
+            (!period.from || issue.date >= period.from) &&
+            (!period.until || issue.date < period.until),
         ),
       });
     }

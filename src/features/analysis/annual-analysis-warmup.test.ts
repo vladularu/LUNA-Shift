@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS } from "@/engine/simple-pay";
 import { createRuleResolver } from "@/rules/rule-resolver";
+import { scheduleAnalysisWork } from "./analysis-work-queue";
 import {
   createAnnualAnalysisWarmupRuntime,
   type AnnualPreparationInput,
@@ -57,6 +58,32 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("annual preparation reconciliation", () => {
+  it("reconciles an edit before busy visible work can starve cancellation of the old background lease", async () => {
+    const first = input();
+    runtime.prepare(first);
+    await vi.runAllTimersAsync();
+    let finished = false;
+    const busy = scheduleAnalysisWork(
+      (function* () {
+        for (let i = 0; i < 10000; i++) yield 1;
+        return undefined;
+      })(),
+      () => {
+        finished = true;
+      },
+      () => {},
+      -1,
+    );
+    try {
+      runtime.prepare({ ...first, entries: [{ ...first.entries[0]!, endTime: "08:00" }] });
+      await vi.advanceTimersByTimeAsync(150);
+      expect(finished).toBe(false);
+      expect(mock.cancelled[0]).toBe(true);
+      expect(mock.keys).toHaveLength(2);
+    } finally {
+      busy.cancel();
+    }
+  });
   it("retains identical in-flight work but replaces it for an exact-content edit", async () => {
     const first = input();
     runtime.prepare(first);

@@ -44,3 +44,16 @@ app-example/
 /artifacts/
 /design-qa.md
 /pflegeshift-preview-build-*-qr.png
+
+# The native pilot is compiled from locked source on the macOS builder.
+/modules/luna-rest-pilot/.build/
+/modules/luna-rest-pilot/rust/target/
+/modules/luna-rest-pilot/ios/LunaRestCore.xcframework/
+
+# Full engine: native release builds use locked source/runtime data. Golden
+# corpora and integration tests stay in Git/CI, outside the app build upload.
+/modules/luna-engine/reference/
+/modules/luna-engine/rust/tests/
+/modules/luna-engine/rust/target/
+/modules/luna-engine/.build/
+/modules/luna-engine/ios/LunaEngineCore.xcframework/

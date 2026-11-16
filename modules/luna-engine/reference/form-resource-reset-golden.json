@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9",
+  "sourceFiles": {
+    "src/infrastructure/database/net-pay-profile-repository.ts": "b785e76cc2134ebd057c6727d55acd504a9f912b3917459409ed6394cb6048e2",
+    "src/infrastructure/database/salary-payment-repository.ts": "1a9de94a8390cc5e0aa15b50a54fabf6f36d46670888a51a013bd64a3007fb7b",
+    "src/infrastructure/database/transaction.ts": "8128dff927f2502e60e5468018c611dddcb5ecca3f61eaa67096450c66b00b3e"
+  },
+  "oracle": {
+    "generatorSha256": "0a3b934ec1df2cd6495e89b30b70204450dee1fe4367f31cf020e62f458450ce",
+    "preludeSha256": "dffb2e8e402214c55c3dde608b6656bdc2a77fdc87e2523e0a08763b48f4ec08",
+    "suffix": "return {calculate};",
+    "observation": "Unchanged original repository against actual SQLite; original fixed Date only. Removed the unrelated unchanged November row so the active June settings retain a visible 2026 override at November source opening."
+  },
+  "cases": [
+    {
+      "id": "reset-2026-native-visible-override",
+      "input": {
+        "kind": "RESET",
+        "epoch": 1794657600123,
+        "rows": [
+          {
+            "month": "2026-01",
+            "settings_json": "{\"version\":2,\"month\":\"2026-01\",\"profile\":{\"birthDate\":\"1990-01-15\",\"taxClass\":1,\"factorPermille\":null,\"churchTaxRatePercent\":0,\"childAllowanceHalfUnits\":0,\"isParent\":false,\"childrenUnder25\":0,\"worksInSaxony\":false,\"healthAdditionalRateBps\":290,\"monthlyTaxAllowanceCents\":0},\"specialCases\":[],\"sfnBasicHourlyPayCents\":null,\"automation\":{\"fullMonthAndPayConfirmed\":true,\"plannedWorkConfirmed\":true,\"additionalRecurringGrossCents\":0,\"additionalNetDeductionCents\":0,\"pensionScheme\":\"ZVK_SACHSEN\",\"annualPayments\":[{\"revision\":1,\"payoutMonth\":\"2025-11\",\"grossCents\":1000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}},{\"revision\":1,\"payoutMonth\":\"2026-11\",\"grossCents\":2000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}},{\"revision\":1,\"payoutMonth\":\"2027-11\",\"grossCents\":3000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}}]}}",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+          },
+          {
+            "month": "2026-06",
+            "settings_json": "{\"version\":2,\"month\":\"2026-06\",\"profile\":{\"birthDate\":\"1990-01-15\",\"taxClass\":1,\"factorPermille\":null,\"churchTaxRatePercent\":0,\"childAllowanceHalfUnits\":0,\"isParent\":false,\"childrenUnder25\":0,\"worksInSaxony\":false,\"healthAdditionalRateBps\":290,\"monthlyTaxAllowanceCents\":0},\"specialCases\":[],\"sfnBasicHourlyPayCents\":null,\"automation\":{\"fullMonthAndPayConfirmed\":true,\"plannedWorkConfirmed\":true,\"additionalRecurringGrossCents\":0,\"additionalNetDeductionCents\":0,\"pensionScheme\":\"ZVK_THUERINGEN\",\"annualPayments\":[{\"revision\":1,\"payoutMonth\":\"2026-11\",\"grossCents\":2000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}},{\"revision\":1,\"payoutMonth\":\"2027-11\",\"grossCents\":3000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}}]}}",
+            "revision": 1,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "preference": null,
+        "year": 2026
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "guards": [
+          {
+            "kind": "NO_TEST_MONTHS"
+          },
+          {
+            "kind": "PROFILE_PRESENT"
+          }
+        ],
+        "mutations": [
+          {
+            "kind": "UPSERT_NET_PAY_PROFILE",
+            "row": {
+              "month": "2026-01",
+              "settings_json": "{\"version\":2,\"month\":\"2026-01\",\"profile\":{\"birthDate\":\"1990-01-15\",\"taxClass\":1,\"factorPermille\":null,\"churchTaxRatePercent\":0,\"childAllowanceHalfUnits\":0,\"isParent\":false,\"childrenUnder25\":0,\"worksInSaxony\":false,\"healthAdditionalRateBps\":290,\"monthlyTaxAllowanceCents\":0},\"specialCases\":[],\"sfnBasicHourlyPayCents\":null,\"automation\":{\"fullMonthAndPayConfirmed\":true,\"plannedWorkConfirmed\":true,\"additionalRecurringGrossCents\":0,\"additionalNetDeductionCents\":0,\"pensionScheme\":\"ZVK_SACHSEN\",\"annualPayments\":[{\"revision\":1,\"payoutMonth\":\"2025-11\",\"grossCents\":1000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}},{\"revision\":1,\"payoutMonth\":\"2027-11\",\"grossCents\":3000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}}]}}",
+              "revision": 2,
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-11-14T12:00:00.123Z"
+            },
+            "expected": {
+              "revision": 1,
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-01-01T00:00:00Z"
+            }
+          },
+          {
+            "kind": "UPSERT_NET_PAY_PROFILE",
+            "row": {
+              "month": "2026-06",
+              "settings_json": "{\"version\":2,\"month\":\"2026-06\",\"profile\":{\"birthDate\":\"1990-01-15\",\"taxClass\":1,\"factorPermille\":null,\"churchTaxRatePercent\":0,\"childAllowanceHalfUnits\":0,\"isParent\":false,\"childrenUnder25\":0,\"worksInSaxony\":false,\"healthAdditionalRateBps\":290,\"monthlyTaxAllowanceCents\":0},\"specialCases\":[],\"sfnBasicHourlyPayCents\":null,\"automation\":{\"fullMonthAndPayConfirmed\":true,\"plannedWorkConfirmed\":true,\"additionalRecurringGrossCents\":0,\"additionalNetDeductionCents\":0,\"pensionScheme\":\"ZVK_THUERINGEN\",\"annualPayments\":[{\"revision\":1,\"payoutMonth\":\"2027-11\",\"grossCents\":3000,\"netBasis\":{\"kind\":\"CONSTANT_PAY\"}}]}}",
+              "revision": 2,
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-11-14T12:00:00.123Z"
+            },
+            "expected": {
+              "revision": 1,
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-01-01T00:00:00Z"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

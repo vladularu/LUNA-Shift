@@ -1,3 +1,9 @@
+import { monthlyRustNetRequest, type MonthlyRustNetCalculator } from "./monthly-rust-net";
+import {
+  monthlyRustChecksKey,
+  monthlyRustChecksSteps,
+  type MonthlyRustChecksCalculator,
+} from "./monthly-rust-checks";
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { resolveNetPaySettings, type SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type {
@@ -29,12 +35,20 @@ import { completedMonthlyCompliance, monthlyComplianceKey } from "./analysis-com
 import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import {
+  monthlyRustRequest,
+  monthlyRustSteps,
+  type MonthlyRustCalculator,
+} from "./monthly-rust-bridge";
+import {
   persistentCheckValue,
   persistentMonthValue,
   persistentSalaryValue,
 } from "./persistent-analysis-values";
 
 export interface AnalysisWarmupInput {
+  readonly monthlyCalculator?: MonthlyRustCalculator | null;
+  readonly netCalculator?: MonthlyRustNetCalculator | null;
+  readonly checksCalculator?: MonthlyRustChecksCalculator | null;
   readonly months: readonly string[];
   readonly profile: UserProfile;
   readonly savedProfile: UserProfile;
@@ -158,7 +172,10 @@ export function createAnalysisWarmupRuntime(
         } = input;
         if (youthEnabled === null) return;
         const shifts = value.complianceShifts.ok ? value.complianceShifts.value : [];
-        const key = monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled);
+        const key = monthlyRustChecksKey(
+          monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled),
+          input.checksCalculator,
+        );
         yield 0;
         if (current !== generation) return;
         stage({
@@ -175,18 +192,23 @@ export function createAnalysisWarmupRuntime(
           ),
           accept: persistentCheckValue,
           steps: () =>
-            calculateMonthlyComplianceSteps(month, shifts, profile.timeZone, {
-              employmentProfile: profile,
-              federalState: profile.federalState,
-              holidayRegion: profile.holidayRegion,
-              weeklyMinutes: profile.weeklyMinutes,
-              regularRotatingNightWork: profile.regularRotatingNightWork,
-              sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
-              allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
-              referenceDate,
-              ruleResolver,
-              youthProtection: youthEnabled,
-            }),
+            input.checksCalculator
+              ? monthlyRustChecksSteps(
+                  { month, shifts, profile, referenceDate, youthProtection: youthEnabled },
+                  input.checksCalculator,
+                )
+              : calculateMonthlyComplianceSteps(month, shifts, profile.timeZone, {
+                  employmentProfile: profile,
+                  federalState: profile.federalState,
+                  holidayRegion: profile.holidayRegion,
+                  weeklyMinutes: profile.weeklyMinutes,
+                  regularRotatingNightWork: profile.regularRotatingNightWork,
+                  sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
+                  allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
+                  referenceDate,
+                  ruleResolver,
+                  youthProtection: youthEnabled,
+                }),
           complete: (result) => {
             completedMonthlyCompliance.write(
               ruleResolver,
@@ -230,14 +252,17 @@ export function createAnalysisWarmupRuntime(
           const priority = ANALYSIS_WARMUP_PRIORITY + index;
           setup(
             (function* () {
-              const request = {
-                month,
-                profile: input.profile,
-                entries: input.entries,
-                tariffDecisions: input.tariffDecisions,
-                workPatternSettings: input.workPatternSettings,
-                ruleResolver: input.resolver,
-              };
+              const request = monthlyRustRequest(
+                {
+                  month,
+                  profile: input.profile,
+                  entries: input.entries,
+                  tariffDecisions: input.tariffDecisions,
+                  workPatternSettings: input.workPatternSettings,
+                  ruleResolver: input.resolver,
+                },
+                input.monthlyCalculator,
+              );
               const inspection = inspectMonthlyAnalysis(request),
                 key = inspection.key;
               yield 0;
@@ -251,7 +276,10 @@ export function createAnalysisWarmupRuntime(
                 priority,
                 prepared: inspection.cached,
                 accept: persistentMonthValue,
-                steps: () => calculateMonthlyAnalysisSteps(request),
+                steps: () =>
+                  input.monthlyCalculator
+                    ? monthlyRustSteps(request, input.monthlyCalculator)
+                    : calculateMonthlyAnalysisSteps(request),
                 complete: (result) => {
                   checks(month, retainPreparedMonthlyAnalysis(request, key, result), priority);
                 },
@@ -265,20 +293,23 @@ export function createAnalysisWarmupRuntime(
                 input.annualPayments === null
               )
                 return;
-              const salary: AnalysisSalaryRequest = {
-                month,
-                profile: input.savedProfile,
-                settings: resolveNetPaySettings(month, input.timeline)?.settings ?? null,
-                annualPayments: input.annualPayments,
-                payment: { ...input.payment, sourceSettings: input.timeline },
-                context: {
-                  entries: input.entries,
-                  tariffDecisions: input.tariffDecisions,
-                  workPatternSettings: input.workPatternSettings,
-                  resolver: input.resolver,
-                  testMonths: input.testMonths,
+              const salary: AnalysisSalaryRequest = monthlyRustNetRequest(
+                {
+                  month,
+                  profile: input.savedProfile,
+                  settings: resolveNetPaySettings(month, input.timeline)?.settings ?? null,
+                  annualPayments: input.annualPayments,
+                  payment: { ...input.payment, sourceSettings: input.timeline },
+                  context: {
+                    entries: input.entries,
+                    tariffDecisions: input.tariffDecisions,
+                    workPatternSettings: input.workPatternSettings,
+                    resolver: input.resolver,
+                    testMonths: input.testMonths,
+                  },
                 },
-              };
+                input.netCalculator,
+              );
               const salaryKey = analysisSalaryKey(salary);
               yield 0;
               if (current !== generation) return;
@@ -287,15 +318,14 @@ export function createAnalysisWarmupRuntime(
                 key: salaryKey,
                 month,
                 resolver: input.resolver,
-                // Payment projections require the same conservative persistence policy
-                // as the visible salary hook until a complete projection codec exists.
-                persistent: null,
+                persistent,
                 priority,
                 prepared: readAnalysisSalary(salary, salaryKey),
-                accept: persistentSalaryValue,
-                retain: (value) =>
-                  value.forecast?.result.status === "available" || persistentSalaryValue(value),
-                steps: (progress) => prepareAnalysisSalarySteps(salary, salaryKey, progress),
+                accept: (value): value is PreparedAnalysisSalary =>
+                  persistentSalaryValue(value, salary),
+                retain: (value) => persistentSalaryValue(value, salary),
+                steps: (progress) =>
+                  prepareAnalysisSalarySteps(salary, salaryKey, progress, input.netCalculator),
                 complete: (result) => {
                   retainPreparedAnalysisSalary(salary, salaryKey, result);
                 },

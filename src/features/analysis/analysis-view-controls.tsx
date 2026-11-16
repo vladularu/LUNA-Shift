@@ -58,7 +58,6 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
     </View>
   ) : null;
   const renderPreferenceRow = (id: AnalysisCardId) => {
-    const index = state.preferences.order.indexOf(id);
     const visible = !state.preferences.hidden.includes(id);
     return (
       <View
@@ -66,8 +65,6 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
         testID={`analysis-setting-${id}`}
         style={{
           minHeight: 72,
-          borderTopWidth: index > 0 ? 1 : 0,
-          borderTopColor: p.separator,
           paddingHorizontal: SPACING.lg,
           paddingVertical: SPACING.sm,
           gap: SPACING.md,

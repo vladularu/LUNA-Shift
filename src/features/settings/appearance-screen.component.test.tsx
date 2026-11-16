@@ -281,6 +281,9 @@ describe("appearance controls", () => {
         nativeEvent: { layout: { width: 308, height: 52, x: 0, y: 0 } },
       });
       const palette = resolvePalette("mint", mode === "dark");
+      expect(screen.getByTestId("appearance-mode-track")).toHaveStyle({
+        backgroundColor: palette.surface,
+      });
       expect(screen.getAllByTestId("appearance-mode-active-surface")).toHaveLength(1);
       expect(screen.getByTestId("appearance-mode-active-surface")).toHaveStyle({
         width: 100,
@@ -337,7 +340,7 @@ describe("appearance controls", () => {
       JSON.stringify(root).indexOf("appearance-settings"),
     );
   });
-  it("keeps the live preview fixed above the scrolling sections with a non-interactive fade", async () => {
+  it("keeps only the rounded live preview floating above the scrolling sections without a fade", async () => {
     const screen = await render(pictureScreen());
 
     const preview = screen.getByTestId("appearance-calendar-preview");
@@ -364,8 +367,14 @@ describe("appearance controls", () => {
 
     expect(within(controls).queryByTestId("appearance-calendar-preview")).toBeNull();
     expect(
-      screen.getByTestId("calendar-design-scroll-fade", { includeHiddenElements: true }),
-    ).toHaveProp("pointerEvents", "none");
+      screen.queryByTestId("calendar-design-scroll-fade", { includeHiddenElements: true }),
+    ).toBeNull();
+    const frame = screen.getByTestId("calendar-design-preview-frame");
+    expect(frame).toHaveProp("pointerEvents", "box-none");
+    expect(frame).toHaveStyle({ position: "absolute", zIndex: 1 });
+    expect(frame.props.style.backgroundColor).toBeUndefined();
+    expect(within(frame).getByTestId("appearance-calendar-preview")).toBe(preview);
+    expect(controls).toHaveProp("contentInsetAdjustmentBehavior", "never");
     for (const name of [
       "Aussehen",
       "Eigenes Hintergrundbild",
@@ -375,7 +384,7 @@ describe("appearance controls", () => {
     ])
       expect(within(controls).getByText(name)).toBeTruthy();
     for (const name of ["Dienste & Abwesenheiten", "Termine", "Feiertage"])
-      expect(within(controls).getByRole("switch", { name })).toBeTruthy();
+      expect(within(controls).getByRole("checkbox", { name })).toBeTruthy();
     expect(
       within(controls).getByRole("button", { name: "Kalenderoptionen zurücksetzen" }),
     ).toBeTruthy();
@@ -543,15 +552,31 @@ describe("appearance controls", () => {
     expect(background.undoRemove).toHaveBeenCalledTimes(1);
     expect(background.choose).toHaveBeenCalledTimes(1);
   });
-  it("keeps independent content switches and separates label and time choices", async () => {
+  it("keeps all three content choices independently checked and separates label and time choices", async () => {
     const screen = await render(screenWith());
-    for (const [name, setter] of [
-      ["Dienste & Abwesenheiten", mockDisplay.setShowShifts],
-      ["Termine", mockDisplay.setShowAppointments],
-      ["Feiertage", mockDisplay.setShowHolidays],
-    ] as const) {
-      await fireEvent.press(screen.getByRole("switch", { name }));
+    const content = within(screen.getByTestId("calendar-content-settings"));
+    const choices = [
+      ["Dienste & Abwesenheiten", mockDisplay.setShowShifts, "showShifts"],
+      ["Termine", mockDisplay.setShowAppointments, "showAppointments"],
+      ["Feiertage", mockDisplay.setShowHolidays, "showHolidays"],
+    ] as const;
+    expect(content.getAllByRole("checkbox", { checked: true })).toHaveLength(3);
+    expect(content.queryAllByRole("switch")).toHaveLength(0);
+    expect(content.queryAllByRole("radio")).toHaveLength(0);
+    for (const [index, [name, setter, key]] of choices.entries()) {
+      await fireEvent.press(content.getByRole("checkbox", { name }));
       expect(setter).toHaveBeenCalledWith(false);
+      mockDisplay[key] = false;
+      await screen.rerender(screenWith());
+      expect(content.getByRole("checkbox", { name, checked: false })).toBeTruthy();
+      expect(content.queryAllByRole("checkbox", { checked: true })).toHaveLength(2 - index);
+    }
+    for (const [index, [name, setter, key]] of choices.entries()) {
+      await fireEvent.press(content.getByRole("checkbox", { name }));
+      expect(setter).toHaveBeenLastCalledWith(true);
+      mockDisplay[key] = true;
+      await screen.rerender(screenWith());
+      expect(content.getAllByRole("checkbox", { checked: true })).toHaveLength(index + 1);
     }
     const labels = within(screen.getByTestId("calendar-label-settings"));
     const times = within(screen.getByTestId("calendar-time-settings"));
@@ -658,7 +683,7 @@ describe("appearance controls", () => {
     mockDisplay.ready = false;
     const screen = await render(screenWith());
     for (const name of ["Dienste & Abwesenheiten", "Termine", "Feiertage"])
-      expect(screen.getByRole("switch", { name })).toBeDisabled();
+      expect(screen.getByRole("checkbox", { name })).toBeDisabled();
     for (const name of ["Name", "Kürzel", "Symbol", "Keine", "Startzeit", "Gesamtdauer"]) {
       expect(screen.getByRole("radio", { name })).toBeDisabled();
       await fireEvent.press(screen.getByRole("radio", { name }));

@@ -22,7 +22,7 @@ import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/type
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { today } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
-import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { CALENDAR_METRICS, CORNER_CURVE } from "@/theme/tokens";
 import type { CalendarAnchorRect } from "./calendar-layout";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import { PrototypeDates, PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
@@ -409,7 +409,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
               top: day.toY - 20,
               width: layout.cellWidth,
               height: layout.weekHeight,
-              borderRadius: RADII.small,
+              borderRadius: CALENDAR_METRICS.dayRadius,
             }}
           >
             {!entriesByDate.get(day.date)?.length &&
@@ -465,7 +465,7 @@ function StampDayOutline({
           borderWidth: 1,
           borderColor: color,
           backgroundColor: fill + "40",
-          borderRadius: RADII.small,
+          borderRadius: CALENDAR_METRICS.dayRadius,
           borderCurve: CORNER_CURVE,
         },
         motionStyle,

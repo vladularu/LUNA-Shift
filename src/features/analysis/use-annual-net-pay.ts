@@ -17,6 +17,8 @@ import {
   persistentAnnualNetPay,
 } from "./annual-net-pay-cache";
 import { requestSharedAnalysis } from "./shared-analysis-tasks";
+import { annualRustNetRequest, annualRustSteps } from "./annual-rust-bridge";
+import { useAnnualRustCalculator } from "./use-annual-rust-calculator";
 
 // Full input content and resolver identity isolate years, profiles and rule catalogs.
 // SQLite additionally retains validated snapshots across restarts of the same app update.
@@ -81,10 +83,15 @@ export function useAnnualNetPay(
 // Shared by the mounted background preparation and the visible annual pages.
 // Route focus only belongs to the wrapper above, never to the background consumer.
 export function usePreparedAnnualNetPay(
-  request: AnnualNetPayRequest | null,
+  inputRequest: AnnualNetPayRequest | null,
   enabled: boolean,
   priority = -1,
 ): AnnualNetPayState {
+  const calculator = useAnnualRustCalculator();
+  const request = useMemo(
+    () => (inputRequest ? annualRustNetRequest(inputRequest, calculator) : null),
+    [inputRequest, calculator],
+  );
   const persistent = useAnalysisPersistentResults();
   const resolver = request?.context.resolver ?? null;
   const key = useMemo(() => (request ? annualNetPayKey(request) : null), [request]);
@@ -113,8 +120,15 @@ export function usePreparedAnnualNetPay(
       resolver,
       persistent,
       priority,
-      accept: (value): value is AnnualNetPay => persistentAnnualNetPay(value, input.year),
-      steps: () => annualNetPaySteps(input),
+      accept: (value): value is AnnualNetPay =>
+        persistentAnnualNetPay(
+          value,
+          input.year,
+          calculator !== null &&
+            !input.context.testMonths?.some((month) => month.startsWith(`${input.year}-`)),
+        ),
+      steps: () =>
+        calculator ? annualRustSteps(() => calculator.net(input)) : annualNetPaySteps(input),
       complete: (report) => {
         if (active)
           setState({
@@ -138,7 +152,7 @@ export function usePreparedAnnualNetPay(
       active = false;
       job.cancel();
     };
-  }, [enabled, key, resolver, settled, priority, persistent]);
+  }, [enabled, key, resolver, settled, priority, persistent, calculator]);
   const error = matching?.error ?? null;
   return {
     report: cached ?? matching?.report ?? null,

@@ -11,28 +11,32 @@ export function CalendarChoiceRows<T extends string>({
   value,
   disabled,
   onChange,
+  multiple = false,
 }: {
   readonly label: string;
   readonly options: readonly { readonly value: T; readonly label: string }[];
-  readonly value: T | null;
+  readonly value: T | readonly T[] | null;
   readonly disabled: boolean;
   readonly onChange: (value: T) => void;
+  readonly multiple?: boolean;
 }) {
   const palette = usePalette();
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label}>
+    <View accessibilityRole={multiple ? undefined : "radiogroup"} accessibilityLabel={label}>
       {options.map((option, index) => {
-        const selected = value === option.value;
+        const selected = Array.isArray(value)
+          ? value.includes(option.value)
+          : value === option.value;
         return (
           <View key={option.value}>
             {index > 0 ? <CardSeparator /> : null}
             <Pressable
-              accessibilityRole="radio"
+              accessibilityRole={multiple ? "checkbox" : "radio"}
               accessibilityLabel={option.label}
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => {
-                if (!selected) onChange(option.value);
+                if (multiple || !selected) onChange(option.value);
               }}
               style={({ pressed }) => ({
                 minHeight: 44,

@@ -78,6 +78,7 @@ export function ProfileChoice<T extends ChoiceValue>({
   readonly modalTitle?: string;
   readonly disabled?: boolean;
 }) {
+  const palette = usePalette();
   const context = useContext(SelectionContext);
   const busy = useContext(ProfileEditorBusyContext);
   const returnTo = useContext(ProfilePageTitleContext);
@@ -86,6 +87,7 @@ export function ProfileChoice<T extends ChoiceValue>({
   if (!context) throw new Error("ProfileSelectionProvider fehlt.");
   return (
     <RowButton
+      titleColor={palette.text}
       title={label}
       subtitle={valueLabel}
       disabled={busy || disabled}

@@ -1,0 +1,2066 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "valid-empty",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-0",
+      "input": null
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-1",
+      "input": false
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-2",
+      "input": 0
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-3",
+      "input": "text"
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-4",
+      "input": []
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-5",
+      "input": {}
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "shape-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "ready": true,
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "missing-id",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "missing-settings_json",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "missing-revision",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "missing-created_at",
+      "input": {
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "missing-updated_at",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": null,
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": false,
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": 0,
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": 1.5,
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": {},
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-id-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": [],
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": null,
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": false,
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": 0,
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": 1.5,
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": { "error": { "message": "Unexpected end of JSON input", "name": "SyntaxError" } },
+      "id": "field-settings_json-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "",
+        "updated_at": "2026-11-01T12:00:00Z"
+      },
+      "safeRejection": "MALFORMED_STORED_JSON"
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": {},
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-settings_json-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": [],
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": null,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": false,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 0,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1.5,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": "",
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": {},
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-revision-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": [],
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-0",
+      "input": {
+        "created_at": null,
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-1",
+      "input": {
+        "created_at": false,
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-2",
+      "input": {
+        "created_at": 0,
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-3",
+      "input": {
+        "created_at": 1.5,
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-4",
+      "input": {
+        "created_at": "",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-5",
+      "input": {
+        "created_at": {},
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-created_at-6",
+      "input": {
+        "created_at": [],
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": null
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": false
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": 0
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": 1.5
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": ""
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": {}
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "field-updated_at-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": []
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "revision--1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": -1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "revision-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 0,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "revision-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 2,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 2,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "revision-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 2,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 9007199254740991,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 9007199254740991,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "revision-9007199254740991",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 9007199254740991,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "revision-9007199254740992",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 9007199254740992,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-0",
+      "input": {
+        "created_at": "bad",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "bad"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-1",
+      "input": {
+        "created_at": "2026-02-30T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-02-30T00:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-2",
+      "input": {
+        "created_at": "2026-01-01T00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "updated-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T01:00:00+01:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T01:00:00+01:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-3",
+      "input": {
+        "created_at": "2026-01-01T01:00:00+01:00",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T01:00:00+01:00"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T01:00:00+01:00"
+        },
+        "staleDates": []
+      },
+      "id": "updated-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T01:00:00+01:00"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00.000000001Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00.000000001Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00.000000001Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00.000000001Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00.000000001Z"
+        },
+        "staleDates": []
+      },
+      "id": "updated-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00.000000001Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:60Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:60Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:60Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:60Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:60Z"
+        },
+        "staleDates": []
+      },
+      "id": "updated-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:60Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00+00:00[Europe/Berlin]",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00+00:00[Europe/Berlin]",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00+00:00[Europe/Berlin]",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00+00:00[Europe/Berlin]"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00+00:00[Europe/Berlin]"
+        },
+        "staleDates": []
+      },
+      "id": "updated-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00+00:00[Europe/Berlin]"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00-00:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00-00:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-7",
+      "input": {
+        "created_at": "2026-01-01T00:00:00-00:00",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00-00:00"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00-00:00"
+        },
+        "staleDates": []
+      },
+      "id": "updated-7",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00-00:00"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00+00:00:01",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00+00:00:01",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-8",
+      "input": {
+        "created_at": "2026-01-01T00:00:00+00:00:01",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-8",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00+00:00:01"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-9",
+      "input": {
+        "created_at": " 2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-9",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": " 2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "-271821-04-20T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "-271821-04-20T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-10",
+      "input": {
+        "created_at": "-271821-04-20T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-10",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "-271821-04-20T00:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-11",
+      "input": {
+        "created_at": "-271821-04-19T23:59:59.999999999Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-11",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "-271821-04-19T23:59:59.999999999Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-12",
+      "input": {
+        "created_at": "+275760-09-13T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "+275760-09-13T00:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "+275760-09-13T00:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "updated-12",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "+275760-09-13T00:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "created-13",
+      "input": {
+        "created_at": "+275760-09-13T00:00:00.000000001Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-13",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "+275760-09-13T00:00:00.000000001Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00+00:00:00.000000001",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00+00:00:00.000000001",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-14",
+      "input": {
+        "created_at": "2026-01-01T00:00:00+00:00:00.000000001",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-14",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00+00:00:00.000000001"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00+000030",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00+000030",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "created-15",
+      "input": {
+        "created_at": "2026-01-01T00:00:00+000030",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "updated-15",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00+000030"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "reverse-order",
+      "input": {
+        "created_at": "2026-11-02T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "nanosecond-order-reversed",
+      "input": {
+        "created_at": "2026-01-01T00:00:00.000000009Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00.000000001Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T01:00:00+01:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T01:00:00+01:00",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-01-01T00:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "same-instant-different-offset",
+      "input": {
+        "created_at": "2026-01-01T01:00:00+01:00",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "null",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "[]",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Diese Version der Sollzeitangaben wird noch nicht unterstützt.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":2,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-4",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[],\"unexpected\":true}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-5",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[{\"date\":\"2026-12-25\",\"signature\":\"x\"}]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "settings-6",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1,\"context\":{\"periods\":[],\"days\":[{\"date\":\"2026-02-30\",\"rosterStatus\":\"DRAFT\",\"disposition\":\"UNKNOWN\"}]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "value": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        }
+      },
+      "expectedSnapshot": {
+        "context": { "days": [], "periods": [] },
+        "planRevision": "{\"shifts\":[],\"timeZone\":\"Europe/Berlin\"}",
+        "saved": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "revision": 1,
+          "settings": {
+            "context": { "days": [], "periods": [] },
+            "planBindings": [],
+            "version": 1
+          },
+          "updatedAt": "2026-11-01T12:00:00Z"
+        },
+        "staleDates": []
+      },
+      "id": "integral-version-token",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1.0,\"context\":{\"periods\":[],\"days\":[]},\"planBindings\":[]}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+          "name": "SyntaxError"
+        }
+      },
+      "id": "malformed-json-0",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{",
+        "updated_at": "2026-11-01T12:00:00Z"
+      },
+      "safeRejection": "MALFORMED_STORED_JSON"
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Unexpected token 'o', \"not-json\" is not valid JSON",
+          "name": "SyntaxError"
+        }
+      },
+      "id": "malformed-json-1",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "not-json",
+        "updated_at": "2026-11-01T12:00:00Z"
+      },
+      "safeRejection": "MALFORMED_STORED_JSON"
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Die Angaben zur Sollarbeitszeit sind unvollständig oder widersprüchlich.",
+          "name": "WorkingTimeTargetError"
+        }
+      },
+      "id": "malformed-json-2",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"version\":1e999}",
+        "updated_at": "2026-11-01T12:00:00Z"
+      },
+      "safeRejection": "MALFORMED_STORED_JSON"
+    },
+    {
+      "expected": {
+        "error": {
+          "message": "Expected ',' or '}' after property value in JSON at position 26 (line 1 column 27)",
+          "name": "SyntaxError"
+        }
+      },
+      "id": "malformed-json-3",
+      "input": {
+        "created_at": "2026-01-01T00:00:00Z",
+        "id": "singleton",
+        "revision": 1,
+        "settings_json": "{\"x\":\"private@example.com\"",
+        "updated_at": "2026-11-01T12:00:00Z"
+      },
+      "safeRejection": "MALFORMED_STORED_JSON"
+    }
+  ],
+  "casesSha256": "b4f29d9480f43370f3769154b119882e424bb30d1686b1c4c024b047533bf7d6",
+  "schemaVersion": 1,
+  "sourceDigest": "92f8505f38e00e19c45c4e7957ac1d559e2712fa9a59e769bab83467e6cbb0d9"
+}

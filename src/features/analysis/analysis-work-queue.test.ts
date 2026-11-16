@@ -8,7 +8,178 @@ afterEach(() => {
   calendarPerformance.clear();
 });
 
+describe("native asynchronous analysis work", () => {
+  it("parks a native wait without polling and continues other work", async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const nativeDone = vi.fn(),
+      otherDone = vi.fn(),
+      fail = vi.fn();
+    const enqueue = createAnalysisWorkQueue();
+    enqueue(
+      (function* () {
+        yield pending;
+        return 7;
+      })(),
+      nativeDone,
+      fail,
+      -1,
+    );
+    enqueue(
+      (function* () {
+        yield 1;
+        return 8;
+      })(),
+      otherDone,
+      fail,
+      0,
+    );
+    await vi.runAllTimersAsync();
+    expect(nativeDone).not.toHaveBeenCalled();
+    expect(otherDone).toHaveBeenCalledExactlyOnceWith(8);
+    expect(vi.getTimerCount()).toBe(0);
+    release();
+    await vi.runAllTimersAsync();
+    expect(nativeDone).toHaveBeenCalledExactlyOnceWith(7);
+    expect(fail).not.toHaveBeenCalled();
+  });
+  it("disposes a canceled native wait and ignores a late response", async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const done = vi.fn(),
+      fail = vi.fn(),
+      dispose = vi.fn();
+    const lease = createAnalysisWorkQueue()(
+      (function* () {
+        try {
+          yield pending;
+          return 1;
+        } finally {
+          dispose();
+        }
+      })(),
+      done,
+      fail,
+    );
+    await vi.runAllTimersAsync();
+    lease.cancel();
+    expect(dispose).toHaveBeenCalledTimes(1);
+    release();
+    await vi.runAllTimersAsync();
+    expect(done).not.toHaveBeenCalled();
+    expect(fail).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("reports an asynchronous failure once without restarting the job", async () => {
+    vi.useFakeTimers();
+    let reject!: (error: unknown) => void;
+    const pending = new Promise<void>((_, fail) => {
+      reject = fail;
+    });
+    const done = vi.fn(),
+      fail = vi.fn();
+    createAnalysisWorkQueue()(
+      (function* () {
+        yield pending;
+        return 1;
+      })(),
+      done,
+      fail,
+    );
+    await vi.runAllTimersAsync();
+    const error = new Error("native failed");
+    reject(error);
+    await vi.runAllTimersAsync();
+    expect(fail).toHaveBeenCalledExactlyOnceWith(error);
+    expect(done).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
 describe("cooperative analysis queue", () => {
+  it("also enforces the timer boundary when completion immediately enqueues more warm work", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    type IdleCallback = (budget: { didTimeout: boolean; timeRemaining(): number }) => void;
+    const idle = new Map<number, IdleCallback>();
+    let nextId = 0;
+    vi.stubGlobal("requestIdleCallback", (callback: IdleCallback) => {
+      idle.set(++nextId, callback);
+      return nextId;
+    });
+    vi.stubGlobal("cancelIdleCallback", (id: number) => idle.delete(id));
+    const enqueue = createAnalysisWorkQueue(),
+      completed = vi.fn();
+    enqueue(
+      (function* () {
+        return 1;
+      })(),
+      () => {
+        enqueue(
+          (function* () {
+            yield 1;
+            return 2;
+          })(),
+          completed,
+          vi.fn(),
+          20,
+        );
+      },
+      vi.fn(),
+      20,
+    );
+    const first = idle.values().next().value!;
+    idle.clear();
+    first({ didTimeout: false, timeRemaining: () => 50 });
+    expect(idle.size).toBe(0);
+    expect(completed).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    const second = idle.values().next().value!;
+    idle.clear();
+    second({ didTimeout: false, timeRemaining: () => 50 });
+    expect(completed).toHaveBeenCalledExactlyOnceWith(2);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("crosses a timer boundary between native warm idle slices and allows immediate promotion", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("performance", { now: () => 0 });
+    const callbacks: ((budget: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];
+    vi.stubGlobal("requestIdleCallback", (callback: (typeof callbacks)[number]) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.stubGlobal("cancelIdleCallback", vi.fn());
+    let advanced = 0;
+    const done = vi.fn();
+    const lease = createAnalysisWorkQueue()(
+      (function* () {
+        for (let i = 0; i < 100; i++) {
+          advanced++;
+          yield 1;
+        }
+        return 100;
+      })(),
+      done,
+      vi.fn(),
+      20,
+    );
+    const heartbeat = vi.fn();
+    setTimeout(heartbeat, 0);
+    callbacks.shift()!({ didTimeout: false, timeRemaining: () => 50 });
+    expect(advanced).toBe(32);
+    expect(callbacks).toHaveLength(0);
+    vi.advanceTimersToNextTimer();
+    expect(heartbeat).toHaveBeenCalledOnce();
+    lease.setPriority(-1);
+    vi.runAllTimers();
+    expect(done).toHaveBeenCalledExactlyOnceWith(100);
+  });
   it("does no warm work with an exhausted idle budget and does not force an idle timeout", () => {
     vi.useFakeTimers();
     const callbacks: ((budget?: { didTimeout: boolean; timeRemaining(): number }) => void)[] = [];
