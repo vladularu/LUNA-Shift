@@ -24,6 +24,14 @@ test("disabled Data API operations run in an isolated process", async (context) 
   context.diagnostic(stdout.trim());
 });
 
+test("platform security contract runs in an isolated process", async (context) => {
+  const { stdout } = await promisify(execFile)(process.execPath, [
+    "--test",
+    fileURLToPath(new URL("./platform-security.test.mjs", import.meta.url)),
+  ]);
+  context.diagnostic(stdout.trim());
+});
+
 const OWNER = "11111111-1111-4111-8111-111111111111";
 const VIEWER = "22222222-2222-4222-8222-222222222222";
 const OTHER = "33333333-3333-4333-8333-333333333333";
@@ -190,6 +198,11 @@ before(async () => {
   );
   assert.equal(timezoneMigrations.length, 1);
   await db.exec(await readFile(`supabase/migrations/${timezoneMigrations[0]}`, "utf8"));
+  const securityMigrations = (await readdir("supabase/migrations")).filter((file) =>
+    file.endsWith("_harden_rls_auto_enable_execute.sql"),
+  );
+  assert.equal(securityMigrations.length, 1);
+  await db.exec(await readFile(`supabase/migrations/${securityMigrations[0]}`, "utf8"));
 });
 beforeEach(async () => {
   await db.exec("reset role; truncate realtime.messages");
@@ -837,6 +850,59 @@ test("private tables have RLS and no direct authenticated grants", async () => {
     );
   } finally {
     await db.exec("reset role");
+  }
+});
+
+test("only the 31 reviewed user RPCs expose SECURITY DEFINER, and all require a live session", async () => {
+  const expected = [
+    ...rpcNames,
+    "private_cloud_head",
+    "private_cloud_read",
+    "private_cloud_history",
+    "private_cloud_write",
+  ].sort();
+  const exposed = await db.query(`
+    select p.proname, p.proconfig,
+      has_function_privilege('anon',p.oid,'EXECUTE') as anon,
+      exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner)))
+        where grantee=0 and privilege_type='EXECUTE') as public_execute,
+      format('select public.%I(%s)',p.proname,
+        (select string_agg('null::'||t::regtype::text,',' order by ord)
+          from unnest(p.proargtypes::oid[]) with ordinality a(t,ord))) as invocation
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.prosecdef
+      and has_function_privilege('authenticated',p.oid,'EXECUTE')
+    order by p.proname
+  `);
+  assert.deepEqual(
+    exposed.rows.map((row) => row.proname),
+    expected,
+  );
+  for (const row of exposed.rows) {
+    assert.equal(row.anon, false, row.proname);
+    assert.equal(row.public_execute, false, row.proname);
+    assert.ok(row.proconfig.includes('search_path=""'), row.proname);
+  }
+  // Exercise every signature, including SQL wrappers, rather than accepting a
+  // function-name allowlist as proof of authentication. Typed nulls must never
+  // reach argument validation or data access before the session guard.
+  for (const session of ["", SESSIONS[OTHER], crypto.randomUUID()]) {
+    await db.exec("set role authenticated");
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [OWNER]);
+    await db.query("select set_config('request.jwt.claims',$1,false)", [
+      JSON.stringify({ sub: OWNER, session_id: session }),
+    ]);
+    try {
+      for (const row of exposed.rows) {
+        await assert.rejects(
+          db.query(row.invocation),
+          failure("SHARE_UNAUTHENTICATED", "42501"),
+          row.proname,
+        );
+      }
+    } finally {
+      await db.exec("reset role");
+    }
   }
 });
 test("security definer functions fix empty search_path and have no dynamic SQL", async () => {
