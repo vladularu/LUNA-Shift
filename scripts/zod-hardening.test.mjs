@@ -402,7 +402,7 @@ test("the published TypeScript source conditions use the hardened implementation
   assert.match(result.stdout, /source-entrypoints-hardened/);
 });
 
-test("the established install/verify CLI fails without Zod hardening and applies both fixes", (t) => {
+test("the established install/verify CLI applies all three hardenings and fails if one is absent", (t) => {
   const root = fixture(t),
     scripts = join(root, "scripts");
   mkdirSync(scripts);
@@ -411,6 +411,8 @@ test("the established install/verify CLI fails without Zod hardening and applies
     "decode-uri-component-hardening.patch.json",
     "zod-hardening.mjs",
     "zod-hardening.patch.json",
+    "picomatch-hardening.mjs",
+    "picomatch-hardening.patch.json",
   ])
     cpSync(join(repo, "scripts", name), join(scripts, name));
   cpSync(
@@ -424,6 +426,28 @@ test("the established install/verify CLI fails without Zod hardening and applies
   lock.packages["node_modules/decode-uri-component"] =
     realLock.packages["node_modules/decode-uri-component"];
   lock.packages[""].dependencies["decode-uri-component"] = "0.2.2";
+  const picomatchPatch = JSON.parse(
+    readFileSync(join(scripts, "picomatch-hardening.patch.json"), "utf8"),
+  );
+  for (const copy of picomatchPatch.installs) {
+    lock.packages[copy.path] = realLock.packages[copy.path];
+    cpSync(join(repo, copy.path), join(root, copy.path), { recursive: true });
+    const parseFile = join(root, copy.path, "lib/parse.js");
+    let parse = readFileSync(parseFile, "utf8");
+    for (const edit of [...picomatchPatch.edits].reverse())
+      parse = parse.replace(edit.after, edit.before);
+    assert.equal(
+      digest(parse),
+      picomatchPatch.versions[copy.version].files.find((entry) => entry.path === "lib/parse.js")
+        .originalSha256,
+    );
+    writeFileSync(parseFile, parse);
+  }
+  for (const consumer of picomatchPatch.consumers) {
+    lock.packages[consumer.path] = { dependencies: { picomatch: consumer.range } };
+    mkdirSync(join(root, consumer.path), { recursive: true });
+    cpSync(join(repo, consumer.path, "package.json"), join(root, consumer.path, "package.json"));
+  }
   writeFileSync(file, JSON.stringify(lock));
   const cli = join(scripts, "decode-uri-component-hardening.cjs");
   const failed = spawnSync(process.execPath, [cli, "verify"], {
@@ -440,11 +464,20 @@ test("the established install/verify CLI fails without Zod hardening and applies
   });
   assert.equal(applied.status, 0, applied.stderr);
   assert.match(applied.stdout, /zod 3\.25\.76: verified/);
+  assert.match(applied.stdout, /Picomatch: verified local repeated-extglob hardening/);
   const checked = spawnSync(process.execPath, [cli, "verify"], {
     cwd: root,
     encoding: "utf8",
     timeout: 30000,
   });
   assert.equal(checked.status, 0, checked.stderr);
+  writeFileSync(join(root, picomatchPatch.installs.at(-1).path, "lib/parse.js"), "unknown source");
+  const missingPicomatch = spawnSync(process.execPath, [cli, "verify"], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(missingPicomatch.status, 1);
+  assert.match(missingPicomatch.stderr, /PICOMATCH_HARDENING_MISSING/);
   assert.deepEqual(originalAndHardenedBehavior(root), Array(3).fill({ visits: 0, issues: 1 }));
 });

@@ -93,6 +93,14 @@ async function fixtureModule(folder) {
   return import(pathToFileURL(join(folder, "scripts/picomatch-hardening.mjs")).href);
 }
 
+test("tooling maintenance preserves the Preview predecessor's native package-scripts fingerprint input", () => {
+  const scripts = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).scripts;
+  assert.equal(
+    hash(JSON.stringify(scripts)),
+    "39755d167a074c6d964167e577e3a1985035408c1c5681079c88336938706a2c",
+  );
+});
+
 test("installation rejects original sources until all six copies are patched; application is idempotent", (t) => {
   const { folder } = fixture(t);
   assert.throws(() => verifyPicomatchHardening(folder), /PICOMATCH_HARDENING_MISSING/);

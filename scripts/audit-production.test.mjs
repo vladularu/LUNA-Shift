@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { evaluateAuditReport } from "./audit-production.mjs";
+import "./picomatch-hardening.test.mjs";
 
 const allowedImageSizeAdvisory = {
   source: 1138808,

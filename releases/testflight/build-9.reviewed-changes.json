@@ -8435,8 +8435,8 @@
     {
       "path": "package.json",
       "kind": "modified",
-      "sha256": "540a1693a9cd96458dc47def290a1868edbf4f40329d29b86ce8a0f5d3d853d3",
-      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending. User-authorized Picomatch maintenance 2026-11-17: append exact-source local hardening for all six locked tooling copies to postinstall, verify:fast and audit-policy tests. Preserve dependency versions, application source, native configuration and release channels. The local patch is reviewed independently of the disputed/revoked upstream advisory; no TestFlight publication or new device acceptance is implied."
+      "sha256": "7481ba7259e34bb132464b75f57674bc1f93a117256d0aaf10a484112b0cf31d",
+      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending."
     },
     {
       "path": "scripts/runtime-policy.test.mjs",
