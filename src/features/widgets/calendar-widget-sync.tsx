@@ -3,8 +3,10 @@ import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
 import { widgetCalendarHighlights } from "./widget-calendar-highlights";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
+import { calendarWidgetDeferral } from "@/application/calendar-widget-deferral";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
@@ -35,6 +37,11 @@ export function CalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPorts
 }
 
 function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPorts }) {
+  const deferred = useSyncExternalStore(
+    calendarWidgetDeferral.subscribe,
+    calendarWidgetDeferral.getSnapshot,
+    calendarWidgetDeferral.getSnapshot,
+  );
   const { ready, error } = usePflegeShiftStatus();
   const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
   const profile = calculationProfile ?? savedProfile;
@@ -61,13 +68,21 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
       return;
     }
     let active = true;
+    let appState = AppState.currentState;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeZone = profile?.timeZone ?? "Europe/Berlin";
     const configuredScheme = Constants.expoConfig?.scheme;
     const scheme =
       (Array.isArray(configuredScheme) ? configuredScheme[0] : configuredScheme) ?? "pflegeshift";
+    const shouldDefer = () => calendarWidgetDeferral.getSnapshot() && appState !== "background";
     async function refresh() {
+      if (!active) return;
+      if (shouldDefer()) {
+        calendarPerformance.record("widget-work", { phase: 3 });
+        return;
+      }
       const revision = ++sequence.current;
+      const isCurrent = () => active && revision === sequence.current && !shouldDefer();
       try {
         const now = new Date();
         const range = widgetEntryRange(now, timeZone);
@@ -76,11 +91,11 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
           profile === null
             ? []
             : await ports.repository.listCalendarEntries(range.startDate, range.endDate);
-        if (!active || revision !== sequence.current) return;
+        if (!isCurrent()) return;
         // Serialize photo-copy + publication so an older pending photo cannot
         // overwrite or remove a newer snapshot during rapid settings changes.
         const publication = publicationQueue.current.then(async () => {
-          if (!active || revision !== sequence.current) return;
+          if (!isCurrent()) return;
           let backgroundFileName: string | null = null;
           try {
             backgroundFileName = await prepareCalendarWidgetBackground(
@@ -90,7 +105,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
             if (active && revision === sequence.current)
               ports.diagnostics.record("provider", "CALENDAR_WIDGET_BACKGROUND_FAILED", cause);
           }
-          if (!active || revision !== sequence.current) return;
+          if (!isCurrent()) return;
           const publishedAt = new Date();
           const currentRange = widgetEntryRange(publishedAt, timeZone);
           if (
@@ -100,8 +115,13 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
             void refresh();
             return;
           }
-          publishCalendarWidgetTimeline(
-            buildCalendarWidgetTimeline({
+          let timeline: ReturnType<typeof buildCalendarWidgetTimeline>;
+          const finishBuild = calendarPerformance.span("widget-work", {
+            phase: 1,
+            input: loaded.length,
+          });
+          try {
+            timeline = buildCalendarWidgetTimeline({
               entries: loaded,
               sharedCalendars,
               now: publishedAt,
@@ -125,8 +145,19 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
               themeMode: appearance.mode,
               backgroundFileName,
               backgroundStrength: background.strength,
-            }),
-          );
+            });
+          } finally {
+            finishBuild();
+          }
+          const finishPublish = calendarPerformance.span("widget-work", {
+            phase: 2,
+            count: timeline.length,
+          });
+          try {
+            publishCalendarWidgetTimeline(timeline);
+          } finally {
+            finishPublish();
+          }
           try {
             pruneCalendarWidgetBackgrounds(backgroundFileName);
           } catch (cause) {
@@ -160,10 +191,15 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
       schedule();
     });
     const subscription = AppState.addEventListener("change", (state) => {
+      appState = state;
       if (state === "active") {
         if (!startupPresentation.isReady()) return;
         void refresh();
         schedule();
+      } else if (state === "background" && startupPresentation.isReady()) {
+        // A selected tool can remain active when the user goes Home. Publish
+        // the saved state then, while foreground taps no longer compete.
+        void refresh();
       }
     });
     return () => {
@@ -175,6 +211,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
     };
   }, [
     ports,
+    deferred,
     ready,
     error,
     profile,

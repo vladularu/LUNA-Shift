@@ -299,7 +299,7 @@ describe("QuickPlannerDock", () => {
 
     expect(stackStyle.position).toBe("absolute");
     expect(mountReveal).toContainElement(stack);
-    expect(stackStyle.bottom).toBe(-24);
+    expect(stackStyle.bottom).toBe(-28);
     expect(stackStyle.left).toBe(8);
     expect(stackStyle.right).toBe(8);
     expect(stack).toContainElement(pencil);

@@ -87,3 +87,104 @@ test("compiled drawer defaults and interrupted control frames preserve their RN 
     }
   }
 });
+
+test("production calendar cadence keeps one registered worklet across React Compiler renders", () => {
+  const result = transformFileSync(
+    resolve(import.meta.dirname, "../src/features/calendar/use-calendar-performance.ts"),
+    {
+      configFile: false,
+      babelrc: false,
+      envName: "production",
+      presets: ["babel-preset-expo"],
+      caller: {
+        name: "metro",
+        supportsStaticESM: false,
+        supportsReactCompiler: true,
+        platform: "ios",
+        isDev: false,
+        engine: "hermes",
+      },
+    },
+  );
+  const callbacks = [],
+    events = [];
+  const control = { setActive() {}, isActive: false, callbackId: 1 };
+  const values = [0, [0, 0, 0, 0, 0, 0]].map((value) => ({
+    value,
+    set(next) {
+      this.value = next;
+    },
+  }));
+  let sharedIndex = 0,
+    memoized,
+    dependencies;
+  const compilerCache = Array(64).fill(Symbol.for("react.memo_cache_sentinel"));
+  const exportedModule = { exports: {} };
+  const runtimeContext = createContext({
+    module: exportedModule,
+    exports: exportedModule.exports,
+    require(name) {
+      if (name === "react/compiler-runtime") return { c: () => compilerCache };
+      if (name === "react")
+        return {
+          useCallback(fn, deps) {
+            if (!dependencies || deps.some((value, index) => value !== dependencies[index])) {
+              memoized = fn;
+              dependencies = deps;
+            }
+            return memoized;
+          },
+          useSyncExternalStore: () => 7,
+          useEffect() {},
+          useLayoutEffect() {},
+        };
+      if (name === "react-native") return {};
+      if (name === "react-native-reanimated")
+        return {
+          useSharedValue: () => values[sharedIndex++],
+          useFrameCallback: (callback) => {
+            callbacks.push(callback);
+            return control;
+          },
+          runOnJS: (fn) => fn,
+        };
+      if (name === "@/application/calendar-performance")
+        return {
+          calendarPerformance: {
+            subscribe() {},
+            getSnapshot: () => 7,
+            record: (kind, values, session) => events.push({ kind, values, session }),
+          },
+        };
+      if (["@/engine/calendar", "@/engine/recurrence", "./calendar-entry-index"].includes(name))
+        return {};
+      if (name.startsWith("@babel/runtime/")) return require(name);
+      throw new Error(`Unexpected calendar probe import: ${name}`);
+    },
+  });
+  runInContext(result.code, runtimeContext);
+  const render = (month) => {
+    sharedIndex = 0;
+    exportedModule.exports.useCalendarPerformance(true, month, "MONTH");
+  };
+  render("2026-01");
+  render("2026-02");
+  assert.equal(
+    callbacks[1],
+    callbacks[0],
+    "rendering must not re-register and reset the UI frame window",
+  );
+  values[0].value = 7;
+  const callback = callbacks[0];
+  assert.equal(typeof callback.__workletHash, "number");
+  const isolatedUI = createContext({});
+  const onFrame = runInContext(`(${callback.__initData.code})`, isolatedUI).bind({
+    __closure: callback.__closure,
+  });
+  onFrame({ timestamp: 100, timeSincePreviousFrame: null });
+  for (let i = 1; i <= 50; i++) onFrame({ timestamp: 100 + i * 20, timeSincePreviousFrame: 20 });
+  const frame = events.find((event) => event.kind === "ui-frames");
+  assert.equal(frame.session, 7);
+  assert.equal(frame.values.duration, 1000);
+  assert.equal(frame.values.count, 50);
+});

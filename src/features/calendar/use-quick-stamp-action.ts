@@ -7,6 +7,27 @@ import { createQuickStampQueue, type StampPreviewDay } from "./quick-stamp-queue
 import { applyCalendarPreview } from "./calendar-render-data";
 import { announceStampResult } from "./stamp-accessibility";
 import { selectionFeedback } from "@/ui/haptics";
+import { calendarPerformance } from "@/application/calendar-performance";
+
+function measureStampWrite<T>(mode: number, write: () => Promise<T>): Promise<T> {
+  if (!calendarPerformance.getSnapshot()) return write();
+  const finish = calendarPerformance.span("stamp-persist", { mode });
+  try {
+    return write().then(
+      (result) => {
+        finish({ state: 1 });
+        return result;
+      },
+      (error: unknown) => {
+        finish({ state: 3 });
+        throw error;
+      },
+    );
+  } catch (error) {
+    finish({ state: 3 });
+    throw error;
+  }
+}
 
 export function useQuickStampAction(options: {
   readonly entries: readonly CalendarEntry[];
@@ -23,10 +44,17 @@ export function useQuickStampAction(options: {
     mounted.current = true;
     queue.current = createQuickStampQueue({
       entries: () => latest.current.entries,
-      save: (input) => latest.current.upsertShift(input),
-      remove: (entry) => latest.current.removeEntry(entry),
+      save: (input) => measureStampWrite(1, () => latest.current.upsertShift(input)),
+      remove: (entry) => measureStampWrite(0, () => latest.current.removeEntry(entry)),
       changed: (days, busy) => {
         if (!mounted.current) return;
+        if (calendarPerformance.getSnapshot())
+          calendarPerformance.record("stamp-preview", {
+            phase: 1,
+            count: days.length,
+            input: days.reduce((count, day) => count + day.entries.length, 0),
+            state: busy ? 1 : 0,
+          });
         setPreview(days);
         latest.current.onBusyChange(busy);
       },
@@ -58,13 +86,21 @@ export function useQuickStampAction(options: {
     queue.current?.reconcile();
   }, [options.entries]);
   const stamp = useCallback((action: QuickEntryStampAction, date: string) => {
-    latest.current.onError("");
-    selectionFeedback();
-    return queue.current?.stamp(action, date) ?? Promise.resolve(false);
+    const finish = calendarPerformance.span("stamp-handler");
+    try {
+      latest.current.onError("");
+      selectionFeedback();
+      return queue.current?.stamp(action, date) ?? Promise.resolve(false);
+    } finally {
+      finish();
+    }
   }, []);
   const displayEntries = useMemo(
     () => applyCalendarPreview(options.entries, preview),
     [options.entries, preview],
   );
+  useLayoutEffect(() => {
+    calendarPerformance.record("stamp-preview", { phase: 2, input: displayEntries.length });
+  }, [displayEntries]);
   return { stamp, displayEntries };
 }

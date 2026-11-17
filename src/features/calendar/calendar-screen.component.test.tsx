@@ -12,6 +12,7 @@ import {
 
 import { addMonths, today } from "@/engine/calendar";
 import { CalendarScreen } from "@/features/calendar/calendar-screen";
+import { calendarWidgetDeferral } from "@/application/calendar-widget-deferral";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
@@ -487,6 +488,47 @@ describe("CalendarScreen quick-entry navigation", () => {
     await fireEvent.press(template);
     await fireEvent.press(screen.getByTestId("calendar-day"));
     expect(mockUpsertShift).toHaveBeenCalledTimes(1);
+  });
+
+  it("defers widgets for the complete planning session and releases on exit or unmount", async () => {
+    const screen = await render(<CalendarScreen />);
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(false);
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(true);
+    const template = screen.getByRole("button", { name: "Früh auswählen" });
+    await fireEvent.press(template);
+    await fireEvent.press(template);
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(true);
+    await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(false);
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(true);
+    await screen.unmount();
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(false);
+  });
+
+  it("keeps widget deferral until a write finishes after planning is closed", async () => {
+    let finishSave!: (value: Awaited<ReturnType<typeof mockUpsertShift>>) => void;
+    mockUpsertShift.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishSave = resolve;
+        }),
+    );
+    const screen = await render(<CalendarScreen />);
+    await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
+      nativeEvent: { layout: { height: 700 } },
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Dienstplan bearbeiten" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Früh auswählen" }));
+    await fireEvent.press(screen.getByTestId("calendar-day"));
+    await fireEvent.press(screen.getByRole("button", { name: "Planung beenden" }));
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(true);
+    await act(async () => {
+      finishSave({ kind: "SHIFT", id: "saved-shift", date: "2026-08-14" });
+    });
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(false);
+    await screen.unmount();
   });
 
   it.each([false, true])(

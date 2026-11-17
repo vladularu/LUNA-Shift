@@ -5,8 +5,6 @@ import { memo } from "react";
 import { today } from "@/engine/calendar";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
-  FadeIn,
-  FadeOut,
   LayoutAnimationConfig,
   useAnimatedStyle,
   useReducedMotion,
@@ -26,12 +24,14 @@ import { shiftDisplayColor } from "@/theme/shift-colors";
 import { SharedCalendarEntryContent } from "./shared-calendar-entry-content";
 import { PrototypeEntryContent, type PrototypeDisplay } from "./prototype-entry-content";
 import { quickStampEntering, quickStampExiting } from "./quick-stamp-motion";
-import { MOTION } from "@/theme/motion";
 import {
   PROTOTYPE_MONTH_NAMES,
   type PrototypeDay,
   type PrototypeMonth,
 } from "./calendar-prototype-layout";
+
+const EMPTY_ENTRIES: readonly CalendarEntry[] = Object.freeze([]);
+const EMPTY_SHARED_ENTRIES: readonly SharedCalendarDayEntry[] = Object.freeze([]);
 
 const MovingDay = memo(function MovingDay({
   day,
@@ -351,8 +351,8 @@ export function PrototypeMonthContent({
           key={day.date}
           day={day}
           layout={layout}
-          entries={entriesByDate.get(day.date) ?? []}
-          shared={sharedEntriesByDate?.get(day.date) ?? []}
+          entries={entriesByDate.get(day.date) ?? EMPTY_ENTRIES}
+          shared={sharedEntriesByDate?.get(day.date) ?? EMPTY_SHARED_ENTRIES}
           display={display}
           timeZone={timeZone}
           labelColor={labelColor}
@@ -366,7 +366,7 @@ export function PrototypeMonthContent({
   );
 }
 
-function CombinedDayContent({
+const CombinedDayContent = memo(function CombinedDayContent({
   animateChanges,
   day,
   layout,
@@ -497,17 +497,21 @@ function CombinedDayContent({
             <Animated.View
               key={key}
               entering={
-                animateChanges && !adjacent && item.kind === "own" && item.entry.kind === "SHIFT"
-                  ? reduceMotion
-                    ? FadeIn.duration(MOTION.duration.instant)
-                    : quickStampEntering
+                animateChanges &&
+                !reduceMotion &&
+                !adjacent &&
+                item.kind === "own" &&
+                item.entry.kind === "SHIFT"
+                  ? quickStampEntering
                   : undefined
               }
               exiting={
-                animateChanges && !adjacent && item.kind === "own" && item.entry.kind === "SHIFT"
-                  ? reduceMotion
-                    ? FadeOut.duration(MOTION.duration.instant)
-                    : quickStampExiting
+                animateChanges &&
+                !reduceMotion &&
+                !adjacent &&
+                item.kind === "own" &&
+                item.entry.kind === "SHIFT"
+                  ? quickStampExiting
                   : undefined
               }
               testID={"calendar-entry-slot-" + day.date + "-" + index}
@@ -536,7 +540,7 @@ function CombinedDayContent({
       </LayoutAnimationConfig>
     </View>
   );
-}
+});
 
 export function PrototypeDates({
   layout,
@@ -565,7 +569,7 @@ export function PrototypeDates({
           day={day}
           progress={progress}
           currentDate={currentDate}
-          selectedDate={selectedDate}
+          selectedDate={selectedDate === day.date ? selectedDate : null}
           selectedDayOpacity={selectedDayOpacity}
         />
       ))}

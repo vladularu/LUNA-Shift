@@ -1,4 +1,4 @@
-import { Fragment, memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
@@ -6,7 +6,11 @@ import type { QuickEntryAction } from "@/features/calendar/quick-entry-actions";
 import { QuickEntryActionTile } from "@/features/calendar/quick-entry-action-tile";
 import { QUICK_PLANNER_METRICS } from "@/features/calendar/quick-planner-appearance";
 import { usePalette } from "@/theme/palette";
-import { MOTION } from "@/theme/motion";
+import {
+  QUICK_ENTRY_VISIBLE_SLOTS,
+  quickEntryCenteredOffset,
+  quickEntryStripLayout,
+} from "./quick-entry-strip-layout";
 
 export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   actions,
@@ -24,70 +28,153 @@ export const QuickEntryActionStrip = memo(function QuickEntryActionStrip({
   const palette = usePalette();
   const reduceMotion = useReducedMotion();
   const { fontScale } = useWindowDimensions();
-  const detailWidth = QUICK_PLANNER_METRICS.activeDetailWidth * Math.max(1, fontScale);
   const scrollRef = useRef<ScrollView>(null);
-  const viewportWidth = useRef(0);
+  const [viewportWidth, setViewportWidth] = useState(tileWidth * QUICK_ENTRY_VISIBLE_SLOTS);
+  const resizeOffset = useRef<{ slots: number; width: number } | null>(null);
+  const nativeOffset = useRef(0);
+  const scrollTarget = useRef<number | null>(null);
+  const centeredSelection = useRef<{ key: string; index: number } | null>(null);
   const activeIndex = actions.findIndex(
     (action) => action.key === activeKey && action.kind === "TEMPLATE",
   );
-  const revealActive = useCallback(() => {
-    if (activeIndex < 0 || viewportWidth.current <= 0) return;
-    const left = 2 + activeIndex * (tileWidth + StyleSheet.hairlineWidth);
-    const activeWidth = tileWidth + detailWidth;
-    scrollRef.current?.scrollTo({
-      x: Math.max(0, left - (viewportWidth.current - activeWidth) / 2),
-      animated: !reduceMotion,
-    });
-  }, [activeIndex, tileWidth, detailWidth, reduceMotion]);
+  const layout = quickEntryStripLayout({
+    viewportWidth,
+    actionCount: actions.length,
+    activeIndex,
+    fontScale,
+  });
+  const { slotWidth, detailWidth, contentWidth, maximumOffset, snapToOffsets } = layout;
+  const previousSelection = useRef<{ key: string | null; index: number }>({ key: null, index: -1 });
+  const moveStrip = useCallback((x: number, animated: boolean) => {
+    if (scrollTarget.current !== null && Math.abs(scrollTarget.current - x) < 0.01) return;
+    if (scrollTarget.current === null && Math.abs(nativeOffset.current - x) < 0.01) return;
+    scrollTarget.current = x;
+    scrollRef.current?.scrollTo({ x, animated });
+  }, []);
   useEffect(() => {
-    if (activeIndex < 0) return;
-    revealActive();
-    // Animated tile widths emit many content-size events. Recenter once after
-    // expansion so the final template is visible without restarting the scroll each frame.
-    const timeout = setTimeout(revealActive, reduceMotion ? 0 : MOTION.duration.normal);
-    return () => clearTimeout(timeout);
-  }, [activeIndex, reduceMotion, revealActive]);
-  const offsets = actions.map(
-    (_, index) =>
-      index * (tileWidth + StyleSheet.hairlineWidth) +
-      (activeIndex >= 0 && index > activeIndex ? detailWidth : 0),
-  );
+    const previous = previousSelection.current;
+    previousSelection.current = { key: activeKey, index: activeIndex };
+    if (
+      activeIndex >= 0 &&
+      activeKey &&
+      (previous.key !== activeKey || previous.index !== activeIndex)
+    ) {
+      centeredSelection.current = { key: activeKey, index: activeIndex };
+    }
+    if (resizeOffset.current !== null) return;
+    const centered = centeredSelection.current;
+    if (centered) {
+      const expanded = activeIndex >= 0 && activeKey === centered.key;
+      const target = quickEntryCenteredOffset({
+        layout: { slotWidth, detailWidth, viewportWidth, maximumOffset },
+        activeIndex: centered.index,
+        expanded,
+      });
+      if (!expanded) centeredSelection.current = null;
+      if (target !== null) moveStrip(target, !reduceMotion);
+    } else if ((scrollTarget.current ?? nativeOffset.current) > maximumOffset) {
+      moveStrip(maximumOffset, !reduceMotion);
+    }
+  }, [
+    activeIndex,
+    activeKey,
+    contentWidth,
+    detailWidth,
+    maximumOffset,
+    moveStrip,
+    viewportWidth,
+    reduceMotion,
+    slotWidth,
+  ]);
 
   return (
     <ScrollView
       ref={scrollRef}
       accessibilityLabel="Schnellauswahl"
       alwaysBounceHorizontal={false}
-      bounces={actions.length > 5 || activeIndex >= 0}
-      contentContainerStyle={styles.content}
+      bounces={maximumOffset > 0}
+      scrollEnabled={maximumOffset > 0}
+      contentContainerStyle={[styles.content, { width: contentWidth }]}
+      automaticallyAdjustContentInsets={false}
+      contentInsetAdjustmentBehavior="never"
       decelerationRate="fast"
       directionalLockEnabled
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
       snapToAlignment="start"
-      snapToOffsets={offsets}
+      snapToOffsets={snapToOffsets}
+      snapToEnd={false}
       onLayout={(event) => {
-        viewportWidth.current = event.nativeEvent.layout.width;
-        revealActive();
+        const width = event.nativeEvent.layout.width;
+        if (width <= 0 || width === viewportWidth) return;
+        const offset = scrollTarget.current ?? nativeOffset.current;
+        scrollTarget.current = null;
+        resizeOffset.current = { slots: offset / slotWidth, width };
+        setViewportWidth(width);
+      }}
+      onContentSizeChange={(nativeContentWidth) => {
+        const target = resizeOffset.current;
+        if (
+          !target ||
+          target.width !== viewportWidth ||
+          Math.abs(nativeContentWidth - contentWidth) > 1
+        )
+          return;
+        resizeOffset.current = null;
+        const centered = centeredSelection.current;
+        if (centered) {
+          const expanded = activeIndex >= 0 && activeKey === centered.key;
+          const offset = quickEntryCenteredOffset({
+            layout,
+            activeIndex: centered.index,
+            expanded,
+          });
+          if (!expanded) centeredSelection.current = null;
+          if (offset !== null) moveStrip(offset, false);
+        } else {
+          moveStrip(Math.min(target.slots * slotWidth, maximumOffset), false);
+        }
+      }}
+      scrollEventThrottle={16}
+      onScroll={(event) => {
+        nativeOffset.current = event.nativeEvent.contentOffset.x;
+      }}
+      onScrollBeginDrag={() => {
+        centeredSelection.current = null;
+        scrollTarget.current = null;
+      }}
+      onScrollEndDrag={(event) => {
+        const target =
+          event.nativeEvent.targetContentOffset?.x ?? event.nativeEvent.contentOffset.x;
+        if (target > maximumOffset) {
+          moveStrip(maximumOffset, !reduceMotion);
+        }
+      }}
+      onMomentumScrollEnd={(event) => {
+        const x = event.nativeEvent.contentOffset.x;
+        nativeOffset.current = x;
+        if (scrollTarget.current !== null && Math.abs(x - scrollTarget.current) > 1) return;
+        scrollTarget.current = null;
+        if (x > maximumOffset) moveStrip(maximumOffset, !reduceMotion);
       }}
       style={styles.scroll}
       testID="quick-planner-strip"
     >
       {actions.map((action, index) => (
-        <Fragment key={action.key}>
+        <View key={action.key}>
           <QuickEntryActionTile
             action={action}
             active={activeKey === action.key}
             disabled={busy}
             onPress={onSelectAction}
-            width={tileWidth + (index === activeIndex ? detailWidth : 0)}
-            detailWidth={detailWidth}
+            width={layout.slotWidth + (index === activeIndex ? layout.detailWidth : 0)}
+            detailWidth={layout.detailWidth}
           />
           {index === actions.length - 1 ? null : (
             <View style={[styles.separator, { backgroundColor: palette.text }]} />
           )}
-        </Fragment>
+        </View>
       ))}
     </ScrollView>
   );
@@ -100,9 +187,11 @@ const styles = StyleSheet.create({
   content: {
     minHeight: QUICK_PLANNER_METRICS.tileHeight,
     alignItems: "center",
-    paddingHorizontal: 2,
   },
   separator: {
+    position: "absolute",
+    right: 0,
+    top: (QUICK_PLANNER_METRICS.tileHeight - 50) / 2,
     width: StyleSheet.hairlineWidth,
     height: 50,
     opacity: 0.2,

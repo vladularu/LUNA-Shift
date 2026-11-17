@@ -34,7 +34,7 @@ import { AnimatedPressable, usePressMotion } from "@/ui/press-motion";
 const CONTROL_SIDE_INSET = 8;
 const CLOSED_SCREEN_RIGHT = 22;
 const IOS_NATIVE_TAB_OVERLAY_CLEARANCE = 17;
-const IOS_NATIVE_TAB_OVERLAY_DROP = 42;
+const IOS_NATIVE_TAB_OVERLAY_DROP = 46;
 const CLOSE_INNER_INSET =
   (QUICK_PLANNER_METRICS.closeTargetSize - QUICK_PLANNER_METRICS.closeVisualSize) / 2;
 const CLOSE_TARGET_GAP = QUICK_PLANNER_METRICS.closeVisualGap - CLOSE_INNER_INSET;

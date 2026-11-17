@@ -41,13 +41,13 @@ export function createAnalysisWorkQueue() {
       }
       if (
         budget &&
-        count > 0 &&
         jobs.length > 0 &&
         jobs.every((job) => job.priority >= ANALYSIS_WARMUP_PRIORITY)
       ) {
         // Some native idle implementations can run newly registered callbacks
-        // in the same idle turn. Cross a real timer boundary before requesting
-        // another warm slice, so input/timers are not starved by that chain.
+        // in the same idle turn, including slices with no remaining budget.
+        // Cross a real timer boundary even when no step ran, so an exhausted
+        // slice cannot busy-loop while starving input and ordinary timers.
         // Completion may already have enqueued and scheduled the next job.
         cancelWakeup();
         idleOnlyScheduled = true;
@@ -96,7 +96,7 @@ export function createAnalysisWorkQueue() {
     measurement?: { readonly month: string; readonly stage: number },
   ) {
     let active = true;
-    const measured = measurement !== undefined && calendarPerformance.getSnapshot() !== 0;
+    const measured = calendarPerformance.getSnapshot() !== 0;
     const queuedAt = measured ? performance.now() : 0;
     const finish = calendarPerformance.span(
       "analysis-work",
@@ -105,7 +105,7 @@ export function createAnalysisWorkQueue() {
             month: Number(measurement.month.replace("-", "")),
             stage: measurement.stage,
           }
-        : {},
+        : { stage: 0 },
     );
     let count = 0,
       cpu = 0,

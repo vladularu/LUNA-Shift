@@ -1,12 +1,14 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { useSharedValue } from "react-native-reanimated";
+import * as palette from "@/theme/palette";
 import { StyleSheet } from "react-native";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
-import { PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
+import { PrototypeDates, PrototypeMonthContent, PrototypeYear } from "./calendar-prototype-canvas";
 import { calendarPrototypeLayout } from "./calendar-prototype-layout";
 import type { CalendarEntry, ShiftEntry } from "@/domain/types";
 import { CALENDAR_METRICS } from "@/theme/tokens";
+import * as calendarPreview from "./combined-calendar-preview";
 
 function Year({
   year = "2026",
@@ -177,6 +179,81 @@ const holidayShift: ShiftEntry = {
   updatedAt: "2026-01-01T00:00:00Z",
   deletedAt: null,
 };
+
+it("updates only the changed day during quick add, remove and save confirmation", async () => {
+  const preview = jest.spyOn(calendarPreview, "combinedCalendarPreview");
+  const layout = calendarPrototypeLayout("2026-10", 430, 640);
+  const display = {
+    labelMode: "FULL" as const,
+    showShiftTimes: true,
+    showShiftDuration: false,
+  };
+  const holidays = new Map();
+  function StampMonth({
+    entriesByDate,
+  }: {
+    entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
+  }) {
+    const progress = useSharedValue(1);
+    return (
+      <PrototypeMonthContent
+        animateChanges
+        layout={layout}
+        progress={progress}
+        entriesByDate={entriesByDate}
+        holidays={holidays}
+        display={display}
+        timeZone="Europe/Berlin"
+        visible
+      />
+    );
+  }
+  const screen = await render(<StampMonth entriesByDate={new Map()} />);
+  const pending = { ...holidayShift, templateId: "late", id: "pending-stamp:1" };
+  const saved = { ...pending, id: "saved", revision: 1 };
+  for (const entries of [[pending], [], [pending], [saved]]) {
+    preview.mockClear();
+    const previousSlot = screen.queryByTestId("calendar-entry-slot-2026-10-03-0");
+    await screen.rerender(<StampMonth entriesByDate={new Map([[holidayShift.date, entries]])} />);
+    expect(preview).toHaveBeenCalledTimes(1);
+    const day = within(screen.getByTestId("calendar-combined-day-2026-10-03"));
+    expect(day.queryAllByText("Spät")).toHaveLength(entries.length);
+    if (entries[0] === saved) {
+      expect(screen.getByTestId("calendar-entry-slot-2026-10-03-0")).toBe(previousSlot);
+    }
+  }
+});
+
+it("updates only the previous and next date markers when moving the quick-stamp selection", async () => {
+  const markerRender = jest.spyOn(palette, "usePalette");
+  const layout = calendarPrototypeLayout("2026-10", 430, 640);
+  function Dates({ selectedDate }: { selectedDate: string }) {
+    const progress = useSharedValue(1);
+    return (
+      <PrototypeDates
+        layout={layout}
+        progress={progress}
+        currentDate="2026-10-10"
+        selectedDate={selectedDate}
+      />
+    );
+  }
+  const screen = await render(<Dates selectedDate="2026-10-03" />);
+  markerRender.mockClear();
+  await screen.rerender(<Dates selectedDate="2026-10-04" />);
+  // The two affected dates and the new selection glyph.
+  expect(markerRender).toHaveBeenCalledTimes(3);
+  const hidden = { includeHiddenElements: true };
+  expect(
+    screen.queryByTestId("calendar-selection-calendar-date-marker-2026-10-03", hidden),
+  ).toBeNull();
+  expect(
+    screen.getByTestId("calendar-selection-calendar-date-marker-2026-10-04", hidden),
+  ).toBeTruthy();
+  expect(
+    screen.getByTestId("calendar-highlight-calendar-date-marker-2026-10-10", hidden),
+  ).toHaveStyle({ backgroundColor: LIGHT_PALETTE.calendarToday });
+});
 
 describe("adjacent month shifts", () => {
   it("shows previous and next month services at 30% opacity without adding edit targets", async () => {

@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
+import { calendarPerformance } from "@/application/calendar-performance";
 import { today } from "@/engine/calendar";
 import { usePalette } from "@/theme/palette";
 import { CALENDAR_METRICS, CORNER_CURVE } from "@/theme/tokens";
@@ -393,7 +394,23 @@ const SharedMonthBody = memo(function SharedMonthBody({
             }
             accessibilityLabel={`${day.date}, ${holidays.get(day.date)?.name ?? specialDays.get(day.date)?.label ?? ""} ${[...(entriesByDate.get(day.date) ?? []).map((entry) => entry.title), ...(sharedEntriesByDate?.get(day.date) ?? []).map((row) => `${row.calendarName}: ${row.entry.title}`)].join(", ")}`}
             accessibilityState={{ selected: selectedDate === day.date }}
+            onTouchStart={
+              stampMode
+                ? (event) => calendarPerformance.touch(1, event.nativeEvent.timestamp)
+                : undefined
+            }
+            onTouchEnd={
+              stampMode
+                ? (event) => calendarPerformance.touch(2, event.nativeEvent.timestamp)
+                : undefined
+            }
+            onTouchCancel={
+              stampMode
+                ? (event) => calendarPerformance.touch(3, event.nativeEvent.timestamp)
+                : undefined
+            }
             onPress={(event) => {
+              if (stampMode) calendarPerformance.touch(4, event.nativeEvent.timestamp);
               const { pageX, pageY, locationX, locationY } = event.nativeEvent;
               onSelectDate(day.date, {
                 x: pageX - locationX,

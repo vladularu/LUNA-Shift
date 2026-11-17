@@ -1,5 +1,5 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { AccessibilityInfo, Pressable, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -8,6 +8,7 @@ import { buildQuickEntryActions } from "@/features/calendar/quick-entry-actions"
 import { useQuickStampAction } from "@/features/calendar/use-quick-stamp-action";
 import { FeedbackProvider } from "@/ui/feedback";
 import { selectionFeedback, successFeedback } from "@/ui/haptics";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 jest.mock("@/ui/haptics", () => ({
   selectionFeedback: jest.fn(),
@@ -60,7 +61,7 @@ const mockBusyChange = jest.fn<(busy: boolean) => void>();
 const mockError = jest.fn<(message: string) => void>();
 
 function Harness({ entries }: { readonly entries: readonly ShiftEntry[] }) {
-  const { stamp: saveStamp } = useQuickStampAction({
+  const { stamp: saveStamp, displayEntries } = useQuickStampAction({
     // A fresh database read can have identical values with new array/object identities.
     entries: entries.map((value) => ({ ...value })),
     removeEntry: mockRemoveEntry,
@@ -72,9 +73,12 @@ function Harness({ entries }: { readonly entries: readonly ShiftEntry[] }) {
 
   if (action.kind !== "TEMPLATE") throw new Error("Expected template action");
   return (
-    <Pressable accessibilityRole="button" onPress={() => void saveStamp(action, "2026-08-04")}>
-      <Text>Tag anwenden</Text>
-    </Pressable>
+    <>
+      <Pressable accessibilityRole="button" onPress={() => void saveStamp(action, "2026-08-04")}>
+        <Text>Tag anwenden</Text>
+      </Pressable>
+      <Text testID="stamp-entry-count">{displayEntries.length}</Text>
+    </>
   );
 }
 
@@ -92,7 +96,9 @@ function TestProvider({ children }: React.PropsWithChildren) {
 }
 
 describe("useQuickStampAction", () => {
+  afterEach(() => calendarPerformance.clear());
   beforeEach(() => {
+    calendarPerformance.clear();
     mockRemoveEntry.mockResolvedValue(undefined);
     mockUpsertShift.mockResolvedValue(entry());
     jest.spyOn(AccessibilityInfo, "announceForAccessibility").mockImplementation(jest.fn());
@@ -116,6 +122,7 @@ describe("useQuickStampAction", () => {
       expect.stringContaining("hinzugefügt"),
     );
     expect(screen.queryByText("Tag eingetragen.")).toBeNull();
+    expect(calendarPerformance.report().events).toEqual([]);
   });
 
   it("removes a matching service silently without offering undo", async () => {
@@ -134,4 +141,55 @@ describe("useQuickStampAction", () => {
     expect(screen.queryByText("Tag entfernt.")).toBeNull();
     expect(screen.queryByRole("button", { name: "Rückgängig" })).toBeNull();
   });
+
+  it.each([false, true])(
+    "shows every rapid toggle before persistence completes (existing=%s)",
+    async (existing) => {
+      calendarPerformance.start(true);
+      let release!: () => void;
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      if (existing) mockRemoveEntry.mockImplementationOnce(() => pending);
+      else
+        mockUpsertShift.mockImplementationOnce(async () => {
+          await pending;
+          return entry();
+        });
+      const screen = await render(
+        <TestProvider>
+          <Harness entries={existing ? [entry()] : []} />
+        </TestProvider>,
+      );
+      const button = screen.getByRole("button", { name: "Tag anwenden" });
+      for (const count of existing ? [0, 1, 0] : [1, 0, 1]) {
+        await fireEvent.press(button);
+        expect(screen.getByTestId("stamp-entry-count")).toHaveTextContent(String(count));
+        expect(mockBusyChange).toHaveBeenLastCalledWith(true);
+      }
+      expect(AccessibilityInfo.announceForAccessibility).not.toHaveBeenCalled();
+      const pendingEvents = calendarPerformance.report().events;
+      expect(pendingEvents.filter((event) => event.kind === "stamp-handler")).toHaveLength(3);
+      expect(
+        pendingEvents
+          .filter((event) => event.kind === "stamp-preview" && event.values.phase === 2)
+          .at(-1)?.values.input,
+      ).toBe(existing ? 0 : 1);
+      expect(pendingEvents.some((event) => event.kind === "stamp-persist")).toBe(false);
+      await act(async () => release());
+      await waitFor(() => expect(mockBusyChange).toHaveBeenLastCalledWith(false));
+      expect(mockUpsertShift).toHaveBeenCalledTimes(existing ? 1 : 2);
+      expect(mockRemoveEntry).toHaveBeenCalledTimes(existing ? 2 : 1);
+      expect(screen.getByTestId("stamp-entry-count")).toHaveTextContent(existing ? "0" : "1");
+      const completed = calendarPerformance.report().events;
+      expect(completed.findIndex((event) => event.kind === "stamp-persist")).toBeGreaterThan(
+        completed.findIndex((event) => event.kind === "stamp-handler"),
+      );
+      expect(completed.filter((event) => event.kind === "stamp-persist")).toHaveLength(3);
+      expect(completed.find((event) => event.kind === "stamp-persist")?.values).toMatchObject({
+        mode: existing ? 0 : 1,
+        state: 1,
+      });
+    },
+  );
 });

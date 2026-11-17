@@ -25,6 +25,13 @@ const kinds = [
   "fallback",
   "effect-cleanup",
   "ui-frames",
+  "ui-sampling",
+  "calendar-lag",
+  "stamp-touch",
+  "stamp-handler",
+  "stamp-preview",
+  "stamp-persist",
+  "widget-work",
   "analysis-request",
   "analysis-view",
   "analysis-commit",
@@ -35,6 +42,7 @@ const kinds = [
   "analysis-parts",
   "analysis-prepare",
   "analysis-work",
+  "analysis-input",
   "analysis-native-rest",
   "analysis-lag",
   "salary-settings-start",
@@ -80,6 +88,7 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
     request = 0,
     started = 0,
     dropped = 0;
+  let touchOrigin: number | null = null;
   const events: {
     t: number;
     request: number;
@@ -133,6 +142,7 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       events.length = 0;
       dropped = 0;
       request = 0;
+      touchOrigin = null;
       started = now();
       session = ++serial;
       notify();
@@ -144,6 +154,17 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
       dropped = 0;
     },
     record,
+    touch: (phase: number, nativeTimestamp: number) => {
+      if (!active()) return;
+      // Native uptime and performance.now have separate origins. Export only
+      // native deltas; comparing intervals can reveal changing delivery lag.
+      const valid = Number.isFinite(nativeTimestamp) && nativeTimestamp >= 0;
+      if (valid && touchOrigin === null) touchOrigin = nativeTimestamp;
+      record("stamp-touch", {
+        phase,
+        ...(valid ? { input: nativeTimestamp - touchOrigin! } : {}),
+      });
+    },
     capture: () => {
       const id = active(),
         owner = request;
@@ -170,9 +191,25 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
     report: () => ({
       schema: 2,
       baseline: "monthly-salary-v3",
+      calendar: {
+        stampTouch:
+          "phase 1 touch start, 2 touch end, 3 touch cancel, 4 onPress; input is native event milliseconds relative to the first recorded touch. Native and JS clocks have separate origins: compare intervals only, not absolute latency. No coordinates, dates, entry IDs or titles are recorded.",
+        stampHandler:
+          "duration covers synchronous feedback, optimistic publication and write kickoff; it excludes async persistence and native paint.",
+        stampPreview:
+          "phase 1 queue publication, phase 2 React layout-effect commit of display entries; count is preview day count for phase 1, input is entry count. A React commit is not native paint or proof of visible response.",
+        stampPersist:
+          "mode 1 save, 0 remove; state 1 completed, 3 failed; duration includes await time and is independent of optimistic preview commit.",
+        widgetWork:
+          "widget-work phase 1 synchronous timeline construction (input is entry count), phase 2 synchronous property-list conversion and native publication (count is timeline entry count), phase 3 refresh deferred during calendar editing (no duration). These spans exclude async database/photo waiting; native publication can include synchronous native work. No widget content, IDs, paths or titles are recorded.",
+        sampling:
+          "ui-sampling phase 1 JS lifecycle, state 1 enabled or 0 disabled, mode 1 focused calendar; phase 2 first UI callback. calendar-lag measures excess over a 100ms JS timer interval, not touch latency. ui-frames contains full one-second callback windows, not GPU FPS.",
+      },
       analysis: {
         stages:
-          "1 overview, 2 compliance, 3 annual salary and full net, 4 annual analysis, 5 salary settings",
+          "0 untagged input preparation/orchestration (priority identifies queue class), 1 overview, 2 compliance, 3 annual salary and full net, 4 annual analysis, 5 salary settings",
+        inputPhases:
+          "analysis-input records synchronous spans of at least 8ms: phase 1 source-row JSON decode, 2 catalog JSON decode, 3 transport JSON encode, 4 transport reply JSON decode, 5 calendar candidate ordering, 6 catalog candidate ordering, 7 annual input selection, 8 annual request key, 9 monthly inspection, 10 salary request key, 11 compliance request key. count is characters for decode, candidates for ordering or input entry count for preparation; output is string length when available. state 1 returned, 3 threw. No arguments, payloads, identifiers or error text. Duration is synchronous elapsed time, not async transport waiting or a CPU sampling profile; nested spans can overlap.",
         cacheStages:
           "For analysis-cache, analysis-cache-phase and analysis-parts: 1 month, 2 compliance, 3 salary, 4 annual, 5 annual-month parts. These differ from work stages.",
         annualCacheRow:

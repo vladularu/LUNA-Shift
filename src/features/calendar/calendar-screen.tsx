@@ -23,6 +23,7 @@ import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provid
 import type { CalendarEntry } from "@/domain/types";
 import { addMonths, currentMonth, today } from "@/engine/calendar";
 import { calendarPerformance } from "@/application/calendar-performance";
+import { useCalendarWidgetDeferral } from "./use-calendar-widget-deferral";
 import { useCalendarStartup, useCalendarViewport } from "./use-calendar-startup";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
 import { CalendarHeader } from "@/features/calendar/calendar-header";
@@ -121,8 +122,7 @@ export function CalendarScreen() {
   });
   const dataYear = controller.displayMonth.slice(0, 4);
   const dataMonths = useMemo(() => calendarDataMonths(dataYear), [dataYear]);
-  const isTransitionInFlight = controller.isTransitionInFlight;
-  const tryBeginTransition = controller.tryBeginTransition;
+  const { isTransitionInFlight, tryBeginTransition } = controller;
   const monthSelectionPending = useRef(false);
   const calendarReady =
     (calendarRange === null && ready) ||
@@ -146,6 +146,7 @@ export function CalendarScreen() {
   const [plannerBusy, setPlannerBusy] = useState(false);
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [stampTool, setStampTool] = useState<QuickEntryStampAction | null>(null);
+  useCalendarWidgetDeferral(isFocused && (plannerMode || stampTool !== null || plannerBusy));
   const [quickPopup, setQuickPopup] = useState<QuickPopupState | null>(null);
   const dayHighlightOpacity = useSharedValue(1);
   const closeQuickPopup = useCallback(() => setQuickPopup(null), []);

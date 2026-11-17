@@ -8445,10 +8445,22 @@
       "reason": "Integrate the mandatory source guard and release-regression tests through the existing verify:fast runtime-test entry, preserving the accepted npm-script fingerprint byte for byte. User-authorized cold-start persistence package 2026-11-11: Package B: enforce calculation compatibility generation and run its regression suite from the existing verification entry without altering npm scripts/native fingerprint. Preview only; TestFlight remains unchanged and device acceptance is pending."
     },
     {
+      "path": "src/application/analysis-input-performance.ts",
+      "kind": "added",
+      "sha256": "4f2074a09ff33006e85e956e6bd30c5e6382480166a354b0fd9ee277ab5eb38e",
+      "reason": " Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
+    },
+    {
       "path": "src/application/calendar-performance.ts",
       "kind": "modified",
-      "sha256": "3164f1e869acbdac216a95f58426d288fa09b9d0732aaa1e119fafd7be80ad29",
-      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Record numeric preparation, native transport, kernel and actual fact-consumption diagnostics without domain data. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
+      "sha256": "549bf4e3020bc4d365d9449df312733943b6b2d70ed6c0087a494e1186938fb2",
+      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Record numeric preparation, native transport, kernel and actual fact-consumption diagnostics without domain data. Preview only; TestFlight unchanged; iPhone latency acceptance pending. Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+    },
+    {
+      "path": "src/application/calendar-widget-deferral.ts",
+      "kind": "added",
+      "sha256": "d1c1cef05f24e70c74d477e86c81924153832f7b3f98bc4db2e92f786debf960",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
     },
     {
       "path": "src/application/entry-notification-queue.ts",
@@ -8747,8 +8759,8 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "603de15386510568b1213f15a63b4df52f372eb5baf7e388aa92573091264bb9",
-      "reason": "Preview salary preparation package5, 2026-11-16: Regenerate the existing calculation identity for complete native salary preparation. Engine-specific salary keys prevent reuse of incompatible partial results. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Regenerate the existing mandatory calculation-source contract after scoped declaration cleanup. No calculation formula changed. A later separately authorized OTA may invalidate cached analysis once; no cache guard is bypassed. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved."
+      "sha256": "2eb17600dbdf98fdb18bc667519653da0011d51a8fdb102b893736ced29b5df9",
+      "reason": "Preview salary preparation package5, 2026-11-16: Regenerate the existing calculation identity for complete native salary preparation. Engine-specific salary keys prevent reuse of incompatible partial results. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Regenerate the existing mandatory calculation-source contract after scoped declaration cleanup. No calculation formula changed. A later separately authorized OTA may invalidate cached analysis once; no cache guard is bypassed. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved. Required cache-contract regeneration for the device-evidence scheduler correction on 2026-11-16. The unchanged contract generator includes analysis-work-queue.ts among calculation-source identities, so refresh only its generated version using the existing command and review the one-time invalidation/recomputation of derived analysis results. Keep all saved shifts, profiles, source calculation formulas, native compatibility, generator policy and accepted TestFlight baseline unchanged. This adds no cache-check exception; runtime-policy and cache-version isolation tests must pass before a new Preview export. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/analysis-compliance-cache.ts",
@@ -8819,14 +8831,14 @@
     {
       "path": "src/features/analysis/analysis-warmup-runtime.ts",
       "kind": "modified",
-      "sha256": "b25e2c1922ed6f4ba8bf79d4b036e0b6920294deff4d214eb83b1ec54ef13900",
-      "reason": "Preview monthly checks package 4, 2026-11-16: Prepare monthly checks using the same native calculator and versioned key as visible consumers; retain the original background scheduling, cancellation and persistence. Implementation only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "c96d91e3e7e6118394b18c7f002bbe0e1bf9f1de522d54ec0836179fbef83c16",
+      "reason": "Preview monthly checks package 4, 2026-11-16: Prepare monthly checks using the same native calculator and versioned key as visible consumers; retain the original background scheduling, cancellation and persistence. Implementation only; iPhone acceptance pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/analysis-work-queue.ts",
       "kind": "modified",
-      "sha256": "a2420340affd91ca596a7292b22b2f3a9b2b97814c6f62a750512fc07c872ac3",
-      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Suspend jobs on a native promise without polling; preserve other job progress, cancellation cleanup and rejection handling. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
+      "sha256": "fd21c11a3e43628a614cbae335aac82c4ac679572e23fcd5ecb89005ec17b92d",
+      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Suspend jobs on a native promise without polling; preserve other job progress, cancellation cleanup and rejection handling. Preview only; TestFlight unchanged; iPhone latency acceptance pending. Device-evidence follow-up 2026-11-16: exhausted warm idle budgets immediately rescheduled another native idle callback without a timer boundary. Extend the existing real timer boundary to zero-step/expired slices. Regression reproduces same-turn callback starvation before the fix and proves input heartbeat, budget recovery, promotion and cancellation remain functional afterward. Preserve calculations, priorities, persistence, data and native configuration; Preview-only correction with physical iPhone acceptance pending. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/annual-analysis-background-preparation.tsx",
@@ -8837,8 +8849,8 @@
     {
       "path": "src/features/analysis/annual-analysis-warmup.ts",
       "kind": "modified",
-      "sha256": "e04b6b1b1289d285ac2d79f14ffecb25c73603100d738f9b7796adde21f7b384",
-      "reason": "Preview Rust annual package 3, 2026-11-16: Use the same injected annual calculator and cache key in existing background annual preparation; no new scheduler or readiness architecture. iPhone package-3 acceptance remains pending. TestFlight unchanged."
+      "sha256": "0f4d5856d9d29c7cf45c751c9fe204d6fc3460949bbc94a84bb0ca0c5c9c7bcf",
+      "reason": "Preview Rust annual package 3, 2026-11-16: Use the same injected annual calculator and cache key in existing background annual preparation; no new scheduler or readiness architecture. iPhone package-3 acceptance remains pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/annual-analysis.ts",
@@ -9137,8 +9149,8 @@
     {
       "path": "src/features/analysis/monthly-rust-finance.ts",
       "kind": "added",
-      "sha256": "187dbb0c28135ad2ce9201f24a2b711263f0ad3ee5f85e10268d5e0072c3114e",
-      "reason": "Preview salary preparation package5, 2026-11-16: Add bounded MONTH salary-preparation requests on the existing serialized owner: native gross/net sections followed by a separate permitted payroll request on the same snapshot, extracting only four original mathematical annual-forecast fields; never forward native views. Preserve existing monthly/yearly/checks requests and the 4-MiB cap. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Keep MonthlyRustFinanceRequest and AnnualRustFinanceRequest as internal interfaces; all references are local. Emitted JavaScript, requests, owner queue and annual summation unchanged. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved."
+      "sha256": "e95f503e5ba9c3fe88b62fab6f4b536a233d013313d767ea6c4088a020b50643",
+      "reason": "Preview salary preparation package5, 2026-11-16: Add bounded MONTH salary-preparation requests on the existing serialized owner: native gross/net sections followed by a separate permitted payroll request on the same snapshot, extracting only four original mathematical annual-forecast fields; never forward native views. Preserve existing monthly/yearly/checks requests and the 4-MiB cap. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Keep MonthlyRustFinanceRequest and AnnualRustFinanceRequest as internal interfaces; all references are local. Emitted JavaScript, requests, owner queue and annual summation unchanged. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/monthly-rust-native.fixture.json",
@@ -9173,8 +9185,8 @@
     {
       "path": "src/features/analysis/monthly-rust-source.ts",
       "kind": "added",
-      "sha256": "b5899f2111c0f82359fa963de2f0f5a7badfe2d1b8ebec3a82bab833abd53c41",
-      "reason": "Preview Rust net package 2, 2026-11-15: Extract the existing coherent SQLite raw-source reader for both month and net calls; preserve every query and stored schema without writes. iPhone package-2 acceptance remains pending. TestFlight unchanged."
+      "sha256": "dbac12a6c853b8a09df058123e1f53fbccddfc84c881fb4137d48cc3984ec0b1",
+      "reason": "Preview Rust net package 2, 2026-11-15: Extract the existing coherent SQLite raw-source reader for both month and net calls; preserve every query and stored schema without writes. iPhone package-2 acceptance remains pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
     },
     {
       "path": "src/features/analysis/monthly-rust-sql.ts",
@@ -9363,6 +9375,12 @@
       "reason": "Weekend implementation: Render common occupied, fully free and open monthly counts with accessible window and source details. Compact-list implementation: Support filtered affected-window details while retaining the existing honest completeness helper and internal assessment contract. Simple end-user check: Show one representative affected four-week period with further affected periods collapsed, retaining all assessed observations and the completeness contract."
     },
     {
+      "path": "src/features/calendar/calendar-layout.ts",
+      "kind": "modified",
+      "sha256": "5d594a6ce3c5b2930c4d5a7024b84565077927a76b371030354166a4b9504918",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/calendar-performance-controls.tsx",
       "kind": "modified",
       "sha256": "aded813c12d9a4308fb123143ecb51c06edbb14e5c4aac27845a238041bbb5d2",
@@ -9375,10 +9393,22 @@
       "reason": "Paket 3: add one atomic NONE/START/DURATION action using the existing ordered snapshot persistence, rollback and retry. Preserve stored boolean fields, legacy combinations, parsing, initial load, resets and all existing readers. No automatic migration or native changes."
     },
     {
+      "path": "src/features/calendar/calendar-prototype-canvas.tsx",
+      "kind": "modified",
+      "sha256": "25c166e77774a9435685fac725731a688f16e5af5b6a74048f6fc375e827688d",
+      "reason": "User-reported quick-stamp delay 2026-11-16: memoize unchanged own/shared day contents, retain stable empty lists and pass selection only to affected date markers. Preserve existing visual geometry, entry animations, provider persistence and rapid-toggle ordering. Local candidate validation only; Preview iPhone acceptance and every Git/build/OTA release approval remain pending. No accepted TestFlight baseline, native configuration, stored data or calculation changes. Follow-up to the same quick-stamp delay after iPhone feedback Keine Besserung on 2026-11-16: retain immediate first-frame service visibility and skip all entry/exit animation when Reduce Motion is enabled. Preserve geometry, selected-date rendering, shared entries, persistence and native inputs. Preview-only correction within the ongoing scoped OTA; renewed iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/calendar/calendar-screen.tsx",
+      "kind": "modified",
+      "sha256": "3970490b0f73d2a7930c2698ff25585f8c1e50f6ada34d359479c40f4fea7622",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+    },
+    {
       "path": "src/features/calendar/calendar-shared-scene.tsx",
       "kind": "modified",
-      "sha256": "451a0da605f4bd46daebb1f308f30ec5e41a5c8f4531e91c0c058c13992d3336",
-      "reason": "Preview-only preservation of src/features/calendar/calendar-shared-scene.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "d6a4816aff19e1c5d679f770bfd08de2024806db8a0c22ecbe3878428418fba8",
+      "reason": "Preview-only preservation of src/features/calendar/calendar-shared-scene.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication."
     },
     {
       "path": "src/features/calendar/calendar-special-days.ts",
@@ -9399,16 +9429,40 @@
       "reason": "Preview-only preservation of src/features/calendar/month-card.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up cleanup: remove only the unused array-map index parameter; preserve all rendered elements, keys, styles and data. No stored-data, native, dependency or TestFlight change."
     },
     {
+      "path": "src/features/calendar/quick-entry-action-strip.tsx",
+      "kind": "modified",
+      "sha256": "589e814d99ef4b8ab8ddd1b44a7341978fa1f76379185f0190414e4a54464502",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/quick-entry-delete-confirmation.tsx",
       "kind": "modified",
       "sha256": "57bf63d27a1d7a14cc33884e2903be85cf4de78bd0de1b21870035cee3d44a83",
       "reason": "Preview-only preservation of src/features/calendar/quick-entry-delete-confirmation.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
     },
     {
+      "path": "src/features/calendar/quick-entry-strip-layout.ts",
+      "kind": "added",
+      "sha256": "9fff8cad14e8b74239d3b10eada856edf42538bf8720ff0f06b93dbac0a68240",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/quick-entry-swipe-row.tsx",
       "kind": "modified",
       "sha256": "1c200554ba5c2ebeb0c35d71bce8626ca8b320715d1926cbbb9ac2e463ceb9f4",
       "reason": "Preview-only preservation of src/features/calendar/quick-entry-swipe-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/quick-planner-dock.tsx",
+      "kind": "modified",
+      "sha256": "d43315d7fc441194f4c1b84aa9ffff0a7764d0f84fb3049e5eedc8cf7f1e92aa",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
+      "path": "src/features/calendar/quick-stamp-motion.ts",
+      "kind": "modified",
+      "sha256": "00c8944491f529bc3bb252ff0cfed3bf6053bcd8cb0a78f41832f39f651b91f8",
+      "reason": "Same quick-stamp latency correction after failed iPhone acceptance 2026-11-16: start inserted services fully opaque, preserve the small insertion movement, and start removed services fully transparent with zero-duration removal. This removes the intentional 160ms visibility fade in each direction. No stored-data, calculation, gesture or native change. Preview-only refinement of the authorized correction; new device acceptance pending."
     },
     {
       "path": "src/features/calendar/rust-pilot-controls.tsx",
@@ -9421,6 +9475,24 @@
       "kind": "removed",
       "sha256": null,
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/calendar/use-calendar-performance.ts",
+      "kind": "modified",
+      "sha256": "777d52393875f29a46fb61d3a4e213623f55d300cd3731a1c6b15ffab2b2df70",
+      "reason": " Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication. Device-evidence follow-up 2026-11-16: scope the temporary React Compiler use-no-memo escape hatch to the opt-in cadence hook, preserving its explicit useCallback through the later worklet transform. Production compilation regression initially shows different callback identities and now verifies the same callback across renders plus isolated UI execution. Keep ordinary calendar data memoization, UI, runtime and stored data unchanged; iPhone acceptance pending."
+    },
+    {
+      "path": "src/features/calendar/use-calendar-widget-deferral.ts",
+      "kind": "added",
+      "sha256": "6beb1e296276d45841f107948ee550de706b2f04ab694d03a2fb2c9997690b2c",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+    },
+    {
+      "path": "src/features/calendar/use-quick-stamp-action.ts",
+      "kind": "modified",
+      "sha256": "9aa234dd6864d18ff0f82d7bcfdf37698b1a22d7ea5ef9f5b67177d4bb2977b2",
+      "reason": " Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication."
     },
     {
       "path": "src/features/data-backup/use-local-backup-restore.ts",
@@ -9835,6 +9907,18 @@
       "kind": "modified",
       "sha256": "78c99cf69a71a2d10ad7e3142a7655bf2d908bd450fcaf5325ded99bdaf189ee",
       "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-sync.component.test.tsx",
+      "kind": "modified",
+      "sha256": "0ace281ae9c2987608467e9fda67a588f54be5ae0682b755d57c93ab8f858ee0",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+    },
+    {
+      "path": "src/features/widgets/calendar-widget-sync.tsx",
+      "kind": "modified",
+      "sha256": "c91fa8239e7c6c84ea97feb6219098cb1074f8e85f620add84c3c56add8798b6",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
     },
     {
       "path": "src/infrastructure/database/analysis-result-repository.ts",

@@ -11,6 +11,7 @@ import { PROTOTYPE_MONTH_NAMES } from "./calendar-prototype-layout";
 import { useCalendarController } from "./use-calendar-controller";
 import { calendarPageTarget } from "./calendar-page-window";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 const mockIdleWork = jest.fn<(work: () => void) => () => void>(() => () => {});
 jest.mock("@/ui/schedule-idle-work", () => ({
@@ -39,6 +40,7 @@ const flushIdleWork = () =>
   });
 afterEach(() => {
   mockIdleWork.mockClear();
+  calendarPerformance.clear();
 });
 
 it.each([false, true])(
@@ -86,7 +88,7 @@ it.each([false, true])(
 );
 
 // Real scene + real bounded pager + real month glyphs: no MonthCard stub.
-function Harness() {
+function Harness({ stampMode = false }: { stampMode?: boolean }) {
   const [month, setMonth] = useState("2026-09");
   const [mode, setMode] = useState<"MONTH" | "YEAR">("MONTH");
   const [revision, setRevision] = useState(0);
@@ -155,6 +157,7 @@ function Harness() {
               selectedDate="2026-09-09"
               accessibilityVisible={m === month}
               testData={false}
+              stampMode={stampMode}
             />
           )}
         />
@@ -164,6 +167,45 @@ function Harness() {
 }
 
 describe("permanent calendar slots with the real shared scene", () => {
+  it.each([false, true])(
+    "records native touch intervals only in stamp mode (%s)",
+    async (stampMode) => {
+      onDate.mockClear();
+      const screen = await render(<Harness stampMode={stampMode} />);
+      await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+        nativeEvent: { layout: { width: 430, height: 700 } },
+      });
+      calendarPerformance.start(true);
+      const day = screen.getByTestId("calendar-day-2026-09-09");
+      const event = (timestamp: number) => ({
+        nativeEvent: { timestamp, pageX: 120, pageY: 350, locationX: 20, locationY: 30 },
+      });
+      await fireEvent(day, "touchStart", event(1_000_000));
+      await fireEvent(day, "touchEnd", event(1_000_050));
+      await fireEvent.press(day, event(1_000_050));
+      await fireEvent(day, "touchStart", event(1_000_100));
+      await fireEvent(day, "touchCancel", event(1_000_150));
+      expect(onDate).toHaveBeenCalledTimes(1);
+      expect(onDate).toHaveBeenCalledWith(
+        "2026-09-09",
+        expect.objectContaining({ x: 100, y: 320 }),
+      );
+      const values = calendarPerformance.report().events.map((entry) => entry.values);
+      expect(values).toEqual(
+        stampMode
+          ? [
+              { phase: 1, input: 0 },
+              { phase: 2, input: 50 },
+              { phase: 4, input: 50 },
+              { phase: 1, input: 100 },
+              { phase: 3, input: 150 },
+            ]
+          : [],
+      );
+      expect(JSON.stringify(values)).not.toContain("1000000");
+      await screen.unmount();
+    },
+  );
   it("keeps each title inside its date page during partial swipes, reversal and Today", async () => {
     const screen = await render(<Harness />);
     await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {

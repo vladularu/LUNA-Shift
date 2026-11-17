@@ -1,4 +1,5 @@
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
+import { measureAnalysisInput } from "@/application/analysis-input-performance";
 import { selectAnnualReportInputs } from "./annual-report-inputs";
 import {
   annualAnalysisKey,
@@ -69,13 +70,15 @@ export function createAnnualAnalysisWarmupRuntime(
             const priority = ANALYSIS_WARMUP_PRIORITY + 10 + index;
             const task = scheduleAnalysisWork(
               (function* () {
-                const selected = selectAnnualReportInputs(
-                  null,
-                  year,
-                  input.entries,
-                  input.tariffDecisions,
-                  input.ruleResolver,
-                  input.profile.tariff !== null,
+                const selected = measureAnalysisInput(7, input.entries.length, () =>
+                  selectAnnualReportInputs(
+                    null,
+                    year,
+                    input.entries,
+                    input.tariffDecisions,
+                    input.ruleResolver,
+                    input.profile.tariff !== null,
+                  ),
                 );
                 const request: AnnualAnalysisRequest = annualRustRequest(
                   {
@@ -90,7 +93,9 @@ export function createAnnualAnalysisWarmupRuntime(
                   },
                   calculator,
                 );
-                const key = annualAnalysisKey(request);
+                const key = measureAnalysisInput(8, selected.entries.length, () =>
+                  annualAnalysisKey(request),
+                );
                 yield 0;
                 if (current !== generation) return;
                 const previous = stages.get(year);

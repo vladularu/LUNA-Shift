@@ -52,7 +52,6 @@ const LEGACY_RADIUS_LITERAL_FILES = [
 const LEGACY_HORIZONTAL_PADDING_LITERAL_FILES = [
   "src/features/analysis/annual-report-view.tsx",
   "src/features/calendar/month-card.tsx",
-  "src/features/calendar/quick-entry-action-strip.tsx",
   "src/features/calendar/quick-entry-popup.tsx",
   "src/features/calendar/quick-planner-dock.tsx",
   "src/features/calendar/year-overview.tsx",

@@ -9,6 +9,38 @@ afterEach(() => {
 });
 
 describe("native asynchronous analysis work", () => {
+  it("measures untagged input preparation instead of hiding it from an opted-in recording", () => {
+    vi.useFakeTimers();
+    let clock = 0;
+    vi.stubGlobal("performance", { now: () => clock });
+    calendarPerformance.start(true);
+    const completed = vi.fn();
+    createAnalysisWorkQueue()(
+      (function* () {
+        clock += 430;
+        yield 0;
+        return 7;
+      })(),
+      completed,
+      vi.fn(),
+      -4,
+    );
+    vi.runAllTimers();
+    expect(completed).toHaveBeenCalledExactlyOnceWith(7);
+    expect(calendarPerformance.report().events).toEqual([
+      expect.objectContaining({
+        kind: "analysis-work",
+        values: expect.objectContaining({
+          stage: 0,
+          priority: -4,
+          count: 2,
+          cpu: 430,
+          maximum: 430,
+          state: 1,
+        }),
+      }),
+    ]);
+  });
   it("parks a native wait without polling and continues other work", async () => {
     vi.useFakeTimers();
     let release!: () => void;
@@ -103,6 +135,55 @@ describe("native asynchronous analysis work", () => {
 });
 
 describe("cooperative analysis queue", () => {
+  it.each([false, true])(
+    "releases a same-turn native idle loop to input when no budget is available (timed out=%s)",
+    (didTimeout) => {
+      vi.useFakeTimers();
+      vi.stubGlobal("performance", { now: () => 0 });
+      type Callback = (budget: { didTimeout: boolean; timeRemaining(): number }) => void;
+      const callbacks = new Map<number, Callback>();
+      let id = 0;
+      vi.stubGlobal("requestIdleCallback", (callback: Callback) => {
+        callbacks.set(++id, callback);
+        return id;
+      });
+      vi.stubGlobal("cancelIdleCallback", (handle: number) => callbacks.delete(handle));
+      const completed = vi.fn(),
+        heartbeat = vi.fn();
+      let steps = 0;
+      createAnalysisWorkQueue()(
+        (function* () {
+          steps++;
+          yield 1;
+          return 7;
+        })(),
+        completed,
+        vi.fn(),
+        30,
+      );
+      setTimeout(heartbeat, 0);
+      // Native scheduling can drain callbacks added during this same idle turn.
+      // The safety cap keeps the regression from hanging the test runner.
+      let deliveries = 0;
+      while (callbacks.size && deliveries < 64) {
+        const [handle, callback] = callbacks.entries().next().value!;
+        callbacks.delete(handle);
+        callback({ didTimeout, timeRemaining: () => 0 });
+        deliveries++;
+      }
+      expect(deliveries).toBe(1);
+      expect(callbacks.size).toBe(0);
+      expect(steps).toBe(0);
+      expect(heartbeat).not.toHaveBeenCalled();
+      vi.runAllTimers();
+      expect(heartbeat).toHaveBeenCalledOnce();
+      const [handle, callback] = callbacks.entries().next().value!;
+      callbacks.delete(handle);
+      callback({ didTimeout: false, timeRemaining: () => 10 });
+      expect(completed).toHaveBeenCalledExactlyOnceWith(7);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
   it("also enforces the timer boundary when completion immediately enqueues more warm work", () => {
     vi.useFakeTimers();
     vi.stubGlobal("performance", { now: () => 0 });
@@ -203,8 +284,12 @@ describe("cooperative analysis queue", () => {
     expect(request.mock.calls[0][1]).toBeUndefined();
     callbacks.shift()!({ didTimeout: true, timeRemaining: () => 0 });
     expect(advanced).toBe(0);
+    expect(callbacks).toHaveLength(0);
+    vi.runAllTimers();
     callbacks.shift()!({ didTimeout: false, timeRemaining: () => 0 });
     expect(advanced).toBe(0);
+    expect(callbacks).toHaveLength(0);
+    vi.runAllTimers();
     callbacks.shift()!({ didTimeout: false, timeRemaining: () => 10 });
     expect(advanced).toBe(1);
     pending.cancel();
