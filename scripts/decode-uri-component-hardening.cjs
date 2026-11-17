@@ -118,7 +118,7 @@ if (require.main === module) {
     else throw new Error("DECODER_COMMAND");
     console.log("decode-uri-component: verified CVE-2026-45822 and CVE-2026-118664 backports.");
     // Keep the established install/verify entrypoint stable for SDK 57 runtimes.
-    // Imported decoder helpers stay independent; only this CLI also checks Zod.
+    // Imported decoder helpers stay independent; this CLI also checks Zod and Picomatch.
     const result = require("node:child_process").spawnSync(
       process.execPath,
       [join(__dirname, "zod-hardening.mjs"), command],
@@ -126,6 +126,13 @@ if (require.main === module) {
     );
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error("ZOD_HARDENING_FAILED");
+    const picomatchResult = require("node:child_process").spawnSync(
+      process.execPath,
+      [join(__dirname, "picomatch-hardening.mjs"), command],
+      { cwd: repoRoot, stdio: "inherit" },
+    );
+    if (picomatchResult.error) throw picomatchResult.error;
+    if (picomatchResult.status !== 0) throw new Error("PICOMATCH_HARDENING_FAILED");
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

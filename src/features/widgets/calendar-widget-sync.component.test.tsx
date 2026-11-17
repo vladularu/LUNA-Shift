@@ -35,6 +35,7 @@ let mockBackground = { ready: true, uri: null as string | null, strength: "mediu
 let mockAppearance = { ready: true, mode: "system" };
 const mockPrepareBackground = jest.fn<(_uri: string | null) => Promise<string | null>>();
 const mockPruneBackground = jest.fn();
+const originalIdleCallback = globalThis.requestIdleCallback;
 jest.mock("@/features/calendar/calendar-preferences", () => ({
   useCalendarPreferences: () => mockDisplay,
 }));
@@ -109,6 +110,10 @@ beforeEach(() => {
   mockBackground = { ready: true, uri: null, strength: "medium" };
   mockAppearance = { ready: true, mode: "system" };
   mockPrepareBackground.mockResolvedValue(null);
+  globalThis.requestIdleCallback = jest.fn<typeof requestIdleCallback>((callback) => {
+    void Promise.resolve().then(() => callback({ didTimeout: false, timeRemaining: () => 50 }));
+    return 1;
+  });
   jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() });
 });
 it("defers the initial widget read until presentation and cancels superseded startup work", async () => {
@@ -127,6 +132,7 @@ it("defers the initial widget read until presentation and cancels superseded sta
   await screen.unmount();
 });
 afterEach(() => {
+  globalThis.requestIdleCallback = originalIdleCallback;
   calendarPerformance.clear();
   jest.useRealTimers();
   jest.restoreAllMocks();
@@ -138,10 +144,110 @@ it("loads today's range independently and refreshes after data changes", async (
   await act(async () => {});
   expect(p.load).toHaveBeenCalledWith("2026-11-30", "2027-02-07");
   expect(publish).toHaveBeenCalledTimes(1);
+  p.load.mockResolvedValue([
+    {
+      kind: "APPOINTMENT",
+      id: "new",
+      date: "2026-12-31",
+      title: "Neu",
+      allDay: true,
+      startTime: null,
+      endTime: null,
+      color: "#FFFFFF",
+      note: null,
+      revision: 1,
+      createdAt: "",
+      updatedAt: "",
+      deletedAt: null,
+    },
+  ]);
   mockEntries = [{}];
   await screen.rerender(<CalendarWidgetSync ports={p.value} />);
   await act(async () => {});
   expect(publish).toHaveBeenCalledTimes(2);
+  expect(publish.mock.calls.at(-1)?.[0][0].props.days[0].appointments?.[0].title).toBe("Neu");
+  await screen.unmount();
+});
+
+it("retains the published widget when a provider reload leaves its actual data unchanged", async () => {
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  await act(async () => {});
+  expect(publish).toHaveBeenCalledTimes(1);
+  mockEntries = [{ id: "a-different-loaded-year" }];
+  await screen.rerender(<CalendarWidgetSync ports={p.value} />);
+  await act(async () => {});
+  expect(p.load).toHaveBeenCalledTimes(2);
+  expect(publish).toHaveBeenCalledTimes(1);
+  await screen.unmount();
+});
+
+it("discards a preparation paused before a settings change", async () => {
+  let resume!: () => void;
+  jest.spyOn(globalThis, "requestIdleCallback").mockImplementationOnce((callback) => {
+    resume = () => callback({ didTimeout: false, timeRemaining: () => 50 });
+    return 1;
+  });
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  expect(publish).not.toHaveBeenCalled();
+  mockAppearance = { ready: true, mode: "dark" };
+  await screen.rerender(<CalendarWidgetSync ports={p.value} />);
+  await act(async () => resume());
+  expect(publish).toHaveBeenCalledTimes(1);
+  expect(publish.mock.calls[0][0][0].props.themeMode).toBe("dark");
+  await screen.unmount();
+});
+
+it("does not publish a preparation that crossed midnight before it could run", async () => {
+  let resume!: () => void;
+  jest.spyOn(globalThis, "requestIdleCallback").mockImplementationOnce((callback) => {
+    resume = () => callback({ didTimeout: false, timeRemaining: () => 50 });
+    return 1;
+  });
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  expect(publish).not.toHaveBeenCalled();
+  jest.setSystemTime(new Date("2027-01-01T01:00:00Z"));
+  await act(async () => resume());
+  expect(publish).toHaveBeenCalledTimes(1);
+  expect(publish.mock.calls[0][0][0].props.todayDate).toBe("2027-01-01");
+  await screen.unmount();
+});
+
+it("retries a failed publication rather than remembering it as successful", async () => {
+  let foreground!: () => void;
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, callback) => {
+    foreground = () => callback("active");
+    return { remove: jest.fn() };
+  });
+  publish.mockImplementationOnce(() => {
+    throw new Error("native publish failed");
+  });
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  expect(p.record).toHaveBeenCalledWith(
+    "provider",
+    "CALENDAR_WIDGET_SYNC_FAILED",
+    expect.any(Error),
+  );
+  await act(async () => foreground());
+  expect(publish).toHaveBeenCalledTimes(2);
+  await screen.unmount();
+});
+
+it("replaces a first timeline entry that became future-dated after a clock rollback", async () => {
+  let foreground!: () => void;
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, callback) => {
+    foreground = () => callback("active");
+    return { remove: jest.fn() };
+  });
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  jest.setSystemTime(new Date("2026-12-31T11:00:00Z"));
+  await act(async () => foreground());
+  expect(publish).toHaveBeenCalledTimes(2);
+  expect(publish.mock.calls[1][0][0].date.getTime()).toBeLessThanOrEqual(Date.now());
   await screen.unmount();
 });
 
@@ -364,7 +470,8 @@ it("refreshes at midnight and when the app returns, then removes subscriptions",
   await act(async () => {
     foreground("active");
   });
-  expect(publish).toHaveBeenCalledTimes(3);
+  expect(p.load).toHaveBeenCalledTimes(3);
+  expect(publish).toHaveBeenCalledTimes(2);
   const clearTimer = jest.spyOn(globalThis, "clearTimeout");
   clearTimer.mockClear();
   await screen.unmount();

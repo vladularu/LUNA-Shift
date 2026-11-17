@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render } from "@testing-library/react-native";
+import { act, fireEvent, render, within } from "@testing-library/react-native";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ReportPeriodPager, reportPeriodOffset } from "./report-period-pager";
@@ -7,7 +7,25 @@ import { ReportPeriodPager, reportPeriodOffset } from "./report-period-pager";
 let mockReduced = false;
 jest.mock("react-native-reanimated", () => ({ useReducedMotion: () => mockReduced }));
 const changed = jest.fn();
+const headerMounts = jest.fn();
 const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+function FixedPeriodHeader({ month, move }: { month: string; move: (delta: number) => void }) {
+  useEffect(() => {
+    headerMounts();
+  }, []);
+  return (
+    <View testID="fixed-period-header">
+      <Text>{`Bericht ${month}`}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Kopf weiter"
+        onPress={() => move(1)}
+      >
+        <Text>Weiter</Text>
+      </Pressable>
+    </View>
+  );
+}
 function Pager({
   initial = "2030-12",
   unit = "MONTH",
@@ -56,10 +74,170 @@ async function settle(screen: Screen, index: number, width = 390) {
 beforeEach(() => {
   mockReduced = false;
   changed.mockClear();
+  headerMounts.mockClear();
   scrollTo.mockClear();
 });
 
+function trackedReports() {
+  const mounts = new Map<string, number>();
+  const placeholders = jest.fn((month: string) => <Text>Vorbereitung {month}</Text>);
+  const Prepared = createContext(0);
+  function Preparation({ month, children }: { month: string; children: ReactNode }) {
+    const [token] = useState(() => {
+      const next = (mounts.get(month) ?? 0) + 1;
+      mounts.set(month, next);
+      return next;
+    });
+    return <Prepared.Provider value={token}>{children}</Prepared.Provider>;
+  }
+  function Content({ month }: { month: string }) {
+    return <Text testID={`prepared-${month}`}>{useContext(Prepared)}</Text>;
+  }
+  function Reports({
+    unit = "MONTH",
+    fixedHeader = false,
+  }: {
+    unit?: "MONTH" | "YEAR";
+    fixedHeader?: boolean;
+  }) {
+    const [month, setMonth] = useState("2030-12");
+    return (
+      <ReportPeriodPager
+        value={month}
+        unit={unit}
+        onChange={(next) => {
+          changed(next);
+          setMonth(next);
+        }}
+        preparationRadius={2}
+        renderHeader={
+          fixedHeader ? (value, move) => <FixedPeriodHeader month={value} move={move} /> : undefined
+        }
+        renderPlaceholder={placeholders}
+        preparePage={(value, _active, _distance, content) => (
+          <Preparation month={value}>{content}</Preparation>
+        )}
+        renderPage={(value) => <Content month={value} />}
+      />
+    );
+  }
+  return { Reports, mounts, placeholders };
+}
+
 describe("native chronological report paging", () => {
+  it("keeps one stationary header outside the swipe viewport through layout, paging and unit changes", async () => {
+    const { Reports } = trackedReports();
+    const screen = await render(<Reports fixedHeader />);
+    expect(screen.getByText("Bericht 2030-12")).toBeTruthy();
+    await measure(screen);
+    expect(
+      screen.getAllByTestId("fixed-period-header", { includeHiddenElements: true }),
+    ).toHaveLength(1);
+    expect(
+      within(screen.getByTestId("report-period-scroll")).queryByTestId("fixed-period-header", {
+        includeHiddenElements: true,
+      }),
+    ).toBeNull();
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scroll", {
+      nativeEvent: { contentOffset: { x: 12.6 * 390, y: 0 } },
+    });
+    expect(screen.getByText("Bericht 2030-12")).toBeTruthy();
+    await settle(screen, 13);
+    expect(screen.getByText("Bericht 2031-01")).toBeTruthy();
+    await screen.rerender(<Reports fixedHeader unit="YEAR" />);
+    await measure(screen, 430);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
+    await settle(screen, 23, 430);
+    expect(screen.getByText("Bericht 2042-01")).toBeTruthy();
+    expect(headerMounts).toHaveBeenCalledTimes(1);
+  });
+  it.each([false, true])(
+    "fixed header arrows retain consecutive requests with reduced motion %s",
+    async (reduced) => {
+      mockReduced = reduced;
+      const { Reports } = trackedReports();
+      const screen = await render(<Reports fixedHeader />);
+      await measure(screen);
+      await fireEvent.press(screen.getByRole("button", { name: "Kopf weiter" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Kopf weiter" }));
+      expect(scrollTo).toHaveBeenLastCalledWith({ x: 14 * 390, animated: !reduced });
+      if (!reduced) {
+        expect(changed).not.toHaveBeenCalled();
+        await settle(screen, 13);
+        expect(changed).not.toHaveBeenCalled();
+        await settle(screen, 14);
+      }
+      expect(screen.getByText("Bericht 2031-02")).toBeTruthy();
+      expect(headerMounts).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("keeps the selected preparation through first measurement without eagerly preparing neighbours", async () => {
+    const { Reports, mounts, placeholders } = trackedReports();
+    const screen = await render(<Reports />);
+    expect([...mounts.keys()]).toEqual(["2030-12"]);
+    expect(placeholders).not.toHaveBeenCalled();
+    await measure(screen);
+    expect(screen.getByTestId("prepared-2030-12").props.children).toBe(1);
+    expect(mounts.get("2030-12")).toBe(1);
+    expect(mounts.size).toBe(5);
+  });
+  it("keeps selected preparation across month/year changes away from the anchor", async () => {
+    const { Reports, mounts } = trackedReports();
+    const screen = await render(<Reports />);
+    await measure(screen);
+    await settle(screen, 13);
+    const oldCommit = screen.getByTestId("report-period-scroll").props.onMomentumScrollEnd;
+    changed.mockClear();
+    await screen.rerender(<Reports unit="YEAR" />);
+    expect(screen.getByTestId("prepared-2031-01").props.children).toBe(1);
+    expect(scrollTo).toHaveBeenLastCalledWith({ x: 12 * 390, animated: false });
+    expect(screen.getByTestId("prepared-2032-01", { includeHiddenElements: true })).toBeTruthy();
+    await act(async () => {
+      oldCommit({ nativeEvent: { contentOffset: { x: 14 * 390, y: 0 } } });
+    });
+    expect(changed).not.toHaveBeenCalled();
+    await screen.rerender(<Reports unit="MONTH" />);
+    expect(screen.getByTestId("prepared-2031-01").props.children).toBe(1);
+    expect(mounts.get("2031-01")).toBe(1);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
+    await settle(screen, 13);
+    expect(changed).toHaveBeenLastCalledWith("2031-02");
+  });
+  it("retains a visible prepared destination while recentering the page window", async () => {
+    const { Reports, mounts } = trackedReports();
+    const screen = await render(<Reports />);
+    await measure(screen);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scroll", {
+      nativeEvent: { contentOffset: { x: 23 * 390, y: 0 } },
+    });
+    expect(mounts.get("2031-11")).toBe(1);
+    await settle(screen, 23);
+    expect(screen.getByTestId("prepared-2031-11").props.children).toBe(1);
+    expect(mounts.get("2031-11")).toBe(1);
+    expect(scrollTo).toHaveBeenLastCalledWith({ x: 12 * 390, animated: false });
+    // A queued event from the previous offset must not select a different date.
+    await settle(screen, 23);
+    expect(changed).toHaveBeenCalledTimes(1);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
+    await settle(screen, 13);
+    expect(changed).toHaveBeenLastCalledWith("2031-12");
+  });
+  it("preserves the year selected by swiping when returning to monthly paging", async () => {
+    const { Reports, mounts } = trackedReports();
+    const screen = await render(<Reports />);
+    await measure(screen);
+    await settle(screen, 13);
+    await screen.rerender(<Reports unit="YEAR" />);
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
+    await settle(screen, 13);
+    const selectedToken = mounts.get("2032-01");
+    await screen.rerender(<Reports unit="MONTH" />);
+    expect(screen.getByTestId("prepared-2032-01").props.children).toBe(selectedToken);
+    expect(scrollTo).toHaveBeenLastCalledWith({ x: 12 * 390, animated: false });
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
+    await settle(screen, 11);
+    expect(changed).toHaveBeenLastCalledWith("2031-12");
+  });
   it.each(["MONTH", "YEAR"] as const)(
     "keeps every traversable %s page nonblank before native scrolling settles",
     async (unit) => {

@@ -14,23 +14,27 @@ export function AnnualReportRuleFailure({
   onMoveYear,
   onRetry,
   year,
+  showHeader = true,
 }: {
   readonly failure: RuleComputationFailure;
   readonly onBackToMonth: () => void;
   readonly onMoveYear: (delta: number) => void;
   readonly onRetry: () => void;
   readonly year: number;
+  readonly showHeader?: boolean;
 }) {
   const palette = usePalette();
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-      <AnalysisYearHeader
-        activeMonthCount={0}
-        onNext={() => onMoveYear(1)}
-        onOpenMonth={onBackToMonth}
-        onPrevious={() => onMoveYear(-1)}
-        year={year}
-      />
+      {showHeader ? (
+        <AnalysisYearHeader
+          activeMonthCount={0}
+          onNext={() => onMoveYear(1)}
+          onOpenMonth={onBackToMonth}
+          onPrevious={() => onMoveYear(-1)}
+          year={year}
+        />
+      ) : null}
       <ReportScrollView>
         <ReportPeriodContent>
           <RuleComputationNotice

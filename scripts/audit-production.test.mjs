@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { evaluateAuditReport } from "./audit-production.mjs";
+import "./picomatch-hardening.test.mjs";
 
 const allowedImageSizeAdvisory = {
   source: 1138808,
@@ -14,6 +15,49 @@ const allowedImageSizeAdvisory = {
 function report(vulnerabilities) {
   return { vulnerabilities };
 }
+
+test("shared cyclic meta graphs retain every advisory without enumerating every path", () => {
+  const unrelated = {
+    ...allowedImageSizeAdvisory,
+    source: 9999999,
+    name: "other",
+    url: "https://example.test/other",
+  };
+  const vulnerabilities = {
+    first: { severity: "high", via: [allowedImageSizeAdvisory] },
+    other: { severity: "high", via: [unrelated] },
+  };
+  let reads = 0;
+  for (let depth = 0; depth < 24; depth++) {
+    for (const side of ["left", "right"]) {
+      const via =
+        depth === 23 ? ["first", "other", "left-0"] : [`left-${depth + 1}`, `right-${depth + 1}`];
+      vulnerabilities[`${side}-${depth}`] = {
+        severity: "high",
+        get via() {
+          // Bound work deterministically instead of relying on a CPU-specific timer.
+          if (++reads > 20_000) throw new Error("Audit graph revisited shared paths excessively");
+          return via;
+        },
+      };
+    }
+  }
+  const result = evaluateAuditReport(report(vulnerabilities));
+  assert.deepEqual(new Set(result.blocking), new Set([allowedImageSizeAdvisory, unrelated]));
+  assert.deepEqual(result.mitigated, []);
+  assert.deepEqual(result.approved, []);
+});
+
+test("a cycle with no resolvable advisory remains blocking", () => {
+  const result = evaluateAuditReport(
+    report({
+      first: { severity: "high", via: ["second"] },
+      second: { severity: "high", via: ["first"] },
+    }),
+  );
+  assert.equal(result.blocking.length, 2);
+  assert.deepEqual(result.mitigated, []);
+});
 
 test("blocks the formerly approved image-size advisory and its cyclic meta chain", () => {
   const result = evaluateAuditReport(

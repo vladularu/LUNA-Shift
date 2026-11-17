@@ -8,6 +8,7 @@ import { verifyBracesHardening } from "./braces-hardening.mjs";
 import decoderHardening from "./decode-uri-component-hardening.cjs";
 import { verifyNodeForgeHardening } from "./node-forge-hardening.mjs";
 import { verifyZodHardening } from "./zod-hardening.mjs";
+import { verifyPicomatchHardening } from "./picomatch-hardening.mjs";
 
 const severities = ["info", "low", "moderate", "high", "critical"];
 const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -110,6 +111,7 @@ function verifyInstalledHardening() {
     verifyBracesHardening(),
     verifyZodHardening(),
     decoderHardening.verifyDecodeUriComponentHardening(),
+    verifyPicomatchHardening(),
   ];
 }
 

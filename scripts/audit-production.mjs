@@ -7,6 +7,7 @@ import {
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import decoderHardening from "./decode-uri-component-hardening.cjs";
+import { isMitigatedPicomatchFinding, verifyPicomatchHardening } from "./picomatch-hardening.mjs";
 import {
   NODE_FORGE_ADVISORY_URL,
   isVerifiedNodeForgeHardening,
@@ -44,14 +45,15 @@ function collectHighAdvisories(packageName, vulnerabilities, visited = new Set()
     ];
   }
 
-  const nextVisited = new Set(visited);
-  nextVisited.add(packageName);
+  // Share visited nodes across branches of this root traversal. Copying the set
+  // enumerates every path through npm's cyclic/diamond-shaped meta graph.
+  visited.add(packageName);
   const findings = [];
 
   for (const cause of vulnerability.via ?? []) {
     if (typeof cause === "string") {
       if (isAtLeastHigh(vulnerabilities[cause]?.severity)) {
-        findings.push(...collectHighAdvisories(cause, vulnerabilities, nextVisited));
+        findings.push(...collectHighAdvisories(cause, vulnerabilities, visited));
       }
       continue;
     }
@@ -93,7 +95,9 @@ function hasVerifiedMitigation(
   bracesProof,
   zodProof,
   decoderProof,
+  picomatchProof,
 ) {
+  if (isMitigatedPicomatchFinding(finding, vulnerabilities.picomatch, picomatchProof)) return true;
   const decoderNodes = vulnerabilities["decode-uri-component"]?.nodes;
   if (
     finding.name === "decode-uri-component" &&
@@ -158,7 +162,14 @@ function hasVerifiedMitigation(
   );
 }
 
-export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProof, decoderProof) {
+export function evaluateAuditReport(
+  report,
+  hardeningProof,
+  bracesProof,
+  zodProof,
+  decoderProof,
+  picomatchProof,
+) {
   const vulnerabilities = report?.vulnerabilities;
   if (!vulnerabilities || typeof vulnerabilities !== "object") {
     throw new Error("npm audit lieferte keinen auswertbaren Vulnerability-Report.");
@@ -191,6 +202,7 @@ export function evaluateAuditReport(report, hardeningProof, bracesProof, zodProo
         bracesProof,
         zodProof,
         decoderProof,
+        picomatchProof,
       )
         ? mitigated
         : blocking;
@@ -213,6 +225,7 @@ function printFinding(prefix, finding) {
 export function runProductionAudit() {
   try {
     decoderHardening.verifyDecodeUriComponentHardening();
+    verifyPicomatchHardening();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     return 1;
@@ -261,6 +274,7 @@ export function runProductionAudit() {
       verifyBracesHardening(),
       verifyZodHardening(),
       decoderHardening.verifyDecodeUriComponentHardening(),
+      verifyPicomatchHardening(),
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

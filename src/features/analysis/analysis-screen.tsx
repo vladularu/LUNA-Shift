@@ -3,7 +3,7 @@ import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { useAnalysisCommit, useAnalysisPerformance } from "./use-analysis-performance";
 import { router, useIsFocused } from "expo-router";
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
 
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
@@ -43,6 +43,12 @@ export type AnalysisExpandedCard = "CHECK" | "PAY";
 export { ComplianceDetails } from "./compliance-details";
 
 const EMPTY_PAYMENTS: readonly AnnualSalaryPayment[] = Object.freeze([]);
+type AnalysisHeaderState = {
+  readonly month: string;
+  readonly period: "MONTH" | "YEAR";
+  readonly visibleMonth: string;
+  readonly activeMonthCount?: number;
+};
 
 export function AnalysisScreen({
   initialExpandedCard = null,
@@ -57,6 +63,19 @@ export function AnalysisScreen({
   const activeMonthCoordinator = useActiveMonthCoordinator();
   const navigation = useAnalysisNavigation(profile?.timeZone);
   const { month, period, routeMonth, selectMonth, changePeriod } = navigation;
+  const [headerState, setHeaderState] = useState<AnalysisHeaderState | null>(null);
+  const updateHeader = useCallback((next: AnalysisHeaderState) => {
+    setHeaderState((previous) =>
+      previous?.month === next.month &&
+      previous.period === next.period &&
+      previous.visibleMonth === next.visibleMonth &&
+      previous.activeMonthCount === next.activeMonthCount
+        ? previous
+        : next,
+    );
+  }, []);
+  const visibleHeader =
+    headerState?.month === month && headerState.period === period ? headerState : null;
   useAnalysisPerformance(month, isFocused, period);
   useEffect(() => {
     if (initialExpandedCard) {
@@ -76,29 +95,31 @@ export function AnalysisScreen({
         profile={savedProfile}
       >
         <ReportPeriodPager
-          key={period}
           value={month}
           unit={period}
           enabled={isFocused}
           onChange={selectMonth}
           preparationRadius={period === "MONTH" ? 2 : 1}
-          renderPlaceholder={(pageMonth, move) => (
+          renderHeader={(pageMonth, move) =>
+            period === "YEAR" ? (
+              <AnalysisYearHeader
+                year={Number(pageMonth.slice(0, 4))}
+                activeMonthCount={visibleHeader?.activeMonthCount}
+                onPrevious={() => move(-1)}
+                onNext={() => move(1)}
+                onOpenMonth={() => changePeriod("MONTH")}
+              />
+            ) : (
+              <AnalysisMonthHeader
+                label={formatMonthRangeLabel(visibleHeader?.visibleMonth ?? pageMonth)}
+                onOpenYear={() => changePeriod("YEAR")}
+                onPrevious={() => move(-1)}
+                onNext={() => move(1)}
+              />
+            )
+          }
+          renderPlaceholder={() => (
             <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-              {period === "YEAR" ? (
-                <AnalysisYearHeader
-                  year={Number(pageMonth.slice(0, 4))}
-                  onPrevious={() => move(-1)}
-                  onNext={() => move(1)}
-                  onOpenMonth={() => changePeriod("MONTH")}
-                />
-              ) : (
-                <AnalysisMonthHeader
-                  label={formatMonthRangeLabel(pageMonth)}
-                  onOpenYear={() => changePeriod("YEAR")}
-                  onPrevious={() => move(-1)}
-                  onNext={() => move(1)}
-                />
-              )}
               <AnalysisCoverageNote message="Auswertung wird vorbereitet …" />
             </View>
           )}
@@ -121,6 +142,7 @@ export function AnalysisScreen({
               move={move}
               active={active}
               changePeriod={changePeriod}
+              onHeaderChange={updateHeader}
             />
           )}
         />
@@ -135,15 +157,16 @@ function AnalysisPage({
   move,
   active,
   changePeriod,
+  onHeaderChange,
 }: {
   readonly month: string;
   readonly period: "MONTH" | "YEAR";
   readonly move: (delta: number) => void;
   readonly active: boolean;
   readonly changePeriod: (period: "MONTH" | "YEAR") => void;
+  readonly onHeaderChange: (state: AnalysisHeaderState) => void;
 }) {
   const year = Number(month.slice(0, 4));
-  const moveMonth = move;
   const moveYear = move;
   const palette = usePalette();
   const isFocused = useIsFocused();
@@ -207,6 +230,24 @@ function AnalysisPage({
     year,
     testMonths,
   });
+  const activeMonthCount =
+    annualReport.ruleFailure !== null
+      ? 0
+      : (annualReport.report ?? annualReport.coreReport)?.activeMonthCount;
+  useLayoutEffect(() => {
+    if (!active) return;
+    if (period === "YEAR") {
+      onHeaderChange({ month, period, visibleMonth: month, activeMonthCount });
+    } else if (ready && error) {
+      onHeaderChange({ month, period, visibleMonth: month });
+    }
+  }, [active, activeMonthCount, error, month, onHeaderChange, period, ready]);
+  const updateVisibleMonth = useCallback(
+    (visibleMonth: string) => {
+      if (active && period === "MONTH") onHeaderChange({ month, period, visibleMonth });
+    },
+    [active, month, onHeaderChange, period],
+  );
 
   function retainScene(content: ReactNode) {
     return <AnalysisScene focused={isFocused}>{content}</AnalysisScene>;
@@ -221,6 +262,7 @@ function AnalysisPage({
     if (annualReport.ruleFailure !== null) {
       return retainScene(
         <AnnualReportRuleFailure
+          showHeader={false}
           failure={annualReport.ruleFailure}
           onBackToMonth={() => changePeriod("MONTH")}
           onMoveYear={moveYear}
@@ -242,17 +284,12 @@ function AnalysisPage({
     if (!ready || visibleReport === null)
       return retainScene(
         <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-          <AnalysisYearHeader
-            year={year}
-            onPrevious={() => moveYear(-1)}
-            onNext={() => moveYear(1)}
-            onOpenMonth={() => changePeriod("MONTH")}
-          />
           <LoadingView label="Jahresauswertung wird berechnet …" />
         </View>,
       );
     return retainScene(
       <AnnualReportScreen
+        showHeader={false}
         resumeKey={active ? appResumeHref("/analysis", { month, period }) : null}
         exportControl={<ReportExportButton period={String(year)} />}
         report={visibleReport}
@@ -286,14 +323,7 @@ function AnalysisPage({
             monthlyCompliance.error !== null) &&
           (testMonths.includes(month) || salaryPayments.status !== "loading")
         }
-        header={(visibleMonth) => (
-          <AnalysisMonthHeader
-            label={formatMonthRangeLabel(visibleMonth)}
-            onOpenYear={() => changePeriod("YEAR")}
-            onNext={() => moveMonth(1)}
-            onPrevious={() => moveMonth(-1)}
-          />
-        )}
+        onVisibleMonthChange={updateVisibleMonth}
       >
         {!ready ||
         profile === null ||

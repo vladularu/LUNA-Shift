@@ -1,4 +1,4 @@
-import { expect, it } from "@jest/globals";
+import { expect, it, jest } from "@jest/globals";
 import { render } from "@testing-library/react-native";
 import { Text } from "react-native";
 import { AnalysisMonthTransition } from "./analysis-month-transition";
@@ -13,6 +13,28 @@ const page = (month: string, ready: boolean, available = true, value = month) =>
     <Text>{`Werte ${value}`}</Text>
   </AnalysisMonthTransition>
 );
+
+it("reports the visible month to a fixed header while retaining pending values", async () => {
+  const visible = jest.fn();
+  const content = (month: string, ready: boolean) => (
+    <AnalysisMonthTransition
+      month={month}
+      ready={ready}
+      available={ready}
+      onVisibleMonthChange={visible}
+    >
+      <Text>{`Werte ${month}`}</Text>
+    </AnalysisMonthTransition>
+  );
+  const screen = await render(content("2026-12", true));
+  expect(visible).toHaveBeenLastCalledWith("2026-12");
+  await screen.rerender(content("2027-01", false));
+  expect(visible).toHaveBeenLastCalledWith("2026-12");
+  expect(screen.getByText("Werte 2026-12")).toBeTruthy();
+  await screen.rerender(content("2027-01", true));
+  expect(visible).toHaveBeenLastCalledWith("2027-01");
+  expect(screen.getByText("Werte 2027-01")).toBeTruthy();
+});
 
 it("keeps the old header and values together until the requested month has finished loading", async () => {
   const screen = await render(page("2026-12", true));

@@ -23,10 +23,11 @@ describe("horizontal card back gestures", () => {
     }
     expect(layout).toContain("...horizontalBackGestureOptions(route.name)");
   });
-  it("keeps edge-back navigation on calendar design while leaving the photo slider free", () => {
+  it("keeps native content-pop active only at the calendar edge, away from the photo slider", () => {
     expect(horizontalBackGestureOptions("calendar-design")).toEqual({
       gestureEnabled: true,
-      fullScreenGestureEnabled: false,
+      fullScreenGestureEnabled: true,
+      gestureResponseDistance: { start: 0, end: 32 },
     });
   });
 

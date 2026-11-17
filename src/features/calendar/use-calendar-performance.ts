@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
-import { AppState } from "react-native";
-import { runOnJS, useFrameCallback, useSharedValue, type FrameInfo } from "react-native-reanimated";
+import { useLayoutEffect, useMemo } from "react";
 import { calendarPerformance } from "@/application/calendar-performance";
 import type { CalendarEntry } from "@/domain/types";
 import { createMonthGrid } from "@/engine/calendar";
@@ -34,113 +32,13 @@ export function useMeasuredCalendarEntries(
   }, [expanded, showAppointments, showShifts]);
 }
 
-function recordFrames(
-  session: number,
-  duration: number,
-  count: number,
-  maximum: number,
-  over17: number,
-  over34: number,
-  over50: number,
-) {
-  calendarPerformance.record(
-    "ui-frames",
-    { duration, count, maximum, over17, over34, over50 },
-    session,
-  );
-}
-
-function recordFirstFrame(session: number) {
-  calendarPerformance.record("ui-sampling", { phase: 2, state: 1 }, session);
-}
-
-/** UI-runtime cadence only; never infer GPU presentation or touch latency from it. */
+/** Page-local commit markers only; the single app-wide probe samples all frames. */
 export function useCalendarPerformance(active: boolean, month: string, mode: string) {
-  // The worklet transform runs after React Compiler. Preserve useCallback so
-  // renders cannot unregister the probe and restart its native frame window.
-  "use no memo";
-  const session = useSyncExternalStore(
-    calendarPerformance.subscribe,
-    calendarPerformance.getSnapshot,
-    () => 0,
-  );
-  const sampling = useSharedValue(0);
-  const bucket = useSharedValue([0, 0, 0, 0, 0, 0]);
-  const onFrame = useCallback(
-    (frame: FrameInfo) => {
-      "worklet";
-      if (!sampling.value) return;
-      const b = bucket.value;
-      if (!b[0] || frame.timeSincePreviousFrame === null) {
-        runOnJS(recordFirstFrame)(sampling.value);
-        bucket.set([frame.timestamp, 0, 0, 0, 0, 0]);
-        return;
-      }
-      const gap = frame.timeSincePreviousFrame;
-      const next = [
-        b[0],
-        b[1] + 1,
-        Math.max(b[2], gap),
-        b[3] + (gap > 17 ? 1 : 0),
-        b[4] + (gap > 34 ? 1 : 0),
-        b[5] + (gap > 50 ? 1 : 0),
-      ];
-      if (frame.timestamp - b[0] >= 1000) {
-        runOnJS(recordFrames)(
-          sampling.value,
-          frame.timestamp - b[0],
-          next[1],
-          next[2],
-          next[3],
-          next[4],
-          next[5],
-        );
-        bucket.set([frame.timestamp, 0, 0, 0, 0, 0]);
-      } else bucket.set(next);
-    },
-    [bucket, sampling],
-  );
-  const frames = useFrameCallback(onFrame, false);
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const cancelTimer = () => {
-      if (timer !== undefined) clearInterval(timer);
-      timer = undefined;
-    };
-    const update = (state: string) => {
-      const enabled = Boolean(session && active && state === "active");
-      cancelTimer();
-      calendarPerformance.record(
-        "ui-sampling",
-        { phase: 1, state: enabled ? 1 : 0, mode: active ? 1 : 0 },
-        session,
-      );
-      bucket.set([0, 0, 0, 0, 0, 0]);
-      sampling.set(enabled ? session : 0);
-      frames.setActive(enabled);
-      if (enabled) {
-        let previous = performance.now();
-        timer = setInterval(() => {
-          const now = performance.now();
-          const lag = Math.max(0, now - previous - 100);
-          previous = now;
-          if (lag > 20) calendarPerformance.record("calendar-lag", { duration: lag }, session);
-        }, 100);
-      }
-    };
-    update(AppState.currentState);
-    const listener = AppState.addEventListener("change", update);
-    return () => {
-      listener.remove();
-      cancelTimer();
-      sampling.set(0);
-      frames.setActive(false);
-    };
-  }, [active, bucket, frames, sampling, session]);
   useLayoutEffect(() => {
     calendarPerformance.record("commit", {
       month: Number(month.replace("-", "")),
       mode: mode === "MONTH" ? 1 : 0,
+      state: active ? 1 : 0,
     });
   });
 }

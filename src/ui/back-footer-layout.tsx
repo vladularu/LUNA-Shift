@@ -9,6 +9,7 @@ export function BackFooterLayout({
   disabled = false,
   footerTestID,
   label,
+  nativeSheet = false,
   onPress,
   showFooter = true,
   style,
@@ -18,6 +19,8 @@ export function BackFooterLayout({
   readonly disabled?: boolean;
   readonly footerTestID?: string;
   readonly label?: string;
+  /** Keep the scroll view a direct native screen child for formSheet frame correction. */
+  readonly nativeSheet?: boolean;
   readonly onPress: () => void;
   readonly showFooter?: boolean;
   readonly style?: StyleProp<ViewStyle>;
@@ -27,8 +30,8 @@ export function BackFooterLayout({
   const [footerHeight, setFooterHeight] = useState(48);
   const bottom = Math.max(insets?.bottom ?? 0, SPACING.md);
 
-  return (
-    <View style={[{ flex: 1 }, style]} testID={testID}>
+  const content = (
+    <>
       {children(showFooter ? bottom + footerHeight + SPACING.lg : 0)}
       {showFooter ? (
         <View
@@ -51,6 +54,13 @@ export function BackFooterLayout({
           />
         </View>
       ) : null}
+    </>
+  );
+  return nativeSheet ? (
+    content
+  ) : (
+    <View style={[{ flex: 1 }, style]} testID={testID}>
+      {content}
     </View>
   );
 }

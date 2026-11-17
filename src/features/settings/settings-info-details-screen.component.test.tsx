@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 
 import { SettingsInfoDetailsScreen } from "@/features/settings/settings-info-details-screen";
-import { APP_RUNTIME_LABEL } from "@/infrastructure/app-version";
+import { APP_VERSION } from "@/infrastructure/app-version";
 
 let mockParams: { section: string; tariff?: string } = { section: "STORAGE" };
 
@@ -110,9 +110,9 @@ describe("SettingsInfoDetailsScreen visible information", () => {
     mockParams = { section: "ABOUT" };
     const screen = await render(<SettingsInfoDetailsScreen />);
     expect(screen.getByText("Version")).toBeVisible();
-    expect(screen.getByText(APP_RUNTIME_LABEL)).toBeVisible();
-    expect(screen.getByText("Produktprinzip")).toBeVisible();
-    expect(screen.getByText(/ist eigenständig/)).toBeVisible();
+    expect(screen.getByText(APP_VERSION)).toBeVisible();
+    expect(screen.getByText("Dein Schichtalltag")).toBeVisible();
+    expect(screen.getByText("Dein Kalender")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Version" })).toBeNull();
   });
   it.each([
@@ -143,6 +143,25 @@ describe("SettingsInfoDetailsScreen visible information", () => {
     await fireEvent.press(screen.getByRole("button", { name: /^Zurück/ }));
     expect(router.back).toHaveBeenCalledTimes(1);
   });
+  it.each(["ABOUT", "CALCULATION", "STORAGE"])(
+    "keeps %s as a direct native sheet scroll child during resizing",
+    async (section) => {
+      mockParams = { section };
+      const screen = await render(<SettingsInfoDetailsScreen />);
+      const rendered = screen.toJSON();
+      // This renderer serializes a Fragment with type ""; neither shape is a native View.
+      expect(Array.isArray(rendered) || rendered?.type === "").toBe(true);
+      const roots = Array.isArray(rendered)
+        ? rendered
+        : (rendered?.children?.filter((child) => typeof child !== "string") ?? []);
+      expect(roots).toHaveLength(2);
+      expect(roots[0]?.props.testID).toBe("info-details-scroll");
+      expect(roots[1]?.props.testID).toBe("info-details-footer");
+      expect(screen.getByTestId("info-details-scroll")).toHaveStyle({ flex: 1 });
+      expect(screen.getByTestId("info-details-footer")).toHaveStyle({ position: "absolute" });
+      expect(screen.getByRole("button", { name: /^Zurück/ })).toBeTruthy();
+    },
+  );
   it("shows the requested information immediately after changing routes", async () => {
     const screen = await render(<SettingsInfoDetailsScreen />);
     mockParams = { section: "CALCULATION" };

@@ -5,6 +5,7 @@ import * as Updates from "expo-updates";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert, Platform } from "react-native";
 import { calendarPerformance } from "@/application/calendar-performance";
+import { navigationPerformance } from "@/application/navigation-performance";
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { usePalette } from "@/theme/palette";
 import { RowButton, SurfaceCard } from "@/ui/design-system";
@@ -23,6 +24,11 @@ export function CalendarPerformanceControls({
     () => 0,
   );
   const [busy, setBusy] = useState(false);
+  const overlayVisible = useSyncExternalStore(
+    navigationPerformance.subscribe,
+    navigationPerformance.isVisible,
+    () => false,
+  );
   const sharing = useRef(false);
   useEffect(() => {
     if (!session) return;
@@ -39,6 +45,7 @@ export function CalendarPerformanceControls({
       const report = JSON.stringify(
         {
           ...calendarPerformance.report(),
+          navigation: navigationPerformance.report(),
           updateId: Updates.updateId,
           runtime: Updates.runtimeVersion,
           embedded: Updates.isEmbeddedLaunch,
@@ -74,11 +81,20 @@ export function CalendarPerformanceControls({
         titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title={session ? "Performancediagnose läuft – stoppen" : "Performancediagnose starten"}
-        subtitle="Misst Kalender, Auswertung und Gehaltsberechnung: nur lokale Zeiten und Anzahlen, keine Titel oder Gehälter. Maximal 10 Minuten. Ein neuer Start ersetzt die vorige Messung."
+        subtitle="Misst Seitenwechsel, UI-Takt und JS-Verzögerungen gegen das Ziel 60 FPS. Nur lokale Zeiten und Anzahlen, keine Titel oder Gehälter. Maximal 10 Minuten."
         onPress={() =>
           session ? calendarPerformance.stop() : calendarPerformance.start(DEV_TOOLS_AVAILABLE)
         }
       />
+      {session ? (
+        <RowButton
+          titleColor={palette.text}
+          subtitleBelow={subtitleBelow}
+          title={overlayVisible ? "FPS-Anzeige ausblenden" : "FPS-Anzeige einblenden"}
+          subtitle="Die Messung läuft auch ohne Anzeige weiter."
+          onPress={() => navigationPerformance.setVisible(!overlayVisible)}
+        />
+      ) : null}
       <RowButton
         titleColor={palette.text}
         subtitleBelow={subtitleBelow}
@@ -92,7 +108,10 @@ export function CalendarPerformanceControls({
         titleColor={palette.text}
         subtitleBelow={subtitleBelow}
         title="Diagnosebericht verwerfen"
-        onPress={calendarPerformance.clear}
+        onPress={() => {
+          calendarPerformance.clear();
+          navigationPerformance.clear();
+        }}
       />
     </SurfaceCard>
   );

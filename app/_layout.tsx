@@ -23,6 +23,7 @@ import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { PAGE_HEADER_OPTIONS, nativePageHeaderStyle } from "@/theme/page-header";
 import { pageBackButtonOptions } from "@/ui/native-page-header";
+import { pageStackHeaderOptions } from "@/ui/page-stack-header";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { FeedbackProvider } from "@/ui/feedback";
 import {
@@ -42,6 +43,7 @@ import {
 } from "@/infrastructure/startup-presentation";
 import { StartupRoutePresentation } from "@/navigation/startup-route-presentation";
 import { AppResumeCheckpoint } from "@/navigation/app-resume-checkpoint";
+import { PerformanceDiagnostics } from "@/ui/performance-diagnostics";
 
 SplashScreen.setOptions({ duration: STARTUP_SPLASH_FADE_MS, fade: true });
 if (Platform.OS !== "web") {
@@ -68,6 +70,7 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
+      <PerformanceDiagnostics />
       <SecureDatabaseProvider>
         <ActiveMonthProvider>
           <CloudDataRefreshBoundary>
@@ -128,6 +131,7 @@ function ThemedApp() {
                         <Stack
                           screenOptions={({ route }) => ({
                             ...horizontalBackGestureOptions(route.name),
+                            ...pageStackHeaderOptions(route.name),
                             headerBackButtonDisplayMode: "minimal",
                             ...PAGE_HEADER_OPTIONS,
                             ...pageBackButtonOptions(),

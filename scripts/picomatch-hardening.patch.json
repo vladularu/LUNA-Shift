@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "advisory": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+  "proposalCommit": "0150ed18b7971894bfd1824c8f96d6b63c70ad1f",
+  "installs": [
+    {
+      "path": "node_modules/@expo/metro-config/node_modules/picomatch",
+      "version": "4.0.7",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+      "dev": false
+    },
+    {
+      "path": "node_modules/expo/node_modules/picomatch",
+      "version": "4.0.7",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+      "dev": false
+    },
+    {
+      "path": "node_modules/picomatch",
+      "version": "2.3.2",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
+      "integrity": "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==",
+      "dev": false
+    },
+    {
+      "path": "node_modules/tinyglobby/node_modules/picomatch",
+      "version": "4.0.5",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz",
+      "integrity": "sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==",
+      "dev": false
+    },
+    {
+      "path": "node_modules/vite/node_modules/picomatch",
+      "version": "4.0.5",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz",
+      "integrity": "sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==",
+      "dev": true
+    },
+    {
+      "path": "node_modules/vitest/node_modules/picomatch",
+      "version": "4.0.7",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
+      "dev": true
+    }
+  ],
+  "consumers": [
+    {
+      "path": "node_modules/@expo/metro-config",
+      "range": "^4.0.4",
+      "target": "node_modules/@expo/metro-config/node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/anymatch",
+      "range": "^2.0.4",
+      "target": "node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/expo/node_modules/@expo/cli",
+      "range": "^4.0.4",
+      "target": "node_modules/expo/node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/jest-util",
+      "range": "^2.2.3",
+      "target": "node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/micromatch",
+      "range": "^2.3.1",
+      "target": "node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/tinyglobby",
+      "range": "^4.0.4",
+      "target": "node_modules/tinyglobby/node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/vite",
+      "range": "^4.0.5",
+      "target": "node_modules/vite/node_modules/picomatch"
+    },
+    {
+      "path": "node_modules/vitest",
+      "range": "^4.0.3",
+      "target": "node_modules/vitest/node_modules/picomatch"
+    }
+  ],
+  "edits": [
+    {
+      "before": "const normalizeSimpleBranch = branch => {",
+      "after": "const branchContainsGlobStar = (branch, options) => {\n  let escaped = false;\n  let bracket = false;\n  let quoted = false;\n\n  for (let i = 0; i < branch.length; i++) {\n    const ch = branch[i];\n    if (escaped) {\n      escaped = false;\n      continue;\n    }\n    if (ch === '\\\\') {\n      escaped = true;\n      continue;\n    }\n    if (bracket) {\n      if (ch === ']') bracket = false;\n      continue;\n    }\n    if (ch === '\"') {\n      quoted = !quoted;\n      continue;\n    }\n    if (quoted) continue;\n    if (ch === '[' && options.nobracket !== true && branch.includes(']', i + 1)) {\n      bracket = true;\n      continue;\n    }\n    if (ch === '*' && branch[i + 1] !== '(') return true;\n  }\n  return false;\n};\n\nconst hasBranchRepetitionOverlap = branches => {\n  const values = branches.map(normalizeSimpleBranch).filter(Boolean);\n  for (let i = 0; i < values.length; i++) {\n    for (let j = i + 1; j < values.length; j++) {\n      const a = values[i];\n      const b = values[j];\n      const [short, long] = a.length <= b.length ? [a, b] : [b, a];\n      if (short.length > 0 && long.length % short.length === 0\n        && long === short.repeat(long.length / short.length)) return true;\n    }\n  }\n  return false;\n};\n\nconst normalizeSimpleBranch = branch => {"
+    },
+    {
+      "before": "  const branches = splitTopLevel(body).map(branch => branch.trim());",
+      "after": "  const branches = splitTopLevel(body).map(branch => branch.trim());\n\n  if (branchContainsGlobStar(body, options)) {\n    return { risky: true };\n  }"
+    },
+    {
+      "before": "      hasRepeatedCharPrefixOverlap(branches)",
+      "after": "      hasRepeatedCharPrefixOverlap(branches) ||\n      hasBranchRepetitionOverlap(branches)"
+    }
+  ],
+  "versions": {
+    "4.0.7": {
+      "files": [
+        {
+          "path": "index.js",
+          "originalSha256": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a",
+          "patchedSha256": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a"
+        },
+        {
+          "path": "lib/constants.js",
+          "originalSha256": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222",
+          "patchedSha256": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222"
+        },
+        {
+          "path": "lib/parse.js",
+          "originalSha256": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4",
+          "patchedSha256": "645613b7c70106a891c7431ecabd23857edd49ac99169356be26854cc80fba61"
+        },
+        {
+          "path": "lib/picomatch.js",
+          "originalSha256": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94",
+          "patchedSha256": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94"
+        },
+        {
+          "path": "lib/scan.js",
+          "originalSha256": "6457a1764e5c2e543cc3a0c00ce12ebb3764097628868198370b64d4e642aaae",
+          "patchedSha256": "6457a1764e5c2e543cc3a0c00ce12ebb3764097628868198370b64d4e642aaae"
+        },
+        {
+          "path": "lib/utils.js",
+          "originalSha256": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935",
+          "patchedSha256": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935"
+        },
+        {
+          "path": "package.json",
+          "originalSha256": "479b70b87aa7b44344d62c8a459ae7e53dd2bca6c61f1396bd55e63e9de73fc6",
+          "patchedSha256": "479b70b87aa7b44344d62c8a459ae7e53dd2bca6c61f1396bd55e63e9de73fc6"
+        },
+        {
+          "path": "posix.js",
+          "originalSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480",
+          "patchedSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480"
+        }
+      ]
+    },
+    "2.3.2": {
+      "files": [
+        {
+          "path": "index.js",
+          "originalSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480",
+          "patchedSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480"
+        },
+        {
+          "path": "lib/constants.js",
+          "originalSha256": "980225ab847a88a784f6d315557b8434f7742b2551ce20e354455c61b938c0a5",
+          "patchedSha256": "980225ab847a88a784f6d315557b8434f7742b2551ce20e354455c61b938c0a5"
+        },
+        {
+          "path": "lib/parse.js",
+          "originalSha256": "3a91656f440069aa8f8e15c9d695b9f6b2209df1eab2be8127c72cbcca45ff5f",
+          "patchedSha256": "b45442ee23fffd8b5bf78ca986b27413cdcea0c9c91107609caec29fcfd271fc"
+        },
+        {
+          "path": "lib/picomatch.js",
+          "originalSha256": "2cb169cbe17d356036c5f62a377318b85e30817877e59797842aec9d8b15f54b",
+          "patchedSha256": "2cb169cbe17d356036c5f62a377318b85e30817877e59797842aec9d8b15f54b"
+        },
+        {
+          "path": "lib/scan.js",
+          "originalSha256": "227fcc994a477ea95c5a0435d32783566334c6bd0dcc4a103029735ad8c9c535",
+          "patchedSha256": "227fcc994a477ea95c5a0435d32783566334c6bd0dcc4a103029735ad8c9c535"
+        },
+        {
+          "path": "lib/utils.js",
+          "originalSha256": "809fc29cf35ab0aa76b99cad29182f62c0ae598902481d10f9868eaef71981ee",
+          "patchedSha256": "809fc29cf35ab0aa76b99cad29182f62c0ae598902481d10f9868eaef71981ee"
+        },
+        {
+          "path": "package.json",
+          "originalSha256": "63264d817e856a4bff57d4304f2b38d2964a4f6df520eb169e7bcdb619f13e9a",
+          "patchedSha256": "63264d817e856a4bff57d4304f2b38d2964a4f6df520eb169e7bcdb619f13e9a"
+        }
+      ]
+    },
+    "4.0.5": {
+      "files": [
+        {
+          "path": "index.js",
+          "originalSha256": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a",
+          "patchedSha256": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a"
+        },
+        {
+          "path": "lib/constants.js",
+          "originalSha256": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222",
+          "patchedSha256": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222"
+        },
+        {
+          "path": "lib/parse.js",
+          "originalSha256": "73211a8ba85ce257b827abd8960e52c9750385b3fd18e8ef1080b114d774eb23",
+          "patchedSha256": "d15134fa7fc454391e29d0f2053b0078fc599e859677287569bc823524783026"
+        },
+        {
+          "path": "lib/picomatch.js",
+          "originalSha256": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94",
+          "patchedSha256": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94"
+        },
+        {
+          "path": "lib/scan.js",
+          "originalSha256": "227fcc994a477ea95c5a0435d32783566334c6bd0dcc4a103029735ad8c9c535",
+          "patchedSha256": "227fcc994a477ea95c5a0435d32783566334c6bd0dcc4a103029735ad8c9c535"
+        },
+        {
+          "path": "lib/utils.js",
+          "originalSha256": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935",
+          "patchedSha256": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935"
+        },
+        {
+          "path": "package.json",
+          "originalSha256": "fb7766f5f9c724e13e075760a95d16f87cdb327143d153a913135fde267ec615",
+          "patchedSha256": "fb7766f5f9c724e13e075760a95d16f87cdb327143d153a913135fde267ec615"
+        },
+        {
+          "path": "posix.js",
+          "originalSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480",
+          "patchedSha256": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480"
+        }
+      ]
+    }
+  }
+}

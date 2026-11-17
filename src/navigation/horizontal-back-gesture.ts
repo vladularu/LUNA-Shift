@@ -15,8 +15,12 @@ const separatePresentations = new Set([
 ]);
 
 const options = Object.freeze({ gestureEnabled: true, fullScreenGestureEnabled: true });
-// Keep native edge-back navigation out of the photo slider's horizontal touch area.
-const calendarDesignOptions = Object.freeze({ ...options, fullScreenGestureEnabled: false });
+// A hidden native bar can disable UIKit's edge recognizer. Use the content-pop
+// recognizer, restricted to the edge so the photo slider keeps its horizontal touch area.
+const calendarDesignOptions = Object.freeze({
+  ...options,
+  gestureResponseDistance: { start: 0, end: 32 },
+});
 const reportOptions = Object.freeze({ ...options, freezeOnBlur: true });
 const reports = new Set([
   "salary",

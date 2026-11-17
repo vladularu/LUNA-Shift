@@ -2,11 +2,11 @@ import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
 
 import { PRODUCT_NAME } from "@/brand";
 import type { SettingsInfoSection } from "@/navigation/routes";
-import { APP_RUNTIME_LABEL } from "@/infrastructure/app-version";
+import { APP_VERSION } from "@/infrastructure/app-version";
 import { parseEnumRouteParam, type RouteParam } from "@/navigation/route-params";
 import { usePalette } from "@/theme/palette";
 import { SurfaceCard } from "@/ui/design-system";
@@ -129,19 +129,19 @@ const INFO_CONTENT: Readonly<Record<SettingsInfoSection, InfoContent>> = {
   },
   ABOUT: {
     title: `Über ${PRODUCT_NAME}`,
-    intro: "Dein Dienstplaner für Schichtarbeit.",
+    intro: "Dein Dienstplan. Dein Überblick.",
     items: [
       {
         title: "Version",
-        text: APP_RUNTIME_LABEL,
+        text: APP_VERSION,
       },
       {
-        title: "Produktprinzip",
-        text: "Dienste einfach planen und Berechnungen nachvollziehen.",
+        title: "Dein Schichtalltag",
+        text: "Plane Dienste und Termine und behalte deine Arbeitszeit im Blick.",
       },
       {
-        title: "Hinweis",
-        text: `${PRODUCT_NAME} ist eigenständig und nicht mit SuperShift oder einem Tarifpartner verbunden.`,
+        title: "Dein Kalender",
+        text: "Gestalte deinen Kalender mit deinen Farben und einem eigenen Foto.",
       },
     ],
   },
@@ -243,13 +243,16 @@ export function SettingsInfoDetailsScreen() {
 
   return (
     <BackFooterLayout
+      nativeSheet={Platform.OS === "ios"}
       onPress={() => router.back()}
+      footerTestID="info-details-footer"
       style={{ backgroundColor: palette.groupedBackground }}
     >
       {(bottomPadding) => (
         <ScrollView
+          testID="info-details-scroll"
           contentInsetAdjustmentBehavior="automatic"
-          style={{ backgroundColor: palette.groupedBackground }}
+          style={{ flex: 1, backgroundColor: palette.groupedBackground }}
           contentContainerStyle={{
             flexGrow: 1,
             gap: 14,
@@ -260,6 +263,7 @@ export function SettingsInfoDetailsScreen() {
           <Stack.Screen
             options={{
               title: content.title,
+              contentStyle: { backgroundColor: palette.groupedBackground },
               headerStyle: { backgroundColor: palette.background },
               headerTintColor: palette.text,
               headerTitleStyle: { color: palette.text },
