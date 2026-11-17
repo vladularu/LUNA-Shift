@@ -1581,10 +1581,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.getByRole("button", { name: "Dienstplan-Check, Wird geprüft …" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Wird berechnet …" })).toBeTruthy();
     expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
-    expect(screen.getByText("1 Monate mit Einträgen")).toBeTruthy();
+    expect(screen.getByText(/^\d{4} 1 Monate mit Einträgen$/)).toBeTruthy();
     mockAnnualCoreValue = { ...mockAnnualCoreValue, activeMonthCount: 2 };
     await screen.rerender(<AnalysisScreen />);
-    expect(screen.getByText("2 Monate mit Einträgen")).toBeTruthy();
+    expect(screen.getByText(/^\d{4} 2 Monate mit Einträgen$/)).toBeTruthy();
   });
 
   it("keeps annual rule coverage local after switching from a covered month", async () => {

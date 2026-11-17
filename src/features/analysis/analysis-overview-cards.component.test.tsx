@@ -300,11 +300,11 @@ describe("analysis overview cards", () => {
     expect(screen.queryByText(/TVöD/)).toBeNull();
   });
 
-  it("uses the same compact page header for the annual view", async () => {
+  it("keeps year and active months on one compact line", async () => {
     const onOpenMonth = jest.fn();
     const screen = await render(
       <AnalysisYearHeader
-        activeMonthCount={4}
+        activeMonthCount={7}
         onNext={jest.fn()}
         onOpenMonth={onOpenMonth}
         onPrevious={jest.fn()}
@@ -320,8 +320,8 @@ describe("analysis overview cards", () => {
       minHeight: 44,
       marginHorizontal: -8,
     });
-    expect(screen.getByText("4 Monate mit Einträgen")).toBeTruthy();
-    expect(screen.getByText("Do. 1. Jan. - 31. Dez. 2026")).toBeTruthy();
+    expect(screen.getByText("2026 7 Monate mit Einträgen")).toBeTruthy();
+    expect(screen.queryByText("7 Monate mit Einträgen")).toBeNull();
     expect(screen.getByRole("button", { name: "Nächstes Jahr, aktuell 2026" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Monatsauswertung öffnen" }));
     expect(onOpenMonth).toHaveBeenCalledTimes(1);

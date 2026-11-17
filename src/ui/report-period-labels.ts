@@ -8,13 +8,6 @@ export function formatMonthRangeLabel(month: string): string {
   );
 }
 
-export function formatYearRangeLabel(year: number): string {
-  return formatPeriodRangeLabel(
-    Temporal.PlainDate.from({ year, month: 1, day: 1 }),
-    Temporal.PlainDate.from({ year, month: 12, day: 31 }),
-  );
-}
-
 function formatPeriodRangeLabel(firstDay: Temporal.PlainDate, lastDay: Temporal.PlainDate): string {
   const date = new Date(`${firstDay.toString()}T00:00:00Z`);
   const endDate = new Date(`${lastDay.toString()}T00:00:00Z`);

@@ -14,7 +14,6 @@ import {
 } from "@/theme/tokens";
 import { TabScreenHeader } from "@/ui/screen-layout";
 import { PeriodArrow } from "./analysis-period-arrow";
-import { formatYearRangeLabel } from "@/ui/report-period-labels";
 export { formatMonthRangeLabel } from "@/ui/report-period-labels";
 
 export function AnalysisMonthHeader({
@@ -55,16 +54,15 @@ export function AnalysisYearHeader({
   readonly onNext: () => void;
   readonly onOpenMonth: () => void;
 }) {
-  const label = formatYearRangeLabel(year);
   return (
     <AnalysisPeriodHeader
-      label={label}
+      label={`${year} ${activeMonthCount ?? "…"} Monate mit Einträgen`}
+      compactSingleLine
       nextAccessibilityLabel={`Nächstes Jahr, aktuell ${year}`}
       onNext={onNext}
       onPrevious={onPrevious}
       onToggle={onOpenMonth}
       previousAccessibilityLabel={`Vorheriges Jahr, aktuell ${year}`}
-      secondaryLabel={`${activeMonthCount ?? "…"} Monate mit Einträgen`}
       testID="analysis-year-toolbar"
       toggleAccessibilityLabel="Monatsauswertung öffnen"
     />
@@ -73,7 +71,7 @@ export function AnalysisYearHeader({
 
 function AnalysisPeriodHeader({
   label,
-  secondaryLabel,
+  compactSingleLine = false,
   previousAccessibilityLabel,
   nextAccessibilityLabel,
   toggleAccessibilityLabel,
@@ -83,7 +81,7 @@ function AnalysisPeriodHeader({
   onToggle,
 }: {
   readonly label: string;
-  readonly secondaryLabel?: string;
+  readonly compactSingleLine?: boolean;
   readonly previousAccessibilityLabel: string;
   readonly nextAccessibilityLabel: string;
   readonly toggleAccessibilityLabel: string;
@@ -108,31 +106,22 @@ function AnalysisPeriodHeader({
         accessibilityLiveRegion="polite"
         dynamicTypeRamp="body"
         maxFontSizeMultiplier={TEXT_MAX_SCALE}
+        numberOfLines={compactSingleLine && !largeText ? 1 : undefined}
         selectable
         style={{
           color: palette.textMuted,
           textAlign: "left",
-          ...(secondaryLabel ? TYPOGRAPHY.bodyStrong : TYPOGRAPHY.body),
+          ...TYPOGRAPHY.body,
           fontVariant: ["tabular-nums"],
         }}
       >
         {label}
       </Text>
-      {secondaryLabel ? (
-        <Text
-          dynamicTypeRamp="caption1"
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          selectable
-          style={{ color: palette.textMuted, textAlign: "left", ...TYPOGRAPHY.caption }}
-        >
-          {secondaryLabel}
-        </Text>
-      ) : null}
     </View>
   );
   return (
     <TabScreenHeader
-      bottomPadding={largeText || secondaryLabel ? SCREEN_LAYOUT.headerBottomPadding : 0}
+      bottomPadding={largeText ? SCREEN_LAYOUT.headerBottomPadding : 0}
       testID={`${testID}-header`}
       accessory={
         <View style={{ flexDirection: "row", gap: SPACING.sm }}>

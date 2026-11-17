@@ -8819,8 +8819,8 @@
     {
       "path": "src/features/analysis/analysis-period-header.tsx",
       "kind": "modified",
-      "sha256": "f24bca0e04d30dff5d16224c33d6086e92aa24c1234342617e989f943e01b259",
-      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-requested annual date range, 2026-11-17: Display the complete 1 January to 31 December period between the year arrows using the same German civil-date formatter as the monthly header. Preserve existing monthly text, year-navigation accessibility labels, active-month count, spacing and the stationary header accepted separately by the user. Local implementation and automated validation only; new Preview publication approval and annual-range iPhone acceptance remain pending. No calculation, native configuration or accepted TestFlight baseline change."
+      "sha256": "918ef2c7d01892ab54b4f160ca938369ac4b2a7b39b2648e1caa43d2432d2beb",
+      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-clarified annual header correction, 2026-11-17: Show the selected year and active-month count as one period text between the arrows, e.g. 2026 7 Monate mit Eintraegen. Remove the separate subtitle and its compact padding; use the same body typography and single-line compact period layout as the month view. Preserve large-text navigation, the accepted fixed header, monthly date text, calculations, cache identity and native configuration. Preview OTA explicitly authorized by Danach OTA; iPhone acceptance remains pending."
     },
     {
       "path": "src/features/analysis/analysis-persistent-results.tsx",
@@ -10181,8 +10181,8 @@
     {
       "path": "src/ui/report-period-labels.ts",
       "kind": "added",
-      "sha256": "e525c0cf3e871fcb375b807d3e0b409c9ec26da8ce6a10e2918a473c6222a501",
-      "reason": "User-requested annual date range, 2026-11-17: Shared UI-only German date-range formatting for existing monthly text and the full 1 January to 31 December annual label. Extracted to respect the existing header refactoring budget without raising limits. Local implementation only; new Preview publication and annual-range iPhone acceptance remain pending. No business calculation or native change."
+      "sha256": "ba867112cbc1f226444e32e72e3b9562cc803fbffabc75919ed8be53d6a2f586",
+      "reason": "Shared UI-only monthly date formatter preserved. Remove the obsolete annual date-range formatter after the user clarified that year and active-month count belong on one line. No calculation or native change. Preview OTA authorized; device acceptance pending."
     },
     {
       "path": "src/ui/report-period-pager.tsx",
