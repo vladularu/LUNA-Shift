@@ -2,6 +2,7 @@ import type { MonthlyAnalysisRequest } from "./monthly-analysis";
 import type { MonthlyRustInputs } from "./monthly-rust-finance";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { Temporal } from "@js-temporal/polyfill";
+import { measureAnalysisInput } from "@/application/analysis-input-performance";
 import type { RuleCatalogRuntimeDiagnosis } from "@/application/rule-catalog-runtime";
 import { withImmediateTransaction } from "@/infrastructure/database/transaction";
 import { createNativeEngineCatalogReader } from "./monthly-rust-catalog";
@@ -45,7 +46,9 @@ export function createStoredMonthlyRustInputReader(
         )
           throw new Error("RUST_MONTH_SOURCE_INVALID");
         remaining -= row.bytes;
-        result[kind] = row.json === null ? null : JSON.parse(row.json);
+        const json = row.json;
+        result[kind] =
+          json === null ? null : measureAnalysisInput(1, json.length, () => JSON.parse(json));
       }
       return result;
     });
@@ -70,7 +73,13 @@ export function createStoredMonthlyRustInputReader(
         state: "READY",
         revision: 1,
         coverage: { kind: "ALL_HISTORY" },
-        payload: { schemaVersion: 1, data: { kind: "VALUE", value: JSON.parse(part.body) } },
+        payload: {
+          schemaVersion: 1,
+          data: {
+            kind: "VALUE",
+            value: measureAnalysisInput(2, part.body.length, () => JSON.parse(part.body)),
+          },
+        },
       };
     }
     return {

@@ -12,6 +12,8 @@ import { work } from "@/engine/remuneration-test-fixtures";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
 import { createWorkingTimeCalculationProfile } from "@/engine/working-time-calculation-profile";
 import { calendarChipPalette } from "@/theme/color-contrast";
+import { calendarWidgetDeferral } from "@/application/calendar-widget-deferral";
+import { calendarPerformance } from "@/application/calendar-performance";
 
 let mockStatus = { ready: true, error: null as string | null };
 let mockProfile: { timeZone: string } | null = { timeZone: "Europe/Berlin" };
@@ -125,6 +127,7 @@ it("defers the initial widget read until presentation and cancels superseded sta
   await screen.unmount();
 });
 afterEach(() => {
+  calendarPerformance.clear();
   jest.useRealTimers();
   jest.restoreAllMocks();
 });
@@ -140,6 +143,140 @@ it("loads today's range independently and refreshes after data changes", async (
   await act(async () => {});
   expect(publish).toHaveBeenCalledTimes(2);
   await screen.unmount();
+});
+
+it("coalesces rapid calendar changes until editing ends", async () => {
+  const release = calendarWidgetDeferral.begin();
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  try {
+    for (const entries of [[{ id: "added" }], [], [{ id: "latest" }]]) {
+      mockEntries = entries;
+      await screen.rerender(<CalendarWidgetSync ports={p.value} />);
+    }
+    expect(p.load).not.toHaveBeenCalled();
+    expect(mockPrepareBackground).not.toHaveBeenCalled();
+    expect(publish).not.toHaveBeenCalled();
+    await act(async () => release());
+    expect(p.load).toHaveBeenCalledTimes(1);
+    expect(publish).toHaveBeenCalledTimes(1);
+  } finally {
+    await screen.unmount();
+    release();
+  }
+});
+
+it("records numeric build/publication spans separately from deferred refreshes", async () => {
+  calendarPerformance.start(true);
+  const release = calendarWidgetDeferral.begin();
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  try {
+    const deferred = calendarPerformance
+      .report()
+      .events.filter((event) => event.kind === "widget-work");
+    expect(deferred).toEqual([expect.objectContaining({ values: { phase: 3 } })]);
+    await act(async () => release());
+    const work = calendarPerformance
+      .report()
+      .events.filter((event) => event.kind === "widget-work");
+    expect(work.map((event) => event.values.phase)).toEqual([3, 1, 2]);
+    expect(work[1].values).toMatchObject({ input: 0, duration: expect.any(Number) });
+    expect(work[2].values).toMatchObject({ count: 15, duration: expect.any(Number) });
+    expect(
+      work.every((event) =>
+        Object.values(event.values).every((value) => typeof value === "number"),
+      ),
+    ).toBe(true);
+  } finally {
+    await screen.unmount();
+    release();
+  }
+});
+
+it("discards a pending pre-edit query and publishes the latest state after release", async () => {
+  let resolveOld!: (entries: readonly CalendarEntry[]) => void;
+  const old = new Promise<readonly CalendarEntry[]>((resolve) => {
+    resolveOld = resolve;
+  });
+  const p = ports(jest.fn<LoadEntries>().mockReturnValueOnce(old).mockResolvedValue([]));
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  let release!: () => void;
+  await act(async () => {
+    release = calendarWidgetDeferral.begin();
+  });
+  try {
+    await act(async () => resolveOld([]));
+    expect(publish).not.toHaveBeenCalled();
+    expect(p.load).toHaveBeenCalledTimes(1);
+    await act(async () => release());
+    expect(p.load).toHaveBeenCalledTimes(2);
+    expect(publish).toHaveBeenCalledTimes(1);
+  } finally {
+    await screen.unmount();
+    release();
+  }
+});
+
+it("flushes on background even when the stamping tool remains selected", async () => {
+  let background!: () => void;
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, callback) => {
+    background = () => callback("background");
+    return { remove: jest.fn() };
+  });
+  const release = calendarWidgetDeferral.begin();
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  try {
+    expect(p.load).not.toHaveBeenCalled();
+    await act(async () => background());
+    expect(p.load).toHaveBeenCalledTimes(1);
+    expect(publish).toHaveBeenCalledTimes(1);
+    expect(calendarWidgetDeferral.getSnapshot()).toBe(true);
+  } finally {
+    await screen.unmount();
+    release();
+  }
+});
+
+it("does not flush a deferred widget after unmount", async () => {
+  const release = calendarWidgetDeferral.begin();
+  const p = ports();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  await screen.unmount();
+  release();
+  expect(p.load).not.toHaveBeenCalled();
+  expect(publish).not.toHaveBeenCalled();
+});
+
+it("does not let a pending background read publish after returning to active editing", async () => {
+  let change!: (state: "active" | "background") => void;
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, callback) => {
+    change = callback;
+    return { remove: jest.fn() };
+  });
+  let resolveRead!: (entries: readonly CalendarEntry[]) => void;
+  const pending = new Promise<readonly CalendarEntry[]>((resolve) => {
+    resolveRead = resolve;
+  });
+  const p = ports(jest.fn<LoadEntries>().mockReturnValueOnce(pending).mockResolvedValue([]));
+  const release = calendarWidgetDeferral.begin();
+  const screen = await render(<CalendarWidgetSync ports={p.value} />);
+  try {
+    await act(async () => change("background"));
+    expect(p.load).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      change("active");
+      resolveRead([]);
+    });
+    expect(publish).not.toHaveBeenCalled();
+    await act(async () => release());
+    expect(p.load).toHaveBeenCalledTimes(2);
+    expect(publish).toHaveBeenCalledTimes(1);
+  } finally {
+    await screen.unmount();
+    release();
+  }
 });
 
 it("publishes visible shared shifts and removes them after account data is cleared", async () => {

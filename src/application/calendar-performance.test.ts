@@ -2,6 +2,34 @@ import { describe, it, expect } from "vitest";
 import { createCalendarPerformanceRecorder } from "./calendar-performance";
 
 describe("calendar performance recorder", () => {
+  it("exports only relative native touch intervals and resets their origin for each session", () => {
+    let t = 100;
+    const r = createCalendarPerformanceRecorder(() => t);
+    r.touch(1, 999_000);
+    expect(r.report().events).toEqual([]);
+    r.start(true);
+    r.touch(1, 1_000_000);
+    t = 180;
+    r.touch(2, 1_000_050);
+    r.touch(4, 1_000_050);
+    expect(r.report().events.map(({ t, values }) => ({ t, ...values }))).toEqual([
+      { t: 0, phase: 1, input: 0 },
+      { t: 80, phase: 2, input: 50 },
+      { t: 80, phase: 4, input: 50 },
+    ]);
+    expect(JSON.stringify(r.report())).not.toContain("1000000");
+    r.stop();
+    r.touch(3, 1_000_075);
+    expect(r.report().events).toHaveLength(3);
+    r.start(true);
+    r.touch(4, Number.NaN);
+    r.touch(1, 2_000_000);
+    expect(r.report().events.map((event) => event.values)).toEqual([
+      { phase: 4 },
+      { phase: 1, input: 0 },
+    ]);
+    expect(r.report().calendar.stampTouch).toContain("compare intervals only");
+  });
   it("keeps committed result states numeric and labels them separately from rendering or paint", () => {
     const r = createCalendarPerformanceRecorder(() => 50);
     r.start(true);

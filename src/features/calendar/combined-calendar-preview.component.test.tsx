@@ -147,13 +147,16 @@ it("renders both actual services in the same short six-week day cell", async () 
   expect(screen.getByTestId("calendar-entry-slot-2026-03-13-0")).toBe(slot);
   expect(slot.props.entering).toBe(quickStampEntering);
   expect(slot.props.exiting).toBe(quickStampExiting);
+  // Selection and the service must agree in the first native animation frame.
+  expect(slot.props.entering({}).initialValues.opacity).toBe(1);
+  expect(slot.props.exiting({}).initialValues.opacity).toBe(0);
   await screen.rerender(content([], { ...own, id: "persisted-after-optimistic-save" }, true));
   expect(screen.getByTestId("calendar-entry-slot-2026-03-13-0")).toBe(slot);
   mockReducedMotion = true;
   try {
     await screen.rerender(content([], own, true));
-    expect(slot.props.entering.build()({}).initialValues.transform).toBeUndefined();
-    expect(slot.props.exiting.build()({}).initialValues.transform).toBeUndefined();
+    expect(slot.props.entering).toBeUndefined();
+    expect(slot.props.exiting).toBeUndefined();
   } finally {
     mockReducedMotion = false;
   }

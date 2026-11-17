@@ -1,16 +1,16 @@
 import { withSequence, withTiming, type EntryExitAnimationFunction } from "react-native-reanimated";
 import { MOTION } from "@/theme/motion";
 
-/** A small local pop; no layout change or delay to the underlying save. */
+/** Visible in the first frame; only the small local movement settles afterward. */
 export const quickStampEntering: EntryExitAnimationFunction = () => {
   "worklet";
   return {
     initialValues: {
-      opacity: 0,
+      opacity: 1,
       transform: [{ translateY: MOTION.distance.subtle }, { scale: MOTION.scale.emphasis }],
     },
     animations: {
-      opacity: withTiming(1, { duration: MOTION.duration.fast }),
+      opacity: withTiming(1, { duration: 0 }),
       transform: [
         {
           translateY: withSequence(
@@ -29,16 +29,13 @@ export const quickStampEntering: EntryExitAnimationFunction = () => {
   };
 };
 
+/** Do not keep a removed service visible while its native view is detached. */
 export const quickStampExiting: EntryExitAnimationFunction = () => {
   "worklet";
   return {
-    initialValues: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
+    initialValues: { opacity: 0 },
     animations: {
-      opacity: withTiming(0, { duration: MOTION.duration.fast }),
-      transform: [
-        { translateY: withTiming(-MOTION.distance.subtle, { duration: MOTION.duration.fast }) },
-        { scale: withTiming(MOTION.scale.emphasis, { duration: MOTION.duration.fast }) },
-      ],
+      opacity: withTiming(0, { duration: 0 }),
     },
   };
 };

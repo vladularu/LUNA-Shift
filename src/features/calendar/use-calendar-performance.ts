@@ -50,8 +50,15 @@ function recordFrames(
   );
 }
 
+function recordFirstFrame(session: number) {
+  calendarPerformance.record("ui-sampling", { phase: 2, state: 1 }, session);
+}
+
 /** UI-runtime cadence only; never infer GPU presentation or touch latency from it. */
 export function useCalendarPerformance(active: boolean, month: string, mode: string) {
+  // The worklet transform runs after React Compiler. Preserve useCallback so
+  // renders cannot unregister the probe and restart its native frame window.
+  "use no memo";
   const session = useSyncExternalStore(
     calendarPerformance.subscribe,
     calendarPerformance.getSnapshot,
@@ -65,6 +72,7 @@ export function useCalendarPerformance(active: boolean, month: string, mode: str
       if (!sampling.value) return;
       const b = bucket.value;
       if (!b[0] || frame.timeSincePreviousFrame === null) {
+        runOnJS(recordFirstFrame)(sampling.value);
         bucket.set([frame.timestamp, 0, 0, 0, 0, 0]);
         return;
       }
@@ -94,16 +102,37 @@ export function useCalendarPerformance(active: boolean, month: string, mode: str
   );
   const frames = useFrameCallback(onFrame, false);
   useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const cancelTimer = () => {
+      if (timer !== undefined) clearInterval(timer);
+      timer = undefined;
+    };
     const update = (state: string) => {
       const enabled = Boolean(session && active && state === "active");
+      cancelTimer();
+      calendarPerformance.record(
+        "ui-sampling",
+        { phase: 1, state: enabled ? 1 : 0, mode: active ? 1 : 0 },
+        session,
+      );
       bucket.set([0, 0, 0, 0, 0, 0]);
       sampling.set(enabled ? session : 0);
       frames.setActive(enabled);
+      if (enabled) {
+        let previous = performance.now();
+        timer = setInterval(() => {
+          const now = performance.now();
+          const lag = Math.max(0, now - previous - 100);
+          previous = now;
+          if (lag > 20) calendarPerformance.record("calendar-lag", { duration: lag }, session);
+        }, 100);
+      }
     };
     update(AppState.currentState);
     const listener = AppState.addEventListener("change", update);
     return () => {
       listener.remove();
+      cancelTimer();
       sampling.set(0);
       frames.setActive(false);
     };

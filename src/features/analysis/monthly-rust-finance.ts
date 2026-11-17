@@ -1,4 +1,5 @@
 import { annualRustMonthTotals, type AnnualSalarySource } from "./annual-rust-month-totals";
+import { measureAnalysisInput } from "@/application/analysis-input-performance";
 
 type MonthlyRustOperation =
   | "info"
@@ -77,9 +78,11 @@ export function createMonthlyRustFinanceBridge(
   let tail = Promise.resolve();
   const ownerScope = `month-trial-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   async function invoke(operation: MonthlyRustOperation, value: unknown = "") {
-    const reply: unknown = JSON.parse(
-      await transport.invoke(operation, typeof value === "string" ? value : JSON.stringify(value)),
+    const text = await transport.invoke(
+      operation,
+      typeof value === "string" ? value : measureAnalysisInput(3, 0, () => JSON.stringify(value)),
     );
+    const reply: unknown = measureAnalysisInput(4, text.length, () => JSON.parse(text));
     if (!record(reply) || reply.ok !== true) {
       const error = new Error("RUST_MONTH_TRANSPORT_FAILED");
       if (
@@ -121,7 +124,7 @@ export function createMonthlyRustFinanceBridge(
     if (!Number.isSafeInteger(building.builderId)) throw new Error("RUST_MONTH_BUILDER_INVALID");
     const builderId = building.builderId;
     const parsed = (text: string) => {
-      const reply: unknown = JSON.parse(text);
+      const reply: unknown = measureAnalysisInput(4, text.length, () => JSON.parse(text));
       if (!record(reply) || reply.ok !== true) throw new Error("RUST_MONTH_SOURCE_FAILED");
       return reply;
     };
@@ -139,7 +142,7 @@ export function createMonthlyRustFinanceBridge(
         parsed(
           await transport.source(
             JSON.stringify({ builderId, target: "SOURCE", group: { kind, source: source(value) } }),
-            value === null ? "" : JSON.stringify(value),
+            value === null ? "" : measureAnalysisInput(3, 0, () => JSON.stringify(value)),
           ),
         );
       }
@@ -162,7 +165,7 @@ export function createMonthlyRustFinanceBridge(
               target: "CATALOG",
               group: { kind, source: source(value) },
             }),
-            JSON.stringify(value),
+            measureAnalysisInput(3, 0, () => JSON.stringify(value)),
           ),
         );
       }
@@ -185,19 +188,29 @@ export function createMonthlyRustFinanceBridge(
             throw new Error("RUST_MONTH_RANKS_INVALID");
           after = next as number | null;
         } while (after !== null);
-        const sorted = [...values].sort((a, b) => a.localeCompare(b));
-        return Object.fromEntries(sorted.map((value, index) => [value, index]));
+        return measureAnalysisInput(
+          operation === "snapshotCalendarCandidates" ? 5 : 6,
+          values.size,
+          () => {
+            const sorted = [...values].sort((a, b) => a.localeCompare(b));
+            return Object.fromEntries(sorted.map((value, index) => [value, index]));
+          },
+        );
       };
+      const calendarHeader = JSON.stringify({ builderId });
+      const calendarOrder = await ranks("snapshotCalendarCandidates");
       parsed(
         await transport.calendarRanks(
-          JSON.stringify({ builderId }),
-          JSON.stringify(await ranks("snapshotCalendarCandidates")),
+          calendarHeader,
+          measureAnalysisInput(3, 0, () => JSON.stringify(calendarOrder)),
         ),
       );
+      const catalogHeader = JSON.stringify({ builderId });
+      const catalogOrder = await ranks("snapshotCatalogCandidates");
       parsed(
         await transport.catalogFinalize(
-          JSON.stringify({ builderId }),
-          JSON.stringify(await ranks("snapshotCatalogCandidates")),
+          catalogHeader,
+          measureAnalysisInput(3, 0, () => JSON.stringify(catalogOrder)),
         ),
       );
       identity = (await invoke("snapshotSeal", { builderId })).identity;

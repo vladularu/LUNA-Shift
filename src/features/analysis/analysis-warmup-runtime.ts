@@ -14,6 +14,7 @@ import type {
 } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { recordDiagnostic } from "@/infrastructure/diagnostics";
+import { measureAnalysisInput } from "@/application/analysis-input-performance";
 import { ANALYSIS_WARMUP_PRIORITY, scheduleAnalysisWork } from "./analysis-work-queue";
 import { requestSharedAnalysis } from "./shared-analysis-tasks";
 import {
@@ -173,7 +174,9 @@ export function createAnalysisWarmupRuntime(
         if (youthEnabled === null) return;
         const shifts = value.complianceShifts.ok ? value.complianceShifts.value : [];
         const key = monthlyRustChecksKey(
-          monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled),
+          measureAnalysisInput(11, shifts.length, () =>
+            monthlyComplianceKey(month, profile, referenceDate, shifts, youthEnabled),
+          ),
           input.checksCalculator,
         );
         yield 0;
@@ -263,7 +266,9 @@ export function createAnalysisWarmupRuntime(
                 },
                 input.monthlyCalculator,
               );
-              const inspection = inspectMonthlyAnalysis(request),
+              const inspection = measureAnalysisInput(9, input.entries.length, () =>
+                  inspectMonthlyAnalysis(request),
+                ),
                 key = inspection.key;
               yield 0;
               if (current !== generation) return;
@@ -310,7 +315,9 @@ export function createAnalysisWarmupRuntime(
                 },
                 input.netCalculator,
               );
-              const salaryKey = analysisSalaryKey(salary);
+              const salaryKey = measureAnalysisInput(10, input.entries.length, () =>
+                analysisSalaryKey(salary),
+              );
               yield 0;
               if (current !== generation) return;
               stage<PreparedAnalysisSalary, PreparedAnalysisSalary["annual"]>({
