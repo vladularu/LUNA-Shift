@@ -1,5 +1,5 @@
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import type { AnimationCallback, WithTimingConfig } from "react-native-reanimated";
@@ -28,12 +28,54 @@ let mockReducedMotion = false;
 let mockTimingValue: number | undefined;
 let mockCloseCompletion: AnimationCallback | undefined;
 const mockCancel = jest.fn();
+const mockNativeScrollStates: { x: number }[] = [];
 const mockTiming = jest.fn(
   (target: number, _config?: WithTimingConfig, complete?: AnimationCallback) => {
     if (complete) mockCloseCompletion = complete;
     return mockTimingValue ?? target;
   },
 );
+jest.mock("react-native", () => {
+  const native = jest.requireActual<typeof import("react-native")>("react-native");
+  const React = jest.requireActual<typeof import("react")>("react");
+  const mocked = Object.create(null, Object.getOwnPropertyDescriptors(native));
+  Object.defineProperty(mocked, "useColorScheme", {
+    enumerable: true,
+    configurable: true,
+    get: () => native.useColorScheme,
+  });
+  Object.defineProperty(mocked, "ScrollView", {
+    enumerable: true,
+    configurable: true,
+    value: React.forwardRef(function ScrollView(
+      props: import("react-native").ScrollViewProps,
+      ref,
+    ) {
+      const state = React.useRef({ x: 0 });
+      React.useImperativeHandle(ref, () => ({
+        scrollTo: ({ x = 0 }: { x?: number }) => {
+          state.current.x = x;
+        },
+      }));
+      React.useLayoutEffect(() => {
+        mockNativeScrollStates.push(state.current);
+      }, []);
+      const nativeProps = {
+        ...props,
+        onScroll: (
+          event: import("react-native").NativeSyntheticEvent<
+            import("react-native").NativeScrollEvent
+          >,
+        ) => {
+          state.current.x = event.nativeEvent.contentOffset.x;
+          props.onScroll?.(event);
+        },
+      };
+      return <native.View {...nativeProps}>{props.children}</native.View>;
+    }),
+  });
+  return mocked;
+});
 // Controlled UI runtime: timing calls are recorded, closing completes only when the test says so.
 jest.mock("react-native-reanimated", () => {
   const React = jest.requireActual<typeof import("react")>("react");
@@ -90,6 +132,7 @@ async function renderDock({
   activeKey = "template:early",
   bottomInset = 34,
   template = TEMPLATE,
+  templates = [template],
 }: {
   onClose?: jest.Mock;
   onOpen?: jest.Mock;
@@ -98,6 +141,7 @@ async function renderDock({
   activeKey?: string | null;
   bottomInset?: number;
   template?: ShiftTemplate;
+  templates?: readonly ShiftTemplate[];
 } = {}) {
   let selectedKey = activeKey;
   const tree = (nextOpen: boolean, active = true) => (
@@ -109,7 +153,7 @@ async function renderDock({
     >
       <QuickPlannerDock
         active={active}
-        actions={buildQuickEntryActions([template]).slice(0, 1)}
+        actions={buildQuickEntryActions(templates).filter((action) => action.kind === "TEMPLATE")}
         activeKey={selectedKey}
         busy={busy}
         onOpen={onOpen}
@@ -132,6 +176,47 @@ async function renderDock({
 }
 
 describe("QuickPlannerDock", () => {
+  it.each([false, true])(
+    "starts again with the first five saved services only after closing and reopening (reduced=%s)",
+    async (reduced) => {
+      mockReducedMotion = reduced;
+      const templates = Array.from({ length: 13 }, (_, index) => ({
+        ...TEMPLATE,
+        id: String(index),
+        name: `Dienst ${index}`,
+        sortOrder: 12 - index,
+      }));
+      const screen = await renderDock({ activeKey: null, templates });
+      const firstFive = () =>
+        within(screen.getByTestId("quick-planner-strip"))
+          .getAllByRole("button")
+          .slice(0, 5)
+          .map((button) => button.props.accessibilityLabel);
+      const expected = [12, 11, 10, 9, 8].map((index) => `Dienst ${index} auswählen`);
+      expect(firstFive()).toEqual(expected);
+      const slot = StyleSheet.flatten(
+        screen.getByTestId("quick-planner-template-template:12").props.style,
+      ).width as number;
+      const position = slot * 2;
+      const view = screen.getByTestId("quick-planner-strip");
+      await fireEvent(view, "scrollBeginDrag");
+      await fireEvent(view, "scroll", { nativeEvent: { contentOffset: { x: position, y: 0 } } });
+      await fireEvent(view, "momentumScrollEnd", {
+        nativeEvent: { contentOffset: { x: position, y: 0 } },
+      });
+      expect(mockNativeScrollStates.at(-1)?.x).toBe(position);
+      await screen.setActiveKey(null);
+      expect(mockNativeScrollStates.at(-1)?.x).toBe(position);
+      await screen.setActive(false);
+      await screen.setActive(true);
+      expect(mockNativeScrollStates.at(-1)?.x).toBe(position);
+      await screen.setOpen(false);
+      await screen.setOpen(true);
+      expect(mockNativeScrollStates.at(-1)?.x).toBe(0);
+      expect(firstFive()).toEqual(expected);
+    },
+  );
+
   it("reverses selection smoothly while keeping the time column mounted for the return", async () => {
     const screen = await renderDock({ activeKey: null });
     const options = { includeHiddenElements: true };
@@ -240,6 +325,7 @@ describe("QuickPlannerDock", () => {
   });
 
   beforeEach(() => {
+    mockNativeScrollStates.length = 0;
     mockReducedMotion = false;
     mockTimingValue = undefined;
     mockCloseCompletion = undefined;
