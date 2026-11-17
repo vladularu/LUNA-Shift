@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { AnnualDetailsScreen } from "./annual-details-screen";
@@ -663,6 +663,14 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       });
     const calls = jest.mocked(router.push).mock.calls.length;
     await measure();
+    expect(
+      screen.getAllByTestId("analysis-month-toolbar", { includeHiddenElements: true }),
+    ).toHaveLength(1);
+    expect(
+      within(screen.getByTestId("report-period-scroll")).queryByTestId("analysis-month-toolbar", {
+        includeHiddenElements: true,
+      }),
+    ).toBeNull();
     await settle(13);
     expect(screen.getByTestId("analysis-month-page-2031-01")).toBeTruthy();
     await settle(11);
@@ -670,8 +678,18 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(router.push).toHaveBeenCalledTimes(calls);
     await openAnalysisMode(screen, "Jahresauswertung öffnen");
     await measure();
+    expect(
+      screen.getAllByTestId("analysis-year-toolbar", { includeHiddenElements: true }),
+    ).toHaveLength(1);
+    expect(
+      within(screen.getByTestId("report-period-scroll")).queryByTestId("analysis-year-toolbar", {
+        includeHiddenElements: true,
+      }),
+    ).toBeNull();
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
     await settle(11);
     expect(screen.getByLabelText("Vorheriges Jahr, aktuell 2029")).toBeTruthy();
+    await fireEvent(screen.getByTestId("report-period-scroll"), "scrollBeginDrag");
     await settle(13);
     expect(screen.getByLabelText("Vorheriges Jahr, aktuell 2031")).toBeTruthy();
   });
@@ -1563,6 +1581,10 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.getByRole("button", { name: "Dienstplan-Check, Wird geprüft …" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gehalt, Wird berechnet …" })).toBeTruthy();
     expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
+    expect(screen.getByText("1 Monate mit Einträgen")).toBeTruthy();
+    mockAnnualCoreValue = { ...mockAnnualCoreValue, activeMonthCount: 2 };
+    await screen.rerender(<AnalysisScreen />);
+    expect(screen.getByText("2 Monate mit Einträgen")).toBeTruthy();
   });
 
   it("keeps annual rule coverage local after switching from a covered month", async () => {

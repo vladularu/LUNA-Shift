@@ -44,6 +44,12 @@ function timeline(entries: readonly ShiftEntry[] = [], now = NOW, hasProfile = t
 }
 
 describe("calendar widget timeline", () => {
+  it("reuses equal month grids and overlapping days within one timeline", () => {
+    const result = timeline([shift({ date: "2026-11-18" })], new Date("2026-11-17T12:00:00Z"));
+    expect(result[1].props.monthDays).toEqual(result[0].props.monthDays);
+    expect(result[1].props.monthDays).toBe(result[0].props.monthDays);
+    expect(result[0].props.days[1]).toBe(result[1].props.days[0]);
+  });
   it.each([
     ["2027-02-01", 28],
     ["2026-12-01", 35],

@@ -2,7 +2,8 @@ import Constants from "expo-constants";
 import { startupPresentation } from "@/infrastructure/startup-presentation";
 import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import { widgetCalendarHighlights } from "./widget-calendar-highlights";
+import { widgetCalendarHighlightSteps } from "./widget-calendar-highlights";
+import { prepareWidgetWork } from "./calendar-widget-preparation";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { calendarWidgetDeferral } from "@/application/calendar-widget-deferral";
@@ -24,7 +25,8 @@ import {
   usePflegeShiftTemplates,
 } from "@/application/pflegeshift-provider";
 import {
-  buildCalendarWidgetTimeline,
+  calendarWidgetTimelineSteps,
+  type CalendarWidgetTimelineEntry,
   nextWidgetMidnight,
   widgetEntryRange,
 } from "./calendar-widget-data";
@@ -51,6 +53,13 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
   const sharedCalendars = useVisibleSharedCalendars();
   const sequence = useRef(0);
   const publicationQueue = useRef<Promise<void>>(Promise.resolve());
+  const lastPublication = useRef<{
+    profile: typeof profile;
+    resolver: typeof resolver;
+    sharedCalendars: typeof sharedCalendars;
+    key: string;
+    publishedAt: number;
+  } | null>(null);
   const display = useCalendarPreferences();
   const background = useCalendarBackground();
   const appearance = useAppearancePreferences();
@@ -65,6 +74,7 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
       !appearance.ready
     ) {
       sequence.current += 1;
+      lastPublication.current = null;
       return;
     }
     let active = true;
@@ -115,23 +125,51 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
             void refresh();
             return;
           }
-          let timeline: ReturnType<typeof buildCalendarWidgetTimeline>;
-          const finishBuild = calendarPerformance.span("widget-work", {
-            phase: 1,
-            input: loaded.length,
+          const dayEndsAt = nextWidgetMidnight(publishedAt, timeZone).getTime();
+          const key = JSON.stringify({
+            entries: loaded,
+            dayEndsAt,
+            timeZone,
+            scheme,
+            display: [
+              display.labelMode,
+              display.showShiftTimes,
+              display.showShiftDuration,
+              display.showShifts,
+              display.showAppointments,
+              display.pastelColors,
+              display.showHolidays,
+              display.holidayColor,
+            ],
+            theme: appearance.mode,
+            backgroundFileName,
+            backgroundStrength: background.strength,
           });
-          try {
-            timeline = buildCalendarWidgetTimeline({
+          const previous = lastPublication.current;
+          if (
+            previous?.profile === profile &&
+            previous.resolver === resolver &&
+            previous.key === key &&
+            previous.publishedAt <= publishedAt.getTime() &&
+            previous.sharedCalendars.length === sharedCalendars.length &&
+            previous.sharedCalendars.every((cached, index) => cached === sharedCalendars[index])
+          ) {
+            calendarPerformance.record("widget-work", { phase: 4 });
+            return;
+          }
+          function* build() {
+            const dayLabels =
+              profile && display.showHolidays
+                ? yield* widgetCalendarHighlightSteps(currentRange, profile, resolver)
+                : undefined;
+            return yield* calendarWidgetTimelineSteps({
               entries: loaded,
               sharedCalendars,
               now: publishedAt,
               timeZone,
               scheme,
               hasProfile: profile !== null,
-              dayLabels:
-                profile && display.showHolidays
-                  ? widgetCalendarHighlights(currentRange, profile, resolver)
-                  : undefined,
+              dayLabels,
               display: {
                 labelMode: display.labelMode,
                 showShiftTimes: display.showShiftTimes,
@@ -146,8 +184,35 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
               backgroundFileName,
               backgroundStrength: background.strength,
             });
+          }
+          let timeline: readonly CalendarWidgetTimelineEntry[] | null = null;
+          let cpu = 0,
+            maximum = 0,
+            count = 0;
+          try {
+            timeline = await prepareWidgetWork(build(), {
+              isCurrent,
+              foreground: () => appState !== "background",
+              onSlice: (duration) => {
+                cpu += duration;
+                maximum = Math.max(maximum, duration);
+                count += 1;
+              },
+            });
           } finally {
-            finishBuild();
+            calendarPerformance.record("widget-work", {
+              phase: 1,
+              duration: cpu,
+              maximum,
+              count,
+              input: loaded.length,
+              state: timeline === null ? 2 : 1,
+            });
+          }
+          if (timeline === null || !isCurrent()) return;
+          if (nextWidgetMidnight(new Date(), timeZone).getTime() !== dayEndsAt) {
+            void refresh();
+            return;
           }
           const finishPublish = calendarPerformance.span("widget-work", {
             phase: 2,
@@ -155,6 +220,13 @@ function SupportedCalendarWidgetSync({ ports }: { readonly ports: PflegeShiftPor
           });
           try {
             publishCalendarWidgetTimeline(timeline);
+            lastPublication.current = {
+              profile,
+              resolver,
+              sharedCalendars,
+              key,
+              publishedAt: publishedAt.getTime(),
+            };
           } finally {
             finishPublish();
           }

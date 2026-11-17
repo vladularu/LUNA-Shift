@@ -88,9 +88,9 @@ test("compiled drawer defaults and interrupted control frames preserve their RN 
   }
 });
 
-test("production calendar cadence keeps one registered worklet across React Compiler renders", () => {
+test("production app-wide cadence keeps one registered worklet across route renders", () => {
   const result = transformFileSync(
-    resolve(import.meta.dirname, "../src/features/calendar/use-calendar-performance.ts"),
+    resolve(import.meta.dirname, "../src/ui/performance-diagnostics.tsx"),
     {
       configFile: false,
       babelrc: false,
@@ -109,7 +109,7 @@ test("production calendar cadence keeps one registered worklet across React Comp
   const callbacks = [],
     events = [];
   const control = { setActive() {}, isActive: false, callbackId: 1 };
-  const values = [0, [0, 0, 0, 0, 0, 0]].map((value) => ({
+  const values = [0, [-1, 0, 0, 0, 0, 0, 0]].map((value) => ({
     value,
     set(next) {
       this.value = next;
@@ -138,7 +138,25 @@ test("production calendar cadence keeps one registered worklet across React Comp
           useEffect() {},
           useLayoutEffect() {},
         };
-      if (name === "react-native") return {};
+      if (name === "react-native")
+        return { Platform: { OS: "ios" }, StyleSheet: { create: (value) => value } };
+      if (name === "react/jsx-runtime")
+        return {
+          jsx: (type, props) => ({ type, props }),
+          jsxs: (type, props) => ({ type, props }),
+        };
+      if (name === "expo-router") return { useSegments: () => ["(tabs)", "(analysis)"] };
+      if (name === "@/infrastructure/dev-tools-policy") return { DEV_TOOLS_AVAILABLE: true };
+      if (name === "@/application/navigation-performance")
+        return {
+          performanceScreen: () => 2,
+          navigationPerformance: { frame() {}, getSnapshot: () => ({ screen: 2 }) },
+        };
+      if (name === "@/theme/palette") return { DARK_PALETTE: {} };
+      if (name === "@/theme/tokens") return { SPACING: {}, RADII: {} };
+      if (name === "@/theme/typography") return { TYPOGRAPHY: {} };
+      if (["react-native-screens", "react-native-safe-area-context", "./text"].includes(name))
+        return {};
       if (name === "react-native-reanimated")
         return {
           useSharedValue: () => values[sharedIndex++],
@@ -165,7 +183,8 @@ test("production calendar cadence keeps one registered worklet across React Comp
   runInContext(result.code, runtimeContext);
   const render = (month) => {
     sharedIndex = 0;
-    exportedModule.exports.useCalendarPerformance(true, month, "MONTH");
+    const element = exportedModule.exports.PerformanceDiagnostics();
+    element.type();
   };
   render("2026-01");
   render("2026-02");
@@ -183,8 +202,9 @@ test("production calendar cadence keeps one registered worklet across React Comp
   });
   onFrame({ timestamp: 100, timeSincePreviousFrame: null });
   for (let i = 1; i <= 50; i++) onFrame({ timestamp: 100 + i * 20, timeSincePreviousFrame: 20 });
-  const frame = events.find((event) => event.kind === "ui-frames");
+  const frame = events.find((event) => event.kind === "navigation-frames");
   assert.equal(frame.session, 7);
-  assert.equal(frame.values.duration, 1000);
-  assert.equal(frame.values.count, 50);
+  assert.equal(frame.values.duration, 500);
+  assert.equal(frame.values.count, 25);
+  assert.equal(events.filter((event) => event.kind === "navigation-frames").length, 2);
 });

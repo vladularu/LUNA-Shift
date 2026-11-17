@@ -63,6 +63,7 @@ export function ScreenScrollView({
 
 export function TabScreenHeader({
   accessory,
+  bottomPadding = SCREEN_LAYOUT.headerBottomPadding,
   surface = "background",
   testID,
   title,
@@ -80,6 +81,7 @@ export function TabScreenHeader({
   titleHidden = false,
 }: {
   readonly accessory?: ReactNode;
+  readonly bottomPadding?: number;
   readonly surface?: ScreenSurface;
   readonly testID?: string;
   readonly title: string;
@@ -112,8 +114,7 @@ export function TabScreenHeader({
       SCREEN_LAYOUT.headerTopPadding -
       SCREEN_LAYOUT.headerBottomPadding
     : MINIMUM_TOUCH_TARGET;
-  const headerMinHeight =
-    titleAreaMinHeight + SCREEN_LAYOUT.headerTopPadding + SCREEN_LAYOUT.headerBottomPadding;
+  const headerMinHeight = titleAreaMinHeight + SCREEN_LAYOUT.headerTopPadding + bottomPadding;
 
   return (
     <View
@@ -124,7 +125,7 @@ export function TabScreenHeader({
         ...pageHeaderStyle(transparent ? "transparent" : palette[surface]),
         paddingTop: safeTop + SCREEN_LAYOUT.headerTopPadding,
         paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-        paddingBottom: SCREEN_LAYOUT.headerBottomPadding,
+        paddingBottom: bottomPadding,
       }}
     >
       <View

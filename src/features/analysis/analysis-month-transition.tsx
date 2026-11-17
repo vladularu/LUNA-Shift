@@ -6,12 +6,14 @@ export function AnalysisMonthTransition({
   ready,
   available,
   header,
+  onVisibleMonthChange,
   children,
 }: {
   readonly month: string;
   readonly ready: boolean;
   readonly available: boolean;
-  readonly header: (visibleMonth: string) => ReactNode;
+  readonly header?: (visibleMonth: string) => ReactNode;
+  readonly onVisibleMonthChange?: (visibleMonth: string) => void;
   readonly children: ReactNode;
 }) {
   const [page, setPage] = useState({ month, children });
@@ -26,6 +28,9 @@ export function AnalysisMonthTransition({
           },
     );
   }, [available, children, month, page.month, ready]);
+  useLayoutEffect(() => {
+    onVisibleMonthChange?.(page.month);
+  }, [onVisibleMonthChange, page.month]);
 
   return (
     <View
@@ -33,7 +38,7 @@ export function AnalysisMonthTransition({
       accessibilityState={{ busy: page.month !== month }}
     >
       <View key={page.month} style={{ flex: 1 }} testID={`analysis-month-page-${page.month}`}>
-        {header(page.month)}
+        {header?.(page.month)}
         {page.children}
       </View>
     </View>

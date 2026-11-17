@@ -2,6 +2,7 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { SCREEN_LAYOUT } from "@/theme/tokens";
 import { AnalysisMonthHeader } from "./analysis-period-header";
 
 jest.mock("./analysis-view-controls", () => ({ AnalysisViewControls: () => null }));
@@ -34,6 +35,13 @@ describe("compact analysis page header", () => {
         </SafeAreaProvider>,
       );
       const compact = fontScale < 1.3;
+      expect(screen.getByTestId("analysis-month-toolbar-header")).toHaveStyle({
+        paddingBottom: compact ? 0 : SCREEN_LAYOUT.headerBottomPadding,
+      });
+      expect(screen.getByText("So. 1. Nov. - 30. Nov. 2026").parent).toHaveStyle({
+        flexShrink: 1,
+      });
+      expect(screen.getByText("So. 1. Nov. - 30. Nov. 2026").parent).not.toHaveStyle({ flex: 1 });
       expect(screen.getByTestId("analysis-month-toolbar-header-title-area")).toHaveStyle({
         minHeight: 44,
       });

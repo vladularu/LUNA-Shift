@@ -18,19 +18,27 @@ function nativeCalendarWidget(): typeof import("./calendar-widget.ios").default 
 
 // SDK 57 persists this tree directly in UserDefaults, not as a JSON blob.
 // Optional Codable fields must be omitted: NSNull is not a property-list value.
-function propertyListValue(value: unknown): unknown {
+function propertyListValue(value: unknown, converted: WeakMap<object, unknown>): unknown {
   if (value === null || value === undefined) return undefined;
   if (typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (Array.isArray(value))
-    return value.map(propertyListValue).filter((item) => item !== undefined);
+  if (typeof value === "object" && converted.has(value)) return converted.get(value);
+  if (Array.isArray(value)) {
+    const result = value
+      .map((item) => propertyListValue(item, converted))
+      .filter((item) => item !== undefined);
+    converted.set(value, result);
+    return result;
+  }
   if (typeof value === "object") {
-    return Object.fromEntries(
+    const result = Object.fromEntries(
       Object.entries(value).flatMap(([key, item]) => {
-        const stored = propertyListValue(item);
+        const stored = propertyListValue(item, converted);
         return stored === undefined ? [] : [[key, stored]];
       }),
     );
+    converted.set(value, result);
+    return result;
   }
   throw new Error("Widget snapshot contains an unsupported storage value.");
 }
@@ -41,10 +49,11 @@ export function publishCalendarWidgetTimeline(
   if (!calendarWidgetsAvailable()) return;
   // Demand loading keeps existing binaries without the module usable.
   const widget = nativeCalendarWidget();
+  const converted = new WeakMap<object, unknown>();
   widget.updateTimeline(
     timeline.map(({ date, props }) => ({
       date,
-      props: propertyListValue(props) as CalendarWidgetProps,
+      props: propertyListValue(props, converted) as CalendarWidgetProps,
     })),
   );
   requireOptionalNativeModule<{ reloadAllWidgets(): void }>("ExpoWidgets")?.reloadAllWidgets();

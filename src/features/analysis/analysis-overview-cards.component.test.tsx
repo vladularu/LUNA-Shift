@@ -321,6 +321,8 @@ describe("analysis overview cards", () => {
       marginHorizontal: -8,
     });
     expect(screen.getByText("4 Monate mit Einträgen")).toBeTruthy();
+    expect(screen.getByText("Do. 1. Jan. - 31. Dez. 2026")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Nächstes Jahr, aktuell 2026" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Monatsauswertung öffnen" }));
     expect(onOpenMonth).toHaveBeenCalledTimes(1);
   });

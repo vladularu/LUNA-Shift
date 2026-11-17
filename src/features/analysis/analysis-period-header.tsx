@@ -1,33 +1,21 @@
 import { Text } from "@/ui/text";
 import { AnalysisViewControls } from "./analysis-view-controls";
 import Ionicons from "@/ui/icon";
-import { Temporal } from "@js-temporal/polyfill";
 import { Pressable, View, useWindowDimensions } from "react-native";
 
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { CONTROL_HEIGHT, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
+import {
+  CONTROL_HEIGHT,
+  MINIMUM_TOUCH_TARGET,
+  RADII,
+  SCREEN_LAYOUT,
+  SPACING,
+} from "@/theme/tokens";
 import { TabScreenHeader } from "@/ui/screen-layout";
 import { PeriodArrow } from "./analysis-period-arrow";
-
-export function formatMonthRangeLabel(month: string): string {
-  const value = Temporal.PlainYearMonth.from(month);
-  const firstDay = value.toPlainDate({ day: 1 });
-  const date = new Date(`${firstDay.toString()}T00:00:00Z`);
-  const weekday = new Intl.DateTimeFormat("de-DE", {
-    weekday: "short",
-    timeZone: "UTC",
-  })
-    .format(date)
-    .replace(/\.$/, "");
-  const monthLabel = new Intl.DateTimeFormat("de-DE", {
-    month: "short",
-    timeZone: "UTC",
-  })
-    .format(date)
-    .replace(/\.$/, "");
-  return `${weekday}. 1. ${monthLabel}. - ${value.daysInMonth}. ${monthLabel}. ${value.year}`;
-}
+import { formatYearRangeLabel } from "@/ui/report-period-labels";
+export { formatMonthRangeLabel } from "@/ui/report-period-labels";
 
 export function AnalysisMonthHeader({
   label,
@@ -67,15 +55,15 @@ export function AnalysisYearHeader({
   readonly onNext: () => void;
   readonly onOpenMonth: () => void;
 }) {
-  const label = String(year);
+  const label = formatYearRangeLabel(year);
   return (
     <AnalysisPeriodHeader
       label={label}
-      nextAccessibilityLabel={`Nächstes Jahr, aktuell ${label}`}
+      nextAccessibilityLabel={`Nächstes Jahr, aktuell ${year}`}
       onNext={onNext}
       onPrevious={onPrevious}
       onToggle={onOpenMonth}
-      previousAccessibilityLabel={`Vorheriges Jahr, aktuell ${label}`}
+      previousAccessibilityLabel={`Vorheriges Jahr, aktuell ${year}`}
       secondaryLabel={`${activeMonthCount ?? "…"} Monate mit Einträgen`}
       testID="analysis-year-toolbar"
       toggleAccessibilityLabel="Monatsauswertung öffnen"
@@ -111,7 +99,7 @@ function AnalysisPeriodHeader({
     <View
       style={{
         minWidth: 0,
-        flex: largeText ? undefined : 1,
+        flexShrink: 1,
         width: largeText ? "100%" : undefined,
         gap: SPACING.xxs,
       }}
@@ -144,6 +132,7 @@ function AnalysisPeriodHeader({
   );
   return (
     <TabScreenHeader
+      bottomPadding={largeText || secondaryLabel ? SCREEN_LAYOUT.headerBottomPadding : 0}
       testID={`${testID}-header`}
       accessory={
         <View style={{ flexDirection: "row", gap: SPACING.sm }}>

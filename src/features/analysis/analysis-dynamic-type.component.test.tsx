@@ -191,7 +191,7 @@ describe("analysis Dynamic Type layout", () => {
     for (const fontScale of [3.1, 1]) {
       mockFontScale = fontScale;
       await screen.rerender(<AnalysisYearHeader {...props} />);
-      expect(screen.getByText("2026")).toBeTruthy();
+      expect(screen.getByText("Do. 1. Jan. - 31. Dez. 2026")).toBeTruthy();
       expect(screen.getByText("12 Monate mit Einträgen")).toBeTruthy();
       expect(screen.getByTestId("analysis-year-toolbar")).toHaveStyle({
         flexWrap: fontScale >= 1.3 ? "wrap" : "nowrap",

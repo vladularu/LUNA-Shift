@@ -203,3 +203,25 @@ it("rejects unsupported values before replacing a valid native timeline", () => 
   expect(widget.updateTimeline).not.toHaveBeenCalled();
   expect(reloadAll).not.toHaveBeenCalled();
 });
+
+it("converts a reused grid once without modifying the input or retaining it across publications", () => {
+  const entries = buildCalendarWidgetTimeline({
+    entries: [],
+    now: new Date(),
+    timeZone: "Europe/Berlin",
+    scheme: "pflegeshift-internal",
+    hasProfile: true,
+  });
+  const repeated = [
+    entries[0],
+    { ...entries[1], props: { ...entries[1].props, monthDays: entries[0].props.monthDays } },
+  ];
+  publishCalendarWidgetTimeline(repeated);
+  const first = jest.mocked(widget.updateTimeline).mock.calls[0][0];
+  expect(first[0].props.monthDays).toEqual(repeated[0].props.monthDays);
+  expect(first[0].props.monthDays).toBe(first[1].props.monthDays);
+  expect(first[0].props.monthDays).not.toBe(repeated[0].props.monthDays);
+  publishCalendarWidgetTimeline(repeated);
+  const second = jest.mocked(widget.updateTimeline).mock.calls[1][0];
+  expect(second[0].props.monthDays).not.toBe(first[0].props.monthDays);
+});

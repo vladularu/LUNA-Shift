@@ -26,6 +26,9 @@ const kinds = [
   "effect-cleanup",
   "ui-frames",
   "ui-sampling",
+  "navigation-frames",
+  "navigation-sampling",
+  "navigation-lag",
   "calendar-lag",
   "stamp-touch",
   "stamp-handler",
@@ -70,6 +73,7 @@ const fields = [
   "over17",
   "over34",
   "over50",
+  "missed60",
   "stage",
   "cpu",
   "wait",
@@ -201,7 +205,7 @@ export function createCalendarPerformanceRecorder(now: () => number = () => perf
         stampPersist:
           "mode 1 save, 0 remove; state 1 completed, 3 failed; duration includes await time and is independent of optimistic preview commit.",
         widgetWork:
-          "widget-work phase 1 synchronous timeline construction (input is entry count), phase 2 synchronous property-list conversion and native publication (count is timeline entry count), phase 3 refresh deferred during calendar editing (no duration). These spans exclude async database/photo waiting; native publication can include synchronous native work. No widget content, IDs, paths or titles are recorded.",
+          "widget-work phase 1 sums synchronous timeline/highlight preparation slices (input is entry count, count is slice count, maximum is longest slice, state 1 completed or 2 stopped/failed); duration excludes cooperative waiting. Phase 2 synchronous property-list conversion and native publication (count is timeline entry count), phase 3 refresh deferred during calendar editing, phase 4 unchanged published input reused (no duration). These spans exclude async database/photo waiting; native publication can include synchronous native work. No widget content, IDs, paths or titles are recorded.",
         sampling:
           "ui-sampling phase 1 JS lifecycle, state 1 enabled or 0 disabled, mode 1 focused calendar; phase 2 first UI callback. calendar-lag measures excess over a 100ms JS timer interval, not touch latency. ui-frames contains full one-second callback windows, not GPU FPS.",
       },

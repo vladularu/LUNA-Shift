@@ -25,6 +25,7 @@ export function ReportPeriodPager({
   unit = "MONTH",
   enabled = true,
   onChange,
+  renderHeader,
   renderPage,
   renderPlaceholder,
   preparePage,
@@ -34,6 +35,7 @@ export function ReportPeriodPager({
   readonly unit?: "MONTH" | "YEAR";
   readonly enabled?: boolean;
   readonly onChange: (month: string) => void;
+  readonly renderHeader?: (month: string, onMove: (delta: number) => void) => ReactNode;
   readonly renderPage: PageRenderer;
   readonly renderPlaceholder?: (month: string, onMove: (delta: number) => void) => ReactNode;
   readonly preparePage?: PagePreparer;
@@ -41,7 +43,10 @@ export function ReportPeriodPager({
 }) {
   const reduced = useReducedMotion();
   const ref = useRef<ScrollView>(null);
-  const [anchor, setAnchor] = useState(value);
+  const [unmeasuredPageKey] = useState(value);
+  const [pageWindow, setPageWindow] = useState({ anchor: value, unit });
+  // Keep the selected key in the same tree on the first render of a new unit.
+  const anchor = pageWindow.unit === unit ? pageWindow.anchor : value;
   const [layout, setLayout] = useState({ width: 0, height: 0 });
   const { width, height } = layout;
   const [destination, setDestination] = useState<string | null>(null);
@@ -56,40 +61,44 @@ export function ReportPeriodPager({
   const index = pages.indexOf(value);
   const requested = useRef(value);
   const settled = useRef(value);
-  const oldWidth = useRef(width);
+  const positionedLayout = useRef({ anchor, unit, width });
   const positioning = useRef<string | null>(null);
-  const currentLayout = useRef({ anchor, width, enabled });
+  const currentLayout = useRef({ anchor, unit, width, enabled });
   useLayoutEffect(() => {
-    currentLayout.current = { anchor, width, enabled };
+    currentLayout.current = { anchor, unit, width, enabled };
     setViewport(null);
-  }, [anchor, enabled, width]);
+  }, [anchor, enabled, unit, width]);
   const initialOffset = useMemo(() => ({ x: RADIUS * width, y: 0 }), [width]);
   useLayoutEffect(() => {
+    if (pageWindow.unit !== unit) setPageWindow({ anchor: value, unit });
     if (index < 0 || index <= 1 || index >= pages.length - 2) {
       requested.current = value;
       settled.current = value;
       setDestination(null);
-      setAnchor(value);
+      setPageWindow({ anchor: value, unit });
       return;
     }
-    const layoutChanged = oldWidth.current !== width;
-    oldWidth.current = width;
+    const previous = positionedLayout.current;
+    const windowChanged = previous.anchor !== anchor || previous.unit !== unit;
+    const layoutChanged = windowChanged || previous.width !== width;
+    positionedLayout.current = { anchor, unit, width };
     if (settled.current === value && !layoutChanged) return;
     settled.current = value;
     requested.current = value;
-    positioning.current = !layoutChanged && !reduced ? value : null;
+    positioning.current = windowChanged || (!layoutChanged && !reduced) ? value : null;
     setDestination(null);
     ref.current?.scrollTo({ x: index * width, animated: !layoutChanged && !reduced });
-  }, [index, pages.length, reduced, value, width]);
+  }, [anchor, index, pageWindow.unit, pages.length, reduced, unit, value, width]);
 
+  const isCurrentLayout = () =>
+    enabled &&
+    currentLayout.current.enabled &&
+    width > 0 &&
+    currentLayout.current.anchor === anchor &&
+    currentLayout.current.unit === unit &&
+    currentLayout.current.width === width;
   const commit = (event: ScrollEvent) => {
-    if (
-      !enabled ||
-      width <= 0 ||
-      currentLayout.current.anchor !== anchor ||
-      currentLayout.current.width !== width
-    )
-      return;
+    if (!isCurrentLayout()) return;
     const position = event.nativeEvent.contentOffset.x / width;
     const nextIndex = Math.round(position);
     if (Math.abs(position - nextIndex) > 0.002) return;
@@ -115,6 +124,7 @@ export function ReportPeriodPager({
         return;
       }
       requested.current = next;
+      positioning.current = next;
       // Dispatch the native motion before preparing any more distant target.
       ref.current?.scrollTo({ x: nextIndex * width, animated: !reduced });
       setDestination(next);
@@ -129,31 +139,23 @@ export function ReportPeriodPager({
   const viewportIndex = viewport ?? destinationIndex;
   const radius = preparePage ? Math.max(1, Math.min(3, preparationRadius)) : 1;
   return (
-    <View
-      style={{ flex: 1 }}
-      testID="report-period-pager"
-      onLayout={(event) => {
-        const { width: nextWidth, height: nextHeight } = event.nativeEvent.layout;
-        setLayout((old) =>
-          old.width === nextWidth && old.height === nextHeight
-            ? old
-            : { width: nextWidth, height: nextHeight },
-        );
-      }}
-    >
-      {width <= 0 || index < 0 ? (
-        <PeriodPageContent
-          month={value}
-          onMove={move}
-          active
-          distance={0}
-          visible
-          renderPage={renderPage}
-          preparePage={preparePage}
-        />
-      ) : (
+    <View style={{ flex: 1 }}>
+      {renderHeader ? (
+        <PeriodHeaderContent month={value} onMove={move} renderHeader={renderHeader} />
+      ) : null}
+      <View
+        style={{ flex: 1 }}
+        testID="report-period-pager"
+        onLayout={(event) => {
+          const { width: nextWidth, height: nextHeight } = event.nativeEvent.layout;
+          setLayout((old) =>
+            old.width === nextWidth && old.height === nextHeight
+              ? old
+              : { width: nextWidth, height: nextHeight },
+          );
+        }}
+      >
         <ScrollView
-          key={`${anchor}-${unit}`}
           ref={ref}
           testID="report-period-scroll"
           style={{ flex: 1 }}
@@ -167,6 +169,7 @@ export function ReportPeriodPager({
           contentInsetAdjustmentBehavior="never"
           contentOffset={initialOffset}
           onScrollBeginDrag={() => {
+            if (!isCurrentLayout()) return;
             positioning.current = null;
             requested.current = settled.current;
             setDestination(null);
@@ -174,13 +177,7 @@ export function ReportPeriodPager({
           onMomentumScrollEnd={commit}
           scrollEventThrottle={16}
           onScroll={(event) => {
-            if (
-              !enabled ||
-              width <= 0 ||
-              currentLayout.current.anchor !== anchor ||
-              currentLayout.current.width !== width
-            )
-              return;
+            if (!isCurrentLayout()) return;
             const next = Math.max(
               0,
               Math.min(pages.length - 1, Math.round(event.nativeEvent.contentOffset.x / width)),
@@ -191,27 +188,32 @@ export function ReportPeriodPager({
             if (Math.abs(event.nativeEvent.velocity?.x ?? 0) < 0.01) commit(event);
           }}
         >
-          {pages.map((month, pageIndex) => (
+          {(width > 0 ? pages : [value]).map((month, pageIndex) => (
             <View
-              key={month}
+              // Before measurement, retain the current complete report during a route change.
+              key={width > 0 ? month : unmeasuredPageKey}
               style={{ width, height }}
               testID={`report-period-page-${month}`}
               accessibilityElementsHidden={month !== value}
               importantForAccessibility={month === value ? "auto" : "no-hide-descendants"}
               pointerEvents={month === value ? "auto" : "none"}
             >
-              {Math.abs(pageIndex - index) <= radius ||
-              Math.abs(pageIndex - destinationIndex) <= radius ||
-              Math.abs(pageIndex - viewportIndex) <= radius ? (
+              {month === value ||
+              (width > 0 &&
+                (Math.abs(pageIndex - index) <= radius ||
+                  Math.abs(pageIndex - destinationIndex) <= radius ||
+                  Math.abs(pageIndex - viewportIndex) <= radius)) ? (
                 <PeriodPageContent
                   month={month}
                   onMove={move}
                   active={month === value}
-                  distance={pageIndex - index}
+                  distance={width > 0 ? pageIndex - index : 0}
                   visible={
-                    Math.abs(pageIndex - index) <= 1 ||
-                    Math.abs(pageIndex - destinationIndex) <= 1 ||
-                    Math.abs(pageIndex - viewportIndex) <= 1
+                    month === value ||
+                    (width > 0 &&
+                      (Math.abs(pageIndex - index) <= 1 ||
+                        Math.abs(pageIndex - destinationIndex) <= 1 ||
+                        Math.abs(pageIndex - viewportIndex) <= 1))
                   }
                   renderPlaceholder={renderPlaceholder}
                   renderPage={renderPage}
@@ -225,15 +227,27 @@ export function ReportPeriodPager({
                   distance={pageIndex - index}
                   visible={false}
                   renderPage={renderPage}
-                  renderPlaceholder={renderPlaceholder}
+                  renderPlaceholder={width > 0 ? renderPlaceholder : undefined}
                 />
               )}
             </View>
           ))}
         </ScrollView>
-      )}
+      </View>
     </View>
   );
+}
+
+function PeriodHeaderContent({
+  month,
+  onMove,
+  renderHeader,
+}: {
+  readonly month: string;
+  readonly onMove: (delta: number) => void;
+  readonly renderHeader: (month: string, onMove: (delta: number) => void) => ReactNode;
+}) {
+  return renderHeader(month, onMove);
 }
 
 function PeriodPageContent({
