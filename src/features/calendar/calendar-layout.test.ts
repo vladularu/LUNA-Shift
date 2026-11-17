@@ -9,14 +9,14 @@ import {
 } from "@/features/calendar/calendar-layout";
 
 describe("calendar layout", () => {
-  it("leaves part of the next planner action visible as a scroll cue", () => {
+  it("fits five complete planner places without a partially visible scroll cue", () => {
     const regularLayout = calculateQuickPlannerLayout(390);
     const compactLayout = calculateQuickPlannerLayout(320);
 
-    expect(regularLayout.visibleTileCapacity).toBe(5.25);
-    expect(regularLayout.tileWidth).toBeCloseTo(68.52, 2);
-    expect(compactLayout.visibleTileCapacity).toBe(4.25);
-    expect(compactLayout.tileWidth).toBeCloseTo(68.41, 2);
+    expect(regularLayout.visibleTileCapacity).toBe(5);
+    expect(regularLayout.tileWidth * 5).toBe(390 - 16);
+    expect(compactLayout.visibleTileCapacity).toBe(5);
+    expect(compactLayout.tileWidth * 5).toBe(320 - 16);
   });
 
   it("keeps the day popup horizontally centered below its anchor", () => {

@@ -35,11 +35,11 @@ function clamp(value: number, minimum: number, maximum: number): number {
 
 export function calculateQuickPlannerLayout(viewportWidth: number): QuickPlannerLayout {
   const safeWidth = Number.isFinite(viewportWidth) ? viewportWidth : 320;
-  const visibleTileCapacity = safeWidth >= 370 ? 5.25 : 4.25;
-  const actionViewportWidth = Math.max(220, safeWidth - 26);
+  const visibleTileCapacity = 5;
+  const actionViewportWidth = Math.max(220, safeWidth - 16);
   return Object.freeze({
     visibleTileCapacity,
-    tileWidth: (actionViewportWidth - (visibleTileCapacity - 1)) / visibleTileCapacity,
+    tileWidth: actionViewportWidth / visibleTileCapacity,
   });
 }
 

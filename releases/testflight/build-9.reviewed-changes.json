@@ -9375,6 +9375,12 @@
       "reason": "Weekend implementation: Render common occupied, fully free and open monthly counts with accessible window and source details. Compact-list implementation: Support filtered affected-window details while retaining the existing honest completeness helper and internal assessment contract. Simple end-user check: Show one representative affected four-week period with further affected periods collapsed, retaining all assessed observations and the completeness contract."
     },
     {
+      "path": "src/features/calendar/calendar-layout.ts",
+      "kind": "modified",
+      "sha256": "5d594a6ce3c5b2930c4d5a7024b84565077927a76b371030354166a4b9504918",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/calendar-performance-controls.tsx",
       "kind": "modified",
       "sha256": "aded813c12d9a4308fb123143ecb51c06edbb14e5c4aac27845a238041bbb5d2",
@@ -9423,16 +9429,34 @@
       "reason": "Preview-only preservation of src/features/calendar/month-card.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up cleanup: remove only the unused array-map index parameter; preserve all rendered elements, keys, styles and data. No stored-data, native, dependency or TestFlight change."
     },
     {
+      "path": "src/features/calendar/quick-entry-action-strip.tsx",
+      "kind": "modified",
+      "sha256": "589e814d99ef4b8ab8ddd1b44a7341978fa1f76379185f0190414e4a54464502",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/quick-entry-delete-confirmation.tsx",
       "kind": "modified",
       "sha256": "57bf63d27a1d7a14cc33884e2903be85cf4de78bd0de1b21870035cee3d44a83",
       "reason": "Preview-only preservation of src/features/calendar/quick-entry-delete-confirmation.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
     },
     {
+      "path": "src/features/calendar/quick-entry-strip-layout.ts",
+      "kind": "added",
+      "sha256": "9fff8cad14e8b74239d3b10eada856edf42538bf8720ff0f06b93dbac0a68240",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
+    },
+    {
       "path": "src/features/calendar/quick-entry-swipe-row.tsx",
       "kind": "modified",
       "sha256": "1c200554ba5c2ebeb0c35d71bce8626ca8b320715d1926cbbb9ac2e463ceb9f4",
       "reason": "Preview-only preservation of src/features/calendar/quick-entry-swipe-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/quick-planner-dock.tsx",
+      "kind": "modified",
+      "sha256": "d43315d7fc441194f4c1b84aa9ffff0a7764d0f84fb3049e5eedc8cf7f1e92aa",
+      "reason": "User-requested quick-selection animation correction 2026-11-17 after iPhone feedback on Preview OTA 01a1e776-bef9-7d16-9429-d0a2516e1028. Follow the three new reference photos: center the selected service and right-hand time column together; on collapse center the service alone at its new position instead of restoring the original start. Keep five-place sizing, allow scrolling and momentum across individual services, and remove five-service page snapping. Preserve stable disclosure bounds, cancel automatic selection centering after manual dragging, bound unused end space, and preserve the selected center or visible service on resize. Keep the airy LUNA appearance and previously published four-point iOS dock drop, hit targets and native/tab rules. No persistence, widget deferral, calculations, packages or native configuration changes. Validated with verify:fast (11131 unit and 2143 component tests), focused geometry/design and component checks, and explicit iPhone acceptance on 2026-11-17 of Internal Preview OTA 01a1e86b-846b-7e07-a503-fea5e906cfa4 (group f6e854f4-003c-4057-b866-d1ae18ea2afa). App and test bytes remain identical to that accepted source. The user explicitly authorized commit, push, PR and merge after successful CI. No additional OTA, native build or TestFlight publication is authorized by this Git delivery; preserve the accepted TestFlight baseline."
     },
     {
       "path": "src/features/calendar/quick-stamp-motion.ts",
