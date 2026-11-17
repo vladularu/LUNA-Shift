@@ -177,6 +177,7 @@ export const QuickPlannerDock = memo(function QuickPlannerDock({
           testID="quick-planner-dock"
         >
           <QuickEntryActionStrip
+            key={open ? "open" : "closed"}
             actions={actions}
             activeKey={activeKey}
             busy={busy || closing}
