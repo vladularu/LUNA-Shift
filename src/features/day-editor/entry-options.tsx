@@ -1,3 +1,4 @@
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { SelectionControl } from "@/ui/selection-control";
 import { SelectionChip, SelectionRow } from "@/ui/selection-option";
 import { TYPOGRAPHY } from "@/theme/typography";
@@ -7,7 +8,7 @@ import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type {
@@ -59,36 +60,45 @@ function SheetShell({
               paddingTop: Math.max(insets.top, 24),
             }}
           >
-            <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center" }}>
-              <Pressable
-                accessibilityLabel="Zurück"
-                accessibilityRole="button"
-                onPress={onClose}
-                style={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
+            <SoftScrollScope>
+              <SoftScrollAnchor>
+                <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center" }}>
+                  <Pressable
+                    accessibilityLabel="Zurück"
+                    accessibilityRole="button"
+                    onPress={onClose}
+                    style={{
+                      width: 48,
+                      height: 48,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons color={palette.text} name="close" size={26} />
+                  </Pressable>
+                  <Text
+                    style={{
+                      flex: 1,
+                      color: palette.text,
+                      fontFamily: INTER_FONTS.bold,
+                      fontSize: TYPOGRAPHY.screenTitle.fontSize,
+                      fontWeight: "700",
+                      textAlign: "center",
+                    }}
+                  >
+                    {title}
+                  </Text>
+                  <View style={{ width: 48 }} />
+                </View>
+              </SoftScrollAnchor>
+              <SoftScrollView
+                keyboardShouldPersistTaps="handled"
+                style={{ flex: 1 }}
+                contentContainerStyle={{ gap: 18, paddingBottom: bottomPadding }}
               >
-                <Ionicons color={palette.text} name="close" size={26} />
-              </Pressable>
-              <Text
-                style={{
-                  flex: 1,
-                  color: palette.text,
-                  fontFamily: INTER_FONTS.bold,
-                  fontSize: TYPOGRAPHY.screenTitle.fontSize,
-                  fontWeight: "700",
-                  textAlign: "center",
-                }}
-              >
-                {title}
-              </Text>
-              <View style={{ width: 48 }} />
-            </View>
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              style={{ flex: 1 }}
-              contentContainerStyle={{ gap: 18, paddingBottom: bottomPadding }}
-            >
-              {children}
-            </ScrollView>
+                {children}
+              </SoftScrollView>
+            </SoftScrollScope>
           </View>
         )}
       </BackFooterLayout>

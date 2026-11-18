@@ -1,4 +1,4 @@
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { State } from "react-native-gesture-handler";
@@ -17,6 +17,20 @@ jest.mock("react-native-safe-area-context", () => {
   };
   return actual.default;
 });
+const mockProvider = ({ children }: React.PropsWithChildren) => children;
+const mockUseRef = () => undefined;
+const mockNativeEdge = {
+  ScrollEdgeEffectProvider: mockProvider,
+  ScrollEdgeEffect: jest.requireActual<typeof import("react-native")>("react-native").View,
+  useScrollEdgeEffectRef: mockUseRef,
+};
+let mockEdgeEnabled = false;
+jest.mock("@/ui/native-scroll-edge", () => ({
+  get nativeScrollEdge() {
+    return mockEdgeEnabled ? mockNativeEdge : null;
+  },
+}));
+
 let mockFontScale = 1;
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
@@ -117,6 +131,33 @@ describe("analysis view preferences", () => {
     expect(restored.getByTestId("independent-salary")).toBeTruthy();
     expect(restored.queryByTestId("independent-net")).toBeNull();
     expect(read(restored).hidden).toEqual(["NET"]);
+  });
+  it("applies the native edge to the customization modal and retains its controls", async () => {
+    mockEdgeEnabled = true;
+    try {
+      const screen = await render(
+        <AnalysisViewProvider>
+          <Harness />
+          <AnalysisViewControls />
+        </AnalysisViewProvider>,
+      );
+      await waitFor(() => expect(screen.getByText("ready")).toBeTruthy());
+      await fireEvent.press(screen.getByRole("button", { name: "Ansicht anpassen" }));
+      const edge = screen.getByTestId("soft-scroll-edge");
+      expect(edge).toHaveProp("edge", "top");
+      expect(edge).toHaveProp("effect", "soft");
+      const controls = within(edge);
+      expect(controls.getByText("Ansicht anpassen")).toBeTruthy();
+      const scroll = screen.getByTestId("analysis-settings-scroll");
+      await fireEvent(within(scroll).getByLabelText("Gehalt anzeigen"), "valueChange", false);
+      await waitFor(() => expect(mockSave.mock.lastCall?.[1].hidden).toEqual(["PAY"]));
+      await fireEvent.press(controls.getByRole("button", { name: "Reihenfolge ändern" }));
+      expect(within(scroll).getByTestId("analysis-sort")).toBeTruthy();
+      await fireEvent.press(controls.getByRole("button", { name: "Ansicht schließen" }));
+      expect(screen.queryByTestId("soft-scroll-edge")).toBeNull();
+    } finally {
+      mockEdgeEnabled = false;
+    }
   });
   it("serializes rapid writes and preserves every newer change", async () => {
     let finish!: () => void;

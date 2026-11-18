@@ -1,8 +1,6 @@
 import type { NativeStackNavigationOptions } from "expo-router";
-import { Platform } from "react-native";
 
-const supportsSystemScrollEdge =
-  process.env.EXPO_OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 26;
+import { supportsSystemScrollEdge } from "@/ui/native-scroll-edge";
 
 export function nativeSheetScrollEdgeOptions(): NativeStackNavigationOptions | undefined {
   if (!supportsSystemScrollEdge) return undefined;

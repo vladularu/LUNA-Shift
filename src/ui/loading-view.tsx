@@ -1,15 +1,17 @@
 import { Text } from "@/ui/text";
 import { CORNER_CURVE, RADII } from "@/theme/tokens";
-import { ActivityIndicator, Pressable, ScrollView } from "react-native";
+import { ActivityIndicator, Pressable } from "react-native";
 
 import { PRODUCT_NAME } from "@/brand";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 
+import { SoftScrollView } from "@/ui/soft-scroll-layout";
+
 export function LoadingView({ label = `${PRODUCT_NAME} wird vorbereitet …` }: { label?: string }) {
   const palette = usePalette();
   return (
-    <ScrollView
+    <SoftScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{
         flexGrow: 1,
@@ -35,7 +37,7 @@ export function LoadingView({ label = `${PRODUCT_NAME} wird vorbereitet …` }: 
       >
         {label}
       </Text>
-    </ScrollView>
+    </SoftScrollView>
   );
 }
 
@@ -58,7 +60,7 @@ export function LoadFailureView({
 }) {
   const palette = usePalette();
   return (
-    <ScrollView
+    <SoftScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{
         flexGrow: 1,
@@ -115,6 +117,6 @@ export function LoadFailureView({
           {actionLabel}
         </Text>
       </Pressable>
-    </ScrollView>
+    </SoftScrollView>
   );
 }

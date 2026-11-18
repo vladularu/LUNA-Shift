@@ -39,16 +39,18 @@ import { useCalendarBackground } from "@/features/settings/calendar-background-c
 import { MOTION } from "@/theme/motion";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, SHADOWS, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import { nativeScrollEdge } from "@/ui/native-scroll-edge";
 import { TabScreenHeader } from "@/ui/screen-layout";
 
 const AnimatedGlassView = Animated.createAnimatedComponent(GlassView);
 const ACTION_GROUP_HEIGHT = 48;
 
-/** Include fixed filters/notices while keeping the native pager below the safe area. */
+/** Measure the full overlap when iOS draws the edge behind the status bar. */
 export function useCalendarHeaderOverlap() {
   const safeTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
   const [height, setHeight] = useState(0);
-  const top = process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : safeTop;
+  const safeInset = process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : safeTop;
+  const top = nativeScrollEdge ? 0 : safeInset;
   return {
     headerHeight: height,
     headerOverlap: Math.max(0, height - top),

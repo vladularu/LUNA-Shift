@@ -2,7 +2,7 @@ import { SelectionRow } from "@/ui/selection-option";
 import { Text } from "@/ui/text";
 import { CONTROL_CORNERS, SHADOWS, SPACING } from "@/theme/tokens";
 import { useCallback, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, View, type ViewProps } from "react-native";
+import { Platform, Pressable, StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
@@ -19,6 +19,7 @@ import {
 import { LocationPreview } from "@/features/location/location-preview";
 import { accessibleChipBackgroundColor } from "@/theme/color-contrast";
 import { MOTION } from "@/theme/motion";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import {
@@ -305,38 +306,42 @@ export function ShiftEditOverlay({
               ]}
               testID="shift-edit-type-popover"
             >
-              <Text
-                style={{
-                  ...TYPOGRAPHY.label,
-                  color: palette.textSecondary,
-                  paddingHorizontal: SPACING.lg,
-                  paddingTop: SPACING.md,
-                  paddingBottom: SPACING.sm,
-                }}
-              >
-                Eintragsart
-              </Text>
-              <ScrollView
-                accessibilityRole="radiogroup"
-                accessibilityLabel="Eintragsart auswählen"
-                style={styles.typeScroll}
-              >
-                {DAY_EDITOR_SHIFT_TYPES.map((type) => {
-                  const selected = type === entryType;
-                  return (
-                    <SelectionRow
-                      key={type}
-                      label={SHIFT_TYPE_LABELS[type]}
-                      selected={selected}
-                      separator
-                      onPress={() => {
-                        if (!selected) onShiftTypeChange(type);
-                        setPopup(null);
-                      }}
-                    />
-                  );
-                })}
-              </ScrollView>
+              <SoftScrollScope>
+                <SoftScrollAnchor>
+                  <Text
+                    style={{
+                      ...TYPOGRAPHY.label,
+                      color: palette.textSecondary,
+                      paddingHorizontal: SPACING.lg,
+                      paddingTop: SPACING.md,
+                      paddingBottom: SPACING.sm,
+                    }}
+                  >
+                    Eintragsart
+                  </Text>
+                </SoftScrollAnchor>
+                <SoftScrollView
+                  accessibilityRole="radiogroup"
+                  accessibilityLabel="Eintragsart auswählen"
+                  style={styles.typeScroll}
+                >
+                  {DAY_EDITOR_SHIFT_TYPES.map((type) => {
+                    const selected = type === entryType;
+                    return (
+                      <SelectionRow
+                        key={type}
+                        label={SHIFT_TYPE_LABELS[type]}
+                        selected={selected}
+                        separator
+                        onPress={() => {
+                          if (!selected) onShiftTypeChange(type);
+                          setPopup(null);
+                        }}
+                      />
+                    );
+                  })}
+                </SoftScrollView>
+              </SoftScrollScope>
             </View>
           ) : null}
         </>

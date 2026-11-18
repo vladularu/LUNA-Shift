@@ -3,14 +3,14 @@ import { CORNER_CURVE, RADII, SHADOWS, SPACING } from "@/theme/tokens";
 import { INTER_FONTS } from "@/theme/shadcn";
 /* eslint-disable react-hooks/immutability -- Reanimated SharedValue.value is intentionally mutable on the UI thread. */
 import type { ReactNode } from "react";
-import type { KeyboardEvent } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+  type KeyboardEvent,
+  type ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -34,6 +34,7 @@ import {
   type EntryEditHeaderProps,
 } from "@/features/day-editor/entry-edit-header";
 import { MOTION } from "@/theme/motion";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SheetBackFooter } from "@/ui/sheet-back-footer";
@@ -376,25 +377,29 @@ export function EntryEditOverlayFrame({
                 ]}
                 testID={`${testIDPrefix}-card`}
               >
-                {dismissGesture ? (
-                  <GestureDetector gesture={dismissGesture}>{editorHeader}</GestureDetector>
-                ) : (
-                  editorHeader
-                )}
-                <ScrollView
-                  ref={fieldsRef}
-                  testID={`${testIDPrefix}-fields`}
-                  style={[styles.fields, nativePresentation && styles.nativeFields]}
-                  contentContainerStyle={keyboardVisible ? styles.typingContent : undefined}
-                  automaticallyAdjustKeyboardInsets={false}
-                  contentInsetAdjustmentBehavior="never"
-                  keyboardDismissMode="interactive"
-                  keyboardShouldPersistTaps="handled"
-                  onFocus={revealFocusedField}
-                  onLayout={revealFocusedField}
-                >
-                  {cardContent}
-                </ScrollView>
+                <SoftScrollScope>
+                  <SoftScrollAnchor>
+                    {dismissGesture ? (
+                      <GestureDetector gesture={dismissGesture}>{editorHeader}</GestureDetector>
+                    ) : (
+                      editorHeader
+                    )}
+                  </SoftScrollAnchor>
+                  <SoftScrollView
+                    ref={fieldsRef}
+                    testID={`${testIDPrefix}-fields`}
+                    style={[styles.fields, nativePresentation && styles.nativeFields]}
+                    contentContainerStyle={keyboardVisible ? styles.typingContent : undefined}
+                    automaticallyAdjustKeyboardInsets={false}
+                    contentInsetAdjustmentBehavior="never"
+                    keyboardDismissMode="interactive"
+                    keyboardShouldPersistTaps="handled"
+                    onFocus={revealFocusedField}
+                    onLayout={revealFocusedField}
+                  >
+                    {cardContent}
+                  </SoftScrollView>
+                </SoftScrollScope>
                 {keyboardVisible && !closing ? (
                   <View
                     testID={`${testIDPrefix}-keyboard-toolbar`}

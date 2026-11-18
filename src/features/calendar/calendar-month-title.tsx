@@ -1,7 +1,9 @@
-import { memo } from "react";
+import { memo, useContext } from "react";
 import { StyleSheet, View } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { formatMonthTitle } from "@/engine/calendar";
 import { CONTROL_HEIGHT } from "@/theme/tokens";
+import { nativeScrollEdge } from "@/ui/native-scroll-edge";
 import { TabScreenHeader } from "@/ui/screen-layout";
 
 /** A real part of each native page: title and dates have exactly one scroll position. */
@@ -14,6 +16,7 @@ export const CalendarMonthTitle = memo(function CalendarMonthTitle({
   readonly referenceMonth: string;
   readonly accessible: boolean;
 }) {
+  const safeTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
   const title =
     month.slice(0, 4) === referenceMonth.slice(0, 4)
       ? formatMonthTitle(month).replace(/\s+\d{4}$/, "")
@@ -31,7 +34,7 @@ export const CalendarMonthTitle = memo(function CalendarMonthTitle({
         minimumTitleScale={0.75}
         titleHeightMode="content"
         transparent
-        safeTopOverride={0}
+        safeTopOverride={nativeScrollEdge ? safeTop : 0}
         accessory={
           <View
             style={{

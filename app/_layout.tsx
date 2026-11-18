@@ -22,8 +22,13 @@ import { analysisSheetOptions } from "@/navigation/analysis-sheet-options";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { PAGE_HEADER_OPTIONS, nativePageHeaderStyle } from "@/theme/page-header";
+import { nativeSheetScrollEdgeOptions } from "@/ui/native-sheet-scroll-edge";
 import { pageBackButtonOptions } from "@/ui/native-page-header";
-import { pageStackHeaderOptions } from "@/ui/page-stack-header";
+import {
+  pageStackHeaderOptions,
+  PageStackScrollEdges,
+  pageStackScrollLayout,
+} from "@/ui/page-stack-header";
 import { AppErrorBoundary } from "@/ui/app-error-boundary";
 import { FeedbackProvider } from "@/ui/feedback";
 import {
@@ -129,11 +134,15 @@ function ThemedApp() {
                         <StartupRoutePresentation />
                         <AppResumeCheckpoint />
                         <Stack
+                          layout={({ children }) => (
+                            <PageStackScrollEdges>{children}</PageStackScrollEdges>
+                          )}
+                          screenLayout={pageStackScrollLayout}
                           screenOptions={({ route }) => ({
                             ...horizontalBackGestureOptions(route.name),
-                            ...pageStackHeaderOptions(route.name),
                             headerBackButtonDisplayMode: "minimal",
                             ...PAGE_HEADER_OPTIONS,
+                            ...pageStackHeaderOptions(route.name),
                             ...pageBackButtonOptions(),
                             headerStyle: nativePageHeaderStyle(palette.background),
                             headerTintColor: palette.text,
@@ -214,6 +223,7 @@ function ThemedApp() {
                             name="day-details"
                             options={{
                               title: "Tagesdetails",
+                              ...nativeSheetScrollEdgeOptions(),
                               presentation: "formSheet",
                               contentStyle: { backgroundColor: "transparent" },
                               sheetAllowedDetents: [1],
@@ -242,6 +252,7 @@ function ThemedApp() {
                             name="info-details"
                             options={{
                               title: "Information",
+                              ...nativeSheetScrollEdgeOptions(),
                               presentation: "formSheet",
                               contentStyle: { backgroundColor: "transparent" },
                               sheetAllowedDetents: [1],

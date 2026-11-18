@@ -5,6 +5,11 @@ import { router } from "expo-router";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { SurfaceCard, CardSeparator, RowButton } from "@/ui/design-system";
+import {
+  SoftScrollAnchor,
+  SoftScrollScope,
+  useSoftScrollEdgeEnabled,
+} from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import {
   MINIMUM_TOUCH_TARGET,
@@ -76,76 +81,106 @@ export function SalaryPage({
       edges={["top", "left", "right"]}
       style={{ flex: 1, backgroundColor: palette.groupedBackground }}
     >
+      <SoftScrollScope>
+        <SoftScrollAnchor>
+          <SalaryPageHeader
+            title={title}
+            month={month}
+            largeTitle={largeTitle}
+            action={action}
+            stacked={stacked}
+          />
+        </SoftScrollAnchor>
+        <BackFooterLayout
+          footerTestID="salary-back-footer"
+          showFooter={showBackFooter}
+          label={backLabel}
+          onPress={() => router.back()}
+        >
+          {(bottomPadding) => (
+            <ScreenScrollView
+              testID="salary-scroll-content"
+              surface="groupedBackground"
+              contentInsetAdjustmentBehavior="never"
+              contentGap={REPORT_CARD_GAP}
+              contentContainerStyle={{ paddingTop: 0 }}
+              bottomPadding={
+                showBackFooter ? bottomPadding : Math.max(insets?.bottom ?? 0, SPACING.lg)
+              }
+            >
+              {children}
+            </ScreenScrollView>
+          )}
+        </BackFooterLayout>
+      </SoftScrollScope>
+    </SafeAreaView>
+  );
+}
+
+function SalaryPageHeader({
+  action,
+  title,
+  month,
+  largeTitle,
+  stacked,
+}: {
+  readonly action?: ReactNode;
+  readonly title: string;
+  readonly month?: string;
+  readonly largeTitle: boolean;
+  readonly stacked: boolean;
+}) {
+  const palette = usePalette();
+  const hasScrollEdge = useSoftScrollEdgeEnabled();
+  return (
+    <View
+      accessibilityRole="toolbar"
+      style={{
+        ...pageHeaderStyle(hasScrollEdge ? "transparent" : palette.groupedBackground),
+        flexDirection: "row",
+        flexWrap: stacked ? "wrap" : "nowrap",
+        alignItems: "center",
+        gap: largeTitle ? SPACING.sm : SPACING.md,
+        paddingHorizontal: largeTitle ? SPACING.sm : SPACING.xl,
+        paddingVertical: SPACING.md,
+      }}
+    >
+      <GlassBackButton onPress={() => router.back()} />
+      {stacked && action ? (
+        <View style={{ width: MINIMUM_TOUCH_TARGET, marginLeft: "auto" }}>{action}</View>
+      ) : null}
       <View
-        accessibilityRole="toolbar"
         style={{
-          ...pageHeaderStyle(palette.groupedBackground),
-          flexDirection: "row",
-          flexWrap: stacked ? "wrap" : "nowrap",
-          alignItems: "center",
-          gap: largeTitle ? SPACING.sm : SPACING.md,
-          paddingHorizontal: largeTitle ? SPACING.sm : SPACING.xl,
-          paddingVertical: SPACING.md,
+          flex: stacked ? undefined : 1,
+          flexBasis: stacked ? "100%" : undefined,
+          minWidth: 0,
+          gap: SPACING.xxs,
         }}
       >
-        <GlassBackButton onPress={() => router.back()} />
-        {stacked && action ? (
-          <View style={{ width: MINIMUM_TOUCH_TARGET, marginLeft: "auto" }}>{action}</View>
-        ) : null}
-        <View
+        <Text
+          accessibilityRole="header"
           style={{
-            flex: stacked ? undefined : 1,
-            flexBasis: stacked ? "100%" : undefined,
-            minWidth: 0,
-            gap: SPACING.xxs,
+            ...(largeTitle
+              ? TYPOGRAPHY.highlightValue
+              : stacked
+                ? TYPOGRAPHY.sectionTitle
+                : TYPOGRAPHY.screenTitle),
+            color: palette.text,
+            textAlign: largeTitle ? "left" : "center",
           }}
         >
-          <Text
-            accessibilityRole="header"
-            style={{
-              ...(largeTitle
-                ? TYPOGRAPHY.highlightValue
-                : stacked
-                  ? TYPOGRAPHY.sectionTitle
-                  : TYPOGRAPHY.screenTitle),
-              color: palette.text,
-              textAlign: largeTitle ? "left" : "center",
-            }}
-          >
-            {title}
+          {title}
+        </Text>
+        {month ? (
+          <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, textAlign: "center" }}>
+            {month}
           </Text>
-          {month ? (
-            <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted, textAlign: "center" }}>
-              {month}
-            </Text>
-          ) : null}
-        </View>
-        {!stacked && (!largeTitle || action) ? (
-          <View style={{ width: MINIMUM_TOUCH_TARGET }}>{action}</View>
         ) : null}
       </View>
-      <BackFooterLayout
-        footerTestID="salary-back-footer"
-        showFooter={showBackFooter}
-        label={backLabel}
-        onPress={() => router.back()}
-      >
-        {(bottomPadding) => (
-          <ScreenScrollView
-            testID="salary-scroll-content"
-            surface="groupedBackground"
-            contentInsetAdjustmentBehavior="never"
-            contentGap={REPORT_CARD_GAP}
-            contentContainerStyle={{ paddingTop: 0 }}
-            bottomPadding={
-              showBackFooter ? bottomPadding : Math.max(insets?.bottom ?? 0, SPACING.lg)
-            }
-          >
-            {children}
-          </ScreenScrollView>
-        )}
-      </BackFooterLayout>
-    </SafeAreaView>
+      {!stacked && (!largeTitle || action) ? (
+        <View style={{ width: MINIMUM_TOUCH_TARGET }}>{action}</View>
+      ) : null}
+    </View>
   );
 }
 

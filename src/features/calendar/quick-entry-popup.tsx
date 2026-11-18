@@ -1,17 +1,11 @@
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { Text } from "@/ui/text";
 import { CORNER_CURVE, SHADOWS, RADII } from "@/theme/tokens";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import {
-  findNodeHandle,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { findNodeHandle, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import { FullWindowOverlay } from "react-native-screens";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -317,278 +311,294 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
           }}
           testID="quick-entry-clipped-content"
         >
-          {holidayName ? (
-            <View
-              accessibilityLabel={holidayName}
-              accessibilityElementsHidden={deletion.pending !== null}
-              importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
-              style={{
-                height: holidayHeaderHeight,
-                flexShrink: 0,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                paddingHorizontal: 16,
-              }}
-            >
-              <View
-                style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: palette.warning }}
-              />
-              <Text
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={{
-                  flex: 1,
-                  color: palette.warning,
-                  fontFamily: INTER_FONTS.semibold,
-                  fontSize: TYPOGRAPHY.overline.fontSize,
-                }}
-              >
-                {holidayName}
-              </Text>
-            </View>
-          ) : null}
-
-          <ScrollView
-            testID="quick-entry-scroll"
-            nestedScrollEnabled
-            showsVerticalScrollIndicator
-            scrollEnabled={listHeight > listViewportHeight}
-            onScrollBeginDrag={() => setSwipedEntry(null)}
-            onContentSizeChange={(_width, measuredHeight) => {
-              if (!Number.isFinite(measuredHeight) || measuredHeight < 0) return;
-              setContentSize((previous) =>
-                previous?.key === rowLayoutKey && previous.height === measuredHeight
-                  ? previous
-                  : { key: rowLayoutKey, height: measuredHeight },
-              );
-            }}
-            pointerEvents={interactionBlocked ? "none" : "auto"}
-            accessibilityElementsHidden={deletion.pending !== null}
-            importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
-            style={{ height: listViewportHeight, flexShrink: 1, flexGrow: 0 }}
-          >
-            {popupRows.map((entry, index) => {
-              const duration = entry.duration;
-              const localEntry = entry.localEntry;
-              const canDelete = localEntry !== null && onDeleteEntry !== undefined;
-              const isPending =
-                localEntry &&
-                deletion.pending?.kind === localEntry.kind &&
-                deletion.pending.id === localEntry.id;
-              const row = (
-                <Pressable
-                  key={entry.key}
-                  ref={index === 0 ? dialogFocusRef : undefined}
-                  accessibilityLabel={`${entry.title} ${entry.readOnly ? "ansehen" : "bearbeiten"}`}
-                  accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
-                  accessibilityRole="button"
-                  disabled={interactionBlocked}
-                  accessibilityState={{ disabled: interactionBlocked }}
-                  accessibilityActions={
-                    canDelete ? [{ name: "delete", label: "Löschen" }] : undefined
-                  }
-                  onAccessibilityAction={(event) => {
-                    if (
-                      !interactionBlocked &&
-                      localEntry &&
-                      event.nativeEvent.actionName === "delete"
-                    ) {
-                      requestDeletion(localEntry);
-                    }
-                  }}
-                  onLongPress={canDelete ? () => requestDeletion(localEntry) : undefined}
-                  onPress={() => {
-                    if (swipedEntry) setSwipedEntry(null);
-                    else entry.onPress();
-                  }}
-                  style={({ pressed }) => ({
-                    minHeight: entryRowHeight,
+          <SoftScrollScope edge={holidayName ? "top" : "bottom"}>
+            {holidayName ? (
+              <SoftScrollAnchor>
+                <View
+                  accessibilityLabel={holidayName}
+                  accessibilityElementsHidden={deletion.pending !== null}
+                  importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
+                  style={{
+                    height: holidayHeaderHeight,
+                    flexShrink: 0,
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 10,
-                    backgroundColor: pressed ? palette.surfaceMuted : palette.surfaceRaised,
-                    paddingHorizontal: 14,
-                  })}
+                    gap: 5,
+                    paddingHorizontal: 16,
+                  }}
                 >
                   <View
                     style={{
-                      width: 30,
-                      height: 30,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 15,
-                      backgroundColor: accessibleChipBackgroundColor(entry.color),
-                    }}
-                  >
-                    {entry.symbol ? (
-                      entry.readOnly ? (
-                        <SharedShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
-                      ) : (
-                        <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
-                      )
-                    ) : (
-                      <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
-                    )}
-                  </View>
-                  <View style={{ minWidth: 0, flex: 1, gap: 1 }}>
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{
-                        color: palette.text,
-                        fontFamily: INTER_FONTS.semibold,
-                        fontSize: TYPOGRAPHY.label.fontSize,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {entry.title}
-                    </Text>
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{
-                        color: palette.textMuted,
-                        fontFamily: INTER_FONTS.regular,
-                        fontSize: TYPOGRAPHY.caption.fontSize,
-                      }}
-                    >
-                      {isPending
-                        ? localEntry.kind === "APPOINTMENT"
-                          ? "Diesen Termin löschen?"
-                          : "Diesen Dienst löschen?"
-                        : entry.subtitle}
-                    </Text>
-                  </View>
-                  {duration ? (
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                      style={{
-                        alignSelf: "flex-start",
-                        paddingTop: 12,
-                        color: palette.textMuted,
-                        fontFamily: INTER_FONTS.regular,
-                        fontSize: TYPOGRAPHY.caption.fontSize,
-                      }}
-                    >
-                      {duration}
-                    </Text>
-                  ) : null}
-                  <View
-                    pointerEvents="none"
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 54,
-                      right: 14,
-                      height: 1,
-                      backgroundColor: palette.separator,
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: palette.warning,
                     }}
                   />
-                </Pressable>
-              );
-              return canDelete ? (
-                <QuickEntrySwipeRow
-                  key={entry.key}
-                  entryKey={entry.key}
-                  title={entry.title}
-                  enabled={active && !closing && !interactionBlocked}
-                  open={swipedEntry === entry.key}
-                  onOpen={() => setSwipedEntry(entry.key)}
-                  onClose={() => setSwipedEntry((key) => (key === entry.key ? null : key))}
-                  onDelete={() => requestDeletion(localEntry)}
-                >
-                  {row}
-                </QuickEntrySwipeRow>
-              ) : (
-                row
-              );
-            })}
-          </ScrollView>
-
-          <View testID="quick-entry-footer" style={{ flexShrink: 0 }}>
-            {deletion.pending ? (
-              <QuickEntryDeleteConfirmation
-                title={deletion.pending.title}
-                busy={deletion.busy}
-                error={deletion.error}
-                minHeight={actionRowHeight}
-                onLayout={(event) =>
-                  setConfirmationHeight(Math.ceil(event.nativeEvent.layout.height))
-                }
-                onCancel={cancelDeletion}
-                onConfirm={() => {
-                  void deletion.confirm().then((deleted) => {
-                    if (deleted) {
-                      setSwipedEntry(null);
-                      scheduleAccessibilityFocus(findNodeHandle(dialogFocusRef.current));
-                    }
-                  });
-                }}
-              />
-            ) : (
-              <View
-                accessibilityRole="toolbar"
-                style={{
-                  minHeight: actionRowHeight,
-                  flexDirection: "row",
-                  alignItems: "stretch",
-                }}
-              >
-                {editorActions.map((action, index) => (
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    style={{
+                      flex: 1,
+                      color: palette.warning,
+                      fontFamily: INTER_FONTS.semibold,
+                      fontSize: TYPOGRAPHY.overline.fontSize,
+                    }}
+                  >
+                    {holidayName}
+                  </Text>
+                </View>
+              </SoftScrollAnchor>
+            ) : null}
+            <SoftScrollView
+              testID="quick-entry-scroll"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+              scrollEnabled={listHeight > listViewportHeight}
+              onScrollBeginDrag={() => setSwipedEntry(null)}
+              onContentSizeChange={(_width, measuredHeight) => {
+                if (!Number.isFinite(measuredHeight) || measuredHeight < 0) return;
+                setContentSize((previous) =>
+                  previous?.key === rowLayoutKey && previous.height === measuredHeight
+                    ? previous
+                    : { key: rowLayoutKey, height: measuredHeight },
+                );
+              }}
+              pointerEvents={interactionBlocked ? "none" : "auto"}
+              accessibilityElementsHidden={deletion.pending !== null}
+              importantForAccessibility={deletion.pending ? "no-hide-descendants" : "auto"}
+              fixedViewportHeight={listViewportHeight}
+              style={{ flexShrink: 1, flexGrow: 0 }}
+            >
+              {popupRows.map((entry, index) => {
+                const duration = entry.duration;
+                const localEntry = entry.localEntry;
+                const canDelete = localEntry !== null && onDeleteEntry !== undefined;
+                const isPending =
+                  localEntry &&
+                  deletion.pending?.kind === localEntry.kind &&
+                  deletion.pending.id === localEntry.id;
+                const row = (
                   <Pressable
-                    key={action.key}
-                    ref={!popupRows.length && index === 0 ? dialogFocusRef : undefined}
-                    accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Dienst"} hinzufügen`}
-                    accessibilityHint={compactDate(date)}
+                    key={entry.key}
+                    ref={index === 0 ? dialogFocusRef : undefined}
+                    accessibilityLabel={`${entry.title} ${entry.readOnly ? "ansehen" : "bearbeiten"}`}
+                    accessibilityHint={`${compactDate(date)}${duration ? `, ${duration}` : ""}`}
                     accessibilityRole="button"
-                    accessibilityState={{ disabled: interactionBlocked }}
                     disabled={interactionBlocked}
-                    onPress={() => {
-                      if (action.kind === "CUSTOM_SHIFT") {
-                        onOpenShiftPicker(date);
-                        return;
+                    accessibilityState={{ disabled: interactionBlocked }}
+                    accessibilityActions={
+                      canDelete ? [{ name: "delete", label: "Löschen" }] : undefined
+                    }
+                    onAccessibilityAction={(event) => {
+                      if (
+                        !interactionBlocked &&
+                        localEntry &&
+                        event.nativeEvent.actionName === "delete"
+                      ) {
+                        requestDeletion(localEntry);
                       }
-                      onSelectAction(action, date);
+                    }}
+                    onLongPress={canDelete ? () => requestDeletion(localEntry) : undefined}
+                    onPress={() => {
+                      if (swipedEntry) setSwipedEntry(null);
+                      else entry.onPress();
                     }}
                     style={({ pressed }) => ({
-                      minHeight: actionRowHeight,
-                      flex: 1,
+                      minHeight: entryRowHeight,
                       flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-                      opacity: busy ? 0.38 : 1,
+                      gap: 10,
+                      backgroundColor: pressed ? palette.surfaceMuted : palette.surfaceRaised,
+                      paddingHorizontal: 14,
                     })}
                   >
-                    {index > 0 ? (
-                      <View
-                        pointerEvents="none"
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 8,
-                          bottom: 8,
-                          width: 1,
-                          backgroundColor: palette.separator,
-                        }}
-                      />
-                    ) : null}
-                    <Ionicons accessible={false} color={palette.textMuted} name="add" size={21} />
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    <View
                       style={{
-                        color: palette.textMuted,
-                        fontFamily: INTER_FONTS.regular,
-                        fontSize: TYPOGRAPHY.small.fontSize,
-                        fontWeight: "400",
+                        width: 30,
+                        height: 30,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 15,
+                        backgroundColor: accessibleChipBackgroundColor(entry.color),
                       }}
                     >
-                      {action.kind === "APPOINTMENT" ? "Termin" : "Dienst"}
-                    </Text>
+                      {entry.symbol ? (
+                        entry.readOnly ? (
+                          <SharedShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                        ) : (
+                          <ShiftSymbol color={chipTextColor} size={15} value={entry.symbol} />
+                        )
+                      ) : (
+                        <Ionicons color={chipTextColor} name="calendar-outline" size={15} />
+                      )}
+                    </View>
+                    <View style={{ minWidth: 0, flex: 1, gap: 1 }}>
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={{
+                          color: palette.text,
+                          fontFamily: INTER_FONTS.semibold,
+                          fontSize: TYPOGRAPHY.label.fontSize,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {entry.title}
+                      </Text>
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={{
+                          color: palette.textMuted,
+                          fontFamily: INTER_FONTS.regular,
+                          fontSize: TYPOGRAPHY.caption.fontSize,
+                        }}
+                      >
+                        {isPending
+                          ? localEntry.kind === "APPOINTMENT"
+                            ? "Diesen Termin löschen?"
+                            : "Diesen Dienst löschen?"
+                          : entry.subtitle}
+                      </Text>
+                    </View>
+                    {duration ? (
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={{
+                          alignSelf: "flex-start",
+                          paddingTop: 12,
+                          color: palette.textMuted,
+                          fontFamily: INTER_FONTS.regular,
+                          fontSize: TYPOGRAPHY.caption.fontSize,
+                        }}
+                      >
+                        {duration}
+                      </Text>
+                    ) : null}
+                    <View
+                      pointerEvents="none"
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 54,
+                        right: 14,
+                        height: 1,
+                        backgroundColor: palette.separator,
+                      }}
+                    />
                   </Pressable>
-                ))}
+                );
+                return canDelete ? (
+                  <QuickEntrySwipeRow
+                    key={entry.key}
+                    entryKey={entry.key}
+                    title={entry.title}
+                    enabled={active && !closing && !interactionBlocked}
+                    open={swipedEntry === entry.key}
+                    onOpen={() => setSwipedEntry(entry.key)}
+                    onClose={() => setSwipedEntry((key) => (key === entry.key ? null : key))}
+                    onDelete={() => requestDeletion(localEntry)}
+                  >
+                    {row}
+                  </QuickEntrySwipeRow>
+                ) : (
+                  row
+                );
+              })}
+            </SoftScrollView>
+
+            <QuickEntryFooterEdge hasHoliday={Boolean(holidayName)}>
+              <View testID="quick-entry-footer" style={{ flexShrink: 0 }}>
+                {deletion.pending ? (
+                  <QuickEntryDeleteConfirmation
+                    title={deletion.pending.title}
+                    busy={deletion.busy}
+                    error={deletion.error}
+                    minHeight={actionRowHeight}
+                    onLayout={(event) =>
+                      setConfirmationHeight(Math.ceil(event.nativeEvent.layout.height))
+                    }
+                    onCancel={cancelDeletion}
+                    onConfirm={() => {
+                      void deletion.confirm().then((deleted) => {
+                        if (deleted) {
+                          setSwipedEntry(null);
+                          scheduleAccessibilityFocus(findNodeHandle(dialogFocusRef.current));
+                        }
+                      });
+                    }}
+                  />
+                ) : (
+                  <View
+                    accessibilityRole="toolbar"
+                    style={{
+                      minHeight: actionRowHeight,
+                      flexDirection: "row",
+                      alignItems: "stretch",
+                    }}
+                  >
+                    {editorActions.map((action, index) => (
+                      <Pressable
+                        key={action.key}
+                        ref={!popupRows.length && index === 0 ? dialogFocusRef : undefined}
+                        accessibilityLabel={`${action.kind === "APPOINTMENT" ? "Termin" : "Dienst"} hinzufügen`}
+                        accessibilityHint={compactDate(date)}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: interactionBlocked }}
+                        disabled={interactionBlocked}
+                        onPress={() => {
+                          if (action.kind === "CUSTOM_SHIFT") {
+                            onOpenShiftPicker(date);
+                            return;
+                          }
+                          onSelectAction(action, date);
+                        }}
+                        style={({ pressed }) => ({
+                          minHeight: actionRowHeight,
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          backgroundColor: pressed ? palette.surfaceMuted : "transparent",
+                          opacity: busy ? 0.38 : 1,
+                        })}
+                      >
+                        {index > 0 ? (
+                          <View
+                            pointerEvents="none"
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              top: 8,
+                              bottom: 8,
+                              width: 1,
+                              backgroundColor: palette.separator,
+                            }}
+                          />
+                        ) : null}
+                        <Ionicons
+                          accessible={false}
+                          color={palette.textMuted}
+                          name="add"
+                          size={21}
+                        />
+                        <Text
+                          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                          style={{
+                            color: palette.textMuted,
+                            fontFamily: INTER_FONTS.regular,
+                            fontSize: TYPOGRAPHY.small.fontSize,
+                            fontWeight: "400",
+                          }}
+                        >
+                          {action.kind === "APPOINTMENT" ? "Termin" : "Dienst"}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
               </View>
-            )}
-          </View>
+            </QuickEntryFooterEdge>
+          </SoftScrollScope>
         </View>
       </Animated.View>
     </GestureHandlerRootView>
@@ -602,3 +612,13 @@ export const QuickEntryPopup = memo(function QuickEntryPopup({
     content
   );
 });
+
+function QuickEntryFooterEdge({
+  children,
+  hasHoliday,
+}: {
+  readonly children: ReactNode;
+  readonly hasHoliday: boolean;
+}) {
+  return hasHoliday ? children : <SoftScrollAnchor>{children}</SoftScrollAnchor>;
+}

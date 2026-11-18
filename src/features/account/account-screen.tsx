@@ -22,6 +22,7 @@ import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { ScreenScrollView, TabScreenHeader } from "@/ui/screen-layout";
 import { CardSeparator, RowButton, SurfaceCard } from "@/ui/design-system";
 import { PrimaryButton } from "@/ui/form-controls";
@@ -164,39 +165,47 @@ export function AccountScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
-        <TabScreenHeader
-          title="Konto"
-          surface="groupedBackground"
-          accessory={
-            <SharingIconButton label="Zurück" icon="chevron-back" onPress={() => router.back()} />
-          }
-        />
-        <ScreenScrollView surface="groupedBackground">
-          <Text style={body}>Anmelden und automatisch synchronisieren.</Text>
-          {error || cloud.initializationError ? (
-            <Text accessibilityRole="alert" style={{ ...body, color: palette.danger }}>
-              {error ?? cloud.initializationError}
-            </Text>
-          ) : null}
-          {!cloud.ready ? (
-            <Text style={body}>Wird geladen …</Text>
-          ) : !auth.isConfigured ? (
-            <Text style={body}>Dein LUNA-Konto ist gerade nicht erreichbar.</Text>
-          ) : (
-            <SignInActions
-              controller={{
-                appleAvailable: apple,
-                signIn: async (provider) => {
-                  if (provider === "apple") await auth.signInApple();
-                  else await auth.signInGoogle();
-                  await cloud.refreshAccount();
-                },
-              }}
-              run={run}
-              busy={disabled}
+        <SoftScrollScope>
+          <SoftScrollAnchor>
+            <TabScreenHeader
+              title="Konto"
+              surface="groupedBackground"
+              accessory={
+                <SharingIconButton
+                  label="Zurück"
+                  icon="chevron-back"
+                  onPress={() => router.back()}
+                />
+              }
             />
-          )}
-        </ScreenScrollView>
+          </SoftScrollAnchor>
+          <ScreenScrollView surface="groupedBackground">
+            <Text style={body}>Anmelden und automatisch synchronisieren.</Text>
+            {error || cloud.initializationError ? (
+              <Text accessibilityRole="alert" style={{ ...body, color: palette.danger }}>
+                {error ?? cloud.initializationError}
+              </Text>
+            ) : null}
+            {!cloud.ready ? (
+              <Text style={body}>Wird geladen …</Text>
+            ) : !auth.isConfigured ? (
+              <Text style={body}>Dein LUNA-Konto ist gerade nicht erreichbar.</Text>
+            ) : (
+              <SignInActions
+                controller={{
+                  appleAvailable: apple,
+                  signIn: async (provider) => {
+                    if (provider === "apple") await auth.signInApple();
+                    else await auth.signInGoogle();
+                    await cloud.refreshAccount();
+                  },
+                }}
+                run={run}
+                busy={disabled}
+              />
+            )}
+          </ScreenScrollView>
+        </SoftScrollScope>
       </View>
     );
   return (

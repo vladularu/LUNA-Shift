@@ -8,8 +8,24 @@ import { CalendarBackgroundContext } from "./calendar-background-context";
 import type { ShiftEntry } from "@/domain/types";
 import { calendarChipPalette } from "@/theme/color-contrast";
 import type { CalendarImageStrength } from "@/theme/calendar-image";
+import { CALENDAR_WIDGET_PREVIEW_METRICS, SCREEN_LAYOUT } from "@/theme/tokens";
+import { ReportScrollHeader, ReportScrollHeaderProvider } from "@/ui/report-scroll-header";
 
 const nativeModule = jest.requireActual<typeof import("react-native")>("react-native");
+const mockRegisterReportScroll = jest.fn();
+const mockReportProvider = ({ children }: React.PropsWithChildren) => children;
+let mockReportScrollEdge = false;
+jest.mock("@/ui/native-scroll-edge", () => ({
+  get nativeScrollEdge() {
+    return mockReportScrollEdge
+      ? {
+          ScrollEdgeEffectProvider: mockReportProvider,
+          ScrollEdgeEffect: jest.requireActual<typeof import("react-native")>("react-native").View,
+          useScrollEdgeEffectRef: () => mockRegisterReportScroll,
+        }
+      : null;
+  },
+}));
 
 const preferences: AppearanceValue = {
   themeId: "mint",
@@ -397,6 +413,50 @@ describe("appearance controls", () => {
     });
     expect(screen.getByTestId("appearance-calendar-preview")).toBe(preview);
     expect(preview).toBeVisible();
+  });
+  it("binds the settings to the measured report header while keeping the preview pinned", async () => {
+    mockReportScrollEdge = true;
+    mockRegisterReportScroll.mockClear();
+    try {
+      const screen = await render(
+        <ReportScrollHeaderProvider>
+          <ReportScrollHeader>
+            <ReactNative.View />
+          </ReportScrollHeader>
+          {pictureScreen()}
+        </ReportScrollHeaderProvider>,
+      );
+      expect(screen.queryByTestId("calendar-design-preview-frame")).toBeNull();
+      const overlay = screen.getByTestId("report-scroll-header-content");
+      const headerGap = SCREEN_LAYOUT.contentTopPadding;
+      const rowBottom = 114;
+      const previewHeight = CALENDAR_WIDGET_PREVIEW_METRICS.height;
+      await fireEvent(overlay, "layout", {
+        nativeEvent: { layout: { height: rowBottom + headerGap } },
+      });
+      const frame = screen.getByTestId("calendar-design-preview-frame");
+      const controls = screen.getByTestId("calendar-design-controls");
+      const preview = within(frame).getByTestId("appearance-calendar-preview");
+      expect(frame).toHaveStyle({ top: rowBottom });
+      await fireEvent(controls, "layout", { nativeEvent: { layout: { height: 740 } } });
+      expect(mockRegisterReportScroll).toHaveBeenCalledWith(expect.anything());
+      expect(ReactNative.StyleSheet.flatten(controls.props.style)?.marginTop).toBeUndefined();
+      expect(ReactNative.StyleSheet.flatten(controls.props.contentContainerStyle)).toMatchObject({
+        paddingTop: rowBottom + previewHeight + SCREEN_LAYOUT.sectionGap,
+      });
+      expect(controls.props.scrollIndicatorInsets.top).toBe(rowBottom + previewHeight);
+      expect(controls.props.contentOffset).toBeUndefined();
+
+      await fireEvent(overlay, "layout", {
+        nativeEvent: { layout: { height: rowBottom + headerGap + 18 } },
+      });
+      expect(frame).toHaveStyle({ top: rowBottom + 18 });
+      expect(within(frame).getByTestId("appearance-calendar-preview")).toBe(preview);
+      expect(screen.getByTestId("calendar-design-controls")).toBe(controls);
+      expect(controls.props.contentOffset).toBeUndefined();
+    } finally {
+      mockReportScrollEdge = false;
+    }
   });
   it("updates the real preview for each saved strength and mode without replacing its date nodes", async () => {
     const screen = await render(pictureScreen());
