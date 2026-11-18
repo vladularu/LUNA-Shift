@@ -29,7 +29,7 @@ export function ShiftSymbolPicker({
   const palette = usePalette();
   const customSelected = !isShiftSymbolId(value);
   const [customValue, setCustomValue] = useState(customSelected ? value : "D");
-  const entries = useMemo(() => [...SHIFT_SYMBOLS, { id: "custom", label: "ABC", icon: null }], []);
+  const entries = useMemo(() => [...SHIFT_SYMBOLS, { id: "custom", label: "ABC" }], []);
 
   function selectSymbol(id: string) {
     selectionFeedback();

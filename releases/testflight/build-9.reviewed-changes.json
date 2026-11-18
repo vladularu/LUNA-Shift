@@ -10225,6 +10225,24 @@
       "kind": "added",
       "sha256": "d7f5b33f6fa965ccb0fb270cfe3292115f1acf982f51eb94d4bc90953b1a1cb1",
       "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones."
+    },
+    {
+      "path": "src/theme/shift-symbols.ts",
+      "kind": "modified",
+      "sha256": "e8cbaab8534f24b9c013496add4659ea918aec4ea35954dccec8c08c85c54710",
+      "reason": "iOS Preview 56. Define original filled artwork for the existing LUNA shift symbol identifiers."
+    },
+    {
+      "path": "src/ui/shift-symbol-picker.tsx",
+      "kind": "modified",
+      "sha256": "a6a12945d047620e0da39e4fde72fb17a5abfe40870eea6aa9de06c2b46a173f",
+      "reason": "iOS Preview 56. Use the shared filled renderer for built-in symbols while keeping the custom text option."
+    },
+    {
+      "path": "src/ui/shift-symbol.tsx",
+      "kind": "modified",
+      "sha256": "916e2e6407c7fb6349583b5063da96204c72fd3e3dcfc2569eae26944982a107",
+      "reason": "iOS Preview 56. Render filled shift symbols at the requested size and foreground color in the editor and calendar."
     }
   ]
 }
