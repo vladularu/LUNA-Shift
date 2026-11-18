@@ -66,7 +66,10 @@ describe("shared brand actions", () => {
       expect(screen.getByRole("button", { name: "Speichern und schließen" })).toHaveStyle({
         backgroundColor: palette.primaryAction,
       });
-      expect(screen.getByText("Speichern")).toHaveStyle({ color: palette.onPrimaryAction });
+      const saveLabel = screen.getByText("Speichern");
+      expect(saveLabel).toHaveStyle({ color: palette.onPrimaryAction });
+      expect(saveLabel).toHaveProp("numberOfLines", 1);
+      expect(saveLabel).toHaveProp("adjustsFontSizeToFit", true);
       expect(screen.getByRole("button", { name: "Vorlage löschen" })).toHaveStyle({
         backgroundColor: palette.dangerAction,
         borderWidth: 0,

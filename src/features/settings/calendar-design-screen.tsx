@@ -18,6 +18,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { InlineNotice, RowButton } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 
 export function CalendarDesignScreen({
@@ -52,85 +53,89 @@ export function CalendarDesignScreen({
   }
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-      <View
-        testID="calendar-design-preview-frame"
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          zIndex: 1,
-          top: SCREEN_LAYOUT.contentTopPadding,
-          left: SCREEN_LAYOUT.horizontalPadding,
-          right: SCREEN_LAYOUT.horizontalPadding,
-        }}
-      >
-        <AppearanceCalendarPreview />
-      </View>
-      <ScreenScrollView
-        testID="calendar-design-controls"
-        surface="groupedBackground"
-        contentGap={SCREEN_LAYOUT.sectionGap}
-        bottomPadding={bottomPadding}
-        contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={{ paddingTop: previewBottom + SCREEN_LAYOUT.sectionGap }}
-        scrollIndicatorInsets={{ top: previewBottom }}
-        style={{ flex: 1 }}
-      >
-        {notice ? <InlineNotice message={notice} /> : null}
-        <SelectionGroup title="Aussehen" testID="appearance-settings">
-          <AppearanceModeControl
-            value={appearance.mode}
-            onChange={appearance.setMode}
-            disabled={!appearance.ready}
-          />
-        </SelectionGroup>
-        {appearance.error ? (
-          <View style={{ gap: SPACING.sm }}>
-            <InlineNotice message={appearance.error} />
-            <RowButton title="Modus erneut speichern" onPress={appearance.retry} />
-          </View>
-        ) : null}
-        <CalendarBackgroundControl />
-        <CalendarDisplayControls />
-        {display.error ? (
-          <View style={{ gap: SPACING.sm }}>
-            <InlineNotice message={display.error} />
-            <RowButton title="Kalenderoptionen erneut versuchen" onPress={display.retry} />
-          </View>
-        ) : null}
-        <View style={{ gap: SPACING.sm }}>
-          <Pressable
-            hitSlop={2}
-            accessibilityRole="button"
-            disabled={resetDisabled}
-            accessibilityState={{ disabled: resetDisabled }}
-            onPress={confirmReset}
-            style={({ pressed }) => ({
-              minHeight: CONTROL_HEIGHT.regular,
-              justifyContent: "center",
-              paddingVertical: SPACING.sm,
-              opacity: resetDisabled ? 0.5 : pressed ? 0.75 : 1,
-            })}
-          >
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}
-            >
-              Kalenderoptionen zurücksetzen
-            </Text>
-          </Pressable>
-          <Text
-            accessibilityLiveRegion="polite"
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}
-          >
-            {appearance.saving || display.saving || background.busy
-              ? "Wird gespeichert …"
-              : appearance.error || display.error || background.error
-                ? "Nicht alle Änderungen wurden gespeichert."
-                : "Änderungen werden automatisch gespeichert."}
-          </Text>
+      <SoftScrollScope>
+        <View
+          testID="calendar-design-preview-frame"
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            zIndex: 1,
+            top: SCREEN_LAYOUT.contentTopPadding,
+            left: SCREEN_LAYOUT.horizontalPadding,
+            right: SCREEN_LAYOUT.horizontalPadding,
+          }}
+        >
+          <SoftScrollAnchor existingOverlap>
+            <AppearanceCalendarPreview />
+          </SoftScrollAnchor>
         </View>
-      </ScreenScrollView>
+        <ScreenScrollView
+          testID="calendar-design-controls"
+          surface="groupedBackground"
+          contentGap={SCREEN_LAYOUT.sectionGap}
+          bottomPadding={bottomPadding}
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={{ paddingTop: previewBottom + SCREEN_LAYOUT.sectionGap }}
+          scrollIndicatorInsets={{ top: previewBottom }}
+          style={{ flex: 1 }}
+        >
+          {notice ? <InlineNotice message={notice} /> : null}
+          <SelectionGroup title="Aussehen" testID="appearance-settings">
+            <AppearanceModeControl
+              value={appearance.mode}
+              onChange={appearance.setMode}
+              disabled={!appearance.ready}
+            />
+          </SelectionGroup>
+          {appearance.error ? (
+            <View style={{ gap: SPACING.sm }}>
+              <InlineNotice message={appearance.error} />
+              <RowButton title="Modus erneut speichern" onPress={appearance.retry} />
+            </View>
+          ) : null}
+          <CalendarBackgroundControl />
+          <CalendarDisplayControls />
+          {display.error ? (
+            <View style={{ gap: SPACING.sm }}>
+              <InlineNotice message={display.error} />
+              <RowButton title="Kalenderoptionen erneut versuchen" onPress={display.retry} />
+            </View>
+          ) : null}
+          <View style={{ gap: SPACING.sm }}>
+            <Pressable
+              hitSlop={2}
+              accessibilityRole="button"
+              disabled={resetDisabled}
+              accessibilityState={{ disabled: resetDisabled }}
+              onPress={confirmReset}
+              style={({ pressed }) => ({
+                minHeight: CONTROL_HEIGHT.regular,
+                justifyContent: "center",
+                paddingVertical: SPACING.sm,
+                opacity: resetDisabled ? 0.5 : pressed ? 0.75 : 1,
+              })}
+            >
+              <Text
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}
+              >
+                Kalenderoptionen zurücksetzen
+              </Text>
+            </Pressable>
+            <Text
+              accessibilityLiveRegion="polite"
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}
+            >
+              {appearance.saving || display.saving || background.busy
+                ? "Wird gespeichert …"
+                : appearance.error || display.error || background.error
+                  ? "Nicht alle Änderungen wurden gespeichert."
+                  : "Änderungen werden automatisch gespeichert."}
+            </Text>
+          </View>
+        </ScreenScrollView>
+      </SoftScrollScope>
     </View>
   );
 }

@@ -2,7 +2,7 @@ import { Switch } from "@/ui/switch";
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { useEffect, useState, type ComponentProps } from "react";
-import { Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, View, useWindowDimensions } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useReducedMotion } from "react-native-reanimated";
 import { ANALYSIS_CARD_TITLES, type AnalysisCardId } from "@/domain/analysis-view";
@@ -13,6 +13,7 @@ import { usePalette } from "@/theme/palette";
 import { SHADCN_METRICS, SPACING, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { SurfaceCard } from "@/ui/design-system";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { selectionFeedback } from "@/ui/haptics";
 import { useAnalysisView } from "./analysis-view-preferences";
@@ -173,117 +174,122 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                 edges={["top", "left", "right"]}
                 style={{ flex: 1, backgroundColor: p.groupedBackground }}
               >
-                <View
-                  style={{
-                    padding: SPACING.lg,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: SPACING.md,
-                  }}
-                >
-                  <Text
-                    accessibilityRole="header"
-                    style={{ flex: 1, color: p.text, ...TYPOGRAPHY.screenTitle }}
-                  >
-                    Ansicht anpassen
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={sorting ? "Auswahl anzeigen" : "Reihenfolge ändern"}
-                    accessibilityState={{ selected: sorting }}
-                    onPress={() => {
-                      selectionFeedback();
-                      setSorting((value) => !value);
-                    }}
-                    testID="analysis-sort-button"
-                    style={({ pressed }) => ({
-                      width: 48,
-                      height: 48,
-                      borderRadius: RADII.pill,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: sorting ? p.sortAction : p.surface,
-                      borderWidth: sorting ? 0 : 1,
-                      borderColor: p.separator,
-                      opacity: pressed ? 0.65 : 1,
-                    })}
-                  >
-                    <Ionicons
-                      accessibilityElementsHidden
-                      name="swap-vertical"
-                      size={23}
-                      color={sorting ? p.onSortAction : p.text}
-                    />
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Ansicht schließen"
-                    onPress={() => setOpen(false)}
-                    style={({ pressed }) => ({
-                      minHeight: 44,
-                      minWidth: 44,
-                      borderRadius: RADII.pill,
-                      backgroundColor: p.surfaceMuted,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: pressed ? 0.6 : 1,
-                    })}
-                  >
-                    <Ionicons name="close" size={22} color={p.text} />
-                  </Pressable>
-                </View>
-                <ScrollView
-                  ref={reorderScroll.scrollRef}
-                  {...reorderScroll.scrollProps}
-                  contentContainerStyle={{
-                    padding: SPACING.lg,
-                    paddingBottom: bottomPadding,
-                    gap: SPACING.md,
-                  }}
-                >
-                  {sorting ? (
-                    <ReorderableList
-                      testID="analysis-sort"
-                      scroll={reorderScroll.controller}
-                      disabled={state.saving}
-                      saveFailed={state.error !== null}
-                      items={state.preferences.order.map((id) => ({
-                        id,
-                        title: state.preferences.hidden.includes(id)
-                          ? `${ANALYSIS_CARD_TITLES[id]}, ausgeblendet`
-                          : ANALYSIS_CARD_TITLES[id],
-                        content: renderPreferenceRow(id),
-                      }))}
-                      onMove={(id, to) =>
-                        state.update((current) => ({
-                          ...current,
-                          order: moveListItem(
-                            current.order,
-                            current.order.indexOf(id as AnalysisCardId),
-                            to,
-                          ),
-                        }))
-                      }
-                    />
-                  ) : (
-                    <SurfaceCard testID="analysis-settings-card">
-                      {state.preferences.order.map(renderPreferenceRow)}
-                    </SurfaceCard>
-                  )}
-                  {error}
-                  <Text
-                    accessibilityElementsHidden={!showSaving}
-                    importantForAccessibility={showSaving ? "auto" : "no-hide-descendants"}
-                    accessibilityLiveRegion="polite"
-                    style={{
-                      color: p.textMuted,
-                      ...TYPOGRAPHY.caption,
-                      opacity: showSaving ? 1 : 0,
+                <SoftScrollScope>
+                  <SoftScrollAnchor>
+                    <View
+                      style={{
+                        padding: SPACING.lg,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: SPACING.md,
+                      }}
+                    >
+                      <Text
+                        accessibilityRole="header"
+                        style={{ flex: 1, color: p.text, ...TYPOGRAPHY.screenTitle }}
+                      >
+                        Ansicht anpassen
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={sorting ? "Auswahl anzeigen" : "Reihenfolge ändern"}
+                        accessibilityState={{ selected: sorting }}
+                        onPress={() => {
+                          selectionFeedback();
+                          setSorting((value) => !value);
+                        }}
+                        testID="analysis-sort-button"
+                        style={({ pressed }) => ({
+                          width: 48,
+                          height: 48,
+                          borderRadius: RADII.pill,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: sorting ? p.sortAction : p.surface,
+                          borderWidth: sorting ? 0 : 1,
+                          borderColor: p.separator,
+                          opacity: pressed ? 0.65 : 1,
+                        })}
+                      >
+                        <Ionicons
+                          accessibilityElementsHidden
+                          name="swap-vertical"
+                          size={23}
+                          color={sorting ? p.onSortAction : p.text}
+                        />
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Ansicht schließen"
+                        onPress={() => setOpen(false)}
+                        style={({ pressed }) => ({
+                          minHeight: 44,
+                          minWidth: 44,
+                          borderRadius: RADII.pill,
+                          backgroundColor: p.surfaceMuted,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: pressed ? 0.6 : 1,
+                        })}
+                      >
+                        <Ionicons name="close" size={22} color={p.text} />
+                      </Pressable>
+                    </View>
+                  </SoftScrollAnchor>
+                  <SoftScrollView
+                    testID="analysis-settings-scroll"
+                    ref={reorderScroll.scrollRef}
+                    {...reorderScroll.scrollProps}
+                    contentContainerStyle={{
+                      padding: SPACING.lg,
+                      paddingBottom: bottomPadding,
+                      gap: SPACING.md,
                     }}
                   >
-                    Wird gespeichert …
-                  </Text>
-                </ScrollView>
+                    {sorting ? (
+                      <ReorderableList
+                        testID="analysis-sort"
+                        scroll={reorderScroll.controller}
+                        disabled={state.saving}
+                        saveFailed={state.error !== null}
+                        items={state.preferences.order.map((id) => ({
+                          id,
+                          title: state.preferences.hidden.includes(id)
+                            ? `${ANALYSIS_CARD_TITLES[id]}, ausgeblendet`
+                            : ANALYSIS_CARD_TITLES[id],
+                          content: renderPreferenceRow(id),
+                        }))}
+                        onMove={(id, to) =>
+                          state.update((current) => ({
+                            ...current,
+                            order: moveListItem(
+                              current.order,
+                              current.order.indexOf(id as AnalysisCardId),
+                              to,
+                            ),
+                          }))
+                        }
+                      />
+                    ) : (
+                      <SurfaceCard testID="analysis-settings-card">
+                        {state.preferences.order.map(renderPreferenceRow)}
+                      </SurfaceCard>
+                    )}
+                    {error}
+                    <Text
+                      accessibilityElementsHidden={!showSaving}
+                      importantForAccessibility={showSaving ? "auto" : "no-hide-descendants"}
+                      accessibilityLiveRegion="polite"
+                      style={{
+                        color: p.textMuted,
+                        ...TYPOGRAPHY.caption,
+                        opacity: showSaving ? 1 : 0,
+                      }}
+                    >
+                      Wird gespeichert …
+                    </Text>
+                  </SoftScrollView>
+                </SoftScrollScope>
               </SafeAreaView>
             )}
           </BackFooterLayout>

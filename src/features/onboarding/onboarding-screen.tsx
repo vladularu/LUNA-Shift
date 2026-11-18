@@ -1,3 +1,4 @@
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { Text, TextInput } from "@/ui/text";
 import { useOnboardingPalette } from "@/theme/onboarding";
 import { CONTROL_HEIGHT, SPACING } from "@/theme/tokens";
@@ -10,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+  type ScrollView,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -299,229 +300,238 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: p.canvas }]}>
       <KeyboardAvoidingView style={s.safe} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={s.progressHeader}>
-          <Pressable
-            accessibilityLabel="Zurück"
-            accessibilityRole="button"
-            disabled={saving || (step === STEP_ORDER[0] && !editingSummary)}
-            onPress={back}
-            style={[
-              s.back,
-              { opacity: step === STEP_ORDER[0] && !editingSummary ? 0 : saving ? 0.5 : 1 },
-            ]}
-          >
-            <Text style={[s.label, { color: p.text }]}>‹</Text>
-          </Pressable>
-          <View style={s.progressRight}>
-            {testMode ? (
+        <SoftScrollScope>
+          <SoftScrollAnchor>
+            <View style={s.progressHeader}>
               <Pressable
-                accessibilityLabel="Testmodus schließen"
+                accessibilityLabel="Zurück"
                 accessibilityRole="button"
-                disabled={saving}
-                onPress={() => void finish()}
-                style={s.back}
+                disabled={saving || (step === STEP_ORDER[0] && !editingSummary)}
+                onPress={back}
+                style={[
+                  s.back,
+                  { opacity: step === STEP_ORDER[0] && !editingSummary ? 0 : saving ? 0.5 : 1 },
+                ]}
               >
-                <Text style={[s.caption, { color: p.muted }]} testID="onboarding-preview-hint">
-                  Schließen
-                </Text>
+                <Text style={[s.label, { color: p.text }]}>‹</Text>
               </Pressable>
-            ) : null}
-            <View
-              accessible
-              accessibilityLabel={`Schritt ${displayStep} von ${STEP_ORDER.length}`}
-              accessibilityRole="progressbar"
-              accessibilityValue={{ min: 1, max: STEP_ORDER.length, now: displayStep }}
-              style={s.progressDots}
-            >
-              <Text style={[s.caption, { color: p.text }]}>
-                {displayStep} / {STEP_ORDER.length}
-              </Text>
-            </View>
-            <Text style={[s.caption, { color: p.text, fontWeight: "600" }]}>LUNA Shift</Text>
-          </View>
-        </View>
-        <View accessibilityElementsHidden style={s.track}>
-          {STEP_ORDER.map((value, index) => (
-            <View
-              key={value}
-              style={[s.segment, { backgroundColor: index < displayStep ? p.accent : p.control }]}
-            />
-          ))}
-        </View>
-        <ScrollView
-          testID="onboarding-scroll-content"
-          style={s.scrollViewport}
-          scrollEnabled={!adjustingPercentage}
-          ref={scrollRef}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-          contentContainerStyle={s.scroll}
-        >
-          <View pointerEvents={saving ? "none" : "auto"}>
-            <OnboardingReveal reduced={reduced} appearance={step} style={s.content}>
-              {step === STEP_ORDER[0] ? <OnboardingBrand reduced={reduced} /> : null}
-              <View style={s.titleGroup}>
-                {step === 3 && salaryView !== "choice" ? (
+              <View style={s.progressRight}>
+                {testMode ? (
                   <Pressable
+                    accessibilityLabel="Testmodus schließen"
                     accessibilityRole="button"
-                    accessibilityLabel="Gehaltsgrundlage"
-                    onPress={() => moveSalary("choice")}
+                    disabled={saving}
+                    onPress={() => void finish()}
                     style={s.back}
                   >
-                    <Text style={[s.caption, { color: p.muted }]}>‹ Gehaltsgrundlage</Text>
+                    <Text style={[s.caption, { color: p.muted }]} testID="onboarding-preview-hint">
+                      Schließen
+                    </Text>
                   </Pressable>
                 ) : null}
-                {step === 5 ? (
-                  <View
-                    accessibilityElementsHidden
-                    style={[s.complete, { backgroundColor: p.highlight }]}
-                  >
-                    <OnboardingCheck color={p.onHighlight} size={24} />
-                  </View>
-                ) : null}
-                <Text accessibilityRole="header" style={[s.title, { color: p.text }]}>
-                  {titles[step]}
-                </Text>
-                {copies[step] ? (
-                  <Text style={[s.body, { color: p.muted }]}>{copies[step]}</Text>
-                ) : null}
-              </View>
-              {step === 3 ? (
-                <OnboardingSalary
-                  view={salaryView}
-                  reduced={reduced}
-                  selection={tariffSelection}
-                  errors={errors}
-                  federalState={federalState}
-                  gross={gross}
-                  grossRef={grossRef}
-                  onGrossChange={(value) => {
-                    setGross(value);
-                    clearError("gross");
-                  }}
-                  onSelectionChange={(value) => {
-                    setTariffSelection(value);
-                    setErrors({});
-                  }}
-                  onModeChange={(mode) => {
-                    setSalaryMode(mode);
-                    moveSalary(
-                      mode === "MANUAL" ? "manual" : tariffSelection.mode ? "details" : "tariffs",
-                    );
-                  }}
-                  onTariffChange={(mode) => {
-                    if (tariffSelection.mode !== mode)
-                      setTariffSelection({ ...EMPTY_TARIFF_SELECTION, mode });
-                    moveSalary("details");
-                  }}
-                  onTariffPicker={() => moveSalary("tariffs")}
-                />
-              ) : null}
-              {step === 4 ? (
-                <View style={s.fields}>
-                  <View style={s.list}>
-                    <OnboardingWorkTime
-                      hours={weeklyHours}
-                      basis={percentageBasis}
-                      onBasisChange={setPercentageBasis}
-                      onHoursChange={(value) => {
-                        setWeeklyHours(value);
-                        clearError("hours");
-                      }}
-                      onInteractionChange={setAdjustingPercentage}
-                      inputRef={hoursRef}
-                      error={errors.hours}
-                    />
-                  </View>
-                  <SelectField
-                    label="Bundesland deines Arbeitsorts"
-                    icon="map-marker-outline"
-                    value={federalState}
-                    options={FEDERAL_STATES.map((value) => ({
-                      value,
-                      label: FEDERAL_STATE_LABELS[value],
-                    }))}
-                    error={errors.state}
-                    onChange={(value) => {
-                      setFederalState(value);
-                      setHolidayRegion(defaultHolidayRegion(value));
-                      setErrors((previous) => ({
-                        ...previous,
-                        state: undefined,
-                        region: undefined,
-                      }));
-                    }}
-                  />
-                  {federalState && holidayRegionsForState(federalState).length > 1 ? (
-                    <SelectField
-                      label="Regionale Feiertage am Arbeitsort"
-                      value={holidayRegion === "UNKNOWN" ? null : holidayRegion}
-                      options={holidayRegionsForState(federalState)
-                        .filter((value) => value !== "UNKNOWN")
-                        .map((value) => ({ value, label: HOLIDAY_REGION_LABELS[value] }))}
-                      error={errors.region}
-                      onChange={(value) => {
-                        setHolidayRegion(value);
-                        clearError("region");
-                      }}
-                    />
-                  ) : null}
-                </View>
-              ) : null}
-              {step === 5 ? (
-                <View>
-                  <View style={[s.summaryCard, { backgroundColor: p.canvas }]}>
-                    {[
-                      {
-                        label: "Arbeitszeit",
-                        value: `${weeklyHours} h / Woche`,
-                        target: 4,
-                        icon: "clock-outline",
-                      },
-                      {
-                        label: "Arbeitsort",
-                        icon: "map-marker-outline",
-                        value: federalState
-                          ? `${FEDERAL_STATE_LABELS[federalState]}${holidayRegionsForState(federalState).length > 1 ? ` · ${HOLIDAY_REGION_LABELS[holidayRegion]}` : ""}`
-                          : "",
-                        target: 4,
-                      },
-                      { label: "Gehalt", value: salaryLabel, target: 3, icon: "database" },
-                    ].map((row) => (
-                      <Pressable
-                        key={row.label}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${row.label} bearbeiten`}
-                        accessibilityHint={row.value}
-                        disabled={saving}
-                        onPress={() => edit(row.target as Step)}
-                        style={[
-                          s.summaryRow,
-                          {
-                            borderBottomColor: p.border,
-                            borderBottomWidth: row.label === "Gehalt" ? 0 : 1,
-                          },
-                        ]}
-                      >
-                        <BlueprintIcon name={row.icon as BlueprintIconName} />
-                        <View style={s.summaryCopy}>
-                          <Text style={[s.caption, { color: p.muted }]}>{row.label}</Text>
-                          <Text style={[s.body, { color: p.text }]}>{row.value}</Text>
-                        </View>
-                        <Text accessibilityElementsHidden style={[s.label, { color: p.muted }]}>
-                          ↗
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Text style={[s.caption, s.centered, { color: p.muted, marginTop: SPACING.xl }]}>
-                    Ohne Konto. Auf deinem Gerät.
+                <View
+                  accessible
+                  accessibilityLabel={`Schritt ${displayStep} von ${STEP_ORDER.length}`}
+                  accessibilityRole="progressbar"
+                  accessibilityValue={{ min: 1, max: STEP_ORDER.length, now: displayStep }}
+                  style={s.progressDots}
+                >
+                  <Text style={[s.caption, { color: p.text }]}>
+                    {displayStep} / {STEP_ORDER.length}
                   </Text>
                 </View>
-              ) : null}
-            </OnboardingReveal>
-          </View>
-        </ScrollView>
+                <Text style={[s.caption, { color: p.text, fontWeight: "600" }]}>LUNA Shift</Text>
+              </View>
+            </View>
+            <View accessibilityElementsHidden style={s.track}>
+              {STEP_ORDER.map((value, index) => (
+                <View
+                  key={value}
+                  style={[
+                    s.segment,
+                    { backgroundColor: index < displayStep ? p.accent : p.control },
+                  ]}
+                />
+              ))}
+            </View>
+          </SoftScrollAnchor>
+          <SoftScrollView
+            testID="onboarding-scroll-content"
+            style={s.scrollViewport}
+            scrollEnabled={!adjustingPercentage}
+            ref={scrollRef}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+            contentContainerStyle={s.scroll}
+          >
+            <View pointerEvents={saving ? "none" : "auto"}>
+              <OnboardingReveal reduced={reduced} appearance={step} style={s.content}>
+                {step === STEP_ORDER[0] ? <OnboardingBrand reduced={reduced} /> : null}
+                <View style={s.titleGroup}>
+                  {step === 3 && salaryView !== "choice" ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Gehaltsgrundlage"
+                      onPress={() => moveSalary("choice")}
+                      style={s.back}
+                    >
+                      <Text style={[s.caption, { color: p.muted }]}>‹ Gehaltsgrundlage</Text>
+                    </Pressable>
+                  ) : null}
+                  {step === 5 ? (
+                    <View
+                      accessibilityElementsHidden
+                      style={[s.complete, { backgroundColor: p.highlight }]}
+                    >
+                      <OnboardingCheck color={p.onHighlight} size={24} />
+                    </View>
+                  ) : null}
+                  <Text accessibilityRole="header" style={[s.title, { color: p.text }]}>
+                    {titles[step]}
+                  </Text>
+                  {copies[step] ? (
+                    <Text style={[s.body, { color: p.muted }]}>{copies[step]}</Text>
+                  ) : null}
+                </View>
+                {step === 3 ? (
+                  <OnboardingSalary
+                    view={salaryView}
+                    reduced={reduced}
+                    selection={tariffSelection}
+                    errors={errors}
+                    federalState={federalState}
+                    gross={gross}
+                    grossRef={grossRef}
+                    onGrossChange={(value) => {
+                      setGross(value);
+                      clearError("gross");
+                    }}
+                    onSelectionChange={(value) => {
+                      setTariffSelection(value);
+                      setErrors({});
+                    }}
+                    onModeChange={(mode) => {
+                      setSalaryMode(mode);
+                      moveSalary(
+                        mode === "MANUAL" ? "manual" : tariffSelection.mode ? "details" : "tariffs",
+                      );
+                    }}
+                    onTariffChange={(mode) => {
+                      if (tariffSelection.mode !== mode)
+                        setTariffSelection({ ...EMPTY_TARIFF_SELECTION, mode });
+                      moveSalary("details");
+                    }}
+                    onTariffPicker={() => moveSalary("tariffs")}
+                  />
+                ) : null}
+                {step === 4 ? (
+                  <View style={s.fields}>
+                    <View style={s.list}>
+                      <OnboardingWorkTime
+                        hours={weeklyHours}
+                        basis={percentageBasis}
+                        onBasisChange={setPercentageBasis}
+                        onHoursChange={(value) => {
+                          setWeeklyHours(value);
+                          clearError("hours");
+                        }}
+                        onInteractionChange={setAdjustingPercentage}
+                        inputRef={hoursRef}
+                        error={errors.hours}
+                      />
+                    </View>
+                    <SelectField
+                      label="Bundesland deines Arbeitsorts"
+                      icon="map-marker-outline"
+                      value={federalState}
+                      options={FEDERAL_STATES.map((value) => ({
+                        value,
+                        label: FEDERAL_STATE_LABELS[value],
+                      }))}
+                      error={errors.state}
+                      onChange={(value) => {
+                        setFederalState(value);
+                        setHolidayRegion(defaultHolidayRegion(value));
+                        setErrors((previous) => ({
+                          ...previous,
+                          state: undefined,
+                          region: undefined,
+                        }));
+                      }}
+                    />
+                    {federalState && holidayRegionsForState(federalState).length > 1 ? (
+                      <SelectField
+                        label="Regionale Feiertage am Arbeitsort"
+                        value={holidayRegion === "UNKNOWN" ? null : holidayRegion}
+                        options={holidayRegionsForState(federalState)
+                          .filter((value) => value !== "UNKNOWN")
+                          .map((value) => ({ value, label: HOLIDAY_REGION_LABELS[value] }))}
+                        error={errors.region}
+                        onChange={(value) => {
+                          setHolidayRegion(value);
+                          clearError("region");
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                ) : null}
+                {step === 5 ? (
+                  <View>
+                    <View style={[s.summaryCard, { backgroundColor: p.canvas }]}>
+                      {[
+                        {
+                          label: "Arbeitszeit",
+                          value: `${weeklyHours} h / Woche`,
+                          target: 4,
+                          icon: "clock-outline",
+                        },
+                        {
+                          label: "Arbeitsort",
+                          icon: "map-marker-outline",
+                          value: federalState
+                            ? `${FEDERAL_STATE_LABELS[federalState]}${holidayRegionsForState(federalState).length > 1 ? ` · ${HOLIDAY_REGION_LABELS[holidayRegion]}` : ""}`
+                            : "",
+                          target: 4,
+                        },
+                        { label: "Gehalt", value: salaryLabel, target: 3, icon: "database" },
+                      ].map((row) => (
+                        <Pressable
+                          key={row.label}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${row.label} bearbeiten`}
+                          accessibilityHint={row.value}
+                          disabled={saving}
+                          onPress={() => edit(row.target as Step)}
+                          style={[
+                            s.summaryRow,
+                            {
+                              borderBottomColor: p.border,
+                              borderBottomWidth: row.label === "Gehalt" ? 0 : 1,
+                            },
+                          ]}
+                        >
+                          <BlueprintIcon name={row.icon as BlueprintIconName} />
+                          <View style={s.summaryCopy}>
+                            <Text style={[s.caption, { color: p.muted }]}>{row.label}</Text>
+                            <Text style={[s.body, { color: p.text }]}>{row.value}</Text>
+                          </View>
+                          <Text accessibilityElementsHidden style={[s.label, { color: p.muted }]}>
+                            ↗
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                    <Text
+                      style={[s.caption, s.centered, { color: p.muted, marginTop: SPACING.xl }]}
+                    >
+                      Ohne Konto. Auf deinem Gerät.
+                    </Text>
+                  </View>
+                ) : null}
+              </OnboardingReveal>
+            </View>
+          </SoftScrollView>
+        </SoftScrollScope>
         <View style={[s.footer, { backgroundColor: p.canvas }]} testID="onboarding-fixed-footer">
           <FieldError message={saveError} />
           {step !== 3 || salaryView !== "tariffs" ? (

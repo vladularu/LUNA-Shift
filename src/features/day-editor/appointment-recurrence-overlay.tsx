@@ -18,6 +18,7 @@ import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-nati
 import type { RecurrenceFrequency, RecurrenceRule } from "@/domain/types";
 import { recurrenceLabel } from "@/features/day-editor/entry-options";
 import { MOTION } from "@/theme/motion";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 
@@ -326,44 +327,48 @@ export function AppointmentRecurrenceOverlay({
         ]}
         testID="appointment-recurrence-sheet"
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          accessibilityRole="radiogroup"
-          style={[styles.presetCard, { backgroundColor: palette.surface }]}
-          testID="appointment-recurrence-preset-card"
-        >
-          {PRESETS.map((preset) => (
-            <PresetRow
-              key={preset.label}
-              label={preset.label}
-              onPress={() => {
-                onChange(preset.value);
-                onClose();
-              }}
-              selected={recurrencesEqual(value, preset.value)}
-            />
-          ))}
-        </ScrollView>
+        <SoftScrollScope edge="bottom">
+          <SoftScrollView
+            keyboardShouldPersistTaps="handled"
+            accessibilityRole="radiogroup"
+            style={[styles.presetCard, { backgroundColor: palette.surface }]}
+            testID="appointment-recurrence-preset-card"
+          >
+            {PRESETS.map((preset) => (
+              <PresetRow
+                key={preset.label}
+                label={preset.label}
+                onPress={() => {
+                  onChange(preset.value);
+                  onClose();
+                }}
+                selected={recurrencesEqual(value, preset.value)}
+              />
+            ))}
+          </SoftScrollView>
 
-        <View
-          style={{
-            borderRadius: RADII.control,
-            borderCurve: CORNER_CURVE,
-            overflow: "hidden",
-            backgroundColor: palette.surface,
-          }}
-        >
-          <SelectionRow
-            label="Benutzerdefiniert"
-            selected={value !== null && !isPreset(value)}
-            navigation
-            testID="appointment-recurrence-custom-row"
-            onPress={() => {
-              setDraft(value ?? DEFAULT_RECURRENCE);
-              setView("CUSTOM");
-            }}
-          />
-        </View>
+          <SoftScrollAnchor>
+            <View
+              style={{
+                borderRadius: RADII.control,
+                borderCurve: CORNER_CURVE,
+                overflow: "hidden",
+                backgroundColor: palette.surface,
+              }}
+            >
+              <SelectionRow
+                label="Benutzerdefiniert"
+                selected={value !== null && !isPreset(value)}
+                navigation
+                testID="appointment-recurrence-custom-row"
+                onPress={() => {
+                  setDraft(value ?? DEFAULT_RECURRENCE);
+                  setView("CUSTOM");
+                }}
+              />
+            </View>
+          </SoftScrollAnchor>
+        </SoftScrollScope>
       </Animated.View>
     </View>
   );

@@ -12,6 +12,8 @@ const COMPACT_SCALE_ALLOWLIST = new Set([
 ]);
 
 const TEXT_SHRINK_ALLOWLIST = new Set([
+  // Compact header save action; its full action label stays available to VoiceOver.
+  "ui/form-layout.tsx",
   // Fixed widget-style sample cells expose full titles in accessible day labels.
   "features/settings/appearance-calendar-preview.tsx",
   // Explicit horizontal Hell/Dunkel/System layout; full option labels remain accessible.
@@ -23,6 +25,8 @@ const TEXT_SHRINK_ALLOWLIST = new Set([
 ]);
 
 const SINGLE_LINE_ALLOWLIST = new Set([
+  // Compact header save action; its full action label stays available to VoiceOver.
+  "ui/form-layout.tsx",
   // Horizontal icon-and-label mode selector with complete accessible option names.
   "features/settings/appearance-mode-control.tsx",
   // Fixed widget-style sample cells expose full titles in accessible day labels.

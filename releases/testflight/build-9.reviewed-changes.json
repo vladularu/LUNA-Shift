@@ -5,8 +5,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "c70754c9b6de81791b2390fb4ef0f8fab1ffa1e03e43e8101ceeb014ebed3176",
-      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. User-requested native Schichtzulage parity correction 2026-11-11: Register the check-issue native formSheet and share exactly the existing Schichtzulage presentation options; retain all existing providers and route behavior. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User-authorized iOS Preview FPS diagnosis 2026-11-17: add one opt-in navigation-wide UI-cadence/JS-lag probe, hideable overlay and bounded numeric export with a 60-FPS comparison target. Preserve calculations, data, native configuration, dependencies and animations. This neither caps refresh nor measures GPU presentation. TestFlight publication and iPhone acceptance remain separate. User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending."
+      "sha256": "39134575d93a7d3902229a7fadc0611aeaabb4123c83043202a758ef0c7c828d",
+      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. User-requested native Schichtzulage parity correction 2026-11-11: Register the check-issue native formSheet and share exactly the existing Schichtzulage presentation options; retain all existing providers and route behavior. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User-authorized iOS Preview FPS diagnosis 2026-11-17: add one opt-in navigation-wide UI-cadence/JS-lag probe, hideable overlay and bounded numeric export with a 60-FPS comparison target. Preserve calculations, data, native configuration, dependencies and animations. This neither caps refresh nor measures GPU presentation. TestFlight publication and iPhone acceptance remain separate. User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "app/check-issue.tsx",
@@ -39,15 +39,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/android/build.gradle",
-      "kind": "added",
-      "sha256": "6dc36b46860956280a38b00ac12aaebbe6dec80916c52ad3bb1553e21b2782fa",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/android/CMakeLists.txt",
       "kind": "added",
       "sha256": "c43c64189e9ee9eac62bed6f523a849ade1df241242f7161831ac8b7a40d0955",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/android/build.gradle",
+      "kind": "added",
+      "sha256": "6dc36b46860956280a38b00ac12aaebbe6dec80916c52ad3bb1553e21b2782fa",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -1935,6 +1935,24 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/Cargo.lock",
+      "kind": "added",
+      "sha256": "22cd551f26a31e4b60276f36dee38ff88f5181494fc1d0ca0c85a3e3f389107e",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/Cargo.toml",
+      "kind": "added",
+      "sha256": "8d29d85c3f1ab4a35b4af5dedc6e99b8ad211b2ccd5c83aea9ae8b6f8028ee54",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/build.rs",
+      "kind": "added",
+      "sha256": "d06c0e3b2497aa2a2e403a969608bf97719a6332811dd5f2694e7eb95c07202f",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/build_support/environment.rs",
       "kind": "added",
       "sha256": "9d32ba1241a15df5190e1e25e8e377c7601cd2402ec947862b27eeb92a265a06",
@@ -1950,24 +1968,6 @@
       "path": "modules/luna-engine/rust/build_support/sources.rs",
       "kind": "added",
       "sha256": "5dbac779415fca6a4ec501665e6f8ed646878affa990aabddfb190433487c806",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/build.rs",
-      "kind": "added",
-      "sha256": "d06c0e3b2497aa2a2e403a969608bf97719a6332811dd5f2694e7eb95c07202f",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/Cargo.lock",
-      "kind": "added",
-      "sha256": "22cd551f26a31e4b60276f36dee38ff88f5181494fc1d0ca0c85a3e3f389107e",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/Cargo.toml",
-      "kind": "added",
-      "sha256": "8d29d85c3f1ab4a35b4af5dedc6e99b8ad211b2ccd5c83aea9ae8b6f8028ee54",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -2463,15 +2463,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/compliance/presentation/tariff_evidence.rs",
-      "kind": "added",
-      "sha256": "0f811a79dde0c720121234630765dc01f4b7cda810881701be961672689cb644",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/compliance/presentation/tariff.rs",
       "kind": "added",
       "sha256": "d8df17532fdccd1cf0a57f967f80108a2884c6a7a8b7b9b3c812e7cdc547c7e3",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/compliance/presentation/tariff_evidence.rs",
+      "kind": "added",
+      "sha256": "0f811a79dde0c720121234630765dc01f4b7cda810881701be961672689cb644",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -2877,15 +2877,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/input/calendar_rows.rs",
-      "kind": "added",
-      "sha256": "e27082e971358b2dbad5bc9f76f82adf8d09b416c4a04f6e0bfd19c1eb759c37",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/input/calendar.rs",
       "kind": "added",
       "sha256": "20f1e4cfd0ee4735d9a557fa8a0b4578c8f9e8bba3ba0a510b492d6d102fc63e",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/input/calendar_rows.rs",
+      "kind": "added",
+      "sha256": "e27082e971358b2dbad5bc9f76f82adf8d09b416c4a04f6e0bfd19c1eb759c37",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -2985,15 +2985,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/input/net_form_command.rs",
-      "kind": "added",
-      "sha256": "b06c971f960363eead843958e9306c0119ce7e92cec46d8faa88e4fcc52123de",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/input/net_form.rs",
       "kind": "added",
       "sha256": "3bca54be50c36c9240cc5d622e3d9272b027be570846b7f030c9831acc99629f",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/input/net_form_command.rs",
+      "kind": "added",
+      "sha256": "b06c971f960363eead843958e9306c0119ce7e92cec46d8faa88e4fcc52123de",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3003,21 +3003,27 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/input/payroll_form_command.rs",
-      "kind": "added",
-      "sha256": "d73b5166ce4d2b2aeef1d64352205188d5599c783db72eeabc98434d9a2f2d97",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/input/payroll_form.rs",
       "kind": "added",
       "sha256": "d15982692ca9d5dfd753293d64b03092f3c1994a1749ed7ecefb0b12d0b53fa4",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/input/payroll_form_command.rs",
+      "kind": "added",
+      "sha256": "d73b5166ce4d2b2aeef1d64352205188d5599c783db72eeabc98434d9a2f2d97",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/input/personal_context.rs",
       "kind": "added",
       "sha256": "7c58fbdb1aa3b02de26789cc7481c355af562e00dafa6599bdd44a177d3fc212",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/input/profile.rs",
+      "kind": "added",
+      "sha256": "df835bf8fb65e529640851da6fba3c13985d608e3684e1ba5e53cd1f712af4d4",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3093,12 +3099,6 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/input/profile_form_command.rs",
-      "kind": "added",
-      "sha256": "91d3c7431727ddfffac36f93091678a70fc04a4e3a54af53a4e8a2d0735c05fb",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/input/profile_form/clock.rs",
       "kind": "added",
       "sha256": "db46a1376ff4f5c0117d22a745b43497613869f493590fcd8684791b6a03fbf0",
@@ -3120,6 +3120,12 @@
       "path": "modules/luna-engine/rust/src/input/profile_form/settings.rs",
       "kind": "added",
       "sha256": "84ccedc5e98d744771495713ad46854c3c96e3062b9df5dfac5d3392a90bd33e",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/input/profile_form_command.rs",
+      "kind": "added",
+      "sha256": "91d3c7431727ddfffac36f93091678a70fc04a4e3a54af53a4e8a2d0735c05fb",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3153,6 +3159,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/input/profile_write/sql.rs",
+      "kind": "added",
+      "sha256": "ff50c52f549b52a853f3209d78dd799c0045654ef94a364af262c4f602b0e154",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/input/profile_write/sql_history.rs",
       "kind": "added",
       "sha256": "66a67b3191fb0bba7cf2c051d1fd9ab45942dd73716c576755b20006e4094eb8",
@@ -3162,18 +3174,6 @@
       "path": "modules/luna-engine/rust/src/input/profile_write/sql_state.rs",
       "kind": "added",
       "sha256": "e84c508e6368c6b17c64ac3a82c08caa8b62b0658c0339bf4103e703b17ecede",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/input/profile_write/sql.rs",
-      "kind": "added",
-      "sha256": "ff50c52f549b52a853f3209d78dd799c0045654ef94a364af262c4f602b0e154",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/input/profile.rs",
-      "kind": "added",
-      "sha256": "df835bf8fb65e529640851da6fba3c13985d608e3684e1ba5e53cd1f712af4d4",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3213,6 +3213,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/input/special_duty.rs",
+      "kind": "added",
+      "sha256": "e2f83bb27f1c1f1d9c9ff0a17b108c301df6fd95ec47cda32c175cbdac92084f",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/input/special_duty_clock.rs",
       "kind": "added",
       "sha256": "cb93713e0c564bb1f3a5b87174a3f7d848043248e26abe4c4d6df51deefef1f9",
@@ -3240,12 +3246,6 @@
       "path": "modules/luna-engine/rust/src/input/special_duty_inline.rs",
       "kind": "added",
       "sha256": "f27f073bd7d977534d1eb92f781cca5876c42744322bcde5c9712436244400a2",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/input/special_duty.rs",
-      "kind": "added",
-      "sha256": "e2f83bb27f1c1f1d9c9ff0a17b108c301df6fd95ec47cda32c175cbdac92084f",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3417,6 +3417,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/net/provider.rs",
+      "kind": "added",
+      "sha256": "14a962f4bf57c8761e8e9a5a7f8622063bfb7529257bb599ac60a0a6464559b4",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/net/provider_reuse.rs",
       "kind": "added",
       "sha256": "c7c2451bd937990424353d28421845599d4f0a1dbcefdc56f2da91eb1adb5890",
@@ -3426,12 +3432,6 @@
       "path": "modules/luna-engine/rust/src/net/provider_tests.rs",
       "kind": "added",
       "sha256": "f8cefefb4a84c2036387c3fae934774685d0c4c83734fe989d3b7e1b52a98bf1",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/net/provider.rs",
-      "kind": "added",
-      "sha256": "14a962f4bf57c8761e8e9a5a7f8622063bfb7529257bb599ac60a0a6464559b4",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3519,15 +3519,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/pay/legacy_interval.rs",
-      "kind": "added",
-      "sha256": "590070b000e53913064dfad8d7cdbff720828e1e2d23e94fe5be020b63f72d47",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/pay/legacy.rs",
       "kind": "added",
       "sha256": "be334907627949e239dacf53c97a373f1e0ac7a3cbfe377ab6445f74d3ed2ac0",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/pay/legacy_interval.rs",
+      "kind": "added",
+      "sha256": "590070b000e53913064dfad8d7cdbff720828e1e2d23e94fe5be020b63f72d47",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -3975,15 +3975,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/remuneration/caritas/overtime_payout.rs",
-      "kind": "added",
-      "sha256": "9955f675e77517768c83874db955b98f87bc21a179f86c66c7db1ffed7a0c565",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/remuneration/caritas/overtime.rs",
       "kind": "added",
       "sha256": "f79ad355db5778da0634f5db837bbf6bd656d16471a10e56a6b7329935b25c46",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/remuneration/caritas/overtime_payout.rs",
+      "kind": "added",
+      "sha256": "9955f675e77517768c83874db955b98f87bc21a179f86c66c7db1ffed7a0c565",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -4545,6 +4545,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/report/financial/assessed.rs",
+      "kind": "added",
+      "sha256": "de1e199376ca8e5942e103a0af45b319849d7dcd9681068f8e876b41771b106c",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/report/financial/assessed_source/book.rs",
       "kind": "added",
       "sha256": "0f0f93f8bfab156091240a7c77a0de12068c6e769526a52835118adc3cb3bfb6",
@@ -4599,12 +4605,6 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/report/financial/assessed.rs",
-      "kind": "added",
-      "sha256": "de1e199376ca8e5942e103a0af45b319849d7dcd9681068f8e876b41771b106c",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/report/financial/dashboard.rs",
       "kind": "added",
       "sha256": "e0bcd64d7ec9be051f8ddedde24b23e3bdf837f63d9d60fb07c1274a9ad07422",
@@ -4653,15 +4653,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/report/financial/net_reuse.rs",
-      "kind": "added",
-      "sha256": "c8de23f3d9625c179d48601c2f53634c0ca9e26dfcc329d7bfc07d9d6d9e883e",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/report/financial/net.rs",
       "kind": "added",
       "sha256": "9f53f64e711161d02c65cace3c1ef642b5e7f862440b97407f332b98985b87f5",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/report/financial/net_reuse.rs",
+      "kind": "added",
+      "sha256": "c8de23f3d9625c179d48601c2f53634c0ca9e26dfcc329d7bfc07d9d6d9e883e",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -4725,6 +4725,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/report/time.rs",
+      "kind": "added",
+      "sha256": "ceafd09c59fb569433f6a230ddc0996e5add33b4204af30330003639fe96ce63",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/report/time_details.rs",
       "kind": "added",
       "sha256": "4cbae3879024bcd7b2493372ed9c1c6aba0668853dec38834b8cf0a617e1044f",
@@ -4776,12 +4782,6 @@
       "path": "modules/luna-engine/rust/src/report/time_display/year/months.rs",
       "kind": "added",
       "sha256": "09e497fd01e832914aa92e37d7c597150d3fc7a110e241432170a83bd7f42b5f",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/report/time.rs",
-      "kind": "added",
-      "sha256": "ceafd09c59fb569433f6a230ddc0996e5add33b4204af30330003639fe96ce63",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -4839,78 +4839,6 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/annex.rs",
-      "kind": "added",
-      "sha256": "ebe91920f51391f1661b1603d7ef113b3505ad38049a716807347852e1b912a2",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/avrdd.rs",
-      "kind": "added",
-      "sha256": "6c60c4752e2eec8636fead8b905efe824c91481641c52772b9103f5498f1a390",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas_annual.rs",
-      "kind": "added",
-      "sha256": "dab4f1886c35c69cb244c57c5613b236cab77c2e12b84bf06a622c584b8ce43f",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/mod.rs",
-      "kind": "added",
-      "sha256": "5baf092e249d63f14302729ebecf825aebe84f43bab2474aaf2320c4facc28c9",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/policy.rs",
-      "kind": "added",
-      "sha256": "5c4862a964a4f9af9aeb7c64c2c8597ad12b0a0ef528d378eb257005993042f8",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/rates.rs",
-      "kind": "added",
-      "sha256": "db259bc36afdbfe0b855dde321be7d310c35668ef78616c4914c652c9d147eac",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/working.rs",
-      "kind": "added",
-      "sha256": "4490fa1867ed7bde8d0a65ce30c65c5d04eb8efd3853f23261e6bb439413ddfb",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/drk.rs",
-      "kind": "added",
-      "sha256": "bcf565f4715d1bf7791ba86d17111b290e48561457eb932ef443a3d542f97a95",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/mod.rs",
-      "kind": "added",
-      "sha256": "ce67831357755f71bc67233772a1400c5980e99a10fcedd3396cf858624ce564",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/tdl_policy.rs",
-      "kind": "added",
-      "sha256": "279412ad901b05a5f4ae15739292575bba8a3db72e8c753da132b4a72c46e029",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/tdl.rs",
-      "kind": "added",
-      "sha256": "da87eda545aa2e538039d2ae4590588f480cdc29698805324bd93243c20cd276",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/rules/validation_tariff/util.rs",
-      "kind": "added",
-      "sha256": "815b1ccfc891a96e526525a5b21a29b547781688f58b320981ce4b4ece27e163",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/rules/validation/common.rs",
       "kind": "added",
       "sha256": "0e7162e162143f708541dada84c721b032f86fcebfc32ceb8c1856bf4a40aba7",
@@ -4962,6 +4890,78 @@
       "path": "modules/luna-engine/rust/src/rules/validation/youth.rs",
       "kind": "added",
       "sha256": "21c8cdac4175e424972d6d1f978b65a8a8340691983db2132b7592dcd70a317a",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/annex.rs",
+      "kind": "added",
+      "sha256": "ebe91920f51391f1661b1603d7ef113b3505ad38049a716807347852e1b912a2",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/avrdd.rs",
+      "kind": "added",
+      "sha256": "6c60c4752e2eec8636fead8b905efe824c91481641c52772b9103f5498f1a390",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/mod.rs",
+      "kind": "added",
+      "sha256": "5baf092e249d63f14302729ebecf825aebe84f43bab2474aaf2320c4facc28c9",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/policy.rs",
+      "kind": "added",
+      "sha256": "5c4862a964a4f9af9aeb7c64c2c8597ad12b0a0ef528d378eb257005993042f8",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/rates.rs",
+      "kind": "added",
+      "sha256": "db259bc36afdbfe0b855dde321be7d310c35668ef78616c4914c652c9d147eac",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas/working.rs",
+      "kind": "added",
+      "sha256": "4490fa1867ed7bde8d0a65ce30c65c5d04eb8efd3853f23261e6bb439413ddfb",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/caritas_annual.rs",
+      "kind": "added",
+      "sha256": "dab4f1886c35c69cb244c57c5613b236cab77c2e12b84bf06a622c584b8ce43f",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/drk.rs",
+      "kind": "added",
+      "sha256": "bcf565f4715d1bf7791ba86d17111b290e48561457eb932ef443a3d542f97a95",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/mod.rs",
+      "kind": "added",
+      "sha256": "ce67831357755f71bc67233772a1400c5980e99a10fcedd3396cf858624ce564",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/tdl.rs",
+      "kind": "added",
+      "sha256": "da87eda545aa2e538039d2ae4590588f480cdc29698805324bd93243c20cd276",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/tdl_policy.rs",
+      "kind": "added",
+      "sha256": "279412ad901b05a5f4ae15739292575bba8a3db72e8c753da132b4a72c46e029",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/rules/validation_tariff/util.rs",
+      "kind": "added",
+      "sha256": "815b1ccfc891a96e526525a5b21a29b547781688f58b320981ce4b4ece27e163",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5175,6 +5175,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/runtime/catalog.rs",
+      "kind": "added",
+      "sha256": "0c000b0d3401795ed2963497f9aa5b43cb7edba10df4672b755384bedecc7f18",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/runtime/catalog_artifact.rs",
       "kind": "added",
       "sha256": "29ba06310f05844e01cc12d2a2062392f72d0af196bcef917aad82cfd709151e",
@@ -5190,12 +5196,6 @@
       "path": "modules/luna-engine/rust/src/runtime/catalog_source/prepared.rs",
       "kind": "added",
       "sha256": "e7dc848285fe85d438313678a4dd08ea7fb06c77040647e4c093cbccd775c26b",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/runtime/catalog.rs",
-      "kind": "added",
-      "sha256": "0c000b0d3401795ed2963497f9aa5b43cb7edba10df4672b755384bedecc7f18",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5511,6 +5511,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/runtime/form_resource/day.rs",
+      "kind": "added",
+      "sha256": "3cc969c37b456aa2725cddef3b1d43745ec48480088aa95ee654871f59aaf4f3",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/runtime/form_resource/day_billing.rs",
       "kind": "added",
       "sha256": "594f77ad1304eda6347c89b41ecebcff25a55a8f8cb5daf151dfe85f58b1cb2e",
@@ -5532,12 +5538,6 @@
       "path": "modules/luna-engine/rust/src/runtime/form_resource/day_write.rs",
       "kind": "added",
       "sha256": "e49a09b0f38f5bfb4bb51685600233151dba6be4582f47d4c4a360d7bcf8e673",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/runtime/form_resource/day.rs",
-      "kind": "added",
-      "sha256": "3cc969c37b456aa2725cddef3b1d43745ec48480088aa95ee654871f59aaf4f3",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5745,15 +5745,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/runtime/utility_lease.rs",
-      "kind": "added",
-      "sha256": "c02311a70eefc05d103f4a58cf716dd71167b70d54a2db7e77ca2923eeb0f248",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/runtime/utility.rs",
       "kind": "added",
       "sha256": "2e8649bfeba9c7c4d3ce6fb6351e4af95b14c5cbb01429cf330455a924fe1799",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/runtime/utility_lease.rs",
+      "kind": "added",
+      "sha256": "c02311a70eefc05d103f4a58cf716dd71167b70d54a2db7e77ca2923eeb0f248",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5841,15 +5841,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/target/rules_data.json",
-      "kind": "added",
-      "sha256": "d50f223ad546a7339a4d935bc2f055f9e97b51d446702d5e9e94191f4733ab00",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/target/rules.rs",
       "kind": "added",
       "sha256": "b68b16e4472944376e580bae894d341f8b5ad861874a24c313a0e9325d97517b",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/target/rules_data.json",
+      "kind": "added",
+      "sha256": "d50f223ad546a7339a4d935bc2f055f9e97b51d446702d5e9e94191f4733ab00",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5859,15 +5859,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/tax/decimal.rs",
-      "kind": "added",
-      "sha256": "4420222556f40a115ed1a1c2fc910787e8338d9b48f6d34876da417cea321c13",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/tax/LICENSE-LstGen.txt",
       "kind": "added",
       "sha256": "68f6d290175e047fb6c743f1f2cf7fb192cb054d70119e8a56c762d6073a99f6",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/tax/decimal.rs",
+      "kind": "added",
+      "sha256": "4420222556f40a115ed1a1c2fc910787e8338d9b48f6d34876da417cea321c13",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5883,15 +5883,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/time_zone.rs",
-      "kind": "added",
-      "sha256": "e638f6e9af85fb1df72c6d04a07d63709b22de4f47850a5f4d29962e38b5e8cd",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/time.rs",
       "kind": "added",
       "sha256": "a8abe5252028be5169bb67128798213982592fa09ca4d9aadaceec3b7e657f52",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/time_zone.rs",
+      "kind": "added",
+      "sha256": "e638f6e9af85fb1df72c6d04a07d63709b22de4f47850a5f4d29962e38b5e8cd",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -5961,15 +5961,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/src/training/feature_adult.rs",
-      "kind": "added",
-      "sha256": "c051d4d0fff96fa5ee5bd967462f0c0a9ba651d5ce72f31eea936e69d86c3a5c",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/src/training/feature.rs",
       "kind": "added",
       "sha256": "7db36e7aeabe2d899e71e3a50638a3e034bc3df795636aca74141e20afe137f0",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/training/feature_adult.rs",
+      "kind": "added",
+      "sha256": "c051d4d0fff96fa5ee5bd967462f0c0a9ba651d5ce72f31eea936e69d86c3a5c",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -6021,6 +6021,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/src/training/youth.rs",
+      "kind": "added",
+      "sha256": "006a0ef68a0a100a64704748d3101ca0ad656f1a716b3f509f1d1b25765bf57d",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/src/training/youth_codes.rs",
       "kind": "added",
       "sha256": "516c937460b6d0aee6f547125f63bfcbbd76506c8a279274d0dff5ba1b02932b",
@@ -6036,12 +6042,6 @@
       "path": "modules/luna-engine/rust/src/training/youth_report.rs",
       "kind": "added",
       "sha256": "61e2051daf7621b9ae7bd665cc8bf52299c9b59d7d76848e8d6517aa13ebb2e7",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/src/training/youth.rs",
-      "kind": "added",
-      "sha256": "006a0ef68a0a100a64704748d3101ca0ad656f1a716b3f509f1d1b25765bf57d",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -6465,15 +6465,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/tests/contract_assembly.rs",
-      "kind": "added",
-      "sha256": "ce01ff294bf8901ae80d77b0bbe2d88da2616b2b1754d26c319cefaea72810ab",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/tests/contract.rs",
       "kind": "added",
       "sha256": "ca0054466e943e55d0eeafefd4049b8391bb78dfe97b460864177175f5575fd8",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/tests/contract_assembly.rs",
+      "kind": "added",
+      "sha256": "ce01ff294bf8901ae80d77b0bbe2d88da2616b2b1754d26c319cefaea72810ab",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -6795,15 +6795,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/tests/ffi_calendar_presentation.rs",
-      "kind": "added",
-      "sha256": "c104b84892b27adc764864f43cd318425f48b5f6827d840305c4a07b56f918e9",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/tests/ffi_calendar.rs",
       "kind": "added",
       "sha256": "61ec94077ac94b1e9a30e5bacc1b5d38564309ded7694fdddbf6c1108362947c",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/tests/ffi_calendar_presentation.rs",
+      "kind": "added",
+      "sha256": "c104b84892b27adc764864f43cd318425f48b5f6827d840305c4a07b56f918e9",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -6999,15 +6999,21 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/tests/form_resource_day_details.rs",
+      "path": "modules/luna-engine/rust/tests/form_resource.rs",
       "kind": "added",
-      "sha256": "3343ab529f8952e012b9932735ba55baba0b8569c8f1ad460de37fcdab220eb4",
+      "sha256": "18e6b5909cebeb287fe34f5aedbb7a50e9b28acda8e3621517a5969d50384a4c",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
       "path": "modules/luna-engine/rust/tests/form_resource_day.rs",
       "kind": "added",
       "sha256": "b570159d5c1e2c52f950c43ae746d8ff9d2d08138d927ad5ef5c4a3072f9c271",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/tests/form_resource_day_details.rs",
+      "kind": "added",
+      "sha256": "3343ab529f8952e012b9932735ba55baba0b8569c8f1ad460de37fcdab220eb4",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -7020,12 +7026,6 @@
       "path": "modules/luna-engine/rust/tests/form_resource_sequences.rs",
       "kind": "added",
       "sha256": "500033a37d3e898ca4dc1ead782c418105cbcea7d71a754d74e392ff212a9a0f",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/tests/form_resource.rs",
-      "kind": "added",
-      "sha256": "18e6b5909cebeb287fe34f5aedbb7a50e9b28acda8e3621517a5969d50384a4c",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -7581,6 +7581,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/rust/tests/runtime_assembly.rs",
+      "kind": "added",
+      "sha256": "f5a50920460b89ee6384a28d7237f621d7f336dc328c138531d18307a82f0136",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/rust/tests/runtime_assembly_calendar.rs",
       "kind": "added",
       "sha256": "760a6d704d9bc3158246b3b41f6062ce4614f60268629ca4c7862810967e0a14",
@@ -7593,21 +7599,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/tests/runtime_assembly.rs",
+      "path": "modules/luna-engine/rust/tests/runtime_catalog.rs",
       "kind": "added",
-      "sha256": "f5a50920460b89ee6384a28d7237f621d7f336dc328c138531d18307a82f0136",
+      "sha256": "517130a20d508e445b1d87e0a466b5dc78e63d48fa29e978788b0506d83e70f6",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
       "path": "modules/luna-engine/rust/tests/runtime_catalog_source.rs",
       "kind": "added",
       "sha256": "2531488ae739e88df91be6c22c924bd7df8644d58616e1010b8556e222d2ec15",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/rust/tests/runtime_catalog.rs",
-      "kind": "added",
-      "sha256": "517130a20d508e445b1d87e0a466b5dc78e63d48fa29e978788b0506d83e70f6",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -7779,15 +7779,15 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
-      "path": "modules/luna-engine/rust/tests/support/value_pool_source_numbers.rs",
-      "kind": "added",
-      "sha256": "35438a6bae68cc33c72180c58cf8255551c48bd50080fe2a424624d7ceeb8ffe",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
       "path": "modules/luna-engine/rust/tests/support/value_pool.rs",
       "kind": "added",
       "sha256": "1cd0bae5f11802aa736b80b218de357e4c7ae7006a9e6cbc019d0a28e4e515b2",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "modules/luna-engine/rust/tests/support/value_pool_source_numbers.rs",
+      "kind": "added",
+      "sha256": "35438a6bae68cc33c72180c58cf8255551c48bd50080fe2a424624d7ceeb8ffe",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -8061,6 +8061,12 @@
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
+      "path": "modules/luna-engine/tests/NativeSmoke.java",
+      "kind": "added",
+      "sha256": "6226a107e5eb511d410baed7a9e8761f4e7b4d3b6dbea1563eab03ce82161b15",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+    },
+    {
       "path": "modules/luna-engine/tests/locale-worker-node.mjs",
       "kind": "added",
       "sha256": "7afe18d780999c449e9ab868ca953a96c3b6497c11f20dbb38d678ab8906ac72",
@@ -8070,12 +8076,6 @@
       "path": "modules/luna-engine/tests/native-copy.c",
       "kind": "added",
       "sha256": "c85a73e7f594acd4b9b1d580bf1770a5cf6f9e297276a992b71740ebd01c3e40",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
-    },
-    {
-      "path": "modules/luna-engine/tests/NativeSmoke.java",
-      "kind": "added",
-      "sha256": "6226a107e5eb511d410baed7a9e8761f4e7b4d3b6dbea1563eab03ce82161b15",
       "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
     },
     {
@@ -8429,14 +8429,14 @@
     {
       "path": "package-lock.json",
       "kind": "modified",
-      "sha256": "1f11b73ff026e8e7ec3ad216e31f4175779e6ed754e83e61e47ea6e89764d107",
-      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval."
+      "sha256": "c224f9381187434b22b1940fd2c3577c60333354db6872607fb9b158453fe4c1",
+      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval. Lock the same Expo native scroll-edge module as Preview Build 56."
     },
     {
       "path": "package.json",
       "kind": "modified",
-      "sha256": "7481ba7259e34bb132464b75f57674bc1f93a117256d0aaf10a484112b0cf31d",
-      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending."
+      "sha256": "32e459e95c57788a0fd4274e9e6ef7ea528b67921f1e37b0160c7056be4dcd75",
+      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending. Use the same pinned Expo native scroll-edge module as Preview Build 56."
     },
     {
       "path": "scripts/runtime-policy.test.mjs",
@@ -8733,6 +8733,12 @@
       "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Do not flag six recorded weekdays by count alone; retain neutral, scoped review of seven days in the same week. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Observe two occupied Sundays independently as REVIEW or PENDING with explicit scope, regularity and period prerequisites. Authorized Preview OTA 2026-11-09: apply tested chronological duty lists, concise tariff details, and start-day weekly checks with assumed sixth-day operational reasons for all supported tariff policies. Preserve all other existing Preview sources. Device acceptance remains pending. User-authorized Variant C implementation and Preview OTA on 2026-11-09: Remove the unknown-Sunday-work requirement when the saved work model supplies that basis; respect explicit negative answers on either observed Sunday. Preserve the previously selected weekly start-date rule. iPhone acceptance remains pending; accepted TestFlight baseline unchanged. Duty overview: Expose the unchanged recordedWorkDates projection for read-only Sunday duty display, preserving all rule thresholds and tariff decisions."
     },
     {
+      "path": "src/features/account/account-screen.tsx",
+      "kind": "modified",
+      "sha256": "4347e759e4718cf40a8e8af2c741f893f6eb674dc316b9677e4260f04abcb18e",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
       "path": "src/features/account/account-summary-card.tsx",
       "kind": "modified",
       "sha256": "2511c789e33a8079915840d9fa850b935770b0fe982349927b70c5768b064d03",
@@ -8819,8 +8825,8 @@
     {
       "path": "src/features/analysis/analysis-period-header.tsx",
       "kind": "modified",
-      "sha256": "918ef2c7d01892ab54b4f160ca938369ac4b2a7b39b2648e1caa43d2432d2beb",
-      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-clarified annual header correction, 2026-11-17: Show the selected year and active-month count as one period text between the arrows, e.g. 2026 7 Monate mit Eintraegen. Remove the separate subtitle and its compact padding; use the same body typography and single-line compact period layout as the month view. Preserve large-text navigation, the accepted fixed header, monthly date text, calculations, cache identity and native configuration. Preview OTA explicitly authorized by Danach OTA; iPhone acceptance remains pending."
+      "sha256": "66e71cc15a93302e21a2ffb4363433e08f87cc5ba40634f9a6dd23dc412629eb",
+      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-clarified annual header correction, 2026-11-17: Show the selected year and active-month count as one period text between the arrows, e.g. 2026 7 Monate mit Eintraegen. Remove the separate subtitle and its compact padding; use the same body typography and single-line compact period layout as the month view. Preserve large-text navigation, the accepted fixed header, monthly date text, calculations, cache identity and native configuration. Preview OTA explicitly authorized by Danach OTA; iPhone acceptance remains pending. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/features/analysis/analysis-persistent-results.tsx",
@@ -8843,14 +8849,14 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "9eb791056a39de54e2704ead14083e293385cf73e71d6a90dfc6acdc0b68c2b2",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged."
+      "sha256": "dd4612eec13b771cfdf1264e965634fc613ee81efdf55063cc55e57a8c6116e3",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
-      "sha256": "c8a5ade5cadcb8d41ff1216bc182ac8616f07ae67c7fbb809c13154c25e6f04c",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+      "sha256": "741d6fcc57faabfdd2cfaefcdfc2b2a8fe9e777d60a88d0ea43094f236721c6e",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview 56 device feedback follow-ups. Scope a native soft edge to the monthly customization modal and keep its existing controls and reorder scroll."
     },
     {
       "path": "src/features/analysis/analysis-warmup-runtime.ts",
@@ -9029,8 +9035,8 @@
     {
       "path": "src/features/analysis/check-issue-screen.tsx",
       "kind": "added",
-      "sha256": "c79eaadca5913196b69463a32407e5631c51ccf51b63f0750fd6b3d8f118dfc2",
-      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Use the actual Schichtzulage native header, BackFooterLayout and ReportScrollView for check detail cards. Handle stale tokens with a safe return and remove the superseded custom modal frame. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User accepted the native check window and requested removal of only the fixed bottom Zurueck bar on 2026-11-11. Disable its shared footer and its reserved content space; retain the native header back action with the existing safe-route fallback, native pull-down presentation, accepted cards and check content. Salary calculation/cache identity and all other source files remain byte-identical to the accepted Preview. Preview-only refinement; no native binary or TestFlight change."
+      "sha256": "247243b8b5d6f18f417685238ec639987a78401e425952fbe3698a2d3bdab241",
+      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Use the actual Schichtzulage native header, BackFooterLayout and ReportScrollView for check detail cards. Handle stale tokens with a safe return and remove the superseded custom modal frame. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User accepted the native check window and requested removal of only the fixed bottom Zurueck bar on 2026-11-11. Disable its shared footer and its reserved content space; retain the native header back action with the existing safe-route fallback, native pull-down presentation, accepted cards and check content. Salary calculation/cache identity and all other source files remain byte-identical to the accepted Preview. Preview-only refinement; no native binary or TestFlight change. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/features/analysis/check-period-label.ts",
@@ -9315,6 +9321,12 @@
       "reason": "User-authorized batched annual Rust integration, 2026-11-12. Allow shared annual jobs to yield a native wait promise while preserving existing task ownership and lifecycle. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
     },
     {
+      "path": "src/features/analysis/tariff-assessment-screen.tsx",
+      "kind": "modified",
+      "sha256": "8f0b3808e8e76bea820fb6fea3c9169d9121ef21ebf43fe25e175181b35552d0",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
       "path": "src/features/analysis/tariff-check-details.tsx",
       "kind": "added",
       "sha256": "132521ace6c9d8f69d410d6aae3363cc89bb7e948bccef985c7a6bef6f5e2e4e",
@@ -9405,6 +9417,12 @@
       "reason": "Weekend implementation: Render common occupied, fully free and open monthly counts with accessible window and source details. Compact-list implementation: Support filtered affected-window details while retaining the existing honest completeness helper and internal assessment contract. Simple end-user check: Show one representative affected four-week period with further affected periods collapsed, retaining all assessed observations and the completeness contract."
     },
     {
+      "path": "src/features/calendar/calendar-header-notices.tsx",
+      "kind": "added",
+      "sha256": "a886b6e8fa79a18cfeb75ceba4e6ddb271119c3a74133cb4ca42668b0d806932",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
       "path": "src/features/calendar/calendar-layout.ts",
       "kind": "modified",
       "sha256": "5d594a6ce3c5b2930c4d5a7024b84565077927a76b371030354166a4b9504918",
@@ -9431,8 +9449,8 @@
     {
       "path": "src/features/calendar/calendar-screen.tsx",
       "kind": "modified",
-      "sha256": "3970490b0f73d2a7930c2698ff25585f8c1e50f6ada34d359479c40f4fea7622",
-      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+      "sha256": "8d681e4ca863da5f347c40cbcd4563c3c3aae2fa0396c16feecc6514feebcaf3",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/calendar/calendar-shared-scene.tsx",
@@ -9445,6 +9463,12 @@
       "kind": "modified",
       "sha256": "9ef7ef7fcfe82f3471aa93cd7e3c365924970dc8ce6fc6c974010ebfef21da4b",
       "reason": "Bounded unused-export cleanup. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: calendarDayLabel."
+    },
+    {
+      "path": "src/features/calendar/calendar-stable-pager.tsx",
+      "kind": "modified",
+      "sha256": "23e1e21b0e23f6ba21701c71f1e9b2fb980a5c948819054c56b37bf04c28a8b9",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Bind the existing paged calendar scroll view to its fixed controls; keep existing frame, page offsets and swipe handlers."
     },
     {
       "path": "src/features/calendar/calendar-view-transition.tsx",
@@ -9469,6 +9493,12 @@
       "kind": "modified",
       "sha256": "57bf63d27a1d7a14cc33884e2903be85cf4de78bd0de1b21870035cee3d44a83",
       "reason": "Preview-only preservation of src/features/calendar/quick-entry-delete-confirmation.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/features/calendar/quick-entry-popup.tsx",
+      "kind": "modified",
+      "sha256": "a42904fc85a2f748459c2263d7940366eb371b53f49d799ce472b3ae6bb114ae",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/calendar/quick-entry-strip-layout.ts",
@@ -9507,6 +9537,12 @@
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
     },
     {
+      "path": "src/features/calendar/shift-selection-panel.tsx",
+      "kind": "modified",
+      "sha256": "a8f8a7be32c55a65511df79c3a194136ccb0861490aa628fc53f996bfc507aa2",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
       "path": "src/features/calendar/use-calendar-performance.ts",
       "kind": "modified",
       "sha256": "9b48c9f2f2c1ca6b09c5d9bd137f352c63ea07d1d41cc0e8330f7df287708c8b",
@@ -9533,8 +9569,8 @@
     {
       "path": "src/features/day-editor/appointment-recurrence-overlay.tsx",
       "kind": "modified",
-      "sha256": "c2a5e99153390c38bb7391677d617e3d24f5c2b66dd7cc28f5afa8f5f3362f5a",
-      "reason": "Preview-only preservation of src/features/day-editor/appointment-recurrence-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "a221c263d5554b315e6540af3e76ddf626177eed7341a078da3ffec98c4b4949",
+      "reason": "Preview-only preservation of src/features/day-editor/appointment-recurrence-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/day-editor/day-editor-components.tsx",
@@ -9567,16 +9603,28 @@
       "reason": "Preview-only preservation of src/features/day-editor/entry-edit-fields.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up cleanup: remove only the unused separator destructuring binding in the preserved Preview variant; retain its prop contract and visible UI. No stored-data, native, dependency or TestFlight change."
     },
     {
+      "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
+      "kind": "modified",
+      "sha256": "729002bb9660f21b1eb2fc9728239733d3f9a85e0755c47131059b3ab9fe33cd",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
       "path": "src/features/day-editor/entry-options.tsx",
       "kind": "modified",
-      "sha256": "0a6da096941418f80479455a8d8b0f48d36d65a2be4cb619d21af20e06f0ab2a",
-      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change."
+      "sha256": "a9c6c4e9c45739b234bc088ea3b52bca9b2eebfef72b815577421c41793735c8",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overlay.tsx",
+      "kind": "modified",
+      "sha256": "b0ffab9f0122af3a9448b99dc47b401be6706f2badeca4c13366e6e750224fca",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
       "kind": "modified",
-      "sha256": "73ce61ce9c43bceffb4abc8c6b89f88e45f38bf551bc50983f1257e638568cb2",
-      "reason": "Preview-only preservation of src/features/day-editor/shift-notification-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "6c25c02c22a9426cd7cc34ca079b96821bc217ad6cdd425fd7905bcd1880401b",
+      "reason": "Preview-only preservation of src/features/day-editor/shift-notification-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/day-editor/shift-overtime-fields.tsx",
@@ -9613,6 +9661,18 @@
       "kind": "added",
       "sha256": "48d55b3025a65fa880bca0f158e773ec0b8d5b843006a0b9d043de517fd526cf",
       "reason": "User-approved special-duty recovery: extract the tested editor review and atomic shift-save actions into focused hooks to retain the existing architecture size budgets, calculation behavior and notification handling."
+    },
+    {
+      "path": "src/features/location/location-picker-screen.tsx",
+      "kind": "modified",
+      "sha256": "a45408eb6a93be0087fb3a22fab136f30294e3129fd94a4c3972b956c8d0e58e",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-screen.tsx",
+      "kind": "modified",
+      "sha256": "2a6617947a28bddd852d2eb457e298ff61dc74b17aa9a122e5de904da5ef8daa",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/private-cloud/private-cloud-screen.tsx",
@@ -9785,8 +9845,8 @@
     {
       "path": "src/features/salary/salary-ui.tsx",
       "kind": "modified",
-      "sha256": "24b768785a1a11d7afc0ee5a65fbb9b48041c4474883e3eaea9f1e07eba878df",
-      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending."
+      "sha256": "44ac899c22b62de86bff24dd2487ffbddbbdfeb132c0c4c289da1fae6813c3fb",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/salary/special-duty-review-row.tsx",
@@ -9863,8 +9923,8 @@
     {
       "path": "src/features/settings/calendar-design-screen.tsx",
       "kind": "modified",
-      "sha256": "4598528b25f6b82b3273a3eed63ff76bf8448c13f100f0f98c0d7bc448cb000c",
-      "reason": "Requested calendar-preview refinement: pin only the rounded preview in a transparent absolute frame above scrolling controls; remove the full-width fade and outer reserved background strip. Reserve the initial content offset using the same fixed preview height; preserve reset, saving feedback, footer padding and all preference handlers. iPhone visual acceptance remains pending."
+      "sha256": "809b7f5a1e67da29543eaa2df1190428768f0b09c7ad7ad5fcca919c9b50ab39",
+      "reason": "Requested calendar-preview refinement: pin only the rounded preview in a transparent absolute frame above scrolling controls; remove the full-width fade and outer reserved background strip. Reserve the initial content offset using the same fixed preview height; preserve reset, saving feedback, footer padding and all preference handlers. iPhone visual acceptance remains pending. iOS Preview 56 device feedback follow-ups. Attach the native soft edge to the existing fixed calendar preview without adding scroll inset or moving controls."
     },
     {
       "path": "src/features/settings/calendar-display-controls.tsx",
@@ -9899,14 +9959,14 @@
     {
       "path": "src/features/settings/settings-info-details-screen.tsx",
       "kind": "modified",
-      "sha256": "6ff9933b37fab3882d206cd5bdcdfb56f43ce4944fe533a7b60be1d91683690b",
-      "reason": "Preview-only preservation of src/features/settings/settings-info-details-screen.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. User-requested About LUNA Shift copy revision, 2026-11-17: remove the competitor/affiliation notice, describe personal shift planning and calendar customization in concise German du copy, and display the configured app version without the Expo SDK suffix on the About page. Keep all existing Preview fixes, native glass, sheet layout, other information sections, runtime label consumers, calculations and data unchanged. Device review and separate publication approval pending."
+      "sha256": "059d48fefa10ef873c3a422ec103bec5a3cb9b3a0a31161a6a91dfda15c6a0f0",
+      "reason": "Preview-only preservation of src/features/settings/settings-info-details-screen.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. User-requested About LUNA Shift copy revision, 2026-11-17: remove the competitor/affiliation notice, describe personal shift planning and calendar customization in concise German du copy, and display the configured app version without the Expo SDK suffix on the About page. Keep all existing Preview fixes, native glass, sheet layout, other information sections, runtime label consumers, calculations and data unchanged. Device review and separate publication approval pending. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/features/settings/settings-screen.tsx",
       "kind": "modified",
-      "sha256": "17dc05cd37daf5a9ead1583042d1e161f08ccad492e3f4851936a02a4c0a1ba8",
-      "reason": "Dienstplan-Check local implementation: Rename the existing settings entry to Dienstplan-Check; preserve the settings structure and route. Local validation only; new iPhone acceptance and OTA approval remain separate. Requested More-card typography refinement: apply the existing primary text color to the ten main row titles while retaining the shared body font and all smaller subtitles, icons, card geometry and navigation handlers."
+      "sha256": "25d1b38b2185e6c6a2e26adb69f67318ed17966dc876aa5bf0470688c2ce5a44",
+      "reason": "Dienstplan-Check local implementation: Rename the existing settings entry to Dienstplan-Check; preserve the settings structure and route. Local validation only; new iPhone acceptance and OTA approval remain separate. Requested More-card typography refinement: apply the existing primary text color to the ten main row titles while retaining the shared body font and all smaller subtitles, icons, card geometry and navigation handlers. Apply the accepted native tab scroll header to Mehr, keeping the existing GitHub settings entries."
     },
     {
       "path": "src/features/settings/shift-color-scheme-picker.tsx",
@@ -9919,6 +9979,18 @@
       "kind": "removed",
       "sha256": null,
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/sharing/calendar-sharing-screen.tsx",
+      "kind": "modified",
+      "sha256": "ca84782c1954351894e04410528db1c0c20ff23767cfcd946fff2fc8ded51107",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
+      "path": "src/features/sharing/sharing-flow-layout.tsx",
+      "kind": "modified",
+      "sha256": "f1838589921947579baab62fd8973fc67025c117cdd3edbff536686eeb5c4da3",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/features/templates/shift-template-list.tsx",
@@ -9935,8 +10007,8 @@
     {
       "path": "src/features/templates/templates-manager-screen.tsx",
       "kind": "modified",
-      "sha256": "78c99cf69a71a2d10ad7e3142a7655bf2d908bd450fcaf5325ded99bdaf189ee",
-      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+      "sha256": "ac9e7f9e1a9271d124c273d7d2984090c24348c44f56ac47c2a1e64aca933354",
+      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation. iOS Preview 56 device feedback follow-ups. Extend the native top edge by eight points for the shift template list. iOS Preview 56 tab header scroll edge geometry. Use the shared tab-header extension instead of the earlier template-only eight point adjustment."
     },
     {
       "path": "src/features/widgets/calendar-widget-data.test.ts",
@@ -10049,8 +10121,8 @@
     {
       "path": "src/navigation/analysis-sheet-options.ts",
       "kind": "added",
-      "sha256": "8ded7f8d84b4455b5f631923fa19ba21767d851c6978ce47f93464645e6003cd",
-      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Reuse one formSheet configuration for Schichtzulage and check details: full detent, native grabber and transparent native content. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "57d6b61b7284d6c35823f791633bb0c0b696851a68a1c7b671f53adb84d0ef23",
+      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Reuse one formSheet configuration for Schichtzulage and check details: full detent, native grabber and transparent native content. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/navigation/check-issue-session.ts",
@@ -10145,8 +10217,14 @@
     {
       "path": "src/ui/form-layout.tsx",
       "kind": "modified",
-      "sha256": "f9e26f4513ee452c8f76484a5fdca3a210775b929507c8c04f9e80eaaf7a970f",
-      "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+      "sha256": "f4a4446ea61e6be960255d529fa624b953027968f78fddb6d67b9159e6b674d7",
+      "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6. iOS Preview 56 device feedback follow-ups. Keep shared header save labels on one line and fit them to constrained toolbar space."
+    },
+    {
+      "path": "src/ui/loading-view.tsx",
+      "kind": "modified",
+      "sha256": "8b7111c979572d3bafde7abf3271d32a5abb2afbd7a7f82387f9f14b5ba679de",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
     },
     {
       "path": "src/ui/month-navigator.tsx",
@@ -10155,10 +10233,22 @@
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
     },
     {
+      "path": "src/ui/native-scroll-edge.ts",
+      "kind": "added",
+      "sha256": "8b47537d786cd994e78aa48d48818a36168eb025405c3af96d615ecf1aeabb24",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Share the iOS availability check and the native view already compiled in Preview Build 56."
+    },
+    {
+      "path": "src/ui/native-sheet-scroll-edge.ts",
+      "kind": "added",
+      "sha256": "290a972fc704eb908613669bf530de46698983fd13924d4583cc7cdf641d241d",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Select the iOS system soft scroll edge for existing UIKit navigation headers on native sheets."
+    },
+    {
       "path": "src/ui/page-stack-header.tsx",
       "kind": "added",
-      "sha256": "47d5f4eab54f5e37e50d1c4ab8e9612a1e5c19a08eb4a7ad3117392ea4d80506",
-      "reason": "User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending."
+      "sha256": "fe01111df227d3079dd7a78ae8a1fd63c281fb95049c0762fe6890934adac963",
+      "reason": "User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation. iOS Preview 56 device feedback follow-ups. Keep the calendar-design navigation header in normal layout so its fixed preview is below the title."
     },
     {
       "path": "src/ui/performance-diagnostics.tsx",
@@ -10179,6 +10269,12 @@
       "reason": "Preview-only preservation of src/ui/reorderable-row.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
     },
     {
+      "path": "src/ui/report-layout.tsx",
+      "kind": "modified",
+      "sha256": "746b8ac642e90e99b33a0b9159ffcfcb25888c67793d4a6001775e4d226bdfe8",
+      "reason": "Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
+    },
+    {
       "path": "src/ui/report-period-labels.ts",
       "kind": "added",
       "sha256": "ba867112cbc1f226444e32e72e3b9562cc803fbffabc75919ed8be53d6a2f586",
@@ -10191,10 +10287,16 @@
       "reason": "Annual/swipe package 2026-11-11: Track the bounded native viewport before scroll settles, retain correct visible/prepared pages, and render lightweight period placeholders on all distant pages. Commit navigation only on settling and preserve reduced motion, accessibility and stale-event protection. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Add an optional stationary header outside the horizontal scroll viewport; measure only the report area and reuse the existing move callback, chronological commit, reduced-motion and prepared-page lifecycle. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged."
     },
     {
+      "path": "src/ui/report-scroll-header.tsx",
+      "kind": "added",
+      "sha256": "ab4c1ee7ad1d19f581ac23292c23d7f5450a03021f93dad1eacdef7712aed868",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Reuse the shared native availability check for the accepted Analysis edge; keep exact row anchoring and position behavior."
+    },
+    {
       "path": "src/ui/screen-layout.tsx",
       "kind": "modified",
-      "sha256": "bf9075a229cb0333376754c07c5e0a3e6b24be9ed537c1d3ee87bf88657a0a50",
-      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change."
+      "sha256": "1111ca0bae8354b3c07504095dc1d797c686410057a14103cfd5c8b749303b0e",
+      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
     },
     {
       "path": "src/ui/selection-option.tsx",
@@ -10205,8 +10307,26 @@
     {
       "path": "src/ui/selection-sheet.tsx",
       "kind": "modified",
-      "sha256": "2d4d3a6bda09ed776810d1af47ccea7e744a15ad0849924008a5eab2f9f626f9",
-      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "5bdd68c2937f95931754192034d740de4d6eb0bcf3a3e0853cab30970cc0ae5e",
+      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. Apply the accepted Build 56 native scroll edge and its targeted presentation fixes."
+    },
+    {
+      "path": "src/ui/shift-color-picker-sheet.tsx",
+      "kind": "modified",
+      "sha256": "9e36c954e37c869d486634a456292e58c3a2aa0a75970f29930ae79ebd3842b0",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation."
+    },
+    {
+      "path": "src/ui/soft-scroll-layout.tsx",
+      "kind": "added",
+      "sha256": "be61026f810dd81aa9ecdaba6430bb8165b2d3906dbebdc6a0d5f43a132fa310",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Match existing scroll geometry by adding measured overlap to content padding. Bind each fixed header or footer only to the scroll view in its own scope. iOS Preview 56 device feedback follow-ups. Extend an opt-in native anchor vertically without enlarging its measured layout or changing the scroll offset. iOS Preview 56 tab header scroll edge geometry. Position the extended native anchor outside the header layout so UIKit receives the full frame. Keep measured padding and scroll position stable."
+    },
+    {
+      "path": "src/ui/tab-root-header.tsx",
+      "kind": "modified",
+      "sha256": "f7b47419d84d9c3130c9e64b4e3c8417fe3268c97c289a405cfd6150dee78645",
+      "reason": "iOS Preview 56 app-wide native scroll edge. Attach the software's existing header or footer to a native soft edge while preserving content, actions and presentation. iOS Preview 56 device feedback follow-ups. Pass the optional native edge extension to the header anchor. iOS Preview 56 tab header scroll edge geometry. Use a 24-point extension on the two tab headers for Mehr and Dienstvorlagen."
     }
   ]
 }

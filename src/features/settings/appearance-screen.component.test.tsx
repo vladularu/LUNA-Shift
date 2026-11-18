@@ -11,6 +11,20 @@ import type { CalendarImageStrength } from "@/theme/calendar-image";
 
 const nativeModule = jest.requireActual<typeof import("react-native")>("react-native");
 
+const mockProvider = ({ children }: React.PropsWithChildren) => children;
+const mockUseRef = () => undefined;
+const mockNativeEdge = {
+  ScrollEdgeEffectProvider: mockProvider,
+  ScrollEdgeEffect: jest.requireActual<typeof import("react-native")>("react-native").View,
+  useScrollEdgeEffectRef: mockUseRef,
+};
+let mockEdgeEnabled = false;
+jest.mock("@/ui/native-scroll-edge", () => ({
+  get nativeScrollEdge() {
+    return mockEdgeEnabled ? mockNativeEdge : null;
+  },
+}));
+
 const preferences: AppearanceValue = {
   themeId: "mint",
   mode: "system",
@@ -397,6 +411,20 @@ describe("appearance controls", () => {
     });
     expect(screen.getByTestId("appearance-calendar-preview")).toBe(preview);
     expect(preview).toBeVisible();
+  });
+  it("anchors the native edge to the fixed calendar preview and keeps the controls separate", async () => {
+    mockEdgeEnabled = true;
+    try {
+      const screen = await render(pictureScreen());
+      const frame = screen.getByTestId("calendar-design-preview-frame");
+      const edge = within(frame).getByTestId("soft-scroll-edge");
+      expect(edge).toHaveProp("edge", "top");
+      expect(edge).toHaveProp("effect", "soft");
+      expect(within(edge).getByTestId("appearance-calendar-preview")).toBeTruthy();
+      expect(within(frame).queryByTestId("calendar-design-controls")).toBeNull();
+    } finally {
+      mockEdgeEnabled = false;
+    }
   });
   it("updates the real preview for each saved strength and mode without replacing its date nodes", async () => {
     const screen = await render(pictureScreen());

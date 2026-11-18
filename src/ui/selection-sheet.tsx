@@ -7,7 +7,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -26,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@/ui/icon";
 
 import { MOTION } from "@/theme/motion";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -259,119 +259,123 @@ export function SelectionSheet({
               sheetStyle,
             ]}
           >
-            <GestureDetector gesture={headerDrag}>
-              <View collapsable={false} style={{ borderBottomWidth: 0 }}>
-                <View
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  style={{
-                    alignItems: "center",
-                    paddingTop: SPACING.sm,
-                    paddingBottom: SPACING.sm,
-                  }}
-                >
-                  <View
-                    testID="selection-sheet-grabber"
-                    style={{
-                      width: 36,
-                      height: 5,
-                      borderRadius: RADII.pill,
-                      backgroundColor: palette.textMuted,
-                    }}
-                  />
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: closeInHeader ? SPACING.lg : 0,
-                    paddingBottom: closeInHeader ? SPACING.sm : 0,
-                    gap: SPACING.sm,
-                  }}
-                >
-                  {onBack ? (
-                    <GlassBackButton
-                      label={backLabel}
-                      disabled={closing || disabled}
-                      onPress={onBack}
-                    />
-                  ) : null}
-                  <View
-                    ref={headingRef}
-                    accessible
-                    accessibilityLabel={`${title}, Auswahldialog`}
-                    accessibilityHint="Zum Schließen nach unten ziehen"
-                    accessibilityRole="header"
-                    style={{
-                      flex: 1,
-                      minHeight: CONTROL_HEIGHT.regular,
-                      justifyContent: "center",
-                      paddingHorizontal: closeInHeader ? undefined : SPACING.lg,
-                      paddingBottom: closeInHeader ? 0 : SPACING.sm,
-                    }}
-                  >
-                    <Text
-                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            <SoftScrollScope>
+              <SoftScrollAnchor>
+                <GestureDetector gesture={headerDrag}>
+                  <View collapsable={false} style={{ borderBottomWidth: 0 }}>
+                    <View
+                      accessibilityElementsHidden
+                      importantForAccessibility="no-hide-descendants"
                       style={{
-                        color: palette.text,
-                        ...TYPOGRAPHY.sectionTitle,
-                        fontWeight: titleWeight ?? TYPOGRAPHY.sectionTitle.fontWeight,
+                        alignItems: "center",
+                        paddingTop: SPACING.sm,
+                        paddingBottom: SPACING.sm,
                       }}
                     >
-                      {title}
-                    </Text>
-                  </View>
-                  {closeInHeader ? (
-                    <Pressable
-                      testID="selection-sheet-header-close"
-                      accessibilityLabel={cancelLabel}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: closing || disabled }}
-                      onPress={requestClose}
-                      disabled={closing || disabled}
-                      style={({ pressed }) => ({
-                        width: CONTROL_HEIGHT.regular,
-                        height: CONTROL_HEIGHT.regular,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: RADII.pill,
-                        borderWidth: 1,
-                        borderColor: palette.primary,
-                        opacity: pressed || disabled ? 0.65 : 1,
-                      })}
-                    >
-                      <Ionicons
-                        accessibilityElementsHidden
-                        name="close"
-                        size={TYPOGRAPHY.value.fontSize}
-                        color={palette.text}
+                      <View
+                        testID="selection-sheet-grabber"
+                        style={{
+                          width: 36,
+                          height: 5,
+                          borderRadius: RADII.pill,
+                          backgroundColor: palette.textMuted,
+                        }}
                       />
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-            </GestureDetector>
-            <GestureDetector gesture={listDrag}>
-              <GestureDetector gesture={nativeScroll}>
-                <ScrollView
-                  key={contentKey}
-                  testID="selection-sheet-list"
-                  nestedScrollEnabled
-                  keyboardShouldPersistTaps={keyboardAware ? "handled" : "never"}
-                  keyboardDismissMode={keyboardAware ? "interactive" : "none"}
-                  bounces={false}
-                  showsVerticalScrollIndicator
-                  scrollEventThrottle={16}
-                  onScroll={(event) => {
-                    scrollOffset.set(Math.max(0, event.nativeEvent.contentOffset.y));
-                  }}
-                  style={{ flexShrink: 1 }}
-                  pointerEvents={closing ? "none" : "auto"}
-                >
-                  {children(requestClose)}
-                </ScrollView>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: closeInHeader ? SPACING.lg : 0,
+                        paddingBottom: closeInHeader ? SPACING.sm : 0,
+                        gap: SPACING.sm,
+                      }}
+                    >
+                      {onBack ? (
+                        <GlassBackButton
+                          label={backLabel}
+                          disabled={closing || disabled}
+                          onPress={onBack}
+                        />
+                      ) : null}
+                      <View
+                        ref={headingRef}
+                        accessible
+                        accessibilityLabel={`${title}, Auswahldialog`}
+                        accessibilityHint="Zum Schließen nach unten ziehen"
+                        accessibilityRole="header"
+                        style={{
+                          flex: 1,
+                          minHeight: CONTROL_HEIGHT.regular,
+                          justifyContent: "center",
+                          paddingHorizontal: closeInHeader ? undefined : SPACING.lg,
+                          paddingBottom: closeInHeader ? 0 : SPACING.sm,
+                        }}
+                      >
+                        <Text
+                          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                          style={{
+                            color: palette.text,
+                            ...TYPOGRAPHY.sectionTitle,
+                            fontWeight: titleWeight ?? TYPOGRAPHY.sectionTitle.fontWeight,
+                          }}
+                        >
+                          {title}
+                        </Text>
+                      </View>
+                      {closeInHeader ? (
+                        <Pressable
+                          testID="selection-sheet-header-close"
+                          accessibilityLabel={cancelLabel}
+                          accessibilityRole="button"
+                          accessibilityState={{ disabled: closing || disabled }}
+                          onPress={requestClose}
+                          disabled={closing || disabled}
+                          style={({ pressed }) => ({
+                            width: CONTROL_HEIGHT.regular,
+                            height: CONTROL_HEIGHT.regular,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: RADII.pill,
+                            borderWidth: 1,
+                            borderColor: palette.primary,
+                            opacity: pressed || disabled ? 0.65 : 1,
+                          })}
+                        >
+                          <Ionicons
+                            accessibilityElementsHidden
+                            name="close"
+                            size={TYPOGRAPHY.value.fontSize}
+                            color={palette.text}
+                          />
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  </View>
+                </GestureDetector>
+              </SoftScrollAnchor>
+              <GestureDetector gesture={listDrag}>
+                <GestureDetector gesture={nativeScroll}>
+                  <SoftScrollView
+                    key={contentKey}
+                    testID="selection-sheet-list"
+                    nestedScrollEnabled
+                    keyboardShouldPersistTaps={keyboardAware ? "handled" : "never"}
+                    keyboardDismissMode={keyboardAware ? "interactive" : "none"}
+                    bounces={false}
+                    showsVerticalScrollIndicator
+                    scrollEventThrottle={16}
+                    onScroll={(event) => {
+                      scrollOffset.set(Math.max(0, event.nativeEvent.contentOffset.y));
+                    }}
+                    style={{ flexShrink: 1 }}
+                    pointerEvents={closing ? "none" : "auto"}
+                  >
+                    {children(requestClose)}
+                  </SoftScrollView>
+                </GestureDetector>
               </GestureDetector>
-            </GestureDetector>
+            </SoftScrollScope>
             {footer ? (
               <View
                 testID="selection-sheet-footer"

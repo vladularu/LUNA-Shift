@@ -4,6 +4,7 @@ import { parseIdentifierRouteParam, type RouteParam } from "@/navigation/route-p
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
+import { nativeSheetScrollEdgeOptions } from "@/ui/native-sheet-scroll-edge";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { pageBackButtonOptions } from "@/ui/native-page-header";
 import { SurfaceCard } from "@/ui/design-system";
@@ -47,6 +48,7 @@ export function CheckIssueScreen() {
           ...pageBackButtonOptions(close, "Zurück", true),
           title: CHECK_TITLE,
           headerStyle: { backgroundColor: palette.background },
+          ...nativeSheetScrollEdgeOptions(),
           headerTintColor: palette.text,
           headerTitleStyle: { color: palette.text },
           statusBarStyle: palette.dark ? "light" : "dark",

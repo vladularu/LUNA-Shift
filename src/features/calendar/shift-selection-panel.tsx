@@ -1,7 +1,7 @@
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { memo, useEffect, useRef } from "react";
-import { findNodeHandle, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { findNodeHandle, Pressable, StyleSheet, View } from "react-native";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -16,6 +16,7 @@ import {
   ShiftTemplateListSeparator,
   shiftTemplateSubtitle,
 } from "@/features/templates/shift-template-list";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { MOTION } from "@/theme/motion";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -94,102 +95,110 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
       <BackFooterLayout disabled={busy} onPress={onClose} showFooter={inNativeSheet}>
         {(bottomPadding) => (
           <>
-            <View style={[styles.navigationBar, { backgroundColor: palette.background }]}>
-              <Pressable
-                accessibilityLabel="Dienstauswahl schließen"
-                accessibilityRole="button"
-                accessibilityState={{ disabled: busy }}
-                disabled={busy}
-                onPress={onClose}
-                style={({ pressed }) => [
-                  styles.closeButton,
-                  { backgroundColor: palette.surface, opacity: pressed ? 0.58 : 1 },
-                ]}
-              >
-                <Ionicons accessibilityElementsHidden color={palette.text} name="close" size={22} />
-              </Pressable>
-              <View
-                ref={headingRef}
-                accessible
-                accessibilityLabel={`Dienst auswählen für ${longDate(date)}`}
-                accessibilityRole="header"
-                style={styles.navigationTitleWrap}
-              >
-                <Text
-                  dynamicTypeRamp="headline"
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.navigationTitle, { color: palette.text }]}
-                >
-                  Dienst auswählen
-                </Text>
-                <Text
-                  dynamicTypeRamp="caption1"
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.navigationDate, { color: palette.textMuted }]}
-                >
-                  {longDate(date)}
-                </Text>
-              </View>
-              <View accessibilityElementsHidden style={styles.navigationPlaceholder} />
-            </View>
-
-            <ScrollView
-              contentContainerStyle={[
-                styles.content,
-                {
-                  paddingBottom: Math.max(
-                    bottomPadding,
-                    Math.max(insets.bottom, SPACING.xxl) + SPACING.xl,
-                  ),
-                },
-              ]}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.section}>
-                <Text
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.sectionHeading, { color: palette.text }]}
-                >
-                  Dienstvorlagen
-                </Text>
-                <ShiftTemplateListCard>
-                  {templateActions.length > 0 ? (
-                    templateActions.map((action, index) => (
-                      <View key={action.key}>
-                        {index > 0 ? <ShiftTemplateListSeparator /> : null}
-                        <ShiftTemplateListRow
-                          accessibilityLabel={`${action.label} direkt eintragen`}
-                          color={action.color}
-                          disabled={busy}
-                          moreAccessibilityLabel={`${action.label} Dienstvorlage bearbeiten`}
-                          onMorePress={() => onEditTemplate(action.template.id)}
-                          onPress={() => onSelectAction(action, date)}
-                          subtitle={shiftTemplateSubtitle(action.template)}
-                          symbol={action.symbol}
-                          title={action.label}
-                        />
-                      </View>
-                    ))
-                  ) : (
-                    <View style={styles.emptyTemplates}>
-                      <Text
-                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                        style={[styles.emptyTemplatesText, { color: palette.textMuted }]}
-                      >
-                        Noch keine Dienstvorlagen
-                      </Text>
-                    </View>
-                  )}
-                  {templateActions.length > 0 ? <ShiftTemplateListSeparator /> : null}
-                  <ShiftTemplateAddRow
-                    accessibilityLabel="Vorlage erstellen und eintragen"
-                    label="Vorlage erstellen und eintragen"
+            <SoftScrollScope>
+              <SoftScrollAnchor>
+                <View style={styles.navigationBar}>
+                  <Pressable
+                    accessibilityLabel="Dienstauswahl schließen"
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: busy }}
                     disabled={busy}
-                    onPress={onAddTemplate}
-                  />
-                </ShiftTemplateListCard>
-              </View>
-            </ScrollView>
+                    onPress={onClose}
+                    style={({ pressed }) => [
+                      styles.closeButton,
+                      { backgroundColor: palette.surface, opacity: pressed ? 0.58 : 1 },
+                    ]}
+                  >
+                    <Ionicons
+                      accessibilityElementsHidden
+                      color={palette.text}
+                      name="close"
+                      size={22}
+                    />
+                  </Pressable>
+                  <View
+                    ref={headingRef}
+                    accessible
+                    accessibilityLabel={`Dienst auswählen für ${longDate(date)}`}
+                    accessibilityRole="header"
+                    style={styles.navigationTitleWrap}
+                  >
+                    <Text
+                      dynamicTypeRamp="headline"
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={[styles.navigationTitle, { color: palette.text }]}
+                    >
+                      Dienst auswählen
+                    </Text>
+                    <Text
+                      dynamicTypeRamp="caption1"
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={[styles.navigationDate, { color: palette.textMuted }]}
+                    >
+                      {longDate(date)}
+                    </Text>
+                  </View>
+                  <View accessibilityElementsHidden style={styles.navigationPlaceholder} />
+                </View>
+              </SoftScrollAnchor>
+              <SoftScrollView
+                contentContainerStyle={[
+                  styles.content,
+                  {
+                    paddingBottom: Math.max(
+                      bottomPadding,
+                      Math.max(insets.bottom, SPACING.xxl) + SPACING.xl,
+                    ),
+                  },
+                ]}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.section}>
+                  <Text
+                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                    style={[styles.sectionHeading, { color: palette.text }]}
+                  >
+                    Dienstvorlagen
+                  </Text>
+                  <ShiftTemplateListCard>
+                    {templateActions.length > 0 ? (
+                      templateActions.map((action, index) => (
+                        <View key={action.key}>
+                          {index > 0 ? <ShiftTemplateListSeparator /> : null}
+                          <ShiftTemplateListRow
+                            accessibilityLabel={`${action.label} direkt eintragen`}
+                            color={action.color}
+                            disabled={busy}
+                            moreAccessibilityLabel={`${action.label} Dienstvorlage bearbeiten`}
+                            onMorePress={() => onEditTemplate(action.template.id)}
+                            onPress={() => onSelectAction(action, date)}
+                            subtitle={shiftTemplateSubtitle(action.template)}
+                            symbol={action.symbol}
+                            title={action.label}
+                          />
+                        </View>
+                      ))
+                    ) : (
+                      <View style={styles.emptyTemplates}>
+                        <Text
+                          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                          style={[styles.emptyTemplatesText, { color: palette.textMuted }]}
+                        >
+                          Noch keine Dienstvorlagen
+                        </Text>
+                      </View>
+                    )}
+                    {templateActions.length > 0 ? <ShiftTemplateListSeparator /> : null}
+                    <ShiftTemplateAddRow
+                      accessibilityLabel="Vorlage erstellen und eintragen"
+                      label="Vorlage erstellen und eintragen"
+                      disabled={busy}
+                      onPress={onAddTemplate}
+                    />
+                  </ShiftTemplateListCard>
+                </View>
+              </SoftScrollView>
+            </SoftScrollScope>
           </>
         )}
       </BackFooterLayout>

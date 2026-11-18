@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import { Modal, View } from "react-native";
 import { DEFAULT_SHARING_RIGHTS } from "@/domain/sharing-content";
+import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { SHARED_CALENDAR_COLORS, SPACING } from "@/theme/tokens";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
@@ -201,50 +202,58 @@ export function CalendarSharingScreen({
   if (controller.status === "loading" || controller.status === "unavailable")
     return (
       <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-        {onClose ? (
-          <TabScreenHeader
-            title="Teilen"
-            surface="groupedBackground"
-            accessory={
-              <SharingIconButton
-                label="Zurück zum Kalender"
-                icon="chevron-back"
-                onPress={onClose}
+        <SoftScrollScope enabled={Boolean(onClose)}>
+          {onClose ? (
+            <SoftScrollAnchor>
+              <TabScreenHeader
+                title="Teilen"
+                surface="groupedBackground"
+                accessory={
+                  <SharingIconButton
+                    label="Zurück zum Kalender"
+                    icon="chevron-back"
+                    onPress={onClose}
+                  />
+                }
               />
-            }
-          />
-        ) : null}
-        {controller.status === "loading" ? (
-          <LoadingView label="Freigaben werden geladen …" />
-        ) : (
-          <SharingUnavailableScreen />
-        )}
+            </SoftScrollAnchor>
+          ) : null}
+          {controller.status === "loading" ? (
+            <LoadingView label="Freigaben werden geladen …" />
+          ) : (
+            <SharingUnavailableScreen />
+          )}
+        </SoftScrollScope>
       </View>
     );
   if (controller.status === "signedOut")
     return (
       <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-        <TabScreenHeader
-          title="Teilen"
-          surface="groupedBackground"
-          accessory={
-            onClose ? (
-              <SharingIconButton
-                label="Zurück zum Kalender"
-                icon="chevron-back"
-                onPress={onClose}
-              />
-            ) : undefined
-          }
-        />
-        <ScreenScrollView surface="groupedBackground">
-          {status}
-          <SectionHeader title="Gemeinsam planen" />
-          <SharingParagraph>
-            Automatisch synchronisieren und deinen Dienstplan teilen.
-          </SharingParagraph>
-          <SignInActions controller={controller} run={action.run} busy={action.busy} />
-        </ScreenScrollView>
+        <SoftScrollScope>
+          <SoftScrollAnchor>
+            <TabScreenHeader
+              title="Teilen"
+              surface="groupedBackground"
+              accessory={
+                onClose ? (
+                  <SharingIconButton
+                    label="Zurück zum Kalender"
+                    icon="chevron-back"
+                    onPress={onClose}
+                  />
+                ) : undefined
+              }
+            />
+          </SoftScrollAnchor>
+          <ScreenScrollView surface="groupedBackground">
+            {status}
+            <SectionHeader title="Gemeinsam planen" />
+            <SharingParagraph>
+              Automatisch synchronisieren und deinen Dienstplan teilen.
+            </SharingParagraph>
+            <SignInActions controller={controller} run={action.run} busy={action.busy} />
+          </ScreenScrollView>
+        </SoftScrollScope>
       </View>
     );
   if (mode === "recovery")
@@ -279,215 +288,225 @@ export function CalendarSharingScreen({
         accessibilityElementsHidden={mode !== "overview"}
         importantForAccessibility={mode !== "overview" ? "no-hide-descendants" : "auto"}
       >
-        <TabScreenHeader
-          title="Teilen"
-          surface="groupedBackground"
-          accessory={
-            onClose ? (
-              <SharingIconButton
-                label="Zurück zum Kalender"
-                icon="chevron-back"
-                onPress={onClose}
-              />
-            ) : undefined
-          }
-        />
-        <ScreenScrollView
-          surface="groupedBackground"
-          testID="sharing-photo-viewport"
-          onLayout={photos.onLayout}
-          onScroll={photos.onScroll}
-          scrollEventThrottle={100}
-        >
-          {mode === "overview" ? status : null}
-          <AccountSyncNotice />
-          {own
-            .filter((calendar) => calendar.publicationPaused)
-            .map((calendar) => (
-              <SurfaceCard key={calendar.id}>
-                <RowButton
-                  title="Freigabe prüfen"
-                  subtitle={own.length > 1 ? calendar.name : undefined}
-                  disabled={action.busy}
-                  onPress={() =>
-                    void action.run(async () => {
-                      const preview = await controller.preparePublicationPreview(calendar.id);
-                      setCalendarId(calendar.id);
-                      setRecovery(preview);
-                      setMode("recovery");
-                    }, "Freigabe konnte nicht vorbereitet werden. Versuche es erneut.")
-                  }
-                />
-              </SurfaceCard>
-            ))}
-          <View
-            style={{ gap: SPACING.md }}
-            testID="sharing-members-section"
-            onLayout={photos.sectionLayout("members")}
+        <SoftScrollScope>
+          <SoftScrollAnchor>
+            <TabScreenHeader
+              title="Teilen"
+              surface="groupedBackground"
+              accessory={
+                onClose ? (
+                  <SharingIconButton
+                    label="Zurück zum Kalender"
+                    icon="chevron-back"
+                    onPress={onClose}
+                  />
+                ) : undefined
+              }
+            />
+          </SoftScrollAnchor>
+          <ScreenScrollView
+            surface="groupedBackground"
+            testID="sharing-photo-viewport"
+            onLayout={photos.onLayout}
+            onScroll={photos.onScroll}
+            scrollEventThrottle={100}
           >
-            <SectionHeader title="Personen mit Zugriff auf meinen Kalender" />
-            {members.length ? (
-              <View testID="sharing-members-card" onLayout={photos.cardLayout("members")}>
-                <SurfaceCard>
-                  {members.map(({ calendar, member }, index) => (
-                    <View
-                      key={`${calendar.id}:${member.userId}`}
-                      testID={`sharing-member-${member.userId}`}
-                      onLayout={photos.rowLayout("member:" + calendar.id + ":" + member.userId)}
-                    >
-                      {index ? <CardSeparator /> : null}
-                      <RowButton
-                        leading={
-                          <PersonAvatar
-                            name={member.displayName}
-                            photoUri={sharedPersonPresentation(controller, member.userId).photoUri}
-                            color={
-                              sharedPersonPresentation(controller, member.userId).color ??
-                              palette.primary
-                            }
-                          />
-                        }
-                        title={member.displayName}
-                        subtitle={
-                          member.status === "PENDING" ? `${calendar.name} · Anfrage` : calendar.name
-                        }
-                        accessibilityLabel={`Kalenderzugriff für ${member.displayName}`}
-                        disabled={action.busy}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/calendar-access",
-                            params: { calendarId: calendar.id, memberId: member.userId },
-                          })
-                        }
-                      />
-                    </View>
-                  ))}
-                </SurfaceCard>
-              </View>
-            ) : (
-              <SharingParagraph>Noch niemand beigetreten.</SharingParagraph>
-            )}
-          </View>
-          {activeInvites.length ? (
-            <View style={{ gap: SPACING.md }}>
-              <SectionHeader title="Aktive Einladungslinks" />
-              {activeInvites.map(({ calendar, item }) => {
-                const link = issuedLinks.find(
-                  (value) => value.id === item.id && value.calendarId === calendar.id,
-                );
-                return (
-                  <SharingActiveInvitationCard
-                    key={item.id}
-                    title={link?.url ?? "Einladung"}
-                    caption={
-                      !link
-                        ? item.rights
-                          ? "Link auf dem ursprünglichen Gerät"
-                          : "Einmal verwendbar · Link auf dem ursprünglichen Gerät"
-                        : undefined
-                    }
-                    name={calendar.name}
-                    remaining={invitationTimeRemaining(item.expiresAt, now)}
-                    joined={
-                      item.rights
-                        ? `${item.joinedCount ?? 0} beigetreten`
-                        : "0 beigetreten · einmal verwendbar"
-                    }
-                    busy={action.busy}
-                    copyLabel={
-                      controller.directCopyAvailable ? "Link kopieren" : "Link teilen oder kopieren"
-                    }
-                    onOpen={
-                      link
-                        ? () => {
-                            setCalendarId(calendar.id);
-                            setInvitation(link);
-                            setMode("ready");
-                          }
-                        : undefined
-                    }
-                    onCopy={
-                      link
-                        ? () =>
-                            void action.run(
-                              () => controller.shareInvitation(link, "copy"),
-                              controller.directCopyAvailable
-                                ? "Link konnte nicht kopiert werden. Versuche es erneut."
-                                : "Link konnte nicht geteilt werden. Versuche es erneut.",
-                            )
-                        : undefined
-                    }
-                    onStop={() =>
-                      void action.run(
-                        () => controller.revokeInvite(calendar.id, item.id),
-                        "Einladung konnte nicht gestoppt werden. Versuche es erneut.",
-                      )
+            {mode === "overview" ? status : null}
+            <AccountSyncNotice />
+            {own
+              .filter((calendar) => calendar.publicationPaused)
+              .map((calendar) => (
+                <SurfaceCard key={calendar.id}>
+                  <RowButton
+                    title="Freigabe prüfen"
+                    subtitle={own.length > 1 ? calendar.name : undefined}
+                    disabled={action.busy}
+                    onPress={() =>
+                      void action.run(async () => {
+                        const preview = await controller.preparePublicationPreview(calendar.id);
+                        setCalendarId(calendar.id);
+                        setRecovery(preview);
+                        setMode("recovery");
+                      }, "Freigabe konnte nicht vorbereitet werden. Versuche es erneut.")
                     }
                   />
-                );
-              })}
-            </View>
-          ) : null}
-          <PrimaryButton disabled={action.busy} onPress={() => invite()}>
-            Neue Einladung
-          </PrimaryButton>
-          {incoming.length ? (
+                </SurfaceCard>
+              ))}
             <View
               style={{ gap: SPACING.md }}
-              testID="sharing-incoming-section"
-              onLayout={photos.sectionLayout("incoming")}
+              testID="sharing-members-section"
+              onLayout={photos.sectionLayout("members")}
             >
-              <SectionHeader title="Mit dir geteilt" />
-              <View testID="sharing-incoming-card" onLayout={photos.cardLayout("incoming")}>
-                <SurfaceCard>
-                  {incoming.map((calendar, index) => (
-                    <View
-                      key={calendar.id}
-                      testID={`sharing-incoming-${calendar.id}`}
-                      onLayout={photos.rowLayout("incoming:" + calendar.id)}
-                    >
-                      {index ? <CardSeparator /> : null}
-                      <RowButton
-                        title={calendar.name}
-                        leading={
-                          <SharingCalendarColorPicker
-                            name={calendar.name}
-                            value={calendar.color}
-                            photoUri={
-                              controller.profilePhotosAvailable ? calendar.profilePhotoUri : null
-                            }
-                            visible={calendar.visible}
-                            disabled={action.busy}
-                            onChange={(color) =>
-                              void action.run(
-                                () => controller.setColor(calendar.id, color),
-                                "Farbe konnte nicht gespeichert werden. Versuche es erneut.",
-                              )
-                            }
-                          />
-                        }
-                        trailing={
-                          <LabeledSwitch
-                            label={`${calendar.name} anzeigen`}
-                            value={calendar.visible}
-                            onValueChange={(on) => setCalendarVisible(calendar.id, on)}
-                          />
-                        }
-                      />
-                      {visibilityErrors.has(calendar.id) ? (
-                        <SharingStatus
-                          busy={false}
-                          failed
-                          message={visibilityErrors.get(calendar.id)}
+              <SectionHeader title="Personen mit Zugriff auf meinen Kalender" />
+              {members.length ? (
+                <View testID="sharing-members-card" onLayout={photos.cardLayout("members")}>
+                  <SurfaceCard>
+                    {members.map(({ calendar, member }, index) => (
+                      <View
+                        key={`${calendar.id}:${member.userId}`}
+                        testID={`sharing-member-${member.userId}`}
+                        onLayout={photos.rowLayout("member:" + calendar.id + ":" + member.userId)}
+                      >
+                        {index ? <CardSeparator /> : null}
+                        <RowButton
+                          leading={
+                            <PersonAvatar
+                              name={member.displayName}
+                              photoUri={
+                                sharedPersonPresentation(controller, member.userId).photoUri
+                              }
+                              color={
+                                sharedPersonPresentation(controller, member.userId).color ??
+                                palette.primary
+                              }
+                            />
+                          }
+                          title={member.displayName}
+                          subtitle={
+                            member.status === "PENDING"
+                              ? `${calendar.name} · Anfrage`
+                              : calendar.name
+                          }
+                          accessibilityLabel={`Kalenderzugriff für ${member.displayName}`}
+                          disabled={action.busy}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/calendar-access",
+                              params: { calendarId: calendar.id, memberId: member.userId },
+                            })
+                          }
                         />
-                      ) : null}
-                    </View>
-                  ))}
-                </SurfaceCard>
-              </View>
+                      </View>
+                    ))}
+                  </SurfaceCard>
+                </View>
+              ) : (
+                <SharingParagraph>Noch niemand beigetreten.</SharingParagraph>
+              )}
             </View>
-          ) : null}
-        </ScreenScrollView>
+            {activeInvites.length ? (
+              <View style={{ gap: SPACING.md }}>
+                <SectionHeader title="Aktive Einladungslinks" />
+                {activeInvites.map(({ calendar, item }) => {
+                  const link = issuedLinks.find(
+                    (value) => value.id === item.id && value.calendarId === calendar.id,
+                  );
+                  return (
+                    <SharingActiveInvitationCard
+                      key={item.id}
+                      title={link?.url ?? "Einladung"}
+                      caption={
+                        !link
+                          ? item.rights
+                            ? "Link auf dem ursprünglichen Gerät"
+                            : "Einmal verwendbar · Link auf dem ursprünglichen Gerät"
+                          : undefined
+                      }
+                      name={calendar.name}
+                      remaining={invitationTimeRemaining(item.expiresAt, now)}
+                      joined={
+                        item.rights
+                          ? `${item.joinedCount ?? 0} beigetreten`
+                          : "0 beigetreten · einmal verwendbar"
+                      }
+                      busy={action.busy}
+                      copyLabel={
+                        controller.directCopyAvailable
+                          ? "Link kopieren"
+                          : "Link teilen oder kopieren"
+                      }
+                      onOpen={
+                        link
+                          ? () => {
+                              setCalendarId(calendar.id);
+                              setInvitation(link);
+                              setMode("ready");
+                            }
+                          : undefined
+                      }
+                      onCopy={
+                        link
+                          ? () =>
+                              void action.run(
+                                () => controller.shareInvitation(link, "copy"),
+                                controller.directCopyAvailable
+                                  ? "Link konnte nicht kopiert werden. Versuche es erneut."
+                                  : "Link konnte nicht geteilt werden. Versuche es erneut.",
+                              )
+                          : undefined
+                      }
+                      onStop={() =>
+                        void action.run(
+                          () => controller.revokeInvite(calendar.id, item.id),
+                          "Einladung konnte nicht gestoppt werden. Versuche es erneut.",
+                        )
+                      }
+                    />
+                  );
+                })}
+              </View>
+            ) : null}
+            <PrimaryButton disabled={action.busy} onPress={() => invite()}>
+              Neue Einladung
+            </PrimaryButton>
+            {incoming.length ? (
+              <View
+                style={{ gap: SPACING.md }}
+                testID="sharing-incoming-section"
+                onLayout={photos.sectionLayout("incoming")}
+              >
+                <SectionHeader title="Mit dir geteilt" />
+                <View testID="sharing-incoming-card" onLayout={photos.cardLayout("incoming")}>
+                  <SurfaceCard>
+                    {incoming.map((calendar, index) => (
+                      <View
+                        key={calendar.id}
+                        testID={`sharing-incoming-${calendar.id}`}
+                        onLayout={photos.rowLayout("incoming:" + calendar.id)}
+                      >
+                        {index ? <CardSeparator /> : null}
+                        <RowButton
+                          title={calendar.name}
+                          leading={
+                            <SharingCalendarColorPicker
+                              name={calendar.name}
+                              value={calendar.color}
+                              photoUri={
+                                controller.profilePhotosAvailable ? calendar.profilePhotoUri : null
+                              }
+                              visible={calendar.visible}
+                              disabled={action.busy}
+                              onChange={(color) =>
+                                void action.run(
+                                  () => controller.setColor(calendar.id, color),
+                                  "Farbe konnte nicht gespeichert werden. Versuche es erneut.",
+                                )
+                              }
+                            />
+                          }
+                          trailing={
+                            <LabeledSwitch
+                              label={`${calendar.name} anzeigen`}
+                              value={calendar.visible}
+                              onValueChange={(on) => setCalendarVisible(calendar.id, on)}
+                            />
+                          }
+                        />
+                        {visibilityErrors.has(calendar.id) ? (
+                          <SharingStatus
+                            busy={false}
+                            failed
+                            message={visibilityErrors.get(calendar.id)}
+                          />
+                        ) : null}
+                      </View>
+                    ))}
+                  </SurfaceCard>
+                </View>
+              </View>
+            ) : null}
+          </ScreenScrollView>
+        </SoftScrollScope>
       </View>
       <Modal
         visible={mode === "setup" || mode === "ready"}

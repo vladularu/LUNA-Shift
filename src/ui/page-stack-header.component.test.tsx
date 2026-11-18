@@ -9,7 +9,27 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { horizontalBackGestureOptions } from "@/navigation/horizontal-back-gesture";
 
 import { pageBackButtonOptions } from "./native-page-header";
-import { pageStackHeaderOptions } from "./page-stack-header";
+import {
+  pageStackHeaderOptions,
+  PageStackScrollEdges,
+  pageStackScrollLayout,
+} from "./page-stack-header";
+import { ScreenScrollView } from "./screen-layout";
+
+const mockProvider = ({ children }: React.PropsWithChildren) => children;
+const mockUseRef = () => undefined;
+let mockSoftEdge = false;
+jest.mock("@/ui/native-scroll-edge", () => ({
+  get nativeScrollEdge() {
+    return mockSoftEdge
+      ? {
+          ScrollEdgeEffectProvider: mockProvider,
+          ScrollEdgeEffect: jest.requireActual<typeof import("react-native")>("react-native").View,
+          useScrollEdgeEffectRef: mockUseRef,
+        }
+      : null;
+  },
+}));
 
 jest.mock("expo-glass-effect", () => ({
   GlassView: (props: Record<string, unknown>) =>
@@ -29,6 +49,8 @@ function Layout() {
   return (
     <SafeAreaInsetsContext.Provider value={{ top: 62, bottom: 34, left: 0, right: 0 }}>
       <Stack
+        layout={({ children }) => <PageStackScrollEdges>{children}</PageStackScrollEdges>}
+        screenLayout={pageStackScrollLayout}
         screenOptions={({ route }) => ({
           ...horizontalBackGestureOptions(route.name),
           ...pageBackButtonOptions(),
@@ -41,19 +63,34 @@ function Layout() {
   );
 }
 
-function Home() {
+function Home({
+  href = "/calendar-design",
+}: {
+  readonly href?: "/calendar-design" | "/settings-editor";
+} = {}) {
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push("/calendar-design")}>
+    <Pressable accessibilityRole="button" onPress={() => router.push(href)}>
       <Text>Seite öffnen</Text>
     </Pressable>
   );
 }
 
-function Editor({ toolbar }: { readonly toolbar: boolean }) {
+function Editor({
+  toolbar,
+  scroll = false,
+}: {
+  readonly toolbar: boolean;
+  readonly scroll?: boolean;
+}) {
   const [dirty, setDirty] = useState(false);
   const save = (
     <Pressable accessibilityRole="button" disabled={!dirty} onPress={mockSave}>
       <Text>Speichern</Text>
+    </Pressable>
+  );
+  const field = (
+    <Pressable accessibilityRole="button" onPress={() => setDirty(true)}>
+      <Text>Eingabe ändern</Text>
     </Pressable>
   );
   return (
@@ -66,9 +103,7 @@ function Editor({ toolbar }: { readonly toolbar: boolean }) {
           <Stack.Toolbar.View hidesSharedBackground>{save}</Stack.Toolbar.View>
         </Stack.Toolbar>
       ) : null}
-      <Pressable accessibilityRole="button" onPress={() => setDirty(true)}>
-        <Text>Eingabe ändern</Text>
-      </Pressable>
+      {scroll ? <ScreenScrollView testID="stack-page-scroll">{field}</ScreenScrollView> : field}
     </>
   );
 }
@@ -105,6 +140,31 @@ describe("page header inside the native screen", () => {
       );
     },
   );
+
+  it("keeps the active header actions inside the native soft edge", async () => {
+    mockSoftEdge = true;
+    try {
+      expect(pageStackHeaderOptions("calendar-design")?.headerTransparent).toBeUndefined();
+      const screen = await renderRouter({
+        _layout: Layout,
+        index: () => <Home href="/settings-editor" />,
+        "settings-editor": () => <Editor toolbar scroll />,
+      });
+      await fireEvent.press(screen.getByRole("button", { name: "Seite öffnen" }));
+      const edge = within(await screen.findByTestId("soft-scroll-edge"));
+      expect(edge.getByTestId("page-stack-header")).toBeTruthy();
+      expect(edge.getByRole("button", { name: "Zurück" })).toBeEnabled();
+      await waitFor(() => expect(edge.getByRole("button", { name: "Speichern" })).toBeDisabled());
+      await fireEvent.press(screen.getByRole("button", { name: "Eingabe ändern" }));
+      await waitFor(() => expect(edge.getByRole("button", { name: "Speichern" })).toBeEnabled());
+      await fireEvent.press(edge.getByRole("button", { name: "Zurück" }));
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Seite öffnen" })).toBeTruthy(),
+      );
+    } finally {
+      mockSoftEdge = false;
+    }
+  });
 
   it("leaves native sheet and vertical-editor headers alone", () => {
     for (const route of ["day-details", "info-details", "check-issue", "day-editor", "quick-add"])

@@ -11,6 +11,7 @@ import { parseEnumRouteParam, type RouteParam } from "@/navigation/route-params"
 import { usePalette } from "@/theme/palette";
 import { SurfaceCard } from "@/ui/design-system";
 import { LoadFailureView } from "@/ui/loading-view";
+import { nativeSheetScrollEdgeOptions } from "@/ui/native-sheet-scroll-edge";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 interface InfoContent {
@@ -265,6 +266,7 @@ export function SettingsInfoDetailsScreen() {
               title: content.title,
               contentStyle: { backgroundColor: palette.groupedBackground },
               headerStyle: { backgroundColor: palette.background },
+              ...nativeSheetScrollEdgeOptions(),
               headerTintColor: palette.text,
               headerTitleStyle: { color: palette.text },
               statusBarStyle: palette.dark ? "light" : "dark",
