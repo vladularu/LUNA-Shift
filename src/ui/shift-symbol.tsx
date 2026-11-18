@@ -1,7 +1,7 @@
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
-import MaterialCommunityIcons from "@/ui/icon";
 import { View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { shiftSymbolDefinition } from "@/theme/shift-symbols";
 import { COMPACT_TEXT_MAX_SCALE } from "@/theme/typography";
@@ -21,7 +21,16 @@ export function ShiftSymbol({
   return (
     <View style={[{ alignItems: "center", justifyContent: "center" }, style]}>
       {definition ? (
-        <MaterialCommunityIcons color={color} name={definition.icon} size={size} />
+        <Svg
+          accessible={false}
+          accessibilityElementsHidden
+          height={size}
+          importantForAccessibility="no-hide-descendants"
+          viewBox="0 0 24 24"
+          width={size}
+        >
+          <Path d={definition.path} fill={color} fillRule="evenodd" />
+        </Svg>
       ) : (
         <Text
           adjustsFontSizeToFit

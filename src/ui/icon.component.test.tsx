@@ -3,8 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
-import { SHIFT_SYMBOLS } from "@/theme/shift-symbols";
-import Icon, { DESIGN_ICON_MAP } from "@/ui/icon";
+import Icon from "@/ui/icon";
 import { SelectionChip, SelectionRow } from "@/ui/selection-option";
 
 jest.mock("lucide-react-native", () => {
@@ -31,14 +30,6 @@ describe("Figma icon adapter", () => {
       );
     } finally {
       scheme.mockRestore();
-    }
-  });
-  it("can draw every existing stored shift symbol without changing its identifier", async () => {
-    for (const symbol of SHIFT_SYMBOLS) {
-      expect(DESIGN_ICON_MAP[symbol.icon]).toBeDefined();
-      const screen = await render(<Icon name={symbol.icon} color="#0F172A" size={24} />);
-      expect(screen.toJSON()).not.toBeNull();
-      await screen.unmount();
     }
   });
 });
