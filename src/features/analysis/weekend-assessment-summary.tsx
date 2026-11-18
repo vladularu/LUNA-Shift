@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
+import { validComplianceIssueFacts } from "@/domain/compliance-issue-facts";
+import type { ComplianceIssue } from "@/domain/types";
 import {
   PLANNING_WEEKEND_POLICY,
   type PlanningWeekendAssessment,
@@ -33,6 +35,26 @@ export function weekendAssessmentOpen(assessment?: PlanningWeekendAssessment): b
   );
 }
 
+export function affectedWeekendWindows(assessment?: PlanningWeekendAssessment) {
+  return (assessment?.windows ?? []).filter(
+    (window) =>
+      window.assessmentComplete &&
+      window.unknownCount === 0 &&
+      window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,
+  );
+}
+
+export function planningWeekendWindowsForIssue(issue: ComplianceIssue) {
+  if (issue.kind !== "PLANNING" || issue.rule !== "PLANNING_WEEKEND_RECOVERY") return [];
+  const facts = validComplianceIssueFacts(issue.facts, issue.rule);
+  return facts?.rule === "PLANNING_WEEKEND_RECOVERY"
+    ? affectedWeekendWindows(facts.assessment)
+    : [];
+}
+
+export const weekendHintTitle = (freeCount: number) =>
+  freeCount === 1 ? "1 freies Wochenende in 4 Wochen" : "Kein freies Wochenende in 4 Wochen";
+
 export function WeekendAssessmentWindows({
   assessment,
   affectedOnly = false,
@@ -41,14 +63,7 @@ export function WeekendAssessmentWindows({
   readonly affectedOnly?: boolean;
 }) {
   const palette = usePalette();
-  const windows = affectedOnly
-    ? assessment.windows.filter(
-        (window) =>
-          window.assessmentComplete &&
-          window.unknownCount === 0 &&
-          window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,
-      )
-    : assessment.windows;
+  const windows = affectedOnly ? affectedWeekendWindows(assessment) : assessment.windows;
   if (!windows.length) return null;
   if (affectedOnly) {
     const ordered = [...windows].sort(

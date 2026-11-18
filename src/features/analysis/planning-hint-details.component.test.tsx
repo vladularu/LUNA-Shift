@@ -26,6 +26,46 @@ jest.mock(
 );
 
 describe("single concise planning detail explanation", () => {
+  it("explains that six consecutive night duties triggered the finding", async () => {
+    const shifts = [
+      ...[3, 4, 5, 6, 7, 8].map((day) => {
+        const date = `2026-08-0${day}`;
+        return forecastShift({
+          id: date,
+          date,
+          title: "Nacht",
+          type: "NIGHT",
+          startTime: "21:00",
+          endTime: "07:30",
+        });
+      }),
+      forecastShift({
+        id: "late",
+        date: "2026-08-10",
+        title: "Spät",
+        type: "LATE",
+        startTime: "13:18",
+        endTime: "21:30",
+      }),
+    ];
+    const result = calculateMonthlyCompliance("2026-08", shifts, "Europe/Berlin", {
+      allEmploymentWorkRecorded: true,
+    });
+    const issue = result.issues.find((value) => value.rule === "PLANNING_NIGHT_SERIES")!;
+    const screen = await render(
+      <ComplianceIssueContent issue={issue} shifts={shifts} timeZone="Europe/Berlin" compact />,
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Details ansehen: 6 Nächte in Folge" }),
+    );
+    expect(
+      screen.getByText("Du hast 6 Nachtdienste direkt hintereinander eingetragen."),
+    ).toBeVisible();
+    expect(screen.getByText("29 h 48 min")).toBeVisible();
+    expect(screen.queryByText("Danach 29 Std. 48 Min. frei.")).toBeNull();
+    expect(screen.getByText(/Empfohlen sind höchstens 3 Nächte in Folge/)).toBeVisible();
+  });
+
   it("keeps an unknown critical compact row short and its original explanation fully reachable", async () => {
     const original =
       "Erster kritischer Originalsatz. Zweite wichtige Angabe. Dritter unveränderter Sachverhalt.";

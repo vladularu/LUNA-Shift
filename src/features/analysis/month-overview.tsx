@@ -3,7 +3,13 @@ import { targetCalculationCaption } from "./target-calculation-caption";
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
-import { classifyChecks, selectVisibleCompliance } from "./check-visibility";
+import {
+  addCheckCounts,
+  classifyChecks,
+  countChecks,
+  selectVisibleCompliance,
+} from "./check-visibility";
+import { planningWeekendWindowsForIssue } from "./weekend-assessment-summary";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { complianceDetailsRoute, salaryRoute, netPayForecastRoute } from "@/navigation/routes";
 import {
@@ -17,7 +23,7 @@ import { EarnedPremiumsCard } from "./salary-overview-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { annualSalaryGrossCents, type AnnualSalaryPayment } from "@/domain/annual-salary-payment";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   timeAccountActual,
   timeAccountBalance,
@@ -60,7 +66,26 @@ export function MonthOverview({
   readonly additionalRecurringGrossCents?: number;
 }) {
   const { summary, pay, shiftTypeAnalysis } = data;
-  const visible = compliance === null ? null : selectVisibleCompliance(compliance, showPlanning);
+  const check = useMemo(() => {
+    if (!compliance) return null;
+    const visible = selectVisibleCompliance(compliance, showPlanning);
+    const planning = visible.issues.filter((issue) => issue.kind === "PLANNING");
+    // Each finding already contributes one to the total.
+    const additional = planning.flatMap((issue) =>
+      planningWeekendWindowsForIssue(issue)
+        .slice(1)
+        .map(() => issue),
+    );
+    return {
+      visible,
+      counts: addCheckCounts(visible, countChecks(additional)),
+      categories: {
+        ...classifyChecks(compliance.issues),
+        planning: countChecks([...planning, ...additional]),
+      },
+    };
+  }, [compliance, showPlanning]);
+  const visible = check?.visible ?? null;
   const emptyMonth = data.monthShifts.length === 0;
   const emptyHorizon = data.complianceShifts.ok && data.complianceShifts.value.length === 0;
   const noFindings =
@@ -150,8 +175,8 @@ export function MonthOverview({
         CHECK: (
           <CheckListCard
             reserveLoadingSpace
-            counts={visible ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
-            categories={visible && compliance ? classifyChecks(compliance.issues) : undefined}
+            counts={check?.counts ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
+            categories={check?.categories}
             status={status}
             loading={status === "Wird geprüft …"}
             showPlanning={showPlanning}

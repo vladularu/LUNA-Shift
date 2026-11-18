@@ -1,8 +1,10 @@
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
+import type { PlanningWeekendWindow } from "@/domain/planning-weekend-policy";
 
 export interface CheckIssueInput {
   readonly issue: ComplianceIssue;
   readonly relatedIssues?: readonly ComplianceIssue[];
+  readonly weekend?: PlanningWeekendWindow;
   readonly shifts: readonly ShiftEntry[];
   readonly timeZone: string;
 }

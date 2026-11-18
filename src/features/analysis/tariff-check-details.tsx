@@ -5,14 +5,20 @@ import type { ShiftEntry } from "@/domain/types";
 import { isTariffSourceUrl, TARIFF_SCOPE_SOURCE } from "@/domain/tariff-time-policy";
 import { usePalette } from "@/theme/palette";
 import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { CHECK_REFERENCE_TYPOGRAPHY, TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
-import { TariffCheckPeriod } from "./tariff-check-period";
+import { TariffCheckPeriod, tariffCheckCalendar } from "./tariff-check-period";
 import { CheckDutyOverview } from "./check-duty-overview";
-import { CheckDetailCard, CheckDetailStack } from "./check-detail-layout";
-import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
+import {
+  CheckDetailCard,
+  checkSourceLinkStyle,
+  CheckDetailStack,
+  CheckDetailHeading,
+  useCheckReferenceDetail,
+} from "./check-detail-layout";
+import { checkPeriodLabel } from "./check-period-label";
 
 export function tariffCheckStatus(status: TariffComplianceEvidence["status"]): string {
   switch (status) {
@@ -50,14 +56,26 @@ export function TariffCheckDetails({
   readonly hideServices?: boolean;
 }) {
   const palette = usePalette();
+  const reference = useCheckReferenceDetail();
   const heading = { color: palette.text, ...TYPOGRAPHY.small, fontWeight: "500" as const };
-  const body = { color: palette.textMuted, ...TYPOGRAPHY.body };
+  const body = reference
+    ? { ...CHECK_REFERENCE_TYPOGRAPHY.body, color: reference.secondary }
+    : { color: palette.textMuted, ...TYPOGRAPHY.body };
   const scopeOnly = evidence.source.url === TARIFF_SCOPE_SOURCE.url;
+  const calendar = scopeOnly ? null : tariffCheckCalendar(evidence);
   const presentation = tariffCheckPresentation(evidence, title, description);
   const period = `${dateLabel(evidence.period.from).slice(0, evidence.period.from.slice(0, 4) === evidence.period.until.slice(0, 4) ? 6 : undefined)}–${dateLabel(evidence.period.until)}`;
+  const sourceLinked = isTariffSourceUrl(evidence.source.url);
   const source = (
     <View style={{ gap: SPACING.xs }}>
-      <Text style={{ color: palette.text, ...TYPOGRAPHY.small }}>{evidence.source.title}</Text>
+      <Text
+        style={[
+          { color: palette.text, ...TYPOGRAPHY.small },
+          sourceLinked && checkSourceLinkStyle(palette),
+        ]}
+      >
+        {evidence.source.title}
+      </Text>
       <Text style={body}>{evidence.source.section}</Text>
       <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
         Fassung: {evidence.source.version}
@@ -67,8 +85,9 @@ export function TariffCheckDetails({
 
   return (
     <CheckDetailStack testID="tariff-check-detail-content" embedded={embedded}>
-      <AnalysisDetailSummaryCard
-        period={period}
+      <CheckDetailHeading
+        kind="tariff"
+        period={reference ? checkPeriodLabel(evidence.period.from, evidence.period.until) : period}
         title={presentation.title}
         caption={
           presentation.status === "planned"
@@ -78,14 +97,37 @@ export function TariffCheckDetails({
               : "Tarifprüfung"
         }
       />
-      <CheckDetailCard>
+      <CheckDetailCard
+        title={
+          reference
+            ? calendar?.dates.length === 7 && calendar.recorded.length === 7
+              ? "Dienstbeginn an sieben Tagen"
+              : "Dienstbeginn im Prüfzeitraum"
+            : undefined
+        }
+        accent={reference?.tariffLine}
+      >
         {scopeOnly ? (
           <CheckDutyOverview shifts={shifts} timeZone={timeZone} />
         ) : (
-          <TariffCheckPeriod evidence={evidence} shifts={shifts} timeZone={timeZone} />
+          <TariffCheckPeriod
+            evidence={evidence}
+            shifts={shifts}
+            timeZone={timeZone}
+            calendar={calendar}
+          />
         )}
+        {reference && calendar && shifts.length ? (
+          <CheckDutyOverview shifts={shifts} timeZone={timeZone} labelOnly />
+        ) : null}
       </CheckDetailCard>
-      <CheckDetailCard title="Einordnung" accent={palette.tariffCheckBorder}>
+      <CheckDetailCard
+        title={reference ? "Was zeigt der Hinweis?" : "Einordnung"}
+        accent={reference ? undefined : palette.tariffCheckBorder}
+      >
+        {reference && (presentation.status === "planned" || presentation.status === "deviation") ? (
+          <Text style={body}>{tariffCheckStatus(evidence.status)}</Text>
+        ) : null}
         <Text testID="tariff-check-summary" style={body}>
           {presentation.summary}
         </Text>
@@ -93,10 +135,13 @@ export function TariffCheckDetails({
           <Text style={body}>Einige zugehörige Dienste sind nicht mehr verfügbar.</Text>
         ) : null}
       </CheckDetailCard>
-      <CheckDetailCard>
-        <CheckDetailDisclosure title="Quelle & Berechnung" testID="tariff-source-limits">
+      <CheckDetailCard disclosure>
+        <CheckDetailDisclosure
+          title={reference ? "Prüfgrundlage" : "Quelle & Berechnung"}
+          testID="tariff-source-limits"
+        >
           <Text style={heading}>{scopeOnly ? "Grundlage des Prüfumfangs" : "Quelle"}</Text>
-          {isTariffSourceUrl(evidence.source.url) ? (
+          {sourceLinked ? (
             <Pressable
               accessibilityRole="link"
               accessibilityLabel={evidence.source.title}

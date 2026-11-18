@@ -176,3 +176,20 @@ export const DARK_PALETTE: Palette = {
   overlaySubtle: "rgba(250, 250, 250, 0.06)",
   shadow: "rgba(0, 0, 0, 0.35)",
 };
+
+/** Colors from the approved calendar preview for standalone check details. */
+export const CHECK_REFERENCE_LIGHT_PALETTE = {
+  background: "#f3f5f5",
+  paper: "#ffffff",
+  text: "#24233a",
+  secondary: "#59596c",
+  line: "#e1e7e6",
+  legal: "#a74031",
+  legalLine: "#c66b5d",
+  tariff: "#285587",
+  tariffLine: "#6e97c5",
+  tariffSoft: "#eaf1f9",
+  neutral: "#4c5063",
+  dot: "#a4b5b2",
+  track: "#c8d5d2",
+};

@@ -23,6 +23,12 @@ describe("horizontal card back gestures", () => {
     }
     expect(layout).toContain("...horizontalBackGestureOptions(route.name)");
   });
+  it("keeps the check detail in a vertically dismissible native sheet", () => {
+    const screen = layout.match(/name="check-issue"([\s\S]*?)\/>/)?.[1];
+    expect(screen).toContain("...analysisSheetOptions()");
+    expect(screen).toContain("gestureEnabled: true");
+    expect(screen).not.toContain("fullScreenGestureEnabled");
+  });
   it("keeps native content-pop active only at the calendar edge, away from the photo slider", () => {
     expect(horizontalBackGestureOptions("calendar-design")).toEqual({
       gestureEnabled: true,

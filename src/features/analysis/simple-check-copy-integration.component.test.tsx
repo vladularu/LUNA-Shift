@@ -43,7 +43,7 @@ const observation = (id: string, later = false): ComplianceIssue => ({
     recordedDates: shifts.slice(later ? 1 : 0, later ? 3 : 2).map((shift) => shift.date),
   },
 });
-const view = (secondary: boolean, issues: readonly ComplianceIssue[]) => {
+const view = (secondary: boolean, issues: readonly ComplianceIssue[], entries = shifts) => {
   const compliance = {
     month: "2026-11",
     issues,
@@ -51,11 +51,11 @@ const view = (secondary: boolean, issues: readonly ComplianceIssue[]) => {
     ...countChecks(issues),
   };
   return secondary ? (
-    <ComplianceDetails compliance={compliance} shifts={shifts} timeZone="Europe/Berlin" />
+    <ComplianceDetails compliance={compliance} shifts={entries} timeZone="Europe/Berlin" />
   ) : (
     <ComplianceDayList
       compliance={compliance}
-      shifts={shifts}
+      shifts={entries}
       timeZone="Europe/Berlin"
       showPlanning
     />
@@ -70,6 +70,27 @@ async function openObservation(screen: Screen, secondary: boolean) {
 }
 
 describe("simple check copy in both result renderers", () => {
+  it("keeps duty symbols in the blue Sunday cells and only date and title in the duty rows", async () => {
+    const night = forecastShift({
+      id: "saturday-night",
+      date: "2026-11-14",
+      title: "Nacht",
+      type: "NIGHT",
+      startTime: "21:00",
+      endTime: "07:30",
+    });
+    const item = observation("weekends");
+    const issue = { ...item, relatedShiftIds: [...item.relatedShiftIds, night.id] };
+    const screen = await render(view(false, [issue], [...shifts, night]));
+    await fireEvent.press(screen.getByTestId("check-details-weekends"));
+    const calendar = within(screen.getByTestId("tariff-period"));
+    expect(calendar.getAllByTestId(/^check-duty-symbol-/)).toHaveLength(2);
+    const rows = within(screen.getByTestId("check-duty-overview"));
+    expect(rows.getByText("14.11. · Nacht")).toBeVisible();
+    expect(rows.queryAllByTestId(/^check-duty-symbol-/)).toHaveLength(0);
+    expect(rows.queryAllByText(/\d{2}:\d{2}/)).toHaveLength(0);
+  });
+
   it.each<[boolean, boolean]>([
     [false, false],
     [true, false],
@@ -82,7 +103,7 @@ describe("simple check copy in both result renderers", () => {
       const originals = mixed ? [observation("ordinary"), deviation] : [deviation];
       const before = JSON.stringify(originals),
         screen = await render(view(secondary, originals));
-      expect(screen.getByText("Tarifprüfung · Abweichung erkannt")).toBeVisible();
+      expect(screen.getByText(/Tarifprüfung · Abweichung erkannt/)).toBeVisible();
       expect(screen.queryByText(/Rechtsverstoß|rechtswidrig|verboten/)).toBeNull();
       if (secondary)
         expect(
@@ -97,18 +118,60 @@ describe("simple check copy in both result renderers", () => {
   it.each<[boolean]>([[false], [true]])(
     "keeps one observation, all original periods and a duty overview for each original period (%s)",
     async (secondary) => {
-      const issues = [observation("first"), observation("second", true)],
+      const issues = [observation("second", true), observation("first")],
         before = JSON.stringify(issues);
       const screen = await render(view(secondary, issues));
       const copy = tariffCheckPresentation(
-        issues[1].tariff!,
-        issues[1].title,
-        issues[1].description,
+        issues[0].tariff!,
+        issues[0].title,
+        issues[0].description,
       );
-      expect(screen.getByText(copy.title)).toBeVisible();
-      expect(screen.getByText(copy.summary)).toBeVisible();
+      expect(screen.getAllByText(copy.title)).toHaveLength(secondary ? 1 : 2);
+      if (secondary) expect(screen.getByText(copy.summary)).toBeVisible();
+      else expect(screen.queryByText(copy.summary)).toBeNull();
       expect(screen.queryByText(/bestätig/)).toBeNull();
+      if (!secondary) {
+        const inbox = within(screen.getByTestId("check-inbox-legal"));
+        const periods = inbox.getAllByRole("button");
+        expect(periods.map((entry) => entry.props.accessibilityValue.text)).toEqual([
+          "Tarif · 02.11.–15.11.2026",
+          "Tarif · 09.11.–22.11.2026",
+        ]);
+        await fireEvent.press(periods[0]);
+        expect(screen.getByTestId("check-original-issue-first")).toBeVisible();
+        expect(screen.queryByTestId("check-original-issue-second")).toBeNull();
+        expect(screen.queryByTestId("check-issue-periods")).toBeNull();
+        const cell = within(screen.getByTestId("tariff-period-2026-11-08"));
+        expect(cell.getByTestId("check-duty-symbol-2026-11-08-sunday-8")).toBeVisible();
+        expect(cell.getByText("8.")).toBeVisible();
+        expect(
+          within(screen.getByTestId("check-shift-sunday-8")).queryByTestId(/^check-duty-symbol-/),
+        ).toBeNull();
+        expect(screen.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
+        await fireEvent.press(
+          screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
+        );
+        expect(
+          screen.getByRole("link", { name: TARIFF_TIME_POLICIES.TVOED_K.freeSource!.title }),
+        ).toBeVisible();
+        expect(screen.getByText(TARIFF_TIME_POLICIES.TVOED_K.freeSource!.title)).toHaveStyle({
+          textDecorationLine: "underline",
+        });
+        await fireEvent.press(screen.getByRole("button", { name: "Hinweis schließen" }));
+        await fireEvent.press(screen.getByTestId("check-details-second"));
+        expect(screen.getByTestId("check-original-issue-second")).toBeVisible();
+        expect(screen.queryByTestId("check-original-issue-first")).toBeNull();
+        expect(screen.queryByTestId("check-shift-sunday-8")).toBeNull();
+        expect(screen.getByTestId("check-shift-sunday-22")).toBeVisible();
+        await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+        expect(screen.getByTestId("check-inbox-legal")).toBeVisible();
+        expect(JSON.stringify(issues)).toBe(before);
+        return;
+      }
       await openObservation(screen, secondary);
+      expect(
+        within(screen.getByTestId("check-original-issue-second")).getByText(copy.summary),
+      ).toBeVisible();
       expect(screen.getByTestId("check-original-issue-second")).toBeVisible();
       expect(screen.queryByTestId("check-original-issue-first")).toBeNull();
       const more = screen.getByRole("button", { name: "Weitere Zeiträume (1)", expanded: false });
@@ -120,7 +183,10 @@ describe("simple check copy in both result renderers", () => {
       expect(screen.getByTestId("check-original-issue-first")).toBeVisible();
       const original = within(screen.getByTestId("check-original-issue-first"));
       await fireEvent.press(
-        original.getByRole("button", { name: "Quelle & Berechnung", expanded: false }),
+        original.getByRole("button", {
+          name: "Quelle & Berechnung",
+          expanded: false,
+        }),
       );
       expect(
         original.getByRole("link", { name: TARIFF_TIME_POLICIES.TVOED_K.freeSource!.title }),
@@ -141,7 +207,8 @@ describe("simple check copy in both result renderers", () => {
       const screen = await render(view(secondary, [pending]));
       const copy = tariffCheckPresentation(pending.tariff, pending.title, pending.description);
       expect(screen.getByText(copy.title)).toBeVisible();
-      expect(screen.getByText(copy.summary)).toBeVisible();
+      if (secondary) expect(screen.getByText(copy.summary)).toBeVisible();
+      else expect(screen.queryByText(copy.summary)).toBeNull();
       expect(screen.queryByTestId("check-status-card")).toBeNull();
       expect(screen.queryByText("Prüfung eingeschränkt")).toBeNull();
     },

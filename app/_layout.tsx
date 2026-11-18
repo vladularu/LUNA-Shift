@@ -275,7 +275,7 @@ function ThemedApp() {
                           />
                           <Stack.Screen
                             name="check-issue"
-                            options={{ title: CHECK_TITLE, ...analysisSheetOptions() }}
+                            options={{ ...analysisSheetOptions(), gestureEnabled: true }}
                           />
                           <Stack.Screen
                             name="tariff-assessment"

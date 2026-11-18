@@ -18,7 +18,14 @@ const { Linking } = ReactNative;
 
 type Screen = Awaited<ReturnType<typeof render>>;
 const openLimits = async (screen: Screen) =>
-  fireEvent.press(screen.getByRole("button", { name: "Quelle & Berechnung", expanded: false }));
+  fireEvent.press(
+    screen.getByRole("button", {
+      name: screen.queryByTestId("check-detail-back-footer")
+        ? "Prüfgrundlage"
+        : "Quelle & Berechnung",
+      expanded: false,
+    }),
+  );
 const openOriginal = async (screen: Screen) =>
   fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben", expanded: false }));
 
@@ -444,19 +451,23 @@ describe("integrated tariff details", () => {
           />
         ),
       );
-      expect(screen.getByText(/^Tarif(?:liche )?prüfung$/i)).toBeVisible();
+      expect(
+        screen.getByText(path === "day-list" ? /^Tarif ·/ : /^Tarif(?:liche )?prüfung$/i),
+      ).toBeVisible();
       expect(screen.queryByText("Hinweise & Empfehlungen")).toBeNull();
       expect(screen.queryByText(issue.description)).toBeNull();
       await fireEvent.press(
         path === "day-list"
-          ? within(screen.getByTestId(`check-details-${issue.id}`)).getByRole("button", {
-              name: /Details ansehen:/,
-            })
+          ? screen.getByTestId(`check-details-${issue.id}`)
           : within(screen.getByTestId(`check-rule-card-${issue.rule}`)).getByRole("button", {
               expanded: false,
             }),
       );
-      expect(screen.getByText("23.11.–06.12.2026")).toBeVisible();
+      expect(
+        screen.getByText(
+          path === "day-list" ? "23. November 2026 – 6. Dezember 2026" : "23.11.–06.12.2026",
+        ),
+      ).toBeVisible();
       expect(screen.queryByRole("link")).toBeNull();
       expect(screen.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);
@@ -499,7 +510,7 @@ describe("integrated tariff details", () => {
       expect(body.queryByText(copy.limitation)).toBeNull();
       if (status === "PENDING") expect(body.getByText(/Geplant oder noch laufend/)).toBeVisible();
       if (status === "DEVIATION") expect(body.getByText(/Abweichung erkannt/)).toBeVisible();
-      expect(body.getByText("30.11.–06.12.2026")).toBeVisible();
+      expect(body.getByText("30. November 2026 – 6. Dezember 2026")).toBeVisible();
       expect(body.queryByText(issue.tariff!.requirements[0])).toBeNull();
       await openLimits(screen);
       expect(body.getByText(copy.limitation)).toBeVisible();
@@ -507,6 +518,7 @@ describe("integrated tariff details", () => {
       await openOriginal(screen);
       expect(body.getByText(issue.description)).toBeVisible();
       expect(screen.getByTestId("check-shift-duty")).toBeVisible();
+      expect(body.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
       expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
       expect(screen.getByTestId("check-shift-duty")).toBeVisible();
     },

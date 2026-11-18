@@ -5,8 +5,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "c70754c9b6de81791b2390fb4ef0f8fab1ffa1e03e43e8101ceeb014ebed3176",
-      "reason": "Paket 4A: the existing net-pay route uses the same custom page header as salary. Hide only its redundant native header; no native configuration or runtime changes. Dienstplan-Check local implementation: Use the bounded Dienstplan-Check route title only; preserve every provider and native behavior. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. User-authorized Cloud crash correction 2026-11-10: package A refreshes React consumers while retaining SQLite and active month; prerequisite package B invalidates reminder generations, pauses scheduling across restore, drains only in-flight SQL mutations, cleans late native results and releases before rollback recovery. This path is in that bounded source scope. No native binary, schema, package, TestFlight release or accepted-baseline change. Preview/iPhone validation pending. User-requested native Schichtzulage parity correction 2026-11-11: Register the check-issue native formSheet and share exactly the existing Schichtzulage presentation options; retain all existing providers and route behavior. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User-authorized iOS Preview FPS diagnosis 2026-11-17: add one opt-in navigation-wide UI-cadence/JS-lag probe, hideable overlay and bounded numeric export with a 60-FPS comparison target. Preserve calculations, data, native configuration, dependencies and animations. This neither caps refresh nor measures GPU presentation. TestFlight publication and iPhone acceptance remain separate. User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending."
+      "sha256": "7ea8b99a55e5521e72e583be00d87611a5e084218d58270170d1496a2da6b0c7",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones."
     },
     {
       "path": "app/check-issue.tsx",
@@ -9005,14 +9005,14 @@
     {
       "path": "src/features/analysis/check-detail-disclosure.tsx",
       "kind": "added",
-      "sha256": "b7119d6feed2fe360d863a1b18dd5d063fa0199c1d210cae71a7a2b480b8a515",
-      "reason": "Simple end-user check: Provide an initially closed accessible disclosure using existing LUNA tokens and a minimum 44-point touch target."
+      "sha256": "f7411c1c34430b051350af4fd7511cbffc23f563f0ab238cc79d9c4fe3b60bff",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/check-detail-layout.tsx",
       "kind": "added",
-      "sha256": "206082e54e0af5e2f699a27b712617fd25b10b49274e962b9266e4e3ebeaabff",
-      "reason": "Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Let the shared native ReportScrollView own screen insets exactly once, keeping existing rounded SurfaceCards and report card spacing. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "6de17508707ba38750a304e03712da8b2f9f9e3602d0d5b7f0b408dee60ca749",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
       "path": "src/features/analysis/check-display-groups.ts",
@@ -9023,14 +9023,14 @@
     {
       "path": "src/features/analysis/check-duty-overview.tsx",
       "kind": "added",
-      "sha256": "743b70187a4ebab8c13ad43aef61df1171d9dd5e5f7f294fcf4cdf49a8e84638",
-      "reason": "Use one shared chronological read-only calendar in check details with stored duty names, symbols and colors; support multiple duties, overnight overlap, large text and VoiceOver without native Temporal formatting. Duty symbols: Use existing LUNA colored round duty symbols instead of dots, hide visible duty times, show each duty only at its start date, and preserve equal-width columns in incomplete final rows. Actual assessment logic and VoiceOver time information remain unchanged. Git integration: exact accepted Preview source from group 2d1b5896-efab-44e6-9acc-1f8be4a4cee6; user confirmed the latest weekend detail UI on 2026-11-10. Other master files, accepted TestFlight baseline and app release channels remain unchanged. Selected check-sheet implementation on 2026-11-11: Preserve existing duty tiles and symbols; optionally show their recorded time ranges in the selected check-detail sheet. Local implementation only; iPhone acceptance and release approval remain separate. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules."
+      "sha256": "bfe0314d5782d4f82111dd7f8c60fe9950069de687002cd30d22723b0694e861",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/check-issue-screen.tsx",
       "kind": "added",
-      "sha256": "c79eaadca5913196b69463a32407e5631c51ccf51b63f0750fd6b3d8f118dfc2",
-      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Use the actual Schichtzulage native header, BackFooterLayout and ReportScrollView for check detail cards. Handle stale tokens with a safe return and remove the superseded custom modal frame. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. User accepted the native check window and requested removal of only the fixed bottom Zurueck bar on 2026-11-11. Disable its shared footer and its reserved content space; retain the native header back action with the existing safe-route fallback, native pull-down presentation, accepted cards and check content. Salary calculation/cache identity and all other source files remain byte-identical to the accepted Preview. Preview-only refinement; no native binary or TestFlight change."
+      "sha256": "e3d83f7015b90d8f73c1efaa083f11ce3e0015cb2f8436a534c8ee1102f1ae56",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/check-period-label.ts",
@@ -9041,8 +9041,8 @@
     {
       "path": "src/features/analysis/check-prerequisites-card.tsx",
       "kind": "modified",
-      "sha256": "98c4a17362b8b89c6ccdc12f3e91a1098224090ade161384d2e19f59952b6e1e",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate missing inputs and scope limits into one neutral initially compact status sheet; retain original findings, sources, tariff details and setup action, closing the sheet before navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Simple end-user check: Explain real check limitations once and expose a profile action only when a concrete supported question can be edited. Duty overview: Use the shared upper duty overview in prerequisite tariff details while preserving setup actions, sources and existing scope requirements."
+      "sha256": "91f038be05c1ec64c65246adf2a5a1d00073167fb7f5384a8d7deecf5fa1e74f",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/check-presentation.ts",
@@ -9071,14 +9071,14 @@
     {
       "path": "src/features/analysis/compliance-day-list.tsx",
       "kind": "modified",
-      "sha256": "d0517ac675334c9cae6a918642f56ddf54086b36b8a314a291cbcdd3d7d0eb6b",
-      "reason": "Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Render lossless planning groups and one compact prerequisite/scope status with bounded empty wording, preserving raw findings and separate recommendation visibility. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Expose common monthly weekend counts in the existing day-list renderer even without recommendation cards. Compact-list implementation: Use the compact per-date planning list and remove the permanent weekend statistics without changing underlying findings. Simple end-user check: Use the shared conservative grouping for tariff observations in the primary renderer while keeping planning and legal findings reachable."
+      "sha256": "05bd883bd6399e01fd1c794b3bc8909e0a0a90b0734b5e970929d472f649caf9",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/compliance-details-screen.tsx",
       "kind": "modified",
-      "sha256": "a78e30469244559151b16ee6a06549d8ad766adb3e50b5b5612058082cba0b33",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact."
+      "sha256": "5dea3c0d983e924874ae872664d95029c8700f277e86b683642ee31b298227e7",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/compliance-details.tsx",
@@ -9089,8 +9089,8 @@
     {
       "path": "src/features/analysis/compliance-issue-content.tsx",
       "kind": "modified",
-      "sha256": "d8a4c36abae3c00891b0a196c366697d87cdb211d4153716225280c682688399",
-      "reason": "Render Dienstfolgen & Erholung day cards with the approved neutral fills/text and petrol border. Per iPhone feedback, use a muted Info icon and announce Hinweis for planning findings. Preserve all rule data, raw severity, timelines, shift details and legal severity icons/labels. iPhone visual acceptance of the Info-icon correction pending. User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Default related duties to a collapsed, accessible compact table; preserve individual shift colors and explicit overnight rollover. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Dienstplan-Check local implementation: Show concrete observations and compact comparison values with accessible details for all result categories, preserving grouped original observations and a single collapsed union duty table. Local validation only; new iPhone acceptance and OTA approval remain separate. Compact-list implementation: Reuse the existing detail sheet for compact planning rows while retaining full statutory and tariff cards and native design tokens. Simple end-user check: Use consistent concise tariff copy in cards and retain grouped original observations, periods and duties in accessible details. Authorized Preview OTA 2026-11-09: apply tested chronological duty lists, concise tariff details, and start-day weekly checks with assumed sixth-day operational reasons for all supported tariff policies. Preserve all other existing Preview sources. Device acceptance remains pending. Duty overview: Replace expandable service tables with the shared upper duty overview for individual, grouped and original-period check details without changing findings or source explanations. Weekend display correction: restrict the shared overview to Saturday/Sunday duty starts in the selected four-week period, use explicit day keys to avoid inserting weekdays, and match the upper caption to the explanation. Grouped findings keep separate weekend overviews. Actual-time weekend assessment, raw findings and all other Preview sources are preserved. Git integration: exact accepted Preview source from group 2d1b5896-efab-44e6-9acc-1f8be4a4cee6; user confirmed the latest weekend detail UI on 2026-11-10. Other master files, accepted TestFlight baseline and app release channels remain unchanged. Selected check-sheet implementation on 2026-11-11: Present check details in the approved near-full-height dismissible sheet and navigate to the following duty only after sheet dismissal; preserve engine findings. Local implementation only; iPhone acceptance and release approval remain separate. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Present every existing legal, tariff and planning detail through the common native route; retain the finding/duty models, read-only cards and icon data, and dismiss when its origin disappears. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "bbc0b6ac382f61e8639a385e223f07b533f113c1d6abba1ac926ea50d4f81d6c",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
       "path": "src/features/analysis/compliance-issue-legacy.ts",
@@ -9125,8 +9125,8 @@
     {
       "path": "src/features/analysis/legal-check-details.tsx",
       "kind": "added",
-      "sha256": "bd9fb569e7c07a0cb2e589039f2dee3b35b9904e90b341fa8f19a9369199e1bf",
-      "reason": "Dienstplan-Check local implementation: Expose original statutory findings, applicability limits and fixed official sources under Details ansehen, without inventing sources for data or unknown rules. Local validation only; new iPhone acceptance and OTA approval remain separate. Duty overview: Show the shared actual-duty overview immediately below the legal finding title and remove the redundant bottom services section. Git integration: exact accepted Preview source from group 2d1b5896-efab-44e6-9acc-1f8be4a4cee6; user confirmed the latest weekend detail UI on 2026-11-10. Other master files, accepted TestFlight baseline and app release channels remain unchanged. Selected check-sheet implementation on 2026-11-11: Route complete matching rest evidence to the selected structured detail view while retaining the existing fallback for missing or unsupported evidence. Local implementation only; iPhone acceptance and release approval remain separate. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules."
+      "sha256": "9d83cae4113c391ce60a2d89268e9607f7ec4a6c6921710116783c1b727f1797",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/legal-check-presentation.ts",
@@ -9137,8 +9137,8 @@
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "207c0f3e0cad8b2054d740c1c48f1a949490184dfe931c9a4701f898c27525ea",
-      "reason": "Paket 4 correction: render PAY and NET as sibling dashboard entities with distinct selected-month routes. Reuse the already prepared net row/model so the second card does not add another calculation or settings read. Weekend implementation: Retain monthly weekend statistics for genuine empty months and zero findings. User-authorized annual-payment correction and iOS Preview OTA on 2026-11-10: Pass annual-payment reasons alongside the unchanged cash-month amounts. All other published Preview sources remain exact; device acceptance remains pending. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness."
+      "sha256": "6c1d6754276f2d75e951276f8ad62778d9b1829ebba9144de6ae89db09187832",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
       "path": "src/features/analysis/monthly-analysis.ts",
@@ -9257,8 +9257,8 @@
     {
       "path": "src/features/analysis/planning-hint-details.tsx",
       "kind": "added",
-      "sha256": "a9b242b02b07a961c536a3868c8ceb7f12d1601490825bacb85843361d166262",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Show clear actual service-period information and compact duty access inside the existing detail sheet. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Dienstplan-Check local implementation: Retain every grouped recommendation original, explanation and source, with a single initially collapsed table of associated duties. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Explain all observed four-week windows and BAuA source limits behind Details with collapsed services. Compact-list implementation: Explain each structured observation once, retain collapsed duties and sources, and show only affected weekend windows. Simple end-user check: Present each recommendation briefly with collapsed sources and limits, preserving all associated duties and unknown evidence. Duty overview: Show the shared actual-duty overview immediately below the planning finding title and remove the redundant bottom services section. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties."
+      "sha256": "c98ba8ca74ceaf135a910c4d9faf9689d5f586e42b82c3ea5640e621ba527ea1",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
       "path": "src/features/analysis/planning-hint-list.tsx",
@@ -9281,8 +9281,8 @@
     {
       "path": "src/features/analysis/rest-check-details.tsx",
       "kind": "added",
-      "sha256": "9565a03c0863ac83dee390c80756175ca1b3d8bd6ee1a97b87bf300045459421",
-      "reason": "Add selected LUNA rest-detail presentation with recorded duties, finding-derived threshold, explicit unverified exceptions and user-initiated neutral system sharing; no rule or data changes. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules."
+      "sha256": "01ee64fa9631acd15908eac517c08f67dd9c65d55d3a625ea2d87f2791cad3da",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/rule-computation.tsx",
@@ -9317,14 +9317,14 @@
     {
       "path": "src/features/analysis/tariff-check-details.tsx",
       "kind": "added",
-      "sha256": "132521ace6c9d8f69d410d6aae3363cc89bb7e948bccef985c7a6bef6f5e2e4e",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Keep original tariff rule facts, source and prerequisites in details while showing compact observations and comparison on cards. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Explain the free-Sunday observation and its unconfirmed tariff prerequisites independently from recommendations. Simple end-user check: Show two short explanatory sentences, a compact period and collapsed sources with understandable limits instead of non-actionable confirmation requirements. Authorized Preview OTA 2026-11-09: apply tested chronological duty lists, concise tariff details, and start-day weekly checks with assumed sixth-day operational reasons for all supported tariff policies. Preserve all other existing Preview sources. Device acceptance remains pending. User-authorized Variant C implementation and Preview OTA on 2026-11-09: Implement selected Variant C: real chronological date strip, concise tariff rule, collapsed service list and Source/calculation disclosure using existing LUNA tokens. iPhone acceptance remains pending; accepted TestFlight baseline unchanged. Duty overview: Remove the duplicate service disclosure and show the real-plan duty overview above the concise tariff summary; preserve sources, missing-entry warnings and the tariff render repair. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties."
+      "sha256": "4dceb506258e5fbd8a05eaf10aa05e76c213a77fd65b7745b9cfdac6ec638071",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/tariff-check-period.tsx",
       "kind": "added",
-      "sha256": "9d9c93c2d7ee59f3467ff51627c889dc961157648c3b8be07b30aeb5c08347ed",
-      "reason": "User-authorized Variant C implementation and Preview OTA on 2026-11-09: Render only validated recorded weekly dates or Sunday pairs with accessible date labels and horizontal scrolling for large text; no inferred free days. iPhone acceptance remains pending; accepted TestFlight baseline unchanged. Preview render correction 2026-11-09 within the authorized Variant C scope: prepare primitive native-view props inside the guarded date section; remove native Intl/toLocaleString dependency and implicit Temporal coercion from rendering. Reproduced formatter failure is covered by a regression. Exact iPhone root cause remains unconfirmed until device retest. Preserve all other Preview sources. Duty overview: Render validated tariff periods with real associated duties and their stored colors; preserve start-date weekly counting and actual-work Sunday projection. Duty symbols: Use the shared start-date-only duty display in tariff details so Saturday night is not duplicated under Sunday. Preserve evidence validation, actual-time Sunday assessment and all rule thresholds."
+      "sha256": "dcfd3110b0fb56b587a15a308da6688ddce781910ce72ac0f5426a818b79d5b7",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/features/analysis/tariff-check-presentation.ts",
@@ -9401,8 +9401,8 @@
     {
       "path": "src/features/analysis/weekend-assessment-summary.tsx",
       "kind": "added",
-      "sha256": "0af8d557f9e1adfa2565d0b4d654f012ff7452895dd77f407fa02904ba02f6e8",
-      "reason": "Weekend implementation: Render common occupied, fully free and open monthly counts with accessible window and source details. Compact-list implementation: Support filtered affected-window details while retaining the existing honest completeness helper and internal assessment contract. Simple end-user check: Show one representative affected four-week period with further affected periods collapsed, retaining all assessed observations and the completeness contract."
+      "sha256": "4e6ab9810d4778162238a13dbbce92d332025bc941d5f14d16a588620cd266cb",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
       "path": "src/features/calendar/calendar-layout.ts",
@@ -10055,8 +10055,8 @@
     {
       "path": "src/navigation/check-issue-session.ts",
       "kind": "added",
-      "sha256": "4004ebe869d949d8605264d89fb113d0867a404e8e0df6c6d626dceae2057767",
-      "reason": "User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "a7fa39b0c32f44ffb1860576e0fb6049ab194987f9711888b3e349ae203f62fa",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/navigation/horizontal-back-gesture.ts",
@@ -10097,8 +10097,8 @@
     {
       "path": "src/theme/palette-values.ts",
       "kind": "modified",
-      "sha256": "13107bc2488a1a75863e372cac21eb7cf6b71583c3d05ebab5b58fee2edf5c31",
-      "reason": "Preserve the established light/dark palette and add only the planningBorder token (#2E7D87 light, #6AB7C2 dark) for actual hint card outlines. Remove the provisional violet planning fill/text tokens per iPhone feedback. Existing palette colors remain unchanged. iPhone visual acceptance of this correction pending. Dienstplan-Check local implementation: Add independent check-specific light/dark blue and warm border tokens; preserve the global status and palette values. Local validation only; new iPhone acceptance and OTA approval remain separate. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change."
+      "sha256": "f1863a5ba771fd25c979b45a0f0f98fe9754ac6941a114443f203a69bedf01de",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/theme/shadcn.ts",
@@ -10121,8 +10121,8 @@
     {
       "path": "src/theme/typography.ts",
       "kind": "modified",
-      "sha256": "825dc404987b5d30f26ca4b7dd515349af986922c81a68b864475261348f93e3",
-      "reason": "Preview-only preservation of src/theme/typography.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "262beb608729fe1f4758316b460d0d138ab1b75decb4125b1a5e918c1aa3f196",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
       "path": "src/ui/back-footer-layout.tsx",
@@ -10207,6 +10207,24 @@
       "kind": "modified",
       "sha256": "2d4d3a6bda09ed776810d1af47ccea7e744a15ad0849924008a5eab2f9f626f9",
       "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/analysis/check-rest-timeline.tsx",
+      "kind": "added",
+      "sha256": "f7037de1044cd94350de088fa39e6dfa6170561b1b7b94036a1ed1b0f610caa9",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+    },
+    {
+      "path": "src/ui/icon.tsx",
+      "kind": "modified",
+      "sha256": "7253cc4d2f82d06fcb5cc5a4108bd300222311afe7eaf86f21949bdfc818b54d",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
+    },
+    {
+      "path": "src/ui/native-sheet-scroll-edge.ts",
+      "kind": "added",
+      "sha256": "d7f5b33f6fa965ccb0fb270cfe3292115f1acf982f51eb94d4bc90953b1a1cb1",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones."
     }
   ]
 }

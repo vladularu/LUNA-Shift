@@ -29,12 +29,12 @@ const issue: ComplianceIssue = {
 const input = { issue, shifts: [], timeZone: "Europe/Berlin" };
 
 describe("native check-detail route lifecycle", () => {
-  it("keeps one native header back action without a fixed bottom footer", async () => {
+  it("offers the LUNA icon and footer as equivalent back actions", async () => {
     createCheckIssueSession(input);
     const screen = await render(<CheckIssueScreen />);
-    expect(screen.queryByTestId("check-detail-back-footer")).toBeNull();
-    expect(screen.getAllByRole("button", { name: "Zurück" })).toHaveLength(1);
-    await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByTestId("check-detail-back-footer")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeEnabled();
+    await fireEvent.press(screen.getByRole("button", { name: "Hinweis schließen" }));
     expect(router.back).toHaveBeenCalledTimes(1);
   });
   it("prevents duplicate pushes and permits reopening after native swipe dismissal", async () => {

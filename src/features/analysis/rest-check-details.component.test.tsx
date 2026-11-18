@@ -76,7 +76,20 @@ describe("structured rest-check details", () => {
     );
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
     expect(screen.getByTestId("rest-check-details")).toBeTruthy();
+    const title = screen.getByTestId("check-reference-heading");
+    expect(title).toBeVisible();
+    expect(screen.getByRole("header", { name: "Kurze Ruhezeit" })).toBeVisible();
+    expect(screen.getByText("Gesetz")).toBeVisible();
     expect(screen.getByText("11.–12. November 2026")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-detail-summary")).toBeNull();
+    expect(screen.getByTestId("rest-check-timeline-card")).toHaveStyle({
+      backgroundColor: "#ffffff",
+      borderColor: "#e1e7e6",
+      borderLeftColor: "#c66b5d",
+      borderLeftWidth: 3,
+      borderRadius: 19,
+    });
+    expect(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false })).toBeVisible();
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     await waitFor(() => expect(screen.queryByTestId("rest-check-details")).toBeNull());
   });
@@ -102,13 +115,22 @@ describe("structured rest-check details", () => {
     );
     expect(share).not.toHaveBeenCalled();
   });
-  it("retains both actual duty tiles, dates and times without an edit shortcut", async () => {
+  it("shows both actual endpoints and the gap, dates and times without an edit shortcut", async () => {
     const screen = await render(<RestCheckDetails model={model()} />);
     expect(screen.getByTestId("rest-check-duties-2026-11-11")).toBeTruthy();
     expect(screen.getByTestId("rest-check-duties-2026-11-12")).toBeTruthy();
-    expect(screen.getByText("13:18–21:30")).toBeTruthy();
-    expect(screen.getByText("06:00–14:12")).toBeTruthy();
-    expect(screen.getByText("8:30 h")).toBeTruthy();
+    expect(screen.getByText("21:30")).toBeTruthy();
+    expect(screen.getByTestId("check-shift-late").props.accessibilityLabel).toContain(
+      "13:18 bis 21:30",
+    );
+    expect(screen.getByText("06:00")).toBeTruthy();
+    expect(screen.getByTestId("check-shift-early").props.accessibilityLabel).toContain(
+      "06:00 bis 14:12",
+    );
+    expect(screen.getByTestId("rest-check-duties-gap")).toHaveProp(
+      "accessibilityLabel",
+      "Erfasste Ruhezeit, 8 h 30 min",
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(screen.getByText("11:00 h")).toBeTruthy();
     expect(screen.getByText("10:00 h")).toBeTruthy();
