@@ -5,6 +5,7 @@ import { Alert, Pressable, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { Temporal } from "@js-temporal/polyfill";
 import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
+import type { PlanningWeekendWindow } from "@/domain/planning-weekend-policy";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -17,6 +18,11 @@ import {
 } from "@/navigation/check-issue-session";
 import { PlanningHintDetails } from "./planning-hint-details";
 import { planningHintPresentation } from "./planning-hint-presentation";
+import {
+  affectedWeekendWindows,
+  planningWeekendWindowsForIssue,
+  weekendHintTitle,
+} from "./weekend-assessment-summary";
 import { TariffCheckDetails, tariffCheckStatus } from "./tariff-check-details";
 import { complianceTimeline, restDuration } from "./compliance-timeline";
 import {
@@ -30,7 +36,14 @@ import { legalCheckPresentation } from "./legal-check-presentation";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
 import { CheckDutyOverview } from "./check-duty-overview";
-import { CheckDetailCard, CheckDetailStack } from "./check-detail-layout";
+import {
+  CheckDetailCard,
+  CheckDetailStack,
+  planningHintIcon,
+  useCheckReferenceDetail,
+} from "./check-detail-layout";
+import { checkPeriodLabel } from "./check-period-label";
+import { CheckRestTimeline, formatCheckRestDuration } from "./check-rest-timeline";
 
 const MONTHS = [
   "Januar",
@@ -148,6 +161,35 @@ export function AffectedCheckShifts({
   );
 }
 
+function WeekendDuties({
+  window,
+  shifts,
+}: {
+  readonly window: PlanningWeekendWindow;
+  readonly shifts: readonly ShiftEntry[];
+}) {
+  const reference = useCheckReferenceDetail();
+  return (
+    <View testID="weekend-duty-overview" style={{ gap: SPACING.md }}>
+      {window.weekends.map((weekend) => {
+        const ids = new Set(weekend.relatedShiftIds);
+        const duties = shifts.filter(({ id }) => ids.has(id));
+        const status = weekend.status === "FREE" ? "Frei" : "Belegt";
+        return (
+          <View key={weekend.saturday} testID={`check-weekend-${weekend.saturday}`}>
+            <Text style={{ ...TYPOGRAPHY.small, fontWeight: "600", color: reference?.text }}>
+              {checkPeriodLabel(weekend.saturday, weekend.sunday)} · {status}
+            </Text>
+            {duties.length ? (
+              <CheckDutyOverview shifts={duties} testID="check-affected-shifts" />
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 /** Each observed window keeps its own dated duty overview. */
 export function TariffObservationDetails({
   issues,
@@ -212,7 +254,8 @@ function checkIssueContext({ issue, relatedIssues = [], shifts, timeZone }: Chec
     };
   });
   const grouped = members.length > 1;
-  const shareDutyOverview = grouped && !members.some((member) => member.hint?.weekendPeriod);
+  const shareDutyOverview =
+    grouped && !members.some((member) => member.hint?.weekendPeriod || member.model.rest);
   const groupedTariff = grouped && members.every((member) => !!member.issue.tariff);
   const groupLabel = groupedTariff
     ? `${members.length} betroffene Zeiträume`
@@ -230,6 +273,42 @@ function checkIssueContext({ issue, relatedIssues = [], shifts, timeZone }: Chec
   return { members, grouped, shareDutyOverview, groupLabel, allRelated };
 }
 
+export interface CheckIssueOccurrence {
+  readonly key: string;
+  readonly issue: ComplianceIssue;
+  readonly period: { readonly from: string; readonly until: string };
+  readonly weekend?: PlanningWeekendWindow;
+}
+
+export function checkIssueOccurrences(input: CheckIssueInput): CheckIssueOccurrence[] {
+  const { members } = checkIssueContext(input);
+  return members.flatMap<CheckIssueOccurrence>(({ issue, model }) => {
+    const weekends = planningWeekendWindowsForIssue(issue);
+    if (weekends.length)
+      return weekends.map((weekend) => ({
+        key: `${issue.id}/${weekend.until}`,
+        issue,
+        period: weekend,
+        weekend,
+      }));
+    const { rest, series } = model;
+    const period =
+      issue.tariff?.period ??
+      (rest
+        ? { from: rest.endDate, until: rest.startDate }
+        : series?.from && series.until
+          ? { from: series.from, until: series.until }
+          : { from: issue.date, until: issue.date });
+    return [
+      {
+        key: issue.id,
+        issue,
+        period,
+      },
+    ];
+  });
+}
+
 export function openCheckIssueDetails(input: CheckIssueInput) {
   const request = createCheckIssueSession(input);
   if (!request) return null;
@@ -244,7 +323,8 @@ export function openCheckIssueDetails(input: CheckIssueInput) {
 }
 
 export function ComplianceIssueDetails(input: CheckIssueInput) {
-  const { issue, shifts, timeZone } = input;
+  const reference = useCheckReferenceDetail();
+  const { issue, shifts, timeZone, weekend } = input;
   const { members, grouped, shareDutyOverview, allRelated } = checkIssueContext(input);
   const tariff = issue.kind === "LEGAL" ? issue.tariff : null;
   return (
@@ -262,14 +342,59 @@ export function ComplianceIssueDetails(input: CheckIssueInput) {
         />
       ) : (
         members.map((member) => {
-          const children =
-            !shareDutyOverview && (member.model.related.length || member.hint?.weekendPeriod) ? (
-              <AffectedCheckShifts
-                shifts={member.model.related}
-                timeZone={timeZone}
-                weekendPeriod={member.hint?.weekendPeriod}
+          const selectedWeekend = reference
+            ? (weekend ??
+              affectedWeekendWindows(member.hint?.weekendAssessment).find(
+                ({ until }) => until === member.hint?.weekendPeriod?.until,
+              ))
+            : undefined;
+          const sequence = reference ? member.model.nightSequence : null;
+          const nights = sequence
+            ? member.model.related.filter(
+                ({ date }) => date >= sequence.firstNight && date <= sequence.lastNight,
+              )
+            : [];
+          const startsAt = nights[0]?.startTime ?? undefined;
+          const nightPhase =
+            sequence && nights.length > 1
+              ? {
+                  period: checkPeriodLabel(sequence.firstNight, sequence.lastNight),
+                  time:
+                    startsAt && nights.every(({ startTime }) => startTime === startsAt)
+                      ? startsAt
+                      : undefined,
+                }
+              : undefined;
+          const children = selectedWeekend ? (
+            <WeekendDuties window={selectedWeekend} shifts={member.model.related} />
+          ) : member.model.rest ? (
+            <View style={{ gap: SPACING.sm }}>
+              <CheckRestTimeline
+                rest={member.model.rest}
+                planning={!!member.hint}
+                nightPhase={nightPhase}
               />
-            ) : null;
+              {member.model.related.length > 2 && reference ? (
+                <AffectedCheckShifts
+                  shifts={member.model.related.filter(
+                    ({ id }) =>
+                      id !== member.model.rest?.previous.id && id !== member.model.rest?.next.id,
+                  )}
+                  timeZone={timeZone}
+                />
+              ) : member.model.related.length > 2 ? (
+                <CheckDetailDisclosure title="Betroffene Dienste">
+                  <AffectedCheckShifts shifts={member.model.related} timeZone={timeZone} />
+                </CheckDetailDisclosure>
+              ) : null}
+            </View>
+          ) : !shareDutyOverview && (member.model.related.length || member.hint?.weekendPeriod) ? (
+            <AffectedCheckShifts
+              shifts={member.model.related}
+              timeZone={timeZone}
+              weekendPeriod={member.hint?.weekendPeriod}
+            />
+          ) : null;
           return member.issue.tariff ? (
             <TariffCheckDetails
               key={member.issue.id}
@@ -284,9 +409,20 @@ export function ComplianceIssueDetails(input: CheckIssueInput) {
             <PlanningHintDetails
               key={member.issue.id}
               hint={member.hint}
+              icon={planningHintIcon(member.issue.rule)}
               rest={member.model.rest}
               series={member.model.series}
-              missing={member.model.missing}
+              nightSequence={sequence}
+              weekend={selectedWeekend}
+              missing={
+                selectedWeekend
+                  ? selectedWeekend.weekends.some(({ relatedShiftIds }) =>
+                      relatedShiftIds.some(
+                        (id) => !member.model.related.some((shift) => shift.id === id),
+                      ),
+                    )
+                  : member.model.missing
+              }
               originalDescription={member.issue.description}
             >
               {children}
@@ -312,15 +448,19 @@ export function ComplianceIssueDetails(input: CheckIssueInput) {
 export function ComplianceIssueContent({
   issue,
   relatedIssues = [],
+  occurrence,
   shifts,
   timeZone,
   compact = false,
+  inbox = false,
 }: {
   readonly issue: ComplianceIssue;
   readonly relatedIssues?: readonly ComplianceIssue[];
+  readonly occurrence?: CheckIssueOccurrence;
   readonly shifts: readonly ShiftEntry[];
   readonly timeZone: string;
   readonly compact?: boolean;
+  readonly inbox?: boolean;
 }) {
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
@@ -333,7 +473,13 @@ export function ComplianceIssueContent({
     [],
   );
   const openDetails = () => {
-    const id = openCheckIssueDetails({ issue, relatedIssues, shifts, timeZone });
+    const id = openCheckIssueDetails({
+      issue,
+      relatedIssues,
+      shifts,
+      timeZone,
+      weekend: occurrence?.weekend,
+    });
     if (id) openedSession.current = id;
   };
   const { members, grouped, groupLabel } = checkIssueContext({
@@ -354,7 +500,12 @@ export function ComplianceIssueContent({
   const title = hint?.title ?? tariffPresentation?.title ?? model.title;
   const { rest, series } = model;
   const compactPlanning = compact && planning;
-  const rowTitle = hint?.compactTitle ?? title;
+  const rowTitle =
+    inbox && rest && issue.rule === "ARBZG_5_REST_10H"
+      ? "Kurze Ruhezeit"
+      : occurrence?.weekend
+        ? weekendHintTitle(occurrence.weekend.freeCount)
+        : (hint?.compactTitle ?? title);
   const rowPeriod =
     hint?.weekendPeriod ??
     (issue.rule === "PLANNING_7_DAYS" && series?.from && series.until
@@ -372,6 +523,100 @@ export function ComplianceIssueContent({
         : issue.severity === "warning"
           ? palette.warning
           : palette.primary;
+  if (inbox) {
+    const category = checkCategory(issue);
+    const accent =
+      category === "legal"
+        ? palette.legalCheckBorder
+        : category === "tariff"
+          ? palette.tariffCheckBorder
+          : palette.textMuted;
+    const period =
+      occurrence?.weekend ??
+      tariff?.period ??
+      hint?.weekendPeriod ??
+      (rest ? { from: rest.endDate, until: rest.startDate } : undefined) ??
+      (series?.from && series.until ? { from: series.from, until: series.until } : undefined);
+    const recoveryStatus = model.nightSequence?.recoveryStatus;
+    const showRest =
+      rest && (!recoveryStatus || recoveryStatus === "under24" || recoveryStatus === "under48");
+    const subtitle = [
+      category === "legal"
+        ? "Gesetz"
+        : category === "tariff"
+          ? tariff?.status === "DEVIATION"
+            ? issueCategory(issue)
+            : "Tarif"
+          : null,
+      showRest ? formatCheckRestDuration(rest.minutes) : null,
+      compactCheckPeriod(period) ?? checkDate(issue.date, false),
+      grouped ? groupLabel : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return (
+      <Pressable
+        testID={`check-details-${occurrence?.key ?? issue.id}`}
+        accessibilityRole="button"
+        accessibilityLabel={`Details ansehen: ${rowTitle}${grouped ? `, ${groupLabel}` : ""}`}
+        accessibilityHint={`${issueCategory(issue)}. ${issueSeverity(issue)}.`}
+        accessibilityValue={{ text: subtitle }}
+        onPress={() => {
+          selectionFeedback();
+          openDetails();
+        }}
+        style={({ pressed }) => ({
+          minHeight: 67,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: SPACING.sm,
+          paddingHorizontal: SPACING.md,
+          paddingVertical: SPACING.sm,
+          borderLeftWidth: 3,
+          borderLeftColor: category === "planning" ? "transparent" : accent,
+          backgroundColor: pressed ? palette.surfaceMuted : palette.surface,
+        })}
+      >
+        <View
+          style={{
+            width: 35,
+            height: 35,
+            borderRadius: RADII.control,
+            backgroundColor: palette.surfaceMuted,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons
+            name={
+              category === "legal"
+                ? rest
+                  ? "time-outline"
+                  : "alert-circle-outline"
+                : category === "tariff"
+                  ? "document-text-outline"
+                  : planningHintIcon(issue.rule)
+            }
+            size={18}
+            color={accent}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+        </View>
+        <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
+          <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>{rowTitle}</Text>
+          <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{subtitle}</Text>
+        </View>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={palette.textMuted}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
+      </Pressable>
+    );
+  }
   return (
     <View
       testID={`check-details-${issue.id}`}
@@ -443,11 +688,11 @@ export function ComplianceIssueContent({
           >
             <Ionicons
               name={
-                planning || needsTariffReview
-                  ? "information-circle-outline"
-                  : issue.severity === "critical"
+                planning
+                  ? planningHintIcon(issue.rule)
+                  : !needsTariffReview && issue.severity === "critical"
                     ? "alert-circle-outline"
-                    : issue.severity === "warning"
+                    : !needsTariffReview && issue.severity === "warning"
                       ? "warning-outline"
                       : "information-circle-outline"
               }

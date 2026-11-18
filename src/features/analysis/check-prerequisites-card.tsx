@@ -31,6 +31,7 @@ export function CheckPrerequisitesCard({
   aggregateTariffCount = 0,
   aggregatePrerequisiteCount,
   aggregateScopeCount = 0,
+  compact = false,
 }: {
   readonly issues?: readonly ComplianceIssue[];
   readonly shifts?: readonly ShiftEntry[];
@@ -38,6 +39,7 @@ export function CheckPrerequisitesCard({
   readonly aggregateTariffCount?: number;
   readonly aggregatePrerequisiteCount?: number;
   readonly aggregateScopeCount?: number;
+  readonly compact?: boolean;
 }) {
   const palette = usePalette();
   const [showDetails, setShowDetails] = useState(false);
@@ -89,7 +91,19 @@ export function CheckPrerequisitesCard({
   if (!missingCount && !scopeCount && !tariffIssues.length && !aggregateTariff) return null;
 
   return (
-    <SurfaceCard testID="check-status-card">
+    <SurfaceCard
+      testID="check-status-card"
+      style={
+        compact
+          ? {
+              borderStyle: "dashed",
+              borderWidth: 1,
+              borderColor: palette.border,
+              backgroundColor: palette.groupedBackground,
+            }
+          : undefined
+      }
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={CHECK_STATUS_TITLE + ": " + summary}
@@ -104,13 +118,24 @@ export function CheckPrerequisitesCard({
           flexDirection: "row",
           alignItems: "center",
           gap: SPACING.md,
-          padding: SPACING.lg,
+          padding: compact ? SPACING.md : SPACING.lg,
           opacity: pressed ? 0.7 : 1,
         })}
       >
+        {compact ? (
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={palette.textMuted}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+        ) : null}
         <View style={{ flex: 1, minWidth: 0, gap: SPACING.xs }}>
           <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>
-            {CHECK_STATUS_TITLE}
+            {compact && (missingCount || unavailableTariff || scopeCount)
+              ? CHECK_NOT_ASSESSABLE
+              : CHECK_STATUS_TITLE}
           </Text>
           <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{summary}</Text>
         </View>

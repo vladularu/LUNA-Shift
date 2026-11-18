@@ -8,6 +8,9 @@ import { countChecks } from "./check-visibility";
 jest.mock("./compliance-issue-content", () => {
   const Native = jest.requireActual<typeof import("react-native")>("react-native");
   return {
+    ...jest.requireActual<typeof import("./compliance-issue-content")>(
+      "./compliance-issue-content",
+    ),
     checkDate: (value: string) => value,
     checkDayParts: (value: string) => [value.slice(8), value.slice(5, 7)],
     ComplianceIssueContent: ({
@@ -156,7 +159,7 @@ describe("Dienstplan check display integration", () => {
     mockFontScale = 1;
   });
 
-  it("keeps work and night observations as separate rows in one date card without changing raw counts", async () => {
+  it("keeps work and night observations as separate rows in the planning section without changing raw counts", async () => {
     const source = result([work, night]);
     const before = JSON.stringify(source);
     const screen = await render(
@@ -168,7 +171,7 @@ describe("Dienstplan check display integration", () => {
       />,
     );
     expect(screen.getAllByLabelText("1 Prüfpunkte")).toHaveLength(2);
-    expect(screen.getAllByTestId(/^planning-hint-card-/)).toHaveLength(1);
+    expect(screen.getAllByTestId("check-inbox-planning")).toHaveLength(1);
     expect(screen.getByText(work.title)).toBeTruthy();
     expect(screen.getByText(night.title)).toBeTruthy();
     expect(screen.getByTestId("group-card-night")).toBeTruthy();
@@ -192,14 +195,11 @@ describe("Dienstplan check display integration", () => {
     expect(screen.getByTestId("group-card-legal")).toBeTruthy();
   });
 
-  it("retains a readable stacked day group at large text and narrow widths", async () => {
+  it("retains a readable planning section at large text and narrow widths", async () => {
     mockWidth = 320;
     mockFontScale = 2;
     const screen = await render(list([work, night]));
-    expect(screen.getByTestId("check-day-group-2026-11-07")).toHaveStyle({
-      flexDirection: "column",
-    });
-    expect(screen.getByRole("header", { name: "2026-11-07" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Hinweise & Empfehlungen" })).toBeTruthy();
     expect(screen.getAllByLabelText("1 Prüfpunkte")).toHaveLength(2);
   });
 
@@ -212,7 +212,7 @@ describe("Dienstplan check display integration", () => {
   it("does not show an all-clear when required inputs are missing", async () => {
     const screen = await render(list([prerequisite]));
     expect(screen.getByTestId("status-card")).toBeTruthy();
-    expect(screen.getByText("Prüfung eingeschränkt")).toBeTruthy();
+    expect(screen.getByText("Angabe fehlt")).toBeTruthy();
     expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
   });
 

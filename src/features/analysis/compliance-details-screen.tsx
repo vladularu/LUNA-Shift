@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
+import { View } from "react-native";
+import Ionicons from "@/ui/icon";
 
 import {
   usePflegeShiftEntries,
@@ -7,7 +9,7 @@ import {
   usePflegeShiftStatus,
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import { currentMonth, formatMonthTitle } from "@/engine/calendar";
+import { currentMonth, formatMonthTitle, monthRange } from "@/engine/calendar";
 import { selectComplianceShifts } from "@/features/analysis/analysis-data";
 import { captureRuleComputation, RuleComputationNotice } from "./rule-computation";
 import { requireResolvedPackage } from "@/rules/rule-resolver";
@@ -23,6 +25,12 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
 import { ReportScrollView } from "@/ui/report-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { Text } from "@/ui/text";
+import { usePalette } from "@/theme/palette";
+import { SPACING } from "@/theme/tokens";
+import { TYPOGRAPHY } from "@/theme/typography";
+import { CHECK_TITLE } from "./check-copy";
+import { checkPeriodLabel } from "./check-period-label";
 
 const EMPTY_SHIFTS: readonly ShiftEntry[] = Object.freeze([]);
 
@@ -39,6 +47,7 @@ export function ComplianceDetailsScreen() {
 }
 
 function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: number }) {
+  const palette = usePalette();
   const preferences = useCheckPreferences();
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const { error, ready, reload } = usePflegeShiftStatus();
@@ -105,6 +114,7 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
     );
   }
   if (!ready || profile === null || compliance === null) return <LoadingView />;
+  const { start, end } = monthRange(month);
 
   return (
     <ScreenScrollView
@@ -117,7 +127,22 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
       {preferences.enabled === null && !preferences.error ? (
         <AnalysisCoverageNote message="Prüfung wird geladen …" />
       ) : null}
-      <CheckPeriod period={formatMonthTitle(month)} />
+      <View style={{ gap: SPACING.sm }}>
+        <Text accessibilityRole="header" style={{ ...TYPOGRAPHY.screenTitle, color: palette.text }}>
+          {CHECK_TITLE}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.xs }}>
+          <Ionicons
+            name="calendar-outline"
+            size={15}
+            color={palette.textMuted}
+            accessibilityElementsHidden
+          />
+          <Text style={{ flexShrink: 1, ...TYPOGRAPHY.small, color: palette.textMuted }}>
+            {checkPeriodLabel(start, end)}
+          </Text>
+        </View>
+      </View>
       <ComplianceDayList
         compliance={sourceCompliance!}
         showPlanning={preferences.enabled !== false}

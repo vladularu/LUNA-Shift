@@ -4,14 +4,19 @@ import { validComplianceIssueFacts } from "@/domain/compliance-issue-facts";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { usePalette } from "@/theme/palette";
 import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { CHECK_REFERENCE_TYPOGRAPHY, TYPOGRAPHY } from "@/theme/typography";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
-import { CheckDutyOverview } from "./check-duty-overview";
+import { CheckRestTimeline, formatCheckRestDuration } from "./check-rest-timeline";
 import { complianceTimeline, restDuration, type RestTimeline } from "./compliance-timeline";
 import { checkPeriodLabel } from "./check-period-label";
-import { CheckDetailCard, CheckDetailStack } from "./check-detail-layout";
-import { AnalysisDetailSummaryCard } from "./analysis-detail-layout";
+import {
+  CheckDetailCard,
+  checkSourceLinkStyle,
+  CheckDetailStack,
+  CheckDetailHeading,
+  useCheckReferenceDetail,
+} from "./check-detail-layout";
 import { CheckDetailDisclosure } from "./check-detail-disclosure";
 
 const sourceUrl = "https://www.gesetze-im-internet.de/arbzg/__5.html";
@@ -58,14 +63,12 @@ export function restCheckDetailModel(
 
 export function RestCheckDetails({ model }: { readonly model: RestCheckDetailModel }) {
   const palette = usePalette();
+  const reference = useCheckReferenceDetail();
   const shortened = model.regularMinutes !== null && model.minimumMinutes < model.regularMinutes;
-  const divider = {
-    borderTopWidth: 1,
-    borderTopColor: palette.cardSeparator,
-    paddingTop: SPACING.lg,
-  };
   const heading = { color: palette.text, ...TYPOGRAPHY.bodyStrong };
-  const secondary = { color: palette.textMuted, ...TYPOGRAPHY.small };
+  const secondary = reference
+    ? { ...CHECK_REFERENCE_TYPOGRAPHY.body, color: reference.secondary }
+    : { color: palette.textMuted, ...TYPOGRAPHY.small };
   const row = {
     flexDirection: "row" as const,
     flexWrap: "wrap" as const,
@@ -75,43 +78,45 @@ export function RestCheckDetails({ model }: { readonly model: RestCheckDetailMod
   };
   return (
     <CheckDetailStack testID="rest-check-details">
-      <AnalysisDetailSummaryCard
+      <CheckDetailHeading
+        kind="legal"
         period={model.period}
-        title="Kurzer Wechsel"
+        title="Kurze Ruhezeit"
         caption="Gesetzliche Prüfung · Ruhezeit"
       />
-      <CheckDetailCard accent={palette.legalCheckBorder}>
-        <CheckDutyOverview
-          shifts={[model.rest.previous, model.rest.next]}
-          compact={false}
-          showTimes
-          testID="rest-check-duties"
-        />
-        <View style={{ ...divider, gap: SPACING.xs }}>
-          <Text style={secondary}>Deine Ruhezeit</Text>
-          <Text style={{ color: palette.text, ...TYPOGRAPHY.highlightValue }}>
-            {restDuration(model.rest.minutes)}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: SPACING.sm }}>
-          <Ionicons
-            name="alert-circle-outline"
-            color={palette.legalCheckBorder}
-            size={22}
-            accessibilityElementsHidden
-          />
-          <View style={{ flex: 1, gap: SPACING.xs }}>
-            <Text style={{ ...heading, color: palette.legalCheckBorder }}>
-              Prüfmaßstab unterschritten
-            </Text>
-            <Text style={secondary}>
-              {restDuration(model.differenceMinutes)} unter{" "}
-              {shortened ? "der verkürzten Ruhezeit" : "dem verwendeten Prüfmaßstab"}.
-            </Text>
-          </View>
-        </View>
+      <CheckDetailCard
+        accent={reference?.legalLine ?? palette.legalCheckBorder}
+        testID="rest-check-timeline-card"
+      >
+        <CheckRestTimeline rest={model.rest} testID="rest-check-duties" />
       </CheckDetailCard>
-      <CheckDetailCard>
+      <CheckDetailCard title="Wie wird das eingeordnet?">
+        {reference ? (
+          <Text style={secondary}>
+            Die erfasste Ruhezeit liegt {formatCheckRestDuration(model.differenceMinutes)} unter dem
+            Prüfmaßstab von {formatCheckRestDuration(model.minimumMinutes)}.
+          </Text>
+        ) : (
+          <View style={{ flexDirection: "row", gap: SPACING.sm }}>
+            <Ionicons
+              name="alert-circle-outline"
+              color={palette.legalCheckBorder}
+              size={22}
+              accessibilityElementsHidden
+            />
+            <View style={{ flex: 1, gap: SPACING.xs }}>
+              <Text style={{ ...heading, color: palette.legalCheckBorder }}>
+                Prüfmaßstab unterschritten
+              </Text>
+              <Text style={secondary}>
+                {restDuration(model.differenceMinutes)} unter{" "}
+                {shortened ? "der verkürzten Ruhezeit" : "dem verwendeten Prüfmaßstab"}.
+              </Text>
+            </View>
+          </View>
+        )}
+      </CheckDetailCard>
+      <CheckDetailCard disclosure>
         <CheckDetailDisclosure title="Prüfgrundlage">
           <View style={row}>
             <Pressable
@@ -127,7 +132,7 @@ export function RestCheckDetails({ model }: { readonly model: RestCheckDetailMod
               }}
               style={{ minHeight: MINIMUM_TOUCH_TARGET, justifyContent: "center" }}
             >
-              <Text style={secondary}>§ 5 ArbZG</Text>
+              <Text style={[secondary, checkSourceLinkStyle(palette)]}>§ 5 ArbZG</Text>
             </Pressable>
           </View>
           {model.regularMinutes !== null && model.regularMinutes !== model.minimumMinutes ? (

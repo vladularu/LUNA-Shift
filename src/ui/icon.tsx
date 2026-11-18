@@ -11,6 +11,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   BarChart3,
+  BedDouble,
   Bell,
   Briefcase,
   Calculator,
@@ -38,6 +39,7 @@ import {
   Hourglass,
   Image,
   Info,
+  List,
   MapPin,
   Menu,
   Minus,
@@ -84,6 +86,8 @@ import {
 // Keep existing control props and stored identifiers; draw the kit's Lucide
 // outlines instead of introducing a second icon language in the design build.
 export const DESIGN_ICON_MAP = {
+  "bed-outline": BedDouble,
+  "list-outline": List,
   "cloud-outline": Cloud,
   "cloud-done-outline": CloudCheck,
   "document-text-outline": FileText,

@@ -3,6 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { Text } from "react-native";
 import type { MonthlyComplianceResult } from "@/domain/types";
 import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
+import { calculateMonthlyCompliance } from "@/engine/compliance";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { MonthOverview } from "./month-overview";
 import type { AnalysisCardId } from "@/domain/analysis-view";
@@ -68,6 +69,47 @@ const view = (
   />
 );
 describe("empty month presentation", () => {
+  it("counts three visible weekend periods and one duty sequence as four planning hints", async () => {
+    const night = ["10-23", "10-31", "11-01", "11-27", "11-28", "11-29"].map((date) =>
+      forecastShift({
+        id: date,
+        date: `2026-${date}`,
+        type: "NIGHT",
+        startTime: "21:00",
+        endTime: "07:30",
+      }),
+    );
+    const late = ["11-14", "11-15", "11-21", "11-22", "11-24", "11-25", "11-26"].map((date) =>
+      forecastShift({
+        id: date,
+        date: `2026-${date}`,
+        type: "LATE",
+        startTime: "13:18",
+        endTime: "21:30",
+      }),
+    );
+    const shifts = [...night, ...late];
+    const calculated = calculateMonthlyCompliance(month, shifts, "Europe/Berlin", {
+      allEmploymentWorkRecorded: true,
+    });
+    const issues = calculated.issues.filter(
+      ({ rule }) => rule === "PLANNING_7_DAYS" || rule === "PLANNING_WEEKEND_RECOVERY",
+    );
+    expect(issues).toHaveLength(2);
+    const compliance = { ...emptyChecks, issues };
+    const data = {
+      ...emptyData,
+      monthShifts: shifts.filter(({ date }) => date.startsWith(month)),
+      complianceShifts: { ok: true as const, value: shifts },
+    };
+    const screen = await render(view(data, compliance));
+    expect(screen.getByLabelText("Hinweise & Empfehlungen: 4 Hinweise")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, 4 Meldungen" })).toBeVisible();
+    await screen.rerender(view(data, compliance, null, false));
+    expect(screen.queryByLabelText(/^Hinweise & Empfehlungen:/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Dienstplan-Check, 4 Meldungen" })).toBeNull();
+  });
+
   it.each<[boolean, 0 | 2]>([
     [true, 0],
     [false, 0],

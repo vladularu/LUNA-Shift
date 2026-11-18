@@ -3,9 +3,10 @@ import { ScrollView, View, useWindowDimensions } from "react-native";
 import type { ShiftEntry } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
+import { CHECK_REFERENCE_TYPOGRAPHY, TYPOGRAPHY } from "@/theme/typography";
 import { ColorBadge } from "@/ui/design-system";
 import { Text } from "@/ui/text";
+import { useCheckReferenceDetail } from "./check-detail-layout";
 
 const weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const fullWeekdays = [
@@ -54,16 +55,19 @@ export function CheckDutyOverview({
   dates,
   compact,
   showTimes = false,
+  labelOnly = false,
   testID = "check-duty-overview",
 }: {
   readonly shifts: readonly ShiftEntry[];
   readonly dates?: readonly string[];
   readonly compact?: boolean;
   readonly showTimes?: boolean;
+  readonly labelOnly?: boolean;
   readonly timeZone?: string;
   readonly testID?: string;
 }) {
   const palette = usePalette();
+  const reference = useCheckReferenceDetail();
   const { width, fontScale } = useWindowDimensions();
   let cells: DutyCell[], period: string | null;
   try {
@@ -130,6 +134,69 @@ export function CheckDutyOverview({
     });
   } catch {
     return null;
+  }
+  if (reference) {
+    const recorded = cells.filter((day) => day.duties.length > 0);
+    if (!recorded.length) return null;
+    return (
+      <View testID={testID}>
+        {recorded.map((day) => (
+          <View key={day.key} testID={`${testID}-${day.key}`}>
+            {day.duties.map((duty, index) => (
+              <View
+                key={`${duty.id}-${index}`}
+                testID={`check-shift-${duty.id}`}
+                accessible
+                accessibilityLabel={labelOnly ? `${duty.title}, ${day.spoken}` : duty.spoken}
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  alignItems: "baseline",
+                  justifyContent: "space-between",
+                  gap: SPACING.xxs,
+                  paddingVertical: SPACING.xs,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flexShrink: 1,
+                    gap: SPACING.xs,
+                  }}
+                >
+                  {!labelOnly ? (
+                    <View testID={`check-duty-symbol-${day.key}-${duty.id}`}>
+                      <ColorBadge color={duty.color} label={duty.symbol} size={18} />
+                    </View>
+                  ) : null}
+                  <Text
+                    style={{
+                      ...CHECK_REFERENCE_TYPOGRAPHY.timeline,
+                      color: reference.text,
+                      flexShrink: 1,
+                    }}
+                  >
+                    {day.label} · {duty.title}
+                  </Text>
+                </View>
+                {!labelOnly ? (
+                  <Text
+                    style={{
+                      ...CHECK_REFERENCE_TYPOGRAPHY.timeline,
+                      color: reference.secondary,
+                      fontVariant: ["tabular-nums"],
+                    }}
+                  >
+                    {duty.time}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    );
   }
   const small = compact ?? cells.length > 3;
   const scroll = fontScale >= 1.3 || width < 340;

@@ -1,25 +1,30 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { ScrollView } from "react-native";
 import { parseIdentifierRouteParam, type RouteParam } from "@/navigation/route-params";
-import { usePalette } from "@/theme/palette";
-import { SPACING } from "@/theme/tokens";
-import { TYPOGRAPHY } from "@/theme/typography";
-import { BackFooterLayout } from "@/ui/back-footer-layout";
-import { pageBackButtonOptions } from "@/ui/native-page-header";
-import { SurfaceCard } from "@/ui/design-system";
-import { ReportScrollView } from "@/ui/report-layout";
-import { Text } from "@/ui/text";
-import { CHECK_TITLE } from "./check-copy";
-import { ComplianceIssueDetails } from "./compliance-issue-content";
 import {
-  readCheckIssueSession,
   isCheckIssueSessionInvalidated,
+  readCheckIssueSession,
   releaseCheckIssueSession,
   subscribeCheckIssueSession,
 } from "@/navigation/check-issue-session";
+import { usePalette } from "@/theme/palette";
+import { CHECK_REFERENCE_TYPOGRAPHY } from "@/theme/typography";
+import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { pageBackButtonOptions } from "@/ui/native-page-header";
+import { nativeSheetScrollEdgeOptions } from "@/ui/native-sheet-scroll-edge";
+import { Text } from "@/ui/text";
+import {
+  CHECK_DETAIL_REFERENCE,
+  CheckDetailCard,
+  CheckReferenceDetailContext,
+  checkReferenceColors,
+} from "./check-detail-layout";
+import { ComplianceIssueDetails } from "./compliance-issue-content";
 
 export function CheckIssueScreen() {
   const palette = usePalette();
+  const colors = checkReferenceColors(palette);
   const params = useLocalSearchParams<{ session?: RouteParam }>();
   const parsed = parseIdentifierRouteParam(params.session);
   const id = parsed.status === "valid" ? parsed.value : null;
@@ -40,39 +45,46 @@ export function CheckIssueScreen() {
   useEffect(() => {
     if (invalidated) close();
   }, [close, invalidated]);
+  const scrollEdge = nativeSheetScrollEdgeOptions();
+
   return (
-    <>
+    <CheckReferenceDetailContext.Provider value={colors}>
       <Stack.Screen
         options={{
-          ...pageBackButtonOptions(close, "Zurück", true),
-          title: CHECK_TITLE,
-          headerStyle: { backgroundColor: palette.background },
+          ...pageBackButtonOptions(close, "Hinweis schließen", true),
+          title: "Hinweis",
+          headerStyle: { backgroundColor: colors.background },
+          ...scrollEdge,
           headerTintColor: palette.text,
           headerTitleStyle: { color: palette.text },
+          contentStyle: { backgroundColor: colors.background },
           statusBarStyle: palette.dark ? "light" : "dark",
         }}
       />
-      <BackFooterLayout onPress={close} showFooter={false} footerTestID="check-detail-back-footer">
+      <BackFooterLayout onPress={close} nativeSheet footerTestID="check-detail-back-footer">
         {(bottomPadding) => (
-          <ReportScrollView bottomPadding={bottomPadding}>
+          <ScrollView
+            testID="check-issue-scroll"
+            contentInsetAdjustmentBehavior="automatic"
+            style={{ flex: 1, backgroundColor: colors.background }}
+            contentContainerStyle={{
+              paddingHorizontal: CHECK_DETAIL_REFERENCE.pageInset,
+              paddingTop: 15,
+              paddingBottom: bottomPadding,
+            }}
+          >
             {request ? (
               <ComplianceIssueDetails {...request} />
             ) : (
-              <SurfaceCard style={{ padding: SPACING.xl, gap: SPACING.md }}>
-                <Text
-                  accessibilityRole="header"
-                  style={{ ...TYPOGRAPHY.bodyStrong, color: palette.text }}
-                >
-                  Prüfungsdetails nicht verfügbar
-                </Text>
-                <Text style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}>
+              <CheckDetailCard title="Prüfungsdetails nicht verfügbar">
+                <Text style={{ ...CHECK_REFERENCE_TYPOGRAPHY.body, color: colors.secondary }}>
                   Öffne den Prüfpunkt bitte erneut im Dienstplan-Check.
                 </Text>
-              </SurfaceCard>
+              </CheckDetailCard>
             )}
-          </ReportScrollView>
+          </ScrollView>
         )}
       </BackFooterLayout>
-    </>
+    </CheckReferenceDetailContext.Provider>
   );
 }

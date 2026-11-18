@@ -40,3 +40,18 @@ export const TYPOGRAPHY = {
   wheelValue: { fontSize: 19, lineHeight: 24, fontWeight: "400" },
   bodyTight: { fontSize: 16, lineHeight: 22, fontWeight: "400" },
 } as const satisfies Readonly<Record<string, TextStyle>>;
+
+/** Native type sizes used by the approved calendar preview's detail page. */
+export const CHECK_REFERENCE_TYPOGRAPHY = {
+  navigation: { fontSize: 14, lineHeight: 18, fontWeight: "700" },
+  back: { fontSize: 14, lineHeight: 18, fontWeight: "600" },
+  category: { fontSize: 12, lineHeight: 16, fontWeight: "700" },
+  title: { fontSize: 27, lineHeight: 29, fontWeight: "700", letterSpacing: -1.4 },
+  section: { fontSize: 15, lineHeight: 19, fontWeight: "700", letterSpacing: -0.225 },
+  body: { fontSize: 14, lineHeight: 21 },
+  disclosure: { fontSize: 14, lineHeight: 18, fontWeight: "600" },
+  timeline: { fontSize: 13, lineHeight: 17 },
+  date: { fontSize: 13, lineHeight: 18 },
+  caption: { fontSize: 12, lineHeight: 16 },
+  weekday: { fontSize: 10, lineHeight: 13 },
+} as const;

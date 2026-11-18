@@ -76,7 +76,7 @@ it("keeps the Dino playable for complete empty checks and stops it when scope be
   expect(screen.getByTestId("check-limited")).toBeTruthy();
   expect(screen.queryByTestId("check-complete")).toBeNull();
   expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
-  expect(screen.getByRole("header", { name: "Prüfung eingeschränkt" })).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Angaben zum Prüfumfang" })).toBeTruthy();
   expect(screen.queryByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeNull();
   expect(screen.queryByTestId("dino-runner")).toBeNull();
   expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();

@@ -232,9 +232,7 @@ describe("analysis compliance details", () => {
       screen.getByRole("button", { name: "Details ansehen: 6 Diensttage in Folge" }),
     );
     expect(screen.queryByRole("link")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(
       screen.getByRole("link", {
         name: "BAuA: Arbeitszeitgestaltung – Handbuch zur Gefährdungsbeurteilung",
@@ -251,11 +249,11 @@ describe("analysis compliance details", () => {
       screen.getByRole("button", { name: "Details ansehen: 4 Nächte in Folge" }),
     );
     expect(screen.queryByRole("link")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(screen.getByRole("link", { name: "BGW: Nacht- und Schichtarbeit" })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-rest-timeline")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
     expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
   });
   it("uses the supplied profile timezone in planning details across the clock change", async () => {
@@ -290,7 +288,7 @@ describe("analysis compliance details", () => {
         name: "Details ansehen: Spät- und Frühdienst direkt nacheinander",
       }),
     );
-    expect(screen.getByLabelText("9:30 h arbeitsfreie Zeit")).toBeVisible();
+    expect(screen.getByLabelText("Erfasste Erholung, 9 h 30 min")).toBeVisible();
   });
   it("shows scope without warning totals, completion or missing-input setup in the embedded view", async () => {
     const scope = {

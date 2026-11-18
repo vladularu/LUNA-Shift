@@ -112,9 +112,7 @@ describe("compact planning hint lists", () => {
     await fireEvent.press(row);
     expect(screen.getAllByTestId("planning-hint-detail-content")).toHaveLength(1);
     expect(screen.queryByRole("link")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(
       screen.getByRole("link", {
         name: "BAuA: Arbeitszeitgestaltung – Handbuch zur Gefährdungsbeurteilung",
@@ -138,13 +136,13 @@ describe("compact planning hint lists", () => {
     );
     expect(screen.getAllByTestId("planning-hint-detail-content")).toHaveLength(1);
     expect(screen.queryByRole("link")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(
       screen.getAllByRole("link", { name: PLANNING_NIGHT_POLICY.sources[0].title }),
     ).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
+    expect(screen.getByTestId("check-rest-timeline")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
     expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
     expect(JSON.stringify(issues)).toBe(before);
     expect(countChecks(issues).infoCount).toBe(3);
@@ -323,12 +321,10 @@ describe("compact planning hint lists", () => {
       screen.getByRole("button", { name: "Details ansehen: 1 freies Wochenende in 4 Wochen" }),
     );
     expect(screen.queryByRole("link")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }));
     expect(screen.getByRole("link", { name: PLANNING_WEEKEND_POLICY.source.title })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Dienste (anzeigen|ausblenden)/ })).toBeNull();
-    expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
+    expect(screen.getByTestId("weekend-duty-overview")).toBeVisible();
   });
 
   it.each([LIGHT_PALETTE, DARK_PALETTE])(
@@ -394,9 +390,9 @@ describe("compact planning hint lists", () => {
     );
     expect(screen.queryByTestId(/^planning-hint-card-/)).toBeNull();
     expect(screen.getByTestId("check-details-legal")).toHaveStyle({
-      borderWidth: 1,
-      borderColor: LIGHT_PALETTE.legalCheckBorder,
+      borderLeftWidth: 3,
+      borderLeftColor: LIGHT_PALETTE.legalCheckBorder,
     });
-    expect(screen.getByText("Details ansehen")).toBeVisible();
+    expect(screen.getByRole("button", { name: /Details ansehen:/ })).toBeVisible();
   });
 });

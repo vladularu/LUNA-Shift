@@ -147,35 +147,29 @@ describe("visible check timelines", () => {
         expect(findings).toHaveLength(1);
         const finding = findings[0];
         const screen = await render(list(findings, entries));
-        const card = screen.getByTestId(`planning-hint-card-${finding.date}`);
-        expect(card).toHaveStyle({
-          backgroundColor: palette.surfaceRaised,
-          borderWidth: 0,
+        const row = screen.getByTestId(`check-details-${finding.id}`);
+        expect(row).toHaveStyle({
+          backgroundColor: palette.surface,
+          borderLeftColor: "transparent",
         });
-        expect(within(card).getByText("4 Nächte in Folge")).toBeVisible();
-        expect(within(card).getByText("Danach 23 Std. 59 Min. frei.")).toBeVisible();
-        expect(within(card).queryByLabelText("23:59 h arbeitsfreie Zeit")).toBeNull();
+        expect(within(row).getByText("4 Nächte in Folge")).toBeVisible();
+        expect(row.props.accessibilityValue.text).toContain("23 h 59 min");
         expect(screen.queryByText("Empfehlung & Quellen")).toBeNull();
         expect(
-          within(card).queryByTestId("warning-glyph", { includeHiddenElements: true }),
+          within(row).queryByTestId("warning-glyph", { includeHiddenElements: true }),
         ).toBeNull();
-        expect(
-          within(card).getByRole("button", { name: "Details ansehen: 4 Nächte in Folge" }).props
-            .accessibilityValue.text,
-        ).toBe("Danach 23 Std. 59 Min. frei.");
-        await fireEvent.press(
-          within(card).getByRole("button", { name: "Details ansehen: 4 Nächte in Folge" }),
-        );
+        await fireEvent.press(row);
         expect(screen.queryByText(/nicht, wie erholt du persönlich bist/)).toBeNull();
         expect(
-          within(screen.getByTestId("planning-hint-detail-content")).getAllByText(
-            /23 Std\. 59 Min\./,
-          ),
+          within(screen.getByTestId("planning-hint-detail-content")).getAllByText("23 h 59 min"),
         ).toHaveLength(1);
         expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
-        expect(screen.getByTestId("check-affected-shifts")).toBeVisible();
+        expect(screen.getByTestId("check-rest-timeline-gap")).toHaveProp(
+          "accessibilityLabel",
+          "Erfasste Erholung, 23 h 59 min",
+        );
         await fireEvent.press(
-          screen.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
+          screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
         );
         expect(screen.getByText(/nicht, wie erholt du persönlich bist/)).toBeVisible();
         await fireEvent.press(
@@ -206,7 +200,7 @@ describe("visible check timelines", () => {
     }).issues.filter((finding) => finding.rule === "PLANNING_NIGHT_RECOVERY");
     const screen = await render(list(findings, entries));
     expect(screen.getByText("Erholung nach 2 Nächten")).toBeVisible();
-    expect(screen.getByText("Danach 24 Std. frei.")).toBeVisible();
+    expect(screen.getByText(/24 h ·/)).toBeVisible();
     expect(screen.queryByLabelText("24:00 h arbeitsfreie Zeit")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /Details ansehen:/ }));
     expect(
@@ -241,14 +235,21 @@ describe("visible check timelines", () => {
       const details = within(screen.getByTestId("planning-hint-detail-content"));
       expect(details.queryByLabelText("48:30 h arbeitsfreie Zeit")).toBeNull();
       expect(details.queryByText(/nur die Anzahl der Nächte/)).toBeNull();
-      expect(details.getByText(/08\.08\.2026/)).toBeTruthy();
-      expect(details.getByText(/08\.08\.2026 · 07:30 bis 10\.08\.2026 · 08:00/)).toBeTruthy();
-      expect(details.getAllByTestId(/^check-shift-/)).toHaveLength(5);
-      expect(details.queryByRole("button", { name: "5 Dienste anzeigen" })).toBeNull();
-      expect(details.getAllByTestId(/^check-shift-/)).toHaveLength(5);
+      const timeline = within(details.getByTestId("check-rest-timeline"));
+      expect(timeline.getByText("8. August 2026")).toBeVisible();
+      expect(timeline.getByText("07:30")).toBeVisible();
+      expect(timeline.getByText("10. August 2026")).toBeVisible();
+      expect(timeline.getByText("08:00")).toBeVisible();
+      expect(details.getByTestId("check-rest-timeline-gap")).toHaveProp(
+        "accessibilityLabel",
+        "Erfasste Erholung, 48 h 30 min",
+      );
+      expect(timeline.getAllByTestId(/^check-shift-/)).toHaveLength(2);
+      expect(details.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
+      expect(details.getByTestId("check-affected-shifts")).toBeVisible();
       expect(details.queryAllByRole("link")).toHaveLength(0);
       await fireEvent.press(
-        details.getByRole("button", { name: "Quelle und Prüfgrenzen", expanded: false }),
+        details.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
       );
       expect(details.getAllByRole("link")).toHaveLength(3);
     },
@@ -408,15 +409,13 @@ describe("visible check timelines", () => {
     ];
     const screen = await render(list(findings, [early, shift, duty]));
     expect(screen.getByText("Rufbereitschaft: Einsatzzeiten ergänzen")).toBeTruthy();
-    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
+    expect(screen.getByText("Kurze Ruhezeit")).toBeTruthy();
     expect(screen.getByTestId("check-details-pause")).toBeTruthy();
     expect(screen.getAllByTestId(/^check-details-/)).toHaveLength(3);
     expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
     expect(screen.getByRole("button", { name: /^Prüfstatus:/ })).toBeTruthy();
     await fireEvent.press(
-      within(
-        screen.getByTestId("check-details-SPECIAL_DUTY_CALLOUTS_INCOMPLETE:on-call:2026-12"),
-      ).getByRole("button", { name: /Details ansehen/ }),
+      screen.getByTestId("check-details-SPECIAL_DUTY_CALLOUTS_INCOMPLETE:on-call:2026-12"),
     );
     expect(screen.queryByRole("button", { name: "1 Dienst anzeigen" })).toBeNull();
     expect(screen.getByTestId("check-shift-on-call")).toBeTruthy();
@@ -453,7 +452,9 @@ describe("visible check timelines", () => {
         expect(card.queryByText(finding.description)).toBeNull();
         expect(card.queryByRole("link")).toBeNull();
         await fireEvent.press(card.getByRole("button", { name: /Details ansehen:/ }));
-        expect(screen.getByText("Prüfmaßstab unterschritten")).toBeVisible();
+        expect(
+          screen.getByText("Die erfasste Ruhezeit liegt 30 min unter dem Prüfmaßstab von 10 h."),
+        ).toBeVisible();
         await fireEvent.press(
           screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
         );
@@ -485,41 +486,30 @@ describe("visible check timelines", () => {
       try {
         const planning = issue({ id: "planning", kind: "PLANNING", severity: "warning" });
         const screen = await render(list([issue(), planning]));
-        const card = screen.getByTestId(`planning-hint-card-${planning.date}`);
+        const section = screen.getByTestId("check-inbox-planning");
+        const row = within(section).getByTestId("check-details-planning");
         const legal = screen.getByTestId("check-details-rest");
-        const cardStyle = StyleSheet.flatten(card.props.style);
-        const label = within(card).getByText("Hinweise & Empfehlungen");
-        const labelStyle = StyleSheet.flatten(label.props.style);
-        expect(within(card).getByText("Hinweise & Empfehlungen")).toBeVisible();
-        expect(within(card).queryByText("Arbeitswissenschaftliche Hinweise")).toBeNull();
-        expect(within(legal).getByText("Gesetzliche Prüfung")).toBeVisible();
-        expect(legal).toHaveStyle({ backgroundColor: palette.surfaceRaised });
-        expect(cardStyle.backgroundColor).toBe(palette.surfaceRaised);
-        expect(labelStyle.color).toBe(palette.textMuted);
-        expect(within(card).getByRole("button", { name: /Details ansehen:/ })).toHaveStyle({
-          minHeight: 44,
+        const labelStyle = StyleSheet.flatten(
+          within(section).getByText("Hinweise & Empfehlungen").props.style,
+        );
+        expect(row).toHaveStyle({
+          minHeight: 67,
+          backgroundColor: palette.surface,
+          borderLeftColor: "transparent",
         });
+        expect(legal).toHaveStyle({
+          backgroundColor: palette.surface,
+          borderLeftColor: palette.legalCheckBorder,
+        });
+        expect(legal.props.accessibilityHint).toContain("Gesetzliche Prüfung");
+        expect(row.props.accessibilityHint).toContain("Hinweise & Empfehlungen");
         expect(
-          within(card).queryByTestId("warning-glyph", { includeHiddenElements: true }),
-        ).toBeNull();
-        expect(
-          within(screen.getByTestId("check-issue-card-heading-rest")).getByTestId(
-            "critical-glyph",
-            {
-              includeHiddenElements: true,
-            },
-          ),
-        ).toHaveProp("color", palette.danger);
-        expect(cardStyle.borderWidth).toBe(0);
-        expect(
-          colorContrastRatio(labelStyle.color, cardStyle.backgroundColor),
+          colorContrastRatio(labelStyle.color, palette.groupedBackground),
         ).toBeGreaterThanOrEqual(4.5);
         expect(
-          colorContrastRatio(palette.legalCheckBorder, cardStyle.backgroundColor),
+          colorContrastRatio(palette.legalCheckBorder, palette.surface),
         ).toBeGreaterThanOrEqual(3);
-        expect(colorContrastRatio(palette.text, cardStyle.backgroundColor)).toBeGreaterThanOrEqual(
-          4.5,
-        );
+        expect(colorContrastRatio(palette.text, palette.surface)).toBeGreaterThanOrEqual(4.5);
         await screen.rerender(list([issue(), planning], [early, shift], false));
         expect(screen.queryByText("Hinweise & Empfehlungen")).toBeNull();
         expect(screen.queryByText("Arbeitswissenschaftliche Hinweise")).toBeNull();
@@ -530,7 +520,7 @@ describe("visible check timelines", () => {
     },
   );
 
-  it("keeps mixed findings in one day group with category and severity on each card", async () => {
+  it("groups legal and planning findings separately with accessible categories", async () => {
     const findings = [
       issue({
         id: "planning",
@@ -543,25 +533,21 @@ describe("visible check timelines", () => {
       issue(),
     ];
     const screen = await render(list(findings));
-    expect(screen.getAllByTestId(/^check-day-group-/)).toHaveLength(1);
+    expect(screen.getAllByTestId(/^check-inbox-/)).toHaveLength(2);
     expect(screen.getAllByTestId(/^check-details-/).map((row) => row.props.testID)).toEqual([
       "check-details-rest",
-      "check-details-planning",
       "check-details-info",
+      "check-details-planning",
     ]);
     expect(
-      within(screen.getByTestId("check-details-planning")).getByRole("button", {
+      screen.getByRole("button", {
         name: "Details ansehen: Dienstfolge prüfen",
       }),
     ).toBeTruthy();
-    expect(
-      within(screen.getByTestId("check-details-rest")).getByLabelText(
-        "Ruhezeit zu kurz, Gesetzliche Prüfung, Kritisch",
-      ),
-    ).toBeTruthy();
+    expect(screen.getByTestId("check-details-rest").props.accessibilityHint).toContain("Kritisch");
     await screen.rerender(list(findings, [shift, early], false));
     expect(screen.queryByTestId("check-details-planning")).toBeNull();
-    expect(screen.getAllByTestId(/^check-day-group-/)).toHaveLength(1);
+    expect(screen.getAllByTestId(/^check-inbox-/)).toHaveLength(1);
     expect(screen.getByTestId("check-details-info")).toBeTruthy();
   });
   it("keeps a structured series and its shift detail route after copy changes", async () => {
@@ -609,7 +595,7 @@ describe("visible check timelines", () => {
     expect(screen.getByRole("button", { name: "Angaben ergänzen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
     await screen.rerender(list([open, issue()]));
-    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
+    expect(screen.getByText("Kurze Ruhezeit")).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Prüfstatus:/ })).toBeTruthy();
   });
   it.each([
@@ -620,19 +606,11 @@ describe("visible check timelines", () => {
     mockFontScale = scale;
     mockWindowWidth = width;
     const screen = await render(list([issue()]));
-    expect(screen.getByTestId("check-day-group-2026-12-01")).toHaveStyle({
-      flexDirection: scale >= 1.3 || width < 360 ? "column" : "row",
-    });
-    expect(screen.getByRole("header", { name: "1. Dezember 2026" })).toBeTruthy();
-    expect(screen.getByLabelText("Spät endet, 21:30, 30. November 2026")).toBeTruthy();
-    expect(screen.getByLabelText("Früh beginnt, 07:00, 1. Dezember 2026")).toBeTruthy();
-    expect(screen.getByText("Ruhezeit zu kurz")).toBeTruthy();
-    expect(screen.getByText("9:30 h")).toBeTruthy();
-    expect(screen.getByText("Spät endet")).toBeTruthy();
-    expect(screen.getByText("Früh beginnt")).toBeTruthy();
-    expect(screen.getByText("21:30")).toBeTruthy();
-    expect(screen.getByText("07:00")).toBeTruthy();
-    expect(screen.getByText("Mindestens 10 Std. Ruhezeit nötig.")).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Gesetz & Tarif" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Details ansehen: Kurze Ruhezeit" })).toBeTruthy();
+    expect(screen.getByText(/9 h 30 min ·/)).toBeTruthy();
+    expect(screen.queryByText("Spät endet")).toBeNull();
+    expect(screen.queryByText("Früh beginnt")).toBeNull();
     expect(screen.queryByText(issue().description)).toBeNull();
     expect(screen.queryByRole("button", { name: /Erklärung|Über die Prüfung/ })).toBeNull();
     expect(screen.queryByTestId("check-shift-late")).toBeNull();
@@ -642,13 +620,17 @@ describe("visible check timelines", () => {
       "check-shift-late",
       "check-shift-early",
     ]);
-    expect(screen.queryByText("13:18–21:30")).toBeNull();
+    expect(screen.getByText("Spät endet")).toBeTruthy();
+    expect(screen.getByText("Früh beginnt")).toBeTruthy();
+    expect(screen.getByText("21:30")).toBeTruthy();
+    expect(screen.getByText("07:00")).toBeTruthy();
+    expect(screen.getByText("9 h 30 min")).toBeTruthy();
     expect(screen.getByTestId("check-shift-late").props.accessibilityLabel).toMatch(
       /13:18 bis 21:30/,
     );
     await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
     await waitFor(() => expect(screen.queryByTestId("check-shift-late")).toBeNull());
-    expect(screen.getByText("9:30 h")).toBeTruthy();
+    expect(screen.getByText(/9 h 30 min ·/)).toBeTruthy();
   });
   it("keeps every finding immediately visible, in date and severity order", async () => {
     const screen = await render(
@@ -665,10 +647,8 @@ describe("visible check timelines", () => {
         issue(),
       ]),
     );
-    expect(screen.getAllByRole("header").map((h) => h.props.accessibilityLabel)).toEqual([
-      "1. Dezember 2026",
-      "4. Dezember 2026",
-    ]);
+    expect(screen.getByRole("header", { name: "Gesetz & Tarif" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Hinweise & Empfehlungen" })).toBeTruthy();
     expect(screen.getByTestId("check-details-rest")).toBeTruthy();
     expect(screen.getByTestId("check-details-later")).toBeTruthy();
     expect(screen.getByText("Später")).toBeTruthy();
