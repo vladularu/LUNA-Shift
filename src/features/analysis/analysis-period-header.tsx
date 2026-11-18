@@ -13,6 +13,11 @@ import {
   SPACING,
 } from "@/theme/tokens";
 import { TabScreenHeader } from "@/ui/screen-layout";
+import {
+  ReportScrollEdge,
+  ReportScrollHeader,
+  useReportScrollHeaderEnabled,
+} from "@/ui/report-scroll-header";
 import { PeriodArrow } from "./analysis-period-arrow";
 export { formatMonthRangeLabel } from "@/ui/report-period-labels";
 
@@ -93,6 +98,7 @@ function AnalysisPeriodHeader({
   const palette = usePalette();
   const { fontScale } = useWindowDimensions();
   const largeText = fontScale >= 1.3;
+  const hasScrollEdge = useReportScrollHeaderEnabled();
   const periodLabel = (
     <View
       style={{
@@ -120,68 +126,73 @@ function AnalysisPeriodHeader({
     </View>
   );
   return (
-    <TabScreenHeader
-      bottomPadding={largeText ? SCREEN_LAYOUT.headerBottomPadding : 0}
-      testID={`${testID}-header`}
-      accessory={
-        <View style={{ flexDirection: "row", gap: SPACING.sm }}>
-          <AnalysisViewControls compact />
-          <Pressable
-            accessibilityLabel={toggleAccessibilityLabel}
-            accessibilityRole="button"
-            onPress={onToggle}
-            style={({ pressed }) => ({
-              width: CONTROL_HEIGHT.compact,
-              height: CONTROL_HEIGHT.compact,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: palette.separator,
-              borderRadius: RADII.pill,
-              backgroundColor: pressed ? palette.surfaceMuted : palette.surface,
-              opacity: pressed ? 0.72 : 1,
-            })}
-          >
-            <Ionicons
-              accessible={false}
-              color={palette.text}
-              name="calendar-number-outline"
-              size={22}
-            />
-          </Pressable>
-        </View>
-      }
-      surface="groupedBackground"
-      title="Auswertung"
-      toolbarSpacing={largeText ? SPACING.xs : 0}
-      toolbar={
-        <View
-          accessibilityRole="toolbar"
-          testID={testID}
-          style={{
-            minHeight: MINIMUM_TOUCH_TARGET,
-            flexDirection: "row",
-            flexWrap: largeText ? "wrap" : "nowrap",
-            alignItems: largeText ? "center" : "flex-start",
-            marginHorizontal: -SPACING.sm,
-          }}
-        >
-          {largeText ? periodLabel : null}
-          <PeriodArrow
-            alignTop={!largeText}
-            accessibilityLabel={previousAccessibilityLabel}
-            direction="back"
-            onPress={onPrevious}
-          />
-          {largeText ? <View style={{ flex: 1 }} /> : periodLabel}
-          <PeriodArrow
-            alignTop={!largeText}
-            accessibilityLabel={nextAccessibilityLabel}
-            direction="forward"
-            onPress={onNext}
-          />
-        </View>
-      }
-    />
+    <ReportScrollHeader>
+      <TabScreenHeader
+        backgroundColor={hasScrollEdge ? "transparent" : undefined}
+        bottomPadding={largeText ? SCREEN_LAYOUT.headerBottomPadding : 0}
+        testID={`${testID}-header`}
+        accessory={
+          <View style={{ flexDirection: "row", gap: SPACING.sm }}>
+            <AnalysisViewControls compact />
+            <Pressable
+              accessibilityLabel={toggleAccessibilityLabel}
+              accessibilityRole="button"
+              onPress={onToggle}
+              style={({ pressed }) => ({
+                width: CONTROL_HEIGHT.compact,
+                height: CONTROL_HEIGHT.compact,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: palette.separator,
+                borderRadius: RADII.pill,
+                backgroundColor: pressed ? palette.surfaceMuted : palette.surface,
+                opacity: pressed ? 0.72 : 1,
+              })}
+            >
+              <Ionicons
+                accessible={false}
+                color={palette.text}
+                name="calendar-number-outline"
+                size={22}
+              />
+            </Pressable>
+          </View>
+        }
+        surface="groupedBackground"
+        title="Auswertung"
+        toolbarSpacing={largeText ? SPACING.xs : 0}
+        toolbar={
+          <ReportScrollEdge>
+            <View
+              accessibilityRole="toolbar"
+              testID={testID}
+              style={{
+                minHeight: MINIMUM_TOUCH_TARGET,
+                flexDirection: "row",
+                flexWrap: largeText ? "wrap" : "nowrap",
+                alignItems: largeText ? "center" : "flex-start",
+                marginHorizontal: -SPACING.sm,
+              }}
+            >
+              {largeText ? periodLabel : null}
+              <PeriodArrow
+                alignTop={!largeText}
+                accessibilityLabel={previousAccessibilityLabel}
+                direction="back"
+                onPress={onPrevious}
+              />
+              {largeText ? <View style={{ flex: 1 }} /> : periodLabel}
+              <PeriodArrow
+                alignTop={!largeText}
+                accessibilityLabel={nextAccessibilityLabel}
+                direction="forward"
+                onPress={onNext}
+              />
+            </View>
+          </ReportScrollEdge>
+        }
+      />
+    </ReportScrollHeader>
   );
 }

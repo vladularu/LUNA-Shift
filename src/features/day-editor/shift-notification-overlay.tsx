@@ -28,6 +28,7 @@ import {
   type NotificationPermissionState,
 } from "@/infrastructure/notifications/notification-permissions";
 import { MOTION } from "@/theme/motion";
+import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY as FONT } from "@/theme/typography";
 
@@ -460,39 +461,43 @@ export function ShiftNotificationOverlay({
           </View>
         ) : null}
 
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          accessibilityRole="radiogroup"
-          style={[styles.presetCard, { backgroundColor: palette.surface }]}
-        >
-          {PRESETS.map((preset) => (
-            <PresetRow
-              key={preset.label}
-              label={preset.label}
-              onPress={() => void applyValue(preset.value)}
-              selected={notificationsEqual(selectedValue, preset.value)}
-            />
-          ))}
-        </ScrollView>
+        <SoftScrollScope edge="bottom">
+          <SoftScrollView
+            keyboardShouldPersistTaps="handled"
+            accessibilityRole="radiogroup"
+            style={[styles.presetCard, { backgroundColor: palette.surface }]}
+          >
+            {PRESETS.map((preset) => (
+              <PresetRow
+                key={preset.label}
+                label={preset.label}
+                onPress={() => void applyValue(preset.value)}
+                selected={notificationsEqual(selectedValue, preset.value)}
+              />
+            ))}
+          </SoftScrollView>
 
-        <View
-          style={{
-            borderRadius: RADII.control,
-            borderCurve: CORNER_CURVE,
-            overflow: "hidden",
-            backgroundColor: palette.surface,
-          }}
-        >
-          <SelectionRow
-            label="Benutzerdefiniert"
-            selected={selectedValue !== null && !isPreset(selectedValue)}
-            navigation
-            onPress={() => {
-              setDraft(selectedValue ?? DEFAULT_NOTIFICATION);
-              setView("CUSTOM");
-            }}
-          />
-        </View>
+          <SoftScrollAnchor>
+            <View
+              style={{
+                borderRadius: RADII.control,
+                borderCurve: CORNER_CURVE,
+                overflow: "hidden",
+                backgroundColor: palette.surface,
+              }}
+            >
+              <SelectionRow
+                label="Benutzerdefiniert"
+                selected={selectedValue !== null && !isPreset(selectedValue)}
+                navigation
+                onPress={() => {
+                  setDraft(selectedValue ?? DEFAULT_NOTIFICATION);
+                  setView("CUSTOM");
+                }}
+              />
+            </View>
+          </SoftScrollAnchor>
+        </SoftScrollScope>
       </Animated.View>
     </View>
   );

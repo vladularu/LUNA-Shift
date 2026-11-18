@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SHIFT_COLOR_SWATCHES } from "@/theme/color-grid";
 import { chipTextColor } from "@/theme/color-contrast";
+import { renderSoftScrollView, SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
@@ -92,60 +93,67 @@ export function ShiftColorPickerSheet({
       <BackFooterLayout onPress={onClose} style={{ backgroundColor: palette.groupedBackground }}>
         {(bottomPadding) => (
           <View style={[styles.screen, { backgroundColor: palette.groupedBackground }]}>
-            <View style={[styles.header, { paddingTop: Math.max(insets.top, SPACING.md) }]}>
-              <Pressable
-                accessibilityLabel="Farbauswahl schließen"
-                accessibilityRole="button"
-                onPress={onClose}
-                style={({ pressed }) => [
-                  styles.closeButton,
+            <SoftScrollScope>
+              <View style={[styles.header, { paddingTop: Math.max(insets.top, SPACING.md) }]}>
+                <Pressable
+                  accessibilityLabel="Farbauswahl schließen"
+                  accessibilityRole="button"
+                  onPress={onClose}
+                  style={({ pressed }) => [
+                    styles.closeButton,
+                    {
+                      backgroundColor: palette.surfaceRaised,
+                      opacity: pressed ? 0.62 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons color={palette.text} name="close" size={28} />
+                </Pressable>
+                <Text
+                  accessibilityRole="header"
+                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                  style={[styles.title, { color: palette.text }]}
+                >
+                  Farbe
+                </Text>
+                <View style={styles.headerPlaceholder} />
+              </View>
+
+              <View
+                accessibilityLabel={`Vorschau mit Farbe ${value}`}
+                accessible
+                style={[styles.preview, { backgroundColor: value }]}
+              >
+                <ShiftSymbol color={chipTextColor} size={34} value={symbol} />
+              </View>
+              <View
+                style={[
+                  styles.gridCard,
                   {
-                    backgroundColor: palette.surfaceRaised,
-                    opacity: pressed ? 0.62 : 1,
+                    width: cardWidth,
+                    borderColor: palette.separator,
+                    backgroundColor: palette.surface,
                   },
                 ]}
               >
-                <Ionicons color={palette.text} name="close" size={28} />
-              </Pressable>
-              <Text
-                accessibilityRole="header"
-                maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                style={[styles.title, { color: palette.text }]}
-              >
-                Farbe
-              </Text>
-              <View style={styles.headerPlaceholder} />
-            </View>
-
-            <View
-              accessibilityLabel={`Vorschau mit Farbe ${value}`}
-              accessible
-              style={[styles.preview, { backgroundColor: value }]}
-            >
-              <ShiftSymbol color={chipTextColor} size={34} value={symbol} />
-            </View>
-
-            <View
-              style={[
-                styles.gridCard,
-                {
-                  width: cardWidth,
-                  borderColor: palette.separator,
-                  backgroundColor: palette.surface,
-                },
-              ]}
-            >
-              <FlatList
-                contentContainerStyle={[styles.gridContent, { paddingBottom: bottomPadding }]}
-                data={SHIFT_COLOR_SWATCHES}
-                initialNumToRender={60}
-                keyExtractor={(item) => item}
-                numColumns={COLUMN_COUNT}
-                renderItem={renderItem}
-                showsVerticalScrollIndicator={false}
-                windowSize={5}
-              />
-            </View>
+                <View pointerEvents="none" style={styles.gridEdge}>
+                  <SoftScrollAnchor existingOverlap>
+                    <View style={{ height: SPACING.sm }} />
+                  </SoftScrollAnchor>
+                </View>
+                <FlatList
+                  renderScrollComponent={renderSoftScrollView}
+                  contentContainerStyle={[styles.gridContent, { paddingBottom: bottomPadding }]}
+                  data={SHIFT_COLOR_SWATCHES}
+                  initialNumToRender={60}
+                  keyExtractor={(item) => item}
+                  numColumns={COLUMN_COUNT}
+                  renderItem={renderItem}
+                  showsVerticalScrollIndicator={false}
+                  windowSize={5}
+                />
+              </View>
+            </SoftScrollScope>
           </View>
         )}
       </BackFooterLayout>
@@ -200,6 +208,7 @@ const styles = StyleSheet.create({
     borderRadius: RADII.large,
     borderCurve: CORNER_CURVE,
   },
+  gridEdge: { position: "absolute", top: 0, left: 0, right: 0, zIndex: 1 },
   gridContent: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,

@@ -1,5 +1,6 @@
 import { Text } from "@/ui/text";
-import { Pressable, View } from "react-native";
+import { useRef } from "react";
+import { Pressable, View, type ScrollView } from "react-native";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
 import { CalendarBackgroundControl } from "./calendar-background-control";
 import { useCalendarBackground } from "./calendar-background-context";
@@ -18,6 +19,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { InlineNotice, RowButton } from "@/ui/design-system";
 import { SelectionGroup } from "@/ui/selection-group";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { useReportScrollHeaderBinding } from "@/ui/report-scroll-header";
 import { confirmDestructiveAction } from "@/ui/confirm-action";
 
 export function CalendarDesignScreen({
@@ -31,7 +33,13 @@ export function CalendarDesignScreen({
   const appearance = useAppearancePreferences();
   const display = useCalendarPreferences();
   const background = useCalendarBackground();
-  const previewBottom = SCREEN_LAYOUT.contentTopPadding + CALENDAR_WIDGET_PREVIEW_METRICS.height;
+  const scrollRef = useRef<ScrollView | null>(null);
+  const header = useReportScrollHeaderBinding(scrollRef);
+  // The header effect extends behind the top of the independently pinned preview.
+  const previewTop = header.enabled
+    ? header.height - SCREEN_LAYOUT.contentTopPadding
+    : SCREEN_LAYOUT.contentTopPadding;
+  const previewHeight = CALENDAR_WIDGET_PREVIEW_METRICS.height;
   const resetDisabled =
     !display.ready ||
     display.saving ||
@@ -50,6 +58,7 @@ export function CalendarDesignScreen({
       },
     });
   }
+  if (header.enabled && header.height === 0) return null;
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
       <View
@@ -58,7 +67,7 @@ export function CalendarDesignScreen({
         style={{
           position: "absolute",
           zIndex: 1,
-          top: SCREEN_LAYOUT.contentTopPadding,
+          top: previewTop,
           left: SCREEN_LAYOUT.horizontalPadding,
           right: SCREEN_LAYOUT.horizontalPadding,
         }}
@@ -70,9 +79,15 @@ export function CalendarDesignScreen({
         surface="groupedBackground"
         contentGap={SCREEN_LAYOUT.sectionGap}
         bottomPadding={bottomPadding}
+        scrollRef={scrollRef}
+        onLayout={header.bind}
         contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={{ paddingTop: previewBottom + SCREEN_LAYOUT.sectionGap }}
-        scrollIndicatorInsets={{ top: previewBottom }}
+        automaticallyAdjustContentInsets={header.enabled ? false : undefined}
+        automaticallyAdjustsScrollIndicatorInsets={header.enabled ? false : undefined}
+        contentContainerStyle={{
+          paddingTop: previewTop + previewHeight + SCREEN_LAYOUT.sectionGap,
+        }}
+        scrollIndicatorInsets={{ top: previewTop + previewHeight }}
         style={{ flex: 1 }}
       >
         {notice ? <InlineNotice message={notice} /> : null}

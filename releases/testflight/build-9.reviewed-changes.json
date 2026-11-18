@@ -5,8 +5,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "7ea8b99a55e5521e72e583be00d87611a5e084218d58270170d1496a2da6b0c7",
-      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones."
+      "sha256": "2e7c251d0bb83351007148a1271c8ceec531b327bafd425aad32419711529694",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "app/check-issue.tsx",
@@ -8429,14 +8429,14 @@
     {
       "path": "package-lock.json",
       "kind": "modified",
-      "sha256": "1f11b73ff026e8e7ec3ad216e31f4175779e6ed754e83e61e47ea6e89764d107",
-      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval."
+      "sha256": "c224f9381187434b22b1940fd2c3577c60333354db6872607fb9b158453fe4c1",
+      "reason": "User-authorized maintenance on 2026-11-10: retain the reviewed Vitest/Vite security updates and complete dependency-audit wiring; align the ten Expo SDK 57 patch packages using the matching SDK 57 documentation; remove only expo-auth-session and @bsky.app/expo-scroll-edge-effect after import, dynamic/native reference and package-peer checks. Active Apple/browser authentication retains expo-apple-authentication, expo-web-browser, expo-linking and expo-crypto. No major SDK migration or stored-data/schema change. A new Preview build and iPhone acceptance are required for the changed native runtime; this source review grants neither release nor device approval. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "package.json",
       "kind": "modified",
-      "sha256": "7481ba7259e34bb132464b75f57674bc1f93a117256d0aaf10a484112b0cf31d",
-      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending."
+      "sha256": "32e459e95c57788a0fd4274e9e6ef7ea528b67921f1e37b0160c7056be4dcd75",
+      "reason": "User-authorized native iPhone Rust pilot, 2026-11-12. Run the scoped pinned Rust device-library preparation before internal iOS Preview pod installation. No production or TestFlight build is requested. Preview only; TestFlight remains unchanged; iPhone acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "scripts/runtime-policy.test.mjs",
@@ -8819,8 +8819,8 @@
     {
       "path": "src/features/analysis/analysis-period-header.tsx",
       "kind": "modified",
-      "sha256": "918ef2c7d01892ab54b4f160ca938369ac4b2a7b39b2648e1caa43d2432d2beb",
-      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-clarified annual header correction, 2026-11-17: Show the selected year and active-month count as one period text between the arrows, e.g. 2026 7 Monate mit Eintraegen. Remove the separate subtitle and its compact padding; use the same body typography and single-line compact period layout as the month view. Preserve large-text navigation, the accepted fixed header, monthly date text, calculations, cache identity and native configuration. Preview OTA explicitly authorized by Danach OTA; iPhone acceptance remains pending."
+      "sha256": "66e71cc15a93302e21a2ffb4363433e08f87cc5ba40634f9a6dd23dc412629eb",
+      "reason": "User-requested analysis header correction 2026-11-17: Keep the period label at its intrinsic width so both unchanged 44-point arrow targets sit equally close to it. Remove only the compact monthly header extra 16-point bottom padding; preserve large-text and annual header spacing. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No accepted TestFlight baseline change. User-clarified annual header correction, 2026-11-17: Show the selected year and active-month count as one period text between the arrows, e.g. 2026 7 Monate mit Eintraegen. Remove the separate subtitle and its compact padding; use the same body typography and single-line compact period layout as the month view. Preserve large-text navigation, the accepted fixed header, monthly date text, calculations, cache identity and native configuration. Preview OTA explicitly authorized by Danach OTA; iPhone acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/analysis/analysis-persistent-results.tsx",
@@ -8843,14 +8843,14 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "9eb791056a39de54e2704ead14083e293385cf73e71d6a90dfc6acdc0b68c2b2",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged."
+      "sha256": "dd4612eec13b771cfdf1264e965634fc613ee81efdf55063cc55e57a8c6116e3",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
-      "sha256": "c8a5ade5cadcb8d41ff1216bc182ac8616f07ae67c7fbb809c13154c25e6f04c",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+      "sha256": "741d6fcc57faabfdd2cfaefcdfc2b2a8fe9e777d60a88d0ea43094f236721c6e",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/analysis/analysis-warmup-runtime.ts",
@@ -9431,8 +9431,8 @@
     {
       "path": "src/features/calendar/calendar-screen.tsx",
       "kind": "modified",
-      "sha256": "3970490b0f73d2a7930c2698ff25585f8c1e50f6ada34d359479c40f4fea7622",
-      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release."
+      "sha256": "8d681e4ca863da5f347c40cbcd4563c3c3aae2fa0396c16feecc6514feebcaf3",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/calendar/calendar-shared-scene.tsx",
@@ -9533,8 +9533,8 @@
     {
       "path": "src/features/day-editor/appointment-recurrence-overlay.tsx",
       "kind": "modified",
-      "sha256": "c2a5e99153390c38bb7391677d617e3d24f5c2b66dd7cc28f5afa8f5f3362f5a",
-      "reason": "Preview-only preservation of src/features/day-editor/appointment-recurrence-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "a221c263d5554b315e6540af3e76ddf626177eed7341a078da3ffec98c4b4949",
+      "reason": "Preview-only preservation of src/features/day-editor/appointment-recurrence-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/day-editor/day-editor-components.tsx",
@@ -9569,14 +9569,14 @@
     {
       "path": "src/features/day-editor/entry-options.tsx",
       "kind": "modified",
-      "sha256": "0a6da096941418f80479455a8d8b0f48d36d65a2be4cb619d21af20e06f0ab2a",
-      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change."
+      "sha256": "a9c6c4e9c45739b234bc088ea3b52bca9b2eebfef72b815577421c41793735c8",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
       "kind": "modified",
-      "sha256": "73ce61ce9c43bceffb4abc8c6b89f88e45f38bf551bc50983f1257e638568cb2",
-      "reason": "Preview-only preservation of src/features/day-editor/shift-notification-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "6c25c02c22a9426cd7cc34ca079b96821bc217ad6cdd425fd7905bcd1880401b",
+      "reason": "Preview-only preservation of src/features/day-editor/shift-notification-overlay.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/day-editor/shift-overtime-fields.tsx",
@@ -9785,8 +9785,8 @@
     {
       "path": "src/features/salary/salary-ui.tsx",
       "kind": "modified",
-      "sha256": "24b768785a1a11d7afc0ee5a65fbb9b48041c4474883e3eaea9f1e07eba878df",
-      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending."
+      "sha256": "44ac899c22b62de86bff24dd2487ffbddbbdfeb132c0c4c289da1fae6813c3fb",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/salary/special-duty-review-row.tsx",
@@ -9863,8 +9863,8 @@
     {
       "path": "src/features/settings/calendar-design-screen.tsx",
       "kind": "modified",
-      "sha256": "4598528b25f6b82b3273a3eed63ff76bf8448c13f100f0f98c0d7bc448cb000c",
-      "reason": "Requested calendar-preview refinement: pin only the rounded preview in a transparent absolute frame above scrolling controls; remove the full-width fade and outer reserved background strip. Reserve the initial content offset using the same fixed preview height; preserve reset, saving feedback, footer padding and all preference handlers. iPhone visual acceptance remains pending."
+      "sha256": "616f6eca26e4142fc229be7f8704d466face428e8f89db766680e8d60bc6fa87",
+      "reason": "Requested calendar-preview refinement: pin only the rounded preview in a transparent absolute frame above scrolling controls; remove the full-width fade and outer reserved background strip. Reserve the initial content offset using the same fixed preview height; preserve reset, saving feedback, footer padding and all preference handlers. iPhone visual acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/settings/calendar-display-controls.tsx",
@@ -9899,14 +9899,14 @@
     {
       "path": "src/features/settings/settings-info-details-screen.tsx",
       "kind": "modified",
-      "sha256": "6ff9933b37fab3882d206cd5bdcdfb56f43ce4944fe533a7b60be1d91683690b",
-      "reason": "Preview-only preservation of src/features/settings/settings-info-details-screen.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. User-requested About LUNA Shift copy revision, 2026-11-17: remove the competitor/affiliation notice, describe personal shift planning and calendar customization in concise German du copy, and display the configured app version without the Expo SDK suffix on the About page. Keep all existing Preview fixes, native glass, sheet layout, other information sections, runtime label consumers, calculations and data unchanged. Device review and separate publication approval pending."
+      "sha256": "059d48fefa10ef873c3a422ec103bec5a3cb9b3a0a31161a6a91dfda15c6a0f0",
+      "reason": "Preview-only preservation of src/features/settings/settings-info-details-screen.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. User-requested About LUNA Shift copy revision, 2026-11-17: remove the competitor/affiliation notice, describe personal shift planning and calendar customization in concise German du copy, and display the configured app version without the Expo SDK suffix on the About page. Keep all existing Preview fixes, native glass, sheet layout, other information sections, runtime label consumers, calculations and data unchanged. Device review and separate publication approval pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/settings/settings-screen.tsx",
       "kind": "modified",
-      "sha256": "17dc05cd37daf5a9ead1583042d1e161f08ccad492e3f4851936a02a4c0a1ba8",
-      "reason": "Dienstplan-Check local implementation: Rename the existing settings entry to Dienstplan-Check; preserve the settings structure and route. Local validation only; new iPhone acceptance and OTA approval remain separate. Requested More-card typography refinement: apply the existing primary text color to the ten main row titles while retaining the shared body font and all smaller subtitles, icons, card geometry and navigation handlers."
+      "sha256": "25d1b38b2185e6c6a2e26adb69f67318ed17966dc876aa5bf0470688c2ce5a44",
+      "reason": "Dienstplan-Check local implementation: Rename the existing settings entry to Dienstplan-Check; preserve the settings structure and route. Local validation only; new iPhone acceptance and OTA approval remain separate. Requested More-card typography refinement: apply the existing primary text color to the ten main row titles while retaining the shared body font and all smaller subtitles, icons, card geometry and navigation handlers. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/settings/shift-color-scheme-picker.tsx",
@@ -9935,8 +9935,8 @@
     {
       "path": "src/features/templates/templates-manager-screen.tsx",
       "kind": "modified",
-      "sha256": "78c99cf69a71a2d10ad7e3142a7655bf2d908bd450fcaf5325ded99bdaf189ee",
-      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval."
+      "sha256": "ac9e7f9e1a9271d124c273d7d2984090c24348c44f56ac47c2a1e64aca933354",
+      "reason": "Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/widgets/calendar-widget-data.test.ts",
@@ -10049,8 +10049,8 @@
     {
       "path": "src/navigation/analysis-sheet-options.ts",
       "kind": "added",
-      "sha256": "8ded7f8d84b4455b5f631923fa19ba21767d851c6978ce47f93464645e6003cd",
-      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Reuse one formSheet configuration for Schichtzulage and check details: full detent, native grabber and transparent native content. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "16a9ddbac0a457fa91ad1b9b6eef3abd64a3cf309037f1d98c104c17fbd7515c",
+      "reason": "User-requested native Schichtzulage parity correction 2026-11-11: Reuse one formSheet configuration for Schichtzulage and check details: full detent, native grabber and transparent native content. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/navigation/check-issue-session.ts",
@@ -10145,8 +10145,8 @@
     {
       "path": "src/ui/form-layout.tsx",
       "kind": "modified",
-      "sha256": "f9e26f4513ee452c8f76484a5fdca3a210775b929507c8c04f9e80eaaf7a970f",
-      "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+      "sha256": "f4a4446ea61e6be960255d529fa624b953027968f78fddb6d67b9159e6b674d7",
+      "reason": "Paket 1: add optional disabled=false to HeaderSaveAction, including its accessibility state and visual state. Existing callers retain their default behavior; no storage, calculation or native change. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/ui/month-navigator.tsx",
@@ -10157,8 +10157,8 @@
     {
       "path": "src/ui/page-stack-header.tsx",
       "kind": "added",
-      "sha256": "47d5f4eab54f5e37e50d1c4ab8e9612a1e5c19a08eb4a7ad3117392ea4d80506",
-      "reason": "User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending."
+      "sha256": "d4ad300081146ca8bbadfc732b8f02f5fd4181f736f3b3ffdc23d6d406897296",
+      "reason": "User-authorized iOS Preview header OTA 2026-11-17: Preserve the exact live widget/analysis/diagnosis predecessor 01a1ea7f-305a-7e13-8d81-c87907a3da94, and move regular iOS card headers into the screen. Reuse the unchanged native glass back button, existing back gesture rules, title styles, headerRight and Stack.Toolbar.View save actions. No native configuration, dependency, calculation, stored-data, Git or TestFlight release. Physical iPhone visual acceptance remains pending. User-reported iPhone header regressions 2026-11-17, local correction: Reserve the complete safe area and a control row for 44pt glass buttons; retain the iOS native content-pop recognizer within a 32pt edge region away from photo controls; render info-sheet ScrollView as a direct native screen child to use Screens 4.26.2 frame correction instead of legacy nested frame replacement. Preserve all current Preview widget/analysis changes, native glass, data, calculations, packages and accepted TestFlight baseline. Local verification only; the new iPhone acceptance and additional OTA approval are pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/ui/performance-diagnostics.tsx",
@@ -10193,8 +10193,8 @@
     {
       "path": "src/ui/screen-layout.tsx",
       "kind": "modified",
-      "sha256": "bf9075a229cb0333376754c07c5e0a3e6b24be9ed537c1d3ee87bf88657a0a50",
-      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change."
+      "sha256": "1111ca0bae8354b3c07504095dc1d797c686410057a14103cfd5c8b749303b0e",
+      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/ui/selection-option.tsx",
@@ -10205,8 +10205,8 @@
     {
       "path": "src/ui/selection-sheet.tsx",
       "kind": "modified",
-      "sha256": "2d4d3a6bda09ed776810d1af47ccea7e744a15ad0849924008a5eab2f9f626f9",
-      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending."
+      "sha256": "5bdd68c2937f95931754192034d740de4d6eb0bcf3a3e0853cab30970cc0ae5e",
+      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/features/analysis/check-rest-timeline.tsx",
@@ -10223,8 +10223,8 @@
     {
       "path": "src/ui/native-sheet-scroll-edge.ts",
       "kind": "added",
-      "sha256": "d7f5b33f6fa965ccb0fb270cfe3292115f1acf982f51eb94d4bc90953b1a1cb1",
-      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones."
+      "sha256": "290a972fc704eb908613669bf530de46698983fd13924d4583cc7cdf641d241d",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
       "path": "src/theme/shift-symbols.ts",
@@ -10243,6 +10243,132 @@
       "kind": "modified",
       "sha256": "916e2e6407c7fb6349583b5063da96204c72fd3e3dcfc2569eae26944982a107",
       "reason": "iOS Preview 56. Render filled shift symbols at the requested size and foreground color in the editor and calendar."
+    },
+    {
+      "path": "src/features/account/account-screen.tsx",
+      "kind": "modified",
+      "sha256": "4347e759e4718cf40a8e8af2c741f893f6eb674dc316b9677e4260f04abcb18e",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/analysis/tariff-assessment-screen.tsx",
+      "kind": "modified",
+      "sha256": "8f0b3808e8e76bea820fb6fea3c9169d9121ef21ebf43fe25e175181b35552d0",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/calendar-header-notices.tsx",
+      "kind": "added",
+      "sha256": "a886b6e8fa79a18cfeb75ceba4e6ddb271119c3a74133cb4ca42668b0d806932",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/calendar-header.tsx",
+      "kind": "modified",
+      "sha256": "5996f134aca12c5321a7eaf55897a7c11710f0a3be2fba3cf1581b4f67f1fb08",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/calendar-month-title.tsx",
+      "kind": "modified",
+      "sha256": "3ab1ae3d6a643b0a0e18928789d82bb676a9c86108f16ab2eada4608903d57ff",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/calendar-stable-pager.tsx",
+      "kind": "modified",
+      "sha256": "23e1e21b0e23f6ba21701c71f1e9b2fb980a5c948819054c56b37bf04c28a8b9",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/quick-entry-popup.tsx",
+      "kind": "modified",
+      "sha256": "a42904fc85a2f748459c2263d7940366eb371b53f49d799ce472b3ae6bb114ae",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/calendar/shift-selection-panel.tsx",
+      "kind": "modified",
+      "sha256": "a8f8a7be32c55a65511df79c3a194136ccb0861490aa628fc53f996bfc507aa2",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
+      "kind": "modified",
+      "sha256": "729002bb9660f21b1eb2fc9728239733d3f9a85e0755c47131059b3ab9fe33cd",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overlay.tsx",
+      "kind": "modified",
+      "sha256": "b0ffab9f0122af3a9448b99dc47b401be6706f2badeca4c13366e6e750224fca",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/location/location-picker-screen.tsx",
+      "kind": "modified",
+      "sha256": "a45408eb6a93be0087fb3a22fab136f30294e3129fd94a4c3972b956c8d0e58e",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-screen.tsx",
+      "kind": "modified",
+      "sha256": "2a6617947a28bddd852d2eb457e298ff61dc74b17aa9a122e5de904da5ef8daa",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/sharing/calendar-sharing-screen.tsx",
+      "kind": "modified",
+      "sha256": "ca84782c1954351894e04410528db1c0c20ff23767cfcd946fff2fc8ded51107",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/sharing/sharing-flow-layout.tsx",
+      "kind": "modified",
+      "sha256": "f1838589921947579baab62fd8973fc67025c117cdd3edbff536686eeb5c4da3",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/loading-view.tsx",
+      "kind": "modified",
+      "sha256": "8b7111c979572d3bafde7abf3271d32a5abb2afbd7a7f82387f9f14b5ba679de",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/native-scroll-edge.ts",
+      "kind": "added",
+      "sha256": "8b47537d786cd994e78aa48d48818a36168eb025405c3af96d615ecf1aeabb24",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/report-layout.tsx",
+      "kind": "modified",
+      "sha256": "746b8ac642e90e99b33a0b9159ffcfcb25888c67793d4a6001775e4d226bdfe8",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/report-scroll-header.tsx",
+      "kind": "added",
+      "sha256": "ab4c1ee7ad1d19f581ac23292c23d7f5450a03021f93dad1eacdef7712aed868",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/shift-color-picker-sheet.tsx",
+      "kind": "modified",
+      "sha256": "9e36c954e37c869d486634a456292e58c3a2aa0a75970f29930ae79ebd3842b0",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/soft-scroll-layout.tsx",
+      "kind": "added",
+      "sha256": "b696a4e9fd72494732de8f1b4375ae5643f5444289d212f97440bf3a0e11666c",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/tab-root-header.tsx",
+      "kind": "modified",
+      "sha256": "f7b47419d84d9c3130c9e64b4e3c8417fe3268c97c289a405cfd6150dee78645",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     }
   ]
 }

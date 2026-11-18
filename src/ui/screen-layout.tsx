@@ -1,7 +1,7 @@
 import type { ComponentProps, Key, PropsWithChildren, ReactNode, RefObject } from "react";
 import { useContext } from "react";
 import {
-  ScrollView,
+  type ScrollView,
   View,
   useWindowDimensions,
   type ScrollViewProps,
@@ -16,6 +16,8 @@ import { pageHeaderStyle } from "@/theme/page-header";
 import { APP_FONT_FAMILY } from "@/theme/app-font";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { MINIMUM_TOUCH_TARGET, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+
+import { SoftScrollView, useSoftScrollEdgeEnabled } from "@/ui/soft-scroll-layout";
 
 export type ScreenSurface = "background" | "groupedBackground" | "calendarBackground";
 
@@ -41,7 +43,7 @@ export function ScreenScrollView({
   const palette = usePalette();
 
   return (
-    <ScrollView
+    <SoftScrollView
       {...scrollViewProps}
       ref={scrollRef}
       contentInsetAdjustmentBehavior={contentInsetAdjustmentBehavior}
@@ -57,12 +59,13 @@ export function ScreenScrollView({
       style={[{ backgroundColor: palette[surface] }, style]}
     >
       {children}
-    </ScrollView>
+    </SoftScrollView>
   );
 }
 
 export function TabScreenHeader({
   accessory,
+  backgroundColor,
   bottomPadding = SCREEN_LAYOUT.headerBottomPadding,
   surface = "background",
   testID,
@@ -81,6 +84,7 @@ export function TabScreenHeader({
   titleHidden = false,
 }: {
   readonly accessory?: ReactNode;
+  readonly backgroundColor?: string;
   readonly bottomPadding?: number;
   readonly surface?: ScreenSurface;
   readonly testID?: string;
@@ -99,6 +103,7 @@ export function TabScreenHeader({
   readonly titleHidden?: boolean;
 }) {
   const palette = usePalette();
+  const hasScrollEdge = useSoftScrollEdgeEnabled();
   const topInset = useContext(SafeAreaInsetsContext)?.top ?? 0;
   const { fontScale } = useWindowDimensions();
   const stableTitleHeight = stableTitle
@@ -122,7 +127,9 @@ export function TabScreenHeader({
       pointerEvents={titleHidden ? "box-none" : "auto"}
       style={{
         minHeight: safeTop + headerMinHeight,
-        ...pageHeaderStyle(transparent ? "transparent" : palette[surface]),
+        ...pageHeaderStyle(
+          backgroundColor ?? (transparent || hasScrollEdge ? "transparent" : palette[surface]),
+        ),
         paddingTop: safeTop + SCREEN_LAYOUT.headerTopPadding,
         paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
         paddingBottom: bottomPadding,

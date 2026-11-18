@@ -1,7 +1,8 @@
+import { SoftScrollView } from "@/ui/soft-scroll-layout";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
   Platform,
-  ScrollView,
+  type ScrollView,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -192,7 +193,7 @@ export function CalendarStablePager({
   const start = pages[0]?.index ?? renderIndex;
   const end = pages.at(-1)?.index ?? renderIndex;
   return (
-    <ScrollView
+    <SoftScrollView
       ref={ref}
       testID="calendar-month-pager"
       contentInsetAdjustmentBehavior="never"
@@ -280,6 +281,6 @@ export function CalendarStablePager({
         </Fragment>
       ))}
       <View key="after" style={{ height: (months.length - end - 1) * height }} />
-    </ScrollView>
+    </SoftScrollView>
   );
 }

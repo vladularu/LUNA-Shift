@@ -1,6 +1,7 @@
 import { useContext, type PropsWithChildren, type ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
+import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -66,38 +67,47 @@ export function SharingFlowLayout({
   const insets = useContext(SafeAreaInsetsContext) ?? { top: 0, bottom: 0 };
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-      <View
-        style={{
-          paddingTop: close ? SPACING.xl : insets.top + SPACING.sm,
-          paddingHorizontal: SPACING.xl,
-          paddingBottom: SPACING.xl,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: SPACING.md,
-        }}
-      >
-        <SharingIconButton
-          label={close ? "Einladung schließen" : "Zurück"}
-          icon={close ? "close" : "chevron-back"}
-          onPress={onBack}
-        />
-        <Text
-          accessibilityRole="header"
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ ...TYPOGRAPHY.screenTitle, color: palette.text, flex: 1, textAlign: "center" }}
+      <SoftScrollScope>
+        <SoftScrollAnchor>
+          <View
+            style={{
+              paddingTop: close ? SPACING.xl : insets.top + SPACING.sm,
+              paddingHorizontal: SPACING.xl,
+              paddingBottom: SPACING.xl,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: SPACING.md,
+            }}
+          >
+            <SharingIconButton
+              label={close ? "Einladung schließen" : "Zurück"}
+              icon={close ? "close" : "chevron-back"}
+              onPress={onBack}
+            />
+            <Text
+              accessibilityRole="header"
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              style={{
+                ...TYPOGRAPHY.screenTitle,
+                color: palette.text,
+                flex: 1,
+                textAlign: "center",
+              }}
+            >
+              {title}
+            </Text>
+            <View style={{ width: MINIMUM_TOUCH_TARGET }} />
+          </View>
+        </SoftScrollAnchor>
+        <ScreenScrollView
+          surface="groupedBackground"
+          style={{ flex: 1 }}
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          {title}
-        </Text>
-        <View style={{ width: MINIMUM_TOUCH_TARGET }} />
-      </View>
-      <ScreenScrollView
-        surface="groupedBackground"
-        style={{ flex: 1 }}
-        contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-        {children}
-      </ScreenScrollView>
+          {children}
+        </ScreenScrollView>
+      </SoftScrollScope>
       {footer ? (
         <View
           style={{

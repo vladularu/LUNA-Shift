@@ -45,6 +45,7 @@ import { FormStatus } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
 import { ReportScrollView } from "@/ui/report-layout";
+import { nativeSheetScrollEdgeOptions } from "@/ui/native-sheet-scroll-edge";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 
 const ALLOWANCE_LABELS: Readonly<Record<AllowanceStatus, string>> = {
@@ -65,6 +66,7 @@ export function TariffAssessmentScreen() {
         options={{
           title: "Schichtzulage",
           headerStyle: { backgroundColor: palette.background },
+          ...nativeSheetScrollEdgeOptions(),
           headerTintColor: palette.text,
           headerTitleStyle: { color: palette.text },
           statusBarStyle: palette.dark ? "light" : "dark",

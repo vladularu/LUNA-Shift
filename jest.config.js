@@ -71,6 +71,10 @@ const componentCoverageThresholds = {
 /** @type {import('jest').Config} */
 module.exports = {
   preset: "jest-expo",
+  // Exercise the published Expo module's JavaScript; only its UIKit view is mocked.
+  transformIgnorePatterns: require("jest-expo/jest-preset").transformIgnorePatterns.map((pattern) =>
+    pattern.replace("/node_modules/(?!(", "/node_modules/(?!(@bsky[.]app/expo-scroll-edge-effect|"),
+  ),
   // Exercise this editor with the iOS production compiler: the default Jest
   // transform missed a generated reference to an out-of-scope save callback.
   transform: {

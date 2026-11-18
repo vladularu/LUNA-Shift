@@ -27,6 +27,7 @@ import { useCalendarWidgetDeferral } from "./use-calendar-widget-deferral";
 import { useCalendarStartup, useCalendarViewport } from "./use-calendar-startup";
 import { useCalendarPerformance, useMeasuredCalendarEntries } from "./use-calendar-performance";
 import { CalendarHeader } from "@/features/calendar/calendar-header";
+import { CalendarHeaderNotices } from "@/features/calendar/calendar-header-notices";
 import { CalendarMonthBackground } from "./calendar-background";
 import { SharedCalendarScene } from "./calendar-shared-scene";
 import { CalendarStablePager } from "./calendar-stable-pager";
@@ -59,10 +60,8 @@ import { useQuickStampAction } from "@/features/calendar/use-quick-stamp-action"
 import { dayEditorRoute, sharedDayEditorRoute, quickAddRoute } from "@/navigation/routes";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
+import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
-import { SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
-import { InlineNotice } from "@/ui/design-system";
-import { PrimaryButton } from "@/ui/form-controls";
 import { selectionFeedback } from "@/ui/haptics";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
@@ -516,109 +515,90 @@ export function CalendarScreen() {
       onLayout={viewport.measureViewport}
     >
       <CalendarMonthBackground progress={controller.progress} />
-      <View
-        testID="calendar-header-measure"
-        pointerEvents="box-none"
-        style={{ zIndex: 1 }}
-        onLayout={measureHeader}
-      >
-        <CalendarHeader
-          pageTitle
-          synchronized
-          notice={
-            !calendarReady
-              ? "Kalenderdaten werden geladen …"
-              : visibleHolidayResolution.status !== "AVAILABLE"
-                ? "Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
-                : undefined
-          }
-          direction={headerDirection}
-          month={controller.displayMonth}
-          onMoveYear={moveYear}
-          onOpenSharing={() => router.push("/calendar-sharing")}
-          onOpenDisplay={openCalendarDisplay}
-          onOpenYear={openYear}
-          plannerActive={plannerMode}
-          plannerTransition={plannerTransition}
-          referenceMonth={currentMonth(timeZone)}
-          transition={headerTransition}
-          viewMode={controller.mode}
-        />
-        <SharedCalendarFilters
-          ownVisible={preferences.showShifts}
-          onOwnVisible={preferences.setShowShifts}
-        />
-        {plannerError ? (
+      <SoftScrollScope>
+        <SoftScrollAnchor existingOverlap showEffect={controller.mode === "MONTH"}>
           <View
-            style={{
-              paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-              paddingBottom: SPACING.sm,
-            }}
+            testID="calendar-header-measure"
+            pointerEvents="box-none"
+            style={{ zIndex: 1 }}
+            onLayout={measureHeader}
           >
-            <InlineNotice message={plannerError} tone="error" />
+            <CalendarHeader
+              pageTitle
+              synchronized
+              notice={
+                !calendarReady
+                  ? "Kalenderdaten werden geladen …"
+                  : visibleHolidayResolution.status !== "AVAILABLE"
+                    ? "Feiertagsregeln für diesen Zeitraum noch nicht verfügbar."
+                    : undefined
+              }
+              direction={headerDirection}
+              month={controller.displayMonth}
+              onMoveYear={moveYear}
+              onOpenSharing={() => router.push("/calendar-sharing")}
+              onOpenDisplay={openCalendarDisplay}
+              onOpenYear={openYear}
+              plannerActive={plannerMode}
+              plannerTransition={plannerTransition}
+              referenceMonth={currentMonth(timeZone)}
+              transition={headerTransition}
+              viewMode={controller.mode}
+            />
+            <SharedCalendarFilters
+              ownVisible={preferences.showShifts}
+              onOwnVisible={preferences.setShowShifts}
+            />
+            <CalendarHeaderNotices plannerError={plannerError} preferences={preferences} />
           </View>
-        ) : null}
-        {preferences.error ? (
-          <View
-            style={{
-              gap: SPACING.sm,
-              paddingHorizontal: SCREEN_LAYOUT.horizontalPadding,
-              paddingBottom: SPACING.sm,
-            }}
-          >
-            <InlineNotice message={preferences.error} tone="error" />
-            <PrimaryButton disabled={preferences.saving} onPress={preferences.retry}>
-              Speichern erneut versuchen
-            </PrimaryButton>
-          </View>
-        ) : null}
-      </View>
-      <SharedCalendarScene
-        onViewportLayout={viewport.measureScene}
-        headerOverlap={headerOverlap}
-        showBackground={false}
-        controller={controller}
-        entriesByDate={entriesByDate}
-        referenceMonth={currentMonth(profile?.timeZone ?? "Europe/Berlin")}
-        pastelColors={preferences.pastelColors}
-        month={visibleMonth}
-        viewMode={preferences.viewMode}
-        active={isFocused}
-        bottomReserve={calendarBottomReserve}
-        onSelectMonth={openMonth}
-      >
-        <View
-          style={{ flex: 1 }}
-          pointerEvents={todayScrollActive ? "none" : "auto"}
-          testID="calendar-month-scene"
+        </SoftScrollAnchor>
+        <SharedCalendarScene
+          onViewportLayout={viewport.measureScene}
+          headerOverlap={headerOverlap}
+          showBackground={false}
+          controller={controller}
+          entriesByDate={entriesByDate}
+          referenceMonth={currentMonth(profile?.timeZone ?? "Europe/Berlin")}
+          pastelColors={preferences.pastelColors}
+          month={visibleMonth}
+          viewMode={preferences.viewMode}
+          active={isFocused}
+          bottomReserve={calendarBottomReserve}
+          onSelectMonth={openMonth}
         >
-          <Animated.View
-            onLayout={viewport.measurePager}
-            testID="calendar-month-pager-shell"
+          <View
             style={{ flex: 1 }}
+            pointerEvents={todayScrollActive ? "none" : "auto"}
+            testID="calendar-month-scene"
           >
-            {pageHeight > 0 ? (
-              <CalendarStablePager
-                onVisibleMonth={controller.previewMonth}
-                month={visibleMonth}
-                months={months}
-                height={pageHeight}
-                revision={pagerResetRevision}
-                enabled={preferences.viewMode === "MONTH"}
-                animatedRevision={animatedTodayRevision}
-                transitioning={controller.busy}
-                onPositioned={setPositionedTarget}
-                onSettled={finishPaging}
-                onBeginDrag={() => {
-                  calendarPerformance.begin("scroll-begin", visibleMonth);
-                  if (!isTransitionInFlight()) monthSelectionPending.current = false;
-                }}
-                renderMonth={renderMonth}
-              />
-            ) : null}
-          </Animated.View>
-        </View>
-      </SharedCalendarScene>
+            <Animated.View
+              onLayout={viewport.measurePager}
+              testID="calendar-month-pager-shell"
+              style={{ flex: 1 }}
+            >
+              {pageHeight > 0 ? (
+                <CalendarStablePager
+                  onVisibleMonth={controller.previewMonth}
+                  month={visibleMonth}
+                  months={months}
+                  height={pageHeight}
+                  revision={pagerResetRevision}
+                  enabled={preferences.viewMode === "MONTH"}
+                  animatedRevision={animatedTodayRevision}
+                  transitioning={controller.busy}
+                  onPositioned={setPositionedTarget}
+                  onSettled={finishPaging}
+                  onBeginDrag={() => {
+                    calendarPerformance.begin("scroll-begin", visibleMonth);
+                    if (!isTransitionInFlight()) monthSelectionPending.current = false;
+                  }}
+                  renderMonth={renderMonth}
+                />
+              ) : null}
+            </Animated.View>
+          </View>
+        </SharedCalendarScene>
+      </SoftScrollScope>
       <CalendarQuickOverlay modal={quickPopup !== null && isFocused}>
         {quickPopup ? (
           <QuickEntryPopup

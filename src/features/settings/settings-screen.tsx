@@ -24,6 +24,7 @@ import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/desig
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { successFeedback } from "@/ui/haptics";
 import { ScreenScrollView } from "@/ui/screen-layout";
+import { SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { TabRootHeader } from "@/ui/tab-root-header";
 import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
 
@@ -70,139 +71,141 @@ export function SettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-      <TabRootHeader surface="groupedBackground" title="Mehr" />
-      <ScreenScrollView surface="groupedBackground">
-        {Platform.OS === "ios" ? (
+      <SoftScrollScope>
+        <TabRootHeader surface="groupedBackground" title="Mehr" />
+        <ScreenScrollView surface="groupedBackground">
+          {Platform.OS === "ios" ? (
+            <View style={{ gap: SPACING.sm }}>
+              <SectionHeader title="LUNA Cloud" />
+              <AccountSummaryCard />
+            </View>
+          ) : null}
           <View style={{ gap: SPACING.sm }}>
-            <SectionHeader title="LUNA Cloud" />
-            <AccountSummaryCard />
+            <SectionHeader title="Arbeit" />
+            <SurfaceCard>
+              <RowButton
+                titleColor={palette.text}
+                title="Arbeitgeber"
+                subtitle={profile.employerName || "Ergänzen"}
+                subtitleBelow={subtitleBelow}
+                leading={<SettingsIcon name="briefcase-outline" />}
+                onPress={() => router.push(settingsEditorRoute("EMPLOYER", "settings"))}
+              />
+              <CardSeparator />
+              <RowButton
+                titleColor={palette.text}
+                title="Arbeit & Gehalt"
+                subtitle={`${profileWorkLabel(profile)} · ${profileSalaryLabel(profile).split(" · ").slice(0, 2).join(" · ")}`}
+                subtitleBelow={subtitleBelow}
+                leading={<SettingsIcon name="time-outline" />}
+                onPress={() => router.push(settingsEditorRoute("EMPLOYMENT", "settings"))}
+              />
+            </SurfaceCard>
           </View>
-        ) : null}
-        <View style={{ gap: SPACING.sm }}>
-          <SectionHeader title="Arbeit" />
-          <SurfaceCard>
-            <RowButton
-              titleColor={palette.text}
-              title="Arbeitgeber"
-              subtitle={profile.employerName || "Ergänzen"}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="briefcase-outline" />}
-              onPress={() => router.push(settingsEditorRoute("EMPLOYER", "settings"))}
-            />
-            <CardSeparator />
-            <RowButton
-              titleColor={palette.text}
-              title="Arbeit & Gehalt"
-              subtitle={`${profileWorkLabel(profile)} · ${profileSalaryLabel(profile).split(" · ").slice(0, 2).join(" · ")}`}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="time-outline" />}
-              onPress={() => router.push(settingsEditorRoute("EMPLOYMENT", "settings"))}
-            />
-          </SurfaceCard>
-        </View>
-        <View style={{ gap: SPACING.sm }}>
-          <SectionHeader title="Deine App" />
-          <SurfaceCard>
-            <RowButton
-              titleColor={palette.text}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="color-palette-outline" />}
-              title="Kalender gestalten"
-              onPress={() => router.push(calendarDesignRoute("settings"))}
-            />
-            <CardSeparator />
-            <RowButton
-              titleColor={palette.text}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="shield-checkmark-outline" />}
-              title={CHECK_TITLE}
-              onPress={() => router.push("/check-settings")}
-            />
-          </SurfaceCard>
-        </View>
-
-        <CalendarPerformanceControls subtitleBelow={subtitleBelow} />
-        {DEV_TOOLS_AVAILABLE ? (
           <View style={{ gap: SPACING.sm }}>
-            <SectionHeader title="Intern" />
+            <SectionHeader title="Deine App" />
             <SurfaceCard>
               <RowButton
                 titleColor={palette.text}
                 subtitleBelow={subtitleBelow}
-                leading={<SettingsIcon name="sparkles-outline" />}
-                onPress={() => router.push({ pathname: "/onboarding", params: { preview: "1" } })}
-                subtitle="Ausprobieren, ohne deine Daten zu ändern"
-                title="Onboarding testen"
+                leading={<SettingsIcon name="color-palette-outline" />}
+                title="Kalender gestalten"
+                onPress={() => router.push(calendarDesignRoute("settings"))}
               />
-              {developerMode ? (
-                <>
-                  <CardSeparator />
-                  <RowButton
-                    titleColor={palette.text}
-                    subtitleBelow={subtitleBelow}
-                    leading={<SettingsIcon name="flask-outline" />}
-                    onPress={() => router.push("/dev-tools")}
-                    subtitle="Testdaten sicher erzeugen und zurücksetzen"
-                    title="Testlabor"
-                  />
-                </>
-              ) : null}
+              <CardSeparator />
+              <RowButton
+                titleColor={palette.text}
+                subtitleBelow={subtitleBelow}
+                leading={<SettingsIcon name="shield-checkmark-outline" />}
+                title={CHECK_TITLE}
+                onPress={() => router.push("/check-settings")}
+              />
             </SurfaceCard>
           </View>
-        ) : null}
 
-        <View style={{ gap: SPACING.sm }}>
-          <SectionHeader title="Daten & App" />
-          <SurfaceCard>
-            {Platform.OS === "ios" ? (
-              <>
+          <CalendarPerformanceControls subtitleBelow={subtitleBelow} />
+          {DEV_TOOLS_AVAILABLE ? (
+            <View style={{ gap: SPACING.sm }}>
+              <SectionHeader title="Intern" />
+              <SurfaceCard>
                 <RowButton
                   titleColor={palette.text}
                   subtitleBelow={subtitleBelow}
-                  leading={<SettingsIcon name="archive-outline" />}
-                  onPress={() => router.push(localBackupRoute())}
-                  subtitle="Backup-Datei erstellen und sicher ablegen"
-                  title="Datensicherung"
+                  leading={<SettingsIcon name="sparkles-outline" />}
+                  onPress={() => router.push({ pathname: "/onboarding", params: { preview: "1" } })}
+                  subtitle="Ausprobieren, ohne deine Daten zu ändern"
+                  title="Onboarding testen"
                 />
-                <CardSeparator />
-              </>
-            ) : null}
-            <RowButton
-              titleColor={palette.text}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="phone-portrait-outline" />}
-              onPress={() => router.push(settingsInfoRoute("STORAGE"))}
-              subtitle="Deine Daten auf diesem Gerät"
-              title="Lokale Datenspeicherung"
-            />
-            <CardSeparator />
-            <RowButton
-              titleColor={palette.text}
-              subtitleBelow={subtitleBelow}
-              leading={<SettingsIcon name="calculator-outline" />}
-              onPress={() => router.push(settingsInfoRoute("CALCULATION"))}
-              subtitle="Feiertage, Zuschläge und Arbeitszeit"
-              title="Berechnungshinweise"
-            />
-            <CardSeparator />
-            <RowButton
-              titleColor={palette.text}
-              subtitleBelow={subtitleBelow}
-              accessibilityHint={
-                DEV_TOOLS_AVAILABLE
-                  ? "Fünf Sekunden gedrückt halten, um das interne Testlabor zu aktivieren."
-                  : undefined
-              }
-              delayLongPress={DEV_TOOLS_AVAILABLE ? 5000 : undefined}
-              leading={<SettingsIcon name="information-circle-outline" />}
-              onLongPress={DEV_TOOLS_AVAILABLE ? () => void activateDeveloperMode() : undefined}
-              onPress={() => router.push(settingsInfoRoute("ABOUT"))}
-              subtitle={APP_RUNTIME_LABEL}
-              title={`Über ${PRODUCT_NAME}`}
-            />
-          </SurfaceCard>
-        </View>
-      </ScreenScrollView>
+                {developerMode ? (
+                  <>
+                    <CardSeparator />
+                    <RowButton
+                      titleColor={palette.text}
+                      subtitleBelow={subtitleBelow}
+                      leading={<SettingsIcon name="flask-outline" />}
+                      onPress={() => router.push("/dev-tools")}
+                      subtitle="Testdaten sicher erzeugen und zurücksetzen"
+                      title="Testlabor"
+                    />
+                  </>
+                ) : null}
+              </SurfaceCard>
+            </View>
+          ) : null}
+
+          <View style={{ gap: SPACING.sm }}>
+            <SectionHeader title="Daten & App" />
+            <SurfaceCard>
+              {Platform.OS === "ios" ? (
+                <>
+                  <RowButton
+                    titleColor={palette.text}
+                    subtitleBelow={subtitleBelow}
+                    leading={<SettingsIcon name="archive-outline" />}
+                    onPress={() => router.push(localBackupRoute())}
+                    subtitle="Backup-Datei erstellen und sicher ablegen"
+                    title="Datensicherung"
+                  />
+                  <CardSeparator />
+                </>
+              ) : null}
+              <RowButton
+                titleColor={palette.text}
+                subtitleBelow={subtitleBelow}
+                leading={<SettingsIcon name="phone-portrait-outline" />}
+                onPress={() => router.push(settingsInfoRoute("STORAGE"))}
+                subtitle="Deine Daten auf diesem Gerät"
+                title="Lokale Datenspeicherung"
+              />
+              <CardSeparator />
+              <RowButton
+                titleColor={palette.text}
+                subtitleBelow={subtitleBelow}
+                leading={<SettingsIcon name="calculator-outline" />}
+                onPress={() => router.push(settingsInfoRoute("CALCULATION"))}
+                subtitle="Feiertage, Zuschläge und Arbeitszeit"
+                title="Berechnungshinweise"
+              />
+              <CardSeparator />
+              <RowButton
+                titleColor={palette.text}
+                subtitleBelow={subtitleBelow}
+                accessibilityHint={
+                  DEV_TOOLS_AVAILABLE
+                    ? "Fünf Sekunden gedrückt halten, um das interne Testlabor zu aktivieren."
+                    : undefined
+                }
+                delayLongPress={DEV_TOOLS_AVAILABLE ? 5000 : undefined}
+                leading={<SettingsIcon name="information-circle-outline" />}
+                onLongPress={DEV_TOOLS_AVAILABLE ? () => void activateDeveloperMode() : undefined}
+                onPress={() => router.push(settingsInfoRoute("ABOUT"))}
+                subtitle={APP_RUNTIME_LABEL}
+                title={`Über ${PRODUCT_NAME}`}
+              />
+            </SurfaceCard>
+          </View>
+        </ScreenScrollView>
+      </SoftScrollScope>
     </View>
   );
 }

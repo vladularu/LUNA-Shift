@@ -25,6 +25,20 @@ import { bundledRuleResolver, createRuleResolver, type RuleResolver } from "@/ru
 
 const mockSelectionFeedback = jest.fn();
 const mockPlanningModeFeedback = jest.fn();
+const mockRegisterCalendarScroll = jest.fn();
+const mockCalendarEdgeProvider = ({ children }: MockReact.PropsWithChildren) => children;
+let mockNativeCalendarEdge = false;
+jest.mock("@/ui/native-scroll-edge", () => ({
+  get nativeScrollEdge() {
+    return mockNativeCalendarEdge
+      ? {
+          ScrollEdgeEffectProvider: mockCalendarEdgeProvider,
+          ScrollEdgeEffect: MockView,
+          useScrollEdgeEffectRef: () => mockRegisterCalendarScroll,
+        }
+      : null;
+  },
+}));
 const mockUpsertShift = jest.fn(async () => ({
   kind: "SHIFT",
   id: "saved-shift",
@@ -316,6 +330,8 @@ describe("CalendarScreen quick-entry navigation", () => {
   beforeEach(() => {
     mockSelectionFeedback.mockClear();
     mockPlanningModeFeedback.mockClear();
+    mockRegisterCalendarScroll.mockClear();
+    mockNativeCalendarEdge = false;
     mockUpsertShift.mockClear();
     mockActiveMonth = "2026-08";
     mockFocused = true;
@@ -339,9 +355,14 @@ describe("CalendarScreen quick-entry navigation", () => {
     });
   });
 
-  it.each([0, 59.333])(
-    "reveals the measured first month with a safe top inset of %s",
-    async (safeTop) => {
+  it.each([
+    { safeTop: 0, softEdge: false },
+    { safeTop: 59.333, softEdge: false },
+    { safeTop: 59.333, softEdge: true },
+  ])(
+    "reveals the measured first month with safeTop=$safeTop and softEdge=$softEdge",
+    async ({ safeTop, softEdge }) => {
+      mockNativeCalendarEdge = softEdge;
       startupPresentation.begin();
       const calendar = () => (
         <SafeAreaInsetsContext.Provider value={{ top: safeTop, left: 0, right: 0, bottom: 34 }}>
@@ -356,12 +377,22 @@ describe("CalendarScreen quick-entry navigation", () => {
       await fireEvent(screen.getByTestId("calendar-header-measure"), "layout", {
         nativeEvent: { layout: { height: 120, width: 400 } },
       });
-      await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
-        nativeEvent: { layout: { height: 700 - safeTop, width: 400 } },
+      const pageHeight = softEdge ? 700 : 700 - safeTop;
+      const scene = screen.getByTestId("calendar-shared-scene");
+      expect(scene).toHaveStyle({ marginTop: -(120 - (softEdge ? 0 : safeTop)) });
+      await fireEvent(scene, "layout", {
+        nativeEvent: { layout: { height: pageHeight, width: 400 } },
       });
       await fireEvent(screen.getByTestId("calendar-month-pager-shell"), "layout", {
-        nativeEvent: { layout: { height: 700 - safeTop } },
+        nativeEvent: { layout: { height: pageHeight } },
       });
+      const pager = screen.getByTestId("calendar-month-pager");
+      expect(pager).toHaveProp("pagingEnabled", true);
+      if (softEdge) {
+        expect(screen.getByTestId("soft-scroll-edge")).toHaveProp("effect", "soft");
+        await fireEvent(pager, "layout", { nativeEvent: { layout: { height: pageHeight } } });
+        expect(mockRegisterCalendarScroll).toHaveBeenCalledWith(expect.anything());
+      }
       expect(startupPresentation.isReady()).toBe(true);
       mockPreferences.viewMode = "YEAR";
       await screen.rerender(calendar());

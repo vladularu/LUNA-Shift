@@ -36,6 +36,11 @@ import { CHECK_TITLE } from "./check-copy";
 import { AnalysisMonthTransition } from "./analysis-month-transition";
 import { useAnalysisNavigation } from "./use-analysis-navigation";
 import { ReportPeriodPager } from "@/ui/report-period-pager";
+import {
+  ReportScrollHeaderPage,
+  ReportScrollHeaderPlaceholder,
+  ReportScrollHeaderProvider,
+} from "@/ui/report-scroll-header";
 import { AnalysisScene } from "./analysis-scene";
 import { AnalysisMonthDataProvider, useAnalysisMonthData } from "./analysis-month-data";
 import { AnalysisSalaryInputsProvider } from "./analysis-salary-inputs";
@@ -94,58 +99,62 @@ export function AnalysisScreen({
         enabled={isFocused && period === "MONTH" && ready && error === null}
         profile={savedProfile}
       >
-        <ReportPeriodPager
-          value={month}
-          unit={period}
-          enabled={isFocused}
-          onChange={selectMonth}
-          preparationRadius={period === "MONTH" ? 2 : 1}
-          renderHeader={(pageMonth, move) =>
-            period === "YEAR" ? (
-              <AnalysisYearHeader
-                year={Number(pageMonth.slice(0, 4))}
-                activeMonthCount={visibleHeader?.activeMonthCount}
-                onPrevious={() => move(-1)}
-                onNext={() => move(1)}
-                onOpenMonth={() => changePeriod("MONTH")}
+        <ReportScrollHeaderProvider>
+          <ReportPeriodPager
+            value={month}
+            unit={period}
+            enabled={isFocused}
+            onChange={selectMonth}
+            preparationRadius={period === "MONTH" ? 2 : 1}
+            renderHeader={(pageMonth, move) =>
+              period === "YEAR" ? (
+                <AnalysisYearHeader
+                  year={Number(pageMonth.slice(0, 4))}
+                  activeMonthCount={visibleHeader?.activeMonthCount}
+                  onPrevious={() => move(-1)}
+                  onNext={() => move(1)}
+                  onOpenMonth={() => changePeriod("MONTH")}
+                />
+              ) : (
+                <AnalysisMonthHeader
+                  label={formatMonthRangeLabel(visibleHeader?.visibleMonth ?? pageMonth)}
+                  onOpenYear={() => changePeriod("YEAR")}
+                  onPrevious={() => move(-1)}
+                  onNext={() => move(1)}
+                />
+              )
+            }
+            renderPlaceholder={() => (
+              <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
+                <ReportScrollHeaderPlaceholder>
+                  <AnalysisCoverageNote message="Auswertung wird vorbereitet …" />
+                </ReportScrollHeaderPlaceholder>
+              </View>
+            )}
+            preparePage={(pageMonth, active, distance, content) => (
+              <AnalysisMonthDataProvider
+                month={pageMonth}
+                active={active}
+                distance={distance}
+                // Native swiping may reveal a distant page before selection commits.
+                // Its placeholder stays visible without starting more distant work.
+                enabled={period === "MONTH" && Math.abs(distance) <= 2}
+              >
+                <ReportScrollHeaderPage active={active}>{content}</ReportScrollHeaderPage>
+              </AnalysisMonthDataProvider>
+            )}
+            renderPage={(pageMonth, move, active) => (
+              <AnalysisPage
+                month={pageMonth}
+                period={period}
+                move={move}
+                active={active}
+                changePeriod={changePeriod}
+                onHeaderChange={updateHeader}
               />
-            ) : (
-              <AnalysisMonthHeader
-                label={formatMonthRangeLabel(visibleHeader?.visibleMonth ?? pageMonth)}
-                onOpenYear={() => changePeriod("YEAR")}
-                onPrevious={() => move(-1)}
-                onNext={() => move(1)}
-              />
-            )
-          }
-          renderPlaceholder={() => (
-            <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-              <AnalysisCoverageNote message="Auswertung wird vorbereitet …" />
-            </View>
-          )}
-          preparePage={(pageMonth, active, distance, content) => (
-            <AnalysisMonthDataProvider
-              month={pageMonth}
-              active={active}
-              distance={distance}
-              // Native swiping may reveal a distant page before selection commits.
-              // Its placeholder stays visible without starting more distant work.
-              enabled={period === "MONTH" && Math.abs(distance) <= 2}
-            >
-              {content}
-            </AnalysisMonthDataProvider>
-          )}
-          renderPage={(pageMonth, move, active) => (
-            <AnalysisPage
-              month={pageMonth}
-              period={period}
-              move={move}
-              active={active}
-              changePeriod={changePeriod}
-              onHeaderChange={updateHeader}
-            />
-          )}
-        />
+            )}
+          />
+        </ReportScrollHeaderProvider>
       </AnalysisSalaryInputsProvider>
     </AnalysisScene>
   );
@@ -254,7 +263,11 @@ function AnalysisPage({
   }
 
   if (ready && error) {
-    return retainScene(<LoadFailureView message={error} onRetry={() => void reload()} />);
+    return retainScene(
+      <ReportScrollHeaderPlaceholder>
+        <LoadFailureView message={error} onRetry={() => void reload()} />
+      </ReportScrollHeaderPlaceholder>,
+    );
   }
 
   if (period === "YEAR") {
@@ -273,18 +286,22 @@ function AnalysisPage({
     }
     if (annualReport.error) {
       return retainScene(
-        <LoadFailureView
-          message={annualReport.error}
-          onRetry={annualReport.retry}
-          title="Jahresauswertung nicht verfügbar"
-        />,
+        <ReportScrollHeaderPlaceholder>
+          <LoadFailureView
+            message={annualReport.error}
+            onRetry={annualReport.retry}
+            title="Jahresauswertung nicht verfügbar"
+          />
+        </ReportScrollHeaderPlaceholder>,
       );
     }
     const visibleReport = annualReport.report ?? annualReport.coreReport;
     if (!ready || visibleReport === null)
       return retainScene(
         <View style={{ flex: 1, backgroundColor: palette.groupedBackground }}>
-          <LoadingView label="Jahresauswertung wird berechnet …" />
+          <ReportScrollHeaderPlaceholder>
+            <LoadingView label="Jahresauswertung wird berechnet …" />
+          </ReportScrollHeaderPlaceholder>
         </View>,
       );
     return retainScene(
@@ -330,7 +347,9 @@ function AnalysisPage({
         monthlyData === null ||
         calculationMonth !== month ||
         !salarySettled ? (
-          <LoadingView />
+          <ReportScrollHeaderPlaceholder>
+            <LoadingView />
+          </ReportScrollHeaderPlaceholder>
         ) : (
           <ReportScrollView
             resumeKey={active ? appResumeHref("/analysis", { month, period }) : null}
