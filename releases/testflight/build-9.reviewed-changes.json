@@ -9023,8 +9023,8 @@
     {
       "path": "src/features/analysis/check-duty-overview.tsx",
       "kind": "added",
-      "sha256": "bfe0314d5782d4f82111dd7f8c60fe9950069de687002cd30d22723b0694e861",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "b36d1605b89b7f6774f33a3df7890431ed9e474c313d60efc2f6dd8cb7d891a6",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Tarifhinweise mit Datumskacheln zeigen die Dienste direkt in diesen Kacheln."
     },
     {
       "path": "src/features/analysis/check-issue-screen.tsx",
@@ -9317,8 +9317,8 @@
     {
       "path": "src/features/analysis/tariff-check-details.tsx",
       "kind": "added",
-      "sha256": "4dceb506258e5fbd8a05eaf10aa05e76c213a77fd65b7745b9cfdac6ec638071",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "640e5b3e93f3558eb991a9ddf40f18aeb090eaa610d2be5b9511dacccb7fd5d0",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Tarifhinweise mit Datumskacheln zeigen die Dienste direkt in diesen Kacheln."
     },
     {
       "path": "src/features/analysis/tariff-check-period.tsx",

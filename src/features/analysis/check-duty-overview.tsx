@@ -55,14 +55,12 @@ export function CheckDutyOverview({
   dates,
   compact,
   showTimes = false,
-  labelOnly = false,
   testID = "check-duty-overview",
 }: {
   readonly shifts: readonly ShiftEntry[];
   readonly dates?: readonly string[];
   readonly compact?: boolean;
   readonly showTimes?: boolean;
-  readonly labelOnly?: boolean;
   readonly timeZone?: string;
   readonly testID?: string;
 }) {
@@ -147,7 +145,7 @@ export function CheckDutyOverview({
                 key={`${duty.id}-${index}`}
                 testID={`check-shift-${duty.id}`}
                 accessible
-                accessibilityLabel={labelOnly ? `${duty.title}, ${day.spoken}` : duty.spoken}
+                accessibilityLabel={duty.spoken}
                 style={{
                   flexDirection: "row",
                   flexWrap: "wrap",
@@ -165,11 +163,9 @@ export function CheckDutyOverview({
                     gap: SPACING.xs,
                   }}
                 >
-                  {!labelOnly ? (
-                    <View testID={`check-duty-symbol-${day.key}-${duty.id}`}>
-                      <ColorBadge color={duty.color} label={duty.symbol} size={18} />
-                    </View>
-                  ) : null}
+                  <View testID={`check-duty-symbol-${day.key}-${duty.id}`}>
+                    <ColorBadge color={duty.color} label={duty.symbol} size={18} />
+                  </View>
                   <Text
                     style={{
                       ...CHECK_REFERENCE_TYPOGRAPHY.timeline,
@@ -180,17 +176,15 @@ export function CheckDutyOverview({
                     {day.label} · {duty.title}
                   </Text>
                 </View>
-                {!labelOnly ? (
-                  <Text
-                    style={{
-                      ...CHECK_REFERENCE_TYPOGRAPHY.timeline,
-                      color: reference.secondary,
-                      fontVariant: ["tabular-nums"],
-                    }}
-                  >
-                    {duty.time}
-                  </Text>
-                ) : null}
+                <Text
+                  style={{
+                    ...CHECK_REFERENCE_TYPOGRAPHY.timeline,
+                    color: reference.secondary,
+                    fontVariant: ["tabular-nums"],
+                  }}
+                >
+                  {duty.time}
+                </Text>
               </View>
             ))}
           </View>

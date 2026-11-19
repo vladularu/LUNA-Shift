@@ -70,7 +70,7 @@ async function openObservation(screen: Screen, secondary: boolean) {
 }
 
 describe("simple check copy in both result renderers", () => {
-  it("keeps duty symbols in the blue Sunday cells and only date and title in the duty rows", async () => {
+  it("shows Sunday duty symbols in the day cells without rendering a duty list", async () => {
     const night = forecastShift({
       id: "saturday-night",
       date: "2026-11-14",
@@ -85,10 +85,8 @@ describe("simple check copy in both result renderers", () => {
     await fireEvent.press(screen.getByTestId("check-details-weekends"));
     const calendar = within(screen.getByTestId("tariff-period"));
     expect(calendar.getAllByTestId(/^check-duty-symbol-/)).toHaveLength(2);
-    const rows = within(screen.getByTestId("check-duty-overview"));
-    expect(rows.getByText("14.11. · Nacht")).toBeVisible();
-    expect(rows.queryAllByTestId(/^check-duty-symbol-/)).toHaveLength(0);
-    expect(rows.queryAllByText(/\d{2}:\d{2}/)).toHaveLength(0);
+    expect(screen.queryByTestId("check-duty-overview")).toBeNull();
+    expect(screen.queryByText("14.11. · Nacht")).toBeNull();
   });
 
   it.each<[boolean, boolean]>([
@@ -144,9 +142,7 @@ describe("simple check copy in both result renderers", () => {
         const cell = within(screen.getByTestId("tariff-period-2026-11-08"));
         expect(cell.getByTestId("check-duty-symbol-2026-11-08-sunday-8")).toBeVisible();
         expect(cell.getByText("8.")).toBeVisible();
-        expect(
-          within(screen.getByTestId("check-shift-sunday-8")).queryByTestId(/^check-duty-symbol-/),
-        ).toBeNull();
+        expect(screen.queryByTestId("check-shift-sunday-8")).toBeNull();
         expect(screen.queryByRole("button", { name: "Betroffene Dienste" })).toBeNull();
         await fireEvent.press(
           screen.getByRole("button", { name: "Prüfgrundlage", expanded: false }),
@@ -161,8 +157,8 @@ describe("simple check copy in both result renderers", () => {
         await fireEvent.press(screen.getByTestId("check-details-second"));
         expect(screen.getByTestId("check-original-issue-second")).toBeVisible();
         expect(screen.queryByTestId("check-original-issue-first")).toBeNull();
-        expect(screen.queryByTestId("check-shift-sunday-8")).toBeNull();
-        expect(screen.getByTestId("check-shift-sunday-22")).toBeVisible();
+        expect(screen.queryByTestId("check-duty-symbol-2026-11-08-sunday-8")).toBeNull();
+        expect(screen.getByTestId("check-duty-symbol-2026-11-22-sunday-22")).toBeVisible();
         await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
         expect(screen.getByTestId("check-inbox-legal")).toBeVisible();
         expect(JSON.stringify(issues)).toBe(before);
