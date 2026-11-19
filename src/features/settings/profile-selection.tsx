@@ -1,6 +1,7 @@
 import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { HeaderTitle } from "expo-router/react-navigation";
 import {
   createContext,
   useCallback,
@@ -10,10 +11,11 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-import { Keyboard, View } from "react-native";
+import { Keyboard, Platform, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { profileSelectionRoute } from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
-import { SPACING } from "@/theme/tokens";
+import { MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/design-system";
 import { Field, type DropdownOption } from "@/ui/form-controls";
@@ -24,6 +26,7 @@ type ChoiceValue = string | number;
 interface SelectionRequest {
   readonly id: string;
   readonly title: string;
+  readonly prompt?: string;
   readonly returnTo: string;
   readonly value: ChoiceValue;
   readonly options: readonly DropdownOption<ChoiceValue>[];
@@ -69,6 +72,7 @@ export function ProfileChoice<T extends ChoiceValue>({
   options,
   onChange,
   modalTitle,
+  selectionPrompt,
   disabled = false,
 }: {
   readonly label: string;
@@ -76,6 +80,7 @@ export function ProfileChoice<T extends ChoiceValue>({
   readonly options: readonly DropdownOption<T>[];
   readonly onChange: (value: T) => void;
   readonly modalTitle?: string;
+  readonly selectionPrompt?: string;
   readonly disabled?: boolean;
 }) {
   const palette = usePalette();
@@ -96,6 +101,7 @@ export function ProfileChoice<T extends ChoiceValue>({
       onPress={() =>
         context.open({
           title: modalTitle ?? label,
+          prompt: selectionPrompt,
           returnTo,
           value,
           options,
@@ -136,6 +142,11 @@ function SelectionPage({
   readonly clear: (requestId?: string) => void;
 }) {
   const palette = usePalette();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const headerSide =
+    Math.max(insets.left, insets.right) + SPACING.lg + MINIMUM_TOUCH_TARGET + SPACING.sm;
+  const titleMaxWidth = Math.max(0, width - 2 * headerSide);
   const [query, setQuery] = useState("");
   const choosing = useRef(false);
   useEffect(() => () => clear(request.id), [clear, request.id]);
@@ -167,9 +178,26 @@ function SelectionPage({
           headerStyle: { backgroundColor: palette.background },
           headerTintColor: palette.text,
           headerTitleStyle: { color: palette.text },
+          headerTitle:
+            Platform.OS === "ios" && request.prompt
+              ? ({ children }) => (
+                  <HeaderTitle tintColor={palette.text} style={{ maxWidth: titleMaxWidth }}>
+                    {children}
+                  </HeaderTitle>
+                )
+              : undefined,
           statusBarStyle: palette.dark ? "light" : "dark",
         }}
       />
+      {request.prompt ? (
+        <Text
+          accessibilityRole="header"
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          style={{ color: palette.text, ...TYPOGRAPHY.sectionTitle }}
+        >
+          {request.prompt}
+        </Text>
+      ) : null}
       {request.title === "Tarifvertrag" ? (
         <Field
           label="Tarif suchen"

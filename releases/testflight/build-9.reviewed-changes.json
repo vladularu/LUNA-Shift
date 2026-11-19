@@ -9879,10 +9879,16 @@
       "reason": "Use the approved title/subtitle and scientific category while retaining both existing switches. Restore the planning setting card to the same neutral surface/border as the legal setting card per iPhone feedback. Preserve saved preferences and legal/youth behavior. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Explain the supported integrated Gesetz & Tarif scope while retaining the separate recommendation toggle and neutral settings cards. Local validation only; new iPhone acceptance and OTA approval remain separate."
     },
     {
+      "path": "src/features/settings/employment-model-fields.tsx",
+      "kind": "modified",
+      "sha256": "a75553f70be785232649b5211e2de6556197e514b11b8f2acf312034fdbbd4d1",
+      "reason": "Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options."
+    },
+    {
       "path": "src/features/settings/profile-selection.tsx",
       "kind": "modified",
-      "sha256": "a00edf3fc353e4602992127bc5c01e5264cce7d3fc9cd27b07a4dcce8a03eb5b",
-      "reason": "Requested primary text refinement for the Work and Salary card rows: apply the existing RowButton titleColor override with palette.text to ProfileChoice labels. Preserve body typography, smaller selected-value captions, selection navigation, disabled/loading state and pending-save behavior; no tariff, calculation or stored-data changes."
+      "sha256": "ef2a992a5418452ea9e0d83805c5863e0c8747391451a3abf6670feabd673184",
+      "reason": "Requested primary text refinement for the Work and Salary card rows: apply the existing RowButton titleColor override with palette.text to ProfileChoice labels. Preserve body typography, smaller selected-value captions, selection navigation, disabled/loading state and pending-save behavior; no tariff, calculation or stored-data changes. Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options. Reserve space for the iOS navigation controls and let both prompts wrap with the selected text size."
     },
     {
       "path": "src/features/settings/settings-editor-screen.tsx",
