@@ -117,9 +117,6 @@ export function TariffCheckDetails({
             calendar={calendar}
           />
         )}
-        {reference && calendar && shifts.length ? (
-          <CheckDutyOverview shifts={shifts} timeZone={timeZone} labelOnly />
-        ) : null}
       </CheckDetailCard>
       <CheckDetailCard
         title={reference ? "Was zeigt der Hinweis?" : "Einordnung"}
