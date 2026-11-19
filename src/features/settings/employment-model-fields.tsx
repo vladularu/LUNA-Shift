@@ -55,7 +55,8 @@ export function EmploymentModelFields({
       <SurfaceCard>
         <ProfileChoice
           label="Sonn- und Feiertagsarbeit"
-          modalTitle="Ist Sonn- und Feiertagsarbeit für deine Tätigkeit erlaubt?"
+          modalTitle="Sonn- & Feiertage"
+          selectionPrompt="Ist Sonn- und Feiertagsarbeit für deine Tätigkeit erlaubt?"
           value={evidence(value.sunday)}
           options={answers}
           onChange={(next) => onChange({ ...value, sunday: bool(next) })}
@@ -92,6 +93,8 @@ export function EmploymentModelFields({
         <CardSeparator />
         <ProfileChoice
           label="Alle Arbeitszeiten einschließlich Nebenjob erfasst"
+          modalTitle="Arbeitszeiten"
+          selectionPrompt="Hast du alle Arbeitszeiten einschließlich Nebenjob erfasst?"
           value={evidence(value.recorded)}
           options={answers}
           onChange={(next) => onChange({ ...value, recorded: bool(next) })}

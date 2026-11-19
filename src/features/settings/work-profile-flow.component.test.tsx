@@ -1,9 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { captureEmploymentProfile } from "@/domain/employment-history";
 import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Alert } from "react-native";
+import { Alert, Dimensions, type TextStyle } from "react-native";
+import { isValidElement } from "react";
 import { router } from "expo-router";
 import type { SaveProfileInput, UserProfile } from "@/domain/types";
 import type { NavigationAction } from "expo-router/react-navigation";
@@ -20,6 +21,8 @@ const mockUpdate = jest.fn<(input: SaveProfileInput) => Promise<UserProfile>>();
 const mockDispatch = jest.fn();
 const mockNavigation = { dispatch: mockDispatch };
 type MockHeaderOptions = {
+  title?: string;
+  headerTitle?: string | ((props: { children: string }) => React.ReactNode);
   headerBackVisible?: boolean;
   presentation?: string;
   headerLeft?: () => React.ReactNode;
@@ -33,6 +36,7 @@ let mockGuard: {
   callback: (event: { data: { action: NavigationAction } }) => void;
 };
 jest.mock("expo-router/react-navigation", () => ({
+  HeaderTitle: jest.fn(),
   usePreventRemove: (active: boolean, callback: typeof mockGuard.callback) => {
     mockGuard = { active, callback };
   },
@@ -119,6 +123,37 @@ describe("work profile draft flow", () => {
     await fireEvent.press(screen.getByRole("radio", { name: "Für den gesamten Zeitraum" }));
     await fireEvent.press(screen.getByRole("button", { name: "Gesamten Zeitraum berichtigen" }));
   }
+  it.each([
+    [
+      "Sonn- und Feiertagsarbeit",
+      "Sonn- & Feiertage",
+      "Ist Sonn- und Feiertagsarbeit für deine Tätigkeit erlaubt?",
+    ],
+    [
+      "Alle Arbeitszeiten einschließlich Nebenjob erfasst",
+      "Arbeitszeiten",
+      "Hast du alle Arbeitszeiten einschließlich Nebenjob erfasst?",
+    ],
+  ])("shows a short header and the full question for %s", async (label, title, prompt) => {
+    mockSection = "EMPLOYMENT";
+    const screen = await render(<SettingsEditorTestFlow />);
+    await fireEvent.press(screen.getByRole("button", { name: new RegExp(`^${label}:`) }));
+
+    expect(mockHeaderOptions.title).toBe(title);
+    const page = within(screen.getByTestId("profile-selection-content"));
+    const renderTitle = mockHeaderOptions.headerTitle;
+    const header = typeof renderTitle === "function" ? renderTitle({ children: title }) : null;
+    if (!isValidElement<{ style: TextStyle }>(header)) {
+      throw new Error("Expected a bounded iOS header title");
+    }
+    expect(header.props.style.maxWidth).toBeLessThan(Dimensions.get("window").width);
+    expect(page.getByRole("header", { name: prompt }).props.numberOfLines).toBeUndefined();
+    expect(page.getByRole("button", { name: "Zurück zu Arbeit & Gehalt" })).toBeEnabled();
+    for (const answer of ["Ja", "Nein", "Weiß ich nicht"]) {
+      expect(page.getByRole("button", { name: answer })).toBeEnabled();
+    }
+  });
+
   it("shows no period question or writes when the editor is unchanged", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
     expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
