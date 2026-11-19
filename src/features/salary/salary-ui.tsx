@@ -78,7 +78,7 @@ export function SalaryPage({
   return (
     <SafeAreaView
       testID="salary-page-safe-area"
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ flex: 1, backgroundColor: palette.groupedBackground }}
     >
       <SoftScrollScope>
@@ -133,8 +133,10 @@ function SalaryPageHeader({
   const palette = usePalette();
   const hasScrollEdge = useSoftScrollEdgeEnabled();
   return (
-    <View
+    <SafeAreaView
       accessibilityRole="toolbar"
+      edges={["top"]}
+      testID="salary-page-header"
       style={{
         ...pageHeaderStyle(hasScrollEdge ? "transparent" : palette.groupedBackground),
         flexDirection: "row",
@@ -180,7 +182,7 @@ function SalaryPageHeader({
       {!stacked && (!largeTitle || action) ? (
         <View style={{ width: MINIMUM_TOUCH_TARGET }}>{action}</View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }
 

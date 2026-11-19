@@ -87,7 +87,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
         styles.screen,
         {
           backgroundColor: palette.background,
-          paddingTop: inNativeSheet ? SPACING.lg : insets.top,
+          paddingTop: inNativeSheet ? SPACING.lg : undefined,
         },
       ]}
       testID="shift-selection-panel"
@@ -97,6 +97,7 @@ export const ShiftSelectionPanel = memo(function ShiftSelectionPanel({
           <>
             <SoftScrollScope>
               <SoftScrollAnchor>
+                {inNativeSheet ? null : <View style={{ height: insets.top }} />}
                 <View style={styles.navigationBar}>
                   <Pressable
                     accessibilityLabel="Dienstauswahl schließen"

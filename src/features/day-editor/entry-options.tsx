@@ -47,6 +47,7 @@ function SheetShell({
 }: React.PropsWithChildren<{ readonly onClose: () => void; readonly title: string }>) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
+  const headerTop = Math.max(insets.top, 24);
   return (
     <Modal animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen" visible>
       <BackFooterLayout onPress={onClose} style={{ backgroundColor: palette.background }}>
@@ -54,15 +55,20 @@ function SheetShell({
           <View
             style={{
               flex: 1,
-              gap: 18,
               backgroundColor: palette.background,
               paddingHorizontal: 20,
-              paddingTop: Math.max(insets.top, 24),
             }}
           >
             <SoftScrollScope>
               <SoftScrollAnchor>
-                <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    minHeight: 48 + headerTop,
+                    paddingTop: headerTop,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
                   <Pressable
                     accessibilityLabel="Zurück"
                     accessibilityRole="button"
@@ -94,7 +100,7 @@ function SheetShell({
               <SoftScrollView
                 keyboardShouldPersistTaps="handled"
                 style={{ flex: 1 }}
-                contentContainerStyle={{ gap: 18, paddingBottom: bottomPadding }}
+                contentContainerStyle={{ gap: 18, paddingTop: 18, paddingBottom: bottomPadding }}
               >
                 {children}
               </SoftScrollView>

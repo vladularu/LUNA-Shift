@@ -147,7 +147,10 @@ describe("analysis view preferences", () => {
       expect(edge).toHaveProp("edge", "top");
       expect(edge).toHaveProp("effect", "soft");
       const controls = within(edge);
-      expect(controls.getByText("Ansicht anpassen")).toBeTruthy();
+      const header = controls.getByTestId("analysis-customization-header");
+      expect(within(header).getByText("Ansicht anpassen")).toBeTruthy();
+      expect(header.props.edges.top).toBe("additive");
+      expect(screen.getByTestId("analysis-customization-safe-area").props.edges.top).toBe("off");
       const scroll = screen.getByTestId("analysis-settings-scroll");
       await fireEvent(within(scroll).getByLabelText("Gehalt anzeigen"), "valueChange", false);
       await waitFor(() => expect(mockSave.mock.lastCall?.[1].hidden).toEqual(["PAY"]));

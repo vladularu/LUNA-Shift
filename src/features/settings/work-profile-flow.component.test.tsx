@@ -130,6 +130,11 @@ describe("work profile draft flow", () => {
       "Ist Sonn- und Feiertagsarbeit für deine Tätigkeit erlaubt?",
     ],
     [
+      "Regelmäßige Nacht- oder Wechselschicht",
+      "Schichtarbeit",
+      "Arbeitest du regelmäßig nachts oder in Wechselschicht?",
+    ],
+    [
       "Alle Arbeitszeiten einschließlich Nebenjob erfasst",
       "Arbeitszeiten",
       "Hast du alle Arbeitszeiten einschließlich Nebenjob erfasst?",

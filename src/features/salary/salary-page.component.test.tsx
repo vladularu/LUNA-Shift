@@ -23,7 +23,15 @@ describe("salary page bottom safe area", () => {
         </SafeAreaInsetsContext.Provider>
       );
       const screen = await render(page(34));
-      expect(screen.getByTestId("salary-page-safe-area").props.edges.bottom).toBe("off");
+      const pageEdges = screen.getByTestId("salary-page-safe-area").props.edges;
+      const headerEdges = screen.getByTestId("salary-page-header").props.edges;
+      expect(pageEdges).toMatchObject({
+        top: "off",
+        bottom: "off",
+        left: "additive",
+        right: "additive",
+      });
+      expect(headerEdges).toMatchObject({ top: "additive", bottom: "off" });
       expect(screen.queryByTestId("salary-back-footer")).toBeNull();
       const scroll = screen.getByTestId("salary-scroll-content");
       expect(scroll.props.contentInsetAdjustmentBehavior).toBe("never");

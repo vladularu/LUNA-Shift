@@ -171,12 +171,15 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
           >
             {(bottomPadding) => (
               <SafeAreaView
-                edges={["top", "left", "right"]}
+                edges={["left", "right"]}
+                testID="analysis-customization-safe-area"
                 style={{ flex: 1, backgroundColor: p.groupedBackground }}
               >
                 <SoftScrollScope>
                   <SoftScrollAnchor>
-                    <View
+                    <SafeAreaView
+                      edges={["top"]}
+                      testID="analysis-customization-header"
                       style={{
                         padding: SPACING.lg,
                         flexDirection: "row",
@@ -234,7 +237,7 @@ export function AnalysisViewControls({ compact = false }: { readonly compact?: b
                       >
                         <Ionicons name="close" size={22} color={p.text} />
                       </Pressable>
-                    </View>
+                    </SafeAreaView>
                   </SoftScrollAnchor>
                   <SoftScrollView
                     testID="analysis-settings-scroll"
