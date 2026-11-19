@@ -8849,8 +8849,8 @@
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
       "kind": "modified",
-      "sha256": "741d6fcc57faabfdd2cfaefcdfc2b2a8fe9e777d60a88d0ea43094f236721c6e",
-      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "9927210c83a44f61ab95a8ae57ee8f05163539c639bac5a1c814f816b8e69f96",
+      "reason": "Paket 4 correction: the independent NET card participates in existing visibility and sorting controls, using the already mapped calculator icon. No other control or Luftig styling change. Sorting visual follow-up requested on 2026-11-07: reuse normal row content and card surfaces in sorting mode, preserve text, colors and spacing, and show edit chevrons for templates. Preserve existing reorder persistence/gesture behavior and Luftig. Regression coverage includes style parity, large text and edit affordance. Candidate awaiting iPhone acceptance; no TestFlight release approval. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: include the status-bar safe inset in the fixed customization header, so the existing soft scroll edge can extend into that area. Preview device acceptance pending."
     },
     {
       "path": "src/features/analysis/analysis-warmup-runtime.ts",
@@ -9569,8 +9569,8 @@
     {
       "path": "src/features/day-editor/entry-options.tsx",
       "kind": "modified",
-      "sha256": "a9c6c4e9c45739b234bc088ea3b52bca9b2eebfef72b815577421c41793735c8",
-      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "ce0d7304003af5154ea057d90f9d5ee7b9503cf8ef653d1b9fd64bbb36e2bc53",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: include the top inset in the fixed header of the full-screen reminder, break, and alarm dialogs. Preview device acceptance pending."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
@@ -9785,8 +9785,8 @@
     {
       "path": "src/features/salary/salary-ui.tsx",
       "kind": "modified",
-      "sha256": "44ac899c22b62de86bff24dd2487ffbddbbdfeb132c0c4c289da1fae6813c3fb",
-      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "90bde67ee321a87f0c9aed7486c580272c3162ecdf1e81dfa1aa5b694d17fc30",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: keep lateral safe insets on the page, and include the status-bar inset in the fixed salary header so the existing soft scroll edge can extend into that area. Preview device acceptance pending."
     },
     {
       "path": "src/features/salary/special-duty-review-row.tsx",
@@ -9881,8 +9881,8 @@
     {
       "path": "src/features/settings/employment-model-fields.tsx",
       "kind": "modified",
-      "sha256": "a75553f70be785232649b5211e2de6556197e514b11b8f2acf312034fdbbd4d1",
-      "reason": "Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options."
+      "sha256": "b93acd88c72917bb3621b310488f098feb3d7ce50db2206f6673825d199fc93a",
+      "reason": "Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options. Include the regular night or rotating shift selection using a short header and the full question above the existing answers."
     },
     {
       "path": "src/features/settings/profile-selection.tsx",
@@ -10295,8 +10295,8 @@
     {
       "path": "src/features/calendar/shift-selection-panel.tsx",
       "kind": "modified",
-      "sha256": "a8f8a7be32c55a65511df79c3a194136ccb0861490aa628fc53f996bfc507aa2",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "89eea8af926fa6abd9df75459afe79bc1f3bc768593f265b8dff135ab5ad8c93",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: include the top safe inset within the fixed header in the full-screen quick selection. Keep native sheet spacing. Preview device acceptance pending."
     },
     {
       "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
@@ -10319,8 +10319,8 @@
     {
       "path": "src/features/onboarding/onboarding-screen.tsx",
       "kind": "modified",
-      "sha256": "2a6617947a28bddd852d2eb457e298ff61dc74b17aa9a122e5de904da5ef8daa",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "c1558b60ce988481ccf05a3704ad829be922b0b4915b9c5ce7b467c2788edb11",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: put the top safe inset inside the fixed onboarding header while keeping the bottom and lateral insets on the screen. Preview device acceptance pending."
     },
     {
       "path": "src/features/sharing/calendar-sharing-screen.tsx",

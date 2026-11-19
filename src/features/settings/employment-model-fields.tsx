@@ -64,6 +64,8 @@ export function EmploymentModelFields({
         <CardSeparator />
         <ProfileChoice
           label="Regelmäßige Nacht- oder Wechselschicht"
+          modalTitle="Schichtarbeit"
+          selectionPrompt="Arbeitest du regelmäßig nachts oder in Wechselschicht?"
           value={evidence(value.night)}
           options={answers}
           onChange={(next) => onChange({ ...value, night: bool(next) })}

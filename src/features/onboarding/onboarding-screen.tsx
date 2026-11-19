@@ -298,10 +298,14 @@ export function OnboardingScreen({ preview = false }: { readonly preview?: boole
         ? `${((grossCents ?? 0) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € brutto / Monat`
         : `${SALARY_BASIS_OPTIONS.find((option) => option.value === tariffSelection.mode)?.label ?? "Tarif"} · ${isTrainingTariff(tariffSelection.mode) ? `${tariffSelection.trainingYear}. Ausbildungsjahr` : `${tariffSelection.group} · Stufe ${tariffSelection.level}`}`;
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: p.canvas }]}>
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={[s.safe, { backgroundColor: p.canvas }]}
+    >
       <KeyboardAvoidingView style={s.safe} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <SoftScrollScope>
           <SoftScrollAnchor>
+            <SafeAreaView edges={["top"]} />
             <View style={s.progressHeader}>
               <Pressable
                 accessibilityLabel="Zurück"
