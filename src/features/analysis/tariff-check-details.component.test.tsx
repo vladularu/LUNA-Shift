@@ -8,6 +8,7 @@ import type { ComplianceIssue, ShiftEntry } from "@/domain/types";
 import { ComplianceIssueContent } from "./compliance-issue-content";
 import { ComplianceDayList } from "./compliance-day-list";
 import { ComplianceDetails } from "./compliance-details";
+import { CheckReferenceDetailContext, checkReferenceColors } from "./check-detail-layout";
 import { TARIFF_SCOPE_SOURCE, TARIFF_TIME_POLICIES } from "@/domain/tariff-time-policy";
 import { TariffCheckDetails } from "./tariff-check-details";
 import { tariffCheckPresentation } from "./tariff-check-presentation";
@@ -209,15 +210,22 @@ describe("integrated tariff details", () => {
       color: "#FEDCBA",
     });
     const screen = await render(
-      <TariffCheckPeriod
-        evidence={{ ...base.tariff!, recordedDates: dates }}
-        shifts={entries}
-        timeZone="Europe/Berlin"
-      />,
+      <CheckReferenceDetailContext.Provider value={checkReferenceColors(LIGHT_PALETTE)}>
+        <TariffCheckDetails
+          evidence={{ ...base.tariff!, recordedDates: dates }}
+          title={base.title}
+          description={base.description}
+          missing={false}
+          shifts={entries}
+          timeZone="Europe/Berlin"
+        />
+      </CheckReferenceDetailContext.Provider>,
     );
+    expect(screen.getByText("Dienstbeginn an sieben Tagen")).toBeVisible();
     for (const entry of entries)
       expect(screen.getByTestId(`check-duty-symbol-${entry.date}-${entry.id}`)).toBeVisible();
     expect(screen.getAllByTestId(/^check-duty-symbol-/)).toHaveLength(8);
+    expect(screen.queryByTestId("check-duty-overview")).toBeNull();
     expect(screen.queryByRole("button", { name: /Dienste anzeigen/ })).toBeNull();
   });
   it("renders the week without native date formatting or implicit Temporal coercion", async () => {
