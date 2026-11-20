@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState, type ReactNode } from "react";
+import { provisionalTariffCaption } from "@/features/salary/provisional-tariff-caption";
 
 import {
   usePflegeShiftEntries,
@@ -142,8 +143,10 @@ export function PremiumDetailsScreen() {
       />,
     );
   }
+  const provisional = provisionalTariffCaption(pay.provisionalTariffMonths);
   return page(
     <>
+      {provisional ? <NetPayText>{provisional}</NetPayText> : null}
       <NetPayServiceDetails
         key={month}
         classification={classification}

@@ -14,6 +14,8 @@ import { calculateTvhKrShift } from "./simple-tvh-kr-pay";
 import { calculateTvUkNursingShift } from "./simple-tvuk-nursing-pay";
 import { calculateTvalPflegeShift } from "./simple-tval-pflege-pay";
 import { premiumCategory, premiumKind } from "./net-pay-premium-trace";
+import { payrollTariffContinuation } from "./payroll-tariff-continuation";
+import { isPayrollTariffContinuation } from "./payroll-tariff-dates";
 
 /** The same dated tariff calculation for regular shifts and actual callout intervals. */
 export function tariffPayrollTrace(
@@ -30,6 +32,9 @@ export function tariffPayrollTrace(
   readonly trace: SfnShift;
   readonly nightCompensatoryMinutes: number;
 } {
+  if (!isPayrollTariffContinuation(resolver)) {
+    resolver = payrollTariffContinuation(resolver, shift.date.slice(0, 7)).resolver;
+  }
   let breakdown: ShiftPremiumBreakdown;
   let trace: SfnShift | undefined;
   let nightCompensatoryMinutes = 0;
@@ -65,10 +70,11 @@ export function tariffPayrollTrace(
       resolver,
       true,
     );
-  else if (profile.vkaETariff) breakdown = calculateVkaEShift(shift, profile, resolver, true);
-  else if (profile.nursingTrainingTariff)
-    breakdown = calculateNursingTrainingShift(shift, profile, resolver, true);
-  else if (profile.tariff) {
+  else if (profile.vkaETariff || profile.nursingTrainingTariff) {
+    breakdown = profile.vkaETariff
+      ? calculateVkaEShift(shift, profile, resolver, true)
+      : calculateNursingTrainingShift(shift, profile, resolver, true);
+  } else if (profile.tariff) {
     const dated = calculateTvoedShiftPremiumTrace(shift, profile, resolver);
     breakdown = dated.breakdown;
     trace = {

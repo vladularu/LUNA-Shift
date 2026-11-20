@@ -2,7 +2,7 @@ import type { StandbyAgreement } from "@/domain/standby-agreement";
 import type { UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { specialDutyHourlyCents } from "./special-duty-hourly-rate";
-import { dutyTariffFamily } from "./special-duty-tariff";
+import { dutyTariffFamily, supportsDutyRules } from "./special-duty-tariff";
 import tables from "./standby-tables.json";
 
 export function standbyGroupOptions(
@@ -37,7 +37,7 @@ export function standbyHourlyRate(
     regular === null ||
     dutyTariffFamily(profile) !== agreement.tariff ||
     date < "2026-01-01" ||
-    date > "2026-12-31"
+    !supportsDutyRules(agreement.tariff, date)
   )
     return null;
   if (agreement.rateMode === "AGREED")
@@ -66,6 +66,8 @@ export function standbyHourlyRate(
         source: "Anlage D TV-H, 01.08.2025 / 01.07.2026",
       };
     }
+    // A new TV-L pay period starts in March. The January source does not supply its standby rates.
+    if (date > "2027-02-28") return null;
     const region = profile.tvlKrTariff!.universityRegion;
     if (region !== "WEST" && region !== "EAST") return null;
     const row = tables.tvl[key as keyof typeof tables.tvl];
@@ -75,6 +77,9 @@ export function standbyHourlyRate(
       source: "Anlage E TV-L, 01.11.2025 / 01.04.2026",
     };
   }
+  // The local Anlage G amounts end with the 2026/27 round. Agreed and TV-UK rates above
+  // use their own basis, independently of these fixed TVöD rows.
+  if (date > "2027-03-31") return null;
   const group = profile.tariff?.payGroup ?? profile.vkaETariff?.payGroup;
   if (!group) return null;
   // BT-B distinguishes Anlage G I from the former workers' Anlage G III.

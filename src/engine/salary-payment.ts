@@ -217,6 +217,13 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
       ),
     );
   const specialSources = selectedSources(["SPECIAL_DUTY"]);
+  const provisionalTariffMonths = [
+    ...new Set(
+      [current, ...selectedSources(SALARY_PAYMENT_GROUPS)].flatMap(
+        (source) => source.pay.provisionalTariffMonths ?? [],
+      ),
+    ),
+  ].sort();
   const available = issues.length === 0;
   const knownGrossAmount =
     !available &&
@@ -230,6 +237,7 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
       : undefined;
   const pay: MonthlyPayEstimate = {
     ...current.pay,
+    ...(provisionalTariffMonths.length ? { provisionalTariffMonths } : {}),
     available,
     knownGrossAmount,
     shiftBreakdowns: selectedSources(["PREMIUMS", "OVERTIME"]).flatMap(

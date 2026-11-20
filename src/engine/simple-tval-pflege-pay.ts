@@ -17,7 +17,8 @@ import type {
 import type { RuleTariffPackage } from "@/rules/contracts.generated";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { validateRulePackage } from "@/rules/validation";
-import { overlaySimpleTariffPackage, selectSimpleTariffTable } from "./simple-tariff-table-overlay";
+import { overlaySimpleTariffPackage, selectPayrollTable } from "./simple-tariff-table-overlay";
+import { isPayrollTariffContinuation, payrollPeriodsEnded } from "./payroll-tariff-dates";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
 import { calculateTvlFamilyShift } from "./simple-tvl-family-shift";
@@ -40,16 +41,25 @@ const active = (
   item: { readonly validFrom: string; readonly validTo: string | null },
 ) => item.validFrom <= date && (item.validTo === null || date <= item.validTo);
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+export const bundledTvalPflegePackages: readonly RuleTariffPackage[] = packages;
+
 export function getTvalPflegeRulePackage(
   date: string,
   resolver: RuleResolver = bundledRuleResolver,
 ): RuleTariffPackage | null {
   const key = Temporal.PlainDate.from(date).toString();
-  const local = packages.find((p) => active(key, p));
+  const resolution = isPayrollTariffContinuation(resolver)
+    ? resolver.resolveTariff(key, "tval-pflege-tdl")
+    : null;
+  const local = resolution
+    ? resolution.ok
+      ? resolution.value
+      : null
+    : packages.find((p) => active(key, p));
   return local
     ? overlaySimpleTariffPackage(
         local,
-        selectSimpleTariffTable(resolver, "TVAL_PFLEGE", key),
+        selectPayrollTable(resolver, "TVAL_PFLEGE", key, local),
         resolver,
       )
     : null;
@@ -170,6 +180,7 @@ export function calculateTvalPflegeMonth(
   selection: TvalPflegeTariff,
   options: TvalPflegeCalculationOptions,
   resolver: RuleResolver = bundledRuleResolver,
+  date = month + "-01",
 ): MonthlyPayEstimate {
   if (
     !/^\d{4}-\d{2}$/.test(month) ||
@@ -178,14 +189,18 @@ export function calculateTvalPflegeMonth(
     (options.confirmedAllowance != null && options.confirmedAllowance !== options.allowanceStatus)
   )
     throw new Error("Ung\u00fcltige TVA-L-Monatsangaben.");
-  const date = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 }).toString();
   const ctx = context(date, selection, work.weeklyMinutes, resolver);
   const empty = { ...createManualMonthlyPayEstimate(month, 0), tariffLabel: "TVA-L Pflege" };
   const allowancePolicy = ctx?.pkg.rules.tvalShiftAllowancePolicy;
-  const periods = allowancePolicy?.scopes
-    .find((s) => s.id === (selection.employerScope ?? "SECTION_43"))
-    ?.rates.periods.filter((p) => active(date, p));
-  if (!ctx || !allowancePolicy || periods?.length !== 1)
+  const rulePeriods = allowancePolicy?.scopes.find(
+    (s) => s.id === (selection.employerScope ?? "SECTION_43"),
+  )?.rates.periods;
+  const periods = rulePeriods?.filter((p) => active(date, p));
+  if (
+    !ctx ||
+    !allowancePolicy ||
+    (periods?.length !== 1 && !payrollPeriodsEnded(rulePeriods, date))
+  )
     return {
       ...empty,
       available: false,
@@ -193,7 +208,7 @@ export function calculateTvalPflegeMonth(
       personalBaseAmount: null,
       estimatedGrossAmount: null,
     };
-  const policy = periods[0];
+  const policy = periods?.[0];
   const breakdowns = shifts
     .filter((s) => s.deletedAt === null && s.date.startsWith(month + "-") && isPayWorkShift(s))
     .map((s) => calculateTvalPflegeShift(s, work, selection, options.saturdayShiftWork, resolver));
@@ -203,7 +218,7 @@ export function calculateTvalPflegeMonth(
     monthly = status.endsWith("_MONTHLY"),
     alternating = status.startsWith("ALTERNATING");
   const adultRate =
-    status === "NONE"
+    status === "NONE" || !policy
       ? 0
       : alternating
         ? monthly

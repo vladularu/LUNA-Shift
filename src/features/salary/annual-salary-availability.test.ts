@@ -78,6 +78,17 @@ describe("annual payment availability through the real dated forecast", () => {
       expect(JSON.stringify(changed)).toBe(original);
     },
   );
+  it.each([
+    [profiles[0][0], profiles[0][1], 7435],
+    [profiles[1][0], profiles[1][1], 8800],
+  ] as const)("forecasts the reviewed 2027 annual payment for %s", (_, profile, rate) => {
+    const forecast = annualSalaryForecast(2027, profile, context);
+    expect(forecast.issue).toBeNull();
+    expect(forecast.proposal).toMatchObject({ rateBasisPoints: rate });
+    expect(forecast.payments[0].payoutMonth).toBe("2027-11");
+    expect(forecast.proposal!.grossCents).toBeGreaterThan(0);
+  });
+
   it.each([0, 250000])(
     "preserves a saved override of %i cents during a tariff switch",
     (grossCents) => {

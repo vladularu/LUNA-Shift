@@ -581,6 +581,9 @@ export function* buildAnnualAvailableReportSteps(
           ? null
           : (available.summary?.balanceMinutes ?? null),
         estimatedGrossAmount: payAvailable ? (available.pay?.estimatedGrossAmount ?? null) : null,
+        ...(available.pay?.provisionalTariffMonths?.length
+          ? { provisionalTariffMonths: available.pay.provisionalTariffMonths }
+          : {}),
         premiumAmount: payAvailable
           ? (available.pay?.timePremiumAmount ?? 0) +
             (available.pay?.overtimeAmount ?? 0) +

@@ -244,7 +244,11 @@ describe("available annual report", () => {
     expect(report.targetMinutes).not.toBeNull();
     expect(report.worktimeCoverageComplete).toBe(true);
     expect(report.complianceCoverageComplete).toBe(false);
-    expect(report.availablePayMonthCount).toBe(3);
+    expect(report.availablePayMonthCount).toBe(12);
+    expect(report.months.slice(0, 3).every((month) => !month.provisionalTariffMonths)).toBe(true);
+    expect(report.months.slice(3).map((month) => month.provisionalTariffMonths)).toEqual(
+      Array.from({ length: 9 }, () => ["2027-03"]),
+    );
   });
 
   it("keeps worktime and compliance independent from missing tariff rules", () => {

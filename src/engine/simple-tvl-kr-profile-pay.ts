@@ -97,6 +97,7 @@ export function calculateTvlKrProfileMonth(
   assessmentShifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings,
   resolver: RuleResolver,
+  pricingDate?: string,
 ) {
   const selection = requireTvlKrSalaryTariff(profile.tvlKrTariff);
   if (!selection) throw new Error("TV-L-Pflegegruppe fehlt.");
@@ -124,5 +125,6 @@ export function calculateTvlKrProfileMonth(
       confirmedAllowance: decision?.allowanceStatus ?? null,
     },
     resolver,
+    pricingDate,
   );
 }

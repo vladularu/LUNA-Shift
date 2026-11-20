@@ -48,6 +48,7 @@ export interface AnnualMonthReport {
   readonly timeAccountMinutes?: number | null;
   readonly balanceMinutes: number | null;
   readonly estimatedGrossAmount: number | null;
+  readonly provisionalTariffMonths?: readonly string[];
   readonly premiumAmount: number;
   readonly criticalCount: number;
   readonly warningCount: number;
@@ -303,6 +304,9 @@ function* calculateAnnualMonthContribution(
       balanceMinutes: summary.specialDutyNotes?.length ? null : summary.balanceMinutes,
       timePremiumAmount: profile.tariff !== null && pay.available ? pay.timePremiumAmount : null,
       estimatedGrossAmount: pay.estimatedGrossAmount,
+      ...(pay.provisionalTariffMonths?.length
+        ? { provisionalTariffMonths: pay.provisionalTariffMonths }
+        : {}),
       premiumAmount: pay.timePremiumAmount + pay.overtimeAmount + allowanceAmount,
       ...countChecks(compliance.issues),
       checkCounts: classifyChecks(compliance.issues),

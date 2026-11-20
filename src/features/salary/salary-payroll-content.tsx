@@ -10,6 +10,7 @@ import type { AllowanceStatus, MonthlyPayEstimate, UserProfile } from "@/domain/
 import type { AnnualPaymentForecast } from "@/engine/net-pay-annual-payment";
 import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
 import { formatMonthTitle } from "@/engine/calendar";
+import { salaryTariffCaption } from "./provisional-tariff-caption";
 import { usePflegeShiftTestData } from "@/application/pflegeshift-provider";
 import {
   dayEditorRoute,
@@ -194,6 +195,12 @@ export function SalaryPayrollStatement({
     ? (annualPayment?.grossCents ?? annualGrossCents)
     : annualGrossCents;
   const partial = !pay.available && pay.knownGrossAmount !== undefined;
+  const tariffCaption = salaryTariffCaption(pay);
+  const grossLabel = partial
+    ? "Bekanntes Brutto"
+    : pay.provisionalTariffMonths?.length
+      ? "Brutto vorläufig"
+      : "Gesamtbrutto";
   const monthlyGross = pay.estimatedGrossAmount ?? pay.knownGrossAmount ?? null;
   const gross =
     (pay.available ? annualPayment?.totalGrossCents : null) ??
@@ -265,7 +272,7 @@ export function SalaryPayrollStatement({
           }}
         >
           {(view === "salary"
-            ? [{ label: partial ? "Bekanntes Brutto" : "Gesamtbrutto", amount: gross }]
+            ? [{ label: grossLabel, amount: gross }]
             : [{ label: netLabel, amount: available?.netCents ?? null }]
           ).map((total) => (
             <View
@@ -292,6 +299,7 @@ export function SalaryPayrollStatement({
             </View>
           ))}
         </View>
+        {tariffCaption ? <PayrollNote>{tariffCaption}</PayrollNote> : null}
         {view === "net" && available && netPayForecastLabel(available) ? (
           <PayrollNote>{netPayForecastLabel(available)}</PayrollNote>
         ) : null}
@@ -412,7 +420,7 @@ export function SalaryPayrollStatement({
             ) : null}
             <CardSeparator />
             <SalaryAmountRow
-              label={partial ? "Bekanntes Brutto" : "Gesamtbrutto"}
+              label={grossLabel}
               value={gross === null ? "Noch offen" : netPayEuro(gross)}
               quiet
               emphasizeValue
@@ -422,7 +430,7 @@ export function SalaryPayrollStatement({
         {view === "net" ? (
           <SalarySectionCard title="Netto-Berechnung">
             <SalaryAmountRow
-              label={partial ? "Bekanntes Brutto" : "Gesamtbrutto"}
+              label={grossLabel}
               value={gross === null ? "Noch offen" : netPayEuro(gross)}
               quiet
             />

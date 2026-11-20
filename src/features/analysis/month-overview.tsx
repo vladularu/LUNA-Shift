@@ -3,6 +3,7 @@ import { targetCalculationCaption } from "./target-calculation-caption";
 import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
+import { salaryTariffCaption } from "@/features/salary/provisional-tariff-caption";
 import {
   addCheckCounts,
   classifyChecks,
@@ -130,6 +131,9 @@ export function MonthOverview({
       : pay.ok && (pay.value.available || pay.value.knownGrossAmount !== undefined)
         ? pay.value
         : null;
+  const tariffCaption = projectionPending
+    ? undefined
+    : salaryTariffCaption(projection?.pay ?? (pay.ok ? pay.value : undefined));
   const paymentHint = projection ? salaryPaymentHint(projection) : null;
   const monthlyGross = estimate?.estimatedGrossAmount ?? estimate?.knownGrossAmount ?? null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
@@ -240,6 +244,7 @@ export function MonthOverview({
                 : undefined
             }
             partial={estimate?.knownGrossAmount !== undefined}
+            provisional={!!estimate?.provisionalTariffMonths?.length}
             duties={estimate ? incompleteSpecialDuties(estimate) : []}
             gross={
               monthlyGross === null
@@ -259,13 +264,15 @@ export function MonthOverview({
             caption={
               salaryError
                 ? salaryError
-                : !salaryReady
-                  ? "Tarif oder Monatsbrutto hinterlegen"
-                  : paymentHint
-                    ? paymentHint
-                    : manualSalary
-                      ? "Manuell hinterlegtes Monatsbrutto"
-                      : "Unverbindliche Schätzung"
+                : tariffCaption
+                  ? tariffCaption
+                  : !salaryReady
+                    ? "Tarif oder Monatsbrutto hinterlegen"
+                    : paymentHint
+                      ? paymentHint
+                      : manualSalary
+                        ? "Manuell hinterlegtes Monatsbrutto"
+                        : "Unverbindliche Schätzung"
             }
           />
         ),
@@ -273,6 +280,7 @@ export function MonthOverview({
           <NetListCard
             onPress={() => router.push(netPayForecastRoute(month))}
             netPay={netPay ?? <AnalysisNetPayRow month={month} />}
+            caption={tariffCaption}
           />
         ),
         SHIFTS: (

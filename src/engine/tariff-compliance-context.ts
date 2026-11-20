@@ -7,7 +7,7 @@ import {
 import { salaryBasisCount } from "@/domain/salary-basis-conflict";
 import {
   TARIFF_TIME_POLICIES,
-  TARIFF_TIME_REVIEW,
+  hasReviewedTariffTimePolicy,
   type TariffTimeFamily,
   type TariffTimePolicy,
 } from "@/domain/tariff-time-policy";
@@ -201,7 +201,7 @@ export function tariffContextAt(profile: UserProfile, date: string): TariffTimeC
     ? (trainingFamily[candidate.family] ?? candidate.family)
     : candidate?.family;
   const policy = family ? TARIFF_TIME_POLICIES[family] : null;
-  const reviewed = date >= TARIFF_TIME_REVIEW.from && date <= TARIFF_TIME_REVIEW.until;
+  const reviewed = family === undefined || hasReviewedTariffTimePolicy(family, date);
   if (!reviewed)
     requirements.push(
       "Die Tarifregeln sind für diesen Zeitraum noch nicht in dieser Prüffassung geprüft.",

@@ -14,7 +14,7 @@ import type {
 import type { RuleTariffPackage } from "@/rules/contracts.generated";
 import { validateRulePackage } from "@/rules/validation";
 import { RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
-import { overlaySimpleTariffPackage, selectSimpleTariffTable } from "./simple-tariff-table-overlay";
+import { overlaySimpleTariffPackage, selectPayrollTable } from "./simple-tariff-table-overlay";
 import { conditionsMatch } from "./pay-conditions";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { countPremiumMinutes } from "./pay-premium-minutes";
@@ -35,15 +35,31 @@ const packages = [training2025, training2026].map((value) => {
 const overlays = new WeakMap<RuleResolver, RuleResolver>();
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+export const bundledNursingTrainingPackages: readonly RuleTariffPackage[] = packages;
+
+function bundledNursingTrainingPackage(date: string): RuleTariffPackage | null {
+  return (
+    packages.find((p) => p.validFrom <= date && (p.validTo === null || date <= p.validTo)) ?? null
+  );
+}
+
 function trainingPackage(date: string, source: RuleResolver): RuleTariffPackage | null {
   const key = Temporal.PlainDate.from(date).toString();
-  const local = packages.find(
-    (p) => p.validFrom <= key && (p.validTo === null || key <= p.validTo),
-  );
-  return local
+  const resolution = source.tariffPackageIds?.includes("tvaoed-pflege-vka")
+    ? source.resolveTariff(key, "tvaoed-pflege-vka")
+    : null;
+  const reviewed =
+    resolution?.ok &&
+    (resolution.value.status === "REVIEWED" ||
+      resolution.value.status === "PUBLISHED" ||
+      resolution.provisionalReferenceDate !== undefined)
+      ? resolution.value
+      : null;
+  const dated = reviewed ?? bundledNursingTrainingPackage(key);
+  return dated?.rules.trainingPay
     ? overlaySimpleTariffPackage(
-        local,
-        selectSimpleTariffTable(source, "TVAOED_PFLEGE", key),
+        dated,
+        selectPayrollTable(source, "TVAOED_PFLEGE", key, dated),
         source,
       )
     : null;
@@ -317,8 +333,8 @@ export function calculateNursingTrainingMonth(
   assessmentShifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings,
   resolver: RuleResolver,
+  date = month + "-01",
 ): MonthlyPayEstimate {
-  const date = month + "-01";
   const context = trainingContext(date, profile, resolver);
   const empty = createManualMonthlyPayEstimate(month, 0);
   if (!context)

@@ -1,6 +1,7 @@
 import type { AllowanceStatus, MonthlyPayEstimate, UserProfile } from "@/domain/types";
 import type { SalaryPaymentProjection } from "@/domain/salary-payment";
 import { formatMonthTitle } from "@/engine/calendar";
+import { provisionalTariffCaption } from "./provisional-tariff-caption";
 
 export function salaryPaymentHint(
   projection: Pick<SalaryPaymentProjection, "month" | "contributions"> &
@@ -60,7 +61,11 @@ export function salaryComposition(
   projection?: SalaryPaymentProjection,
 ) {
   const manualSalary = profile.tariff === null && profile.manualMonthlyGrossCents != null;
-  const caption = salaryProfileCaption(profile);
+  const profileCaption = salaryProfileCaption(profile);
+  const provisional = provisionalTariffCaption(pay.provisionalTariffMonths);
+  const caption = provisional
+    ? [profileCaption, provisional].filter(Boolean).join("\n")
+    : profileCaption;
   const allowanceParts = projection?.contributions.filter(
     (part) =>
       (part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE") &&

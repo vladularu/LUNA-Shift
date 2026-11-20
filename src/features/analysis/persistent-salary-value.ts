@@ -92,6 +92,7 @@ function pay(v: unknown): boolean {
       "careAllowanceAmount",
     ]) &&
     optional(v.knownGrossAmount, finite) &&
+    optional(v.provisionalTariffMonths, (months) => list(months, month)) &&
     optional(v.specialDutyAmount, finite) &&
     optional(v.specialDutyBreakdowns, (items) => list(items, record)) &&
     optional(v.specialDutyNotes, (items) => list(items, text)) &&

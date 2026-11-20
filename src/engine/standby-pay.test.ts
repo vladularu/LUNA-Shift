@@ -533,10 +533,21 @@ describe("dated standby remuneration", () => {
     });
   });
 
+  it("uses the reviewed TVöD standby rate in January and March but leaves April open", () => {
+    for (const date of ["2027-01-05", "2027-03-02"]) {
+      const entry = shift("TVOED_K", {}, { date, breakMinutes: 30 });
+      expect(calculateStandbyPay(entry, profiles.p, resolver)).toMatchObject({
+        cashAmountCents: 13101,
+        weightedMinutes: 337.5,
+        notes: [],
+      });
+    }
+  });
+
   it("keeps unconfirmed facts, conflicts and unsupported intervals open", () => {
     for (const entry of [
       shift("TVOED_K", { rule: "UNKNOWN" }),
-      shift("TVOED_K", {}, { date: "2027-01-05" }),
+      shift("TVOED_K", {}, { date: "2027-04-05" }),
     ])
       expect(calculateStandbyPay(entry, profiles.p, resolver).cashAmountCents).toBeNull();
     expect(

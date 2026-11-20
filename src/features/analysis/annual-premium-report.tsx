@@ -1,4 +1,5 @@
 import { formatMonthTitle } from "@/engine/calendar";
+import { provisionalTariffCaption } from "@/features/salary/provisional-tariff-caption";
 import type { AnnualReport } from "./annual-report";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { formatEuro } from "./salary-summary-card";
@@ -16,12 +17,19 @@ export function AnnualPremiumReport({
   const available =
     !pending && report.salarySource === "TARIFF" && report.availablePayMonthCount > 0;
   const months = report.months.filter((month) => month.timePremiumAmount != null);
+  const provisional = provisionalTariffCaption(
+    months.flatMap((month) => month.provisionalTariffMonths ?? []),
+  );
   return (
     <ReportScrollView>
       <ReportPeriodContent>
         <AnalysisListCard
           title={"Zeitzuschläge " + report.year}
-          caption={available ? months.length + " von 12 Monaten · Brutto-Schätzung" : undefined}
+          caption={
+            available
+              ? months.length + " von 12 Monaten · " + (provisional ?? "Brutto-Schätzung")
+              : undefined
+          }
         >
           <AnalysisValueRow
             first

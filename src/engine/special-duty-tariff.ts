@@ -51,6 +51,19 @@ export const DUTY_RULE_SOURCES = {
   TVUK: { version: "2025-01-01", standby: "§ 12 Abs. 1 TV-UK", onCall: "§ 12 Abs. 2 TV-UK" },
 } as const;
 
+/** Source coverage of the calculation rules, independently of the dated hourly amounts. */
+const DUTY_RULE_REVIEWED_UNTIL: Readonly<Record<DutyTariffFamily, string>> = {
+  TVOED_K: "2027-12-31",
+  TVOED_B: "2027-12-31",
+  TVL_43: "2027-12-31",
+  TVH_43: "2026-12-31",
+  TVUK: "2027-12-31",
+};
+
+export function supportsDutyRules(family: DutyTariffFamily, from: string, to = from): boolean {
+  return from >= DUTY_RULE_SOURCES[family].version && to <= DUTY_RULE_REVIEWED_UNTIL[family];
+}
+
 /** Normal case only. These are entgelt factors, NEVER the legal working-time factor. */
 export function standbyNormalFactor(input: {
   readonly family: DutyTariffFamily;
@@ -59,12 +72,7 @@ export function standbyNormalFactor(input: {
   readonly normalCaseConfirmed: boolean;
   readonly date: string;
 }): number | null {
-  if (
-    !input.normalCaseConfirmed ||
-    input.date < DUTY_RULE_SOURCES[input.family].version ||
-    input.date > "2026-12-31"
-  )
-    return null;
+  if (!input.normalCaseConfirmed || !supportsDutyRules(input.family, input.date)) return null;
   if (input.family === "TVUK") return input.level === "I" ? 0.7 : input.level === "II" ? 0.9 : null;
   if (input.family === "TVOED_K")
     return input.level === "I"

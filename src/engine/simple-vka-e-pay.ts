@@ -15,7 +15,7 @@ import type {
 import type { RuleTariffPackage } from "@/rules/contracts.generated";
 import { validateRulePackage } from "@/rules/validation";
 import { RuleResolutionError, bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
-import { overlaySimpleTariffPackage, selectSimpleTariffTable } from "./simple-tariff-table-overlay";
+import { overlaySimpleTariffPackage, selectPayrollTable } from "./simple-tariff-table-overlay";
 import { conditionsMatch } from "./pay-conditions";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { countPremiumMinutes } from "./pay-premium-minutes";
@@ -38,15 +38,30 @@ const packages = [table2025, table2026].map((value) => {
 const overlays = new WeakMap<RuleResolver, RuleResolver>();
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+export const bundledVkaEPackages: readonly RuleTariffPackage[] = packages;
+
+function bundledVkaEPackage(date: string): RuleTariffPackage | null {
+  return (
+    packages.find((p) => p.validFrom <= date && (p.validTo === null || date <= p.validTo)) ?? null
+  );
+}
+
 function ePackage(date: string, source: RuleResolver): RuleTariffPackage | null {
   const key = Temporal.PlainDate.from(date).toString();
-  const update = selectSimpleTariffTable(source, "TVOED_VKA_E", key);
-  const local = packages.find(
-    (p) => p.validFrom <= key && (p.validTo === null || key <= p.validTo),
-  );
-  // Only use a policy template whose dated rules already cover this day.
-  if (!local) return null;
-  const table = overlaySimpleTariffPackage(local, update, source);
+  const resolution = source.tariffPackageIds?.includes("tvoed-vka-anlage-a")
+    ? source.resolveTariff(key, "tvoed-vka-anlage-a")
+    : null;
+  const reviewed =
+    resolution?.ok &&
+    (resolution.value.status === "REVIEWED" ||
+      resolution.value.status === "PUBLISHED" ||
+      resolution.provisionalReferenceDate !== undefined)
+      ? resolution.value
+      : null;
+  const dated = reviewed ?? bundledVkaEPackage(key);
+  if (!dated?.rules.tvoedAnnexATimePremiumPolicy) return null;
+  const update = selectPayrollTable(source, "TVOED_VKA_E", key, dated);
+  const table = overlaySimpleTariffPackage(dated, update, source);
   let base = source.resolveTariff(key);
   if (!base.ok && base.error.code === "RULE_PACKAGE_NOT_FOUND")
     base = bundledRuleResolver.resolveTariff(key);
@@ -363,8 +378,8 @@ export function calculateVkaEMonth(
   assessmentShifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings,
   resolver: RuleResolver,
+  date = month + "-01",
 ): MonthlyPayEstimate {
-  const date = month + "-01";
   const context = eContext(date, profile, resolver);
   const empty = createManualMonthlyPayEstimate(month, 0);
   if (!context)

@@ -24,6 +24,8 @@ import {
 import { userFacingErrorMessage } from "@/domain/errors";
 import { currentMonth, formatMonthTitle } from "@/engine/calendar";
 import { calculateMonthlyTvoedAssessment } from "@/engine/simple-pay";
+import { payrollTariffContinuation } from "@/engine/payroll-tariff-continuation";
+import { provisionalTariffCaption } from "@/features/salary/provisional-tariff-caption";
 import {
   selectAllowanceShifts,
   selectMonthlyAnalysisEntries,
@@ -131,6 +133,8 @@ function TariffAssessmentForm({
   const calculation = useMemo(() => {
     void ruleRetryRevision;
     return captureRuleComputation(() => {
+      const continuation = payrollTariffContinuation(ruleResolver, month);
+      const resolver = continuation.resolver;
       const monthlyEntries = selectMonthlyAnalysisEntries(entries, month);
       const allowanceShifts = profile?.tvhKrTariff
         ? selectTvhKrAssessmentShifts(entries, month)
@@ -140,13 +144,13 @@ function TariffAssessmentForm({
             ? selectVkaEAssessmentShifts(entries, month)
             : profile?.nursingTrainingTariff
               ? selectNursingTrainingAssessmentShifts(entries, month)
-              : selectAllowanceShifts(entries, month, ruleResolver);
-      return calculateMonthlyTvoedAssessment(
+              : selectAllowanceShifts(entries, month, resolver);
+      const result = calculateMonthlyTvoedAssessment(
         month,
         monthlyEntries.monthShifts,
         allowanceShifts,
         { workplaceCoverage: coverage, assignment, updatedAt: workPatternSettings.updatedAt },
-        ruleResolver,
+        resolver,
         profile
           ? {
               ...employmentProfileAt(profile, month + "-01"),
@@ -155,6 +159,10 @@ function TariffAssessmentForm({
             }
           : undefined,
       );
+      return {
+        ...result,
+        tariffCaption: provisionalTariffCaption([...continuation.referenceMonths]),
+      };
     });
   }, [
     assignment,
@@ -241,10 +249,11 @@ function TariffAssessmentForm({
         <ReportScrollView bottomPadding={bottomPadding}>
           <AnalysisDetailSummaryCard
             caption={
-              decision
+              assessmentResult.tariffCaption ??
+              (decision
                 ? "Für diesen Monat gilt deine Auswahl."
                 : (assessment.estimateNote ??
-                  "Schätzung aus deinen Diensten, kein bestätigter Monatsanspruch.")
+                  "Schätzung aus deinen Diensten, kein bestätigter Monatsanspruch."))
             }
             period={formatMonthTitle(month)}
             title={resultTitle}

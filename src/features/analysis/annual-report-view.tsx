@@ -9,6 +9,7 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { SHIFT_TYPE_LABELS, type ShiftType } from "@/domain/types";
 import { formatMonthTitle } from "@/engine/calendar";
+import { provisionalTariffCaption } from "@/features/salary/provisional-tariff-caption";
 import { formatMinutes } from "@/engine/working-time";
 import { buildAnnualDistributionSections } from "@/features/analysis/annual-distribution";
 import { AnalysisCoverageNote } from "@/features/analysis/analysis-coverage-note";
@@ -134,7 +135,14 @@ export function AnnualReportDetails({
   const testMonthCount = report.months.filter((item) => testMonths.includes(item.month)).length;
   if (section === "NET")
     return (
-      <AnnualNetPayDetails year={report.year} data={salaryData.net} onSelectMonth={onSelectMonth} />
+      <AnnualNetPayDetails
+        year={report.year}
+        data={salaryData.net}
+        onSelectMonth={onSelectMonth}
+        tariffCaption={provisionalTariffCaption(
+          report.months.flatMap((month) => month.provisionalTariffMonths ?? []),
+        )}
+      />
     );
   if (section === "PAY" && (salaryData.loading || salaryData.error))
     return (
@@ -443,6 +451,9 @@ function AnnualSalaryDetails({
 }) {
   const palette = usePalette();
   const available = report.availablePayMonthCount > 0;
+  const provisional = provisionalTariffCaption(
+    report.months.flatMap((month) => month.provisionalTariffMonths ?? []),
+  );
   const rows = [
     { label: "Zeitzuschläge", value: formatEuro(report.premiumAmount) },
     { label: "Überstunden", value: formatEuro(report.overtimeAmount) },
@@ -482,9 +493,10 @@ function AnnualSalaryDetails({
         <CardFooterLine
           caption={
             available
-              ? report.availablePayMonthCount < 12
-                ? "Nur verfügbare Monate enthalten · keine Hochrechnung."
-                : "Unverbindliche Brutto-Schätzung."
+              ? (provisional ??
+                (report.availablePayMonthCount < 12
+                  ? "Nur verfügbare Monate enthalten · keine Hochrechnung."
+                  : "Unverbindliche Brutto-Schätzung."))
               : "Ohne eingerichtete Gehaltsgrundlage werden keine Beträge ausgewiesen."
           }
         />
@@ -544,7 +556,12 @@ function AnnualSalaryDetails({
                 >
                   {item.estimatedGrossAmount === null
                     ? "Nicht verfügbar"
-                    : formatEuro(item.estimatedGrossAmount)}
+                    : [
+                        formatEuro(item.estimatedGrossAmount),
+                        provisionalTariffCaption(item.provisionalTariffMonths),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" color={palette.textMuted} size={20} />

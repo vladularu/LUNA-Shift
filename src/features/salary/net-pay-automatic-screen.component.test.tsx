@@ -1770,11 +1770,11 @@ describe("integrated salary-to-net workflow", () => {
     expect(mockSettingsEnabled).toBe(false);
     expect(mockSave).not.toHaveBeenCalled();
   });
-  it("does not suggest changing salary data when a future tariff is unavailable", async () => {
+  it("shows provisional April net without suggesting a salary profile change", async () => {
     mockEntries = [forecastShift({ date: "2027-04-04" })];
     const screen = await netOverview("2027-04");
-    expect(statement(screen).getByLabelText("Netto geschätzt: Nicht verfügbar")).toBeTruthy();
-    expect(statement(screen).getByLabelText("Abzüge: Nicht verfügbar")).toBeTruthy();
+    expect(screen.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(statement(screen).getAllByLabelText(/^Netto geschätzt:.*€/).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Gehaltsgrundlage ansehen" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Gehaltsangaben prüfen" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();

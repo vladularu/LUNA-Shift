@@ -47,6 +47,7 @@ export function calculateTvalPflegeProfileMonth(
   assessmentShifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings,
   resolver: RuleResolver,
+  pricingDate?: string,
 ) {
   const selection = requireTvalPflegeTariff(profile.tvalPflegeTariff);
   if (!selection) throw new Error("TVA-L-Ausbildungsjahr fehlt.");
@@ -73,5 +74,6 @@ export function calculateTvalPflegeProfileMonth(
       confirmedAllowance: decision?.allowanceStatus ?? null,
     },
     resolver,
+    pricingDate,
   );
 }

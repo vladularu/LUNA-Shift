@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
+import { embeddedReviewedRuleResolver } from "@/rules/embedded-reviewed-rules";
 import type { MonthlyRustCalculator } from "./monthly-rust-bridge";
 import * as original from "./monthly-analysis";
 import { usePreparedMonthlyAnalysis } from "./use-prepared-monthly-analysis";
@@ -35,6 +36,52 @@ afterEach(() => {
 });
 
 describe("existing month hook with actual recorded Rust results", () => {
+  it("uses the current 2027 tariff rules even with an older native module enabled", async () => {
+    jest.mocked(original.calculateMonthlyAnalysisSteps).mockRestore();
+    const input = { ...request(), month: "2027-04" };
+    const native = jest.fn<MonthlyRustCalculator>().mockResolvedValue(base);
+    const hook = await renderHook(() => usePreparedMonthlyAnalysis(input, true, 1, null, native));
+    await settle();
+    expect(native).not.toHaveBeenCalled();
+    expect(hook.result.current?.pay).toMatchObject({
+      ok: true,
+      value: {
+        available: true,
+        estimatedGrossAmount: expect.any(Number),
+        provisionalTariffMonths: ["2027-03"],
+      },
+    });
+  });
+
+  it("uses the dated continuation before 2027 when the native engine cannot show it", async () => {
+    jest.mocked(original.calculateMonthlyAnalysisSteps).mockRestore();
+    const existing = request();
+    const catalog = structuredClone(embeddedReviewedRuleResolver.simpleTariffData!);
+    const table = catalog.tables.find(
+      (row) => row.tariffId === "TVUK_PUK" && row.validFrom === "2025-10-01",
+    );
+    if (!table) throw new Error("The bundled TV-UK table is missing");
+    table.validTo = "2026-05-31";
+    const input: original.MonthlyAnalysisRequest = {
+      ...existing,
+      month: "2026-06",
+      profile: {
+        ...existing.profile,
+        tariff: null,
+        tvUkNursingTariff: { payGroup: "PUK8", payLevel: 4 },
+      },
+      ruleResolver: { ...embeddedReviewedRuleResolver, simpleTariffData: catalog },
+    };
+    const native = jest.fn<MonthlyRustCalculator>().mockResolvedValue(base);
+    const hook = await renderHook(() => usePreparedMonthlyAnalysis(input, true, 1, null, native));
+    await settle();
+    expect(native).not.toHaveBeenCalled();
+    expect(hook.result.current?.pay).toMatchObject({
+      ok: true,
+      value: { available: true, provisionalTariffMonths: ["2026-05"] },
+    });
+  });
+
   it("separates engine versions while reusing an unchanged engine result", async () => {
     const input = request();
     const first = Object.assign(jest.fn<MonthlyRustCalculator>().mockResolvedValue(base), {

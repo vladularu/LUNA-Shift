@@ -5,7 +5,7 @@ import type { StandbyPay } from "@/domain/special-duty-pay";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { standbyHourlyRate } from "./standby-hourly-rate";
-import { standbyNormalFactor, dutyTariffFamily, DUTY_RULE_SOURCES } from "./special-duty-tariff";
+import { standbyNormalFactor, dutyTariffFamily, supportsDutyRules } from "./special-duty-tariff";
 import { specialDutyWorkMinutes } from "./special-duty";
 import { getPublicHolidays } from "./holidays";
 import type { SfnTimeRange, SfnPremiumPayment } from "@/domain/net-pay-sfn";
@@ -67,7 +67,7 @@ export function calculateStandbyPay(
     actualMinutes > elapsedMinutes
   )
     return unknown("Prüfe die Dauer und Pausenangabe deines Bereitschaftsdienstes.");
-  if (shift.date < DUTY_RULE_SOURCES[family].version || lastDate > "2026-12-31")
+  if (!supportsDutyRules(family, shift.date, lastDate))
     return unknown("Für diesen Zeitraum fehlen geprüfte Bereitschaftsregeln.");
   let factor: number | null;
   if (agreement.rule === "CARE") {

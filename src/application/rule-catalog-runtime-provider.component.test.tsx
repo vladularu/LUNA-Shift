@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { AppState, Button, Text, type AppStateStatus } from "react-native";
@@ -16,6 +17,10 @@ import type {
   SynchronizeRuleCatalog,
 } from "@/application/rule-catalog-sync";
 import { getPublicHolidays } from "@/engine/holidays";
+import { calculateMonthlyPayEstimate } from "@/engine/simple-pay";
+import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
+import { EMBEDDED_REVIEWED_RULE_CATALOG } from "@/rules/embedded-reviewed-rules";
+import type { RulePackage } from "@/rules/contracts.generated";
 import { getTariffVersion } from "@/engine/tariff";
 import { requireResolvedPackage } from "@/rules/rule-resolver";
 import { validateRuleCatalog } from "@/rules/validation";
@@ -71,6 +76,92 @@ function CalculationHarness() {
       {`${diagnosis.selectedGeneration}:${tariff}:${holiday}:${legal.rules.workingTime.maxDailyMinutes}`}
     </Text>
   );
+}
+
+function TariffTransitionHarness() {
+  const [month, setMonth] = useState("2027-03");
+  const { resolver } = useRuleCatalogRuntime();
+  const pay = calculateMonthlyPayEstimate(
+    month,
+    month === "2027-04" ? [forecastShift({ date: "2027-04-04" })] : [],
+    {
+      ...forecastProfile,
+      tariff: { ...forecastProfile.tariff!, payGroup: "P7", payLevel: 2 },
+    },
+    null,
+    undefined,
+    undefined,
+    resolver,
+  );
+  const base = pay.personalBaseAmount;
+  return (
+    <>
+      <Button title="März öffnen" onPress={() => setMonth("2027-03")} />
+      <Button title="April öffnen" onPress={() => setMonth("2027-04")} />
+      <Text>
+        {`${month}:${pay.provisionalTariffMonths?.length ? "vorläufig" : "gültig"}:${base}:${pay.estimatedGrossAmount === null ? "offen" : "berechnet"}`}
+      </Text>
+      <Text testID="tariff-transition-premiums">{String(pay.timePremiumAmount)}</Text>
+    </>
+  );
+}
+
+function storedAprilCatalog(): StoredRuleCatalogSnapshot {
+  const generation = 7;
+  const next = clone(EMBEDDED_REVIEWED_RULE_CATALOG.tariff[0]);
+  next.versionId = "2027-04";
+  next.validFrom = "2027-04-01";
+  next.validTo = "2027-12-31";
+  next.status = "PUBLISHED";
+  next.review.status = "PUBLISHED";
+  next.engineContractVersion = 3;
+  delete next.rules.selection;
+  delete next.rules.annualPaymentRules;
+  delete next.rules.simpleTariffTables;
+  next.rules.payTables[0].entries.find(
+    (entry) => entry.groupId === "p7" && entry.stepId === "s2",
+  )!.monthlyCents = 400_000;
+  for (const allowance of next.rules.allowanceRules) {
+    allowance.validFrom = next.validFrom;
+    allowance.validTo = next.validTo;
+  }
+  const packages: RulePackage[] = [
+    ...Object.values(EMBEDDED_REVIEWED_RULE_CATALOG)
+      .flat()
+      .map((pkg) => ({
+        ...pkg,
+        status: "PUBLISHED" as const,
+        review: { ...tariffPackageFixture.review, status: "PUBLISHED" as const },
+      })),
+    next as RulePackage,
+  ];
+  const manifest = {
+    ...manifestFixture,
+    generation,
+    tracks: manifestFixture.tracks.map((track) => ({
+      ...track,
+      coverageTo: track.kind === "TARIFF" ? next.validTo : null,
+    })),
+    packages: packages.map((pkg) => ({
+      packageId: pkg.packageId,
+      versionId: pkg.versionId,
+      kind: pkg.kind,
+      engineContractVersion: pkg.engineContractVersion,
+      validFrom: pkg.validFrom,
+      validTo: pkg.validTo,
+      path: `packages/${pkg.packageId}/${pkg.versionId}.json`,
+      sha256: "a".repeat(64),
+      sizeBytes: 4096,
+    })),
+  };
+  const validation = validateRuleCatalog(manifest, packages);
+  if (!validation.ok) throw new Error(JSON.stringify(validation.issues));
+  return {
+    activeGeneration: generation,
+    generation,
+    recoveredFromGeneration: null,
+    catalog: validation.value,
+  };
 }
 
 function ManualRefreshHarness() {
@@ -197,6 +288,46 @@ describe("RuleCatalogRuntimeProvider", () => {
       expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_SYNC_FAILED", error),
     );
     expect(screen.getByText("APP_EMBEDDED:NO_STORED_CATALOG")).toBeTruthy();
+  });
+
+  it("keeps March and April usable offline and refreshes April on return without editing the profile", async () => {
+    let stored: StoredRuleCatalogSnapshot | null = null;
+    const fresh = storedAprilCatalog();
+    const synchronizeCatalog: SynchronizeRuleCatalog = async () => {
+      if (!stored) throw new Error("offline");
+      return { status: "ACTIVATED", generation: fresh.generation, previousGeneration: null };
+    };
+    const recordDiagnostic = jest.fn();
+    const screen = await render(
+      <RuleCatalogRuntimeProvider
+        loadStoredCatalog={async () => stored}
+        synchronizeCatalog={synchronizeCatalog}
+        recordDiagnostic={recordDiagnostic}
+      >
+        <TariffTransitionHarness />
+      </RuleCatalogRuntimeProvider>,
+    );
+    await waitFor(() =>
+      expect(recordDiagnostic).toHaveBeenCalledWith("RULE_CATALOG_SYNC_FAILED", expect.any(Error)),
+    );
+    const march = screen.getByText(/^2027-03:gültig:/).props.children;
+    const marchBase = march.split(":")[2];
+    await fireEvent.press(screen.getByRole("button", { name: "April öffnen" }));
+    expect(screen.getByText(`2027-04:vorläufig:${marchBase}:berechnet`)).toBeTruthy();
+    expect(Number(screen.getByTestId("tariff-transition-premiums").props.children)).toBeGreaterThan(
+      0,
+    );
+
+    await changeAppState("background");
+    stored = fresh;
+    await changeAppState("active");
+    await waitFor(() => expect(screen.getByText("2027-04:gültig:4000:berechnet")).toBeTruthy());
+    expect(Number(screen.getByTestId("tariff-transition-premiums").props.children)).toBeGreaterThan(
+      0,
+    );
+    expect(screen.queryByText(/^2027-04:vorläufig:/)).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "März öffnen" }));
+    expect(screen.getByText(march)).toBeTruthy();
   });
 
   it("replaces every calculation consumer with one newly loaded resolver generation", async () => {

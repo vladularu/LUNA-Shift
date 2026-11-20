@@ -548,6 +548,8 @@ export interface TvoedAssessmentCriterion {
 export interface MonthlyPayEstimate {
   /** Explicit subtotal when only special-duty billing is incomplete; never a full gross/net basis. */
   readonly knownGrossAmount?: number;
+  /** Tariff months used where rules for the payroll date are still missing. */
+  readonly provisionalTariffMonths?: readonly string[];
   readonly specialDutyAmount?: number;
   readonly specialDutyBreakdowns?: readonly import("./special-duty-pay").SpecialDutyPayLine[];
   readonly specialDutyNotes?: readonly string[];

@@ -243,17 +243,14 @@ export function CheckListCard({
 export function NetListCard({
   onPress,
   netPay,
+  caption = "Unverbindliche Netto-Schätzung",
 }: {
   readonly onPress: () => void;
   readonly netPay: ReactNode;
+  readonly caption?: string;
 }) {
   return (
-    <AnalysisListCard
-      title="Netto"
-      label="Netto"
-      onPress={onPress}
-      caption="Unverbindliche Netto-Schätzung"
-    >
+    <AnalysisListCard title="Netto" label="Netto" onPress={onPress} caption={caption}>
       {netPay}
     </AnalysisListCard>
   );
@@ -261,6 +258,7 @@ export function NetListCard({
 
 export function PayListCard({
   partial = false,
+  provisional = false,
   duties = [],
   onPress,
   base,
@@ -281,6 +279,7 @@ export function PayListCard({
   readonly onPress: () => void;
   readonly base?: number | null;
   readonly partial?: boolean;
+  readonly provisional?: boolean;
   readonly duties?: readonly SpecialDutyReview[];
   readonly premiums?: number;
   readonly overtime?: number;
@@ -353,7 +352,9 @@ export function PayListCard({
             reserveDisclosure
             first
             total
-            label={partial ? "Bekanntes Brutto" : "Brutto geschätzt"}
+            label={
+              partial ? "Bekanntes Brutto" : provisional ? "Brutto vorläufig" : "Brutto geschätzt"
+            }
             value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>
@@ -395,7 +396,9 @@ export function PayListCard({
             reserveDisclosure
             first={base == null && premiums == null}
             total
-            label={partial ? "Bekanntes Brutto" : "Brutto geschätzt"}
+            label={
+              partial ? "Bekanntes Brutto" : provisional ? "Brutto vorläufig" : "Brutto geschätzt"
+            }
             value={loading ? "Wird berechnet …" : formatEuro(gross ?? null)}
           />
         </>

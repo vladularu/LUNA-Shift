@@ -50,7 +50,7 @@ export function annualSalaryIssueMessage(issue: AnnualSalaryIssue): string {
     case "UNSUPPORTED_GROUP":
       return "Für diese Tarifgruppe ist noch keine automatische Prognose hinterlegt. Du kannst den bestätigten Bruttobetrag ergänzen.";
     case "UNSUPPORTED_YEAR":
-      return "Die automatische Tarifprognose ist bisher nur für 2026 hinterlegt. Für dieses Jahr kannst du den bestätigten Bruttobetrag ergänzen.";
+      return "Für diesen Tarif und dieses Jahr fehlt die Grundlage für einen automatischen Vorschlag. Du kannst den bestätigten Bruttobetrag ergänzen.";
     case "NO_TARIFF":
       return "Für deine Gehaltsgrundlage gibt es keine automatische Tarifprognose. Du kannst den vereinbarten Bruttobetrag ergänzen.";
     case "TEST_DATA":

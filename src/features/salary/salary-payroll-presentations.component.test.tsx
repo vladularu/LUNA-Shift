@@ -102,6 +102,30 @@ async function openDeductions(
 }
 
 describe("classical payroll presentation", () => {
+  it("shows provisional April gross and the March tariff basis", async () => {
+    const props = fixture();
+    const month = "2027-04";
+    const shift = forecastShift({ date: "2027-04-04" });
+    const projection = salaryPaymentInput(
+      month,
+      props.profile,
+      { ...context, entries: [shift] },
+      DEFAULT_SALARY_PAYMENT_PREFERENCES,
+      "PAYOUT",
+    );
+    const screen = await render(
+      <SalaryPayrollStatement
+        {...props}
+        month={month}
+        pay={projection.pay}
+        projection={projection}
+        net={null}
+      />,
+    );
+    expect(screen.getAllByText("Brutto vorläufig").length).toBeGreaterThan(0);
+    expect(screen.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(projection.pay.timePremiumAmount).toBeGreaterThan(0);
+  });
   it("retains known gross and the review action without showing a stale full net", async () => {
     const props = fixture();
     const entry = forecastShift({
