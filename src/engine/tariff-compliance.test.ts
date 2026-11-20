@@ -550,8 +550,14 @@ describe("tariff rules integrated as legal findings", () => {
     expect(result.find((item) => item.rule === "TARIFF_WEEK_DAYS")).toBeUndefined();
   });
 
+  it("reviews TVöD working days in January 2027 independently of the pay-table period", () => {
+    const result = calculate(days("2027-01-04", 7), profile, "2027-01", "2027-02-01");
+    expect(result.some((issue) => issue.rule === "TARIFF_WEEK_DAYS")).toBe(true);
+    expect(result.some((issue) => issue.rule === "TARIFF_SCOPE")).toBe(false);
+  });
+
   it("shows one targeted coverage notice for an unreviewed year even with few duties", () => {
-    const result = calculate(days("2027-01-04", 3), profile, "2027-01", "2027-02-01");
+    const result = calculate(days("2028-01-03", 3), profile, "2028-01", "2028-02-01");
     expect(result).toHaveLength(1);
     expect(result[0].rule).toBe("TARIFF_SCOPE");
     expect(result[0].tariff?.status).toBe("UNAVAILABLE");

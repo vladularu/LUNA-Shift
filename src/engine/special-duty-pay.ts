@@ -5,7 +5,12 @@ import type { SpecialDutyPayLine } from "@/domain/special-duty-pay";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import { dutyCalendarDates } from "./special-duty";
-import { DUTY_RULE_SOURCES, dutyTariffFamily, onCallBaseHours } from "./special-duty-tariff";
+import {
+  DUTY_RULE_SOURCES,
+  dutyTariffFamily,
+  onCallBaseHours,
+  supportsDutyRules,
+} from "./special-duty-tariff";
 import { specialDutyHourlyCents } from "./special-duty-hourly-rate";
 import { getPublicHolidays } from "./holidays";
 import { calculateDutyCalloutPay } from "./special-duty-callout-pay";
@@ -38,8 +43,11 @@ function calculateDutyBase(
     if (!family)
       notes.push("Der Arbeitgeberbereich ist für diese Abrechnung noch nicht zugeordnet.");
     else if (
-      shift.date < DUTY_RULE_SOURCES[family].version ||
-      end.subtract({ milliseconds: 1 }).toPlainDate().toString() > "2026-12-31"
+      !supportsDutyRules(
+        family,
+        shift.date,
+        end.subtract({ milliseconds: 1 }).toPlainDate().toString(),
+      )
     )
       notes.push("Für diesen Zeitraum fehlen geprüfte Bereitschaftsregeln.");
     else if (duty.kind === "STANDBY") {

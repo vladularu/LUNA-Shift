@@ -189,6 +189,7 @@ export function calculateTvhKrProfileMonth(
   assessmentShifts: readonly ShiftEntry[],
   settings: TvoedWorkPatternSettings,
   resolver: RuleResolver,
+  pricingDate?: string,
 ) {
   const selection = requireTvhKrTariff(profile.tvhKrTariff);
   if (!selection) throw new Error("TV-H-Pflegegruppe fehlt.");
@@ -215,5 +216,6 @@ export function calculateTvhKrProfileMonth(
       confirmedAllowance: decision?.allowanceStatus ?? null,
     },
     resolver,
+    pricingDate,
   );
 }

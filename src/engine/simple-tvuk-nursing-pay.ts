@@ -9,7 +9,12 @@ import type {
   UserProfile,
 } from "@/domain/types";
 import { bundledRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
-import { selectSimpleTariffTable, simpleTariffTableAmount } from "./simple-tariff-table-overlay";
+import {
+  selectBundledPayrollTable,
+  selectPayrollTable,
+  simpleTariffTableAmount,
+} from "./simple-tariff-table-overlay";
+import { coversPayrollDate } from "./payroll-tariff-dates";
 import { resolveHolidayMapForMonth } from "./holidays";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
@@ -34,8 +39,9 @@ export function getTvUkNursingTable(
   resolver: RuleResolver = bundledRuleResolver,
 ): TvUkTable | null {
   const day = Temporal.PlainDate.from(date).toString();
-  const local = tables.find((t) => t.validFrom <= day && (t.validTo === null || day <= t.validTo));
-  const update = selectSimpleTariffTable(resolver, "TVUK_PUK", day);
+  const exact = tables.find((table) => coversPayrollDate(table, day));
+  const update = selectPayrollTable(resolver, "TVUK_PUK", day, exact);
+  const local = exact ?? selectBundledPayrollTable(resolver, tables, day, update !== null);
   if (!local || !update) return local ?? null;
   const groups = Object.fromEntries(
     Object.entries(local.groups).map(([group, steps]) => [
@@ -287,10 +293,10 @@ export function calculateTvUkNursingMonth(
   selection: TvUkNursingTariff,
   options: TvUkCalculationOptions,
   resolver: RuleResolver = bundledRuleResolver,
+  date = month + "-01",
 ): TvUkMonthlyEstimate {
   requireOptions(options);
   if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("Ungültiger TV-UK-Monat.");
-  const date = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 }).toString();
   const ctx = context(date, selection, work.weeklyMinutes, resolver);
   const empty: TvUkMonthlyEstimate = {
     ...createManualMonthlyPayEstimate(month, 0),

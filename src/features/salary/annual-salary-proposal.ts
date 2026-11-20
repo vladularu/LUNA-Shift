@@ -49,7 +49,7 @@ export function* annualSalaryProposalResultSteps(
   void
 > {
   const unavailable = (issue: AnnualSalaryIssue) => ({ proposal: null, issue });
-  if (year !== 2026) return unavailable({ code: "UNSUPPORTED_YEAR" });
+  if (year !== 2026 && year !== 2027) return unavailable({ code: "UNSUPPORTED_YEAR" });
   if (profile.salaryBasisConflict) return unavailable({ code: "SALARY_BASIS_CONFLICT" });
   if (context.testMonths?.length) return unavailable({ code: "TEST_DATA" });
   const contexts = [
@@ -70,6 +70,13 @@ export function* annualSalaryProposalResultSteps(
   if (new Set(contexts.map((p) => JSON.stringify(basis(p)))).size > 1)
     return unavailable({ code: "TARIFF_CHANGE" });
   profile = employmentProfileAt(profile, `${year}-12-01`);
+  if (
+    year === 2027 &&
+    !profile.tvlKrTariff &&
+    !profile.tvalPflegeTariff &&
+    !profile.tvUkNursingTariff
+  )
+    return unavailable({ code: "UNSUPPORTED_YEAR" });
   let rate: number;
   let months = [7, 8, 9];
   const group = (value: string) => Number(value.replace(/\D/g, ""));
@@ -99,7 +106,12 @@ export function* annualSalaryProposalResultSteps(
     for (const month of referenceMonths) {
       referenceMonth = month;
       const { pay } = yield* salaryMonthInputSteps(month, profile, context);
-      if (!pay.available || pay.estimatedGrossAmount === null || pay.personalBaseAmount === null) {
+      if (
+        !pay.available ||
+        pay.provisionalTariffMonths?.length ||
+        pay.estimatedGrossAmount === null ||
+        pay.personalBaseAmount === null
+      ) {
         const duties = incompleteSpecialDuties(pay);
         return unavailable({
           code: "REFERENCE_MONTH_UNAVAILABLE",

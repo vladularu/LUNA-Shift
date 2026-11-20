@@ -52,9 +52,25 @@ const twoFree =
 /** Review coverage is not the legal expiry of a tariff. */
 export const TARIFF_TIME_REVIEW = {
   from: "2026-01-01",
-  until: "2026-12-31",
-  version: "2026-11-08",
+  version: "2026-11-19",
 } as const;
+
+const REVIEWED_UNTIL: Readonly<Record<TariffTimeFamily, string>> = {
+  TVOED_K: "2027-12-31",
+  TVOED_B: "2027-12-31",
+  TVL_KR: "2027-12-31",
+  TVL_GENERAL: "2027-12-31",
+  TVH_KR: "2026-12-31",
+  TVUK: "2027-12-31",
+  TVAOED_K: "2027-12-31",
+  TVAOED_B: "2027-12-31",
+  TVAL_KR: "2027-12-31",
+  TVAL_GENERAL: "2027-12-31",
+};
+
+export function hasReviewedTariffTimePolicy(family: TariffTimeFamily, date: string): boolean {
+  return date >= TARIFF_TIME_REVIEW.from && date <= REVIEWED_UNTIL[family];
+}
 
 const basePolicies: Readonly<Record<BaseFamily, TariffTimePolicy>> = {
   TVOED_K: {

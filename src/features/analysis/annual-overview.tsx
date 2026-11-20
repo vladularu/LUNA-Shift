@@ -14,6 +14,7 @@ import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisListCard, AnalysisValueRow } from "./analysis-list-card";
 import { AnnualNetPayCard } from "./annual-net-pay-view";
 import type { AnnualNetPayState } from "./use-annual-net-pay";
+import { provisionalTariffCaption } from "@/features/salary/provisional-tariff-caption";
 
 export function AnnualOverview({
   report,
@@ -46,6 +47,9 @@ export function AnnualOverview({
       ? "Nicht verfügbar"
       : undefined;
   const payReady = !pending && !salaryPending && !salaryError && report.availablePayMonthCount > 0;
+  const provisional = provisionalTariffCaption(
+    report.months.flatMap((month) => month.provisionalTariffMonths ?? []),
+  );
   const tariff = report.salarySource === "TARIFF";
   const base = tariff
     ? Math.round(
@@ -128,6 +132,7 @@ export function AnnualOverview({
             overtime={tariff ? report.overtimeAmount : undefined}
             allowances={tariff ? report.allowanceAmount : undefined}
             gross={report.estimatedGrossAmount}
+            provisional={provisional !== undefined}
             annualPayments={report.annualPaymentAmount}
             manual={report.salarySource === "MANUAL"}
             caption={
@@ -138,12 +143,13 @@ export function AnnualOverview({
                       ? "Brutto-Teilsumme · "
                       : "Brutto-Schätzung · ") +
                     report.availablePayMonthCount +
-                    " von 12 Monaten"
+                    " von 12 Monaten" +
+                    (provisional ? ` · ${provisional}` : "")
                   : "Keine unterstützte Monatsschätzung verfügbar"
             }
           />
         ),
-        NET: <AnnualNetPayCard year={report.year} data={net} />,
+        NET: <AnnualNetPayCard year={report.year} data={net} tariffCaption={provisional} />,
         SHIFTS: report.shiftTypeAnalysis ? (
           <ShiftAnalysisCard
             analysis={report.shiftTypeAnalysis}

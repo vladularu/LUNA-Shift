@@ -86,6 +86,9 @@ export function persistentAnnualMonthParts(value: unknown): value is AnnualMonth
       item.month === month &&
       typeof item.available === "boolean" &&
       (item.estimatedGrossAmount === null || number(item.estimatedGrossAmount)) &&
+      (item.provisionalTariffMonths === undefined ||
+        (strings(item.provisionalTariffMonths) &&
+          item.provisionalTariffMonths.every((entry) => /^\d{4}-(0[1-9]|1[0-2])$/.test(entry)))) &&
       numbers(item, [
         "timePremiumAmount",
         "overtimeAmount",

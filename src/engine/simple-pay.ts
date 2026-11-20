@@ -1,6 +1,17 @@
 import { projectRegularPayShifts } from "./special-duty";
 import { calculateSpecialDutyPay } from "./special-duty-pay";
 import { payrollEmploymentPeriods } from "./payroll-employment-periods";
+import {
+  isContinuedPayrollPackage,
+  payrollTariffContinuation,
+  payrollTariffPackageIds,
+} from "./payroll-tariff-continuation";
+import { isPayrollTariffContinuation, type DatedPayrollValue } from "./payroll-tariff-dates";
+import { getTvhKrTable } from "./simple-tvh-kr-pay";
+import { getTvUkNursingTable } from "./simple-tvuk-nursing-pay";
+import { getTvlKrRulePackage } from "./simple-tvl-kr-pay";
+import { getTvalPflegeRulePackage } from "./simple-tval-pflege-pay";
+import { selectPayrollTable } from "./simple-tariff-table-overlay";
 import { employmentWorkPatternAt, employmentProfileAt } from "@/domain/employment-history";
 import {
   calculateTvalPflegeAssessment,
@@ -263,13 +274,18 @@ function countPremiumMinutes(
   breakEnd: number,
   rulePackage: RuleTariffPackage,
   ruleResolver: RuleResolver,
-  periodsByRuleId?: Map<string, SfnTimeRange[]>,
-): PremiumMinuteBuckets {
+  includeTrace = false,
+  from = 0,
+  until = gross,
+): {
+  byRuleId: ReadonlyMap<string, number>;
+  periodsByRuleId?: ReadonlyMap<string, SfnTimeRange[]>;
+} {
   const buckets: PremiumMinuteBuckets = {
     byRuleId: new Map(),
-    periodsByRuleId: periodsByRuleId ? new Map() : undefined,
+    periodsByRuleId: includeTrace ? new Map() : undefined,
   };
-  if (gross <= 0) return buckets;
+  if (until <= from) return { byRuleId: buckets.byRuleId };
 
   // Collect minute intervals numerically; format only their boundaries, not every minute.
   const finish = () => {
@@ -279,21 +295,26 @@ function countPremiumMinutes(
           profile.timeZone,
         ),
       );
-    for (const [id, periods] of buckets.periodsByRuleId ?? [])
-      periodsByRuleId!.set(
-        id,
-        periods.map(([from, until]) => ({ start: timestamp(from), end: timestamp(until) })),
-      );
-    return buckets;
+    return {
+      byRuleId: buckets.byRuleId,
+      periodsByRuleId:
+        buckets.periodsByRuleId &&
+        new Map(
+          [...buckets.periodsByRuleId].map(([id, periods]) => [
+            id,
+            periods.map(([from, until]) => ({ start: timestamp(from), end: timestamp(until) })),
+          ]),
+        ),
+    };
   };
 
   const start = zonedStart(shift, profile.timeZone);
-  const lastMinute = start.add({ minutes: gross - 1 });
+  const lastMinute = start.add({ minutes: until - 1 });
   const crossesOffsetTransition = start.offsetNanoseconds !== lastMinute.offsetNanoseconds;
 
   if (crossesOffsetTransition) {
     const dayContexts = new Map<string, PremiumDayContext>();
-    for (let index = 0; index < gross; index++) {
+    for (let index = from; index < until; index++) {
       if (index >= breakStart && index < breakEnd) continue;
       const cursor = start.add({ minutes: index });
       const date = cursor.toPlainDate();
@@ -311,7 +332,7 @@ function countPremiumMinutes(
         shift,
         profile,
         rulePackage,
-        periodsByRuleId ? cursor.epochMilliseconds / 60_000 : undefined,
+        includeTrace ? cursor.epochMilliseconds / 60_000 : undefined,
       );
     }
     return finish();
@@ -329,7 +350,7 @@ function countPremiumMinutes(
     ruleResolver,
   );
 
-  for (let index = 0; index < gross; index++) {
+  for (let index = from; index < until; index++) {
     if (index >= breakStart && index < breakEnd) continue;
     const localMinute = startMinuteOfDay + index;
     const dayOffset = Math.floor(localMinute / (24 * 60));
@@ -351,7 +372,7 @@ function countPremiumMinutes(
       shift,
       profile,
       rulePackage,
-      periodsByRuleId ? startEpochMinute + index : undefined,
+      includeTrace ? startEpochMinute + index : undefined,
     );
   }
   return finish();
@@ -410,7 +431,7 @@ function calculateShiftPremiumBreakdownUncached(
   shift: ShiftEntry,
   profile: UserProfile,
   ruleResolver: RuleResolver,
-  periodsByRuleId?: Map<string, SfnTimeRange[]>,
+  trace?: TvoedShiftPremiumTrace["premiums"][number][],
 ): ShiftPremiumBreakdown {
   const tariff = profile.tariff;
   const rulePackage = getTariffRulePackage(shift.date, ruleResolver);
@@ -426,20 +447,27 @@ function calculateShiftPremiumBreakdownUncached(
     };
   }
 
-  const individualRate = getIndividualHourlyRate(tariff, shift.date, ruleResolver) ?? 0;
   const gross = grossMinutes(shift, profile.timeZone);
   const breakStart = Math.floor((gross - Math.min(gross, shift.breakMinutes)) / 2);
   const breakEnd = breakStart + Math.min(gross, shift.breakMinutes);
-  const buckets = countPremiumMinutes(
-    shift,
-    profile,
-    gross,
-    breakStart,
-    breakEnd,
-    rulePackage,
-    ruleResolver,
-    periodsByRuleId,
-  );
+  const netMinutes = calculateTimedShiftMinutes(shift, profile.timeZone);
+  const confirmedOvertime = shift.tariffOvertimeConfirmed
+    ? Math.min(shift.overtimeMinutes, netMinutes)
+    : 0;
+  const segments = [{ from: 0, until: gross, date: shift.date, rulePackage }];
+  if (gross > 0) {
+    const start = zonedStart(shift, profile.timeZone);
+    const nextDay = start.add({ days: 1 }).startOfDay();
+    const nextDate = nextDay.toPlainDate().toString();
+    const midnight = (nextDay.epochMilliseconds - start.epochMilliseconds) / 60_000;
+    if (midnight < gross) {
+      const next = getTariffRulePackage(nextDate, ruleResolver);
+      if (next && next.versionId !== rulePackage.versionId) {
+        segments[0].until = midnight;
+        segments.push({ from: midnight, until: gross, date: nextDate, rulePackage: next });
+      }
+    }
+  }
   const premiumKey = (rule: RulePremiumRule): string => {
     switch (rule.premiumType) {
       case "HOLIDAY_WITH_TIME_OFF":
@@ -451,46 +479,73 @@ function calculateShiftPremiumBreakdownUncached(
         return rule.premiumType.toLowerCase();
     }
   };
-  const hourlyRateFor = (rule: RulePremiumRule): number => {
-    if (rule.rateBasis === "INDIVIDUAL_HOURLY") return individualRate;
-    if (rule.referenceStepId === null) {
-      throw new Error(`Premium rule ${rule.id} requires a reference step.`);
-    }
-    return getHourlyTableAmountForStep(tariff, shift.date, rule.referenceStepId, ruleResolver) ?? 0;
-  };
-  const lines = rulePackage.rules.premiumRules
-    .filter((rule) => rule.premiumType !== "OVERTIME")
-    .map((rule) =>
-      premiumLine(
+  const lines: PremiumLine[] = [];
+  let overtimeBaseAmount = 0;
+  let overtimePremiumAmount = 0;
+  for (const { from, until, date, rulePackage } of segments) {
+    const individualRate = getIndividualHourlyRate(tariff, date, ruleResolver) ?? 0;
+    const hourlyRateFor = (rule: RulePremiumRule): number => {
+      if (rule.rateBasis === "INDIVIDUAL_HOURLY") return individualRate;
+      if (rule.referenceStepId === null)
+        throw new Error(`Premium rule ${rule.id} requires a reference step.`);
+      return getHourlyTableAmountForStep(tariff, date, rule.referenceStepId, ruleResolver) ?? 0;
+    };
+    const buckets = countPremiumMinutes(
+      shift,
+      profile,
+      gross,
+      breakStart,
+      breakEnd,
+      rulePackage,
+      ruleResolver,
+      trace !== undefined,
+      from,
+      until,
+    );
+    for (const rule of rulePackage.rules.premiumRules) {
+      if (rule.premiumType === "OVERTIME") continue;
+      const line = premiumLine(
         premiumKey(rule),
         rule.label,
         buckets.byRuleId.get(rule.id) ?? 0,
         rule.percentageBasisPoints / 100,
         hourlyRateFor(rule),
-      ),
-    )
-    .filter((line): line is PremiumLine => line !== null);
-  const netMinutes = calculateTimedShiftMinutes(shift, profile.timeZone);
-  const overtimeMinutes = shift.tariffOvertimeConfirmed
-    ? Math.min(shift.overtimeMinutes, netMinutes)
-    : 0;
-  const overtimeRules = rulePackage.rules.premiumRules.filter(
-    (rule) =>
-      rule.premiumType === "OVERTIME" &&
-      conditionsMatch(rule.conditions, profile, shift.date, shift, null),
-  );
-  if (overtimeRules.length !== 1) {
-    throw new Error(
-      `Expected one overtime rule for ${tariff.payGroup} on ${shift.date}, found ${overtimeRules.length}.`,
+      );
+      if (!line) continue;
+      lines.push(line);
+      if (trace)
+        trace.push({
+          ruleId: segments.length > 1 ? rule.id + ":" + date : rule.id,
+          premiumType: rule.premiumType,
+          line,
+          periods: buckets.periodsByRuleId!.get(rule.id)!,
+        });
+    }
+    const overtimeRules = rulePackage.rules.premiumRules.filter(
+      (rule) =>
+        rule.premiumType === "OVERTIME" &&
+        conditionsMatch(rule.conditions, profile, date, shift, null),
+    );
+    if (overtimeRules.length !== 1)
+      throw new Error(
+        `Expected one overtime rule for ${tariff.payGroup} on ${date}, found ${overtimeRules.length}.`,
+      );
+    const overtimeRule = overtimeRules[0];
+    const workedMinutes = (start: number, end: number) =>
+      end - start - Math.max(0, Math.min(end, breakEnd) - Math.max(start, breakStart));
+    const overtimeMinutes = Math.min(
+      workedMinutes(from, until),
+      Math.max(0, confirmedOvertime - workedMinutes(until, gross)),
+    );
+    const overtimeRate = hourlyRateFor(overtimeRule);
+    const overtimeBaseRate = getOvertimeBaseHourlyRate(rulePackage, tariff, individualRate);
+    overtimeBaseAmount += roundMoney((overtimeMinutes / 60) * overtimeBaseRate);
+    overtimePremiumAmount += roundMoney(
+      (overtimeMinutes / 60) * overtimeRate * (overtimeRule.percentageBasisPoints / 10_000),
     );
   }
-  const overtimeRule = overtimeRules[0];
-  const overtimeRate = hourlyRateFor(overtimeRule);
-  const overtimeBaseRate = getOvertimeBaseHourlyRate(rulePackage, tariff, individualRate);
-  const overtimeBaseAmount = roundMoney((overtimeMinutes / 60) * overtimeBaseRate);
-  const overtimePremiumAmount = roundMoney(
-    (overtimeMinutes / 60) * overtimeRate * (overtimeRule.percentageBasisPoints / 10_000),
-  );
+  overtimeBaseAmount = roundMoney(overtimeBaseAmount);
+  overtimePremiumAmount = roundMoney(overtimePremiumAmount);
   const totalAmount = roundMoney(
     lines.reduce((sum, line) => sum + line.amount, 0) + overtimeBaseAmount + overtimePremiumAmount,
   );
@@ -511,22 +566,21 @@ export function calculateTvoedShiftPremiumTrace(
   profile: UserProfile,
   ruleResolver: RuleResolver = bundledRuleResolver,
 ): TvoedShiftPremiumTrace {
-  const periods = new Map<string, SfnTimeRange[]>();
-  const breakdown = calculateShiftPremiumBreakdownUncached(shift, profile, ruleResolver, periods);
+  const premiums: TvoedShiftPremiumTrace["premiums"][number][] = [];
+  const month = shift.date.slice(0, 7);
+  const payrollResolver = isPayrollTariffContinuation(ruleResolver)
+    ? ruleResolver
+    : payrollTariffContinuation(ruleResolver, month).resolver;
+  const breakdown = calculateShiftPremiumBreakdownUncached(
+    shift,
+    profile,
+    payrollResolver,
+    premiums,
+  );
   const start = zonedStart(shift, profile.timeZone);
   const gross = grossMinutes(shift, profile.timeZone);
   const pauseMinutes = Math.min(gross, shift.breakMinutes);
   const pauseStart = start.add({ minutes: Math.floor((gross - pauseMinutes) / 2) });
-  const rules = getTariffRulePackage(shift.date, ruleResolver)?.rules.premiumRules ?? [];
-  let lineIndex = 0;
-  const premiums = rules
-    .filter((rule) => rule.premiumType !== "OVERTIME" && periods.has(rule.id))
-    .map((rule) => ({
-      ruleId: rule.id,
-      premiumType: rule.premiumType,
-      line: breakdown.premiumLines[lineIndex++],
-      periods: periods.get(rule.id)!,
-    }));
   return {
     start: premiumTimestamp(start),
     end: premiumTimestamp(start.add({ minutes: gross })),
@@ -581,6 +635,14 @@ export function calculateShiftPremiumBreakdown(
 
 const cachedMonthlyPay = createSimpleMonthlyPayCache();
 
+function hasPayrollTariff(profile: UserProfile): boolean {
+  return (
+    payrollTariffPackageIds(profile).length > 0 ||
+    !!profile.tvhKrTariff ||
+    !!profile.tvUkNursingTariff
+  );
+}
+
 export function calculateMonthlyPayEstimate(
   month: string,
   shifts: readonly ShiftEntry[],
@@ -589,6 +651,43 @@ export function calculateMonthlyPayEstimate(
   assessmentShifts: readonly ShiftEntry[] = shifts,
   workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
   ruleResolver: RuleResolver = bundledRuleResolver,
+): MonthlyPayEstimate {
+  return cachedMonthlyPay(
+    { month, shifts, profile, decision, assessmentShifts, workPatternSettings, ruleResolver },
+    () => {
+      let tariffApplies = hasPayrollTariff(profile);
+      if (profile.employmentTimeline?.length) {
+        const first = Temporal.PlainDate.from(month + "-01");
+        const last = first.with({ day: first.daysInMonth }).toString();
+        tariffApplies = payrollEmploymentPeriods(profile, month, last).some(({ profile }) =>
+          hasPayrollTariff(profile),
+        );
+      }
+      const continuation = tariffApplies ? payrollTariffContinuation(ruleResolver, month) : null;
+      const pay = calculateMonthlyPay(
+        month,
+        shifts,
+        profile,
+        decision,
+        assessmentShifts,
+        workPatternSettings,
+        continuation?.resolver ?? ruleResolver,
+      );
+      return continuation?.referenceMonths.size
+        ? { ...pay, provisionalTariffMonths: [...continuation.referenceMonths].sort() }
+        : pay;
+    },
+  );
+}
+
+function calculateMonthlyPay(
+  month: string,
+  shifts: readonly ShiftEntry[],
+  profile: UserProfile,
+  decision: MonthlyTariffDecision | null,
+  assessmentShifts: readonly ShiftEntry[],
+  workPatternSettings: TvoedWorkPatternSettings,
+  ruleResolver: RuleResolver,
 ): MonthlyPayEstimate {
   if (
     !shifts.some((shift) => shift.specialDuty) &&
@@ -647,24 +746,109 @@ export function calculateMonthlyPayEstimate(
       };
 }
 
+function payrollVersionKey(profile: UserProfile, date: string, resolver: RuleResolver): string {
+  const dated = (value?: DatedPayrollValue | null) =>
+    value
+      ? [value.validFrom, value.validTo, value.validTo !== null && value.validTo < date].join("/")
+      : "";
+  if (profile.tvhKrTariff) return dated(getTvhKrTable(date, resolver));
+  if (profile.tvUkNursingTariff) return dated(getTvUkNursingTable(date, resolver));
+  if (profile.tvlKrTariff) return dated(getTvlKrRulePackage(date, resolver));
+  if (profile.tvalPflegeTariff) return dated(getTvalPflegeRulePackage(date, resolver));
+  const resolutions = payrollTariffPackageIds(profile).map((id) =>
+    resolver.resolveTariff(date, id),
+  );
+  const packages = resolutions.map((result) => {
+    return result.ok
+      ? result.value.versionId + "/" + (result.provisionalReferenceDate ?? "")
+      : result.error.code;
+  });
+  const family = profile.vkaETariff
+    ? "TVOED_VKA_E"
+    : profile.nursingTrainingTariff
+      ? "TVAOED_PFLEGE"
+      : null;
+  if (family)
+    packages.push(
+      dated(
+        selectPayrollTable(
+          resolver,
+          family,
+          date,
+          resolutions[0]?.ok ? resolutions[0].value : null,
+        ),
+      ),
+    );
+  return packages.join("|");
+}
+
+function splitAtTariffChanges(
+  periods: ReturnType<typeof payrollEmploymentPeriods>,
+  endOfMonth: string,
+  resolver: RuleResolver,
+): ReturnType<typeof payrollEmploymentPeriods> {
+  return periods.flatMap((period) => {
+    if (!hasPayrollTariff(period.profile)) return [period];
+    const versionAt = (date: string) => payrollVersionKey(period.profile, date, resolver);
+    const result = [];
+    let from = period.from;
+    let version = versionAt(from);
+    const until = period.until ?? endOfMonth;
+    for (
+      let cursor = Temporal.PlainDate.from(from).add({ days: 1 });
+      cursor.toString() < until;
+      cursor = cursor.add({ days: 1 })
+    ) {
+      const date = cursor.toString();
+      const nextVersion = versionAt(date);
+      if (nextVersion !== version) {
+        result.push({ ...period, from, until: date });
+        from = date;
+        version = nextVersion;
+      }
+    }
+    result.push({ ...period, from });
+    return result;
+  });
+}
+
+export function hasProvisionalPayrollTariff(
+  month: string,
+  profile: UserProfile,
+  ruleResolver: RuleResolver,
+): boolean {
+  const first = Temporal.PlainDate.from(month + "-01");
+  const last = first.with({ day: first.daysInMonth }).toString();
+  const periods = payrollEmploymentPeriods(profile, month, last);
+  if (!periods.some(({ profile }) => hasPayrollTariff(profile))) return false;
+  const continuation = payrollTariffContinuation(ruleResolver, month);
+  splitAtTariffChanges(periods, first.add({ months: 1 }).toString(), continuation.resolver);
+  return continuation.referenceMonths.size > 0;
+}
+
 function calculateRegularMonthlyPayEstimate(
   month: string,
   shifts: readonly ShiftEntry[],
   profile: UserProfile,
   decision: MonthlyTariffDecision | null,
-  assessmentShifts: readonly ShiftEntry[] = shifts,
-  workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
-  ruleResolver: RuleResolver = bundledRuleResolver,
+  assessmentShifts: readonly ShiftEntry[],
+  workPatternSettings: TvoedWorkPatternSettings,
+  ruleResolver: RuleResolver,
 ): MonthlyPayEstimate {
   const first = Temporal.PlainDate.from(month + "-01");
   const last = first.with({ day: first.daysInMonth }).toString();
-  const periods = payrollEmploymentPeriods(profile, month, last);
+  const endOfMonth = first.add({ months: 1 }).toString();
+  const periods = splitAtTariffChanges(
+    payrollEmploymentPeriods(profile, month, last),
+    endOfMonth,
+    ruleResolver,
+  );
   if (periods.length > 1) {
     const parts = periods.map((period) => {
       const selected = { ...period.profile, employmentTimeline: undefined };
-      const days = Temporal.PlainDate.from(
-        period.until ?? first.add({ months: 1 }).toString(),
-      ).since(Temporal.PlainDate.from(period.from)).days;
+      const days = Temporal.PlainDate.from(period.until ?? endOfMonth).since(
+        Temporal.PlainDate.from(period.from),
+      ).days;
       const inPeriod = shifts.filter(
         (shift) => shift.date >= period.from && (!period.until || shift.date < period.until),
       );
@@ -676,6 +860,7 @@ function calculateRegularMonthlyPayEstimate(
         assessmentShifts,
         employmentWorkPatternAt(period.profile, workPatternSettings, period.from),
         ruleResolver,
+        period.from,
       );
       const fixed = calculateMonthlyPayEstimateUncached(
         month,
@@ -685,6 +870,7 @@ function calculateRegularMonthlyPayEstimate(
         assessmentShifts,
         employmentWorkPatternAt(period.profile, workPatternSettings, period.from),
         ruleResolver,
+        period.from,
       );
       return { estimate, fixed, days };
     });
@@ -745,18 +931,14 @@ function calculateRegularMonthlyPayEstimate(
   }
   profile = periods[0].profile;
   workPatternSettings = employmentWorkPatternAt(profile, workPatternSettings, first.toString());
-  return cachedMonthlyPay(
-    { month, shifts, profile, decision, assessmentShifts, workPatternSettings, ruleResolver },
-    () =>
-      calculateMonthlyPayEstimateUncached(
-        month,
-        shifts,
-        profile,
-        decision,
-        assessmentShifts,
-        workPatternSettings,
-        ruleResolver,
-      ),
+  return calculateMonthlyPayEstimateUncached(
+    month,
+    shifts,
+    profile,
+    decision,
+    assessmentShifts,
+    workPatternSettings,
+    ruleResolver,
   );
 }
 
@@ -768,6 +950,7 @@ function calculateMonthlyPayEstimateUncached(
   assessmentShifts: readonly ShiftEntry[] = shifts,
   workPatternSettings: TvoedWorkPatternSettings = DEFAULT_TVOED_WORK_PATTERN_SETTINGS,
   ruleResolver: RuleResolver = bundledRuleResolver,
+  pricingDate = month + "-01",
 ): MonthlyPayEstimate {
   if (profile.tvalPflegeTariff)
     return calculateTvalPflegeProfileMonth(
@@ -778,6 +961,7 @@ function calculateMonthlyPayEstimateUncached(
       assessmentShifts,
       workPatternSettings,
       ruleResolver,
+      pricingDate,
     );
   if (profile.tvhKrTariff)
     return calculateTvhKrProfileMonth(
@@ -788,9 +972,17 @@ function calculateMonthlyPayEstimateUncached(
       assessmentShifts,
       workPatternSettings,
       ruleResolver,
+      pricingDate,
     );
   if (profile.tvUkNursingTariff)
-    return calculateTvUkNursingProfileMonth(month, shifts, profile, assessmentShifts, ruleResolver);
+    return calculateTvUkNursingProfileMonth(
+      month,
+      shifts,
+      profile,
+      assessmentShifts,
+      ruleResolver,
+      pricingDate,
+    );
   if (profile.tvlKrTariff)
     return calculateTvlKrProfileMonth(
       month,
@@ -800,6 +992,7 @@ function calculateMonthlyPayEstimateUncached(
       assessmentShifts,
       workPatternSettings,
       ruleResolver,
+      pricingDate,
     );
   if (profile.vkaETariff)
     return calculateVkaEMonth(
@@ -810,6 +1003,7 @@ function calculateMonthlyPayEstimateUncached(
       assessmentShifts,
       workPatternSettings,
       ruleResolver,
+      pricingDate,
     );
   if (profile.nursingTrainingTariff)
     return calculateNursingTrainingMonth(
@@ -820,6 +1014,7 @@ function calculateMonthlyPayEstimateUncached(
       assessmentShifts,
       workPatternSettings,
       ruleResolver,
+      pricingDate,
     );
   if (profile.tariff === null && profile.manualMonthlyGrossCents != null) {
     return createManualMonthlyPayEstimate(month, profile.manualMonthlyGrossCents);
@@ -828,8 +1023,7 @@ function calculateMonthlyPayEstimateUncached(
   const monthShifts = shifts.filter(
     (shift) => shift.deletedAt === null && shift.date.startsWith(`${month}-`) && isWorkShift(shift),
   );
-  const first = Temporal.PlainDate.from(`${month}-01`);
-  const dateKey = first.toString();
+  const dateKey = pricingDate;
   const rulePackage = getTariffRulePackage(dateKey, ruleResolver);
   const assessmentResult = calculateMonthlyTvoedAssessment(
     month,
@@ -904,6 +1098,7 @@ function calculateMonthlyPayEstimateUncached(
     rulePackage,
     status: effectiveAllowance,
     workMinutes,
+    allowExpiredAllowances: isContinuedPayrollPackage(rulePackage),
   });
   return {
     month,

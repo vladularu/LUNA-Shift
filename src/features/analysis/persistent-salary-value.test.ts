@@ -8,18 +8,24 @@ import { encodeAnalysisCacheValue, decodeAnalysisCacheValue } from "./analysis-c
 import { persistentSalaryValue } from "./persistent-salary-value";
 import { salaryPersistenceRequest } from "./salary-persistence-test-fixtures";
 
-function calculate(month: string) {
-  const request = salaryPersistenceRequest(month),
-    steps = prepareAnalysisSalarySteps(request, analysisSalaryKey(request));
+function calculate(month: string, withTariff = true) {
+  const fixture = salaryPersistenceRequest(month);
+  const request = withTariff
+    ? fixture
+    : { ...fixture, profile: { ...fixture.profile, tariff: null } };
+  const steps = prepareAnalysisSalarySteps(request, analysisSalaryKey(request));
   while (true) {
     const step = steps.next();
     if (step.done) return { request, value: step.value };
   }
 }
-let available: ReturnType<typeof calculate>, unavailable: ReturnType<typeof calculate>;
+let available: ReturnType<typeof calculate>,
+  provisional: ReturnType<typeof calculate>,
+  unavailable: ReturnType<typeof calculate>;
 beforeAll(() => {
   available = calculate("2026-10");
-  unavailable = calculate("2027-10");
+  provisional = calculate("2027-10");
+  unavailable = calculate("2027-10", false);
 });
 const copy = (value: PreparedAnalysisSalary) =>
   decodeAnalysisCacheValue(encodeAnalysisCacheValue(value)) as PreparedAnalysisSalary;
@@ -34,7 +40,13 @@ describe("complete persisted payout salary", () => {
     expect(encodeAnalysisCacheValue(restored)).toBe(encodeAnalysisCacheValue(available.value));
     expect(restored.projection).toEqual(available.value.projection);
   });
-  it("retains complete deterministic unavailable results instead of repeating unchanged future-year work", () => {
+  it("retains the provisional tariff basis across storage and reload", () => {
+    expect(provisional.value.forecast?.result.status).toBe("available");
+    const restored = copy(provisional.value);
+    expect(restored.projection?.pay.provisionalTariffMonths).toEqual(["2027-03"]);
+    expect(persistentSalaryValue(restored, provisional.request)).toBe(true);
+  });
+  it("retains deterministic unavailable results when the actual pay basis is missing", () => {
     expect(unavailable.value.forecast?.result.status).toBe("unavailable");
     expect(persistentSalaryValue(copy(unavailable.value), unavailable.request)).toBe(true);
   });

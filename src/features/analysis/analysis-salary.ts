@@ -131,6 +131,7 @@ export function* prepareAnalysisSalarySteps(
   onAnnualReady?: (annual: PreparedAnalysisSalary["annual"]) => void,
   netCalculator?: MonthlyRustNetCalculator | null,
 ): Generator<AnalysisWorkYield, PreparedAnalysisSalary, void> {
+  if (request.month.startsWith("2027-")) netCalculator = null;
   if (netCalculator?.prepare && request.payment?.perspective !== "EARNED") {
     let prepared: PreparedAnalysisSalary | undefined;
     yield netCalculator.prepare(request).then((value) => {

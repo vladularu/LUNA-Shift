@@ -1,4 +1,9 @@
-import { resolveNetPaySettings, type SavedMonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import {
+  collectAnnualSalaryPayments,
+  resolveNetPaySettings,
+  type SavedMonthlyNetPaySettings,
+} from "@/domain/net-pay-profile";
+import { annualSalaryForecastSteps } from "@/features/salary/annual-salary-forecast";
 import type { UserProfile } from "@/domain/types";
 import type { SalaryPaymentPreferences } from "@/domain/salary-payment";
 import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
@@ -100,5 +105,17 @@ export function* annualNetPaySteps(
     }
     yield 0;
   }
-  return summarizeAnnualNetPay(input.year, months);
+  const result = summarizeAnnualNetPay(input.year, months);
+  if (
+    input.year !== 2027 ||
+    input.context.testMonths?.some((month) => month.startsWith(`${input.year}-`))
+  )
+    return result;
+  const salaryForecast = yield* annualSalaryForecastSteps(
+    input.year,
+    input.profile,
+    input.context,
+    collectAnnualSalaryPayments(input.timeline),
+  );
+  return { ...result, salaryForecast };
 }

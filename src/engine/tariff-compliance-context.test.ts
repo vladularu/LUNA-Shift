@@ -148,7 +148,8 @@ describe("tariff context for the existing legal check", () => {
   });
 
   it("preserves unreviewed dates as a coverage limitation, not legal expiry", () => {
-    const result = tariffContextAt(profile, "2027-01-01");
+    expect(tariffContextAt(profile, "2027-01-01")?.unavailable).toBe(false);
+    const result = tariffContextAt(profile, "2028-01-01");
     expect(result?.unavailable).toBe(true);
     expect(result?.requirements.join(" ")).toMatch(/geprüft/);
     expect(result?.requirements.join(" ")).not.toMatch(/abgelaufen/);

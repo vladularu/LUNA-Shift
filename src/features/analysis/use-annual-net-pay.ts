@@ -87,7 +87,8 @@ export function usePreparedAnnualNetPay(
   enabled: boolean,
   priority = -1,
 ): AnnualNetPayState {
-  const calculator = useAnnualRustCalculator();
+  const nativeCalculator = useAnnualRustCalculator();
+  const calculator = inputRequest?.year === 2027 ? null : nativeCalculator;
   const request = useMemo(
     () => (inputRequest ? annualRustNetRequest(inputRequest, calculator) : null),
     [inputRequest, calculator],

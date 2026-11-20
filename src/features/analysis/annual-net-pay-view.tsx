@@ -20,10 +20,12 @@ export function AnnualNetPayCard({
   year,
   data = loading,
   detail = false,
+  tariffCaption,
 }: {
   readonly year: number;
   readonly data?: AnnualNetPayState;
   readonly detail?: boolean;
+  readonly tariffCaption?: string;
 }) {
   const palette = usePalette();
   const { fontScale } = useWindowDimensions();
@@ -39,7 +41,12 @@ export function AnnualNetPayCard({
         (data.loading
           ? "Netto-Prognosen werden berechnet …"
           : count
-            ? `${count < 12 ? "Netto-Teilsumme" : "Netto-Schätzung"} · ${count} von 12 Monaten`
+            ? [
+                `${count < 12 ? "Netto-Teilsumme" : "Netto-Schätzung"} · ${count} von 12 Monaten`,
+                tariffCaption,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             : "Keine unterstützte Monatsprognose verfügbar")
       }
       busy={data.loading}
@@ -76,15 +83,17 @@ export function AnnualNetPayDetails({
   year,
   data,
   onSelectMonth,
+  tariffCaption,
 }: {
   readonly year: number;
   readonly data?: AnnualNetPayState;
   readonly onSelectMonth: (month: string) => void;
+  readonly tariffCaption?: string;
 }) {
   const palette = usePalette();
   return (
     <ReportScrollView>
-      <AnnualNetPayCard year={year} data={data} detail />
+      <AnnualNetPayCard year={year} data={data} detail tariffCaption={tariffCaption} />
       {data?.report ? (
         <AnalysisListCard title="Nach Monaten">
           {data.report.months.map((month, index) => (

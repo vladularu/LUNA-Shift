@@ -9,6 +9,7 @@ export interface AllowanceCalculationInput {
   readonly rulePackage: RuleTariffPackage;
   readonly status: AllowanceStatus | null;
   readonly workMinutes: number;
+  readonly allowExpiredAllowances?: boolean;
 }
 
 export interface MonthlyAllowanceAmounts {
@@ -56,6 +57,7 @@ function matchingAllowanceAmount(
   const { date, fullTimeWeeklyMinutes, profile, status, workMinutes } = input;
   if (profile.tariff === null || (allowanceType.includes("shift") && status === null)) return 0;
   const candidates = applicableAllowanceRules(allowanceType, input);
+  if (candidates.length === 0 && input.allowExpiredAllowances) return 0;
   if (candidates.length !== 1) {
     throw new Error(
       `Expected one ${allowanceType} allowance rule on ${date}, found ${candidates.length}.`,

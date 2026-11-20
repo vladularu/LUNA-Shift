@@ -20,7 +20,8 @@ import type {
 import type { RuleTariffPackage } from "@/rules/contracts.generated";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
 import { validateRulePackage } from "@/rules/validation";
-import { overlaySimpleTariffPackage, selectSimpleTariffTable } from "./simple-tariff-table-overlay";
+import { overlaySimpleTariffPackage, selectPayrollTable } from "./simple-tariff-table-overlay";
+import { isPayrollTariffContinuation, payrollPeriodsEnded } from "./payroll-tariff-dates";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
 import { isPayWorkShift } from "./tvoed-pattern";
@@ -45,14 +46,27 @@ const active = (
   item: { readonly validFrom: string; readonly validTo: string | null },
 ) => item.validFrom <= date && (item.validTo === null || date <= item.validTo);
 
+export const bundledTvlKrPackages: readonly RuleTariffPackage[] = packages;
+
 export function getTvlKrRulePackage(
   date: string,
   resolver: RuleResolver = bundledRuleResolver,
 ): RuleTariffPackage | null {
   const key = Temporal.PlainDate.from(date).toString();
-  const local = packages.find((p) => active(key, p));
+  const resolution = isPayrollTariffContinuation(resolver)
+    ? resolver.resolveTariff(key, "tvl-kr-tdl")
+    : null;
+  const local = resolution
+    ? resolution.ok
+      ? resolution.value
+      : null
+    : packages.find((p) => active(key, p));
   return local
-    ? overlaySimpleTariffPackage(local, selectSimpleTariffTable(resolver, "TVL_KR", key), resolver)
+    ? overlaySimpleTariffPackage(
+        local,
+        selectPayrollTable(resolver, "TVL_KR", key, local),
+        resolver,
+      )
     : null;
 }
 
@@ -192,6 +206,7 @@ export function calculateTvlKrMonth(
   region: TvlKrUniversityRegion,
   options: TvlKrCalculationOptions,
   resolver: RuleResolver = bundledRuleResolver,
+  date = month + "-01",
 ): MonthlyPayEstimate {
   if (
     !/^\d{4}-\d{2}$/.test(month) ||
@@ -200,7 +215,6 @@ export function calculateTvlKrMonth(
     (options.confirmedAllowance != null && options.confirmedAllowance !== options.allowanceStatus)
   )
     throw new Error("Ungültige TV-L-Monatsangaben.");
-  const date = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 }).toString();
   const ctx = context(date, selection, region, work.weeklyMinutes, resolver);
   const empty = { ...createManualMonthlyPayEstimate(month, 0), tariffLabel: "TV-L Pflege" };
   if (!ctx)
@@ -211,9 +225,10 @@ export function calculateTvlKrMonth(
       personalBaseAmount: null,
       estimatedGrossAmount: null,
     };
-  const policy = ctx.pkg.rules.tvlShiftAllowancePolicy?.periods.find((p) => active(date, p));
+  const shiftAllowancePeriods = ctx.pkg.rules.tvlShiftAllowancePolicy?.periods;
+  const policy = shiftAllowancePeriods?.find((p) => active(date, p));
   const care = ctx.pkg.rules.tvlCareAllowancePolicy;
-  if (!policy || !care)
+  if ((!policy && !payrollPeriodsEnded(shiftAllowancePeriods, date)) || !care)
     return {
       ...empty,
       available: false,
@@ -234,7 +249,7 @@ export function calculateTvlKrMonth(
   const monthly = status.endsWith("_MONTHLY"),
     alternating = status.startsWith("ALTERNATING");
   const rate =
-    status === "NONE"
+    status === "NONE" || !policy
       ? 0
       : alternating
         ? monthly

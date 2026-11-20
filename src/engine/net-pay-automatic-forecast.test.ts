@@ -332,9 +332,20 @@ describe("automatic payroll across every selectable salary model", () => {
         expect(after.pay.netCents).toBeGreaterThan(before.pay.netCents);
     });
   }
-  it("still requires a complete tariff gross after the known TVöD table expires", () => {
+  it("can estimate net from provisional April tariff wages", () => {
     const { forecast, pay } = calculateMonth(
       forecastProfile,
+      "2027-04",
+      [],
+      automatedSettings("2026-01"),
+    );
+    expect(pay.available).toBe(true);
+    expect(pay.provisionalTariffMonths).toEqual(["2027-03"]);
+    expect(forecast.result.status).toBe("available");
+  });
+  it("still requires the personal tariff amount for a net forecast", () => {
+    const { forecast, pay } = calculateMonth(
+      { ...forecastProfile, tariff: { ...forecastProfile.tariff!, payGroup: "P7", payLevel: 1 } },
       "2027-04",
       [],
       automatedSettings("2026-01"),

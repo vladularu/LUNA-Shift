@@ -8,6 +8,7 @@ import {
 } from "./monthly-analysis";
 import { analysisWorkPriority } from "./analysis-work-queue";
 import type { RuleResolver } from "@/rules/rule-resolver";
+import { hasProvisionalPayrollTariff } from "@/engine/simple-pay";
 import { calendarPerformance } from "@/application/calendar-performance";
 import type { PersistentAnalysisCache } from "./persistent-analysis-cache";
 import { persistentMonthValue } from "./persistent-analysis-values";
@@ -24,8 +25,18 @@ export function usePreparedMonthlyAnalysis(
   active: boolean,
   distance = 1,
   persistent: PersistentAnalysisCache | null = null,
-  rust: MonthlyRustCalculator | null = null,
+  nativeCalculator: MonthlyRustCalculator | null = null,
 ) {
+  const rust = useMemo(() => {
+    if (!request || !nativeCalculator || request.month >= "2027-01") return null;
+    try {
+      return hasProvisionalPayrollTariff(request.month, request.profile, request.ruleResolver)
+        ? null
+        : nativeCalculator;
+    } catch {
+      return null;
+    }
+  }, [nativeCalculator, request]);
   const effectiveRequest = useMemo(
     () => (request === null ? null : monthlyRustRequest(request, rust)),
     [request, rust],

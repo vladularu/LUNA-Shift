@@ -9,6 +9,7 @@ import type { AnnualReport } from "./annual-report";
 import type { RuleComputationFailure } from "./rule-computation";
 import { useLocalReferenceDate } from "./use-local-reference-date";
 import { bundledRuleResolver, type RuleResolver } from "@/rules/rule-resolver";
+import { hasProvisionalPayrollTariff } from "@/engine/simple-pay";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { useAnalysisPersistentResults } from "./analysis-persistent-results";
 import {
@@ -66,7 +67,25 @@ export function useSimpleAnnualReport({
     retry: retryPreferences,
   } = useCheckPreferences();
   const stored = useAnalysisPersistentResults();
-  const calculator = useAnnualRustCalculator();
+  const nativeCalculator = useAnnualRustCalculator();
+  const calculator = useMemo(() => {
+    if (!nativeCalculator || !profile || year >= 2027) return null;
+    try {
+      for (let month = 1; month <= 12; month++) {
+        if (
+          hasProvisionalPayrollTariff(
+            `${year}-${String(month).padStart(2, "0")}`,
+            profile,
+            ruleResolver,
+          )
+        )
+          return null;
+      }
+      return nativeCalculator;
+    } catch {
+      return null;
+    }
+  }, [nativeCalculator, profile, ruleResolver, year]);
   const persistent = testMonths.length === 0 ? stored : null;
   const [retryRevision, setRetryRevision] = useState(0);
   const [state, setState] = useState<AnnualReportState | null>(null);

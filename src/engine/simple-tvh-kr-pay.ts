@@ -14,7 +14,12 @@ import type {
 } from "@/domain/types";
 import type { RuleTimeWindow } from "@/rules/contracts.generated";
 import { bundledRuleResolver, RuleResolutionError, type RuleResolver } from "@/rules/rule-resolver";
-import { selectSimpleTariffTable, simpleTariffTableAmount } from "./simple-tariff-table-overlay";
+import {
+  selectBundledPayrollTable,
+  selectPayrollTable,
+  simpleTariffTableAmount,
+} from "./simple-tariff-table-overlay";
+import { coversPayrollDate } from "./payroll-tariff-dates";
 import { resolveHolidayMapForMonth } from "./holidays";
 import { createManualMonthlyPayEstimate } from "./pay-fallback";
 import { roundRemunerationCents } from "./remuneration-money";
@@ -34,8 +39,9 @@ const catalogTables = new WeakMap<
 
 export function getTvhKrTable(date: string, resolver: RuleResolver = bundledRuleResolver) {
   const key = Temporal.PlainDate.from(date).toString();
-  const local = tables.find((p) => p.validFrom <= key && (p.validTo === null || key <= p.validTo));
-  const update = selectSimpleTariffTable(resolver, "TVH_KR", key);
+  const exact = tables.find((p) => coversPayrollDate(p, key));
+  const update = selectPayrollTable(resolver, "TVH_KR", key, exact);
+  const local = exact ?? selectBundledPayrollTable(resolver, tables, key, update !== null);
   if (!local || !update) return local ?? null;
   const cached = catalogTables.get(resolver)?.get(local)?.get(update);
   if (cached) return cached;
@@ -436,6 +442,7 @@ export function calculateTvhKrMonth(
   selection: TvhKrTariff,
   options: TvhKrCalculationOptions,
   resolver: RuleResolver = bundledRuleResolver,
+  date = month + "-01",
 ): MonthlyPayEstimate {
   if (
     !/^\d{4}-\d{2}$/.test(month) ||
@@ -444,7 +451,6 @@ export function calculateTvhKrMonth(
     (options.confirmedAllowance != null && options.confirmedAllowance !== options.allowanceStatus)
   )
     throw new Error("Ungültige TV-H-Monatsangaben.");
-  const date = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 }).toString();
   const ctx = context(date, selection, work.weeklyMinutes, resolver);
   const empty = { ...createManualMonthlyPayEstimate(month, 0), tariffLabel: "TV-H Pflege" };
   if (!ctx)

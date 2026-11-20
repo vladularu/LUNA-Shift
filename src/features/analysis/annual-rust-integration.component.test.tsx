@@ -75,13 +75,26 @@ describe("existing annual hooks with Rust data only", () => {
       { initialProps: { year: input.year } },
     );
     await settle();
-    await hook.rerender({ year: input.year + 1 });
+    await hook.rerender({ year: input.year - 1 });
     await settle();
-    expect(hook.result.current.report?.year).toBe(input.year + 1);
+    expect(hook.result.current.report?.year).toBe(input.year - 1);
     await hook.rerender({ year: input.year });
     expect(hook.result.current.report?.year).toBe(input.year);
     await settle();
     expect(mockCalculator.report).toHaveBeenCalledTimes(2);
+  });
+  it("uses the current 2027 annual rules rather than the older native calculator", async () => {
+    const input = { ...request(), year: 2027 };
+    const updated = { ...report(), year: 2027 };
+    jest.mocked(oldReport.buildAnnualAvailableReportSteps).mockImplementation(function* () {
+      return updated;
+    });
+
+    const hook = await renderHook(() => useSimpleAnnualReport(input));
+    await settle();
+
+    expect(hook.result.current.report).toEqual(updated);
+    expect(mockCalculator.report).not.toHaveBeenCalled();
   });
   it("uses the existing failure and retry flow instead of waiting indefinitely", async () => {
     const input = request();

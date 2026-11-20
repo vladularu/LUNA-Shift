@@ -79,6 +79,7 @@ export function calculateTvUkNursingProfileMonth(
   profile: UserProfile,
   assessmentShifts: readonly ShiftEntry[] = shifts,
   resolver: RuleResolver = bundledRuleResolver,
+  pricingDate?: string,
 ) {
   const selection = requireTvUkNursingTariff(profile.tvUkNursingTariff);
   if (!selection) throw new Error("TV-UK-Pflegegruppe fehlt.");
@@ -90,5 +91,6 @@ export function calculateTvUkNursingProfileMonth(
     selection,
     { regularShiftWork: result.assessment.shiftWork === "DETECTED", assessment: result.assessment },
     resolver,
+    pricingDate,
   );
 }

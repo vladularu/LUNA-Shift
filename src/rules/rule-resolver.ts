@@ -28,7 +28,7 @@ export interface RuleResolutionFailure {
 }
 
 export type RuleResolution<T extends RulePackage> =
-  | { readonly ok: true; readonly value: T }
+  | { readonly ok: true; readonly value: T; readonly provisionalReferenceDate?: string }
   | { readonly ok: false; readonly error: RuleResolutionFailure };
 
 export interface RuleResolverCatalog {
@@ -69,6 +69,7 @@ export interface RuleResolver {
     packageId: string,
     year: number,
   ) => readonly RuleTariffPackage[];
+  readonly previousTariff?: (date: string, packageId: string) => RuleTariffPackage | null;
   readonly resolveTariff: (
     effectiveDate: string,
     packageId?: string,
@@ -280,6 +281,13 @@ export function createRuleResolver(
         }
       : {}),
     tariffPackageIds: Object.freeze([...new Set(source.tariff.map((item) => item.packageId))]),
+    previousTariff(date: string, packageId: string) {
+      const expired = source.tariff
+        .filter((pkg) => pkg.packageId === packageId && pkg.validTo !== null && pkg.validTo < date)
+        .sort((a, b) => b.validTo!.localeCompare(a.validTo!));
+      const [latest, next] = expired;
+      return latest && latest.validTo !== next?.validTo ? latest : null;
+    },
     annualTariffCandidates: (packageId: string, year: number) =>
       Object.freeze(
         Number.isInteger(year) && year >= 1900 && year <= 4099

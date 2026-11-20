@@ -255,6 +255,7 @@ export function createAnalysisWarmupRuntime(
           const priority = ANALYSIS_WARMUP_PRIORITY + index;
           setup(
             (function* () {
+              const monthlyCalculator = month.startsWith("2027-") ? null : input.monthlyCalculator;
               const request = monthlyRustRequest(
                 {
                   month,
@@ -264,7 +265,7 @@ export function createAnalysisWarmupRuntime(
                   workPatternSettings: input.workPatternSettings,
                   ruleResolver: input.resolver,
                 },
-                input.monthlyCalculator,
+                monthlyCalculator,
               );
               const inspection = measureAnalysisInput(9, input.entries.length, () =>
                   inspectMonthlyAnalysis(request),
@@ -282,8 +283,8 @@ export function createAnalysisWarmupRuntime(
                 prepared: inspection.cached,
                 accept: persistentMonthValue,
                 steps: () =>
-                  input.monthlyCalculator
-                    ? monthlyRustSteps(request, input.monthlyCalculator)
+                  monthlyCalculator
+                    ? monthlyRustSteps(request, monthlyCalculator)
                     : calculateMonthlyAnalysisSteps(request),
                 complete: (result) => {
                   checks(month, retainPreparedMonthlyAnalysis(request, key, result), priority);

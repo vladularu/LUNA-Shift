@@ -5,7 +5,15 @@ import { describe, expect, it } from "vitest";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import { calculateMonthlyPayEstimate, calculateShiftPremiumBreakdown } from "./simple-pay";
 import { selectVkaEAssessmentShifts } from "./simple-vka-e-pay";
-import { bundledRuleResolver } from "@/rules/rule-resolver";
+import {
+  BUNDLED_RULE_CATALOG,
+  bundledRuleResolver,
+  createRuleResolver,
+  requireResolvedPackage,
+} from "@/rules/rule-resolver";
+import type { RuleTariffPackage } from "@/rules/contracts.generated";
+import { validateRulePackage } from "@/rules/validation";
+import packet from "../../rules/packages/reviewed/tvoed-vka-anlage-a/2026-05-01-draft1.json";
 const profile: UserProfile = {
   federalState: "NW",
   holidayRegion: "NONE",
@@ -88,10 +96,60 @@ describe("simple nursing TVöD E table pay", () => {
     }
     expect(count).toBe(101);
   });
-  it.each(["2025-03", "2027-04"])("does not invent table values outside coverage %s", (month) => {
-    const pay = calculateMonthlyPayEstimate(month, [], profile, null);
+  it("uses a dated catalog package when the April rules arrive", () => {
+    const validation = validateRulePackage(packet);
+    if (!validation.ok || validation.value.kind !== "TARIFF")
+      throw new Error("Expected a tariff package fixture");
+    const old = validation.value;
+    const base = requireResolvedPackage(bundledRuleResolver.resolveTariff("2027-03-31"));
+    const next: RuleTariffPackage = {
+      ...structuredClone(old),
+      status: "PUBLISHED" as const,
+      review: {
+        status: "PUBLISHED" as const,
+        reviewedBy: "fixture",
+        reviewedAt: "2027-04-01T12:00:00Z",
+        gitCommit: "1".repeat(40),
+      },
+      validFrom: "2027-04-01",
+      validTo: "2027-12-31",
+    };
+    for (const entry of next.rules.payTables[0].entries) entry.monthlyCents = 500123;
+    const resolver = createRuleResolver({
+      ...BUNDLED_RULE_CATALOG,
+      tariff: [
+        ...BUNDLED_RULE_CATALOG.tariff,
+        { ...base, validFrom: "2027-04-01", validTo: "2027-12-31" },
+        next,
+      ],
+    });
+    expect(
+      calculateMonthlyPayEstimate("2027-04", [], profile, null, undefined, undefined, resolver),
+    ).toMatchObject({
+      available: true,
+      personalBaseAmount: 5001.23,
+    });
+  });
+  it("does not invent table values before the first matching package", () => {
+    const pay = calculateMonthlyPayEstimate("2025-03", [], profile, null);
     expect(pay.available).toBe(false);
     expect(pay.estimatedGrossAmount).toBeNull();
+  });
+  it("uses April shifts and a confirmed allowance during the provisional tariff period", () => {
+    const april = calculateMonthlyPayEstimate(
+      "2027-04",
+      [shift({ date: "2027-04-04" })],
+      profile,
+      decision("SHIFT_MONTHLY"),
+    );
+    expect(april).toMatchObject({
+      available: true,
+      estimatedGrossAmount: expect.any(Number),
+      provisionalTariffMonths: ["2027-03"],
+      shiftBreakdowns: [expect.objectContaining({ date: "2027-04-04" })],
+      allowanceAmount: 100,
+    });
+    expect(april.timePremiumAmount).toBeGreaterThan(0);
   });
   it("uses step3 of the selected E group for a night hour, independently of personal step", () => {
     const result = calculateShiftPremiumBreakdown(

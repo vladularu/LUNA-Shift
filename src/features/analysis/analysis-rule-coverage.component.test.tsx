@@ -858,7 +858,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(premiums.getAllByText(/14,26/).length).toBeGreaterThan(0);
   });
 
-  it("shows uncovered nursing trainee months as unavailable rather than manual salary", async () => {
+  it("shows the foreseen tariff basis in the April trainee premium view", async () => {
     mockRouteMonth = "2027-04";
     mockRuleResolver = FUTURE_HOLIDAY_TARIFF_EXPIRY_RESOLVER;
     mockProfile = {
@@ -867,15 +867,13 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       nursingTrainingTariff: { trainingYear: 1, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<PremiumDetailsScreen />);
-    expect(
-      screen.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
-    ).toBeTruthy();
+    expect(screen.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(screen.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(
       screen.queryByLabelText(
         "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
       ),
     ).toBeNull();
-    expect(screen.queryByText("0,00 €")).toBeNull();
   });
 
   it("shows TVA-L as training tariff salary in the familiar overview", async () => {
@@ -1118,7 +1116,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       ),
     ).toBeNull();
   });
-  it("keeps an uncovered E period unavailable without treating it as manual salary", async () => {
+  it("shows the provisional tariff basis for April E premiums", async () => {
     mockRouteMonth = "2027-04";
     mockRuleResolver = FUTURE_HOLIDAY_TARIFF_EXPIRY_RESOLVER;
     mockProfile = {
@@ -1127,9 +1125,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
       vkaETariff: { payGroup: "E12", payLevel: 4, sector: "BT_K", tariffRegion: "OTHER" },
     };
     const screen = await render(<PremiumDetailsScreen />);
-    expect(
-      screen.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
-    ).toBeTruthy();
+    expect(screen.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(screen.getByTestId("net-pay-service-details")).toBeTruthy();
     expect(
       screen.queryByLabelText(
         "Keine tarifliche Berechnung. Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet.",
@@ -1219,7 +1216,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     ).toBeTruthy();
   });
 
-  it("keeps the full April 2027 analysis and marks only expired TVöD pay unavailable", async () => {
+  it("keeps April work time visible alongside provisional gross and premiums", async () => {
     mockRouteMonth = "2027-04";
     mockRuleResolver = FUTURE_HOLIDAY_TARIFF_EXPIRY_RESOLVER;
     mockEntries = [
@@ -1234,7 +1231,8 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     const screen = await render(<AnalysisScreen />);
 
     expect(screen.getByTestId("analysis-month-toolbar")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Gehalt, Nicht verfügbar/ })).toBeTruthy();
+    expect(screen.getByText("Brutto vorläufig")).toBeTruthy();
+    expect(screen.getAllByText("Vorläufig · Tarifstand März 2027").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Soll: 169:24 h")).toBeTruthy();
     expect(screen.getByLabelText("Ist: 7:30 h")).toBeTruthy();
     expect(screen.getByLabelText("Stundensaldo: −161:54 h")).toBeTruthy();
@@ -1325,23 +1323,18 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(salary.getByText("Grundentgelt")).toBeTruthy();
   });
 
-  it("shows expired tariff detail paths as unavailable without zero pseudo-results", async () => {
+  it("shows the provisional tariff basis in April premium and allowance details", async () => {
     mockRouteMonth = "2027-04";
     mockRuleResolver = FUTURE_HOLIDAY_TARIFF_EXPIRY_RESOLVER;
     mockEntries = [{ ...januaryShift(), id: "april-shift", date: "2027-04-04" }];
 
     const premiums = await render(<PremiumDetailsScreen />);
-    expect(
-      premiums.getByLabelText("Nicht verfügbar. Für diesen Zeitraum fehlen geprüfte Tarifdaten."),
-    ).toBeTruthy();
-    expect(premiums.queryByText("0,00 €")).toBeNull();
+    expect(premiums.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(premiums.getByTestId("net-pay-service-details")).toBeTruthy();
 
     const assessment = await render(<TariffAssessmentScreen />);
-    expect(
-      assessment.getByText("Schichtzulage nicht berechenbar: Tarifdaten fehlen."),
-    ).toBeTruthy();
-    expect(assessment.queryByLabelText("Schichtzulage selbst festlegen")).toBeNull();
-    expect(assessment.queryByText("Einschätzung erklären")).toBeNull();
+    expect(assessment.getByText("Vorläufig · Tarifstand März 2027")).toBeTruthy();
+    expect(assessment.getByLabelText("Schichtzulage selbst festlegen")).toBeTruthy();
   });
 
   it.each([
