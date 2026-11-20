@@ -6,6 +6,7 @@ import {
   writeFileSync,
   symlinkSync,
   realpathSync,
+  rmSync,
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -28,18 +29,23 @@ const lockEntry = JSON.parse(readFileSync(join(root, "package-lock.json"))).pack
   "node_modules/braces"
 ];
 
-function fixture({
-  original = false,
-  version = "3.0.3",
-  entry = lockEntry,
-  pin = "3.0.3",
-  extra = {},
-  externalLibrary = false,
-} = {}) {
+function fixture(
+  t,
+  {
+    original = false,
+    version = "3.0.3",
+    entry = lockEntry,
+    pin = "3.0.3",
+    extra = {},
+    externalLibrary = false,
+  } = {},
+) {
   const dir = mkdtempSync(join(tmpdir(), "luna-braces-test-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 3 }));
   mkdirSync(join(dir, "node_modules/braces"), { recursive: true });
   if (externalLibrary) {
     const outside = mkdtempSync(join(tmpdir(), "luna-braces-external-"));
+    t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 3 }));
     symlinkSync(
       outside,
       join(dir, "node_modules/braces/lib"),
@@ -72,18 +78,18 @@ test("records the exact upstream commit and npm archive without inventing a patc
   assert.equal(data.files.filter((item) => item.originalSha256 !== item.patchedSha256).length, 5);
 });
 
-test("creates opaque frozen evidence only for the actual audit checkout", () => {
+test("creates opaque frozen evidence only for the actual audit checkout", (t) => {
   const proof = verifyBracesHardening();
   assert.ok(isVerifiedBracesHardening(proof));
   assert.ok(Object.isFrozen(proof));
   assert.ok(Object.isFrozen(proof.nodes));
   for (const fake of [null, true, { nodes: proof.nodes }, JSON.parse(JSON.stringify(proof))])
     assert.equal(isVerifiedBracesHardening(fake), false);
-  assert.equal(isVerifiedBracesHardening(verifyBracesHardening(fixture())), false);
+  assert.equal(isVerifiedBracesHardening(verifyBracesHardening(fixture(t))), false);
 });
 
-test("applies only the complete original and is byte-for-byte idempotent", () => {
-  const dir = fixture({ original: true });
+test("applies only the complete original and is byte-for-byte idempotent", (t) => {
+  const dir = fixture(t, { original: true });
   assert.throws(() => verifyBracesHardening(dir), /BRACES_HARDENING_MISSING/);
   applyBracesHardening(dir);
   for (const file of data.files)
@@ -95,8 +101,8 @@ test("applies only the complete original and is byte-for-byte idempotent", () =>
   verifyBracesHardening(dir);
 });
 
-test("rejects mixed installations and unknown source before any writes", () => {
-  const dir = fixture({ original: true });
+test("rejects mixed installations and unknown source before any writes", (t) => {
+  const dir = fixture(t, { original: true });
   const altered = data.files.find((file) => file.originalSha256 !== file.patchedSha256);
   const target = join(dir, "node_modules/braces", altered.path);
   writeFileSync(target, altered.patchedSource);
@@ -112,7 +118,7 @@ test("rejects mixed installations and unknown source before any writes", () => {
   );
 });
 
-test("rejects wrong pin, version, integrity, URL or extra lock copies", () => {
+test("rejects wrong pin, version, integrity, URL or extra lock copies", (t) => {
   for (const options of [
     { pin: "^3.0.3" },
     { entry: { ...lockEntry, version: "3.0.4" } },
@@ -120,16 +126,16 @@ test("rejects wrong pin, version, integrity, URL or extra lock copies", () => {
     { entry: { ...lockEntry, resolved: "https://example.invalid/braces.tgz" } },
     { extra: { "node_modules/other/node_modules/braces": lockEntry } },
   ])
-    assert.throws(() => verifyBracesHardening(fixture(options)), /BRACES_LOCK_IDENTITY/);
+    assert.throws(() => verifyBracesHardening(fixture(t, options)), /BRACES_LOCK_IDENTITY/);
   assert.throws(
-    () => verifyBracesHardening(fixture({ version: "3.0.4" })),
+    () => verifyBracesHardening(fixture(t, { version: "3.0.4" })),
     /BRACES_INSTALLED_VERSION/,
   );
 });
 
-test("checks all public and recursive helper source files", () => {
+test("checks all public and recursive helper source files", (t) => {
   for (const file of data.files) {
-    const dir = fixture();
+    const dir = fixture(t);
     writeFileSync(
       join(dir, "node_modules/braces", file.path),
       file.patchedSource + "\n// changed\n",
@@ -138,15 +144,15 @@ test("checks all public and recursive helper source files", () => {
   }
 });
 
-test("rejects symlinked library files outside the verified checkout", () => {
-  const dir = fixture({ externalLibrary: true });
+test("rejects symlinked library files outside the verified checkout", (t) => {
+  const dir = fixture(t, { externalLibrary: true });
   assert.throws(() => verifyBracesHardening(dir), /BRACES_TARGET_OUTSIDE_CHECKOUT/);
   assert.throws(() => applyBracesHardening(dir), /BRACES_TARGET_OUTSIDE_CHECKOUT/);
 });
 
-test("rejects parents resolving braces to an external private installation", () => {
-  const dir = fixture(),
-    outside = fixture();
+test("rejects parents resolving braces to an external private installation", (t) => {
+  const dir = fixture(t);
+  const outside = fixture(t);
   const fake = JSON.parse(readFileSync(join(dir, "package-lock.json")));
   // A parent with a private braces junction must not resolve to an external installation.
   mkdirSync(join(dir, "node_modules/parent/node_modules"), { recursive: true });
@@ -164,9 +170,9 @@ test("rejects parents resolving braces to an external private installation", () 
   assert.throws(() => verifyBracesHardening(dir), /BRACES_PARENT_RESOLUTION/);
 });
 
-test("rejects a junctioned parent whose real Node resolution reaches an unpatched external copy", () => {
-  const dir = fixture(),
-    outside = fixture({ original: true });
+test("rejects a junctioned parent whose real Node resolution reaches an unpatched external copy", (t) => {
+  const dir = fixture(t);
+  const outside = fixture(t, { original: true });
   mkdirSync(join(outside, "parent"));
   writeFileSync(join(outside, "parent/package.json"), "{}");
   symlinkSync(
@@ -191,8 +197,10 @@ test("rejects a junctioned parent whose real Node resolution reaches an unpatche
   assert.throws(() => applyBracesHardening(dir), /BRACES_TARGET_OUTSIDE_CHECKOUT/);
 });
 
-test("requires every recorded parent and accepts the expected hoisted resolution", () => {
-  const dir = fixture({ extra: { "node_modules/parent": { dependencies: { braces: "3.0.3" } } } });
+test("requires every recorded parent and accepts the expected hoisted resolution", (t) => {
+  const dir = fixture(t, {
+    extra: { "node_modules/parent": { dependencies: { braces: "3.0.3" } } },
+  });
   assert.throws(() => verifyBracesHardening(dir), /BRACES_PARENT_MISSING/);
   mkdirSync(join(dir, "node_modules/parent"), { recursive: true });
   writeFileSync(join(dir, "node_modules/parent/package.json"), "{}");

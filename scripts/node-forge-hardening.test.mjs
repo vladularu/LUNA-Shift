@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, privateEncrypt, constants, sign } from "node:crypto";
-import { mkdtempSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -26,8 +26,12 @@ const patchedBytes = upstreamFiles["rsa.js"];
 const lockEntry = JSON.parse(readFileSync(join(root, "package-lock.json"))).packages[
   "node_modules/node-forge"
 ];
-function fixture({ source = patchedBytes, version = "1.4.2", entry = lockEntry, extra = {} } = {}) {
+function fixture(
+  t,
+  { source = patchedBytes, version = "1.4.2", entry = lockEntry, extra = {} } = {},
+) {
   const directory = mkdtempSync(join(tmpdir(), "luna-forge-test-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true, maxRetries: 3 }));
   mkdirSync(join(directory, "node_modules/node-forge/lib"), { recursive: true });
   writeFileSync(
     join(directory, "package-lock.json"),
@@ -55,8 +59,8 @@ test("verifies the installed hash and creates only opaque registered proofs", ()
     assert.equal(isVerifiedNodeForgeHardening(fake), false);
 });
 
-test("verifies the exact upstream files idempotently without rewriting them", () => {
-  const directory = fixture();
+test("verifies the exact upstream files idempotently without rewriting them", (t) => {
+  const directory = fixture(t);
   for (let attempt = 0; attempt < 2; attempt++) {
     assert.ok(isVerifiedNodeForgeHardening(applyNodeForgeHardening(directory)));
     for (const [name, bytes] of Object.entries(upstreamFiles))
@@ -64,9 +68,9 @@ test("verifies the exact upstream files idempotently without rewriting them", ()
   }
 });
 
-test("rejects tampering in each verified upstream security module", () => {
+test("rejects tampering in each verified upstream security module", (t) => {
   for (const name of Object.keys(upstreamFiles)) {
-    const directory = fixture();
+    const directory = fixture(t);
     writeFileSync(
       join(directory, "node_modules/node-forge/lib", name),
       Buffer.concat([upstreamFiles[name], Buffer.from("\n// altered\n")]),
@@ -75,30 +79,32 @@ test("rejects tampering in each verified upstream security module", () => {
   }
 });
 
-test("fails closed for version, archive identity, extra copies and altered source", () => {
+test("fails closed for version, archive identity, extra copies and altered source", (t) => {
   assert.throws(
-    () => applyNodeForgeHardening(fixture({ version: "1.4.0" })),
+    () => applyNodeForgeHardening(fixture(t, { version: "1.4.0" })),
     /NODE_FORGE_INSTALLED_VERSION/,
   );
   assert.throws(
-    () => applyNodeForgeHardening(fixture({ entry: { ...lockEntry, integrity: "unknown" } })),
+    () => applyNodeForgeHardening(fixture(t, { entry: { ...lockEntry, integrity: "unknown" } })),
     /NODE_FORGE_LOCK_IDENTITY/,
   );
   assert.throws(
     () =>
       applyNodeForgeHardening(
-        fixture({ extra: { "node_modules/parent/node_modules/node-forge": lockEntry } }),
+        fixture(t, { extra: { "node_modules/parent/node_modules/node-forge": lockEntry } }),
       ),
     /NODE_FORGE_LOCK_IDENTITY/,
   );
-  const altered = fixture({ source: Buffer.concat([patchedBytes, Buffer.from("\n// changed\n")]) });
+  const altered = fixture(t, {
+    source: Buffer.concat([patchedBytes, Buffer.from("\n// changed\n")]),
+  });
   assert.throws(() => applyNodeForgeHardening(altered), /NODE_FORGE_HARDENING_MISSING/);
   assert.throws(() => verifyNodeForgeHardening(altered), /NODE_FORGE_HARDENING_MISSING/);
 });
 
-test("fails closed when a locked parent does not resolve the verified installed copy", () => {
+test("fails closed when a locked parent does not resolve the verified installed copy", (t) => {
   const extra = { "node_modules/test-parent": { dependencies: { "node-forge": "^1.3.3" } } };
-  const directory = fixture({ extra });
+  const directory = fixture(t, { extra });
   assert.throws(() => verifyNodeForgeHardening(directory), /NODE_FORGE_PARENT_MISSING/);
   mkdirSync(join(directory, "node_modules/test-parent/node_modules/node-forge/lib"), {
     recursive: true,
@@ -173,9 +179,10 @@ test("rejects extra nested DigestAlgorithm children with and without NULL", () =
   }
 });
 
-test("rejects a dependency junction outside the checkout before writing", () => {
-  const outside = fixture();
+test("rejects a dependency junction outside the checkout before writing", (t) => {
+  const outside = fixture(t);
   const directory = mkdtempSync(join(tmpdir(), "luna-forge-junction-test-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true, maxRetries: 3 }));
   mkdirSync(join(directory, "node_modules"));
   writeFileSync(
     join(directory, "package-lock.json"),
