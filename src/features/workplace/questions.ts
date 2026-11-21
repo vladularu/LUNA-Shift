@@ -10,15 +10,15 @@ export interface Topic {
 export const topics: Record<QuestionId, Topic> = {
   week: {
     title: "Arbeitstage pro Woche",
-    question: "Wie sind deine Arbeitstage pro Woche geregelt?",
+    question: "Gibt es bei euch eine Obergrenze für Arbeitstage pro Woche?",
     basis:
-      "§ 6 TVöD-AT sieht eine Verteilung auf fünf Tage vor, bei notwendigen betrieblichen oder dienstlichen Gründen auch auf sechs. Für den Check zählt jeder Tag mit Dienstbeginn einmal.",
+      "§ 6 TVöD-AT regelt, wie die regelmäßige Arbeitszeit verteilt wird. Die Frage hier bezieht sich auf eine konkrete Grenze in deinem Dienstplan. Wenn du nur weißt, dass du eine 5-Tage-Woche hast, wähle „Weiß ich nicht“. LUNA zählt jeden Tag mit Dienstbeginn einmal.",
     sample:
-      "In vier Wochen sind es durchschnittlich fünf Arbeitstage pro Woche. Eine einzelne Woche darf sechs Arbeitstage haben.",
+      "Bei euch gelten über vier Wochen im Schnitt höchstens fünf Arbeitstage pro Woche. Sechs Tage in einer Woche und vier Tage in der nächsten können sich ausgleichen.",
     example: { mode: "average", count: "5", weeks: "4" },
     choices: {
-      limit: "Feste Höchstzahl von Montag bis Sonntag",
-      average: "Durchschnitt über mehrere Wochen",
+      limit: "Feste Höchstzahl für jede Woche",
+      average: "Höchstzahl im Schnitt mehrerer Wochen",
     },
   },
   series: {

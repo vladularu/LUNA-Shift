@@ -140,8 +140,15 @@ describe("Betriebsregeln beim ersten Dienstplan-Check", () => {
     const s = await render(setup()());
     await fireEvent.press(await s.findByText("Sonderregelungen in deinem Betrieb"));
     await fireEvent.press(s.getByText("Arbeitstage pro Woche"));
-    await fireEvent.press(s.getByText("Feste Höchstzahl von Montag bis Sonntag"));
+    expect(
+      s.getByText("Gibt es bei euch eine Obergrenze für Arbeitstage pro Woche?"),
+    ).toBeVisible();
+    expect(s.getByText("Hier zählt die Woche von Montag bis Sonntag.")).toBeVisible();
+    await fireEvent.press(s.getByText("Feste Höchstzahl für jede Woche"));
     await fireEvent.press(s.getByText("Weiter"));
+    expect(
+      s.getByText("Wie viele Arbeitstage sind von Montag bis Sonntag höchstens vorgesehen?"),
+    ).toBeVisible();
     await fireEvent.press(s.getByLabelText("Anzahl erhöhen"));
     expect(s.getByDisplayValue("1")).toBeVisible();
     expect(s.getByLabelText("Anzahl verringern")).toBeDisabled();
@@ -171,6 +178,8 @@ describe("Betriebsregeln beim ersten Dienstplan-Check", () => {
     await fireEvent.press(s.getByText("Änderung speichern"));
     expect(await s.findByText("Ø 5 Tage über 4 Wochen")).toBeVisible();
     await fireEvent.press(s.getByText("Arbeitstage pro Woche"));
+    expect(s.getByText("Einzelne Wochen können mehr Arbeitstage haben.")).toBeVisible();
+    expect(s.getByText("Höchstens so viele Arbeitstage pro Woche im Schnitt")).toBeVisible();
     expect(s.getByDisplayValue("5")).toBeVisible();
     expect(s.getByDisplayValue("4")).toBeVisible();
     await fireEvent.press(s.getByLabelText("Zurück"));

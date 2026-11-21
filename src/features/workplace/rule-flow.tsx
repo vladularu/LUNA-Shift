@@ -332,6 +332,11 @@ export function RuleFlow({
           <>
             {guided && <Progress step={topicStep[id]} label={topic.title} />}
             <Headline>{screen === "answer" ? topic.question : topic.title}</Headline>
+            {screen === "answer" && id === "week" && (
+              <Text style={{ ...TYPOGRAPHY.small, color: p.textMuted }}>
+                Hier zählt die Woche von Montag bis Sonntag.
+              </Text>
+            )}
             {screen === "answer" && id === "weekend" && (
               <Text style={{ ...TYPOGRAPHY.small, color: p.textMuted }}>
                 Ein ganzes Wochenende umfasst Samstag und Sonntag.
@@ -360,9 +365,13 @@ export function RuleFlow({
             ) : (
               <>
                 <Text style={{ ...TYPOGRAPHY.body, color: p.textMuted }}>
-                  {["short", "standard", "alternate", "off"].includes(mode)
-                    ? topic.choices[mode]
-                    : topic.question}
+                  {id === "week" && mode === "limit"
+                    ? "Wie viele Arbeitstage sind von Montag bis Sonntag höchstens vorgesehen?"
+                    : id === "week" && mode === "average"
+                      ? "Einzelne Wochen können mehr Arbeitstage haben."
+                      : ["short", "standard", "alternate", "off"].includes(mode)
+                        ? topic.choices[mode]
+                        : topic.question}
                 </Text>
                 {mode === "limit" ? (
                   <View
@@ -465,11 +474,17 @@ export function RuleFlow({
                         ? "Höchstens so viele Nachtdienste"
                         : mode === "recovery"
                           ? "Dauer der freien Zeit"
-                          : "Anzahl Arbeitstage",
+                          : "Höchstens so viele Arbeitstage pro Woche im Schnitt",
                     true,
                   )}
                 {(mode === "average" || mode === "rolling") &&
-                  input("weeks", "Zeitraum in aufeinanderfolgenden Wochen", true)}
+                  input(
+                    "weeks",
+                    mode === "average"
+                      ? "Über wie viele Wochen?"
+                      : "Zeitraum in aufeinanderfolgenden Wochen",
+                    true,
+                  )}
                 {mode === "alternate" && (
                   <>
                     <LinkAction
