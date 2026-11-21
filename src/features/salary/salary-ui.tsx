@@ -186,69 +186,6 @@ function SalaryPageHeader({
   );
 }
 
-export function SalaryMonthNavigator({
-  label,
-  onPrevious,
-  onNext,
-  disabled = false,
-}: {
-  readonly label: string;
-  readonly onPrevious: () => void;
-  readonly onNext: () => void;
-  readonly disabled?: boolean;
-}) {
-  const palette = usePalette();
-  return (
-    <View
-      accessibilityRole="toolbar"
-      style={{ flexDirection: "row", alignItems: "center", gap: SPACING.md }}
-    >
-      {(["previous", "label", "next"] as const).map((item) =>
-        item === "label" ? (
-          <Text
-            key={item}
-            accessibilityLiveRegion="polite"
-            style={{
-              ...TYPOGRAPHY.value,
-              fontWeight: "400",
-              color: palette.textMuted,
-              textAlign: "center",
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {label}
-          </Text>
-        ) : (
-          <Pressable
-            key={item}
-            accessibilityRole="button"
-            accessibilityLabel={`${item === "previous" ? "Vorheriger" : "Nächster"} Monat, aktuell ${label}`}
-            accessibilityState={{ disabled }}
-            disabled={disabled}
-            onPress={item === "previous" ? onPrevious : onNext}
-            style={({ pressed }) => ({
-              width: MINIMUM_TOUCH_TARGET,
-              minHeight: MINIMUM_TOUCH_TARGET,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: RADII.control,
-              backgroundColor: pressed ? palette.surfaceMuted : "transparent",
-            })}
-          >
-            <Ionicons
-              name={item === "previous" ? "chevron-back" : "chevron-forward"}
-              size={23}
-              color={palette.text}
-              accessibilityElementsHidden
-            />
-          </Pressable>
-        ),
-      )}
-    </View>
-  );
-}
-
 export function SalarySectionCard({
   title,
   amount,

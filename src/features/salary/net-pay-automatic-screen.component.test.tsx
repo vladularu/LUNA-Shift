@@ -452,7 +452,7 @@ describe("integrated salary-to-net workflow", () => {
       alert.mockRestore();
     }
   });
-  it("keeps a standalone tax draft on cancelled back and changes the salary month only after discard", async () => {
+  it("keeps a standalone tax draft on cancelled back and restores the same report after discard", async () => {
     const salary = await netOverview();
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     await fireEvent.press(salary.getByRole("button", { name: /^Netto-Einstellungen/ }));
@@ -487,11 +487,9 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockSettings?.profile.taxClass).toBe(1);
       await screen.unmount();
       const returned = await netOverview();
-      await fireEvent.press(returned.getByRole("button", { name: /^Nächster Monat/ }));
-      expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
-      await returned.rerender(<NetPayScreen />);
-      expect(mockParams.month).toBe("2026-08");
-      expect(returned.getByText("August 2026")).toBeTruthy();
+      expect(router.setParams).not.toHaveBeenCalled();
+      expect(mockParams.month).toBe("2026-07");
+      expect(returned.getByText("Juli 2026")).toBeTruthy();
       expect(
         returned.getByRole("button", { name: /^Netto-Einstellungen\. Steuerklasse 1/ }),
       ).toBeTruthy();
@@ -1794,12 +1792,13 @@ describe("integrated salary-to-net workflow", () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
   it.each(["salary", "components", "deductions", "premiums", "services", "basis"] as const)(
-    "reserves %s for native back navigation without changing the selected month",
+    "shows %s for the selected month and leaves swiping to native back navigation",
     async (section) => {
       const screen = section === "salary" ? await render(<SalaryScreen />) : await details(section);
       const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
       expect(screen.queryByTestId("report-period-pager")).toBeNull();
       expect(screen.queryByTestId("report-period-scroll")).toBeNull();
+      expect(screen.queryByRole("button", { name: /^(Vorheriger|Nächster) Monat/ })).toBeNull();
       expect(mockCoordinator.getMonth()).toBe("2026-07");
       expect(screen.getByText("Juli 2026")).toBeTruthy();
       await fireEvent.press(screen.getByRole("button", { name: "Zurück" }));
@@ -1813,22 +1812,16 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockSave).not.toHaveBeenCalled();
     },
   );
-  it("keeps the statement, deductions route and bottom export on the selected month", async () => {
+  it("opens net, deductions and the bottom export for the month selected in analysis", async () => {
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-    const screen = await render(<NetPayScreen />);
-    const before = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
-    await fireEvent.press(screen.getByRole("button", { name: /^Nächster Monat/ }));
-    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
-    mockParams = { month: "2026-08" };
-    await screen.rerender(<NetPayScreen />);
+    const screen = await netOverview("2026-08");
+    expect(screen.queryByRole("button", { name: /^(Vorheriger|Nächster) Monat/ })).toBeNull();
     expect(screen.getByText("August 2026")).toBeTruthy();
     expect(mockSetMonth).toHaveBeenLastCalledWith("2026-08");
     expect(mockExport).toHaveBeenLastCalledWith(
       expect.objectContaining({ period: "2026-08", variant: "button" }),
     );
-    expect(totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).not.toBe(
-      before,
-    );
+    const net = totals(screen).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel;
     await fireEvent.press(screen.getByRole("button", { name: /^Abzüge:/ }));
     expect(statement(screen).queryByLabelText(/^Krankenversicherung:/)).toBeNull();
     expect(router.push).toHaveBeenLastCalledWith({
@@ -1843,38 +1836,24 @@ describe("integrated salary-to-net workflow", () => {
     expect(router.back).toHaveBeenCalledTimes(1);
     await deduction.unmount();
     const returned = await netOverview("2026-08");
-    await fireEvent.press(returned.getByRole("button", { name: /^Vorheriger Monat/ }));
-    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
-    mockParams = { month: "2026-07" };
-    await returned.rerender(<NetPayScreen />);
-    expect(totals(returned).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).toBe(
-      before,
-    );
+    expect(returned.getByText("August 2026")).toBeTruthy();
+    expect(totals(returned).getByLabelText(/^Netto geschätzt:/).props.accessibilityLabel).toBe(net);
+    expect(router.setParams).not.toHaveBeenCalled();
   });
-  it("changes the read-only component month without pushing a new route", async () => {
-    const screen = await details("components");
-    const before = screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel;
+  it("opens read-only salary components for the selected month", async () => {
+    const screen = await details("components", "2026-08");
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
-    await fireEvent.press(screen.getByRole("button", { name: /^Nächster Monat/ }));
-    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-08" });
-    expect(router.push).not.toHaveBeenCalled();
-    mockParams = { month: "2026-08", section: "components" };
-    await screen.rerender(<SalaryDetailsScreen />);
     expect(mockCoordinator.getMonth()).toBe("2026-08");
     expect(screen.getByText("August 2026")).toBeTruthy();
-    expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).not.toBe(before);
+    expect(screen.queryByRole("button", { name: /^(Vorheriger|Nächster) Monat/ })).toBeNull();
     expect(screen.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Netto-Berechnung" })).toBeTruthy();
     expect(screen.getByLabelText(/^Abzüge:/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Abzüge:/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Berechnungsgrundlagen" })).toBeNull();
     expect(router.push).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: /^Vorheriger Monat/ }));
-    expect(router.setParams).toHaveBeenLastCalledWith({ month: "2026-07" });
-    mockParams = { month: "2026-07", section: "components" };
-    await screen.rerender(<SalaryDetailsScreen />);
-    expect(screen.getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(before);
-    expect(mockCoordinator.getMonth()).toBe("2026-07");
+    expect(router.setParams).not.toHaveBeenCalled();
+    expect(mockCoordinator.getMonth()).toBe("2026-08");
     await fireEvent.press(screen.getByRole("button", { name: "Zurück zum Gehalt" }));
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(mockSave).not.toHaveBeenCalled();

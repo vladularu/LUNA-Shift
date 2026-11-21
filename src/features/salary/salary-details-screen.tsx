@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Text } from "@/ui/text";
 import { View } from "react-native";
-import { addMonths, formatMonthTitle } from "@/engine/calendar";
+import { formatMonthTitle } from "@/engine/calendar";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { useReportMonth } from "@/navigation/use-report-month";
 import { dayEditorRoute, salaryDetailsRoute, type SalaryDetailSection } from "@/navigation/routes";
@@ -20,7 +20,6 @@ import {
   SalaryPage,
   SalaryAmountRow,
   SalaryPremiumCard,
-  SalaryMonthNavigator,
   SalarySectionCard,
   SalaryNavigationRow,
 } from "./salary-ui";
@@ -49,7 +48,7 @@ export function SalaryDetailsScreen() {
     typeof params.section === "string" && Object.hasOwn(SALARY_DETAIL_TITLES, params.section)
       ? (params.section as SalaryDetailSection)
       : null;
-  const { month, selectMonth } = useReportMonth(parsed.status === "valid" ? parsed.value : null);
+  const { month } = useReportMonth(parsed.status === "valid" ? parsed.value : null);
   if (parsed.status !== "valid" || !section)
     return (
       <SalaryPage title="Gehalt">
@@ -61,23 +60,15 @@ export function SalaryDetailsScreen() {
         />
       </SalaryPage>
     );
-  return (
-    <SalaryDetailsMonthPage
-      month={month}
-      section={section}
-      moveMonth={(delta) => selectMonth(addMonths(month, delta))}
-    />
-  );
+  return <SalaryDetailsMonthPage month={month} section={section} />;
 }
 
 function SalaryDetailsMonthPage({
   month,
   section,
-  moveMonth,
 }: {
   readonly month: string;
   readonly section: SalaryDetailSection;
-  readonly moveMonth: (delta: number) => void;
 }) {
   const valid = true;
   const report = useSalaryReport(month, valid);
@@ -101,30 +92,19 @@ function SalaryDetailsMonthPage({
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const palette = usePalette();
   const heading = SALARY_DETAIL_TITLES[section];
-  const caption = formatMonthTitle(month);
   const pageProps = {
     title: heading,
-    month: section === "components" ? undefined : caption,
+    month: formatMonthTitle(month),
   };
-  const navigation =
-    section === "components" ? (
-      <SalaryMonthNavigator
-        label={caption}
-        onPrevious={() => moveMonth(-1)}
-        onNext={() => moveMonth(1)}
-      />
-    ) : null;
   if (report.error)
     return (
       <SalaryPage {...pageProps}>
-        {navigation}
         <LoadFailureView message={report.error} onRetry={() => void report.reload()} />
       </SalaryPage>
     );
   if (report.calculation !== null && !report.calculation.ok)
     return (
       <SalaryPage {...pageProps}>
-        {navigation}
         <RuleComputationNotice
           failure={report.calculation}
           title="Gehaltsdetails nicht verfügbar"
@@ -135,7 +115,6 @@ function SalaryDetailsMonthPage({
   if (!report.ready || !report.profile || !report.calculation)
     return (
       <SalaryPage {...pageProps}>
-        {navigation}
         <LoadingView />
       </SalaryPage>
     );
@@ -315,7 +294,6 @@ function SalaryDetailsMonthPage({
   }
   return (
     <SalaryPage {...pageProps}>
-      {navigation}
       {available &&
       (section === "premiums" || section === "services") &&
       netPayForecastLabel(available.pay) ? (
