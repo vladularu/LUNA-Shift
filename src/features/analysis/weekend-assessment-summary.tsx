@@ -28,16 +28,19 @@ const reasons = {
 } as const;
 
 export function weekendAssessmentOpen(assessment?: PlanningWeekendAssessment): boolean {
-  return Boolean(
-    assessment &&
-    (assessment.unknownCount > 0 ||
-      assessment.windows.some((window) => !window.assessmentComplete || window.unknownCount > 0)),
+  if (!assessment) return false;
+  const covered = assessment.windows.some((window) => window.workplaceRuleApplies);
+  if (!covered && assessment.unknownCount > 0) return true;
+  return assessment.windows.some(
+    (window) =>
+      !window.workplaceRuleApplies && (!window.assessmentComplete || window.unknownCount > 0),
   );
 }
 
 export function affectedWeekendWindows(assessment?: PlanningWeekendAssessment) {
   return (assessment?.windows ?? []).filter(
     (window) =>
+      !window.workplaceRuleApplies &&
       window.assessmentComplete &&
       window.unknownCount === 0 &&
       window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,
@@ -63,7 +66,9 @@ export function WeekendAssessmentWindows({
   readonly affectedOnly?: boolean;
 }) {
   const palette = usePalette();
-  const windows = affectedOnly ? affectedWeekendWindows(assessment) : assessment.windows;
+  const windows = affectedOnly
+    ? affectedWeekendWindows(assessment)
+    : assessment.windows.filter((window) => !window.workplaceRuleApplies);
   if (!windows.length) return null;
   if (affectedOnly) {
     const ordered = [...windows].sort(

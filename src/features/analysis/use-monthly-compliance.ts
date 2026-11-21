@@ -52,7 +52,8 @@ export function useDeferredMonthlyCompliance({
   readonly persistent?: PersistentAnalysisCache | null;
 }): DeferredMonthlyComplianceResult {
   const nativeCalculator = useMonthlyRustChecksCalculator();
-  const calculator = month.startsWith("2027-") ? null : nativeCalculator;
+  const calculator =
+    month.startsWith("2027-") || profile?.workplaceHistory?.length ? null : nativeCalculator;
   const {
     youthEnabled = false,
     error: preferenceError,

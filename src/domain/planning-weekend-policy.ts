@@ -33,6 +33,7 @@ export interface PlanningWeekend {
 }
 
 export interface PlanningWeekendWindow {
+  readonly workplaceRuleApplies?: true;
   /** Required even if recorded duty already proves all four weekends occupied. */
   readonly assessmentComplete: boolean;
   /** Inclusive Monday and Sunday, spanning exactly four complete calendar weeks. */

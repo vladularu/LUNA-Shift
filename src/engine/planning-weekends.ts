@@ -50,7 +50,7 @@ const dutyEvidence = new WeakMap<
   ShiftEntry,
   Map<string, { readonly signature: string; readonly value: Map<string, Evidence> }>
 >();
-function weekendEvidence(shift: ShiftEntry, timeZone: string): Map<string, Evidence> {
+export function weekendEvidence(shift: ShiftEntry, timeZone: string): Map<string, Evidence> {
   let signature: string;
   try {
     signature = JSON.stringify([
@@ -211,6 +211,7 @@ const counts = (weekends: readonly PlanningWeekend[]) => ({
 export function planningWeekendIssues(assessment: PlanningWeekendAssessment): ComplianceIssue[] {
   const affected = assessment.windows.filter(
     (window) =>
+      !window.workplaceRuleApplies &&
       window.assessmentComplete &&
       window.unknownCount === 0 &&
       window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,

@@ -53,6 +53,7 @@ export function useCheckReferenceDetail() {
 const category = {
   legal: { label: "Gesetz", icon: "time-outline" },
   tariff: { label: "Tarif", icon: "document-text-outline" },
+  workplace: { label: "Betriebsregel", icon: "options-outline" },
   planning: { label: "Planungsempfehlung", icon: "information-circle-outline" },
 } as const;
 
@@ -85,12 +86,12 @@ export function CheckDetailHeading({
   readonly period: string;
   readonly title: string;
   readonly caption: string;
-  readonly planningIcon?: ReturnType<typeof planningHintIcon>;
+  readonly planningIcon?: import("react").ComponentProps<typeof Ionicons>["name"];
 }) {
   const reference = useCheckReferenceDetail();
   if (!reference)
     return <AnalysisDetailSummaryCard period={period} title={title} caption={caption} />;
-  const color = kind === "planning" ? reference.neutral : reference[kind];
+  const color = kind === "planning" || kind === "workplace" ? reference.neutral : reference[kind];
   return (
     <View testID="check-reference-heading" style={{ marginTop: 3, marginBottom: 2 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

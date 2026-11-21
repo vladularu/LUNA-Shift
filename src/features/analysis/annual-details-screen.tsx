@@ -1,5 +1,6 @@
 import { router, Stack, useIsFocused, useLocalSearchParams } from "expo-router";
 import { CHECK_TITLE } from "./check-copy";
+import { PreparationFailureView } from "./analysis-preparation-failure";
 import {
   usePflegeShiftEntries,
   usePflegeShiftProfile,
@@ -78,7 +79,7 @@ export function AnnualDetailsScreen() {
         onRetry={() => router.back()}
       />
     );
-  if (!(ready && error) && annual.fatalError) throw annual.fatalError;
+
   const report = annual.report ?? annual.coreReport;
   return (
     <BackFooterLayout
@@ -107,6 +108,13 @@ export function AnnualDetailsScreen() {
           />
           {ready && error ? (
             <LoadFailureView message={error} onRetry={() => void reload()} />
+          ) : annual.fatalError ? (
+            <PreparationFailureView
+              month={parsedMonth.status === "valid" ? parsedMonth.value : String(year) + "-01"}
+              annual
+              error={annual.fatalError}
+              retry={annual.retry}
+            />
           ) : annual.error || annual.ruleFailure ? (
             <LoadFailureView
               title="Jahresdetails nicht verfügbar"

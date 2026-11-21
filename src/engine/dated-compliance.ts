@@ -1,3 +1,4 @@
+import { applyWorkplacePlanning } from "./workplace-resolution";
 import type { ComplianceInterval } from "./compliance-sequences";
 import { Temporal } from "@js-temporal/polyfill";
 import { employmentMonthPeriods } from "@/domain/employment-history";
@@ -41,7 +42,7 @@ export function datedComplianceInputs(month: string, timeZone: string, options: 
 }
 export function createDatedComplianceCalculator(core: Steps) {
   /** Keep complete assessment windows; only dated input facts and displayed findings vary. */
-  function* steps(
+  function* baseSteps(
     month: string,
     shifts: readonly ShiftEntry[],
     timeZone: string,
@@ -94,6 +95,14 @@ export function createDatedComplianceCalculator(core: Steps) {
       infoCount: issues.filter((i) => i.severity === "info").length,
       affectedDates: [...new Set(issues.map((i) => i.date))].sort(),
     };
+  }
+
+  function* steps(...args: Parameters<Steps>) {
+    return applyWorkplacePlanning(
+      yield* baseSteps(...args),
+      args[3]?.employmentProfile?.workplaceHistory,
+      args[1],
+    );
   }
 
   function calculate(...args: Parameters<Steps>): MonthlyComplianceResult {

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { MonthPreparationError } from "./analysis-preparation-failure";
 import {
   calculateMonthlyAnalysisSteps,
   inspectMonthlyAnalysis,
@@ -107,6 +108,7 @@ export function usePreparedMonthlyAnalysis(
     () => task.current?.setPriority(analysisWorkPriority(1, active, distance)),
     [active, distance, key, resolver],
   );
-  if (active && matching && "failure" in matching) throw matching.failure;
+  if (active && matching && "failure" in matching)
+    throw new MonthPreparationError(matching.failure);
   return cached ?? shared ?? matching?.result ?? null;
 }

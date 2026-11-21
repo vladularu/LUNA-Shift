@@ -15,6 +15,7 @@ import {
   invalidateCheckIssueSession,
   releaseCheckIssueSession,
   type CheckIssueInput,
+  type CheckDetailInput,
 } from "@/navigation/check-issue-session";
 import { PlanningHintDetails } from "./planning-hint-details";
 import { planningHintPresentation } from "./planning-hint-presentation";
@@ -104,7 +105,7 @@ export const issueSeverity = (issue: ComplianceIssue) =>
           ? "Warnung"
           : "Hinweis";
 
-function compactCheckPeriod(period?: {
+export function compactCheckPeriod(period?: {
   readonly from: string;
   readonly until: string;
 }): string | null {
@@ -161,17 +162,20 @@ export function AffectedCheckShifts({
   );
 }
 
-function WeekendDuties({
-  window,
+export function WeekendDuties({
+  weekends,
   shifts,
 }: {
-  readonly window: PlanningWeekendWindow;
+  readonly weekends: readonly Pick<
+    PlanningWeekendWindow["weekends"][number],
+    "saturday" | "sunday" | "status" | "relatedShiftIds"
+  >[];
   readonly shifts: readonly ShiftEntry[];
 }) {
   const reference = useCheckReferenceDetail();
   return (
     <View testID="weekend-duty-overview" style={{ gap: SPACING.md }}>
-      {window.weekends.map((weekend) => {
+      {weekends.map((weekend) => {
         const ids = new Set(weekend.relatedShiftIds);
         const duties = shifts.filter(({ id }) => ids.has(id));
         const status = weekend.status === "FREE" ? "Frei" : "Belegt";
@@ -309,7 +313,7 @@ export function checkIssueOccurrences(input: CheckIssueInput): CheckIssueOccurre
   });
 }
 
-export function openCheckIssueDetails(input: CheckIssueInput) {
+export function openCheckIssueDetails(input: CheckDetailInput) {
   const request = createCheckIssueSession(input);
   if (!request) return null;
   try {
@@ -366,7 +370,7 @@ export function ComplianceIssueDetails(input: CheckIssueInput) {
                 }
               : undefined;
           const children = selectedWeekend ? (
-            <WeekendDuties window={selectedWeekend} shifts={member.model.related} />
+            <WeekendDuties weekends={selectedWeekend.weekends} shifts={member.model.related} />
           ) : member.model.rest ? (
             <View style={{ gap: SPACING.sm }}>
               <CheckRestTimeline
@@ -442,6 +446,84 @@ export function ComplianceIssueDetails(input: CheckIssueInput) {
         })
       )}
     </View>
+  );
+}
+
+export function CheckInboxRow({
+  title,
+  subtitle,
+  icon,
+  accent,
+  stripe,
+  label,
+  hint,
+  testID,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  icon: import("react").ComponentProps<typeof Ionicons>["name"];
+  accent: string;
+  stripe?: string;
+  label: string;
+  hint: string;
+  testID?: string;
+  onPress: () => void;
+}) {
+  const palette = usePalette();
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+      accessibilityValue={{ text: subtitle }}
+      onPress={() => {
+        selectionFeedback();
+        onPress();
+      }}
+      style={({ pressed }) => ({
+        minHeight: 67,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: SPACING.sm,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        borderLeftWidth: 3,
+        borderLeftColor: stripe ?? "transparent",
+        backgroundColor: pressed ? palette.surfaceMuted : palette.surface,
+      })}
+    >
+      <View
+        style={{
+          width: 35,
+          height: 35,
+          borderRadius: RADII.control,
+          backgroundColor: palette.surfaceMuted,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Ionicons
+          name={icon}
+          size={18}
+          color={accent}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
+      </View>
+      <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
+        <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>{title}</Text>
+        <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{subtitle}</Text>
+      </View>
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color={palette.textMuted}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      />
+    </Pressable>
   );
 }
 
@@ -555,66 +637,25 @@ export function ComplianceIssueContent({
       .filter(Boolean)
       .join(" · ");
     return (
-      <Pressable
+      <CheckInboxRow
         testID={`check-details-${occurrence?.key ?? issue.id}`}
-        accessibilityRole="button"
-        accessibilityLabel={`Details ansehen: ${rowTitle}${grouped ? `, ${groupLabel}` : ""}`}
-        accessibilityHint={`${issueCategory(issue)}. ${issueSeverity(issue)}.`}
-        accessibilityValue={{ text: subtitle }}
-        onPress={() => {
-          selectionFeedback();
-          openDetails();
-        }}
-        style={({ pressed }) => ({
-          minHeight: 67,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: SPACING.sm,
-          paddingHorizontal: SPACING.md,
-          paddingVertical: SPACING.sm,
-          borderLeftWidth: 3,
-          borderLeftColor: category === "planning" ? "transparent" : accent,
-          backgroundColor: pressed ? palette.surfaceMuted : palette.surface,
-        })}
-      >
-        <View
-          style={{
-            width: 35,
-            height: 35,
-            borderRadius: RADII.control,
-            backgroundColor: palette.surfaceMuted,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Ionicons
-            name={
-              category === "legal"
-                ? rest
-                  ? "time-outline"
-                  : "alert-circle-outline"
-                : category === "tariff"
-                  ? "document-text-outline"
-                  : planningHintIcon(issue.rule)
-            }
-            size={18}
-            color={accent}
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-          />
-        </View>
-        <View style={{ flex: 1, minWidth: 0, gap: SPACING.xxs }}>
-          <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>{rowTitle}</Text>
-          <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.small }}>{subtitle}</Text>
-        </View>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={palette.textMuted}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        />
-      </Pressable>
+        title={rowTitle}
+        subtitle={subtitle}
+        accent={accent}
+        stripe={category === "planning" ? undefined : accent}
+        label={`Details ansehen: ${rowTitle}${grouped ? `, ${groupLabel}` : ""}`}
+        hint={`${issueCategory(issue)}. ${issueSeverity(issue)}.`}
+        icon={
+          category === "legal"
+            ? rest
+              ? "time-outline"
+              : "alert-circle-outline"
+            : category === "tariff"
+              ? "document-text-outline"
+              : planningHintIcon(issue.rule)
+        }
+        onPress={openDetails}
+      />
     );
   }
   return (

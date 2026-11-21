@@ -12,6 +12,8 @@ import {
   type SplitDutyBreakCheck,
 } from "./compliance-split-breaks";
 import { createDatedComplianceCalculator, employmentEvidenceIntervals } from "./dated-compliance";
+import { hasAgreedRestLimit, rulesAt } from "@/domain/workplace-rules";
+import { employmentProfileAt } from "@/domain/employment-history";
 import { Temporal } from "@js-temporal/polyfill";
 import { finishMonthlyCompliance } from "./compliance-result";
 import { checkPlanningNightsSteps } from "./planning-night-recovery";
@@ -328,45 +330,99 @@ function checkRestAndSequence(
   referenceDate: Temporal.PlainDate,
   rules: RuleLegalRules,
   sectorId: string,
+  profile: UserProfile | undefined,
+  originalShifts: readonly ShiftEntry[],
+  coverageEnd: string,
 ): ComplianceIssue[] {
   const issues: ComplianceIssue[] = [];
   const periods = restPeriods(intervals);
   const deviation =
     rules.restPeriod.deviations.find((candidate) => candidate.sectorIds.includes(sectorId)) ?? null;
-  const minimumMinutes = deviation?.minimumMinutes ?? rules.restPeriod.defaultMinutes;
+  const history = profile?.workplaceHistory;
+  const original = history?.length ? new Map(originalShifts.map((s) => [s.id, s])) : null;
+  const applicable = periods.map(({ current, next }) => {
+    if (!history?.length || !profile || !deviation || sectorId !== "care") return null;
+    const date = next.start.toPlainDate().toString();
+    const employment = employmentProfileAt(profile, date);
+
+    const rule = rulesAt(history, date).rest;
+    if (
+      rule?.mode !== "rest" ||
+      rule.source !== "agreed" ||
+      (rule.minutes < rules.restPeriod.defaultMinutes &&
+        (!hasAgreedRestLimit(rule) || (employment.industry !== "HEALTHCARE" && !employment.tariff)))
+    )
+      return null;
+    const shift = original?.get(current.shift.id);
+    if (!shift || current.shift.id === next.shift.id) return null;
+    const kind =
+      shift.specialDuty?.kind === "STANDBY"
+        ? "standby"
+        : shift.specialDuty?.kind === "ON_CALL"
+          ? "callout"
+          : "regular";
+    return rule.duty === "all" || rule.duty === kind ? rule : null;
+  });
+  const limits = applicable.map((rule) =>
+    rule && rule.minutes < rules.restPeriod.defaultMinutes ? rule : null,
+  );
+  const deviationAt = (index: number) => {
+    const local = limits[index];
+    if (!local || !deviation) return deviation;
+    return local.makeup
+      ? {
+          ...deviation,
+          minimumMinutes: local.minutes,
+          compensationMinutes: local.makeup.minutes,
+          compensationWithinDays: local.makeup.days,
+          compensationWithinCalendarMonths: 0,
+        }
+      : null;
+  };
   const compensated = compensatedShortRestIndexes(
     periods,
-    deviation,
+    deviationAt,
     rules.restPeriod.defaultMinutes,
   );
   for (let index = 0; index < periods.length; index += 1) {
     const { current, next, minutes: rest } = periods[index];
     if (rest < 0) continue;
+    const applicableRule = applicable[index];
+    const local = limits[index];
+    const makeup = deviationAt(index);
+    const minimumMinutes =
+      local?.minutes ?? deviation?.minimumMinutes ?? rules.restPeriod.defaultMinutes;
     if (rest < minimumMinutes) {
-      issues.push(
-        issue(
+      issues.push({
+        ...issue(
           "critical",
           "LEGAL",
           "ARBZG_5_REST_10H",
           `Ruhezeit unter ${minimumMinutes / 60} Stunden`,
-          `Zwischen den Diensten liegen nur ${hours(rest)} Ruhezeit. Damit wird auch die für Krankenhäuser und Pflegeeinrichtungen mögliche Verkürzung auf ${minimumMinutes / 60} Stunden unterschritten.`,
+          local
+            ? `Die Ruhezeit liegt ${minimumMinutes - rest} Minuten unter der vereinbarten Mindestdauer.`
+            : `Zwischen den Diensten liegen nur ${hours(rest)} Ruhezeit. Damit wird auch die für Krankenhäuser und Pflegeeinrichtungen mögliche Verkürzung auf ${minimumMinutes / 60} Stunden unterschritten.`,
           [current.shift, next.shift],
           undefined,
           { rule: "ARBZG_5_REST_10H", restMinutes: rest, minimumRestMinutes: minimumMinutes },
         ),
-      );
+        ...(applicableRule ? { workplaceRestMinimum: applicableRule.minutes } : {}),
+      });
     } else if (
-      deviation !== null &&
+      makeup !== null &&
       rest < rules.restPeriod.defaultMinutes &&
       !compensated.has(index)
     ) {
-      const dayDeadline = next.start.toPlainDate().add({ days: deviation.compensationWithinDays });
+      const dayDeadline = next.start.toPlainDate().add({ days: makeup.compensationWithinDays });
       const monthDeadline = next.start.toPlainDate().add({
-        months: deviation.compensationWithinCalendarMonths ?? 0,
+        months: makeup.compensationWithinCalendarMonths ?? 0,
       });
       const deadline =
         Temporal.PlainDate.compare(dayDeadline, monthDeadline) >= 0 ? dayDeadline : monthDeadline;
-      const overdue = Temporal.PlainDate.compare(referenceDate, deadline) > 0;
+      const overdue =
+        Temporal.PlainDate.compare(referenceDate, deadline) > 0 &&
+        (!local ||
+          (deadline.toString() <= coverageEnd && profile?.allEmploymentWorkRecorded === true));
       issues.push(
         issue(
           overdue ? "critical" : "warning",
@@ -375,13 +431,13 @@ function checkRestAndSequence(
           overdue
             ? "Ausgleich für verkürzte Ruhezeit fehlt"
             : "Ausgleich für verkürzte Ruhezeit offen",
-          `Die Ruhezeit beträgt ${hours(rest)}. In den eingetragenen Diensten wurde bis ${dateLabel(deadline)} keine noch unbenutzte Ruhezeit von mindestens ${deviation.compensationMinutes / 60} Stunden als Ausgleich erkannt.`,
+          `Die Ruhezeit beträgt ${hours(rest)}. In den eingetragenen Diensten wurde bis ${dateLabel(deadline)} keine noch unbenutzte Ruhezeit von mindestens ${makeup.compensationMinutes / 60} Stunden als Ausgleich erkannt.`,
           [current.shift, next.shift],
           undefined,
           {
             rule: "ARBZG_5_REST_11H",
             restMinutes: rest,
-            compensationMinutes: deviation.compensationMinutes,
+            compensationMinutes: makeup.compensationMinutes,
             compensationDeadline: deadline.toString(),
           },
         ),
@@ -590,7 +646,15 @@ function* calculateMonthlyComplianceCoreSteps(
   );
   yield 5;
   issues.push(
-    ...checkRestAndSequence(assessmentIntervals, referenceDate, rules, options.sectorId ?? "care"),
+    ...checkRestAndSequence(
+      options.employmentProfile?.workplaceHistory?.length ? intervals : assessmentIntervals,
+      referenceDate,
+      rules,
+      options.sectorId ?? "care",
+      options.employmentProfile,
+      originalShifts,
+      end,
+    ),
   );
   yield 6;
   const sundayHolidayRest = checkSundayHolidayRestIncrementally(

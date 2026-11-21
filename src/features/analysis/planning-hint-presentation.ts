@@ -99,6 +99,7 @@ export function planningHintPresentation(
     const assessment = facts.assessment;
     const affected = assessment.windows.filter(
       (window) =>
+        !window.workplaceRuleApplies &&
         window.assessmentComplete &&
         window.unknownCount === 0 &&
         window.freeCount < PLANNING_WEEKEND_POLICY.minimumFreeWeekends,

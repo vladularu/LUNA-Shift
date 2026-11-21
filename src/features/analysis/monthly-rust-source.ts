@@ -56,15 +56,27 @@ export function createStoredMonthlyRustInputReader(
       shiftRows: { id: string; revision: number }[];
       appointmentRows: { id: string; revision: number }[];
     };
-    const observed = [...calendar.shiftRows, ...calendar.appointmentRows]
-      .map((row) => `${row.id}:${row.revision}`)
-      .sort();
-    const expected = request.entries
-      .filter((entry) => entry.deletedAt === null)
-      .map((entry) => `${entry.id}:${entry.revision}`)
-      .sort();
-    if (JSON.stringify(observed) !== JSON.stringify(expected))
-      throw new Error("RUST_MONTH_INPUT_CHANGED");
+    // The provider retains a window of calendar entries. The database also holds
+    // other years. Send exactly the requested snapshot under its calculation key.
+    const expectedShifts = new Map<string, number>();
+    const expectedAppointments = new Map<string, number>();
+    for (const entry of request.entries) {
+      if (entry.deletedAt !== null) continue;
+      (entry.kind === "SHIFT" ? expectedShifts : expectedAppointments).set(
+        entry.id,
+        entry.revision,
+      );
+    }
+    const select = (rows: typeof calendar.shiftRows, expected: ReadonlyMap<string, number>) => {
+      const selected = rows.filter((row) => expected.get(row.id) === row.revision);
+      if (selected.length !== expected.size) throw new Error("RUST_MONTH_INPUT_CHANGED");
+      return selected;
+    };
+    sources.CALENDAR_ENTRIES = {
+      ...calendar,
+      shiftRows: select(calendar.shiftRows, expectedShifts),
+      appointmentRows: select(calendar.appointmentRows, expectedAppointments),
+    };
     const current: Record<string, unknown> = {};
     for (const part of await catalogs.collect(diagnosis)) {
       if (part.state !== "READY" || part.presence !== "VALUE")

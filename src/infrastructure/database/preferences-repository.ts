@@ -8,6 +8,7 @@ import { NURSING_TRAINING_PREFERENCE_KEY } from "@/domain/nursing-training";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { APPEARANCE_KEYS } from "@/domain/appearance";
 import { ANALYSIS_VIEW_KEY } from "@/domain/analysis-view";
+import { WORKPLACE_RULES_KEY } from "@/domain/workplace-rules";
 import { SALARY_PAYMENT_KEY } from "@/domain/salary-payment";
 
 import type {
@@ -96,6 +97,7 @@ const CALENDAR_PREFERENCE_KEYS = {
 } as const;
 
 export const USER_DATA_PREFERENCE_KEYS = Object.freeze([
+  WORKPLACE_RULES_KEY,
   ANALYSIS_VIEW_KEY,
   SALARY_PAYMENT_KEY,
   NURSING_TRAINING_PREFERENCE_KEY,

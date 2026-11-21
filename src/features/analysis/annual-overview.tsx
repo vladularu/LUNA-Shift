@@ -5,6 +5,7 @@ import {
   timeAccountBalance,
   timeAccountCaption,
 } from "./special-duty-time-presentation";
+import { WorkplaceCheckSummary } from "@/features/workplace/check-summary";
 import { annualDetailsRoute } from "@/navigation/routes";
 import type { AnnualReport } from "./annual-report";
 import { useCheckPreferences } from "@/features/settings/check-preferences";
@@ -98,24 +99,32 @@ export function AnnualOverview({
           />
         ),
         CHECK: (
-          <CheckListCard
-            counts={{
-              criticalCount: report.criticalCount,
-              warningCount: report.warningCount,
-              infoCount: report.infoCount ?? 0,
-              prerequisiteCount: report.prerequisiteCount,
-              scopeCount: report.scopeCount,
-            }}
-            categories={categories}
-            showPlanning={checkPreferences.enabled !== false}
-            status={checkStatus}
-            onPress={() => router.push(annualDetailsRoute(report.year, "CHECK"))}
-            caption={
-              !pending && !report.complianceCoverageComplete
-                ? "Für die vollständige Jahresprüfung fehlen Berechnungsdaten."
-                : undefined
-            }
-          />
+          <WorkplaceCheckSummary
+            period={String(report.year)}
+            restKeys={report.months.flatMap((m) => m.legalRestKeys ?? [])}
+          >
+            {(workplaceCount) => (
+              <CheckListCard
+                workplaceCount={workplaceCount}
+                counts={{
+                  criticalCount: report.criticalCount,
+                  warningCount: report.warningCount,
+                  infoCount: report.infoCount ?? 0,
+                  prerequisiteCount: report.prerequisiteCount,
+                  scopeCount: report.scopeCount,
+                }}
+                categories={categories}
+                showPlanning={checkPreferences.enabled !== false}
+                status={checkStatus}
+                onPress={() => router.push(annualDetailsRoute(report.year, "CHECK"))}
+                caption={
+                  !pending && !report.complianceCoverageComplete
+                    ? "Für die vollständige Jahresprüfung fehlen Berechnungsdaten."
+                    : undefined
+                }
+              />
+            )}
+          </WorkplaceCheckSummary>
         ),
         PAY: (
           <PayListCard

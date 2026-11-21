@@ -8,9 +8,12 @@ export interface CheckIssueInput {
   readonly shifts: readonly ShiftEntry[];
   readonly timeZone: string;
 }
-export interface CheckIssueSession extends CheckIssueInput {
-  readonly id: string;
+export interface WorkplaceIssueInput {
+  readonly workplace: { readonly period: string; readonly key: string };
+  readonly issue?: never;
 }
+export type CheckDetailInput = CheckIssueInput | WorkplaceIssueInput;
+export type CheckIssueSession = CheckDetailInput & { readonly id: string };
 
 let current: CheckIssueSession | null = null;
 let invalidatedId: string | null = null;
@@ -19,13 +22,21 @@ const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
 
 /** One in-memory handoff; finding data never becomes URL or persisted route data. */
-export function createCheckIssueSession(input: CheckIssueInput): CheckIssueSession | null {
+export function createCheckIssueSession(
+  input: CheckIssueInput,
+): (CheckIssueInput & { readonly id: string }) | null;
+export function createCheckIssueSession(input: CheckDetailInput): CheckIssueSession | null;
+export function createCheckIssueSession(input: CheckDetailInput): CheckIssueSession | null {
   if (current) return null;
   current = Object.freeze({
     ...input,
     id: `check-${Date.now().toString(36)}-${++sequence}`,
-    relatedIssues: Object.freeze([...(input.relatedIssues ?? [])]),
-    shifts: Object.freeze([...input.shifts]),
+    ...("workplace" in input
+      ? { workplace: Object.freeze({ ...input.workplace }) }
+      : {
+          relatedIssues: Object.freeze([...(input.relatedIssues ?? [])]),
+          shifts: Object.freeze([...input.shifts]),
+        }),
   });
   notify();
   return current;

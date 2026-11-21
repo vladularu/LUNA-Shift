@@ -11,10 +11,12 @@ export function ProfileDateField({
   value,
   onChange,
   disabled,
+  label = "Gültig ab",
 }: {
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly disabled: boolean;
+  readonly label?: string;
 }) {
   const palette = usePalette();
   const [day, month, year] = value.split(".").map(Number);
@@ -30,7 +32,7 @@ export function ProfileDateField({
   if (process.env.EXPO_OS === "web")
     return (
       <Field
-        label="Gültig ab"
+        label={label}
         value={value}
         onChangeText={onChange}
         editable={!disabled}
@@ -41,7 +43,7 @@ export function ProfileDateField({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Gültig ab ${value}, Datum wählen`}
+        accessibilityLabel={`${label} ${value}, Datum wählen`}
         disabled={disabled}
         style={{ minHeight: 48, justifyContent: "center" }}
         onPress={() =>
@@ -52,7 +54,9 @@ export function ProfileDateField({
           })
         }
       >
-        <Text style={{ color: palette.primary, ...TYPOGRAPHY.bodyStrong }}>Gültig ab {value}</Text>
+        <Text style={{ color: palette.primary, ...TYPOGRAPHY.bodyStrong }}>
+          {label} {value}
+        </Text>
       </Pressable>
     );
   return (
@@ -66,9 +70,9 @@ export function ProfileDateField({
         justifyContent: "space-between",
       }}
     >
-      <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>Gültig ab</Text>
+      <Text style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}>{label}</Text>
       <DateTimePicker
-        accessibilityLabel="Gültig ab"
+        accessibilityLabel={label}
         mode="date"
         display="compact"
         locale="de-DE"

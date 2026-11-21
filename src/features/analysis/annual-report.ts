@@ -1,3 +1,4 @@
+import { restFindingKeys } from "@/engine/workplace-resolution";
 import { employmentProfileAt } from "@/domain/employment-history";
 import {
   buildMonthlyShiftTypeAnalysis,
@@ -29,6 +30,7 @@ import { classifyChecks, countChecks, type ClassifiedCheckCounts } from "./check
 import type { AnnualRemuneration } from "./annual-remuneration";
 
 export interface AnnualMonthReport {
+  readonly legalRestKeys?: readonly string[];
   readonly scopeCount?: number;
   readonly targetStatus?: "FINAL" | "PROVISIONAL" | "UNAVAILABLE";
   readonly annualPaymentAmount?: number;
@@ -309,6 +311,9 @@ function* calculateAnnualMonthContribution(
         : {}),
       premiumAmount: pay.timePremiumAmount + pay.overtimeAmount + allowanceAmount,
       ...countChecks(compliance.issues),
+      ...(profile.workplaceHistory?.length
+        ? { legalRestKeys: restFindingKeys(compliance.issues) }
+        : {}),
       checkCounts: classifyChecks(compliance.issues),
     }),
     workMinutes: summary.work.minutes,

@@ -1,5 +1,6 @@
 import { WorkingTimeYouthProtectionContext } from "@/application/working-time-provider";
 import { useSQLiteContext } from "expo-sqlite";
+import { WorkplaceDatabase, WorkplaceCalculationSettings } from "@/features/workplace/store";
 import {
   createContext,
   useContext,
@@ -103,7 +104,9 @@ export function CheckPreferencesProvider({ children }: PropsWithChildren) {
       }}
     >
       <WorkingTimeYouthProtectionContext value={{ youthEnabled, error }}>
-        {children}
+        <WorkplaceDatabase.Provider value={db}>
+          <WorkplaceCalculationSettings>{children}</WorkplaceCalculationSettings>
+        </WorkplaceDatabase.Provider>
       </WorkingTimeYouthProtectionContext>
     </Context.Provider>
   );

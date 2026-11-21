@@ -36,7 +36,7 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
-function NativeRouteHost({ children }: PropsWithChildren) {
+export function NativeRouteHost({ children }: PropsWithChildren) {
   const request = useSyncExternalStore(
     subscribeCheckIssueSession,
     currentCheckIssueSession,

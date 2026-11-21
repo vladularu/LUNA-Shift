@@ -35,6 +35,58 @@ const request = (): AnnualAnalysisRequest => ({
   ruleResolver: createRuleResolver(),
 });
 describe("shared annual snapshots", () => {
+  it("recalculates the annual and monthly rest findings when the agreement changes", () => {
+    const input = request();
+    const entries = [
+      forecastShift({
+        id: "late",
+        type: "LATE",
+        date: "2026-10-06",
+        startTime: "14:00",
+        endTime: "22:00",
+      }),
+      forecastShift({
+        id: "early",
+        type: "EARLY",
+        date: "2026-10-07",
+        startTime: "07:30",
+        endTime: "15:30",
+      }),
+    ];
+    const run = (minutes: number) => {
+      const updated: AnnualAnalysisRequest = {
+        ...input,
+        entries,
+        profile: {
+          ...input.profile,
+          workplaceHistory: [
+            {
+              from: "2026-01-01",
+              rules: {
+                rest: {
+                  mode: "rest",
+                  minutes,
+                  source: "agreed",
+                  onRequest: false,
+                  duty: "regular",
+                  basis: "",
+                  compensation: "",
+                },
+              },
+            },
+          ],
+        },
+      };
+      return drain(prepareAnnualAnalysisSteps(updated, annualAnalysisKey(updated), null));
+    };
+    const nine = run(540),
+      ten = run(600);
+    const month = (report: typeof nine) => report.months.find((m) => m.month === "2026-10")!;
+    expect(month(nine).legalRestKeys).toEqual([]);
+    expect(month(ten).legalRestKeys).toHaveLength(1);
+    expect(month(ten).criticalCount - month(nine).criticalCount).toBe(1);
+    expect(ten.criticalCount - nine.criticalCount).toBe(1);
+  });
   it("retains exact complete results across remounts and cloned input objects", () => {
     const input = request(),
       key = annualAnalysisKey(input);

@@ -19,6 +19,8 @@ import {
   type WorkingTimeCalculationProfile,
 } from "@/engine/working-time-calculation-profile";
 
+export const WorkplaceHistoryContext = createContext<UserProfile["workplaceHistory"]>(undefined);
+
 export interface PflegeShiftProfileValue {
   readonly profile: UserProfile | null;
   readonly calculationProfile?: WorkingTimeCalculationProfile | null;
@@ -49,6 +51,7 @@ export function WorkingTimeProvider({
   readonly profileContext: Context<PflegeShiftProfileValue | null>;
 }>) {
   const history = useRemunerationData();
+  const workplaceHistory = useContext(WorkplaceHistoryContext);
   const protection = useContext(WorkingTimeYouthProtectionContext);
   const youthEnabled = protection?.youthEnabled;
   const youthError = protection?.error;
@@ -83,6 +86,10 @@ export function WorkingTimeProvider({
         : loaded.status === "error" || history.status === "error"
           ? "error"
           : "ready";
+    const calculationBase =
+      base.profile && workplaceHistory?.length
+        ? { ...base.profile, workplaceHistory }
+        : base.profile;
     return {
       ...base,
       ...(base.profile &&
@@ -97,9 +104,9 @@ export function WorkingTimeProvider({
         : {}),
       refreshWorkingTimeTarget,
       calculationProfile:
-        base.profile && load
+        calculationBase && load
           ? createWorkingTimeCalculationProfile(
-              base.profile,
+              calculationBase,
               loaded?.snapshot ?? null,
               history.profiles,
               status,
@@ -107,12 +114,13 @@ export function WorkingTimeProvider({
               youthEnabled ?? null,
               youthEnabled === null ? (youthError ? "error" : "loading") : "ready",
             )
-          : base.profile,
+          : calculationBase,
     };
   }, [
     base,
     history.profiles,
     history.status,
+    workplaceHistory,
     load,
     loaded,
     ready,

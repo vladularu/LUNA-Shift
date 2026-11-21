@@ -75,14 +75,16 @@ export function restPeriods(intervals: readonly ComplianceInterval[]): readonly 
 
 export function compensatedShortRestIndexes(
   periods: readonly RestPeriod[],
-  deviation: RuleRestDeviation | null,
+  deviationFor: RuleRestDeviation | null | ((index: number) => RuleRestDeviation | null),
   defaultMinutes: number,
 ): ReadonlySet<number> {
   const compensated = new Set<number>();
-  if (deviation === null) return compensated;
+  if (deviationFor === null) return compensated;
   const usedCompensationPeriods = new Set<number>();
 
   for (let shortIndex = 0; shortIndex < periods.length; shortIndex += 1) {
+    const deviation = typeof deviationFor === "function" ? deviationFor(shortIndex) : deviationFor;
+    if (!deviation) continue;
     const shortened = periods[shortIndex];
     if (shortened.minutes < deviation.minimumMinutes || shortened.minutes >= defaultMinutes) {
       continue;
