@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useIsFocused } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useActiveMonthCoordinator } from "./active-month";
 
@@ -20,14 +20,5 @@ export function useReportMonth(routeMonth: string | null) {
       setMonth(next);
     }, [coordinator, routeMonth]),
   );
-  const selectMonth = useCallback(
-    (next: string) => {
-      if (!focused) return;
-      coordinator.setMonth(next);
-      setMonth(next);
-      router.setParams({ month: next });
-    },
-    [coordinator, focused],
-  );
-  return { month, selectMonth, focused };
+  return { month };
 }

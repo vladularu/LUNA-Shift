@@ -490,8 +490,6 @@ export function SalaryPayrollContent({
   profile,
   pay,
   projection,
-  onDirtyChange,
-  onBusyChange,
 }: {
   readonly view?: PayrollView;
   readonly month: string;
@@ -499,8 +497,6 @@ export function SalaryPayrollContent({
   readonly profile: UserProfile;
   readonly pay: MonthlyPayEstimate;
   readonly projection: SalaryPaymentProjection;
-  readonly onDirtyChange?: (dirty: boolean) => void;
-  readonly onBusyChange?: (busy: boolean) => void;
 }) {
   const { testMonths } = usePflegeShiftTestData();
   const data = useNetPayProfile(month, !blocked);
@@ -644,8 +640,6 @@ export function SalaryPayrollContent({
               month={month}
               blocked={blocked}
               onChanged={data.reload}
-              onDirtyChange={onDirtyChange}
-              onBusyChange={onBusyChange}
             />
           ) : null
         }

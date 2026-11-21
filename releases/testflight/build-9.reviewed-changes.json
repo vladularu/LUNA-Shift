@@ -9935,8 +9935,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "cbac609932c62483f701db84204e50aaaf4ae8cc968baf3762a2898ec0e48675",
-      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. User-authorized annual-payment correction and iOS Preview OTA on 2026-11-10: Add the real salary-screen tariff-switch recovery regression without removing existing payroll, net, navigation or annual-payment tests. All other published Preview sources remain exact; device acceptance remains pending. Preserve the complete integrated payroll regression coverage, changing only the incomplete-duty expectations to the user-approved known gross, precise open component and direct review action. User-requested layout: reverse only the existing order assertion so the total precedes the payout-month selector; retain the complete payroll regression coverage. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "6aae70605827b02cdae04619f089f803924cd372d2603f4390a7a0c98f680262",
+      "reason": "Paket 4 correction: preserve monetary and forecast reuse assertions while testing salary and net in separate cards. Assert no net content in salary and remove expectations for provisional peer links; no skipped cases or changed expected money. Correction D test isolation: give each UI fixture a fresh equivalent rule-resolver identity because fixtures replace the monthly calculator with different artificial allowance outputs. Preserve each checkout-specific accepted card-order assertion and all 77 UI cases. This changes no app calculation or layout. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. User-authorized annual-payment correction and iOS Preview OTA on 2026-11-10: Add the real salary-screen tariff-switch recovery regression without removing existing payroll, net, navigation or annual-payment tests. All other published Preview sources remain exact; device acceptance remains pending. Preserve the complete integrated payroll regression coverage, changing only the incomplete-duty expectations to the user-approved known gross, precise open component and direct review action. User-requested layout: reverse only the existing order assertion so the total precedes the payout-month selector; retain the complete payroll regression coverage. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Vorschau: Prüft die aus der Auswertung übernommenen Monate, fehlende Monatspfeile, Zurücknavigation, Abzüge, Export und den Schutz ungespeicherter Netto-Eingaben."
     },
     {
       "path": "src/features/salary/net-pay-automatic-screen.tsx",
@@ -10007,8 +10007,8 @@
     {
       "path": "src/features/salary/salary-details-screen.tsx",
       "kind": "modified",
-      "sha256": "d5b50c707c40c86c3c8c9db4f5760ed6aebd806d969e98d25c983f55ccf440b8",
-      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook so it shares the exact prepared salary/cache with the parent report. Entire JSX and every other original byte protected against accepted package4. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "859104485f2f7c2cb27a7159e797a5c60aebfaed6d0b1b8ce45fdb234479383b",
+      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook so it shares the exact prepared salary/cache with the parent report. Entire JSX and every other original byte protected against accepted package4. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Vorschau: Entfernt die Monatspfeile bei Gehaltsbestandteilen und zeigt den aus der Route übernommenen Monat in der bestehenden Kopfzeile."
     },
     {
       "path": "src/features/salary/salary-month-input.ts",
@@ -10019,8 +10019,8 @@
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
       "kind": "modified",
-      "sha256": "711f7e97720a88733d5ce9e9f473a018d46b0d60d5c3acbbb614e8dc6853fe2a",
-      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook; share the completed salary preparation. No JSX, layout, copy or form-state change. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "014c71f7e3184e03fe35f3f5b9fcc5f97dc255824da0c67b984c4c047c1dbfd9",
+      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook; share the completed salary preparation. No JSX, layout, copy or form-state change. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Vorschau: Entfernt die Weitergabe der Bearbeitungszustände, die ausschließlich den Monatswechsel in der Gehaltsansicht steuerte."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -10031,14 +10031,14 @@
     {
       "path": "src/features/salary/salary-screen.tsx",
       "kind": "modified",
-      "sha256": "dc9d8d4ea3a3f533cb7934e7301841636f4e1e30222702c15dc400d111d47017",
-      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards."
+      "sha256": "4f592bc6cdc4b8dedd50681c2b3fb46eebb38120bbe0a1d59235eeec74c3bcf8",
+      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards. Vorschau: Entfernt den direkten Monatswechsel aus Gehalt und Netto-Prognose. Der Kopf und der Export verwenden den ausgewählten Berichtsmonat."
     },
     {
       "path": "src/features/salary/salary-ui.tsx",
       "kind": "modified",
-      "sha256": "90bde67ee321a87f0c9aed7486c580272c3162ecdf1e81dfa1aa5b694d17fc30",
-      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: keep lateral safe insets on the page, and include the status-bar inset in the fixed salary header so the existing soft scroll edge can extend into that area. Preview device acceptance pending."
+      "sha256": "16dd78a7ebf43636438c66eec8f479e7d060bb4e81b1c2f93b6c745f600433f6",
+      "reason": "Paket 2: Preserve the previously accepted Preview-specific styling/assertions in this file. Keep top/lateral safe areas on the wrapper and move footerless bottom protection into scroll-content padding. Preserve back-footer clearance and navigation on all other salary details. Add invisible layout test identifiers. Preview device acceptance pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: keep lateral safe insets on the page, and include the status-bar inset in the fixed salary header so the existing soft scroll edge can extend into that area. Preview device acceptance pending. Vorschau: Entfernt die Monatsnavigation, nachdem beide Aufrufer die vorhandene Monatsbeschriftung im Header verwenden."
     },
     {
       "path": "src/features/salary/special-duty-review-row.tsx",
@@ -10411,6 +10411,12 @@
       "kind": "modified",
       "sha256": "5c19fa56b6539e8ac7778fc367f81a3872c44af8aa18de663d881778772a041b",
       "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: salaryPaymentSettingsRoute."
+    },
+    {
+      "path": "src/navigation/use-report-month.ts",
+      "kind": "modified",
+      "sha256": "574cceb712689169acfaba22eeff6dc4f8b3241e661ce82b65ec10addeb05296",
+      "reason": "Vorschau: Entfernt das Schreiben neuer Monatsparameter aus Berichtsuntermenüs. Die Übernahme des ausgewählten Monats bei Fokus bleibt erhalten."
     },
     {
       "path": "src/rules/embedded-reviewed-rules.ts",
