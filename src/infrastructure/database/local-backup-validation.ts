@@ -107,6 +107,7 @@ import {
   type LocalBackupDocument,
 } from "@/infrastructure/database/local-backup";
 import { USER_DATA_PREFERENCE_KEYS } from "@/infrastructure/database/preferences-repository";
+import { WORKPLACE_RULES_KEY, dataSchema } from "@/domain/workplace-rules";
 import {
   mapRemunerationProfileRow,
   REMUNERATION_PROFILE_COLUMNS,
@@ -688,6 +689,14 @@ function validateTariffDecisionRow(value: unknown): BackupRow {
 }
 
 function validatePreferenceValue(key: string, value: string): void {
+  if (key === WORKPLACE_RULES_KEY) {
+    try {
+      dataSchema.parse(JSON.parse(value));
+      return;
+    } catch {
+      return invalid();
+    }
+  }
   if (key === SALARY_PAYMENT_KEY) {
     try {
       validateSalaryPaymentPreferences(JSON.parse(value));

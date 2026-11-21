@@ -24,6 +24,8 @@ const exceptions = "Betriebliche Ausnahmen sind nicht geprüft.";
 
 interface RestCheckDetailModel {
   readonly rest: RestTimeline;
+  readonly agreement?: boolean;
+  readonly additionalMinimum?: number;
   readonly minimumMinutes: number;
   readonly regularMinutes: number | null;
   readonly differenceMinutes: number;
@@ -54,6 +56,10 @@ export function restCheckDetailModel(
   const dateRange = checkPeriodLabel(rest.endDate, rest.startDate);
   return {
     rest,
+    ...(issue.workplaceRestMinimum === facts.minimumRestMinutes ? { agreement: true } : {}),
+    ...(issue.workplaceRestMinimum && issue.workplaceRestMinimum > facts.minimumRestMinutes
+      ? { additionalMinimum: issue.workplaceRestMinimum }
+      : {}),
     minimumMinutes: facts.minimumRestMinutes,
     regularMinutes,
     differenceMinutes: facts.minimumRestMinutes - rest.minutes,
@@ -82,7 +88,11 @@ export function RestCheckDetails({ model }: { readonly model: RestCheckDetailMod
         kind="legal"
         period={model.period}
         title="Kurze Ruhezeit"
-        caption="Gesetzliche Prüfung · Ruhezeit"
+        caption={
+          model.agreement
+            ? "Ruhezeit · mit betrieblicher Vereinbarung"
+            : "Gesetzliche Prüfung · Ruhezeit"
+        }
       />
       <CheckDetailCard
         accent={reference?.legalLine ?? palette.legalCheckBorder}
@@ -147,7 +157,17 @@ export function RestCheckDetails({ model }: { readonly model: RestCheckDetailMod
             </Text>
             <Text style={heading}>{restDuration(model.minimumMinutes)}</Text>
           </View>
-          <Text style={secondary}>{exceptions}</Text>
+          {model.additionalMinimum ? (
+            <Text style={secondary}>
+              In deinem Betrieb sind mindestens {formatCheckRestDuration(model.additionalMinimum)}{" "}
+              vereinbart.
+            </Text>
+          ) : null}
+          <Text style={secondary}>
+            {model.agreement
+              ? "Für diese Dienste verwendet LUNA die Mindestdauer, die du als vereinbart eingetragen hast."
+              : exceptions}
+          </Text>
         </CheckDetailDisclosure>
       </CheckDetailCard>
     </CheckDetailStack>

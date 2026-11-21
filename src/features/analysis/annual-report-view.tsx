@@ -1,3 +1,4 @@
+import { WorkplacePanel } from "@/features/workplace/panel";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import type { ReactNode } from "react";
@@ -219,9 +220,20 @@ export function AnnualReportDetails({
             {preferences.enabled === null && !preferences.error ? (
               <AnalysisCoverageNote message="Prüfung wird geladen …" />
             ) : null}
-            {!pending && report.complianceCoverageComplete ? (
-              <AnnualCheckDetails report={report} onSelectMonth={onSelectMonth} />
-            ) : null}
+            <WorkplacePanel
+              period={String(report.year)}
+              restKeys={report.months.flatMap((m) => m.legalRestKeys ?? [])}
+            >
+              {(count) =>
+                !pending && report.complianceCoverageComplete ? (
+                  <AnnualCheckDetails
+                    report={report}
+                    hasWorkplaceFindings={count > 0}
+                    onSelectMonth={onSelectMonth}
+                  />
+                ) : null
+              }
+            </WorkplacePanel>
           </>
         ) : section === "PAY" ? (
           pending ? (
@@ -309,9 +321,11 @@ function AnnualTestBadge({ count }: { readonly count: number }) {
 }
 
 function AnnualCheckDetails({
+  hasWorkplaceFindings,
   report,
   onSelectMonth,
 }: {
+  readonly hasWorkplaceFindings: boolean;
   readonly report: AnnualReport;
   readonly onSelectMonth: (month: string) => void;
 }) {
@@ -325,6 +339,7 @@ function AnnualCheckDetails({
         (item.scopeCount ?? 0) >
       0,
   );
+  if (!issueMonths.length && hasWorkplaceFindings && !isCheckLimited(report)) return null;
   if (issueMonths.length === 0)
     return (
       <View style={{ gap: SPACING.md }}>

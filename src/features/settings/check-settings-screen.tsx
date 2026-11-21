@@ -1,3 +1,4 @@
+import { WorkplacePanel } from "@/features/workplace/panel";
 import { Text } from "@/ui/text";
 import { router } from "expo-router";
 import { View } from "react-native";
@@ -36,6 +37,7 @@ export function CheckSettingsScreen() {
         ) : (
           <ScreenScrollView bottomPadding={bottomPadding} surface="groupedBackground">
             <InlineNotice message="Unterstützte Regeln zu Gesetz und Tarif werden gemeinsam geprüft." />
+            <WorkplacePanel />
             <SectionHeader title={LEGAL_TARIFF_TITLE} />
             <SurfaceCard testID="legal-check-settings-card">
               <View

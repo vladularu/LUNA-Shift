@@ -158,7 +158,9 @@ export function CheckListCard({
   loading = false,
   reserveLoadingSpace = false,
   weekendAssessment,
+  workplaceCount,
 }: {
+  readonly workplaceCount?: number;
   readonly counts: CheckCounts;
   readonly categories?: ClassifiedCheckCounts;
   readonly showPlanning: boolean;
@@ -177,10 +179,13 @@ export function CheckListCard({
       (fontScale >= 1.3 ? SPACING.sm : 0)
     : undefined;
   const total = counts.criticalCount + counts.warningCount + counts.infoCount;
+  const combinedTotal = total + (workplaceCount ?? 0);
   const label =
-    status ??
-    (total
-      ? total + (total === 1 ? " Meldung" : " Meldungen")
+    (status && workplaceCount
+      ? `${status}, Betriebsregeln: ${workplaceCount} ${workplaceCount === 1 ? "Hinweis" : "Hinweise"}`
+      : status) ??
+    (combinedTotal
+      ? combinedTotal + (combinedTotal === 1 ? " Meldung" : " Meldungen")
       : isCheckLimited(counts) || weekendAssessmentOpen(weekendAssessment)
         ? "Prüfung eingeschränkt"
         : "Keine sichtbaren Auffälligkeiten");
@@ -237,6 +242,21 @@ export function CheckListCard({
       ) : (
         <CheckRow first label="Meldungen" counts={counts} />
       )}
+      {workplaceCount !== undefined &&
+        (loading ? (
+          <AnalysisValueRow
+            minimumHeight={rowHeight}
+            label="Betriebsregeln"
+            value="Wird geprüft …"
+          />
+        ) : (
+          <CheckRow
+            minimumHeight={rowHeight}
+            label="Betriebsregeln"
+            counts={{ criticalCount: 0, warningCount: 0, infoCount: workplaceCount }}
+            planning
+          />
+        ))}
     </AnalysisListCard>
   );
 }

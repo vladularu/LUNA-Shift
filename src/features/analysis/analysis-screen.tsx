@@ -1,4 +1,5 @@
 import { ReportExportButton } from "@/features/report-export/report-export-button";
+import { MonthPreparationBoundary, PreparationFailureView } from "./analysis-preparation-failure";
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
 import { useAnalysisCommit, useAnalysisPerformance } from "./use-analysis-performance";
@@ -132,16 +133,18 @@ export function AnalysisScreen({
               </View>
             )}
             preparePage={(pageMonth, active, distance, content) => (
-              <AnalysisMonthDataProvider
-                month={pageMonth}
-                active={active}
-                distance={distance}
-                // Native swiping may reveal a distant page before selection commits.
-                // Its placeholder stays visible without starting more distant work.
-                enabled={period === "MONTH" && Math.abs(distance) <= 2}
-              >
-                <ReportScrollHeaderPage active={active}>{content}</ReportScrollHeaderPage>
-              </AnalysisMonthDataProvider>
+              <MonthPreparationBoundary key={period} month={pageMonth}>
+                <AnalysisMonthDataProvider
+                  month={pageMonth}
+                  active={active}
+                  distance={distance}
+                  // Native swiping may reveal a distant page before selection commits.
+                  // Its placeholder stays visible without starting more distant work.
+                  enabled={period === "MONTH" && Math.abs(distance) <= 2}
+                >
+                  <ReportScrollHeaderPage active={active}>{content}</ReportScrollHeaderPage>
+                </AnalysisMonthDataProvider>
+              </MonthPreparationBoundary>
             )}
             renderPage={(pageMonth, move, active) => (
               <AnalysisPage
@@ -271,7 +274,15 @@ function AnalysisPage({
   }
 
   if (period === "YEAR") {
-    if (active && annualReport.fatalError !== null) throw annualReport.fatalError;
+    if (active && annualReport.fatalError !== null)
+      return retainScene(
+        <PreparationFailureView
+          month={month}
+          annual
+          error={annualReport.fatalError}
+          retry={annualReport.retry}
+        />,
+      );
     if (annualReport.ruleFailure !== null) {
       return retainScene(
         <AnnualReportRuleFailure

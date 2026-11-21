@@ -195,6 +195,8 @@ export type SalaryBasisDrafts = Pick<
 >;
 
 export interface UserProfile {
+  /** Dated local check settings, attached only to the calculation profile. */
+  readonly workplaceHistory?: import("./workplace-rules").WorkplaceData["history"];
   /** Dated shift-model answers; legacy preferences remain the fallback. */
   readonly workPattern?: SaveTvoedWorkPatternSettingsInput | null;
   /** Read-only dated inputs, loaded from the existing remuneration history. */
@@ -461,6 +463,7 @@ export interface ComplianceAssessmentRange {
 }
 
 export interface ComplianceIssue {
+  readonly workplaceRestMinimum?: number;
   readonly id: string;
   readonly severity: ComplianceSeverity;
   readonly kind: ComplianceKind;

@@ -20,6 +20,7 @@ import {
   CheckReferenceDetailContext,
   checkReferenceColors,
 } from "./check-detail-layout";
+import { WorkplaceFindingDetails } from "@/features/workplace/finding-details";
 import { ComplianceIssueDetails } from "./compliance-issue-content";
 
 export function CheckIssueScreen() {
@@ -73,7 +74,12 @@ export function CheckIssueScreen() {
               paddingBottom: bottomPadding,
             }}
           >
-            {request ? (
+            {request && "workplace" in request ? (
+              <WorkplaceFindingDetails
+                period={request.workplace.period}
+                groupKey={request.workplace.key}
+              />
+            ) : request ? (
               <ComplianceIssueDetails {...request} />
             ) : (
               <CheckDetailCard title="Prüfungsdetails nicht verfügbar">

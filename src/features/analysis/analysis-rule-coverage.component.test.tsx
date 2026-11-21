@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { AnnualDetailsScreen } from "./annual-details-screen";
 import { WorktimeDetailsScreen } from "./worktime-details-screen";
 import { ComplianceDetailsScreen } from "./compliance-details-screen";
+import { WorkplaceDatabase } from "@/features/workplace/store";
+import type { SQLiteDatabase } from "expo-sqlite";
 import * as MockReact from "react";
 import type { ReactElement } from "react";
 
@@ -67,6 +69,7 @@ jest.mock("@/features/salary/salary-payment-preferences", () => ({
     };
   },
 }));
+let mockMonthFailure: Error | null = null;
 const mockSaveEmployment = jest.fn();
 // These assertions exercise real rule results; cooperative scheduling has dedicated lifecycle tests.
 jest.mock("@/features/analysis/use-prepared-monthly-analysis", () => ({
@@ -74,6 +77,12 @@ jest.mock("@/features/analysis/use-prepared-monthly-analysis", () => ({
     request: import("./monthly-analysis").MonthlyAnalysisRequest | null,
     active: boolean,
   ) => {
+    if (request && active && mockMonthFailure) {
+      const { MonthPreparationError } = jest.requireActual<
+        typeof import("./analysis-preparation-failure")
+      >("./analysis-preparation-failure");
+      throw new MonthPreparationError(mockMonthFailure);
+    }
     const actual = jest.requireActual<typeof import("./monthly-analysis")>("./monthly-analysis");
     return MockReact.useMemo(
       () =>
@@ -496,6 +505,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     mockRouteMonth = "2027-01";
     mockAnnualSection = undefined;
     mockAnnualFatalError = null;
+    mockMonthFailure = null;
     mockAnnualInputFailure = null;
     mockAnnualReportValue = null;
     mockAnnualCoreValue = null;
@@ -735,6 +745,25 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.getByTestId(`analysis-month-page-${presentYear}-03`)).toBeTruthy();
   });
 
+  it("keeps the check reachable after a monthly calculation failure and retries the selected month", async () => {
+    mockRouteMonth = "2026-11";
+    mockMonthFailure = new Error("RUST_MONTH_INPUT_CHANGED");
+    const screen = await render(
+      <AppErrorBoundary>
+        <AnalysisScreen />
+      </AppErrorBoundary>,
+    );
+    expect(await screen.findByText("Monatsauswertung derzeit unvollständig")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Dienstplan-Check öffnen"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/compliance-details",
+      params: { month: "2026-11" },
+    });
+    mockMonthFailure = null;
+    await fireEvent.press(screen.getByText("Berechnung erneut versuchen"));
+    expect(await screen.findByRole("button", { name: /^Dienstplan-Check,/ })).toBeTruthy();
+  });
+
   it("retains a tab-reset request while a detail page is focused and applies it when the overview returns", async () => {
     mockRouteMonth = "2030-03";
     const screen = await render(<AnalysisScreen />);
@@ -781,6 +810,21 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     await screen.rerender(<AnalysisScreen />);
     expect(screen.getByRole("button", { name: "Dienstplan-Check, Nicht verfügbar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Gehalt,/ })).toBeTruthy();
+  });
+
+  it("opens the first workplace questionnaire even when the checks cannot be calculated", async () => {
+    mockRouteMonth = "2026-11";
+    mockComplianceResult = null;
+    mockCheckError = "Prüfung fehlgeschlagen";
+    const db = { getFirstAsync: async () => null } as unknown as SQLiteDatabase;
+    const screen = await render(
+      <WorkplaceDatabase.Provider value={db}>
+        <ComplianceDetailsScreen />
+      </WorkplaceDatabase.Provider>,
+    );
+    expect(await screen.findByText("Welche Regeln gelten bei euch im Betrieb?")).toBeTruthy();
+    expect(screen.getByText("Direkt zum Dienstplan-Check")).toBeTruthy();
+    expect(screen.getByText("Arbeitszeitprüfung erneut versuchen")).toBeTruthy();
   });
 
   it("opens time premiums for a tariff month without shifts", async () => {
@@ -1612,7 +1656,7 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
     expect(screen.queryByText("Jahresauswertung nicht verfügbar")).toBeNull();
   });
 
-  it("passes unexpected annual errors to the global boundary", async () => {
+  it("keeps the check accessible when annual preparation fails", async () => {
     mockRouteMonth = "2026-08";
     mockAnnualFatalError = new Error("unexpected annual render failure");
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
@@ -1624,7 +1668,9 @@ describe("reviewed Generation 1 rule coverage in analysis screens", () => {
 
     await openAnalysisMode(screen, "Jahresauswertung öffnen");
 
-    expect(await screen.findByText("Diagnosecode: APP_RENDER_FAILED")).toBeTruthy();
+    expect(await screen.findByText("Jahresauswertung derzeit unvollständig")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check öffnen" })).toBeTruthy();
+    expect(screen.queryByText("Diagnosecode: APP_RENDER_FAILED")).toBeNull();
     consoleError.mockRestore();
   });
 

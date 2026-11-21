@@ -33,11 +33,13 @@ export function ComplianceDayList({
   shifts,
   showPlanning,
   timeZone,
+  hasWorkplaceFindings = false,
 }: {
   readonly compliance: MonthlyComplianceResult;
   readonly shifts: readonly ShiftEntry[];
   readonly showPlanning: boolean;
   readonly timeZone: string;
+  readonly hasWorkplaceFindings?: boolean;
 }) {
   const palette = usePalette();
   const visible = useMemo(
@@ -83,7 +85,9 @@ export function ComplianceDayList({
     display.unavailable;
 
   return (
-    <View style={{ gap: SPACING.lg, flexGrow: sections.length ? undefined : 1 }}>
+    <View
+      style={{ gap: SPACING.lg, flexGrow: sections.length || hasWorkplaceFindings ? undefined : 1 }}
+    >
       {sections.map(({ title, id, rows }) => (
         <View key={id} testID={id} style={{ gap: SPACING.xs }}>
           <Text
@@ -132,7 +136,7 @@ export function ComplianceDayList({
           </Text>
         </SurfaceCard>
       ) : null}
-      {!sections.length && !limited ? (
+      {!sections.length && !limited && !hasWorkplaceFindings ? (
         <View
           testID="check-complete"
           style={{ flexGrow: 1, minHeight: 280, justifyContent: "center", alignItems: "center" }}

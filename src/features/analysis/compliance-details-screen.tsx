@@ -1,3 +1,5 @@
+import { restFindingKeys } from "@/engine/workplace-resolution";
+import { WorkplacePanel } from "@/features/workplace/panel";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { View } from "react-native";
@@ -26,6 +28,7 @@ import { ScreenScrollView } from "@/ui/screen-layout";
 import { ReportScrollView } from "@/ui/report-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { Text } from "@/ui/text";
+import { SecondaryButton } from "@/ui/form-controls";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
@@ -97,6 +100,7 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
     return (
       <ReportScrollView bottomPadding={bottomPadding}>
         <CheckPeriod period={formatMonthTitle(month)} />
+        <WorkplacePanel period={month} />
         <RuleComputationNotice
           failure={window}
           onRetry={() => setRetryRevision((value) => value + 1)}
@@ -106,11 +110,14 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
     );
   if (monthlyCompliance.error) {
     return (
-      <LoadFailureView
-        message={monthlyCompliance.error}
-        onRetry={monthlyCompliance.retry}
-        title="Arbeitszeitprüfung fehlgeschlagen"
-      />
+      <ReportScrollView bottomPadding={bottomPadding}>
+        <CheckPeriod period={formatMonthTitle(month)} />
+        <WorkplacePanel period={month} />
+        <AnalysisCoverageNote message={monthlyCompliance.error} />
+        <SecondaryButton onPress={monthlyCompliance.retry}>
+          Arbeitszeitprüfung erneut versuchen
+        </SecondaryButton>
+      </ReportScrollView>
     );
   }
   if (!ready || profile === null || compliance === null) return <LoadingView />;
@@ -143,12 +150,17 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
           </Text>
         </View>
       </View>
-      <ComplianceDayList
-        compliance={sourceCompliance!}
-        showPlanning={preferences.enabled !== false}
-        shifts={window?.ok ? window.value : EMPTY_SHIFTS}
-        timeZone={profile.timeZone}
-      />
+      <WorkplacePanel period={month} restKeys={restFindingKeys(compliance.issues)}>
+        {(count) => (
+          <ComplianceDayList
+            hasWorkplaceFindings={count > 0}
+            compliance={sourceCompliance!}
+            showPlanning={preferences.enabled !== false}
+            shifts={window?.ok ? window.value : EMPTY_SHIFTS}
+            timeZone={profile.timeZone}
+          />
+        )}
+      </WorkplacePanel>
     </ScreenScrollView>
   );
 }

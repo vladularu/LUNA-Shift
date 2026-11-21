@@ -129,7 +129,7 @@ export default function AnalysisBackgroundPreparation() {
     runtime.prepare({
       monthlyCalculator,
       netCalculator,
-      checksCalculator,
+      checksCalculator: profile.workplaceHistory?.length ? null : checksCalculator,
       months,
       profile,
       savedProfile,

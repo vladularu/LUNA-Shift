@@ -1,3 +1,5 @@
+import { WorkplaceCheckSummary } from "@/features/workplace/check-summary";
+import { restFindingKeys } from "@/engine/workplace-resolution";
 import { incompleteSpecialDuties } from "@/domain/special-duty-review";
 import { targetCalculationCaption } from "./target-calculation-caption";
 import { router } from "expo-router";
@@ -177,26 +179,34 @@ export function MonthOverview({
           />
         ),
         CHECK: (
-          <CheckListCard
-            reserveLoadingSpace
-            counts={check?.counts ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
-            categories={check?.categories}
-            status={status}
-            loading={status === "Wird geprüft …"}
-            showPlanning={showPlanning}
-            weekendAssessment={compliance?.weekendAssessment}
-            onPress={() => router.push(complianceDetailsRoute(month))}
-            caption={
-              !data.complianceShifts.ok
-                ? "Für die Prüfung fehlen Berechnungsdaten."
-                : (checkError ??
-                  (emptyMonth
-                    ? emptyHorizon
-                      ? "Bei neuen Einträgen wird die Prüfung automatisch aktualisiert."
-                      : "Die Prüfung berücksichtigt auch Einflüsse anderer Monate."
-                    : undefined))
-            }
-          />
+          <WorkplaceCheckSummary
+            period={month}
+            restKeys={compliance ? restFindingKeys(compliance.issues) : undefined}
+          >
+            {(workplaceCount) => (
+              <CheckListCard
+                workplaceCount={workplaceCount}
+                reserveLoadingSpace
+                counts={check?.counts ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
+                categories={check?.categories}
+                status={status}
+                loading={status === "Wird geprüft …"}
+                showPlanning={showPlanning}
+                weekendAssessment={compliance?.weekendAssessment}
+                onPress={() => router.push(complianceDetailsRoute(month))}
+                caption={
+                  !data.complianceShifts.ok
+                    ? "Für die Prüfung fehlen Berechnungsdaten."
+                    : (checkError ??
+                      (emptyMonth
+                        ? emptyHorizon
+                          ? "Bei neuen Einträgen wird die Prüfung automatisch aktualisiert."
+                          : "Die Prüfung berücksichtigt auch Einflüsse anderer Monate."
+                        : undefined))
+                }
+              />
+            )}
+          </WorkplaceCheckSummary>
         ),
         PREMIUM: (
           <EarnedPremiumsCard

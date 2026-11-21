@@ -55,7 +55,10 @@ export function complianceIssueSummary(issue: ComplianceIssue): string {
       const counts = facts.assessment.windows
         .filter(
           (window) =>
-            window.assessmentComplete && window.unknownCount === 0 && window.freeCount < 2,
+            !window.workplaceRuleApplies &&
+            window.assessmentComplete &&
+            window.unknownCount === 0 &&
+            window.freeCount < 2,
         )
         .map((window) => window.freeCount);
       return `${Math.min(...counts)} von 4 Wochenenden vollständig frei.`;

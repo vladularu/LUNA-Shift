@@ -1,3 +1,4 @@
+import { restFindingKeys } from "@/engine/workplace-resolution";
 import { employmentProfileAt } from "@/domain/employment-history";
 import type { CompliancePreparation } from "@/engine/compliance-preparation";
 import type { PreparedRestProvider } from "@/engine/compliance-rest-kernel";
@@ -592,6 +593,9 @@ export function* buildAnnualAvailableReportSteps(
             (available.pay?.careAllowanceAmount ?? 0)
           : 0,
         ...countChecks(compliance?.issues ?? []),
+        ...(profile.workplaceHistory?.length
+          ? { legalRestKeys: restFindingKeys(compliance?.issues ?? []) }
+          : {}),
         checkCounts: classifyChecks(compliance?.issues ?? []),
       }),
     );

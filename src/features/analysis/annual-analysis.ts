@@ -6,6 +6,7 @@ import type {
 } from "@/domain/types";
 import type { RuleResolver } from "@/rules/rule-resolver";
 import {
+  annualComplianceInput,
   annualInputKey,
   buildAnnualAvailableReportSteps,
   createAnnualAvailableReportCache,
@@ -17,6 +18,9 @@ import { readSharedAnalysisResult, requestSharedAnalysis } from "./shared-analys
 import { annualMonthPartsSession } from "./annual-month-parts";
 import { buildAnnualNativeReportSteps } from "./annual-native-report";
 import type { AnalysisWorkYield } from "./analysis-work-queue";
+import { restFindingKeys } from "@/engine/workplace-resolution";
+import { calculateMonthlyComplianceSteps } from "@/engine/compliance";
+import { classifyChecks, countChecks, selectAnnualCheckDisplay } from "./check-visibility";
 import { annualRustSteps, type AnnualRustCalculator } from "./annual-rust-bridge";
 
 export interface AnnualAnalysisRequest {
@@ -145,6 +149,48 @@ function* calculateAnnualAnalysis<Step extends AnalysisWorkYield>(
   );
   return retainAnnualAnalysis(request, key, persistent, value);
 }
+/** Keep the native time and pay sections while applying the same dated checks as the month view. */
+function* annualReportWithWorkplaceChecks(
+  request: AnnualAnalysisRequest,
+  calculator: AnnualRustCalculator,
+) {
+  const report = yield* annualRustSteps(() => calculator.report(request));
+  if (!request.profile.workplaceHistory?.length) return report;
+  const months = [];
+  for (const row of report.months) {
+    const { profile, shifts } = annualComplianceInput(
+      row.month,
+      request.entries,
+      request.profile,
+      request.referenceDate,
+      request.ruleResolver,
+      request.youthProtection,
+    );
+    if (!shifts || row.complianceComplete === false) {
+      months.push(row);
+      continue;
+    }
+    const result = yield* calculateMonthlyComplianceSteps(row.month, shifts, profile.timeZone, {
+      employmentProfile: profile,
+      referenceDate: request.referenceDate,
+      ruleResolver: request.ruleResolver,
+      youthProtection: request.youthProtection,
+      federalState: profile.federalState,
+      holidayRegion: profile.holidayRegion,
+      weeklyMinutes: profile.weeklyMinutes,
+      regularRotatingNightWork: profile.regularRotatingNightWork,
+      sundayHolidayWorkEligible: profile.sundayHolidayWorkEligible,
+      allEmploymentWorkRecorded: profile.allEmploymentWorkRecorded,
+    });
+    months.push({
+      ...row,
+      ...countChecks(result.issues),
+      checkCounts: classifyChecks(result.issues),
+      legalRestKeys: restFindingKeys(result.issues),
+    });
+  }
+  return selectAnnualCheckDisplay({ ...report, months }, true);
+}
 export function requestAnnualAnalysis(
   request: AnnualAnalysisRequest,
   key: string,
@@ -174,7 +220,7 @@ export function requestAnnualAnalysis(
     restore: calculator ? undefined : parts.restore,
     steps: (onCore) =>
       calculator
-        ? annualRustSteps(() => calculator.report(request))
+        ? annualReportWithWorkplaceChecks(request, calculator)
         : calculateAnnualAnalysis(
             request,
             key,

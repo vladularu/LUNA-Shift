@@ -8535,6 +8535,12 @@
       "reason": "User-approved special-duty recovery: extract the tested editor review and atomic shift-save actions into focused hooks to retain the existing architecture size budgets, calculation behavior and notification handling."
     },
     {
+      "path": "src/application/working-time-provider.tsx",
+      "kind": "modified",
+      "sha256": "7312ace7fe18ca1ea11fdf8fc92d792997b55f2386b87dba48b6bfd282a6a425",
+      "reason": "Preview-Prüfung mit datierten Betriebsvereinbarungen, Ausgleich und zusammengeführten Hinweisen."
+    },
+    {
       "path": "src/composition/analysis-cache-diagnostics.ts",
       "kind": "added",
       "sha256": "e52237300d21ec659d5ffcb9e514c9a24f19b1bc570d7d9dd6d999a2386e3708",
@@ -8591,7 +8597,7 @@
     {
       "path": "src/domain/planning-weekend-policy.ts",
       "kind": "added",
-      "sha256": "64d7ede19e6c57aa399ab8d7701d89941bd24b32648f82038c27da16bfec16e3",
+      "sha256": "3ba529d06a215f8845982fedf2cca93b30ce61ce58402311cfd80c8bdf7d3585",
       "reason": "User-requested local check correction: Restore the explicitly requested optional third-weekend trigger with transparent BGW source and no invented legal maximum. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Represent and validate calendar-aligned four-week evidence and the sourced BAuA two-free-weekend criterion."
     },
     {
@@ -8627,8 +8633,14 @@
     {
       "path": "src/domain/types.ts",
       "kind": "modified",
-      "sha256": "2eaef3347e53da3408ab8a53549581becea7c3521a952a42bf952b0d61742c7b",
+      "sha256": "a7f1a9feb3142edb19a164c65c9d0eb713ad90a9e6dad9a4fef5029d6a287c42",
       "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+    },
+    {
+      "path": "src/domain/workplace-rules.ts",
+      "kind": "added",
+      "sha256": "235d3ac4bb5f895291ac35e9adb718c0bf90af629c74776f1bf73cfd92147ea8",
+      "reason": "Validiert die Antworten und ordnet sie nach ihrem Gültigkeitsdatum den betrieblichen Regeln zu. Allow an explicit whole-history rule change while preserving other topics."
     },
     {
       "path": "src/engine/compliance-issue.ts",
@@ -8667,6 +8679,12 @@
       "reason": "User-authorized batched annual Rust integration, 2026-11-12. Define typed prepared rest facts and exact context keys without introducing a second domain calculation. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
     },
     {
+      "path": "src/engine/compliance-sequences.ts",
+      "kind": "modified",
+      "sha256": "a3dea51e91beed9b21b82385ba12a77455e27f6707bb1fd935da435847c7e0f7",
+      "reason": "Preview-Prüfung mit datierten Betriebsvereinbarungen, Ausgleich und zusammengeführten Hinweisen."
+    },
+    {
       "path": "src/engine/compliance-sunday-holiday-rest.ts",
       "kind": "modified",
       "sha256": "4e8e318b535b0e04762842ff15d950d6fbaba0e9f9328bfd650a7c1d721557b5",
@@ -8681,13 +8699,13 @@
     {
       "path": "src/engine/compliance.ts",
       "kind": "modified",
-      "sha256": "26f49b6e37fd1e780c424c4860690b7c321eedf973833ffa9ece234693c8f95c",
+      "sha256": "b0f61b793bf418e4c59bb62091eb8cee6204a1f0875b9bb9f8cb0693bdab36c1",
       "reason": "User-authorized batched annual Rust integration, 2026-11-12. Extract and reuse the original full calendar and legal-context preparation, with optional request-local cache and rest facts. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
     },
     {
       "path": "src/engine/dated-compliance.ts",
       "kind": "modified",
-      "sha256": "8351b69d54be6391616191ef4665a62a4191a1fefc8baf649884f9f7f6a7935e",
+      "sha256": "f06c739bf0ea0f8094dd8820200f33005ebdae38dd3e3f45d1ddda87e4643a58",
       "reason": "User-authorized batched annual Rust integration, 2026-11-12. Share the exact employment and timezone context splitting between monthly evaluation and native preparation. Preview only; TestFlight unchanged; iPhone latency acceptance pending."
     },
     {
@@ -8717,8 +8735,8 @@
     {
       "path": "src/engine/planning-weekends.ts",
       "kind": "added",
-      "sha256": "c486e1beaa319d48daf6215bd52343b418c571209deaa82d076bbf4736d2a7b3",
-      "reason": "User-requested local check correction: Recognize consecutive weekend duty commitments from actual recorded intervals across months and zones; blank dates never prove freedom. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Replace the three-weekend trigger with one monthly observation for fully assessable four-week windows below two free weekends; preserve uncertain coverage. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Annual/swipe package 2026-11-11: Reuse per-duty weekend evidence with complete used-fact/time-zone signatures, same-revision/deletion invalidation, weak ownership and a bounded zone map. Preserve all weekend definitions and findings. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+      "sha256": "cdf21441336a5425846da474240f80da43cdcbac6a46ba91f30c6a68019522a4",
+      "reason": "User-requested local check correction: Recognize consecutive weekend duty commitments from actual recorded intervals across months and zones; blank dates never prove freedom. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Replace the three-weekend trigger with one monthly observation for fully assessable four-week windows below two free weekends; preserve uncertain coverage. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Annual/swipe package 2026-11-11: Reuse per-duty weekend evidence with complete used-fact/time-zone signatures, same-revision/deletion invalidation, weak ownership and a bounded zone map. Preserve all weekend definitions and findings. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Stellt die bestehende Erkennung belegter Wochenenden auch für den persönlichen Wochenendrhythmus bereit."
     },
     {
       "path": "src/engine/salary-payment.ts",
@@ -8847,6 +8865,18 @@
       "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
     },
     {
+      "path": "src/engine/workplace-check.ts",
+      "kind": "added",
+      "sha256": "4e292837de1a65be186487f996206ef6413a9663f1f6744b6f47c1240f8d0c20",
+      "reason": "Prüft vereinbarte und übliche Dienstfolgen, Wochenenden, Nachtblöcke, Erholung und Dienstzeiten anhand der datierten Antworten. Summarize weekend evidence once and preserve shift-specific confirmations. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte. Betriebliche Ruhezeit nur unter der hinterlegten Mindestdauer melden."
+    },
+    {
+      "path": "src/engine/workplace-resolution.ts",
+      "kind": "added",
+      "sha256": "1b0541245c2a503217b4f18646f1cab6697fd2198dd2cc44714522a02bd5f28c",
+      "reason": "Preview-Prüfung mit datierten Betriebsvereinbarungen, Ausgleich und zusammengeführten Hinweisen."
+    },
+    {
       "path": "src/features/account/account-screen.tsx",
       "kind": "modified",
       "sha256": "4347e759e4718cf40a8e8af2c741f893f6eb674dc316b9677e4260f04abcb18e",
@@ -8867,7 +8897,7 @@
     {
       "path": "src/features/analysis/analysis-background-preparation.tsx",
       "kind": "modified",
-      "sha256": "127bcd38afed5c85b8c54f0881ab059d1a8ba6354d2f9bb773f5bf0c83d5a5da",
+      "sha256": "0f04d712a8b534bd9672fc53ebac4e74d553bcda72dbc8899811a72811aec162",
       "reason": "Preview monthly checks package 4, 2026-11-16: Supply the existing background runtime with the bundle-gated native checks calculator. Render output remains null, with no JSX or UI change. Implementation only; iPhone acceptance pending. TestFlight unchanged."
     },
     {
@@ -8885,8 +8915,8 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "9d798367851cb721eeffa8a1c4555445f82479d257098dcea15d71f6f32264de",
-      "reason": "Preview salary preparation package5, 2026-11-16: Regenerate the existing calculation identity for complete native salary preparation. Engine-specific salary keys prevent reuse of incompatible partial results. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Regenerate the existing mandatory calculation-source contract after scoped declaration cleanup. No calculation formula changed. A later separately authorized OTA may invalidate cached analysis once; no cache guard is bypassed. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved. Required cache-contract regeneration for the device-evidence scheduler correction on 2026-11-16. The unchanged contract generator includes analysis-work-queue.ts among calculation-source identities, so refresh only its generated version using the existing command and review the one-time invalidation/recomputation of derived analysis results. Keep all saved shifts, profiles, source calculation formulas, native compatibility, generator policy and accepted TestFlight baseline unchanged. This adds no cache-check exception; runtime-policy and cache-version isolation tests must pass before a new Preview export. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Tariffortrechnung aus iOS Preview Build 56. Kennung fuer die Berechnungsquellen dieses Git-Stands neu erzeugt."
+      "sha256": "8c55f98c373256da1d2f8c1722459775b687d46b6eecfdcd145070ad4449db9f",
+      "reason": "Preview salary preparation package5, 2026-11-16: Regenerate the existing calculation identity for complete native salary preparation. Engine-specific salary keys prevent reuse of incompatible partial results. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Regenerate the existing mandatory calculation-source contract after scoped declaration cleanup. No calculation formula changed. A later separately authorized OTA may invalidate cached analysis once; no cache guard is bypassed. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved. Required cache-contract regeneration for the device-evidence scheduler correction on 2026-11-16. The unchanged contract generator includes analysis-work-queue.ts among calculation-source identities, so refresh only its generated version using the existing command and review the one-time invalidation/recomputation of derived analysis results. Keep all saved shifts, profiles, source calculation formulas, native compatibility, generator policy and accepted TestFlight baseline unchanged. This adds no cache-check exception; runtime-policy and cache-version isolation tests must pass before a new Preview export. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Tariffortrechnung aus iOS Preview Build 56. Kennung fuer die Berechnungsquellen dieses Git-Stands neu erzeugt. Die neuen Berechnungsquellen für betriebliche Dienstplanregeln erhalten eine eigene Berechnungsversion für gespeicherte Auswertungen. Invalidate calculations prepared before the calendar snapshot correction. Refresh derived calculation identity for corrected workplace findings. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte. Betriebliche Ruhezeit nur unter der hinterlegten Mindestdauer melden."
     },
     {
       "path": "src/features/analysis/analysis-compliance-cache.ts",
@@ -8949,6 +8979,12 @@
       "reason": "User-authorized Preview write-performance package 2026-11-11: Inject the opt-in diagnostic observer into the repository. Database/time-zone cache lifetime, bundle identity and SHA-256 configuration stay unchanged. Exact persisted rows and eviction outcomes match in two fixed-input SQLite replay rounds. No UI, legal/pay-rule, live data, dependency, schema, native or TestFlight update. User-authorized cold-start persistence package 2026-11-11: Package B: use the checked calculation identity rather than a running OTA ID and enable the same guarded persistence for embedded starts. Keep database/time-zone scope, SHA-256 and write diagnostics unchanged. Preview only; TestFlight remains unchanged and device acceptance is pending. Annual restart diagnosis 2026-11-12: Wire optional annual row and annual-month diagnostic observers at the persistent cache provider. The complete calculation contract, resolver identity, digest validation and cache namespace are unchanged. Authorized iOS Preview only; no performance-fix claim; TestFlight/Production unchanged; device cause diagnosis pending."
     },
     {
+      "path": "src/features/analysis/analysis-preparation-failure.tsx",
+      "kind": "added",
+      "sha256": "086274575b565e99e8af7beabef038e71777d4b80923e372917141cc4880c469",
+      "reason": "Keep check navigation and local retry available when report preparation fails."
+    },
+    {
       "path": "src/features/analysis/analysis-salary-input-store.ts",
       "kind": "modified",
       "sha256": "e82a3fae45c48545b9991b0c4dcb1ce9b079f81e15f30cdf80ef51e3980e6058",
@@ -8963,8 +8999,8 @@
     {
       "path": "src/features/analysis/analysis-screen.tsx",
       "kind": "modified",
-      "sha256": "dd4612eec13b771cfdf1264e965634fc613ee81efdf55063cc55e57a8c6116e3",
-      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "d638bcfcf68a6ceaec506a4c0849c243a063e4ac72d37665dde32115bf14f43f",
+      "reason": "Package A: pass navigation focus as annual work activity rather than request validity. Preserve existing monthly presentation, analysis scene, compact net UI and Luftig. Device acceptance pending. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Dienstplan-Check local implementation: Use the common check title and forward the existing optional profile timezone into the secondary result renderer. Local validation only; new iPhone acceptance and OTA approval remain separate. Isolated master integration on 2026-11-09: retain existing master salary/export preparation, unrelated layout and custom sorting-card geometry. Local integration and tests authorized; no release or TestFlight-baseline acceptance is implied. Integrate the user-approved annual-payment status and incomplete special-duty recovery on current master. Preserve known gross, strict full net and annual-reference requirements, direct existing-screen correction, selected atomic transfers and unrelated master UI behavior. User-authorized analysis optimization 2026-11-11: start foreground annual work only for the selected pager page while its route is focused. Preserve valid cached reports on hidden pages, background warmup, every calculation, monthly behavior, layout and stored data. Four mounted-pager regressions reproduce three active years before the change. No native, package, schema or TestFlight software change; new Preview device acceptance pending. Annual/swipe package 2026-11-11: Provide period-correct existing headers and a lightweight preparation state on distant native pages so rapid swipes never traverse completely empty pages; preserve normal report layout and calculation gating. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. User-authorized local page-transition optimization 2026-11-17: preserve the selected report preparation and native ScrollView across first measurement, month/year changes and window recentering. Retain bounded neighbour preparation and reject obsolete layout events. No calculation, stored-data, native-runtime or visual-design change. Physical iPhone performance acceptance and any new publication remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Render one stationary analysis header above the pager. Preserve the actually displayed monthly period and existing annual active-month count using display metadata from the active page only; hide inner page headers in ready, loading and rule-error states. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Contain monthly and annual calculation failures within the selected overview period."
     },
     {
       "path": "src/features/analysis/analysis-view-controls.tsx",
@@ -8999,20 +9035,20 @@
     {
       "path": "src/features/analysis/annual-analysis.ts",
       "kind": "modified",
-      "sha256": "5165ded00909ce8ae87b8ff5a5ffa60314b56b667c5389f2a20ce63bd8763af0",
+      "sha256": "26664f85364426beabfe6b3690c3ea1a0c48d04051118327425519febf212d46",
       "reason": "Preview Rust annual package 3, 2026-11-16: Inject the optional native year calculation into the original shared/persistent annual task; use engine-bound keys and skip unused legacy monthly-part reads. iPhone package-3 acceptance remains pending. TestFlight unchanged."
     },
     {
       "path": "src/features/analysis/annual-core-report.ts",
       "kind": "modified",
-      "sha256": "2b4f122ef27f3dbf04aac8ca6a773d9dabb083e10c9f3fbf08b7ddd742028b9b",
+      "sha256": "ed23d5dcc15350913ebf1cd348f42c63c982caff200fde5dfdca1a97601805c2",
       "reason": "User-authorized batched annual Rust integration, 2026-11-12. Share exact selected monthly inputs and prepared contexts with the existing annual report builder and monthly cache keys. Preview only; TestFlight unchanged; iPhone latency acceptance pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
     },
     {
       "path": "src/features/analysis/annual-details-screen.tsx",
       "kind": "modified",
-      "sha256": "94bc359872a7e2586e4d60e7301c78b4b8f4e87cc50cf181b3b6a8f0918a90b5",
-      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year. Package A: pause annual detail work on blur without discarding results for still valid inputs, across all six detail sections. Preserve routes and existing layout. Device acceptance pending. Dienstplan-Check local implementation: Use the common Dienstplan-Check title for the existing annual check route. Local validation only; new iPhone acceptance and OTA approval remain separate."
+      "sha256": "6cb61c5db561cb98a48b94b60e2ddfa3d86ea640539c2d1404df65a33e0685f7",
+      "reason": "Paket 4C: validate NET section, title it Netto and open the selected month through its existing /net-pay route without changing parent analysis year. Package A: pause annual detail work on blur without discarding results for still valid inputs, across all six detail sections. Preserve routes and existing layout. Device acceptance pending. Dienstplan-Check local implementation: Use the common Dienstplan-Check title for the existing annual check route. Local validation only; new iPhone acceptance and OTA approval remain separate. Display the failed annual calculation locally and retain access to the duty check."
     },
     {
       "path": "src/features/analysis/annual-month-parts.ts",
@@ -9047,8 +9083,8 @@
     {
       "path": "src/features/analysis/annual-overview.tsx",
       "kind": "modified",
-      "sha256": "b90d42bfc71dd6b62746ad73148d84581c94b78d5a536cc552364da4e342fc1a",
-      "reason": "Paket 4C: add NET sibling to PAY in annual overview, honoring existing independent visibility/order preferences and selected year. Gross card unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "c50a60e73646ee28830eb2c61eac4c9f045b6848bf9bd6a67240fac058761af9",
+      "reason": "Paket 4C: add NET sibling to PAY in annual overview, honoring existing independent visibility/order preferences and selected year. Gross card unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/annual-premium-report.tsx",
@@ -9071,13 +9107,13 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "89a55157f68d34786207d3e3ec5ec1d55cc2e7125ba8313a719ec1ce7346911e",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate prerequisite and scope disclosure into one expandable annual status, with bounded empty copy; retain original counts and month navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Allow the analysis overview to omit its inner annual header while retaining the existing standalone default and all report/payment calculations and content. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "e48c5a43537ad9c391dcb4baccf0680e45b0637d49a61493bf382cb0e2af14e5",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate prerequisite and scope disclosure into one expandable annual status, with bounded empty copy; retain original counts and month navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Allow the analysis overview to omit its inner annual header while retaining the existing standalone default and all report/payment calculations and content. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Zeigt die persönlichen Hinweise beim bewussten Öffnen der Jahresprüfung. Place workplace findings after the annual check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/annual-report.ts",
       "kind": "modified",
-      "sha256": "e61485b7864319a152e686621260f95bfd1a80838f95306e4af8146bd59fbaff",
+      "sha256": "fd2191e904ef968bddd2773acba2086b817f4926cd8fdb0ed8a50bdbbf8c8543",
       "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
     },
     {
@@ -9137,8 +9173,8 @@
     {
       "path": "src/features/analysis/check-detail-layout.tsx",
       "kind": "added",
-      "sha256": "6de17508707ba38750a304e03712da8b2f9f9e3602d0d5b7f0b408dee60ca749",
-      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
+      "sha256": "89fdb8ffb260a7f783d25af478bf9d8eef8fa28c2d9006426044f366de3de371",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
     },
     {
       "path": "src/features/analysis/check-display-groups.ts",
@@ -9155,8 +9191,8 @@
     {
       "path": "src/features/analysis/check-issue-screen.tsx",
       "kind": "added",
-      "sha256": "e3d83f7015b90d8f73c1efaa083f11ce3e0015cb2f8436a534c8ee1102f1ae56",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "527ce605bace4fadb4f760d3514b5b4a76b925b8804d2b9bdfb429f693fdb536",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
     },
     {
       "path": "src/features/analysis/check-period-label.ts",
@@ -9203,14 +9239,14 @@
     {
       "path": "src/features/analysis/compliance-day-list.tsx",
       "kind": "modified",
-      "sha256": "05bd883bd6399e01fd1c794b3bc8909e0a0a90b0734b5e970929d472f649caf9",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "8a5661a64edfc4bcc7f61f662c2aaeba2135711eb3f90be4b6578ff776f5c220",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/compliance-details-screen.tsx",
       "kind": "modified",
-      "sha256": "5dea3c0d983e924874ae872664d95029c8700f277e86b683642ee31b298227e7",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "507f9034192f1cfa185c418e88494ee9cc435baadf715614403e0a7d5151deb4",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Bietet die erstmalige Erfassung im Monatscheck an und zeigt die Hinweise für den gewählten Monat. Keep workplace settings available when compliance preparation fails. Place workplace findings after the monthly check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/compliance-details.tsx",
@@ -9221,8 +9257,8 @@
     {
       "path": "src/features/analysis/compliance-issue-content.tsx",
       "kind": "modified",
-      "sha256": "bbc0b6ac382f61e8639a385e223f07b533f113c1d6abba1ac926ea50d4f81d6c",
-      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
+      "sha256": "546cee2bec5b4ee62bdde1dbfb34a255d3a27d3c23c555b04411ed79be98c48b",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
     },
     {
       "path": "src/features/analysis/compliance-issue-legacy.ts",
@@ -9233,7 +9269,7 @@
     {
       "path": "src/features/analysis/compliance-issue-summary.ts",
       "kind": "modified",
-      "sha256": "5b704490e92a837d48d39404f440a6a8a50c743c4b068d186789f8e125965068",
+      "sha256": "dfff5ba457787661817032b54d64e342d14c8eeff95180c9b043f297dd53ad67",
       "reason": " User-authorized scientific night/recovery rules: fourth consecutive night and post-series free time below 24/48 hours, after at least two nights. Keep Info icons, neutral surfaces and petrol borders. Local implementation verified with 10506 unit and 1918 component tests. Preview OTA explicitly authorized on 2026-11-08; device acceptance of the new rules remains pending. Preserve the served Preview e6a1ade7, including Luftig and annual-net/PDF parity. Weekend implementation: Summarize the tightest eligible four-week window from validated facts rather than calendar-month free counts."
     },
     {
@@ -9245,8 +9281,8 @@
     {
       "path": "src/features/analysis/dashboard-cards.tsx",
       "kind": "modified",
-      "sha256": "e8249bfe41d98fc6ef1c9e49deec50bec782abb75756cfa22151e6f091943463",
-      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending. Dienstplan-Check local implementation: Use Dienstplan-Check and Gesetz & Tarif labels while preserving the neutral overview, original counts, icons, layout and navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Keep compact neutral month statistics visible independently of the recommendations switch. Compact-list implementation: Remove permanent monthly weekend statistics from the analysis card while retaining category counts and limited-check status. User-authorized annual-payment correction and iOS Preview OTA on 2026-11-10: Display the specific missing annual-payment reason; confirmed amounts, including zero, keep priority. All other published Preview sources remain exact; device acceptance remains pending. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "fbb62ceb153df3195c47f21a75291dfd66fca8283f2efaa6bf05ec97edbca7a8",
+      "reason": "Keep the overview neutral and use the approved Dienstfolgen & Erholung title. Display planning findings as Hinweis/Hinweise with a muted Info icon, preserving underlying counts, zero/loading states, legal warning labels/icons and navigation. iPhone visual acceptance of the Info-icon correction pending. Dienstplan-Check local implementation: Use Dienstplan-Check and Gesetz & Tarif labels while preserving the neutral overview, original counts, icons, layout and navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. Weekend implementation: Keep compact neutral month statistics visible independently of the recommendations switch. Compact-list implementation: Remove permanent monthly weekend statistics from the analysis card while retaining category counts and limited-check status. User-authorized annual-payment correction and iOS Preview OTA on 2026-11-10: Display the specific missing annual-payment reason; confirmed amounts, including zero, keep priority. All other published Preview sources remain exact; device acceptance remains pending. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/expandable-highlight-card.tsx",
@@ -9269,8 +9305,8 @@
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "42ff6a138320d6313ec58afdeb1aabcecf5d50890130e9f83fc99d2cb59ca761",
-      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "66dcf9aac73bade9bea4e7fc9ad684b3e7692f32fb3fd74ccf72744a48e6c839",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
     },
     {
       "path": "src/features/analysis/monthly-analysis.ts",
@@ -9347,8 +9383,8 @@
     {
       "path": "src/features/analysis/monthly-rust-source.ts",
       "kind": "added",
-      "sha256": "dbac12a6c853b8a09df058123e1f53fbccddfc84c881fb4137d48cc3984ec0b1",
-      "reason": "Preview Rust net package 2, 2026-11-15: Extract the existing coherent SQLite raw-source reader for both month and net calls; preserve every query and stored schema without writes. iPhone package-2 acceptance remains pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
+      "sha256": "3df089afbeb09054010bacaff8242552ef8df18077190302cabbbe7f180e3a32",
+      "reason": "Preview Rust net package 2, 2026-11-15: Extract the existing coherent SQLite raw-source reader for both month and net calls; preserve every query and stored schema without writes. iPhone package-2 acceptance remains pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Read the requested calendar snapshot and validate revisions of its live entries."
     },
     {
       "path": "src/features/analysis/monthly-rust-sql.ts",
@@ -9401,7 +9437,7 @@
     {
       "path": "src/features/analysis/planning-hint-presentation.ts",
       "kind": "added",
-      "sha256": "aebe71e6bf2efd527406f9d840077a5b6d1d23149fd8ad645b80e772c4997beb",
+      "sha256": "f689aabb98d5b98b9d4ac36fac815fca0ad979a24dc9dedb4391d5f062bbf9f5",
       "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use dynamic weekend facts and the correct BGW recommendation, keeping observation thresholds separate from legal or source-imposed limits. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Show concise observed free-weekend counts and the two-in-four-weeks planning criterion. Compact-list implementation: Provide concise row titles, explicit affected weekend periods and mutually exclusive 24/48-hour recovery wording. Simple end-user check: Keep recommendations concise and retain exclusive 24/48-hour guidance, showing actual free time without the redundant subtraction in list rows."
     },
     {
@@ -9413,7 +9449,7 @@
     {
       "path": "src/features/analysis/rest-check-details.tsx",
       "kind": "added",
-      "sha256": "01ee64fa9631acd15908eac517c08f67dd9c65d55d3a625ea2d87f2791cad3da",
+      "sha256": "e73350d7edaf7d978b90a616ac0436041eec7ede4c8b5c98a11b619def37dd03",
       "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
@@ -9503,7 +9539,7 @@
     {
       "path": "src/features/analysis/use-monthly-compliance.ts",
       "kind": "modified",
-      "sha256": "31402b233e7c206473df6517b7fa10d3345afb801a90541c570d34fe0d088476",
+      "sha256": "e2d8de643f653bbeddaf14b5e0be584c9720c97e75b9c25ebe3ec03e4f069acf",
       "reason": "Preview monthly checks package 4, 2026-11-16: Connect the unchanged overview/details hook to the native checks calculator. Share versioned cache keys, reject stale engine/input answers and preserve existing errors, retries, priorities and persistence. Implementation only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
     },
     {
@@ -9533,8 +9569,8 @@
     {
       "path": "src/features/analysis/use-prepared-monthly-analysis.ts",
       "kind": "modified",
-      "sha256": "f73966badf6aa9c07609c9f8486cf2c2592ac8843b7389a77b6d678882dd77db",
-      "reason": "Preview recovery package 1, 2026-11-15: Use the existing shared queue, cancellation and persistent cache with the Rust monthly calculator and its engine-bound request; retain the original hook/UI contract. Physical iPhone acceptance remains pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "46126ef4258a1cdefb4786c2eec1729ff9e81af6f7f2a3d0b3813d10535f1b7f",
+      "reason": "Preview recovery package 1, 2026-11-15: Use the existing shared queue, cancellation and persistent cache with the Rust monthly calculator and its engine-bound request; retain the original hook/UI contract. Physical iPhone acceptance remains pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Identify preparation failures so the report page can recover and be retried."
     },
     {
       "path": "src/features/analysis/use-simple-annual-report.ts",
@@ -9545,7 +9581,7 @@
     {
       "path": "src/features/analysis/weekend-assessment-summary.tsx",
       "kind": "added",
-      "sha256": "4e6ab9810d4778162238a13dbbce92d332025bc941d5f14d16a588620cd266cb",
+      "sha256": "3970314b8ef50703ae2cfe62a5b387bdc2147a9a5ad7b496864a3dc2914013ca",
       "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
     },
     {
@@ -10089,16 +10125,28 @@
       "reason": "Paket 3: separate service-label/time radio cards with atomic time choice and explicit legacy-both-on handling. R2 reorders these groups to Dienstfarben, Dienstbezeichnung, Zeitangabe, Kalenderinhalt, Feiertage/Sondertage, producing the user-confirmed A-B-E-F-G-C-D-H order. Preserve selection/persistence handlers, loading/visibility guards and all other controls. Requested calendar-content refinement: replace the three icon-and-switch rows with the shared vertical choice rows and independent checkbox values. Preserve the same three persisted preference setters, loading guard, time and label choices, service colors and holiday colors."
     },
     {
+      "path": "src/features/settings/check-preferences.tsx",
+      "kind": "modified",
+      "sha256": "cda2da7ff767852781262a198340bf09b3339d734a38d0825be007e95562c762",
+      "reason": "Stellt dem Fragebogen dieselbe geöffnete lokale Datenbank wie den übrigen Prüfeinstellungen bereit."
+    },
+    {
       "path": "src/features/settings/check-settings-screen.tsx",
       "kind": "modified",
-      "sha256": "6995dd82e0631a1b2612a52d50291660e8ae317045261f65f636661c8e81e564",
-      "reason": "Use the approved title/subtitle and scientific category while retaining both existing switches. Restore the planning setting card to the same neutral surface/border as the legal setting card per iPhone feedback. Preserve saved preferences and legal/youth behavior. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Explain the supported integrated Gesetz & Tarif scope while retaining the separate recommendation toggle and neutral settings cards. Local validation only; new iPhone acceptance and OTA approval remain separate."
+      "sha256": "169887c0e9d6f658daa0163083eef9ac7c5ed31e6ff200187741c1d2eeef66ee",
+      "reason": "Use the approved title/subtitle and scientific category while retaining both existing switches. Restore the planning setting card to the same neutral surface/border as the legal setting card per iPhone feedback. Preserve saved preferences and legal/youth behavior. iPhone visual acceptance of this correction pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Explain the supported integrated Gesetz & Tarif scope while retaining the separate recommendation toggle and neutral settings cards. Local validation only; new iPhone acceptance and OTA approval remain separate. Macht die gespeicherten Antworten unter Mehr und Dienstplan-Check wieder bearbeitbar."
     },
     {
       "path": "src/features/settings/employment-model-fields.tsx",
       "kind": "modified",
       "sha256": "b93acd88c72917bb3621b310488f098feb3d7ce50db2206f6673825d199fc93a",
       "reason": "Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options. Include the regular night or rotating shift selection using a short header and the full question above the existing answers."
+    },
+    {
+      "path": "src/features/settings/profile-date-field.tsx",
+      "kind": "modified",
+      "sha256": "0b2e7ee3baa6152f2f5d479a34e5cc51250acd71b4d07d7442afd57e4db65ca5",
+      "reason": "Let workplace calendar fields label a known free Saturday."
     },
     {
       "path": "src/features/settings/profile-selection.tsx",
@@ -10221,6 +10269,54 @@
       "reason": "User-authorized iOS Preview widget-performance correction 2026-11-17: reuse identical day/grid/shift data only within one input timeline, prepare it in cooperative cancellable app-side steps, avoid re-publication of exactly unchanged known inputs, and reuse property-list conversion only within one publication. Preserve complete widget values, shared-cache expiry, profile/settings/photo/date invalidation and existing synchronous release adapters. Numeric diagnostics distinguish summed CPU, longest slice and native publication. Existing mandatory widget tests remain and gain regression coverage. No calculation rules, native binary/configuration, dependencies, stored format or visual design change. Preview OTA authorized; TestFlight and Git delivery excluded; physical iPhone acceptance pending."
     },
     {
+      "path": "src/features/workplace/check-summary.tsx",
+      "kind": "added",
+      "sha256": "34a4856afa2ff0f35ff553752493e3a1cc3600de10b0bcaf3ce873c2e745e430",
+      "reason": "iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+    },
+    {
+      "path": "src/features/workplace/finding-details.tsx",
+      "kind": "added",
+      "sha256": "fe14da3c7efa5d262db45a656b85b4de831f2dff3cd175a1b6e32552b31297ff",
+      "reason": "Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
+    },
+    {
+      "path": "src/features/workplace/flow-layout.tsx",
+      "kind": "added",
+      "sha256": "63c31e838d028759b223b399fbc0fa9cd1af4e8dc1d2a70107019a671422ba9e",
+      "reason": "Use LUNA assets, accessible answer rows and a single safe-area footer for the dedicated guided flow. Bind both native soft edges to the scroll view and reuse the glass back button. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview."
+    },
+    {
+      "path": "src/features/workplace/overview.tsx",
+      "kind": "added",
+      "sha256": "74277780a57f7aa41b7bbedebf08b52710f80e7a185a8e2b0613fe8b53d18ab7",
+      "reason": "Group workplace preferences by topic and show their current and scheduled values. Use the shared topic icons in workplace settings. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
+    },
+    {
+      "path": "src/features/workplace/panel.tsx",
+      "kind": "added",
+      "sha256": "40f1a181b7316ec3486aa014d9c794605fa20056aaba4ebb398b51be470a91ce",
+      "reason": "Erfasst eigene Werte, übernimmt Beispiele auf Wunsch und bestätigt einzelne Ausnahmen im Dienstplan. Open the guided questions on first use and the grouped editable overview in settings. Present grouped check findings with their period and workplace basis. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+    },
+    {
+      "path": "src/features/workplace/questions.ts",
+      "kind": "added",
+      "sha256": "b593896c1756cfb2b9dff4245639f1628edd4f148dd63ac0c39da1da1220298b",
+      "reason": "Enthält die Pflegefragen, die Tarif- und Gesetzeserklärungen sowie die Eingabeformate für eigene Antworten. Use the short weekend and night topic labels approved for the iPhone screens. Simplify the workplace questions and preserve existing stored answers. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview."
+    },
+    {
+      "path": "src/features/workplace/rule-flow.tsx",
+      "kind": "added",
+      "sha256": "a9995603200c66b5839acac855d1514c22d6bc6babdc46c2edd1daa8b4dbeb9d",
+      "reason": "Use individual answer screens, relevant follow-up questions and per-rule editing with validity dates. Align the stepper, offer both validity scopes and disclose optional details. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+    },
+    {
+      "path": "src/features/workplace/store.tsx",
+      "kind": "added",
+      "sha256": "5de172fd60a077608a23d17e5b758060a3d82a4cd0aa515dfa3f006696b37a65",
+      "reason": "Speichert Antworten, Gültigkeitsverlauf und Dienstbestätigungen transaktional in den lokalen Einstellungen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+    },
+    {
       "path": "src/infrastructure/app-version.ts",
       "kind": "modified",
       "reason": "User-requested About LUNA Shift copy revision, 2026-11-17: remove the competitor/affiliation notice, describe personal shift planning and calendar customization in concise German du copy, and display the configured app version without the Expo SDK suffix on the About page. Keep all existing Preview fixes, native glass, sheet layout, other information sections, runtime label consumers, calculations and data unchanged. Device review and separate publication approval pending.",
@@ -10249,6 +10345,18 @@
       "kind": "modified",
       "sha256": "7668f747e8e8d6474e2b9e4be57a6e001109741e1019af28f6f7d3a6513f0494",
       "reason": "Package B cache validity: notify existing net-profile subscribers only after the local backup replacement transaction commits successfully. No SQL, backup format or schema change; no notification on rollback. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/infrastructure/database/local-backup-validation.ts",
+      "kind": "modified",
+      "sha256": "64b2bbb864df607b72522bdfc2ffc259f2b50a584458e5b4a5d10b7392a50f1c",
+      "reason": "Validiert die betrieblichen Regeln beim Import eines lokalen Backups."
+    },
+    {
+      "path": "src/infrastructure/database/preferences-repository.ts",
+      "kind": "modified",
+      "sha256": "1a48a8598619fac6f7c7c40a1800a7b4aa3a96e07a3940ab58b971004ded8812",
+      "reason": "Nimmt den Einstellungsschlüssel für betriebliche Regeln in die bestehende Sicherung und Wiederherstellung auf."
     },
     {
       "path": "src/infrastructure/database/private-cloud-repository.ts",
@@ -10289,8 +10397,8 @@
     {
       "path": "src/navigation/check-issue-session.ts",
       "kind": "added",
-      "sha256": "a7fa39b0c32f44ffb1860576e0fb6049ab194987f9711888b3e349ae203f62fa",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "3c36794caff454b0eba7a0170b4b941961bb27e1c241e2f7cd0964b0493e1671",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
     },
     {
       "path": "src/navigation/horizontal-back-gesture.ts",
