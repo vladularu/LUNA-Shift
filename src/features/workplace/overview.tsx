@@ -52,7 +52,8 @@ export function ruleSummary(id: QuestionId, r?: WorkplaceRule): string {
         "Höchstens " +
         r.count +
         " " +
-        (id === "night" ? (r.count === 1 ? "Nacht" : "Nächte") : r.count === 1 ? "Tag" : "Tage")
+        (id === "night" ? (r.count === 1 ? "Nacht" : "Nächte") : r.count === 1 ? "Tag" : "Tage") +
+        (id === "week" ? " · Mo–So" : "")
       );
     case "average":
       return "Ø " + r.count.toLocaleString("de-DE") + " Tage über " + r.weeks + " Wochen";

@@ -10289,8 +10289,8 @@
     {
       "path": "src/features/workplace/overview.tsx",
       "kind": "added",
-      "sha256": "74277780a57f7aa41b7bbedebf08b52710f80e7a185a8e2b0613fe8b53d18ab7",
-      "reason": "Group workplace preferences by topic and show their current and scheduled values. Use the shared topic icons in workplace settings. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte."
+      "sha256": "e4b0c39b9908c097a9d437eb081f79efdb778703d8f0ea4cdc0689567cad70c6",
+      "reason": "Group workplace preferences by topic and show their current and scheduled values. Use the shared topic icons in workplace settings. Betriebsregeln verwenden dieselbe native Hinweisansicht, Listenzeile und Dienstübersicht wie die vorhandenen Prüfpunkte. Die Wochenfrage unterscheidet die Obergrenze pro Kalenderwoche, den Durchschnitt und Arbeitstage am Stück."
     },
     {
       "path": "src/features/workplace/panel.tsx",
@@ -10301,14 +10301,14 @@
     {
       "path": "src/features/workplace/questions.ts",
       "kind": "added",
-      "sha256": "b593896c1756cfb2b9dff4245639f1628edd4f148dd63ac0c39da1da1220298b",
-      "reason": "Enthält die Pflegefragen, die Tarif- und Gesetzeserklärungen sowie die Eingabeformate für eigene Antworten. Use the short weekend and night topic labels approved for the iPhone screens. Simplify the workplace questions and preserve existing stored answers. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview."
+      "sha256": "cf8a8663672d8b41787d61bc04c2958cb0b2b3b523181e70e099b4793689806e",
+      "reason": "Enthält die Pflegefragen, die Tarif- und Gesetzeserklärungen sowie die Eingabeformate für eigene Antworten. Use the short weekend and night topic labels approved for the iPhone screens. Simplify the workplace questions and preserve existing stored answers. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. Die Wochenfrage unterscheidet die Obergrenze pro Kalenderwoche, den Durchschnitt und Arbeitstage am Stück."
     },
     {
       "path": "src/features/workplace/rule-flow.tsx",
       "kind": "added",
-      "sha256": "a9995603200c66b5839acac855d1514c22d6bc6babdc46c2edd1daa8b4dbeb9d",
-      "reason": "Use individual answer screens, relevant follow-up questions and per-rule editing with validity dates. Align the stepper, offer both validity scopes and disclose optional details. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "e71c77cb3a97497583c342b195a20550fe591f2b28f217bf146d57e73c2d8a0d",
+      "reason": "Use individual answer screens, relevant follow-up questions and per-rule editing with validity dates. Align the stepper, offer both validity scopes and disclose optional details. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Die Wochenfrage unterscheidet die Obergrenze pro Kalenderwoche, den Durchschnitt und Arbeitstage am Stück. Der Hinweis nennt nur die Kalenderwoche von Montag bis Sonntag."
     },
     {
       "path": "src/features/workplace/store.tsx",
