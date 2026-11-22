@@ -16,15 +16,11 @@ import {
   groupCheckDisplayIssues,
   type CheckDisplayGroup,
 } from "./check-display-groups";
-import {
-  CHECK_NOT_ASSESSABLE,
-  CHECK_TITLE,
-  LEGAL_TARIFF_TITLE,
-  SUPPORTED_CHECKS_EMPTY,
-} from "./check-copy";
+import { CHECK_NOT_ASSESSABLE, LEGAL_TARIFF_TITLE } from "./check-copy";
 import { weekendAssessmentOpen } from "./weekend-assessment-summary";
 import { planningHintGroups } from "./planning-hint-list";
 import { PLANNING_TITLE } from "./check-presentation";
+import type { MonthlyCheckArea } from "@/navigation/routes";
 
 const severityOrder = { critical: 0, warning: 1, info: 2 };
 
@@ -34,12 +30,14 @@ export function ComplianceDayList({
   showPlanning,
   timeZone,
   hasWorkplaceFindings = false,
+  area,
 }: {
   readonly compliance: MonthlyComplianceResult;
   readonly shifts: readonly ShiftEntry[];
   readonly showPlanning: boolean;
   readonly timeZone: string;
   readonly hasWorkplaceFindings?: boolean;
+  readonly area?: Exclude<MonthlyCheckArea, "workplace">;
 }) {
   const palette = usePalette();
   const visible = useMemo(
@@ -64,6 +62,7 @@ export function ComplianceDayList({
       {
         title: LEGAL_TARIFF_TITLE,
         id: "check-inbox-legal",
+        area: "legal",
         rows: rowsFor(
           groupCheckDisplayIssues(
             display.issues.filter((issue) => issue.kind !== "PLANNING"),
@@ -75,6 +74,7 @@ export function ComplianceDayList({
       {
         title: PLANNING_TITLE,
         id: "check-inbox-planning",
+        area: "planning",
         rows: rowsFor(planningHintGroups(display.issues, shifts)),
       },
     ].filter(({ rows }) => rows.length > 0);
@@ -83,12 +83,15 @@ export function ComplianceDayList({
     isCheckLimited(visible) ||
     weekendAssessmentOpen(compliance.weekendAssessment) ||
     display.unavailable;
+  const selectedSection = sections.find((section) => section.area === area);
+  const shownSections = selectedSection ? [selectedSection] : sections;
+  const showScope = selectedSection?.area !== "planning";
 
   return (
     <View
       style={{ gap: SPACING.lg, flexGrow: sections.length || hasWorkplaceFindings ? undefined : 1 }}
     >
-      {sections.map(({ title, id, rows }) => (
+      {shownSections.map(({ title, id, rows }) => (
         <View key={id} testID={id} style={{ gap: SPACING.xs }}>
           <Text
             accessibilityRole="header"
@@ -141,10 +144,10 @@ export function ComplianceDayList({
           testID="check-complete"
           style={{ flexGrow: 1, minHeight: 280, justifyContent: "center", alignItems: "center" }}
         >
-          <CheckRunnerEgg title={CHECK_TITLE} subtitle={SUPPORTED_CHECKS_EMPTY} />
+          <CheckRunnerEgg />
         </View>
       ) : null}
-      {display.prerequisites.length || visible.scopeCount ? (
+      {showScope && (display.prerequisites.length || visible.scopeCount) ? (
         <CheckPrerequisitesCard
           compact
           issues={display.prerequisites}

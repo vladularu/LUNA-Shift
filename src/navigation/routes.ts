@@ -124,11 +124,13 @@ export function premiumDetailsRoute(month: string) {
   });
 }
 
-export function complianceDetailsRoute(month: string) {
+export type MonthlyCheckArea = "legal" | "planning" | "workplace";
+
+export function complianceDetailsRoute(month: string, area?: MonthlyCheckArea) {
   const normalizedMonth = requireMonth(month);
   return Object.freeze({
     pathname: "/compliance-details" as const,
-    params: Object.freeze({ month: normalizedMonth }),
+    params: Object.freeze({ month: normalizedMonth, ...(area ? { area } : {}) }),
   });
 }
 

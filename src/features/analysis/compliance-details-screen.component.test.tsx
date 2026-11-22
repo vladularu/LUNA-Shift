@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { ReactNode } from "react";
 
 import type { MonthlyComplianceResult } from "@/domain/types";
 import { ComplianceDetailsScreen } from "@/features/analysis/compliance-details-screen";
@@ -23,14 +24,28 @@ const mockCompliance: MonthlyComplianceResult = {
 };
 let mockPlanning = true;
 let mockResult: MonthlyComplianceResult | null = mockCompliance;
+let mockArea: string | undefined;
+let mockWorkplaceCount = 0;
 jest.mock("@/features/settings/check-preferences", () => ({
   useCheckPreferences: () => ({ enabled: mockPlanning, error: null }),
 }));
 
 jest.mock("expo-router", () => ({
   router: { back: jest.fn() },
-  useLocalSearchParams: () => ({ month: "2026-08" }),
+  useLocalSearchParams: () => ({ month: "2026-08", area: mockArea }),
 }));
+
+jest.mock("@/features/workplace/panel", () => {
+  const { Text } = jest.requireActual<typeof import("react-native")>("react-native");
+  return {
+    WorkplacePanel: ({ children }: { children?: (count: number) => ReactNode }) => (
+      <>
+        {children?.(mockWorkplaceCount)}
+        {mockWorkplaceCount > 0 ? <Text>Betrieblicher Testhinweis</Text> : null}
+      </>
+    ),
+  };
+});
 
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftEntries: () => ({ entries: [] }),
@@ -65,6 +80,33 @@ describe("ComplianceDetailsScreen", () => {
   beforeEach(() => {
     mockPlanning = true;
     mockResult = mockCompliance;
+    mockArea = undefined;
+    mockWorkplaceCount = 0;
+  });
+
+  it.each([
+    ["legal", true, false, false],
+    ["planning", false, true, false],
+    ["workplace", false, false, true],
+    ["unknown", true, true, true],
+  ])("limits the detail list to %s when available", async (area, legal, planning, workplace) => {
+    mockArea = area;
+    mockWorkplaceCount = 1;
+    const screen = await render(<ComplianceDetailsScreen />);
+    expect(Boolean(screen.queryByRole("header", { name: "Gesetz & Tarif" }))).toBe(legal);
+    expect(Boolean(screen.queryByRole("header", { name: "Hinweise & Empfehlungen" }))).toBe(
+      planning,
+    );
+    expect(Boolean(screen.queryByText("Betrieblicher Testhinweis"))).toBe(workplace);
+    expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
+  });
+
+  it("falls back to the available findings when the selected area is hidden", async () => {
+    mockArea = "planning";
+    mockPlanning = false;
+    const screen = await render(<ComplianceDetailsScreen />);
+    expect(screen.getByRole("header", { name: "Gesetz & Tarif" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
   });
   it("filters the detail summary but keeps legal critical findings", async () => {
     mockPlanning = false;
@@ -111,8 +153,9 @@ describe("ComplianceDetailsScreen", () => {
     expect(screen.queryByText("Keine Auffälligkeiten")).toBeNull();
     expect(screen.queryByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeNull();
     expect(screen.queryByText("Keine sichtbaren Auffälligkeiten")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Prüfungs-Dino" })).toBeNull();
     mockResult = { ...mockCompliance, issues: [] };
     await screen.rerender(<ComplianceDetailsScreen />);
-    expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeVisible();
   });
 });

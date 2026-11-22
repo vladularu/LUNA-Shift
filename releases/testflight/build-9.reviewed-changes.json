@@ -9219,6 +9219,12 @@
       "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
     },
     {
+      "path": "src/features/analysis/check-runner-egg.tsx",
+      "kind": "modified",
+      "sha256": "9459d911aa890760a840e018b310254eab642bb1b2ffd9520c3c7033bda6f4a8",
+      "reason": "Im abgeschlossenen leeren Dienstplan-Check steht der Dino allein. Doppeltipp und Prüfstatus in der Bedienungshilfe bleiben erhalten. Auf dem iPhone mit Preview Build 56 am 22. November 2026 bestätigt."
+    },
+    {
       "path": "src/features/analysis/check-scope-disclosure.tsx",
       "kind": "modified",
       "sha256": "48a7e8362ece9b9d424ee135a8b612ea7662269eb8ec1da71bba2916ed00c910",
@@ -9239,14 +9245,14 @@
     {
       "path": "src/features/analysis/compliance-day-list.tsx",
       "kind": "modified",
-      "sha256": "8a5661a64edfc4bcc7f61f662c2aaeba2135711eb3f90be4b6578ff776f5c220",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "591b5d99b93af81c7554241115fc61fb0418f74e9cf3b88e4439e7abaffa2763",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Zeigt im leeren Ergebnis den Dino und bietet beim Einstieg über einen Prüfbereich die passenden Hinweiskarten an. Die Gesamtansicht behält die vollständige Liste."
     },
     {
       "path": "src/features/analysis/compliance-details-screen.tsx",
       "kind": "modified",
-      "sha256": "507f9034192f1cfa185c418e88494ee9cc435baadf715614403e0a7d5151deb4",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Bietet die erstmalige Erfassung im Monatscheck an und zeigt die Hinweise für den gewählten Monat. Keep workplace settings available when compliance preparation fails. Place workplace findings after the monthly check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "b8131f43d0df6bd489766654609f4d3e90032be9936b01cb96943fe237531d9f",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Bietet die erstmalige Erfassung im Monatscheck an und zeigt die Hinweise für den gewählten Monat. Keep workplace settings available when compliance preparation fails. Place workplace findings after the monthly check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Verwendet die bestehenden Details für den gewählten Prüfbereich und den unveränderten Monatszeitraum. Ein veralteter Einstieg führt zur verfügbaren Übersicht."
     },
     {
       "path": "src/features/analysis/compliance-details.tsx",
@@ -9305,14 +9311,20 @@
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "66dcf9aac73bade9bea4e7fc9ad684b3e7692f32fb3fd74ccf72744a48e6c839",
-      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "cfc04fff7f59b42413269ed8e57a0c34bc1fa7f0e6dd82d579bb693854275c79",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Setzt die gewählte Variante Nach Prüfbereich in der Monatsauswertung ein und verbindet die Zeilen mit dem jeweiligen Prüfbereich."
     },
     {
       "path": "src/features/analysis/monthly-analysis.ts",
       "kind": "modified",
       "sha256": "58f4bcd0341d1b12fc5ba8b28233ccce6e513f83823b17fc8e7bde2eb250affc",
       "reason": "Preview recovery package 1, 2026-11-15: Add an optional engine identity to existing monthly cache keys; preserve the original key when the Rust calculator is absent. Physical iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/analysis/monthly-check-card.tsx",
+      "kind": "added",
+      "sha256": "4da40d899d65f28db81010f97bcdac8131b443e257a999382e0fde54cab50c11",
+      "reason": "Kompakte Karte mit aktiven Prüfbereichen, Hinweisanzahl, Gesamtzugang und einer Statuszeile für verfügbare Prüfergebnisse. Auf dem iPhone mit Preview Build 56 am 22. November 2026 bestätigt."
     },
     {
       "path": "src/features/analysis/monthly-rust-bridge.ts",
@@ -10415,8 +10427,8 @@
     {
       "path": "src/navigation/routes.ts",
       "kind": "modified",
-      "sha256": "5c19fa56b6539e8ac7778fc367f81a3872c44af8aa18de663d881778772a041b",
-      "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: salaryPaymentSettingsRoute."
+      "sha256": "cdf8f6f174053255ee3e8db351aa86047a294841b43e5f07e6612e5ef2b2d303",
+      "reason": "User-authorized cleanup on 2026-11-10: remove only the seven unused overtime-allocation, TVL shift-work, SuE, Annex-A month/premium facts, paid-absence and annual-payment route builders whose destination files no longer exist. Preserve every active editor, calendar, analysis, salary, tariff and sharing route. Existing active month validation and focused navigation tests remain enforced; Preview acceptance remains pending. User-authorized cleanup 2026-11-11: remove only the listed proven-unused exports after current master and the preserved iOS Preview both show no identifier, import, literal, native or route consumer. Keep active neighboring behavior, stored data, packages, native configuration, accepted TestFlight baseline and visible UI unchanged. No TestFlight publication is authorized. Removed: salaryPaymentSettingsRoute. Optionaler Prüfbereich für den bestehenden Monatsdetail-Link. Alte Aufrufe und die Gesamtansicht behalten ihre Parameter."
     },
     {
       "path": "src/navigation/use-report-month.ts",

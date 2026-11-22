@@ -665,7 +665,7 @@ describe("visible check timelines", () => {
     await screen.rerender(list([planning], [shift, early], false));
     expect(screen.queryByTestId("check-shift-late")).toBeNull();
     expect(screen.queryByText(/Planungshinweise ausgeblendet/)).toBeNull();
-    expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeVisible();
     await screen.rerender(list([planning]));
     expect(screen.queryByTestId("check-shift-late")).toBeNull();
   });
@@ -735,7 +735,7 @@ describe("visible check timelines", () => {
       justifyContent: "center",
       alignItems: "center",
     });
-    expect(screen.getByRole("header", { name: "Dienstplan-Check" })).toBeTruthy();
+    expect(screen.queryByRole("header", { name: "Dienstplan-Check" })).toBeNull();
     expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeTruthy();
   });
 });

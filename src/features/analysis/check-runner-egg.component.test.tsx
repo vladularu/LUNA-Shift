@@ -67,7 +67,9 @@ it("keeps the Dino playable for complete empty checks and stops it when scope be
   );
   const screen = await render(page({ ...compliance, issues: [], infoCount: 0 }));
   expect(screen.getByTestId("check-complete")).toBeTruthy();
-  expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeVisible();
+  expect(screen.queryByText("Dienstplan-Check")).toBeNull();
+  expect(screen.queryByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeNull();
   await unlock(screen);
   expect(screen.getByTestId("dino-runner")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Springen" })).toBeTruthy();
@@ -108,7 +110,7 @@ it("keeps the Dino playable for complete empty checks and stops it when scope be
 });
 
 it("only opens on a fast double tap and runs without visible controls", async () => {
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   expect(screen.getByTestId("dino-runner-idle", { includeHiddenElements: true })).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: "Prüfungs-Dino" }));
   expect(screen.queryByTestId("dino-runner")).toBeNull();
@@ -128,9 +130,9 @@ it("only opens on a fast double tap and runs without visible controls", async ()
   expect(screen.getByTestId("dino-runner").props.style).not.toEqual(
     expect.objectContaining({ backgroundColor: expect.anything() }),
   );
-  await screen.rerender(<CheckRunnerEgg title="Prüfung abgeschlossen" active={false} />);
-  expect(screen.getByRole("header", { name: "Prüfung abgeschlossen" })).toBeTruthy();
-  await screen.rerender(<CheckRunnerEgg title="Prüfung abgeschlossen" active />);
+  await screen.rerender(<CheckRunnerEgg active={false} />);
+  expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeVisible();
+  await screen.rerender(<CheckRunnerEgg active />);
   await unlock(screen);
   expect(loadRunnerProgress).toHaveBeenCalledTimes(2);
 });
@@ -141,7 +143,7 @@ it("automatically resumes the saved run, shows one record, and jumps on touch", 
     run: { ...createRunnerRun(9), distance: 1250, y: 35, velocity: 80 },
     scores: [{ points: 432, at: "2026-10-14T12:00:00Z" }],
   });
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   expect(screen.getByLabelText("Punkte 125")).toBeTruthy();
   expect(screen.getByText("HI 00432")).toBeTruthy();
@@ -163,7 +165,7 @@ it("restarts by tapping the background after a collision", async () => {
     run: { ...createRunnerRun(9), obstacles: [{ x: 86, width: 20, height: 40 }] },
     scores: [{ points: 432, at: "2026-10-14T12:00:00Z" }],
   });
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await act(async () => jest.advanceTimersByTime(300));
   expect(screen.getByRole("button", { name: "Nochmal spielen" })).toBeTruthy();
@@ -175,7 +177,7 @@ it("restarts by tapping the background after a collision", async () => {
 });
 
 it("jumps when the running background is tapped", async () => {
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await fireEvent.press(screen.getByTestId("runner-field"));
   await act(async () => jest.advanceTimersByTime(120));
@@ -184,7 +186,7 @@ it("jumps when the running background is tapped", async () => {
 });
 
 it("ends a naturally spawned unattended run and stops awarding points", async () => {
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await act(async () => jest.advanceTimersByTime(10000));
   expect(screen.getByRole("button", { name: "Nochmal spielen" })).toBeTruthy();
@@ -209,7 +211,7 @@ it("renders saved bird and cactus group patterns on the transparent background",
     },
     scores: [{ points: 432, at: "2026-10-14T12:00:00Z" }],
   });
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   expect(screen.getByTestId("runner-obstacle-bird", { includeHiddenElements: true })).toBeTruthy();
   expect(
@@ -220,17 +222,17 @@ it("renders saved bird and cactus group patterns on the transparent background",
 });
 
 it("returns to the check on navigation and requires another double tap", async () => {
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
-  await screen.rerender(<CheckRunnerEgg title="Prüfung abgeschlossen" active={false} />);
+  await screen.rerender(<CheckRunnerEgg active={false} />);
   expect(screen.queryByTestId("dino-runner")).toBeNull();
-  await screen.rerender(<CheckRunnerEgg title="Prüfung abgeschlossen" active />);
+  await screen.rerender(<CheckRunnerEgg active />);
   expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeTruthy();
   expect(screen.queryByTestId("dino-runner")).toBeNull();
 });
 
 it("immediately pauses and hides on navigation blur, even before another render", async () => {
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await act(async () => {
     jest.advanceTimersByTime(100);
@@ -252,7 +254,7 @@ it("closes and saves when the app goes to the background", async () => {
     listeners.push(listener);
     return { remove: jest.fn() };
   });
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await act(async () => {
     jest.advanceTimersByTime(100);
@@ -264,7 +266,7 @@ it("closes and saves when the app goes to the background", async () => {
 
 it("does not overwrite a stored run when loading fails, and offers retry", async () => {
   jest.mocked(loadRunnerProgress).mockRejectedValueOnce(new Error("locked"));
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   expect(screen.getByText("Spielstand konnte nicht geladen werden.")).toBeTruthy();
   expect(saveRunnerProgress).not.toHaveBeenCalled();
@@ -274,7 +276,7 @@ it("does not overwrite a stored run when loading fails, and offers retry", async
 
 it("shows a save failure and retries without losing the in-memory run", async () => {
   jest.mocked(saveRunnerProgress).mockRejectedValue(new Error("full"));
-  const screen = await render(<CheckRunnerEgg title="Prüfung abgeschlossen" />);
+  const screen = await render(<CheckRunnerEgg />);
   await unlock(screen);
   await act(async () => {
     jest.advanceTimersByTime(1200);

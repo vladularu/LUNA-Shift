@@ -1,4 +1,4 @@
-import { render, within } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { Text } from "react-native";
 import type { MonthlyComplianceResult } from "@/domain/types";
@@ -8,6 +8,14 @@ import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { MonthOverview } from "./month-overview";
 import type { AnalysisCardId } from "@/domain/analysis-view";
 import type { ReactNode } from "react";
+
+const mockPush = jest.fn();
+let mockWorkplaceCount = 0;
+jest.mock("expo-router", () => ({ router: { push: (...args: unknown[]) => mockPush(...args) } }));
+jest.mock("@/features/workplace/check-summary", () => ({
+  WorkplaceCheckSummary: ({ children }: { children: (count: number) => ReactNode }) =>
+    children(mockWorkplaceCount),
+}));
 jest.mock("./analysis-net-pay-row", () => ({ AnalysisNetPayRow: () => null }));
 
 jest.mock("./dashboard-cards", () => {
@@ -69,6 +77,66 @@ const view = (
   />
 );
 describe("empty month presentation", () => {
+  it("opens only the selected active area or all monthly hints", async () => {
+    const shift = forecastShift({ date: "2026-11-06" });
+    const data = { ...emptyData, monthShifts: [shift] };
+    const compliance: MonthlyComplianceResult = {
+      ...emptyChecks,
+      issues: [
+        {
+          id: "rest",
+          kind: "LEGAL",
+          rule: "ARBZG_5_REST",
+          severity: "warning",
+          title: "Kurze Ruhezeit",
+          description: "Test",
+          date: shift.date,
+          relatedShiftIds: [shift.id],
+        },
+      ],
+    };
+    mockWorkplaceCount = 3;
+    try {
+      const screen = await render(view(data, compliance));
+      expect(screen.queryByText("Hinweise & Empfehlungen")).toBeNull();
+      expect(screen.queryByText("Keine Auffälligkeiten")).toBeNull();
+      for (const [name, area] of [
+        ["Gesetz & Tarif: 1 Warnung", "legal"],
+        ["Betriebsregeln: 3 Hinweise", "workplace"],
+        ["Dienstplan-Check, Alle 4 Hinweise", undefined],
+      ] as const) {
+        await fireEvent.press(screen.getByRole("button", { name }));
+        expect(mockPush).toHaveBeenLastCalledWith({
+          pathname: "/compliance-details",
+          params: area ? { month, area } : { month },
+        });
+      }
+      mockWorkplaceCount = 0;
+      await screen.rerender(view(data, emptyChecks));
+      expect(screen.getAllByText("Keine Auffälligkeiten")).toHaveLength(1);
+      expect(screen.queryByText("Gesetz & Tarif")).toBeNull();
+      expect(screen.queryByText("Betriebsregeln")).toBeNull();
+      await screen.rerender(
+        view(data, {
+          ...emptyChecks,
+          issues: [
+            {
+              ...compliance.issues[0],
+              id: "missing-data",
+              rule: "ARBZG_DATA_ALL_EMPLOYMENT",
+              severity: "info",
+            },
+          ],
+        }),
+      );
+      expect(
+        screen.getByRole("button", { name: "Dienstplan-Check, Prüfung eingeschränkt" }),
+      ).toBeVisible();
+      expect(screen.queryByText("Keine Auffälligkeiten")).toBeNull();
+    } finally {
+      mockWorkplaceCount = 0;
+    }
+  });
   it("counts three visible weekend periods and one duty sequence as four planning hints", async () => {
     const night = ["10-23", "10-31", "11-01", "11-27", "11-28", "11-29"].map((date) =>
       forecastShift({
@@ -104,10 +172,17 @@ describe("empty month presentation", () => {
     };
     const screen = await render(view(data, compliance));
     expect(screen.getByLabelText("Hinweise & Empfehlungen: 4 Hinweise")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Dienstplan-Check, 4 Meldungen" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Dienstplan-Check, Alle 4 Hinweise" })).toBeVisible();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Hinweise & Empfehlungen: 4 Hinweise" }),
+    );
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: "/compliance-details",
+      params: { month, area: "planning" },
+    });
     await screen.rerender(view(data, compliance, null, false));
     expect(screen.queryByLabelText(/^Hinweise & Empfehlungen:/)).toBeNull();
-    expect(screen.queryByRole("button", { name: "Dienstplan-Check, 4 Meldungen" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Dienstplan-Check, Alle 4 Hinweise" })).toBeNull();
   });
 
   it.each<[boolean, 0 | 2]>([
