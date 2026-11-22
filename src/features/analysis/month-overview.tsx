@@ -6,22 +6,11 @@ import { router } from "expo-router";
 import type { MonthlyComplianceResult, UserProfile } from "@/domain/types";
 import { formatMinutes } from "@/engine/working-time";
 import { salaryTariffCaption } from "@/features/salary/provisional-tariff-caption";
-import {
-  addCheckCounts,
-  classifyChecks,
-  countChecks,
-  selectVisibleCompliance,
-} from "./check-visibility";
-import { planningWeekendWindowsForIssue } from "./weekend-assessment-summary";
+import { selectVisibleCompliance } from "./check-visibility";
 import type { MonthlyAnalysisCalculation } from "./monthly-analysis";
 import { complianceDetailsRoute, salaryRoute, netPayForecastRoute } from "@/navigation/routes";
-import {
-  AnalysisDashboard,
-  CheckListCard,
-  PayListCard,
-  WorkListCard,
-  NetListCard,
-} from "./dashboard-cards";
+import { AnalysisDashboard, PayListCard, WorkListCard, NetListCard } from "./dashboard-cards";
+import { MonthlyCheckCard } from "./monthly-check-card";
 import { EarnedPremiumsCard } from "./salary-overview-cards";
 import { ShiftAnalysisCard } from "./shift-analysis-card";
 import { AnalysisNetPayRow } from "./analysis-net-pay-row";
@@ -69,35 +58,14 @@ export function MonthOverview({
   readonly additionalRecurringGrossCents?: number;
 }) {
   const { summary, pay, shiftTypeAnalysis } = data;
-  const check = useMemo(() => {
-    if (!compliance) return null;
-    const visible = selectVisibleCompliance(compliance, showPlanning);
-    const planning = visible.issues.filter((issue) => issue.kind === "PLANNING");
-    // Each finding already contributes one to the total.
-    const additional = planning.flatMap((issue) =>
-      planningWeekendWindowsForIssue(issue)
-        .slice(1)
-        .map(() => issue),
-    );
-    return {
-      visible,
-      counts: addCheckCounts(visible, countChecks(additional)),
-      categories: {
-        ...classifyChecks(compliance.issues),
-        planning: countChecks([...planning, ...additional]),
-      },
-    };
-  }, [compliance, showPlanning]);
-  const visible = check?.visible ?? null;
+  const visible = useMemo(
+    () => (compliance ? selectVisibleCompliance(compliance, showPlanning) : null),
+    [compliance, showPlanning],
+  );
   const emptyMonth = data.monthShifts.length === 0;
   const emptyHorizon = data.complianceShifts.ok && data.complianceShifts.value.length === 0;
   const noFindings =
-    visible !== null &&
-    visible.criticalCount +
-      visible.warningCount +
-      visible.infoCount +
-      (visible.prerequisiteCount ?? 0) ===
-      0;
+    visible !== null && visible.issues.length === 0 && (visible.prerequisiteCount ?? 0) === 0;
   const status =
     !data.complianceShifts.ok || checkError
       ? "Nicht verfügbar"
@@ -184,16 +152,11 @@ export function MonthOverview({
             restKeys={compliance ? restFindingKeys(compliance.issues) : undefined}
           >
             {(workplaceCount) => (
-              <CheckListCard
+              <MonthlyCheckCard
                 workplaceCount={workplaceCount}
-                reserveLoadingSpace
-                counts={check?.counts ?? { criticalCount: 0, warningCount: 0, infoCount: 0 }}
-                categories={check?.categories}
+                compliance={visible}
                 status={status}
-                loading={status === "Wird geprüft …"}
-                showPlanning={showPlanning}
-                weekendAssessment={compliance?.weekendAssessment}
-                onPress={() => router.push(complianceDetailsRoute(month))}
+                onOpen={(area) => router.push(complianceDetailsRoute(month, area))}
                 caption={
                   !data.complianceShifts.ok
                     ? "Für die Prüfung fehlen Berechnungsdaten."

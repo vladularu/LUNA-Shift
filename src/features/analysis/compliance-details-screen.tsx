@@ -33,6 +33,7 @@ import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CHECK_TITLE } from "./check-copy";
+import { checkDisplayProjection } from "./check-display-groups";
 import { checkPeriodLabel } from "./check-period-label";
 
 const EMPTY_SHIFTS: readonly ShiftEntry[] = Object.freeze([]);
@@ -52,7 +53,7 @@ export function ComplianceDetailsScreen() {
 function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: number }) {
   const palette = usePalette();
   const preferences = useCheckPreferences();
-  const params = useLocalSearchParams<{ month?: RouteParam }>();
+  const params = useLocalSearchParams<{ month?: RouteParam; area?: RouteParam }>();
   const { error, ready, reload } = usePflegeShiftStatus();
   const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
   const profile = calculationProfile ?? savedProfile;
@@ -122,6 +123,25 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
   }
   if (!ready || profile === null || compliance === null) return <LoadingView />;
   const { start, end } = monthRange(month);
+  const area = params.area;
+  const legalOrPlanning = area === "legal" || area === "planning" ? area : undefined;
+  const selectedArea =
+    legalOrPlanning &&
+    checkDisplayProjection(compliance).issues.some(
+      (issue) => (issue.kind === "PLANNING" ? "planning" : "legal") === legalOrPlanning,
+    )
+      ? legalOrPlanning
+      : undefined;
+  const renderCheck = (hasWorkplaceFindings: boolean) => (
+    <ComplianceDayList
+      area={selectedArea}
+      hasWorkplaceFindings={hasWorkplaceFindings}
+      compliance={sourceCompliance!}
+      showPlanning={preferences.enabled !== false}
+      shifts={window?.ok ? window.value : EMPTY_SHIFTS}
+      timeZone={profile.timeZone}
+    />
+  );
 
   return (
     <ScreenScrollView
@@ -150,17 +170,13 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
           </Text>
         </View>
       </View>
-      <WorkplacePanel period={month} restKeys={restFindingKeys(compliance.issues)}>
-        {(count) => (
-          <ComplianceDayList
-            hasWorkplaceFindings={count > 0}
-            compliance={sourceCompliance!}
-            showPlanning={preferences.enabled !== false}
-            shifts={window?.ok ? window.value : EMPTY_SHIFTS}
-            timeZone={profile.timeZone}
-          />
-        )}
-      </WorkplacePanel>
+      {selectedArea ? (
+        renderCheck(false)
+      ) : (
+        <WorkplacePanel period={month} restKeys={restFindingKeys(compliance.issues)}>
+          {(count) => (area === "workplace" && count > 0 ? null : renderCheck(count > 0))}
+        </WorkplacePanel>
+      )}
     </ScreenScrollView>
   );
 }

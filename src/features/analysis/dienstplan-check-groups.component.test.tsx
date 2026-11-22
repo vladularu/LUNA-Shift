@@ -205,7 +205,9 @@ describe("Dienstplan check display integration", () => {
 
   it("bounds the empty result to supported checks", async () => {
     const screen = await render(list([]));
-    expect(screen.getByText("Keine Auffälligkeiten in den unterstützten Prüfungen.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prüfungs-Dino" }).props.accessibilityHint).toContain(
+      "Keine Auffälligkeiten in den unterstützten Prüfungen.",
+    );
     expect(screen.queryByText("Prüfung abgeschlossen")).toBeNull();
   });
 
