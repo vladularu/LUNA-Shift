@@ -31,8 +31,11 @@ export function PercentageSlider({
 }) {
   const p = useOnboardingPalette();
   const [width, setWidth] = useState(0);
+  const [hoursBeforeDrag, setHoursBeforeDrag] = useState<string | null>(null);
   const origin = useRef({ pageX: 0, locationX: 0 });
   const percentage = weeklyPercentage(weeklyHours, basis);
+  const presetPercentage =
+    hoursBeforeDrag === null ? percentage : weeklyPercentage(hoursBeforeDrag, basis);
   const clamped = Math.max(10, Math.min(100, percentage ?? 10));
   const display =
     percentage == null
@@ -85,6 +88,7 @@ export function PercentageSlider({
         onMoveShouldSetResponder={() => true}
         onResponderTerminationRequest={() => false}
         onResponderGrant={(event) => {
+          setHoursBeforeDrag(weeklyHours);
           origin.current = {
             pageX: event.nativeEvent.pageX,
             locationX: event.nativeEvent.locationX,
@@ -95,8 +99,18 @@ export function PercentageSlider({
         onResponderMove={(event) =>
           touch(origin.current.locationX + event.nativeEvent.pageX - origin.current.pageX)
         }
-        onResponderRelease={() => onInteractionChange(false)}
-        onResponderTerminate={() => onInteractionChange(false)}
+        onResponderRelease={(event) => {
+          const pageX = event.nativeEvent?.pageX;
+          if (Number.isFinite(pageX))
+            touch(origin.current.locationX + pageX - origin.current.pageX);
+          setHoursBeforeDrag(null);
+          onInteractionChange(false);
+        }}
+        onResponderTerminate={() => {
+          if (hoursBeforeDrag !== null) onHoursChange(hoursBeforeDrag);
+          setHoursBeforeDrag(null);
+          onInteractionChange(false);
+        }}
         style={styles.slider}
       >
         <View pointerEvents="none" style={[styles.track, { backgroundColor: p.control }]}>
@@ -115,7 +129,7 @@ export function PercentageSlider({
       </View>
       <View style={styles.presets}>
         {[50, 75, 80, 100].map((value) => {
-          const selected = percentage != null && Math.abs(percentage - value) < 0.05;
+          const selected = presetPercentage != null && Math.abs(presetPercentage - value) < 0.05;
           return (
             <Pressable
               key={value}

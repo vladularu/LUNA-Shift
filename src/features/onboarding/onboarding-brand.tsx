@@ -7,7 +7,13 @@ import { OnboardingReveal } from "./onboarding-motion";
 const LIGHT = require("../../../assets/brand/lunashift/logo-horizontal-light.png");
 const DARK = require("../../../assets/brand/lunashift/logo-horizontal-dark.png");
 
-export function OnboardingBrand({ reduced }: { readonly reduced: boolean }) {
+export function OnboardingBrand({
+  reduced,
+  welcome = false,
+}: {
+  readonly reduced: boolean;
+  readonly welcome?: boolean;
+}) {
   const p = useOnboardingPalette();
   return (
     <View style={s.root}>
@@ -19,19 +25,23 @@ export function OnboardingBrand({ reduced }: { readonly reduced: boolean }) {
           accessibilityLabel="LUNA Shift"
           source={p.dark ? DARK : LIGHT}
           resizeMode="contain"
-          style={s.signature}
+          style={[s.signature, welcome && { alignSelf: "center" }]}
         />
       </OnboardingReveal>
-      <View style={s.slogan}>
-        <OnboardingReveal reduced={reduced} delay={40}>
-          <Text style={[s.sentence, { color: p.muted }]}>Schichtdienst ist kompliziert genug.</Text>
-        </OnboardingReveal>
-        <OnboardingReveal reduced={reduced} delay={90}>
-          <Text style={[s.sentence, s.bold, { color: p.text }]}>
-            Dein Dienstplan sollte es nicht sein.
-          </Text>
-        </OnboardingReveal>
-      </View>
+      {!welcome && (
+        <View style={s.slogan}>
+          <OnboardingReveal reduced={reduced} delay={40}>
+            <Text style={[s.sentence, { color: p.muted }]}>
+              Schichtdienst ist kompliziert genug.
+            </Text>
+          </OnboardingReveal>
+          <OnboardingReveal reduced={reduced} delay={90}>
+            <Text style={[s.sentence, s.bold, { color: p.text }]}>
+              Dein Dienstplan sollte es nicht sein.
+            </Text>
+          </OnboardingReveal>
+        </View>
+      )}
     </View>
   );
 }

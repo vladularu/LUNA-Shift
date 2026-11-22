@@ -28,50 +28,53 @@ export function useOnboardingReducedMotion() {
 export function OnboardingReveal({
   children,
   reduced,
-  appearance,
+  variant = "intro",
   delay = 0,
   style,
   testID,
 }: {
   readonly children: ReactNode;
   readonly reduced: boolean;
-  readonly appearance?: string | number;
+  readonly variant?: "intro" | "page";
   readonly delay?: number;
   readonly style?: StyleProp<ViewStyle>;
   readonly testID?: string;
 }) {
-  const [opacity] = useState(() => new Animated.Value(1));
+  const [progress] = useState(() => new Animated.Value(reduced ? 1 : 0));
   useEffect(() => {
     if (reduced) {
-      opacity.stopAnimation();
-      opacity.setValue(1);
+      progress.setValue(1);
       return;
     }
-    opacity.setValue(0);
-    const animation = Animated.timing(opacity, {
+    const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: 260,
+      duration: variant === "page" ? 160 : 260,
       delay,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     });
     animation.start();
     return () => animation.stop();
-  }, [appearance, delay, opacity, reduced]);
+  }, [delay, progress, reduced, variant]);
   return (
     <Animated.View
       testID={testID}
       style={[
         style,
         {
-          opacity: reduced ? 1 : opacity,
-          transform: [
-            {
-              translateY: reduced
-                ? 0
-                : opacity.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }),
-            },
-          ],
+          opacity: reduced
+            ? 1
+            : variant === "page"
+              ? progress.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] })
+              : progress,
+          transform:
+            variant === "intro" && !reduced
+              ? [
+                  {
+                    translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }),
+                  },
+                ]
+              : undefined,
         },
       ]}
     >

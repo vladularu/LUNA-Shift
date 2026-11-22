@@ -8,7 +8,10 @@ export default function OnboardingRoute() {
   return (
     // This native full-screen modal needs insets measured within its own presentation.
     <SafeAreaProvider>
-      <OnboardingScreen preview={DEV_TOOLS_AVAILABLE && preview === "1"} />
+      <OnboardingScreen
+        setupPlan={DEV_TOOLS_AVAILABLE}
+        preview={DEV_TOOLS_AVAILABLE && preview === "1"}
+      />
     </SafeAreaProvider>
   );
 }

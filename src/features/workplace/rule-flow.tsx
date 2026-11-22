@@ -1,5 +1,5 @@
 import { SPACING, RADII } from "@/theme/tokens";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { Modal, View, Pressable } from "react-native";
 import { Text, TextInput } from "@/ui/text";
 import { Temporal } from "@js-temporal/polyfill";
@@ -55,18 +55,65 @@ const dutyChoices = {
 
 export type Save = (update: (current: WorkplaceData) => WorkplaceData) => Promise<void>;
 type Screen = "intro" | "overview" | "answer" | "details";
+
+export type OnboardingRulePage = {
+  pageKey: string;
+  heading?: string;
+  children: ReactNode;
+  back: () => void;
+  primary: { label: string; disabled: boolean; onPress: () => void };
+  busy: boolean;
+  error: string;
+};
+
+function RuleFlowFrame({
+  renderPage,
+  title,
+  aside,
+  footer,
+  ...page
+}: OnboardingRulePage & {
+  renderPage?: (page: OnboardingRulePage) => ReactNode;
+  title: string;
+  aside?: ReactNode;
+  footer: ReactNode;
+}) {
+  if (renderPage) return renderPage(page);
+
+  return (
+    <Modal visible presentationStyle="fullScreen" animationType="slide" onRequestClose={page.back}>
+      <FlowPage
+        pageKey={page.pageKey}
+        busy={page.busy}
+        title={title}
+        onBack={page.back}
+        aside={aside}
+        footer={footer}
+      >
+        {page.children}
+      </FlowPage>
+    </Modal>
+  );
+}
+
 export function RuleFlow({
   data,
   today,
   entry,
   save,
   onClose,
+  onboarding,
 }: {
   data: WorkplaceData;
   today: string;
   entry: "intro" | "overview";
   save: Save;
   onClose: () => void;
+  onboarding?: {
+    back: () => void;
+    hasTVoeD: boolean;
+    renderPage: (page: OnboardingRulePage) => ReactNode;
+  };
 }) {
   const p = usePalette();
   const { profile } = usePflegeShiftProfile();
@@ -168,6 +215,10 @@ export function RuleFlow({
       return;
     }
     if (screen === "intro") {
+      if (onboarding) {
+        onboarding.back();
+        return;
+      }
       if (entry === "overview") {
         setScreen("overview");
         return;
@@ -220,17 +271,35 @@ export function RuleFlow({
       : !guided
         ? "Änderung speichern"
         : id === "duration" && (screen === "details" || !known)
-          ? "Zum Dienstplan-Check"
+          ? onboarding
+            ? "Übernehmen"
+            : "Zum Dienstplan-Check"
           : "Weiter";
+  function advance() {
+    if (screen === "intro") {
+      begin();
+      return;
+    }
+    if (screen === "answer" && (known || !guided)) {
+      setExample(false);
+      setScreen("details");
+      return;
+    }
+    void commit();
+  }
+  const primaryAction = {
+    label: screen === "answer" && !guided ? "Weiter" : primary,
+    disabled: busy || (screen === "answer" && !mode),
+    onPress: advance,
+  };
+  const hasTVoeD = onboarding?.hasTVoeD ?? !!(profile?.tariff || profile?.vkaETariff);
   const help = (
     <>
       <InfoDisclosure
         key={id}
         summary="Tarif und Gesetz ansehen"
         details={
-          (["week", "weekend", "series", "recovery"].includes(id) &&
-          !profile?.tariff &&
-          !profile?.vkaETariff
+          (["week", "weekend", "series", "recovery"].includes(id) && !hasTVoeD
             ? "Zur Orientierung für Beschäftigte im TVöD: "
             : "") + topic.basis
         }
@@ -256,60 +325,53 @@ export function RuleFlow({
       )}
     </>
   );
+  const heading = screen === "answer" ? topic.question : topic.title;
   return (
-    <Modal visible presentationStyle="fullScreen" animationType="slide" onRequestClose={back}>
-      <FlowPage
-        pageKey={screen + id}
-        busy={busy}
-        title={
-          screen === "intro" || screen === "overview"
-            ? "Dienstplan-Check"
-            : guided
-              ? "Sonderregelungen"
-              : "Regel bearbeiten"
-        }
-        onBack={back}
-        aside={
-          guided && isQuestion ? (
-            <LinkAction label="Später" disabled={busy} onPress={() => void commit(true)} />
-          ) : null
-        }
-        footer={
-          <>
-            {!!error && <InlineNotice message={error} />}
-            {screen !== "overview" && (
-              <PrimaryButton
-                disabled={busy || (screen === "answer" && !mode)}
-                onPress={() => {
-                  if (screen === "intro") {
-                    begin();
-                    return;
-                  }
-                  if (screen === "answer" && (known || !guided)) {
-                    setExample(false);
-                    setScreen("details");
-                    return;
-                  }
-                  void commit();
-                }}
-              >
-                {screen === "answer" && !guided ? "Weiter" : primary}
-              </PrimaryButton>
-            )}
-            {screen === "intro" && (
-              <View style={{ alignItems: "center" }}>
-                <LinkAction
-                  disabled={busy}
-                  label={entry === "intro" ? "Direkt zum Dienstplan-Check" : "Zurück zur Übersicht"}
-                  onPress={() => (entry === "intro" ? void commit(true) : setScreen("overview"))}
-                />
-              </View>
-            )}
-          </>
-        }
-      >
+    <RuleFlowFrame
+      pageKey={screen + id}
+      heading={isQuestion ? heading : undefined}
+      back={back}
+      primary={primaryAction}
+      busy={busy}
+      error={error}
+      renderPage={onboarding?.renderPage}
+      title={
+        screen === "intro" || screen === "overview"
+          ? "Dienstplan-Check"
+          : guided
+            ? "Sonderregelungen"
+            : "Regel bearbeiten"
+      }
+      aside={
+        guided && isQuestion ? (
+          <LinkAction label="Später" disabled={busy} onPress={() => void commit(true)} />
+        ) : null
+      }
+      footer={
+        <>
+          {!!error && <InlineNotice message={error} />}
+          {screen !== "overview" && (
+            <PrimaryButton disabled={primaryAction.disabled} onPress={primaryAction.onPress}>
+              {primaryAction.label}
+            </PrimaryButton>
+          )}
+          {screen === "intro" && (
+            <View style={{ alignItems: "center" }}>
+              <LinkAction
+                disabled={busy}
+                label={entry === "intro" ? "Direkt zum Dienstplan-Check" : "Zurück zur Übersicht"}
+                onPress={() => (entry === "intro" ? void commit(true) : setScreen("overview"))}
+              />
+            </View>
+          )}
+        </>
+      }
+    >
+      <>
         {screen === "intro" ? (
-          <Welcome />
+          onboarding ? null : (
+            <Welcome />
+          )
         ) : screen === "overview" ? (
           <>
             <RuleOverview
@@ -331,7 +393,7 @@ export function RuleFlow({
         ) : (
           <>
             {guided && <Progress step={topicStep[id]} label={topic.title} />}
-            <Headline>{screen === "answer" ? topic.question : topic.title}</Headline>
+            {!onboarding && <Headline>{heading}</Headline>}
             {screen === "answer" && id === "week" && (
               <Text style={{ ...TYPOGRAPHY.small, color: p.textMuted }}>
                 Hier zählt die Woche von Montag bis Sonntag.
@@ -634,7 +696,7 @@ export function RuleFlow({
             {help}
           </>
         )}
-      </FlowPage>
-    </Modal>
+      </>
+    </RuleFlowFrame>
   );
 }

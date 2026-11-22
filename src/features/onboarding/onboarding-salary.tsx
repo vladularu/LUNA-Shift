@@ -49,7 +49,7 @@ export function OnboardingSalary({
 }) {
   const p = useOnboardingPalette();
   return (
-    <OnboardingReveal reduced={reduced} appearance={view} style={s.root}>
+    <OnboardingReveal key={view} reduced={reduced} variant="page" style={s.root}>
       {view === "choice"
         ? (
             [
