@@ -1,4 +1,4 @@
-import { WorkplacePanel } from "@/features/workplace/panel";
+import { WorkplaceCheckSummary, type useWorkplaceGroups } from "@/features/workplace/check-summary";
 import { Text } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import type { ReactNode } from "react";
@@ -220,20 +220,20 @@ export function AnnualReportDetails({
             {preferences.enabled === null && !preferences.error ? (
               <AnalysisCoverageNote message="Prüfung wird geladen …" />
             ) : null}
-            <WorkplacePanel
-              period={String(report.year)}
-              restKeys={report.months.flatMap((m) => m.legalRestKeys ?? [])}
-            >
-              {(count) =>
-                !pending && report.complianceCoverageComplete ? (
+            {!pending && report.complianceCoverageComplete ? (
+              <WorkplaceCheckSummary
+                period={String(report.year)}
+                restKeys={report.months.flatMap((month) => month.legalRestKeys ?? [])}
+              >
+                {(_, groups) => (
                   <AnnualCheckDetails
                     report={report}
-                    hasWorkplaceFindings={count > 0}
+                    workplaceGroups={groups}
                     onSelectMonth={onSelectMonth}
                   />
-                ) : null
-              }
-            </WorkplacePanel>
+                )}
+              </WorkplaceCheckSummary>
+            ) : null}
           </>
         ) : section === "PAY" ? (
           pending ? (
@@ -321,15 +321,20 @@ function AnnualTestBadge({ count }: { readonly count: number }) {
 }
 
 function AnnualCheckDetails({
-  hasWorkplaceFindings,
   report,
+  workplaceGroups,
   onSelectMonth,
 }: {
-  readonly hasWorkplaceFindings: boolean;
   readonly report: AnnualReport;
+  readonly workplaceGroups?: ReturnType<typeof useWorkplaceGroups>;
   readonly onSelectMonth: (month: string) => void;
 }) {
   const palette = usePalette();
+  const workplaceByMonth = new Map<string, number>();
+  for (const [, group] of workplaceGroups ?? []) {
+    const month = group[0].date.slice(0, 7);
+    workplaceByMonth.set(month, (workplaceByMonth.get(month) ?? 0) + 1);
+  }
   const issueMonths = report.months.filter(
     (item) =>
       item.criticalCount +
@@ -337,9 +342,8 @@ function AnnualCheckDetails({
         (item.infoCount ?? 0) +
         (item.prerequisiteCount ?? 0) +
         (item.scopeCount ?? 0) >
-      0,
+        0 || workplaceByMonth.has(item.month),
   );
-  if (!issueMonths.length && hasWorkplaceFindings && !isCheckLimited(report)) return null;
   if (issueMonths.length === 0)
     return (
       <View style={{ gap: SPACING.md }}>
@@ -374,9 +378,16 @@ function AnnualCheckDetails({
       <SurfaceCard style={{ paddingHorizontal: SPACING.lg }}>
         {issueMonths.map((item, index) => {
           const count = item.criticalCount + item.warningCount + (item.infoCount ?? 0);
-          const countLabel = count
-            ? `${count} ${count === 1 ? "Meldung" : "Meldungen"}`
-            : "Prüfung eingeschränkt";
+          const workplaceCount = workplaceByMonth.get(item.month) ?? 0;
+          const countLabel =
+            [
+              count ? `${count} ${count === 1 ? "Meldung" : "Meldungen"}` : null,
+              workplaceCount
+                ? `${workplaceCount} ${workplaceCount === 1 ? "Betriebshinweis" : "Betriebshinweise"}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "Prüfung eingeschränkt";
           const monthLabel = formatMonthTitle(item.month);
           const severity =
             item.criticalCount > 0
@@ -588,6 +599,9 @@ function AnnualSalaryDetails({
   );
 }
 
+// Reserve room beyond the shared 100% mark for overtime, up to 125%.
+const MONTHLY_TARGET_WIDTH = 80;
+
 function MonthlyBars({
   report,
   pending,
@@ -600,88 +614,152 @@ function MonthlyBars({
   readonly onSelectMonth: (month: string) => void;
 }) {
   const palette = usePalette();
-  const maximum = Math.max(1, ...report.months.map((item) => item.actualMinutes));
   return (
     <SurfaceCard>
       <ReportCardTitle title="Jahresverlauf" />
       <View style={{ gap: SPACING.sm, padding: SPACING.lg }}>
         <Text
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+          style={{
+            width: `${MONTHLY_TARGET_WIDTH}%`,
+            textAlign: "right",
+            color: palette.textMuted,
+            ...TYPOGRAPHY.caption,
+          }}
         >
-          Monat antippen, um die Stunden im Detail zu öffnen.
+          100 % Soll
         </Text>
-        {report.months.map((item, index) => (
-          <View key={item.month}>
-            {index > 0 ? <CardSeparator inset={0} /> : null}
-            <Pressable
-              accessibilityLabel={`${formatMonthTitle(item.month)}, ${pending ? formatMinutes(item.actualMinutes) : timeAccountActual(item)} ${pending ? "erfasst; Prüfung ausstehend" : "Ist"}${testMonths.includes(item.month) ? ", Testdaten" : ""}`}
-              accessibilityRole="button"
-              onPress={() => onSelectMonth(item.month)}
-              style={({ pressed }) => ({
-                minHeight: CARD_METRICS.rowMinHeight,
-                gap: SPACING.sm,
-                paddingVertical: CARD_METRICS.rowPaddingVertical,
-                opacity: pressed ? 0.72 : 1,
-              })}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.md }}>
-                <View style={{ flex: 1, minWidth: 0, gap: SPACING.xs }}>
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
-                  >
-                    {formatMonthTitle(item.month)}
-                  </Text>
-                  <Text
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
-                  >
-                    {pending ? formatMinutes(item.actualMinutes) : timeAccountActual(item)}
-                    {item.timeAccountMinutes === null && !pending ? "" : " h"}{" "}
-                    {pending ? "erfasst" : "Ist"} · Soll{" "}
-                    {pending
-                      ? "Wird berechnet"
-                      : item.targetMinutes === null
-                        ? "Nicht verfügbar"
-                        : `${formatMinutes(item.targetMinutes)} h`}
-                  </Text>
-                  {testMonths.includes(item.month) ? (
+        {report.months.map((item, index) => {
+          const month = formatMonthTitle(item.month);
+          const isTestMonth = testMonths.includes(item.month);
+          const target = pending
+            ? "Wird berechnet"
+            : item.targetMinutes === null
+              ? "Nicht verfügbar"
+              : `${formatMinutes(item.targetMinutes)} h`;
+          const actual = pending
+            ? `${formatMinutes(item.actualMinutes)} h erfasst`
+            : item.timeAccountMinutes === null
+              ? timeAccountActual(item)
+              : `${timeAccountActual(item)} h`;
+          const balance = pending
+            ? "Wird berechnet"
+            : item.timeAccountMinutes === null
+              ? "Noch offen"
+              : item.balanceMinutes === null
+                ? "Nicht verfügbar"
+                : `${timeAccountBalance({ ...item, balanceMinutes: item.balanceMinutes })} h`;
+          const progress =
+            !pending &&
+            item.targetMinutes !== null &&
+            item.targetMinutes > 0 &&
+            item.timeAccountMinutes !== null
+              ? (item.timeAccountMinutes ?? item.actualMinutes) / item.targetMinutes
+              : null;
+          const values = `Soll ${target} · Ist ${actual} · Saldo ${balance}`;
+
+          return (
+            <View key={item.month}>
+              {index > 0 ? <CardSeparator inset={0} /> : null}
+              <Pressable
+                accessibilityLabel={`${month}, ${values}${isTestMonth ? ", Testdaten" : ""}`}
+                accessibilityRole="button"
+                onPress={() => onSelectMonth(item.month)}
+                style={({ pressed }) => ({
+                  minHeight: CARD_METRICS.rowMinHeight,
+                  gap: SPACING.sm,
+                  paddingVertical: CARD_METRICS.rowPaddingVertical,
+                  opacity: pressed ? 0.72 : 1,
+                })}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.md }}>
+                  <View style={{ flex: 1, minWidth: 0, gap: SPACING.xs }}>
+                    <Text
+                      maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                      style={{ color: palette.text, ...TYPOGRAPHY.bodyStrong }}
+                    >
+                      {month}
+                    </Text>
                     <Text
                       maxFontSizeMultiplier={TEXT_MAX_SCALE}
                       style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
                     >
-                      Testdaten
+                      {values}
                     </Text>
-                  ) : null}
+                    {isTestMonth ? (
+                      <Text
+                        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                        style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}
+                      >
+                        Testdaten
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Ionicons color={palette.textMuted} name="chevron-forward" size={20} />
                 </View>
-                <Ionicons color={palette.textMuted} name="chevron-forward" size={20} />
-              </View>
-              <View
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                style={{
-                  height: 6,
-                  backgroundColor: palette.primarySoft,
-                  borderRadius: RADII.pill,
-                  overflow: "hidden",
-                }}
-              >
-                <View
-                  style={{
-                    height: "100%",
-                    width: `${(item.actualMinutes / maximum) * 100}%`,
-                    backgroundColor: palette.primary,
-                    borderRadius: RADII.pill,
-                  }}
-                />
-              </View>
-            </Pressable>
-          </View>
-        ))}
+                {progress !== null ? <MonthlyHoursBar progress={progress} /> : null}
+              </Pressable>
+            </View>
+          );
+        })}
       </View>
       <CardFooterLine />
     </SurfaceCard>
+  );
+}
+
+function MonthlyHoursBar({ progress }: { readonly progress: number }) {
+  const palette = usePalette();
+  const actualWidth = Math.max(0, Math.min(progress * MONTHLY_TARGET_WIDTH, MONTHLY_TARGET_WIDTH));
+  const overtimeWidth = Math.min(
+    progress * MONTHLY_TARGET_WIDTH - MONTHLY_TARGET_WIDTH,
+    100 - MONTHLY_TARGET_WIDTH,
+  );
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ height: 10, justifyContent: "center" }}
+    >
+      <View
+        style={{
+          height: 6,
+          flexDirection: "row",
+          backgroundColor: palette.surfaceMuted,
+          borderRadius: RADII.pill,
+          overflow: "hidden",
+        }}
+      >
+        <View
+          testID="monthly-hours-fill"
+          style={{
+            width: `${actualWidth}%`,
+            backgroundColor: progress < 1 ? palette.danger : palette.primary,
+          }}
+        />
+        {overtimeWidth > 0 ? (
+          <View
+            testID="monthly-hours-overtime"
+            style={{
+              width: `${overtimeWidth}%`,
+              minWidth: 2,
+              backgroundColor: palette.positiveBalance,
+            }}
+          />
+        ) : null}
+      </View>
+      <View
+        testID="monthly-hours-target"
+        style={{
+          position: "absolute",
+          left: `${MONTHLY_TARGET_WIDTH}%`,
+          top: 0,
+          bottom: 0,
+          width: 1,
+          backgroundColor: palette.textMuted,
+        }}
+      />
+    </View>
   );
 }
 

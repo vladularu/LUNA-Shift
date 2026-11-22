@@ -1,6 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { MonthlySummary } from "@/domain/types";
+import { LIGHT_PALETTE } from "@/theme/palette";
 import { router } from "expo-router";
 import { WorktimeDetailsScreen } from "./worktime-details-screen";
 
@@ -47,6 +48,18 @@ jest.mock("./monthly-analysis", () => ({
     },
   }),
 }));
+
+describe("Monatlicher Stundensaldo", () => {
+  it.each([
+    [1_572, "+26:12", LIGHT_PALETTE.positiveBalance],
+    [0, "+0:00", LIGHT_PALETTE.success],
+    [-30, "\u22120:30", LIGHT_PALETTE.danger],
+  ])("uses the appropriate color for a balance of %i minutes", async (minutes, label, color) => {
+    mockSummary = { targetMinutes: 9_702, actualMinutes: 9_702 + minutes, balanceMinutes: minutes };
+    const screen = await render(<WorktimeDetailsScreen />);
+    expect(screen.getByText(label)).toHaveStyle({ color });
+  });
+});
 
 describe("Stunden ohne Dienste", () => {
   it("shows precise agreed account time separately from recorded work and opens the duty", async () => {

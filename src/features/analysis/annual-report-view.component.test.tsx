@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
 import { annualDetailsRoute } from "@/navigation/routes";
 
-import type { ShiftType } from "@/domain/types";
+import type { ShiftEntry, ShiftType } from "@/domain/types";
+import { WorkplaceDataContext } from "@/features/workplace/store";
+import { LIGHT_PALETTE } from "@/theme/palette";
 import type { AnnualReport } from "@/features/analysis/annual-report";
 import { AnnualReportScreen, AnnualReportDetails } from "@/features/analysis/annual-report-view";
 import { summarizeAnnualNetPay } from "./annual-net-pay";
@@ -63,6 +65,12 @@ const report: AnnualReport = {
 };
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+let mockEntries: ShiftEntry[] = [];
+jest.mock("@/application/pflegeshift-provider", () => ({
+  ...jest.requireActual<object>("@/application/pflegeshift-provider"),
+  usePflegeShiftEntries: () => ({ entries: mockEntries }),
+  usePflegeShiftProfile: () => ({ profile: { timeZone: "Europe/Berlin" } }),
+}));
 let mockPlanning = true;
 jest.mock("@/features/settings/check-preferences", () => ({
   useCheckPreferences: () => ({ enabled: mockPlanning, error: null }),
@@ -207,6 +215,7 @@ describe("annual report view", () => {
   );
   beforeEach(() => {
     mockPlanning = true;
+    mockEntries = [];
     mockAnnualNet = { report: null, loading: true, error: null };
   });
   it("limits the clear yearly result to supported checks", async () => {
@@ -286,6 +295,134 @@ describe("annual report view", () => {
     expect(screen.getByLabelText("1 Testmonate enthalten")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /^August 2026,/ }));
     expect(onSelectMonth).toHaveBeenCalledWith("2026-08");
+  });
+
+  it("shows Soll, Ist and Saldo and keeps each month's target mark fixed", async () => {
+    const hours: AnnualReport = {
+      ...report,
+      months: [
+        { ...report.months[0], targetMinutes: 6_000, actualMinutes: 3_000, balanceMinutes: -3_000 },
+        { ...report.months[1], targetMinutes: 9_600, actualMinutes: 9_600, balanceMinutes: 0 },
+        {
+          ...report.months[2],
+          targetMinutes: 6_000,
+          actualMinutes: 6_000,
+          timeAccountMinutes: 7_500,
+          balanceMinutes: 1_500,
+        },
+        { ...report.months[3], targetMinutes: null, balanceMinutes: null },
+        { ...report.months[4], timeAccountMinutes: null, balanceMinutes: null },
+        { ...report.months[5], targetMinutes: 0, balanceMinutes: 0 },
+      ],
+    };
+    const screen = await render(
+      <AnnualReportDetails
+        report={hours}
+        section="WORK"
+        testMonths={[]}
+        onSelectMonth={jest.fn()}
+      />,
+    );
+    const below = within(
+      screen.getByRole("button", {
+        name: "Januar 2026, Soll 100:00 h · Ist 50:00 h · Saldo −50:00 h",
+      }),
+    );
+    const exact = within(screen.getByRole("button", { name: /^Februar 2026,/ }));
+    const above = within(
+      screen.getByRole("button", {
+        name: "März 2026, Soll 100:00 h · Ist 125:00 h · Saldo +25:00 h",
+      }),
+    );
+    const hidden = { includeHiddenElements: true };
+
+    for (const row of [below, exact, above]) {
+      expect(row.getByTestId("monthly-hours-target", hidden)).toHaveStyle({ left: "80%" });
+    }
+    expect(below.getByTestId("monthly-hours-fill", hidden)).toHaveStyle({
+      width: "40%",
+      backgroundColor: LIGHT_PALETTE.danger,
+    });
+    expect(exact.getByTestId("monthly-hours-fill", hidden)).toHaveStyle({
+      width: "80%",
+      backgroundColor: LIGHT_PALETTE.primary,
+    });
+    expect(above.getByTestId("monthly-hours-fill", hidden)).toHaveStyle({
+      width: "80%",
+      backgroundColor: LIGHT_PALETTE.primary,
+    });
+    expect(exact.queryByTestId("monthly-hours-overtime", hidden)).toBeNull();
+    expect(above.getByTestId("monthly-hours-overtime", hidden)).toHaveStyle({
+      width: "20%",
+      backgroundColor: LIGHT_PALETTE.positiveBalance,
+    });
+
+    expect(screen.getByRole("button", { name: /April 2026, Soll Nicht verfügbar/ })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /Mai 2026, .*Ist Noch offen · Saldo Noch offen/ }),
+    ).toBeVisible();
+    expect(screen.getAllByTestId("monthly-hours-target", hidden)).toHaveLength(3);
+    await screen.rerender(
+      <AnnualReportDetails
+        report={hours}
+        pending
+        section="WORK"
+        testMonths={[]}
+        onSelectMonth={jest.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("monthly-hours-target", hidden)).toBeNull();
+  });
+
+  it("shows a workplace-only month without listing individual workplace findings", async () => {
+    mockEntries = ["2026-11-14", "2026-11-21"].map(
+      (date) =>
+        ({
+          kind: "SHIFT",
+          id: date,
+          date,
+          title: "Frühdienst",
+          type: "EARLY",
+          color: "#336699",
+          symbol: "sun",
+          startTime: "06:00",
+          endTime: "14:00",
+          breakMinutes: 30,
+          revision: 1,
+          deletedAt: null,
+        }) as ShiftEntry,
+    );
+    const onSelectMonth = jest.fn();
+    const screen = await render(
+      <WorkplaceDataContext.Provider
+        value={{
+          handled: true,
+          exceptions: [],
+          history: [
+            {
+              from: "2026-01-01",
+              rules: {
+                weekend: { mode: "alternate", anchor: null, onRequest: false, source: "agreed" },
+              },
+            },
+          ],
+        }}
+      >
+        <AnnualReportDetails
+          report={report}
+          testMonths={[]}
+          section="CHECK"
+          onSelectMonth={onSelectMonth}
+        />
+      </WorkplaceDataContext.Provider>,
+    );
+    expect(screen.getByRole("button", { name: /^August 2026, 3 Meldungen/ })).toBeVisible();
+    expect(screen.queryByText("Betriebsregeln")).toBeNull();
+    expect(screen.queryByText("Zwei Wochenenden hintereinander mit Dienst")).toBeNull();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /^November 2026, 1 Betriebshinweis/ }),
+    );
+    expect(onSelectMonth).toHaveBeenCalledWith("2026-11");
   });
 
   it("opens the affected month from the full year check details", async () => {
