@@ -99,6 +99,21 @@ export function WorktimeDetailsScreen() {
         </ReportScrollView>
       </>
     );
+  const balanceMinutes =
+    summary.ok &&
+    summary.value.timeAccountMinutes !== null &&
+    !summary.value.specialDutyNotes?.length
+      ? summary.value.balanceMinutes
+      : null;
+  const balanceAccent =
+    balanceMinutes === null
+      ? palette.textMuted
+      : balanceMinutes < 0
+        ? palette.danger
+        : balanceMinutes > 0
+          ? palette.positiveBalance
+          : palette.success;
+
   return (
     <ReportScrollView>
       <Stack.Screen options={{ title: "Stunden" }} />
@@ -126,13 +141,7 @@ export function WorktimeDetailsScreen() {
               : timeAccountBalance(summary.value)
             : "Nicht verfügbar"
         }
-        balanceAccent={
-          summary.ok && summary.value.timeAccountMinutes !== null
-            ? summary.value.balanceMinutes < 0
-              ? palette.danger
-              : palette.success
-            : palette.textMuted
-        }
+        balanceAccent={balanceAccent}
       />
       {summary.ok && summary.value.specialDutyNotes?.length ? (
         <AnalysisCoverageNote message={summary.value.specialDutyNotes.join(" ")} />

@@ -41,7 +41,7 @@ export function useWorkplaceGroups(
 type SummaryProps = {
   period: string;
   restKeys?: readonly string[];
-  children: (count?: number) => ReactNode;
+  children: (count?: number, groups?: ReturnType<typeof useWorkplaceGroups>) => ReactNode;
 };
 
 export function WorkplaceCheckSummary({ period, restKeys, children }: SummaryProps) {
@@ -74,5 +74,5 @@ function ConfiguredSummary({
   children,
 }: SummaryProps & { data: WorkplaceData }) {
   const groups = useWorkplaceGroups(data, period, restKeys);
-  return children(groups.length);
+  return children(groups.length, groups);
 }

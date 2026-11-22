@@ -9107,8 +9107,8 @@
     {
       "path": "src/features/analysis/annual-report-view.tsx",
       "kind": "modified",
-      "sha256": "e48c5a43537ad9c391dcb4baccf0680e45b0637d49a61493bf382cb0e2af14e5",
-      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate prerequisite and scope disclosure into one expandable annual status, with bounded empty copy; retain original counts and month navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Allow the analysis overview to omit its inner annual header while retaining the existing standalone default and all report/payment calculations and content. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Zeigt die persönlichen Hinweise beim bewussten Öffnen der Jahresprüfung. Place workplace findings after the annual check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "1ddc3402d158bc9c347fa85c39580667a17f321e5b4667986683f327136f335b",
+      "reason": "Paket 5: restructure annual gross detail into a compact year summary, existing additional gross components and twelve monthly destinations. Preserve all values, missing/month coverage, manual salary behavior and navigation; use existing Luftig-aware primitives. No calculation, net, export, native or global theme changes. Preview device acceptance pending. Package B: request salary preparation only for PAY details and net preparation only for NET details. WORK, CHECK, PREMIUM and SHIFTS do not request financial settings/calculations. Preserve accepted annual layout and Luftig. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. Remove only the disabled-planning notice and its unused imports/string at user request, preserving live Luftig Preview, legal findings, prerequisites, loading/error messages, filters, calculations and stored preferences. iPhone acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Dienstplan-Check local implementation: Consolidate prerequisite and scope disclosure into one expandable annual status, with bounded empty copy; retain original counts and month navigation. Local validation only; new iPhone acceptance and OTA approval remain separate. User-requested fixed Supershift-style analysis header, 2026-11-17: Allow the analysis overview to omit its inner annual header while retaining the existing standalone default and all report/payment calculations and content. Local implementation and automated validation only. New Preview publication approval and physical iPhone acceptance remain pending; accepted TestFlight baseline and native configuration unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Zeigt die persönlichen Hinweise beim bewussten Öffnen der Jahresprüfung. Place workplace findings after the annual check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Jahresansicht in iOS Preview 56: Zeigt Soll, Ist und Saldo je Monat mit einer festen Sollmarke. Zeigt betriebliche Hinweise gebündelt in den Monatszeilen der Jahresprüfung."
     },
     {
       "path": "src/features/analysis/annual-report.ts",
@@ -9583,6 +9583,12 @@
       "kind": "added",
       "sha256": "3970314b8ef50703ae2cfe62a5b387bdc2147a9a5ad7b496864a3dc2914013ca",
       "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen."
+    },
+    {
+      "path": "src/features/analysis/worktime-details-screen.tsx",
+      "kind": "modified",
+      "sha256": "e06d3a07a29f8c8e706d4f41bc594ffeb169c7fbd8d89139ac1e297427714759",
+      "reason": "Monatliche Stundenansicht in iOS Preview 56: Hebt einen positiven Stundensaldo mit derselben grünen Farbe wie den Mehrstundenabschnitt der Jahresansicht hervor."
     },
     {
       "path": "src/features/calendar/calendar-header-notices.tsx",
@@ -10271,8 +10277,8 @@
     {
       "path": "src/features/workplace/check-summary.tsx",
       "kind": "added",
-      "sha256": "34a4856afa2ff0f35ff553752493e3a1cc3600de10b0bcaf3ce873c2e745e430",
-      "reason": "iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check."
+      "sha256": "ba276869cc84d456ba4e8a3043ed8934e0f9830275d77c8b128d5464edd17777",
+      "reason": "iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Jahresansicht in iOS Preview 56: Gibt der Jahresprüfung die bereits berechneten Gruppen für die Zuordnung der betrieblichen Hinweise zu Monatszeilen."
     },
     {
       "path": "src/features/workplace/finding-details.tsx",
