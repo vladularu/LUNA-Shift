@@ -3,12 +3,23 @@ import { usePalette } from "./palette";
 import { TYPOGRAPHY } from "./typography";
 import { DARK_PALETTE, LIGHT_PALETTE } from "./palette-values";
 
+export const GOOGLE_LOGO_COLORS = {
+  red: "#EA4335",
+  blue: "#4285F4",
+  yellow: "#FBBC05",
+  green: "#34A853",
+} as const;
+
 export function useOnboardingPalette() {
   const palette = usePalette();
   const { dark } = palette;
   return {
     dark,
     canvas: palette.onboardingBackground,
+    planProgressSurface: dark ? "#25332C" : "#E4EEE7",
+    syncOutline: dark ? "#B6B2C3" : "#615D6C",
+    syncSurface: dark ? "#36343E" : "#EEECF3",
+    syncAccent: dark ? palette.salaryAccent : "#986C0D",
     surface: palette.surface,
     text: palette.text,
     muted: palette.textMuted,

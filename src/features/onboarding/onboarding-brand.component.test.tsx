@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, render, waitFor } from "@testing-library/react-native";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, Animated, StyleSheet } from "react-native";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
 import { OnboardingBrand } from "./onboarding-brand";
 import { OnboardingReveal, useOnboardingReducedMotion } from "./onboarding-motion";
@@ -14,6 +14,25 @@ beforeEach(() => {
 });
 
 describe("theme-aware onboarding identity", () => {
+  it("keeps page content in position and never rewinds an already visible page", async () => {
+    jest
+      .spyOn(Animated, "timing")
+      .mockReturnValue({ start: jest.fn(), stop: jest.fn(), reset: jest.fn() });
+    const page = (name: string, reduced: boolean) => (
+      <OnboardingReveal key={name} variant="page" reduced={reduced} testID="page">
+        <Text>{name}</Text>
+      </OnboardingReveal>
+    );
+    const screen = await render(page("Plan", true));
+    await screen.rerender(page("Plan", false));
+    expect(screen.getByTestId("page")).toHaveStyle({ opacity: 1 });
+    await screen.rerender(page("Zusammenfassung", false));
+    const surface = screen.getByTestId("page");
+    expect(surface).toHaveStyle({ opacity: 0.85 });
+    expect(StyleSheet.flatten(surface.props.style).transform).toBeUndefined();
+    await screen.rerender(page("Zusammenfassung", true));
+    expect(screen.getByTestId("page")).toHaveStyle({ opacity: 1 });
+  });
   it("keeps an accessible identity and selects the supplied logo for each theme", async () => {
     const screen = await render(<OnboardingBrand reduced />);
     expect(screen.getByRole("image", { name: "LUNA Shift" })).toBeTruthy();

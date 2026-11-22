@@ -21,6 +21,12 @@
       "reason": "Dienstplan-Check local implementation: Use the common Dienstplan-Check settings route title. Local validation only; new iPhone acceptance and OTA approval remain separate."
     },
     {
+      "path": "app/onboarding.tsx",
+      "kind": "modified",
+      "sha256": "8874a5d4750a6c50f9c31eea90bc07713a2371b80aae8d6f02ca770c8ef43e5d",
+      "reason": "Aktiviert den Einrichtungsplan im internen Onboarding zum Testen."
+    },
+    {
       "path": "eas.json",
       "kind": "modified",
       "sha256": "f36adeb157f143c4c9e9f28d9a6a62c83990054554ef6075243888c824b55e97",
@@ -9867,10 +9873,58 @@
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
+      "path": "src/features/onboarding/onboarding-brand.tsx",
+      "kind": "modified",
+      "sha256": "565dd1fbd8ddeba43d8635afb95bf1cfcd4bcc6141f8ca8fb83fc34b9815113c",
+      "reason": "Center the current LUNA logo on the dedicated Preview welcome page."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-header.tsx",
+      "kind": "added",
+      "sha256": "1f6575f466f49c2a2e405bca17f4e18b042bfda5ccd227dfa7a46e60b1c14f1b",
+      "reason": "Render consistent back and close actions at the measured safe-area position across onboarding."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-motion.tsx",
+      "kind": "modified",
+      "sha256": "c6dac37dfa94f1f4d5eb0520afb9a7f0b8ce31a9b51daab8b1b2caa0d714f307",
+      "reason": "Start each reveal at its intended opacity and keep regular page transitions readable and stationary."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-salary.tsx",
+      "kind": "modified",
+      "sha256": "6595c3712ee1d8b259aa16f91ff063788ab817ebd940b65cf5355470ccf4061b",
+      "reason": "Use the stationary page reveal when switching salary views."
+    },
+    {
       "path": "src/features/onboarding/onboarding-screen.tsx",
       "kind": "modified",
-      "sha256": "c1558b60ce988481ccf05a3704ad829be922b0b4915b9c5ce7b467c2788edb11",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: put the top safe inset inside the fixed onboarding header while keeping the bottom and lateral insets on the screen. Preview device acceptance pending."
+      "sha256": "a6c95fb6ba4c169956b52284d87858851d29ddec2b18766580d475fd15652301",
+      "reason": "Open the account-first final page after the Preview summary and complete the existing profile flow directly. Fade out the Preview summary before opening the sign-in page and respect the active Reduce Motion setting. Keep the frame and scroll edge mounted between ordinary pages and the summary, and lay out each new page with the established modal insets."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-start-art.tsx",
+      "kind": "added",
+      "sha256": "45b0632033b05e9203a815bea8ab63a739510796763672bcad0e7d8b09f08e99",
+      "reason": "Draw the approved account synchronization illustration and Google mark using the existing SVG runtime."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-start.tsx",
+      "kind": "added",
+      "sha256": "a05be5408ea2d370b6817b6bd621f36424cae61c53267195eb09d528b15a8c46",
+      "reason": "Show direct Apple and Google sign-in and the guest action on the iOS Preview final page. Preserve the draft on cancellation and avoid repeat sign-in for an existing session. Reveal the sync illustration first, then lift the sign-in sheet, reserving the iOS Apple button height to avoid a layout jump. Use the shared navigation header and the same already measured modal insets on the sign-in page."
+    },
+    {
+      "path": "src/features/onboarding/onboarding-workplace.tsx",
+      "kind": "added",
+      "sha256": "3dcce7ceb8fc91ec294af1e58c73aeaa002225b926c4345ae2f0c6261371b79c",
+      "reason": "Hält Antworten bis zum Abschluss als Entwurf und übernimmt beantwortete Regeln über den bestehenden Speicher."
+    },
+    {
+      "path": "src/features/onboarding/percentage-slider.tsx",
+      "kind": "modified",
+      "sha256": "3f183a7f5d40673cba6da1849cd1d7658398d291d9eaaa9f6bad836e19eaa8bf",
+      "reason": "Keep the selected percentage preset stable until the user releases the slider."
     },
     {
       "path": "src/features/private-cloud/private-cloud-screen.tsx",
@@ -10325,8 +10379,8 @@
     {
       "path": "src/features/workplace/rule-flow.tsx",
       "kind": "added",
-      "sha256": "e71c77cb3a97497583c342b195a20550fe591f2b28f217bf146d57e73c2d8a0d",
-      "reason": "Use individual answer screens, relevant follow-up questions and per-rule editing with validity dates. Align the stepper, offer both validity scopes and disclose optional details. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Die Wochenfrage unterscheidet die Obergrenze pro Kalenderwoche, den Durchschnitt und Arbeitstage am Stück. Der Hinweis nennt nur die Kalenderwoche von Montag bis Sonntag."
+      "sha256": "8db9740e1c44011d7d2e30aa0718b34572b0b5fd7b1daaaa3a4691e70729a83b",
+      "reason": "Use individual answer screens, relevant follow-up questions and per-rule editing with validity dates. Align the stepper, offer both validity scopes and disclose optional details. Betriebsregel-Details mit Dienstnachweisen und überarbeitete Eingabe für die iPhone-Preview. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Die Wochenfrage unterscheidet die Obergrenze pro Kalenderwoche, den Durchschnitt und Arbeitstage am Stück. Der Hinweis nennt nur die Kalenderwoche von Montag bis Sonntag. Zeigt denselben Fragebogen im Onboarding-Rahmen und weiterhin im Dialog von Dienstplan-Check und Einstellungen."
     },
     {
       "path": "src/features/workplace/store.tsx",
@@ -10459,6 +10513,12 @@
       "kind": "modified",
       "sha256": "18ef9a989143d37e4d66941c7748e85db5d699ab160584cb1bdcec13f9e4da9b",
       "reason": "Preview-only preservation of src/theme/card-layout.ts byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+    },
+    {
+      "path": "src/theme/onboarding.ts",
+      "kind": "modified",
+      "sha256": "2de78df8254e5071237e27363516e9ea01d179cbd9371695159edabb442003bf",
+      "reason": "Die Fortschrittskarte im Einrichtungsplan verwendet die helle und dunkle Farbfläche des getesteten Entwurfs. Define the sync illustration and Google brand colors for the account-first Preview page."
     },
     {
       "path": "src/theme/palette-values.ts",

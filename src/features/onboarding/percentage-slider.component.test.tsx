@@ -6,7 +6,7 @@ import {
   weeklyPercentage,
 } from "./percentage-slider";
 
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 function render(ui: ReactElement) {
   return renderNative(
@@ -78,6 +78,42 @@ describe("percentage conversion", () => {
     expect(interaction).toHaveBeenLastCalledWith(false);
     await fireEvent(slider, "responderTerminate", {});
     expect(interaction).toHaveBeenLastCalledWith(false);
+  });
+  it("keeps preset colors stable during a drag and selects only the released percentage", async () => {
+    function ControlledSlider() {
+      const [hours, setHours] = useState("40");
+      return (
+        <PercentageSlider
+          weeklyHours={hours}
+          basis={40}
+          onHoursChange={setHours}
+          onBasisChange={jest.fn()}
+          onInteractionChange={jest.fn()}
+        />
+      );
+    }
+    const screen = await render(<ControlledSlider />);
+    const slider = screen.getByRole("adjustable");
+    const selected = (value: number) =>
+      screen.queryByRole("button", { name: value + " Prozent auswählen", selected: true });
+    await fireEvent(slider, "layout", { nativeEvent: { layout: { width: 90 } } });
+    await fireEvent(slider, "responderGrant", { nativeEvent: { locationX: 90, pageX: 90 } });
+    for (const percent of [50, 80, 75]) {
+      await fireEvent(slider, "responderMove", { nativeEvent: { pageX: percent - 10 } });
+      expect(screen.getByTestId("onboarding-percentage-value")).toHaveTextContent(percent + " %");
+      expect(selected(100)).toBeTruthy();
+      expect(selected(percent)).toBeNull();
+    }
+    await fireEvent(slider, "responderRelease", { nativeEvent: { pageX: 65 } });
+    expect(selected(75)).toBeTruthy();
+    await fireEvent(slider, "responderGrant", { nativeEvent: { locationX: 40, pageX: 40 } });
+    await fireEvent(slider, "responderTerminate", {});
+    expect(selected(75)).toBeTruthy();
+    expect(screen.getByTestId("onboarding-percentage-value")).toHaveTextContent("75 %");
+    await fireEvent(slider, "responderGrant", { nativeEvent: { locationX: 40, pageX: 40 } });
+    await fireEvent(slider, "responderRelease", { nativeEvent: { pageX: 41 } });
+    expect(screen.getByTestId("onboarding-percentage-value")).toHaveTextContent("51 %");
+    for (const value of [50, 75, 80, 100]) expect(selected(value)).toBeNull();
   });
   it("decrements by one percent despite minute rounding on a 38.5-hour basis", async () => {
     const change = jest.fn();
