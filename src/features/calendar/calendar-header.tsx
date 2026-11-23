@@ -11,7 +11,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  useWindowDimensions,
   View,
   type LayoutChangeEvent,
 } from "react-native";
@@ -37,13 +36,18 @@ import {
 import { usePalette } from "@/theme/palette";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
 import { MOTION } from "@/theme/motion";
-import { TYPOGRAPHY } from "@/theme/typography";
-import { CORNER_CURVE, SHADOWS, RADII, SCREEN_LAYOUT, SPACING } from "@/theme/tokens";
+import {
+  CALENDAR_METRICS,
+  CORNER_CURVE,
+  SHADOWS,
+  RADII,
+  SCREEN_LAYOUT,
+  SPACING,
+} from "@/theme/tokens";
 import { nativeScrollEdge } from "@/ui/native-scroll-edge";
 import { TabScreenHeader } from "@/ui/screen-layout";
 
 const AnimatedGlassView = Animated.createAnimatedComponent(GlassView);
-const ACTION_GROUP_HEIGHT = 48;
 
 /** Measure the full overlap when iOS draws the edge behind the status bar. */
 export function useCalendarHeaderOverlap() {
@@ -122,19 +126,6 @@ export const CalendarHeader = memo(function CalendarHeader({
 }) {
   const palette = usePalette();
   const background = useCalendarBackground();
-  const { fontScale } = useWindowDimensions();
-  // Both headers share a bottom anchor; align the fixed island with the scrolling title's center.
-  const titleAlignmentStyle =
-    pageTitle && viewMode === "MONTH" && fontScale < SCREEN_LAYOUT.headerAccessoryStackFontScale
-      ? {
-          transform: [
-            {
-              translateY:
-                (ACTION_GROUP_HEIGHT - Math.ceil(TYPOGRAPHY.hero.lineHeight * fontScale)) / 2,
-            },
-          ],
-        }
-      : undefined;
   const glassAvailable =
     Platform.OS === "ios" && isGlassEffectAPIAvailable() && isLiquidGlassAvailable();
   const [reduceTransparency, setReduceTransparency] = useState(true);
@@ -194,14 +185,11 @@ export const CalendarHeader = memo(function CalendarHeader({
   }));
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={[styles.headerPosition, titleAlignmentStyle]}
-      testID="calendar-header-position"
-    >
+    <View pointerEvents="box-none" style={styles.headerPosition} testID="calendar-header-position">
       <TabScreenHeader
         testID="calendar-header"
         transparent={pageTitle || Boolean(background.uri)}
+        compactTitleArea={pageTitle}
         titleHidden={pageTitle && viewMode === "MONTH"}
         surface="calendarBackground"
         accessory={
@@ -317,7 +305,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.xs - SCREEN_LAYOUT.horizontalPadding,
   },
   actionGroup: {
-    minHeight: ACTION_GROUP_HEIGHT,
+    minHeight: CALENDAR_METRICS.headerActionHeight,
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",

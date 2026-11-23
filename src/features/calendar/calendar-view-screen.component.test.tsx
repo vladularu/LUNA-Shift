@@ -179,13 +179,20 @@ describe("CalendarViewScreen", () => {
     expect(screen.queryByText("Feiertag (Beispiel)")).toBeNull();
   });
 
-  it("tracks light and dark calendar surfaces", async () => {
+  it("matches the month grid surface and continuous weekend band in light and dark mode", async () => {
     const screen = await renderView();
+    const hidden = { includeHiddenElements: true };
     for (const palette of [DARK_PALETTE, LIGHT_PALETTE]) {
       mockPalette = palette;
       await screen.rerender(page());
       expect(screen.getByTestId("appearance-calendar-preview")).toHaveStyle({
-        backgroundColor: palette.calendarBackground,
+        backgroundColor: palette.surface,
+      });
+      expect(screen.getByTestId("appearance-preview-weekend-background", hidden)).toHaveStyle({
+        backgroundColor: palette.dark ? palette.weekend : palette.surfaceRaised,
+      });
+      expect(screen.getByTestId("calendar-combined-day-2026-10-04")).toHaveStyle({
+        backgroundColor: "transparent",
       });
     }
   });

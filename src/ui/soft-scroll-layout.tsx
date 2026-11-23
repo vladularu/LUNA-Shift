@@ -114,21 +114,25 @@ export function SoftScrollAnchor({
   children,
   existingOverlap = false,
   extendBelow = 0,
+  topEffectHeight,
   showEffect = true,
 }: PropsWithChildren<{
   readonly existingOverlap?: boolean;
   readonly extendBelow?: number;
+  readonly topEffectHeight?: number;
   readonly showEffect?: boolean;
 }>) {
   const edge = useContext(SoftEdgeContext);
   const NativeEdge = nativeScrollEdge?.ScrollEdgeEffect;
   if (!NativeEdge || !edge) return children;
 
-  // A separately positioned native view extends the UIKit interaction itself.
-  // The fixed header still determines the layout and content padding.
-  const extended = edge.edge === "top" && extendBelow > 0;
-  const effectStyle = extended
-    ? [styles.extendedEffect, { bottom: -extendBelow }]
+  // Position the UIKit interaction independently of the header's measured layout.
+  const detachedEffect = edge.edge === "top" && (topEffectHeight !== undefined || extendBelow > 0);
+  const effectStyle = detachedEffect
+    ? [
+        styles.positionedEffect,
+        topEffectHeight === undefined ? { bottom: -extendBelow } : { height: topEffectHeight },
+      ]
     : existingOverlap
       ? styles.anchor
       : undefined;
@@ -136,14 +140,14 @@ export function SoftScrollAnchor({
     <NativeEdge
       edge={edge.edge}
       effect={showEffect ? "soft" : "hidden"}
-      pointerEvents={extended ? "none" : "box-none"}
+      pointerEvents={detachedEffect ? "none" : "box-none"}
       style={effectStyle}
       testID="soft-scroll-edge"
     >
-      {extended ? null : children}
+      {detachedEffect ? null : children}
     </NativeEdge>
   );
-  if (existingOverlap && !extended) return effect;
+  if (existingOverlap && !detachedEffect) return effect;
 
   return (
     <View
@@ -160,7 +164,7 @@ export function SoftScrollAnchor({
       }
     >
       {effect}
-      {extended ? children : null}
+      {detachedEffect ? children : null}
     </View>
   );
 }
@@ -268,5 +272,5 @@ export function renderSoftScrollView(props: ScrollViewProps) {
 
 const styles = StyleSheet.create({
   anchor: { flexShrink: 0, zIndex: 1 },
-  extendedEffect: { position: "absolute", top: 0, left: 0, right: 0 },
+  positionedEffect: { position: "absolute", top: 0, left: 0, right: 0 },
 });

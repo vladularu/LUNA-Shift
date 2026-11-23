@@ -9615,10 +9615,16 @@
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
+      "path": "src/features/calendar/calendar-header.component.test.tsx",
+      "kind": "modified",
+      "sha256": "1bc9852b02754e2ab982f98644009b6e69d189b0e082407b276c51a3318e00ba",
+      "reason": "Update the protected toolbar regression to verify the standard tab title-area height without vertical translation. Keep the right gutter, 48-by-44 touch targets, and all toolbar destination assertions."
+    },
+    {
       "path": "src/features/calendar/calendar-header.tsx",
       "kind": "modified",
-      "sha256": "5996f134aca12c5321a7eaf55897a7c11710f0a3be2fba3cf1581b4f67f1fb08",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "03792f6e693e1f298a9ead15033225a9345377b322acf9b1aa1edeaf8730a09c",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Align the live calendar button group with the other root headers using their title-area height. Let the measured header height give the saved space to the month grid and retain the native touch sizes."
     },
     {
       "path": "src/features/calendar/calendar-layout.ts",
@@ -9629,8 +9635,8 @@
     {
       "path": "src/features/calendar/calendar-month-title.tsx",
       "kind": "modified",
-      "sha256": "3ab1ae3d6a643b0a0e18928789d82bb676a9c86108f16ab2eada4608903d57ff",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "00916eeebeb21f0b0e28cfd5ed93542df8acda084a93ae0cc3ff5c4a0f7cd147",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Align the scrolling month title with the analysis header by using its 44-point accessory height for the invisible placeholder. Keep the fixed calendar buttons and the independent status-bar edge placement. Keep the paged title and its adaptive text behavior."
     },
     {
       "path": "src/features/calendar/calendar-performance-controls.tsx",
@@ -9647,20 +9653,20 @@
     {
       "path": "src/features/calendar/calendar-prototype-canvas.tsx",
       "kind": "modified",
-      "sha256": "25c166e77774a9435685fac725731a688f16e5af5b6a74048f6fc375e827688d",
-      "reason": "User-reported quick-stamp delay 2026-11-16: memoize unchanged own/shared day contents, retain stable empty lists and pass selection only to affected date markers. Preserve existing visual geometry, entry animations, provider persistence and rapid-toggle ordering. Local candidate validation only; Preview iPhone acceptance and every Git/build/OTA release approval remain pending. No accepted TestFlight baseline, native configuration, stored data or calculation changes. Follow-up to the same quick-stamp delay after iPhone feedback Keine Besserung on 2026-11-16: retain immediate first-frame service visibility and skip all entry/exit animation when Reduce Motion is enabled. Preserve geometry, selected-date rendering, shared entries, persistence and native inputs. Preview-only correction within the ongoing scoped OTA; renewed iPhone acceptance remains pending."
+      "sha256": "6460c88950b9508204313178e946f4accb7d1311469ebc603db2a45967a87e97",
+      "reason": "User-reported quick-stamp delay 2026-11-16: memoize unchanged own/shared day contents, retain stable empty lists and pass selection only to affected date markers. Preserve existing visual geometry, entry animations, provider persistence and rapid-toggle ordering. Local candidate validation only; Preview iPhone acceptance and every Git/build/OTA release approval remain pending. No accepted TestFlight baseline, native configuration, stored data or calculation changes. Follow-up to the same quick-stamp delay after iPhone feedback Keine Besserung on 2026-11-16: retain immediate first-frame service visibility and skip all entry/exit animation when Reduce Motion is enabled. Preserve geometry, selected-date rendering, shared entries, persistence and native inputs. Preview-only correction within the ongoing scoped OTA; renewed iPhone acceptance remains pending. Draw the rounded LUNA theme surface and a continuous weekend background beneath the measured live month grid when no calendar photo is set. Keep date, entry, special-day, and touch geometry plus the existing photo rendering and month/year animation."
     },
     {
       "path": "src/features/calendar/calendar-screen.tsx",
       "kind": "modified",
-      "sha256": "8d681e4ca863da5f347c40cbcd4563c3c3aae2fa0396c16feecc6514feebcaf3",
-      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "d877d3ae9c09fa993fcb76b3cf9abffef7e7cb5c5f136a2c4555bf25f42a6e4e",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Limit the live calendar's native top scroll effect to the status-bar inset minus four points. Keep the title, controls and measured pager outside the native effect view, with the usual month-only activation."
     },
     {
       "path": "src/features/calendar/calendar-shared-scene.tsx",
       "kind": "modified",
-      "sha256": "d6a4816aff19e1c5d679f770bfd08de2024806db8a0c22ecbe3878428418fba8",
-      "reason": "Preview-only preservation of src/features/calendar/calendar-shared-scene.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication."
+      "sha256": "5003e74cf5ccf67c28c6e268dd639d86465f166a2740aa41046a1dd07fc241d8",
+      "reason": "Preview-only preservation of src/features/calendar/calendar-shared-scene.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication. Enable the default LUNA background only in the live month renderer, reusing its measured grid and existing transition. This change is for iOS Preview validation."
     },
     {
       "path": "src/features/calendar/calendar-special-days.ts",
@@ -9739,6 +9745,12 @@
       "kind": "removed",
       "sha256": null,
       "reason": "User-authorized cleanup on 2026-11-10: remove this abandoned UI file after fresh exact caller, AST import/platform entry-point and dynamic/native reference checks found no runtime, test or tool consumer. Preserve all similarly named active views and stored data; retain the accepted TestFlight baseline. Preview/iPhone acceptance remains pending."
+    },
+    {
+      "path": "src/features/calendar/shared-calendar-filters.tsx",
+      "kind": "modified",
+      "sha256": "81494234b758b394de4a868e0911218a5dfec8faea16d8b6959c85f8842cefb1",
+      "reason": "Raise the own and shared calendar filter row by six points using the existing header spacing. Preserve the measured month grid, status placement, touch targets, and filter behavior. Use another four points of the available header padding above the own and shared calendar filters. Balance the margins to preserve header measurement, grid position, notices, and full touch targets."
     },
     {
       "path": "src/features/calendar/shift-selection-panel.tsx",
@@ -10163,8 +10175,8 @@
     {
       "path": "src/features/settings/appearance-calendar-preview.tsx",
       "kind": "modified",
-      "sha256": "909ad08c876aa134aada101984f07bc6eabc518705a56dbf93d081c138148e21",
-      "reason": "Paket 3 R2: replace the tall full-month-renderer excerpt with a local fixed two-row, seven-column preview following the existing medium native widget metrics. Preserve the two-week sample data, existing label/detail/color helpers, photo background, opacity and current-day marker. No native widget, full-calendar rendering or data changes."
+      "sha256": "8e6418721fdb4f11f3fed44115c477732ed931280aa5bc76258c69b845aa069c",
+      "reason": "Keep the fixed two-week preview using the medium native widget metrics. Without a photo, match the month grid surface in both themes and draw a continuous weekend band. Preserve the existing photo overlay, shift detail, date markers and holiday colors."
     },
     {
       "path": "src/features/settings/appearance-mode-control.tsx",
@@ -10547,8 +10559,8 @@
     {
       "path": "src/theme/tokens.ts",
       "kind": "modified",
-      "sha256": "8fde3885c76971c53b688976e85eb5fd5041d6cbab0e2b3b1b8f0e598fcaf82e",
-      "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged."
+      "sha256": "d2be4875103cf4fb21715738bf851658fb91242c2ba71a2e1cb5ad391a6d2abf",
+      "reason": "Paket 3 R2: centralize additive widget-preview geometry and typography metrics mirroring the existing medium native widget. Existing theme tokens and native widget behavior remain unchanged. Share the existing calendar toolbar height between the actual buttons and the corresponding paged-title layout placeholder."
     },
     {
       "path": "src/theme/typography.ts",
@@ -10661,8 +10673,8 @@
     {
       "path": "src/ui/screen-layout.tsx",
       "kind": "modified",
-      "sha256": "1111ca0bae8354b3c07504095dc1d797c686410057a14103cfd5c8b749303b0e",
-      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "f0145894c1db3509d3c7d24d57168464d304f8f5181fe07eae8d045d0b30250b",
+      "reason": "User-requested analysis header correction 2026-11-17: Allow an explicit bottomPadding override and include it in minimum-height calculation. Keep the existing 16-point default for all other headers; only the compact monthly analysis header opts out. Local implementation and tests only; Preview publication approval and physical iPhone acceptance remain pending. No native integration or accepted TestFlight baseline change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Let the live calendar opt into the standard tab title-area height with a transparent surface. Preserve the default size for existing call sites."
     },
     {
       "path": "src/ui/selection-option.tsx",
@@ -10697,8 +10709,8 @@
     {
       "path": "src/ui/soft-scroll-layout.tsx",
       "kind": "added",
-      "sha256": "b696a4e9fd72494732de8f1b4375ae5643f5444289d212f97440bf3a0e11666c",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "df8ac2d128aaedfefd8e63d00449e8855128df2a43acbebdb5a97558c7cf5bbd",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Allow a top anchor to use a bounded absolute effect height while the fixed header remains in layout. Keep the default overlapping anchor behavior and the existing below-header extension for other screens."
     },
     {
       "path": "src/ui/tab-root-header.tsx",

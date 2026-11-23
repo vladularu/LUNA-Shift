@@ -29,17 +29,20 @@ export const CalendarMonthTitle = memo(function CalendarMonthTitle({
       importantForAccessibility={accessible ? "auto" : "no-hide-descendants"}
     >
       <TabScreenHeader
+        testID={`calendar-month-header-${month}`}
         title={title}
         stableTitle
         minimumTitleScale={0.75}
         titleHeightMode="content"
         transparent
+        compactTitleArea
         safeTopOverride={nativeScrollEdge ? safeTop : 0}
         accessory={
           <View
+            testID={`calendar-month-header-accessory-${month}`}
             style={{
               width: CONTROL_HEIGHT.compact * 3 + StyleSheet.hairlineWidth * 2 + 2,
-              height: CONTROL_HEIGHT.compact + 2,
+              height: CONTROL_HEIGHT.compact,
             }}
           />
         }

@@ -82,6 +82,7 @@ export function TabScreenHeader({
   toolbarSpacing = SPACING.xs,
   safeTopOverride,
   titleHidden = false,
+  compactTitleArea = false,
 }: {
   readonly accessory?: ReactNode;
   readonly backgroundColor?: string;
@@ -101,6 +102,7 @@ export function TabScreenHeader({
   readonly toolbarSpacing?: number;
   readonly safeTopOverride?: number;
   readonly titleHidden?: boolean;
+  readonly compactTitleArea?: boolean;
 }) {
   const palette = usePalette();
   const hasScrollEdge = useSoftScrollEdgeEnabled();
@@ -113,7 +115,8 @@ export function TabScreenHeader({
     Boolean(accessory) && fontScale >= SCREEN_LAYOUT.headerAccessoryStackFontScale;
   const safeTop =
     safeTopOverride ?? (process.env.EXPO_OS === "web" ? SCREEN_LAYOUT.contentTopPadding : topInset);
-  const preserveTitleGeometry = transparent || surface === "calendarBackground";
+  const preserveTitleGeometry =
+    !compactTitleArea && (transparent || surface === "calendarBackground");
   const titleAreaMinHeight = preserveTitleGeometry
     ? SCREEN_LAYOUT.headerMinHeight -
       SCREEN_LAYOUT.headerTopPadding -

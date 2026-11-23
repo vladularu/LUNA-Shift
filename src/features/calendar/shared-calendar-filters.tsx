@@ -11,6 +11,8 @@ import { SharingStatus } from "@/features/sharing/sharing-ui-elements";
 import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharingController } from "@/domain/sharing-ui-contract";
 
+const PERSON_FILTER_LIFT = SPACING.xs + SPACING.xxs;
+
 export function SharedCalendarFilters(props: {
   readonly ownVisible: boolean;
   readonly onOwnVisible: (visible: boolean) => void;
@@ -82,7 +84,8 @@ function Filters({
     [loadPhotos, photoViewId],
   );
   return (
-    <View>
+    // Move the row into the header spacing while preserving the position of the grid and notices.
+    <View style={{ marginTop: -PERSON_FILTER_LIFT }}>
       <ScrollView
         testID="calendar-person-filter-viewport"
         horizontal
@@ -102,6 +105,7 @@ function Filters({
             Math.ceil(TYPOGRAPHY.caption.lineHeight * fontScale * 2),
           ),
           flexGrow: 0,
+          marginBottom: PERSON_FILTER_LIFT,
         }}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm }}

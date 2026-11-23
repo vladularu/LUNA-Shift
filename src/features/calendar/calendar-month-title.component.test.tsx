@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { CONTROL_HEIGHT } from "@/theme/tokens";
 import { CalendarMonthTitle } from "./calendar-month-title";
 
 afterEach(() => {
@@ -12,6 +13,11 @@ describe("month page title", () => {
       <CalendarMonthTitle month="2027-02" referenceMonth="2026-10" accessible />,
     );
     expect(screen.getByRole("header", { name: "Februar 2027" })).toBeVisible();
+    const area = screen.getByTestId("calendar-month-header-2027-02-title-area");
+    expect(area).toHaveStyle({ minHeight: CONTROL_HEIGHT.compact });
+    expect(screen.getByTestId("calendar-month-header-accessory-2027-02")).toHaveStyle({
+      height: CONTROL_HEIGHT.compact,
+    });
     await screen.rerender(
       <CalendarMonthTitle month="2026-10" referenceMonth="2026-10" accessible />,
     );

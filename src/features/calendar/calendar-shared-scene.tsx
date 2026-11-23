@@ -361,6 +361,7 @@ const SharedMonthBody = memo(function SharedMonthBody({
       ) : null}
       <PrototypeMonthContent
         animateChanges={stampMode && visible}
+        showDefaultBackground
         layout={layout}
         progress={progress}
         entriesByDate={entriesByDate}

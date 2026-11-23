@@ -209,7 +209,7 @@ it("adds shared visibility controls inside the same horizontal row", async () =>
   await fireEvent.press(screen.getByRole("button", { name: "Selena Müller anzeigen" }));
   await waitFor(() => expect(mockSetVisible).toHaveBeenCalledWith("foreign", false));
   expect(onOwnVisible).not.toHaveBeenCalled();
-  expect(viewport).toHaveStyle({ height: MINIMUM_TOUCH_TARGET });
+  expect(viewport).toHaveStyle({ height: MINIMUM_TOUCH_TARGET, marginBottom: 10 });
 });
 
 it("keeps person controls responsive during cloud work and pending local saves", async () => {
