@@ -549,6 +549,15 @@ describe("appearance controls", () => {
   });
   it("uses a red text row for removing only the photo and provides undo", async () => {
     const screen = await render(pictureScreen());
+    const hidden = { includeHiddenElements: true };
+    const palette = resolvePalette("mint", false);
+    expect(screen.getByTestId("appearance-calendar-preview")).toHaveStyle({
+      backgroundColor: palette.calendarBackground,
+    });
+    expect(screen.queryByTestId("appearance-preview-weekend-background", hidden)).toBeNull();
+    expect(screen.getByTestId("calendar-combined-day-2026-10-04")).toHaveStyle({
+      backgroundColor: palette.text + "14",
+    });
     expect(screen.getByText("Foto entfernen")).toHaveStyle({
       color: resolvePalette("mint", false).danger,
     });
@@ -558,6 +567,10 @@ describe("appearance controls", () => {
     expect(preferences.setMode).not.toHaveBeenCalled();
     expect(setStrength).not.toHaveBeenCalled();
     await screen.rerender(screenWith({}, { canUndoRemoval: true }));
+    expect(screen.queryByTestId("calendar-custom-background-image", hidden)).toBeNull();
+    expect(screen.getByTestId("appearance-preview-weekend-background", hidden)).toHaveStyle({
+      backgroundColor: palette.surfaceRaised,
+    });
     expect(screen.getByRole("button", { name: "Foto auswählen" })).toBeTruthy();
     expect(screen.queryByRole("radio", { name: "LUNA Standard" })).toBeNull();
     expect(screen.queryByLabelText("Bildsichtbarkeit")).toBeNull();

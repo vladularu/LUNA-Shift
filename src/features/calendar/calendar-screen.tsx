@@ -4,9 +4,18 @@ import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import { useSharedCalendarDays } from "./use-shared-calendar-days";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AccessibilityInfo, View } from "react-native";
 import Animated, { useReducedMotion, useSharedValue } from "react-native-reanimated";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import {
   usePflegeShiftEntries,
@@ -62,6 +71,7 @@ import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params
 import { useActiveMonthCoordinator } from "@/navigation/active-month";
 import { SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
+import { SPACING } from "@/theme/tokens";
 import { selectionFeedback } from "@/ui/haptics";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { useThemeStatusBar } from "@/ui/use-theme-status-bar";
@@ -75,6 +85,8 @@ interface QuickPopupState {
 
 export function CalendarScreen() {
   const palette = usePalette();
+  const safeTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
+  const topEffectHeight = Math.max(0, safeTop - SPACING.xxs);
   useThemeStatusBar();
   const isFocused = useIsFocused();
   const preferences = useCalendarPreferences();
@@ -516,7 +528,11 @@ export function CalendarScreen() {
     >
       <CalendarMonthBackground progress={controller.progress} />
       <SoftScrollScope>
-        <SoftScrollAnchor existingOverlap showEffect={controller.mode === "MONTH"}>
+        <SoftScrollAnchor
+          existingOverlap
+          topEffectHeight={topEffectHeight}
+          showEffect={controller.mode === "MONTH" && topEffectHeight > 0}
+        >
           <View
             testID="calendar-header-measure"
             pointerEvents="box-none"

@@ -389,7 +389,11 @@ describe("CalendarScreen quick-entry navigation", () => {
       const pager = screen.getByTestId("calendar-month-pager");
       expect(pager).toHaveProp("pagingEnabled", true);
       if (softEdge) {
-        expect(screen.getByTestId("soft-scroll-edge")).toHaveProp("effect", "soft");
+        const edge = screen.getByTestId("soft-scroll-edge");
+        expect(edge).toHaveProp("effect", "soft");
+        expect(edge).toHaveProp("pointerEvents", "none");
+        expect(edge).toHaveStyle({ position: "absolute", top: 0, height: safeTop - 4 });
+        expect(within(edge).queryByTestId("calendar-header-measure")).toBeNull();
         await fireEvent(pager, "layout", { nativeEvent: { layout: { height: pageHeight } } });
         expect(mockRegisterCalendarScroll).toHaveBeenCalledWith(expect.anything());
       }

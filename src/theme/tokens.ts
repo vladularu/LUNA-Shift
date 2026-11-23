@@ -80,6 +80,7 @@ export const SHADOWS = {
 } as const;
 
 export const CALENDAR_METRICS = {
+  headerActionHeight: 48,
   chipRadius: 2,
   dayRadius: 3,
   dayNumberRadius: 12,

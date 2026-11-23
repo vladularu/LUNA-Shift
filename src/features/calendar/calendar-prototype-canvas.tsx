@@ -14,7 +14,7 @@ import Animated, {
 import { usePalette } from "@/theme/palette";
 import { calendarImageLabelColor } from "@/theme/calendar-image";
 import { useCalendarBackground } from "@/features/settings/calendar-background-context";
-import { CALENDAR_METRICS, RADII } from "@/theme/tokens";
+import { CALENDAR_METRICS, CORNER_CURVE, RADII } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import type { SharedCalendarDayEntry } from "./shared-calendar-display";
 import type { CalendarEntry } from "@/domain/types";
@@ -291,6 +291,7 @@ export const PrototypeYear = memo(function PrototypeYear({
 
 export function PrototypeMonthContent({
   animateChanges = false,
+  showDefaultBackground = false,
   layout,
   progress,
   entriesByDate,
@@ -302,6 +303,7 @@ export function PrototypeMonthContent({
   visible,
 }: {
   animateChanges?: boolean;
+  showDefaultBackground?: boolean;
   layout: PrototypeMonth;
   progress: SharedValue<number>;
   entriesByDate: ReadonlyMap<string, readonly CalendarEntry[]>;
@@ -314,6 +316,14 @@ export function PrototypeMonthContent({
 }) {
   const palette = usePalette();
   const background = useCalendarBackground();
+  const days = [...layout.adjacentDays, ...layout.days];
+  const hasDefaultBackground =
+    showDefaultBackground &&
+    background.ready &&
+    !background.uri &&
+    layout.cellWidth > 0 &&
+    layout.weekHeight > 0;
+  const weekendTint = hasDefaultBackground ? "transparent" : calendarDayTints(palette).weekend;
   const labelColor = background.uri
     ? calendarImageLabelColor(palette, background.strength)
     : palette.textMuted;
@@ -325,6 +335,30 @@ export function PrototypeMonthContent({
       importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
       style={[StyleSheet.absoluteFill, motion]}
     >
+      {hasDefaultBackground ? (
+        <View
+          testID="calendar-month-default-background"
+          style={[
+            styles.monthBackground,
+            {
+              top: layout.topInset,
+              height: styles.weekdays.height + (days.length / 7) * layout.weekHeight,
+              backgroundColor: palette.surface,
+            },
+          ]}
+        >
+          <View
+            testID="calendar-month-weekend-background"
+            style={[
+              styles.monthWeekendBackground,
+              {
+                width: 2 * layout.cellWidth,
+                backgroundColor: palette.dark ? palette.weekend : palette.surfaceRaised,
+              },
+            ]}
+          />
+        </View>
+      ) : null}
       <View
         testID="calendar-month-weekdays"
         style={[styles.weekdays, { marginTop: layout.topInset }]}
@@ -338,14 +372,14 @@ export function PrototypeMonthContent({
               height: "100%",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: i >= 5 ? calendarDayTints(palette).weekend : "transparent",
+              backgroundColor: i >= 5 ? weekendTint : "transparent",
             }}
           >
             <Text style={{ color: i >= 5 ? palette.danger : labelColor }}>{label}</Text>
           </View>
         ))}
       </View>
-      {[...layout.adjacentDays, ...layout.days].map((day) => (
+      {days.map((day) => (
         <CombinedDayContent
           animateChanges={animateChanges}
           key={day.date}
@@ -356,6 +390,7 @@ export function PrototypeMonthContent({
           display={display}
           timeZone={timeZone}
           labelColor={labelColor}
+          weekendTint={weekendTint}
           visible={visible}
           adjacent={day.date.slice(0, 7) !== layout.month}
           holiday={holidays.get(day.date)?.name}
@@ -375,6 +410,7 @@ const CombinedDayContent = memo(function CombinedDayContent({
   display,
   timeZone,
   labelColor,
+  weekendTint,
   visible,
   adjacent = false,
   holiday,
@@ -394,6 +430,7 @@ const CombinedDayContent = memo(function CombinedDayContent({
   readonly display: PrototypeDisplay;
   readonly timeZone: string;
   readonly labelColor: string;
+  readonly weekendTint: string;
   readonly visible: boolean;
   readonly adjacent?: boolean;
   readonly holiday?: string;
@@ -448,7 +485,7 @@ const CombinedDayContent = memo(function CombinedDayContent({
           holiday || specialDay
             ? calendarDayTints(palette, display.holidayColor).specialDay
             : day.weekend
-              ? calendarDayTints(palette).weekend
+              ? weekendTint
               : "transparent",
         overflow: "hidden",
         opacity: 1,
@@ -615,5 +652,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: TYPOGRAPHY.label.lineHeight,
   },
+  monthBackground: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    borderRadius: RADII.card,
+    borderCurve: CORNER_CURVE,
+    overflow: "hidden",
+  },
+  monthWeekendBackground: { position: "absolute", right: 0, top: 0, bottom: 0 },
   weekdays: { flexDirection: "row", height: 32, alignItems: "center" },
 });

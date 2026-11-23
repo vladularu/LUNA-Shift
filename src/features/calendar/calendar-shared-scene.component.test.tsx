@@ -1,6 +1,6 @@
 import { act, fireEvent, render, renderHook, within } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import { AppState } from "react-native";
+import { AppState, StyleSheet } from "react-native";
 import { getAnimatedStyle, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { CalendarBackgroundContext } from "@/features/settings/calendar-background-context";
 import type { CalendarEntry, CalendarViewMode, UserProfile } from "@/domain/types";
@@ -105,6 +105,25 @@ it("waits for a measured page width before fitting the month title", async () =>
   expect(screen.getByTestId("calendar-month-title-2026-01")).toBeTruthy();
   await screen.rerender(<Tree headerOverlap={120} />);
   expect(screen.getByTestId("calendar-month-title-2026-01")).toBeTruthy();
+});
+
+it("gives all six calendar weeks the available space when the measured header is shorter", async () => {
+  const hidden = { includeHiddenElements: true };
+  const screen = await render(<Tree headerOverlap={96} />);
+  await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
+    nativeEvent: { layout: { width: 420, height: 700 } },
+  });
+  const firstDay = screen.getByTestId("calendar-combined-day-2026-01-01", hidden);
+  const lastDay = screen.getByTestId("calendar-combined-day-2026-02-08", hidden);
+  const gridBottom = 700 - 55;
+  const previousWeekHeight = (gridBottom - 96 - 32) / 6;
+  expect(firstDay).toHaveStyle({ top: 96 + 32, height: previousWeekHeight });
+  expect(StyleSheet.flatten(lastDay.props.style).top).toBeCloseTo(gridBottom - previousWeekHeight);
+  await screen.rerender(<Tree headerOverlap={84} />);
+  expect(firstDay).toHaveStyle({ top: 84 + 32, height: previousWeekHeight + 2 });
+  expect(StyleSheet.flatten(lastDay.props.style).top).toBeCloseTo(
+    gridBottom - previousWeekHeight - 2,
+  );
 });
 
 function BackgroundTree({
@@ -388,15 +407,35 @@ describe("shared live calendar scene", () => {
     expect(screen.queryByText("Termin neu", { includeHiddenElements: true })).toBeNull();
     expect(screen.getByTestId("shared-month-2026-01")).toBe(month);
   });
-  it("shows a saved photo in the real calendar and updates it without remounting the month", async () => {
+  it.each([false, true])("switches calendar backgrounds in place, dark=%s", async (dark) => {
+    const scheme = jest
+      .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+      .mockReturnValue(dark ? "dark" : "light");
+    const palette = dark ? DARK_PALETTE : LIGHT_PALETTE;
     const hidden = { includeHiddenElements: true };
     const screen = await render(<BackgroundTree uri={null} />);
     const month = screen.getByTestId("shared-month-2026-01");
     const marker = screen.getByTestId("calendar-date-marker-2026-01-08", hidden);
     expect(screen.queryByTestId("calendar-custom-background", hidden)).toBeNull();
-    await screen.rerender(<BackgroundTree uri="file:///documents/calendar-first.jpg" />);
     await fireEvent(screen.getByTestId("calendar-shared-scene"), "layout", {
       nativeEvent: { layout: { width: 420, height: 700 } },
+    });
+    expect(screen.getByTestId("calendar-month-default-background", hidden)).toHaveStyle({
+      top: 0,
+      height: 645,
+      backgroundColor: palette.surface,
+    });
+    expect(screen.getByTestId("calendar-month-weekend-background", hidden)).toHaveStyle({
+      width: 120,
+      backgroundColor: dark ? palette.weekend : palette.surfaceRaised,
+    });
+    expect(screen.getByTestId("calendar-combined-day-2026-01-03", hidden)).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+    await screen.rerender(<BackgroundTree uri="file:///documents/calendar-first.jpg" />);
+    expect(screen.queryByTestId("calendar-month-default-background", hidden)).toBeNull();
+    expect(screen.getByTestId("calendar-combined-day-2026-01-03", hidden)).toHaveStyle({
+      backgroundColor: palette.text + "14",
     });
     await fireEvent.press(screen.getByTestId("calendar-day-2026-01-08"), {
       nativeEvent: { pageX: 220, pageY: 350, locationX: 10, locationY: 20 },
@@ -420,8 +459,10 @@ describe("shared live calendar scene", () => {
     });
     await screen.rerender(<BackgroundTree uri={null} />);
     expect(screen.queryByTestId("calendar-custom-background", hidden)).toBeNull();
+    expect(screen.getByTestId("calendar-month-default-background", hidden)).toBeTruthy();
     expect(screen.getByTestId("shared-month-2026-01")).toBe(month);
     expect(screen.getByTestId("calendar-date-marker-2026-01-08", hidden)).toBe(marker);
+    scheme.mockRestore();
   });
   it("applies every saved strength to the live month without remounting its photo or date glyphs", async () => {
     const hidden = { includeHiddenElements: true };

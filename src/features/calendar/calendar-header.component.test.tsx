@@ -126,7 +126,6 @@ describe("CalendarHeader", () => {
     expect(actions).toHaveLength(3);
     expect(screen.getByTestId("calendar-header-position")).toHaveStyle({
       marginRight: -14,
-      transform: [{ translateY: 3.5 }],
     });
     expect(screen.getByTestId("calendar-header-position")).toHaveProp("pointerEvents", "box-none");
     expect(screen.getByTestId("calendar-header")).toHaveStyle({ paddingHorizontal: 20 });
@@ -135,6 +134,8 @@ describe("CalendarHeader", () => {
       screen.getByTestId("calendar-header-position").props.style,
     );
     expect(Number(headerStyle.paddingHorizontal) + Number(positionStyle.marginRight)).toBe(6);
+    expect(positionStyle.transform).toBeUndefined();
+    expect(screen.getByTestId("calendar-header-title-area")).toHaveStyle({ minHeight: 44 });
     expect(screen.getByTestId("calendar-header-actions")).toHaveStyle({
       minHeight: 48,
       paddingHorizontal: 2,

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { ShiftEntry } from "@/domain/types";
 import {
   usePflegeShiftEntries,
@@ -11,6 +11,7 @@ import { useActiveMonth } from "@/navigation/active-month";
 import { CalendarBackground } from "@/features/calendar/calendar-background";
 import { calendarShiftDetail } from "@/features/calendar/calendar-display";
 import { useCalendarPreferences } from "@/features/calendar/calendar-preferences";
+import { useCalendarBackground } from "./calendar-background-context";
 import { calendarDesignPreviewData } from "./calendar-design-preview-data";
 import { usePalette } from "@/theme/palette";
 import { calendarDayTints } from "@/theme/calendar-day-tints";
@@ -25,8 +26,13 @@ import { INTER_FONTS } from "@/theme/shadcn";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { Text } from "@/ui/text";
 
+const DAY_COLUMN_GAP = 2;
+// Align the band with the midpoint of the gap between Friday and Saturday.
+const BAND_SIDE_INSET = WIDGET_PREVIEW.horizontalInset - DAY_COLUMN_GAP / 2;
+
 export function AppearanceCalendarPreview() {
   const palette = usePalette();
+  const { uri } = useCalendarBackground();
   const month = useActiveMonth();
   const { entries } = usePflegeShiftEntries();
   const { profile } = usePflegeShiftProfile();
@@ -49,6 +55,7 @@ export function AppearanceCalendarPreview() {
   const timeZone = profile?.timeZone ?? "Europe/Berlin";
   const currentDate = today(timeZone);
   const tints = calendarDayTints(palette, preferences.holidayColor);
+  const weekendTint = uri ? tints.weekend : "transparent";
   const rowText = {
     height: WIDGET_PREVIEW.lineHeight,
     lineHeight: WIDGET_PREVIEW.lineHeight,
@@ -67,10 +74,28 @@ export function AppearanceCalendarPreview() {
         borderCurve: CORNER_CURVE,
         borderRadius: RADII.card,
         overflow: "hidden",
-        backgroundColor: palette.calendarBackground,
+        backgroundColor: uri ? palette.calendarBackground : palette.surface,
       }}
     >
       <CalendarBackground />
+      {!uri ? (
+        <View
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={[StyleSheet.absoluteFill, { flexDirection: "row" }]}
+        >
+          <View style={{ flexGrow: 5, flexBasis: BAND_SIDE_INSET }} />
+          <View
+            testID="appearance-preview-weekend-background"
+            style={{
+              flexGrow: 2,
+              flexBasis: BAND_SIDE_INSET,
+              backgroundColor: palette.dark ? palette.weekend : palette.surfaceRaised,
+            }}
+          />
+        </View>
+      ) : null}
       <View
         testID="appearance-preview-month"
         style={{
@@ -83,7 +108,7 @@ export function AppearanceCalendarPreview() {
           <View
             key={week}
             testID={`appearance-preview-week-${week}`}
-            style={{ flex: 1, flexDirection: "row", gap: 2 }}
+            style={{ flex: 1, flexDirection: "row", gap: DAY_COLUMN_GAP }}
           >
             {days.slice(week * 7, week * 7 + 7).map((day) => {
               const shift = preferences.showShifts ? byDate.get(day.date) : undefined;
@@ -114,7 +139,7 @@ export function AppearanceCalendarPreview() {
                     backgroundColor: holiday
                       ? tints.specialDay
                       : day.weekend
-                        ? tints.weekend
+                        ? weekendTint
                         : "transparent",
                   }}
                 >
