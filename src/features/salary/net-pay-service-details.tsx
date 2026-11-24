@@ -195,6 +195,7 @@ export function NetPayServiceDetails({
           )}
         </SurfaceCard>
         <SelectionSheet
+          luna
           visible={selected !== null}
           title={
             selected

@@ -337,7 +337,7 @@ describe("earned premium service workflow", () => {
     },
   );
 
-  it("retains the original category chips, connected list and service selection sheet", async () => {
+  it("keeps category selection and opens a LUNA sheet for a service", async () => {
     const calculate = jest.spyOn(netPreparation, "prepareAutomaticNetPay");
     mockEntries = [
       forecastShift({ id: "night", date: "2026-10-01", endTime: "06:00", breakMinutes: 30 }),
@@ -384,11 +384,12 @@ describe("earned premium service workflow", () => {
       ),
     ).toBeTruthy();
     await fireEvent.press(list.getByRole("button", { name: /^Do\. 01\.10\.:/ }));
-    expect(screen.getByTestId("dropdown-modal-content")).toBeTruthy();
+    const sheet = within(screen.getByTestId("dropdown-modal-content"));
+    expect(sheet.getByTestId("back-footer-surface")).toBeTruthy();
     expect(screen.getByRole("header", { name: "Berechnung dieses Dienstes" })).toBeTruthy();
     expect(screen.getByText(/endet am 02\.10\./)).toBeTruthy();
     expect(screen.getByText(/Sozialversicherungsfrei.*Beitragspflichtig/)).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen" }));
+    await fireEvent.press(sheet.getByRole("button", { name: "Schließen" }));
     await waitFor(() => expect(screen.queryByTestId("dropdown-modal-content")).toBeNull());
     expect(list.getByRole("radio", { name: "Nacht" }).props.accessibilityState.checked).toBe(true);
     await fireEvent.press(list.getByRole("radio", { name: "Alle" }));

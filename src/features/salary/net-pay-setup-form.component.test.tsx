@@ -3,6 +3,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
+import { SPACING } from "@/theme/tokens";
 import { NetPaySetupForm } from "./net-pay-setup-form";
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -162,6 +163,7 @@ describe("one continuous net forecast settings page", () => {
     const screen = await render(element);
     expect(screen.queryByRole("radio", { name: "Versicherungsart: Gesetzlich" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: /^Krankenversicherung bearbeiten/ }));
+    expect(screen.getByTestId("net-pay-sheet-card")).toHaveStyle({ paddingTop: SPACING.md });
     await selectSettingOption(screen, "Beitrag für die Prognose", "Eigener Zusatzbeitrag");
     await fireEvent.changeText(
       screen.getByLabelText("Zusatzbeitrag deiner Krankenkasse (%)"),

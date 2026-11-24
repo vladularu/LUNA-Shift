@@ -10059,16 +10059,28 @@
       "reason": "Paket 4A: preserve strict legacy net-link month validation and add a back-capable custom page for invalid links after removing the native header."
     },
     {
+      "path": "src/features/salary/net-pay-service-details.tsx",
+      "kind": "modified",
+      "sha256": "5c21e73f648ea105097e025811c9fb219346162f982438ca975a0d8a4cf9594f",
+      "reason": "Zuschläge je Dienst uses the shared LUNA dialog for the iPhone-accepted detail view."
+    },
+    {
       "path": "src/features/salary/net-pay-setting-rows.tsx",
       "kind": "modified",
-      "sha256": "6ccac29b201892a7d58130ac708b38422092d6d3c1644be1f201279f83b30801",
-      "reason": "Preview-only preservation of src/features/salary/net-pay-setting-rows.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "d63d7b0c2fbf1ef31e9e03394cd38844a3f55b00a7fa57f035734fd4176ef19b",
+      "reason": "Preview-only preservation of src/features/salary/net-pay-setting-rows.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Only the health insurance detail entry opts into the shared LUNA dialog."
     },
     {
       "path": "src/features/salary/net-pay-settings-screen.tsx",
       "kind": "modified",
       "sha256": "c02fa9ec6033a3026b373774a11678f0581f9ec4a47061d042844c8dbcc69da2",
       "reason": "Paket 4A: return to the net forecast when settings were opened without navigation history; preserve selected month, save behavior and draft protection. Package B: retain the open net-settings editor snapshot during background invalidation; preserve its original optimistic conflict basis. Device acceptance pending. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+    },
+    {
+      "path": "src/features/salary/net-pay-sheet.tsx",
+      "kind": "modified",
+      "sha256": "6dafdce65c44867b7dbb40b3689502ec05ff0dbfda8f16227e408d790dcd8dbd",
+      "reason": "The health insurance surface gets the iPhone-accepted top spacing above Versicherungsart."
     },
     {
       "path": "src/features/salary/net-pay-workflow-controls.tsx",
@@ -10697,8 +10709,8 @@
     {
       "path": "src/ui/selection-sheet.tsx",
       "kind": "modified",
-      "sha256": "5bdd68c2937f95931754192034d740de4d6eb0bcf3a3e0853cab30970cc0ae5e",
-      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "a275cd70478b80b447d6602e714df1532fa6399699d50f2baad426c15eca430e",
+      "reason": "Add opt-in full-height layout, optional header action and cancel-row omission for check details; preserve existing default layout and gesture behavior. Correct the iOS calendar-format crash and apply the selected LUNA card layout and dismissible detail sheet across legal, tariff and planning findings; preserve calculations, thresholds and recorded duties. Round the read-only LUNA check sheet and duty tiles; remove the extra menu, single-duty edit shortcut and sharing action at the user request; preserve finding facts and all calculation rules. User-requested native Schichtzulage parity correction 2026-11-11: Remove the superseded check-only custom frame/header/full-height modes and restore the generic picker sheet. Preserve the native accessibility focus behavior and its web-only guard. Preview-only refinement of the authorized OTA; calculations, rules, stored data, packages, native binaries and the accepted TestFlight baseline remain unchanged. Physical iPhone acceptance is pending. User-requested native check-window delivery: preserve the concurrent published cold-start salary OTA 01a1cc4e-b87c-7811-80f7-623c00c1ef6c byte for byte. Place the transient finding handoff in navigation, outside calculation sources, so this UI-only change keeps the released calculation/cache identity. Native iPhone acceptance remains pending. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. The two salary dialogs opt into clipped rounded corners, grouped color, and the LUNA close footer."
     },
     {
       "path": "src/ui/shift-color-picker-sheet.tsx",
