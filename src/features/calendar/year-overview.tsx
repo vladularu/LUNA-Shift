@@ -284,7 +284,7 @@ export function YearOverview({
   }, [active, selectedMonth, year]);
 
   return (
-    <View style={{ flex: 1, overflow: "hidden", backgroundColor: palette.calendarBackground }}>
+    <View style={{ flex: 1, overflow: "hidden", backgroundColor: palette.background }}>
       <FlatList
         ref={listRef}
         onLayout={(event) => {

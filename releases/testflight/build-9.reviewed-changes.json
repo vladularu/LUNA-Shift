@@ -9657,10 +9657,16 @@
       "reason": "User-reported quick-stamp delay 2026-11-16: memoize unchanged own/shared day contents, retain stable empty lists and pass selection only to affected date markers. Preserve existing visual geometry, entry animations, provider persistence and rapid-toggle ordering. Local candidate validation only; Preview iPhone acceptance and every Git/build/OTA release approval remain pending. No accepted TestFlight baseline, native configuration, stored data or calculation changes. Follow-up to the same quick-stamp delay after iPhone feedback Keine Besserung on 2026-11-16: retain immediate first-frame service visibility and skip all entry/exit animation when Reduce Motion is enabled. Preserve geometry, selected-date rendering, shared entries, persistence and native inputs. Preview-only correction within the ongoing scoped OTA; renewed iPhone acceptance remains pending. Draw the rounded LUNA theme surface and a continuous weekend background beneath the measured live month grid when no calendar photo is set. Keep date, entry, special-day, and touch geometry plus the existing photo rendering and month/year animation."
     },
     {
+      "path": "src/features/calendar/calendar-prototype-screen.tsx",
+      "kind": "modified",
+      "sha256": "16c3a0424fdd4908cddf5c961cdf21bd7bba7470e663a8d5a7e0c27a0f7c674c",
+      "reason": "Use the common near-black dark page background on the calendar prototype route."
+    },
+    {
       "path": "src/features/calendar/calendar-screen.tsx",
       "kind": "modified",
-      "sha256": "d877d3ae9c09fa993fcb76b3cf9abffef7e7cb5c5f136a2c4555bf25f42a6e4e",
-      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Limit the live calendar's native top scroll effect to the status-bar inset minus four points. Keep the title, controls and measured pager outside the native effect view, with the usual month-only activation."
+      "sha256": "0192b5edc3c87d89194d3f8b3fd7011b8af4f9b31322a332ab80daf44ad60f9e",
+      "reason": "Preview quick-stamp follow-up on 2026-11-17 after device report 1794870459458 rules out a matching long synchronous analysis-input operation. Defer the existing whole-widget range query, timeline construction and synchronous iOS publication while the focused calendar planning/stamping session or its pending writes remain active. Flush the latest saved state after release or on background; discard superseded async results. Keep widget contents, 14-day timeline, persisted shifts, domain calculations and native runtime intact. Add only bounded numeric opt-in widget construction/publication/deferred events, with no user content. Local regression and full verification required; the widget work is an independently reproduced cost, not yet a proven cause of the iPhone lag. Same authorized iOS Preview OTA investigation only; no Git, native build, Production or TestFlight release. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Limit the live calendar's native top scroll effect to the status-bar inset minus four points. Keep the title, controls and measured pager outside the native effect view, with the usual month-only activation. Use the shared page background for the outer calendar scene while preserving the month grid and photo overlay."
     },
     {
       "path": "src/features/calendar/calendar-shared-scene.tsx",
@@ -9775,6 +9781,12 @@
       "kind": "modified",
       "sha256": "9aa234dd6864d18ff0f82d7bcfdf37698b1a22d7ea5ef9f5b67177d4bb2977b2",
       "reason": " Follow-up after the user rejected Preview quick-stamp latency twice and supplied a matching device performance report on 2026-11-16. Add bounded opt-in numeric touch-relative timing, synchronous stamp handler, optimistic publication/React commit and async persistence measurements, plus calendar JS timer lag and UI sampling lifecycle. Preserve physical touch/paint caveats, all domain data, gestures, animations, persistence order and native/runtime configuration. This is diagnostic instrumentation, not a proven latency fix; a new iPhone recording is required. Preview only; no TestFlight publication."
+    },
+    {
+      "path": "src/features/calendar/year-overview.tsx",
+      "kind": "modified",
+      "sha256": "c82af3e2ea4589f7fd4f97154fe47b16917f029c758f66bb7cdccf4e8b92c45d",
+      "reason": "Use the common near-black dark page background on the calendar year overview."
     },
     {
       "path": "src/features/data-backup/use-local-backup-restore.ts",
@@ -10535,8 +10547,8 @@
     {
       "path": "src/theme/palette-values.ts",
       "kind": "modified",
-      "sha256": "f1863a5ba771fd25c979b45a0f0f98fe9754ac6941a114443f203a69bedf01de",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "d074a4573da2a8dd948ccf63704bc65ecd251bf8e87b678d6f25a9b7d46edb66",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Use the same near-black dark background for normal, grouped and onboarding pages while retaining the existing surface colors. Apply the selected Graphite dark card color to shared card bodies and headers and keep calendar weekends darker than the grid."
     },
     {
       "path": "src/theme/shadcn.ts",
@@ -10577,8 +10589,8 @@
     {
       "path": "src/ui/design-system.tsx",
       "kind": "modified",
-      "sha256": "c8346a6fec6b263913efc2decf264911904ac18eb73f1197f8d064ea763f2599",
-      "reason": "Preview-only preservation of src/ui/design-system.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Requested More-card typography refinement: add an optional titleColor prop to RowButton so only the explicitly selected More rows use primary text. Preserve default title styling for other callers, caption styling, destructive color precedence, layout and interaction behavior."
+      "sha256": "b5f62542f9bf65551c3486a8d98061149ebc78f0fbfda3f90dca8d8f964e259c",
+      "reason": "Preview-only preservation of src/ui/design-system.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Requested More-card typography refinement: add an optional titleColor prop to RowButton so only the explicitly selected More rows use primary text. Preserve default title styling for other callers, caption styling, destructive color precedence, layout and interaction behavior. Hide the generic dark card outline while keeping the card geometry and explicit semantic border overrides."
     },
     {
       "path": "src/ui/dropdown-field.tsx",

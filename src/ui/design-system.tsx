@@ -41,7 +41,7 @@ export function SurfaceCard({
       style={{
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: palette.dark ? palette.border : palette.surface,
+        borderColor: palette.dark ? "transparent" : palette.surface,
         borderRadius: RADII.card,
         borderCurve: CORNER_CURVE,
         backgroundColor: palette.surface,

@@ -523,7 +523,7 @@ export function CalendarScreen() {
   return (
     <View
       testID="calendar-screen"
-      style={{ flex: 1, backgroundColor: palette.calendarBackground }}
+      style={{ flex: 1, backgroundColor: palette.background }}
       onLayout={viewport.measureViewport}
     >
       <CalendarMonthBackground progress={controller.progress} />
