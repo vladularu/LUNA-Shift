@@ -31,6 +31,7 @@ import { CORNER_CURVE, SHADOWS, CONTROL_HEIGHT, RADII, SPACING } from "@/theme/t
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { scheduleAccessibilityFocus } from "@/ui/accessibility-focus";
 import { GlassBackButton } from "@/ui/glass-back-button";
+import { SheetBackFooter } from "@/ui/sheet-back-footer";
 
 // Mirror the opening curve so dismissal does not accelerate out of view immediately.
 const closingEasing = Easing.bezier(0.64, 0, 0.78, 0);
@@ -49,6 +50,7 @@ export function SelectionSheet({
   backLabel = "Zurück zur Angaben-Übersicht",
   footer,
   contentKey,
+  luna = false,
 }: {
   readonly children: (dismiss: () => void) => ReactNode;
   readonly onClose: () => void;
@@ -63,8 +65,11 @@ export function SelectionSheet({
   readonly backLabel?: string;
   readonly footer?: ReactNode;
   readonly contentKey?: string;
+  readonly luna?: boolean;
 }) {
   const palette = usePalette();
+  const lunaSheet = luna && Platform.OS === "ios";
+  const headerClose = closeInHeader && !lunaSheet;
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
@@ -252,8 +257,8 @@ export function SelectionSheet({
                 borderTopLeftRadius: RADII.sheet,
                 borderTopRightRadius: RADII.sheet,
                 borderCurve: CORNER_CURVE,
-                backgroundColor: palette.surfaceRaised,
-                boxShadow: SHADOWS.overlay,
+                backgroundColor: lunaSheet ? palette.groupedBackground : palette.surfaceRaised,
+                ...(lunaSheet ? { overflow: "hidden" } : { boxShadow: SHADOWS.overlay }),
                 paddingBottom: Math.max(insets.bottom, SPACING.md),
               },
               sheetStyle,
@@ -286,8 +291,8 @@ export function SelectionSheet({
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        paddingHorizontal: closeInHeader ? SPACING.lg : 0,
-                        paddingBottom: closeInHeader ? SPACING.sm : 0,
+                        paddingHorizontal: headerClose ? SPACING.lg : 0,
+                        paddingBottom: headerClose ? SPACING.sm : 0,
                         gap: SPACING.sm,
                       }}
                     >
@@ -308,8 +313,8 @@ export function SelectionSheet({
                           flex: 1,
                           minHeight: CONTROL_HEIGHT.regular,
                           justifyContent: "center",
-                          paddingHorizontal: closeInHeader ? undefined : SPACING.lg,
-                          paddingBottom: closeInHeader ? 0 : SPACING.sm,
+                          paddingHorizontal: headerClose ? undefined : SPACING.lg,
+                          paddingBottom: headerClose ? 0 : SPACING.sm,
                         }}
                       >
                         <Text
@@ -323,7 +328,7 @@ export function SelectionSheet({
                           {title}
                         </Text>
                       </View>
-                      {closeInHeader ? (
+                      {headerClose ? (
                         <Pressable
                           testID="selection-sheet-header-close"
                           accessibilityLabel={cancelLabel}
@@ -391,7 +396,19 @@ export function SelectionSheet({
                 {footer}
               </View>
             ) : null}
-            {!closeInHeader ? (
+            {lunaSheet ? (
+              <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm }}>
+                <SheetBackFooter
+                  label={cancelLabel}
+                  accessibilityLabel={
+                    cancelLabel === "Abbrechen" ? "Auswahl abbrechen" : cancelLabel
+                  }
+                  icon={cancelLabel.startsWith("Zurück") ? "chevron-back" : "close"}
+                  disabled={closing || disabled}
+                  onPress={requestClose}
+                />
+              </View>
+            ) : !headerClose ? (
               <Pressable
                 accessibilityLabel={cancelLabel === "Abbrechen" ? "Auswahl abbrechen" : cancelLabel}
                 accessibilityRole="button"

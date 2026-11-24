@@ -1,7 +1,8 @@
 import type { PropsWithChildren, ReactNode } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { SPACING } from "@/theme/tokens";
 import { SelectionSheet } from "@/ui/selection-sheet";
+import { SurfaceCard } from "@/ui/design-system";
 
 export function NetPaySheet({
   title,
@@ -13,6 +14,7 @@ export function NetPaySheet({
   footer,
   contentKey,
   children,
+  luna = false,
 }: PropsWithChildren<{
   readonly title: string;
   readonly visible: boolean;
@@ -22,6 +24,7 @@ export function NetPaySheet({
   readonly backLabel?: string;
   readonly footer?: ReactNode;
   readonly contentKey?: string;
+  readonly luna?: boolean;
 }>) {
   if (!visible) return null;
   return (
@@ -37,8 +40,19 @@ export function NetPaySheet({
       backLabel={backLabel}
       footer={footer}
       contentKey={contentKey}
+      luna={luna}
     >
-      {() => <View style={{ padding: SPACING.lg, gap: SPACING.md }}>{children}</View>}
+      {() => (
+        <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
+          {luna && Platform.OS === "ios" ? (
+            <SurfaceCard testID="net-pay-sheet-card" style={{ paddingTop: SPACING.md }}>
+              {children}
+            </SurfaceCard>
+          ) : (
+            children
+          )}
+        </View>
+      )}
     </SelectionSheet>
   );
 }

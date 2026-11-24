@@ -179,6 +179,7 @@ export function NetPaySettingDetails({
         />
       </Pressable>
       <NetPaySheet
+        luna
         title={label}
         visible={expanded}
         busy={disabled}
