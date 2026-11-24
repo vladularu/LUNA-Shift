@@ -9903,6 +9903,12 @@
       "reason": "Center the current LUNA logo on the dedicated Preview welcome page."
     },
     {
+      "path": "src/features/onboarding/onboarding-controls.tsx",
+      "kind": "modified",
+      "sha256": "901daf7f8198d5948f68e335a5c74ff93a2b8d4f519342b5f3daaab1802bff11",
+      "reason": "Use the shared native iOS menu for simple onboarding selections, preserve numeric and string values, and retain the existing modal on other platforms."
+    },
+    {
       "path": "src/features/onboarding/onboarding-header.tsx",
       "kind": "added",
       "sha256": "1f6575f466f49c2a2e405bca17f4e18b042bfda5ccd227dfa7a46e60b1c14f1b",
@@ -9923,8 +9929,8 @@
     {
       "path": "src/features/onboarding/onboarding-screen.tsx",
       "kind": "modified",
-      "sha256": "a6c95fb6ba4c169956b52284d87858851d29ddec2b18766580d475fd15652301",
-      "reason": "Open the account-first final page after the Preview summary and complete the existing profile flow directly. Fade out the Preview summary before opening the sign-in page and respect the active Reduce Motion setting. Keep the frame and scroll edge mounted between ordinary pages and the summary, and lay out each new page with the established modal insets."
+      "sha256": "c2dcd18dc3bf0732e6733e30d146fd3d0c63f7c47e6f9b86469a7ce1886b0120",
+      "reason": "Open the account-first final page after the Preview summary and complete the existing profile flow directly. Fade out the Preview summary before opening the sign-in page and respect the active Reduce Motion setting. Keep the frame and scroll edge mounted between ordinary pages and the summary, and lay out each new page with the established modal insets. Pass the explicit preview flag to the account page so an existing profile alone cannot enable test copy."
     },
     {
       "path": "src/features/onboarding/onboarding-start-art.tsx",
@@ -9935,8 +9941,8 @@
     {
       "path": "src/features/onboarding/onboarding-start.tsx",
       "kind": "added",
-      "sha256": "a05be5408ea2d370b6817b6bd621f36424cae61c53267195eb09d528b15a8c46",
-      "reason": "Show direct Apple and Google sign-in and the guest action on the iOS Preview final page. Preserve the draft on cancellation and avoid repeat sign-in for an existing session. Reveal the sync illustration first, then lift the sign-in sheet, reserving the iOS Apple button height to avoid a layout jump. Use the shared navigation header and the same already measured modal insets on the sign-in page."
+      "sha256": "5e8e6c5a15d471e1a42738e254660ed01efb619a9d75c217a40a66ce72293c79",
+      "reason": "Show direct Apple and Google sign-in and the guest action on the iOS Preview final page. Preserve the draft on cancellation and avoid repeat sign-in for an existing session. Reveal the sync illustration first, then lift the sign-in sheet, reserving the iOS Apple button height to avoid a layout jump. Use the shared navigation header and the same already measured modal insets on the sign-in page. Show the test disclosure only in the explicit onboarding preview and preserve the standard sign-in copy and account actions."
     },
     {
       "path": "src/features/onboarding/onboarding-workplace.tsx",
@@ -10627,6 +10633,18 @@
       "kind": "modified",
       "sha256": "8b7111c979572d3bafde7abf3271d32a5abb2afbd7a7f82387f9f14b5ba679de",
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/luna-choice-menu.ios.tsx",
+      "kind": "added",
+      "sha256": "2bbb64ae55a958f997c23bcd402c54a23dae2f53587ecbd40b30d4c419c0686b",
+      "reason": "Use the existing Expo UI SwiftUI Menu and Picker with an onboarding field layout, current selection and accessible validation feedback."
+    },
+    {
+      "path": "src/ui/luna-choice-menu.tsx",
+      "kind": "added",
+      "sha256": "6e09bd56e79782a2033cdcb36e9dc117fef68e0715e5489a42f8c6b39339e7ef",
+      "reason": "Define the shared menu contract and retain the React Native modal fallback for other platforms."
     },
     {
       "path": "src/ui/month-navigator.tsx",

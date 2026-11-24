@@ -33,12 +33,14 @@ import { OnboardingHeader } from "./onboarding-header";
 
 export function OnboardingStart({
   testMode,
+  preview = false,
   reducedMotion,
   onBack,
   onFinish,
   saveError,
 }: {
   readonly testMode: boolean;
+  readonly preview?: boolean;
   readonly reducedMotion: boolean;
   readonly onBack: () => void;
   readonly onFinish: () => Promise<void>;
@@ -189,7 +191,7 @@ export function OnboardingStart({
           <Text style={[s.body, { color: p.muted, marginBottom: SPACING.sm }]}>
             {cloud.user
               ? "Du bist bereits mit deinem LUNA-Konto angemeldet."
-              : testMode
+              : preview
                 ? "Apple und Google melden dich auch im Test mit deinem echten Konto an. Deine Testangaben werden verworfen."
                 : "Melde dich an, um deine Daten zu synchronisieren."}
           </Text>

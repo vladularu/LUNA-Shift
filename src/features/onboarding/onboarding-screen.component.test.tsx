@@ -16,6 +16,8 @@ import { OnboardingScreen, normalizeOnboardingGross, parseWeeklyHours } from "./
 import { OnboardingStart } from "./onboarding-start";
 import { MOTION } from "@/theme/motion";
 
+jest.mock("@/ui/luna-choice-menu", () => jest.requireActual("@/ui/luna-choice-menu.tsx"));
+
 const mockUpdateProfile = jest.fn<(input: SaveProfileInput) => Promise<void>>();
 type ProviderLogin = () => Promise<{ id: string } | null>;
 const mockApple = jest.fn<ProviderLogin>();
@@ -1004,6 +1006,22 @@ describe("Einrichtungsplan in der Preview", () => {
       expect(storage.write).not.toHaveBeenCalled();
     },
   );
+  it("shows the test note only in the explicit onboarding preview", async () => {
+    const props = {
+      testMode: true,
+      reducedMotion: true,
+      onBack: jest.fn(),
+      onFinish: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    const note = /Deine Testangaben werden verworfen/;
+    const screen = await render(appScreen(<OnboardingStart {...props} />));
+    expect(screen.queryByText(note)).toBeNull();
+    expect(screen.getByText("Melde dich an, um deine Daten zu synchronisieren.")).toBeVisible();
+    await screen.rerender(appScreen(<OnboardingStart {...props} preview />));
+    expect(screen.getByText(note)).toBeVisible();
+    await screen.rerender(appScreen(<OnboardingStart {...props} testMode={false} />));
+    expect(screen.queryByText(note)).toBeNull();
+  });
   it("retains the guest action when sign-in is unavailable", async () => {
     mockAuthConfigured = false;
     mockAppleAvailable.mockResolvedValue(false);

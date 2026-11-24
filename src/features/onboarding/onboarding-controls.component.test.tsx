@@ -5,6 +5,8 @@ import { Keyboard, TextInput } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Choice, NumberField, SelectField } from "./onboarding-controls";
 
+jest.mock("@/ui/luna-choice-menu", () => jest.requireActual("@/ui/luna-choice-menu.tsx"));
+
 const metrics = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 59, bottom: 34, left: 0, right: 0 },
