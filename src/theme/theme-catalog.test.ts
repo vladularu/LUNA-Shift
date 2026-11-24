@@ -71,6 +71,16 @@ describe("theme catalog", () => {
     expect(LIGHT_PALETTE).not.toEqual(DARK_PALETTE);
     expect(THEME_OPTIONS.map((theme) => theme.name)).toEqual(["LUNA Standard"]);
   });
+  it("uses near-black dark pages and graphite cards with a darker calendar weekend", () => {
+    const palette = resolvePalette("standard", true);
+    expect(palette.background).toBe("#030303");
+    expect(palette.groupedBackground).toBe(palette.background);
+    expect(palette.onboardingBackground).toBe(palette.background);
+    expect(palette.surface).toBe("#19191C");
+    expect(palette.cardHeader).toBe(palette.surface);
+    expect(palette.weekend).toBe("#141416");
+    expect(palette.calendarBackground).toBe("#09090B");
+  });
   it.each(THEME_IDS)(
     "%s supports readable light and dark surfaces without changing semantic status colors",
     (id) => {

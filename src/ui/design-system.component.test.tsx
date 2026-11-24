@@ -1,7 +1,39 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-import { InlineNotice, RowButton, SegmentedControl } from "@/ui/design-system";
+import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
+import { InlineNotice, RowButton, SegmentedControl, SurfaceCard } from "@/ui/design-system";
+
+let mockPalette = LIGHT_PALETTE;
+jest.mock("@/theme/palette", () => ({ usePalette: () => mockPalette }));
+
+beforeEach(() => {
+  mockPalette = LIGHT_PALETTE;
+});
+
+describe("SurfaceCard", () => {
+  it.each([LIGHT_PALETTE, DARK_PALETTE])(
+    "keeps the card fill and explicit border colors in dark=$dark",
+    async (palette) => {
+      mockPalette = palette;
+      const screen = await render(
+        <>
+          <SurfaceCard testID="standard-card" />
+          <SurfaceCard testID="status-card" style={{ borderColor: palette.tariffCheckBorder }} />
+        </>,
+      );
+
+      expect(screen.getByTestId("standard-card")).toHaveStyle({
+        borderWidth: 1,
+        borderColor: palette.dark ? "transparent" : palette.surface,
+        backgroundColor: palette.surface,
+      });
+      expect(screen.getByTestId("status-card")).toHaveStyle({
+        borderColor: palette.tariffCheckBorder,
+      });
+    },
+  );
+});
 
 describe("design system accessibility", () => {
   it("exposes selected tabs and announces changes", async () => {

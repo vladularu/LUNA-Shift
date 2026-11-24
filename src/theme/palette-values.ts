@@ -120,13 +120,16 @@ export const LIGHT_PALETTE: Palette = {
 };
 
 // Dark surfaces retain the same quiet Wallet hierarchy.
+const DARK_SCREEN_BACKGROUND = "#030303";
+const DARK_CARD_SURFACE = "#19191C";
+
 export const DARK_PALETTE: Palette = {
   dark: true,
   calendarBackground: "#09090B",
-  background: "#111014",
-  onboardingBackground: "#111014",
-  groupedBackground: "#111014",
-  surface: "#262628",
+  background: DARK_SCREEN_BACKGROUND,
+  onboardingBackground: DARK_SCREEN_BACKGROUND,
+  groupedBackground: DARK_SCREEN_BACKGROUND,
+  surface: DARK_CARD_SURFACE,
   surfaceRaised: "#2C2C2E",
   surfaceMuted: "#2C2C2E",
   planningBorder: "#6AB7C2",
@@ -135,7 +138,7 @@ export const DARK_PALETTE: Palette = {
   selectionTrack: "#202023",
   selectionActiveSurface: "#303035",
   selectionActiveBorder: "#3F3F46",
-  cardHeader: "#262628",
+  cardHeader: DARK_CARD_SURFACE,
   text: "#FAFAFA",
   textSecondary: "#D4D4D8",
   textMuted: "#A1A1AA",
@@ -162,7 +165,7 @@ export const DARK_PALETTE: Palette = {
   positiveBalance: "#4ADE80",
   warning: "#FCA5A5",
   danger: "#FCA5A5",
-  weekend: "#202023",
+  weekend: "#141416",
   outsideMonth: "#111113",
   tabBar: "#141416",
   calendarToday: "#FAFAFA",
