@@ -104,7 +104,7 @@ describe("AppointmentEditOverlay", () => {
     expect(screen.getByRole("button", { name: "Erinnerung: Keine" })).toBeTruthy();
     expect(screen.queryByPlaceholderText("Notizen")).toBeNull();
     expect(screen.getByRole("button", { name: "Ort: Kein Ort" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Termin löschen" })).toBeTruthy();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
 
     await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
@@ -137,10 +137,8 @@ describe("AppointmentEditOverlay", () => {
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Kein Ort" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     const deleteAction = screen.getByRole("button", { name: "Termin löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
-    expect(within(deleteAction).getByText("Termin löschen")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
     const notes = screen.getByLabelText("Notizen");
     expect(notes).toHaveStyle({ minHeight: 88 });
@@ -172,8 +170,9 @@ describe("AppointmentEditOverlay", () => {
     const close = screen.getByRole("button", { name: "Schließen und speichern" });
     expect(close.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
     await fireEvent.press(close);
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
-    expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
+    const deleteAction = screen.getByRole("button", { name: "Termin löschen" });
+    expect(deleteAction).toBeDisabled();
+    await fireEvent.press(deleteAction);
     expect(props.onRequestClose).not.toHaveBeenCalled();
     expect(props.onDelete).not.toHaveBeenCalled();
   });

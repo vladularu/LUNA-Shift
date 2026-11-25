@@ -1,8 +1,9 @@
-import { act, fireEvent, render, within } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { useState } from "react";
-import { Keyboard, Platform, TextInput } from "react-native";
+import { Dimensions, Keyboard, Platform, TextInput } from "react-native";
 import type { KeyboardEvent, KeyboardEventName } from "react-native";
+import * as Reanimated from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { EntryEditOverlayFrame } from "@/features/day-editor/entry-edit-overlay-frame";
@@ -21,7 +22,7 @@ const keyboardEvent: KeyboardEvent = {
   endCoordinates: { screenX: 0, screenY: 600, width: 430, height: 332 },
 };
 
-async function setup(visible = false) {
+async function setup(visible = false, staged = false) {
   jest.spyOn(Keyboard, "isVisible").mockReturnValue(visible);
   const listeners = jest.spyOn(Keyboard, "addListener");
   const scheduleAnimation = jest
@@ -30,6 +31,14 @@ async function setup(visible = false) {
   const dismiss = jest.spyOn(Keyboard, "dismiss").mockImplementation(() => {});
   const onRequestClose = jest.fn(async () => true);
   const onDismiss = jest.fn();
+  const overviewStage = staged
+    ? {
+        expanded: false,
+        compactHeightFraction: 0.68,
+        onExpand: jest.fn(),
+        onCollapse: jest.fn(),
+      }
+    : undefined;
   function Harness() {
     const [note, setNote] = useState("Erste Zeile\nZweite Zeile");
     return (
@@ -48,8 +57,10 @@ async function setup(visible = false) {
           durationMinutes={60}
           error={null}
           headerColor="#C93443"
+          nativePresentation={staged ? false : undefined}
           onDismiss={onDismiss}
           onRequestClose={onRequestClose}
+          overviewStage={overviewStage}
           testIDPrefix="test-edit"
         />
       </SafeAreaProvider>
@@ -170,10 +181,76 @@ describe("Entry editor keyboard action", () => {
     for (const remove of subscriptions) expect(remove).toHaveBeenCalled();
   });
 
+  it("starts the footer motion only when the popup finishes opening", async () => {
+    const sequence = jest.spyOn(Reanimated, "withSequence");
+    const timing = jest.spyOn(Reanimated, "withTiming");
+    const { screen, emit } = await setup(false, true);
+    timing.mockClear();
+    const footer = screen.getByTestId("test-edit-close-arrival");
+    expect(footer).toHaveStyle({
+      transform: [{ translateY: Dimensions.get("window").height }, { scaleX: 1 }, { scaleY: 1 }],
+    });
+    expect(sequence).not.toHaveBeenCalled();
+    const entering = screen.getByTestId("test-edit-sheet").parent!.props.entering as {
+      callbackV?: (finished: boolean) => void;
+    };
+    expect(entering.callbackV).toEqual(expect.any(Function));
+    await act(() => entering.callbackV?.(true));
+    expect(sequence).toHaveBeenCalledTimes(1);
+    expect(timing).toHaveBeenCalledWith(1, expect.objectContaining({ duration: 100 }));
+    await emit("keyboardWillShow");
+    await emit("keyboardWillHide");
+    expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
+    expect(sequence).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves the popup and its footer together as soon as close is pressed", async () => {
+    const timing = jest.spyOn(Reanimated, "withTiming").mockImplementation((target) => target);
+    const { screen, onDismiss, onRequestClose } = await setup(false, true);
+    const popup = screen.getByTestId("test-edit-sheet");
+    const footer = screen.getByTestId("test-edit-close-arrival");
+    const entering = popup.parent!.props.entering as { callbackV?: (finished: boolean) => void };
+    await act(() => entering.callbackV?.(false));
+    expect(screen.getByTestId("test-edit-card").parent).toBe(popup);
+    expect(footer.parent).toBe(popup);
+    timing.mockClear();
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+
+    expect(onRequestClose).toHaveBeenCalledTimes(1);
+    expect(timing).toHaveBeenCalledTimes(2);
+    const [popupTarget, options, finishPopupExit] = timing.mock.calls[0];
+    const viewportHeight = Dimensions.get("window").height;
+    expect(Number(popupTarget)).toBeGreaterThan(viewportHeight * 0.68);
+    expect(Number(popupTarget)).toBeLessThan(viewportHeight);
+    expect(options).toEqual(expect.objectContaining({ duration: 240 }));
+    expect(timing.mock.calls[1]).toEqual([0, options]);
+    expect(Reanimated.getAnimatedStyle(popup).transform).toEqual([{ translateY: popupTarget }]);
+    expect(Reanimated.getAnimatedStyle(footer).transform).toEqual([
+      { translateY: 0 },
+      { scaleX: 1 },
+      { scaleY: 1 },
+    ]);
+    expect(onDismiss).not.toHaveBeenCalled();
+    await act(() => finishPopupExit?.(true));
+    await waitFor(() => expect(onDismiss).toHaveBeenCalledTimes(1));
+  });
+
+  it("restores the popup with its footer when saving fails", async () => {
+    const { screen, onDismiss, onRequestClose } = await setup(false, true);
+    onRequestClose.mockResolvedValueOnce(false);
+    const timing = jest.spyOn(Reanimated, "withTiming").mockImplementation((target) => target);
+    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+
+    expect(timing.mock.calls.map(([target]) => target)).toEqual([expect.any(Number), 0, 0, 1]);
+    expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeEnabled();
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
   it("omits the sheet slide and footer arrival when motion is reduced", async () => {
     mockReduceMotion = true;
-    const { screen, onRequestClose } = await setup();
-    expect(screen.getByTestId("test-edit-close-arrival").props.entering).toBeUndefined();
+    const sequence = jest.spyOn(Reanimated, "withSequence");
+    const { screen, onRequestClose } = await setup(false, true);
+    expect(sequence).not.toHaveBeenCalled();
     expect(screen.getByTestId("test-edit-sheet").parent!.props.entering).toBeUndefined();
     await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
     expect(onRequestClose).toHaveBeenCalledTimes(1);

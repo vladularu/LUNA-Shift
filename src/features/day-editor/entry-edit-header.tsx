@@ -8,7 +8,6 @@ import {
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, RADII, SPACING, MINIMUM_TOUCH_TARGET } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { SurfaceCard } from "@/ui/design-system";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 
@@ -18,6 +17,7 @@ export interface EntryEditHeaderProps {
   readonly headerColor: string;
   readonly headerLeading?: ReactNode;
   readonly headerSubtitle?: string;
+  readonly hideHeaderDuration?: boolean;
   readonly headerAccessibilityLabel?: string;
   readonly onHeaderPress?: () => void;
   readonly onDelete?: (() => void) | undefined;
@@ -31,15 +31,13 @@ export function EntryEditHeader({
   headerColor,
   headerLeading,
   headerSubtitle,
+  hideHeaderDuration,
   headerAccessibilityLabel,
   onHeaderPress,
   onDelete,
-  menuVisible,
-  onMenuPress,
+  deleteLabel = "Eintrag löschen",
 }: EntryEditHeaderProps & {
   readonly busy: boolean;
-  readonly menuVisible: boolean;
-  readonly onMenuPress: () => void;
 }) {
   const palette = usePalette();
   const { fontScale } = useWindowDimensions();
@@ -80,79 +78,36 @@ export function EntryEditHeader({
         ) : (
           <View style={[styles.heading, fontScale >= 1.6 && styles.largeHeading]}>{heading}</View>
         )}
-        <View style={styles.duration}>
-          <Text style={[TYPOGRAPHY.bodyStrong, { color: palette.text }]}>
-            {entryEditDurationLabel(durationMinutes)}
-          </Text>
-          {durationMinutes !== null ? (
-            <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted }]}>
-              {headerSubtitle === "Termin" ? "Dauer" : "ohne Pause"}
+        {!hideHeaderDuration ? (
+          <View style={styles.duration}>
+            <Text style={[TYPOGRAPHY.bodyStrong, { color: palette.text }]}>
+              {entryEditDurationLabel(durationMinutes)}
             </Text>
-          ) : null}
-        </View>
+            {durationMinutes !== null ? (
+              <Text style={[TYPOGRAPHY.caption, { color: palette.textMuted }]}>
+                {headerSubtitle === "Termin" ? "Dauer" : "ohne Pause"}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
       </View>
       {onDelete ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Weitere Aktionen"
-          accessibilityState={{ expanded: menuVisible }}
+          accessibilityLabel={deleteLabel}
           disabled={busy}
-          onPress={onMenuPress}
-          style={styles.more}
+          onPress={onDelete}
+          style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
         >
           <Ionicons
             accessibilityElementsHidden
-            name="ellipsis-horizontal-circle"
-            color={palette.textMuted}
+            name="trash-outline"
+            color={palette.danger}
             size={22}
           />
         </Pressable>
       ) : null}
     </View>
-  );
-}
-
-// Rendered in the sheet root so native hit testing includes the entire menu.
-export function EntryEditActionMenu({
-  top,
-  label,
-  onDelete,
-  onClose,
-}: {
-  readonly top: number;
-  readonly label: string;
-  readonly onDelete: () => void;
-  readonly onClose: () => void;
-}) {
-  const palette = usePalette();
-  return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Aktionsmenü schließen"
-        onPress={onClose}
-        style={[StyleSheet.absoluteFill, { zIndex: 5 }]}
-      />
-      <SurfaceCard style={{ ...styles.menu, top }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={label}
-          onPress={() => {
-            onClose();
-            onDelete();
-          }}
-          style={[styles.deleteAction, { backgroundColor: palette.dangerAction }]}
-        >
-          <Ionicons
-            accessibilityElementsHidden
-            name="trash-outline"
-            color={palette.onDanger}
-            size={20}
-          />
-          <Text style={[TYPOGRAPHY.body, { color: palette.onDanger }]}>{label}</Text>
-        </Pressable>
-      </SurfaceCard>
-    </>
   );
 }
 
@@ -188,21 +143,11 @@ const styles = StyleSheet.create({
   identity: { flex: 1, minWidth: 0 },
   subtitle: { flexDirection: "row", alignItems: "center", gap: SPACING.xxs },
   duration: { alignItems: "flex-end" },
-  more: {
+  deleteButton: {
     minWidth: MINIMUM_TOUCH_TARGET,
     minHeight: MINIMUM_TOUCH_TARGET,
     alignItems: "center",
     justifyContent: "center",
   },
-  menu: { position: "absolute", right: SPACING.lg, maxWidth: "90%", zIndex: 6 },
-  deleteAction: {
-    borderRadius: RADII.control,
-    borderCurve: CORNER_CURVE,
-    minHeight: MINIMUM_TOUCH_TARGET,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
+  pressed: { opacity: 0.7 },
 });

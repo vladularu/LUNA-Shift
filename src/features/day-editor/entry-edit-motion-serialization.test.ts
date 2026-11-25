@@ -53,8 +53,15 @@ function nativeSerializationFixture() {
     { "../animationBuilder": { ...base, ...complex } },
   );
   const motion = loadNativeJavaScript("src/features/day-editor/entry-edit-overlay-motion.ts", {
+    react: {},
     "react-native-reanimated": slide,
-    "@/theme/motion": { MOTION: { easing: { calm: () => {} }, reduceMotion: "system" } },
+    "@/theme/motion": {
+      MOTION: {
+        duration: { normal: 240, fast: 160 },
+        easing: { calm: () => {} },
+        reduceMotion: "system",
+      },
+    },
   });
   const backend = new Proxy(
     {},

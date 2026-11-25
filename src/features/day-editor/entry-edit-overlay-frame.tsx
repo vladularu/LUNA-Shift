@@ -1,6 +1,7 @@
 import { Text, TextInput } from "@/ui/text";
 import { CORNER_CURVE, RADII, SHADOWS, SPACING } from "@/theme/tokens";
 import { INTER_FONTS } from "@/theme/shadcn";
+import { useLocalSearchParams } from "expo-router";
 /* eslint-disable react-hooks/immutability -- Reanimated SharedValue.value is intentionally mutable on the UI thread. */
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ import {
   Pressable,
   type KeyboardEvent,
   type ScrollView,
+  type ScrollViewProps,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -18,6 +20,7 @@ import {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
+  Easing,
   FadeIn,
   cancelAnimation,
   runOnJS,
@@ -30,53 +33,120 @@ import Animated, {
 import { shouldDismissEntryEditOverlay } from "@/features/day-editor/entry-edit-overlay-pattern";
 import {
   EntryEditHeader,
-  EntryEditActionMenu,
   type EntryEditHeaderProps,
 } from "@/features/day-editor/entry-edit-header";
+import { usesEntryOverviewSheet } from "@/features/day-editor/entry-edit-presentation";
 import { MOTION } from "@/theme/motion";
 import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
+import { FloatingGlassBackground } from "@/ui/floating-glass-background";
+import { SecondaryButton } from "@/ui/form-controls";
+import { useGlassAppearance } from "@/ui/glass-appearance";
 import { SheetBackFooter } from "@/ui/sheet-back-footer";
 import {
   ENTRY_EDIT_CLOSE_DURATION,
-  ENTRY_EDIT_MOTION,
+  useEntryEditCloseFooterMotion,
 } from "@/features/day-editor/entry-edit-overlay-motion";
 
 // Leave room below the focused field, with matching scrollable space at the end.
 const FOCUSED_FIELD_CLEARANCE = 72;
+const OVERVIEW_RADIUS = RADII.sheet + SPACING.sm;
+const OVERVIEW_HEIGHT_FRACTION = 0.54;
+const APPOINTMENT_FORM_HEIGHT_FRACTION = 0.68;
+const OVERVIEW_SIDE_INSET = SPACING.lg;
+const STAGED_SHEET_EXIT_EASING = Easing.in(Easing.quad);
+
+interface EntryOverviewStage {
+  readonly expanded: boolean;
+  readonly compactHeightFraction: number;
+  readonly editLabel?: string;
+  readonly onExpand: () => void;
+  readonly onCollapse: () => void;
+}
+
+export function useEntryOverviewStage(
+  mode: "SHIFT" | "APPOINTMENT",
+  existing: boolean,
+  closePickers: () => void,
+): EntryOverviewStage | undefined {
+  const params = useLocalSearchParams();
+  const [expanded, setExpanded] = useState(false);
+  if (
+    Platform.OS !== "ios" ||
+    (!existing && mode === "SHIFT") ||
+    !usesEntryOverviewSheet(params, mode)
+  ) {
+    return undefined;
+  }
+  return {
+    expanded,
+    compactHeightFraction: existing ? OVERVIEW_HEIGHT_FRACTION : APPOINTMENT_FORM_HEIGHT_FRACTION,
+    editLabel: existing
+      ? mode === "SHIFT"
+        ? "Dienst bearbeiten"
+        : "Termin bearbeiten"
+      : undefined,
+    onExpand: () => setExpanded(true),
+    onCollapse: () => {
+      closePickers();
+      setExpanded(false);
+    },
+  };
+}
 
 export function EntryEditOverlayFrame({
   busy,
   cardContent,
+  contentKey,
+  closeLabel = "Schließen",
   error,
+  fieldsContentContainerStyle,
   nativePresentation = Platform.OS === "ios",
   onBackdropPress,
   onClosingStart,
   onDismiss,
   onRequestClose,
   overlay,
+  overviewStage,
   testIDPrefix,
   ...header
 }: EntryEditHeaderProps & {
   readonly busy: boolean;
   readonly cardContent: ReactNode;
+  readonly contentKey?: string;
+  readonly closeLabel?: string;
   readonly error: string | null;
+  readonly fieldsContentContainerStyle?: ScrollViewProps["contentContainerStyle"];
   readonly nativePresentation?: boolean;
   readonly onBackdropPress?: () => void;
   readonly onClosingStart?: () => void;
   readonly onDismiss: () => void;
   readonly onRequestClose: () => Promise<boolean>;
   readonly overlay?: ReactNode;
+  readonly overviewStage?: EntryOverviewStage;
   readonly testIDPrefix: string;
 }) {
   const palette = usePalette();
+  const { nativeGlass } = useGlassAppearance();
+  const stagedSheet = overviewStage !== undefined;
+  const compactSheet = overviewStage?.expanded === false;
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  const viewportTop = Math.max(insets.top, 16);
+  const expandedHeight = Math.max(0, height - viewportTop);
+  const compactHeight = Math.min(
+    height * (overviewStage?.compactHeightFraction ?? OVERVIEW_HEIGHT_FRACTION),
+    expandedHeight,
+  );
+  const targetHeight = compactSheet ? compactHeight : expandedHeight;
   const reduceMotion = useReducedMotion();
+  const animateCloseFooter = stagedSheet && !nativePresentation && !reduceMotion;
+  const { footerMotionStyle, onFooterLayout, sheetEntering } = useEntryEditCloseFooterMotion(
+    animateCloseFooter,
+    height,
+  );
   const [closing, setClosing] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(64);
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
   const closingRef = useRef(false);
   const fieldsRef = useRef<ScrollView>(null);
@@ -120,6 +190,16 @@ export function EntryEditOverlayFrame({
   const sheetTranslateY = useSharedValue(0);
   const backdropProgress = useSharedValue(1);
   const dragOriginY = useSharedValue(0);
+  const overviewHeight = useSharedValue(targetHeight);
+  const dragOriginHeight = useSharedValue(targetHeight);
+  useEffect(() => {
+    if (!stagedSheet) return;
+    overviewHeight.value = withTiming(targetHeight, {
+      duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
+      easing: MOTION.easing.calm,
+      reduceMotion: MOTION.reduceMotion,
+    });
+  }, [overviewHeight, reduceMotion, stagedSheet, targetHeight]);
   const exitAnimationFinishedRef = useRef(false);
   const saveSucceededRef = useRef<boolean | null>(null);
   const [gestureCloseRequest, setGestureCloseRequest] = useState(0);
@@ -168,7 +248,6 @@ export function EntryEditOverlayFrame({
     if (busy || closingRef.current) return;
     closingRef.current = true;
     setClosing(true);
-    setMenuVisible(false);
     onClosingStart?.();
     if (nativePresentation) {
       void onRequestClose().then(
@@ -190,35 +269,43 @@ export function EntryEditOverlayFrame({
     saveSucceededRef.current = null;
     cancelAnimation(sheetTranslateY);
     cancelAnimation(backdropProgress);
-    sheetTranslateY.value = withTiming(
-      closedOffset,
-      {
-        duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
-        easing: MOTION.easing.calm,
-        reduceMotion: MOTION.reduceMotion,
-      },
-      (finished) => {
-        if (finished) runOnJS(markExitAnimationFinished)();
-      },
-    );
-    backdropProgress.value = withTiming(0, {
-      duration: reduceMotion ? MOTION.duration.instant : ENTRY_EDIT_CLOSE_DURATION,
-      easing: MOTION.easing.calm,
+    const useStagedExit = animateCloseFooter && !keyboardVisible;
+    // The card and footer share this translation. Use the current height while changing detents.
+    const exitOffset = useStagedExit
+      ? Math.max(Math.max(targetHeight, overviewHeight.get()) + SPACING.sm, sheetTranslateY.get())
+      : closedOffset;
+    const options = {
+      duration: reduceMotion
+        ? MOTION.duration.instant
+        : useStagedExit
+          ? MOTION.duration.normal
+          : ENTRY_EDIT_CLOSE_DURATION,
+      easing: useStagedExit ? STAGED_SHEET_EXIT_EASING : MOTION.easing.calm,
       reduceMotion: MOTION.reduceMotion,
-    });
+    };
+    sheetTranslateY.set(
+      withTiming(exitOffset, options, (finished) => {
+        if (finished) runOnJS(markExitAnimationFinished)();
+      }),
+    );
+    backdropProgress.set(withTiming(0, options));
     void onRequestClose().then(handleSaveResult, () => handleSaveResult(false));
   }, [
+    animateCloseFooter,
     backdropProgress,
     busy,
     closedOffset,
-    nativePresentation,
-    onDismiss,
     handleSaveResult,
+    keyboardVisible,
     markExitAnimationFinished,
+    nativePresentation,
     onClosingStart,
+    onDismiss,
     onRequestClose,
+    overviewHeight,
     reduceMotion,
     sheetTranslateY,
+    targetHeight,
   ]);
 
   const queueGestureClose = useCallback(() => {
@@ -231,6 +318,27 @@ export function EntryEditOverlayFrame({
     requestClose();
   }, [gestureCloseRequest, requestClose]);
 
+  const expandOverview = overviewStage?.onExpand;
+  const collapseOverview = overviewStage?.onCollapse;
+  const collapseFromGesture = () => {
+    Keyboard.dismiss();
+    collapseOverview?.();
+  };
+  const settleDrag = () => {
+    "worklet";
+    const options = {
+      duration: ENTRY_EDIT_CLOSE_DURATION,
+      easing: MOTION.easing.calm,
+      reduceMotion: MOTION.reduceMotion,
+    };
+    sheetTranslateY.value = withTiming(0, options);
+    if (stagedSheet) overviewHeight.value = withTiming(targetHeight, options);
+    backdropProgress.value = withTiming(1, {
+      duration: MOTION.duration.fast,
+      easing: MOTION.easing.standard,
+      reduceMotion: MOTION.reduceMotion,
+    });
+  };
   const dismissGesture = nativePresentation
     ? null
     : Gesture.Pan()
@@ -238,12 +346,23 @@ export function EntryEditOverlayFrame({
         .enabled(!busy && !closing)
         .activeOffsetY([-6, 6])
         .failOffsetX([-28, 28])
-        .onBegin(() => {
+        .onStart(() => {
           cancelAnimation(sheetTranslateY);
           cancelAnimation(backdropProgress);
           dragOriginY.value = sheetTranslateY.value;
+          if (stagedSheet) {
+            cancelAnimation(overviewHeight);
+            dragOriginHeight.value = overviewHeight.value;
+          }
         })
         .onUpdate((event) => {
+          if (stagedSheet) {
+            overviewHeight.value = Math.min(
+              expandedHeight,
+              Math.max(compactHeight, dragOriginHeight.value - event.translationY),
+            );
+            if (!compactSheet) return;
+          }
           const nextTranslateY = Math.max(0, dragOriginY.value + event.translationY);
           sheetTranslateY.value = nextTranslateY;
           backdropProgress.value = Math.max(
@@ -252,46 +371,36 @@ export function EntryEditOverlayFrame({
           );
         })
         .onEnd((event) => {
-          if (shouldDismissEntryEditOverlay(event.translationY, event.velocityY)) {
-            runOnJS(queueGestureClose)();
+          if (
+            compactSheet &&
+            expandOverview &&
+            shouldDismissEntryEditOverlay(-event.translationY, -event.velocityY)
+          ) {
+            runOnJS(expandOverview)();
             return;
           }
-          sheetTranslateY.value = withTiming(0, {
-            duration: ENTRY_EDIT_CLOSE_DURATION,
-            easing: MOTION.easing.calm,
-            reduceMotion: MOTION.reduceMotion,
-          });
-          backdropProgress.value = withTiming(1, {
-            duration: MOTION.duration.fast,
-            easing: MOTION.easing.standard,
-            reduceMotion: MOTION.reduceMotion,
-          });
+          if (shouldDismissEntryEditOverlay(event.translationY, event.velocityY)) {
+            if (stagedSheet && !compactSheet) runOnJS(collapseFromGesture)();
+            else runOnJS(queueGestureClose)();
+            return;
+          }
+          settleDrag();
         })
         .onFinalize((_event, success) => {
-          if (success) return;
-          sheetTranslateY.value = withTiming(0, {
-            duration: ENTRY_EDIT_CLOSE_DURATION,
-            easing: MOTION.easing.calm,
-            reduceMotion: MOTION.reduceMotion,
-          });
-          backdropProgress.value = withTiming(1, {
-            duration: MOTION.duration.fast,
-            easing: MOTION.easing.standard,
-            reduceMotion: MOTION.reduceMotion,
-          });
+          if (!success) settleDrag();
         });
 
-  const backdropMotionStyle = useAnimatedStyle(() => ({ opacity: backdropProgress.value }));
+  const backdropOpacity = stagedSheet && !palette.dark ? 0.9 : 1;
+  const backdropMotionStyle = useAnimatedStyle(() => ({
+    opacity: backdropProgress.value * backdropOpacity,
+  }));
+  const overviewHeightStyle = useAnimatedStyle(() => ({ height: overviewHeight.value }));
   const sheetMotionStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslateY.value }],
   }));
 
   const editorHeader = (
-    <Animated.View
-      style={{ flexShrink: 0, zIndex: 4 }}
-      onLayout={({ nativeEvent: { layout } }) => setHeaderHeight(layout.height)}
-      testID={`${testIDPrefix}-drag-handle`}
-    >
+    <Animated.View style={{ flexShrink: 0, zIndex: 4 }} testID={`${testIDPrefix}-drag-handle`}>
       {!nativePresentation ? (
         <View
           accessibilityElementsHidden
@@ -301,11 +410,34 @@ export function EntryEditOverlayFrame({
       <EntryEditHeader
         {...header}
         busy={busy || closing}
-        menuVisible={menuVisible}
-        onMenuPress={() => {
-          onBackdropPress?.();
-          setMenuVisible(!menuVisible);
-        }}
+        onDelete={
+          header.onDelete &&
+          (() => {
+            onBackdropPress?.();
+            header.onDelete?.();
+          })
+        }
+      />
+    </Animated.View>
+  );
+  const closeFooter = keyboardVisible ? null : (
+    <Animated.View
+      onLayout={animateCloseFooter ? onFooterLayout : undefined}
+      style={[
+        styles.footer,
+        compactSheet && styles.detachedFooter,
+        { paddingBottom: Math.max(insets.bottom, SPACING.md) },
+        animateCloseFooter && footerMotionStyle,
+      ]}
+      testID={`${testIDPrefix}-close-arrival`}
+    >
+      <SheetBackFooter
+        accessibilityLabel={closeLabel === "Speichern" ? "Speichern" : "Schließen und speichern"}
+        busy={busy || closing}
+        disabled={closing}
+        icon={closeLabel === "Speichern" ? "checkmark" : "close"}
+        label={closeLabel}
+        onPress={requestClose}
       />
     </Animated.View>
   );
@@ -346,20 +478,24 @@ export function EntryEditOverlayFrame({
           style={[
             nativePresentation ? styles.nativeViewport : styles.scrollContent,
             {
-              paddingTop: nativePresentation ? SPACING.sm : Math.max(insets.top, 16),
+              paddingTop: nativePresentation ? SPACING.sm : viewportTop,
             },
           ]}
         >
           <Animated.View
-            entering={nativePresentation || reduceMotion ? undefined : ENTRY_EDIT_MOTION.sheet}
-            style={[styles.shell, nativePresentation && styles.nativeShell]}
+            entering={nativePresentation || reduceMotion ? undefined : sheetEntering}
+            style={[
+              styles.shell,
+              nativePresentation && styles.nativeShell,
+              stagedSheet && [styles.stagedShell, overviewHeightStyle],
+            ]}
           >
             <Animated.View
               accessibilityViewIsModal
               pointerEvents={busy || closing ? "none" : "auto"}
               style={[
                 styles.sheetContent,
-                nativePresentation && styles.nativeShell,
+                (nativePresentation || stagedSheet) && styles.nativeShell,
                 !nativePresentation && sheetMotionStyle,
               ]}
               testID={`${testIDPrefix}-sheet`}
@@ -368,15 +504,21 @@ export function EntryEditOverlayFrame({
                 style={[
                   styles.card,
                   nativePresentation && styles.nativeCard,
+                  stagedSheet && styles.stagedCard,
+                  compactSheet && styles.overviewCard,
                   keyboardVisible && styles.keyboardDockedCard,
                   {
-                    backgroundColor: palette.groupedBackground,
+                    backgroundColor:
+                      compactSheet && nativeGlass ? "transparent" : palette.groupedBackground,
                     borderColor: palette.border,
                     shadowColor: palette.shadow,
                   },
                 ]}
                 testID={`${testIDPrefix}-card`}
               >
+                {compactSheet && nativeGlass ? (
+                  <FloatingGlassBackground dark={palette.dark} radius={OVERVIEW_RADIUS} />
+                ) : null}
                 <SoftScrollScope>
                   <SoftScrollAnchor>
                     {dismissGesture ? (
@@ -386,10 +528,16 @@ export function EntryEditOverlayFrame({
                     )}
                   </SoftScrollAnchor>
                   <SoftScrollView
+                    key={contentKey}
                     ref={fieldsRef}
                     testID={`${testIDPrefix}-fields`}
-                    style={[styles.fields, nativePresentation && styles.nativeFields]}
-                    contentContainerStyle={keyboardVisible ? styles.typingContent : undefined}
+                    style={[
+                      styles.fields,
+                      (nativePresentation || stagedSheet) && styles.fillFields,
+                    ]}
+                    contentContainerStyle={
+                      keyboardVisible ? styles.typingContent : fieldsContentContainerStyle
+                    }
                     automaticallyAdjustKeyboardInsets={false}
                     contentInsetAdjustmentBehavior="never"
                     keyboardDismissMode="interactive"
@@ -437,30 +585,21 @@ export function EntryEditOverlayFrame({
                   </View>
                 ) : null}
 
-                {!keyboardVisible ? (
-                  <View
-                    style={[styles.footer, { paddingBottom: Math.max(insets.bottom, SPACING.md) }]}
-                    testID={`${testIDPrefix}-close-arrival`}
-                  >
-                    <SheetBackFooter
-                      accessibilityLabel="Schließen und speichern"
-                      busy={busy || closing}
-                      disabled={closing}
-                      icon="close"
-                      label="Schließen"
-                      onPress={requestClose}
-                    />
+                {compactSheet && overviewStage?.editLabel ? (
+                  <View style={[styles.footer, styles.overviewAction]}>
+                    <SecondaryButton
+                      disabled={busy || closing}
+                      shape="pill"
+                      onPress={overviewStage.onExpand}
+                    >
+                      {overviewStage.editLabel}
+                    </SecondaryButton>
                   </View>
-                ) : null}
-                {menuVisible && header.onDelete && !busy && !closing ? (
-                  <EntryEditActionMenu
-                    top={headerHeight}
-                    label={header.deleteLabel ?? "Eintrag löschen"}
-                    onDelete={header.onDelete}
-                    onClose={() => setMenuVisible(false)}
-                  />
-                ) : null}
+                ) : (
+                  !compactSheet && closeFooter
+                )}
               </View>
+              {compactSheet ? closeFooter : null}
             </Animated.View>
           </Animated.View>
         </View>
@@ -493,13 +632,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   shell: { width: "100%", alignSelf: "center", flexShrink: 1 },
+  stagedShell: { maxHeight: "100%" },
   sheetContent: { flexShrink: 1 },
   nativeViewport: { flex: 1 },
   nativeShell: { flex: 1 },
   // Override the fallback's explicit flexGrow: 0; flex: 1 alone cannot override it.
-  nativeFields: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+  fillFields: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
   nativeCard: { flex: 1, borderRadius: 0, borderWidth: 0, boxShadow: "none" },
+  stagedCard: { flex: 1, borderWidth: 0 },
   footer: { paddingHorizontal: SPACING.md, paddingTop: SPACING.xs, flexShrink: 0 },
+  overviewCard: {
+    marginHorizontal: OVERVIEW_SIDE_INSET,
+    borderRadius: OVERVIEW_RADIUS,
+  },
+  overviewAction: { paddingBottom: SPACING.md },
+  detachedFooter: { paddingTop: SPACING.sm, paddingHorizontal: OVERVIEW_SIDE_INSET },
   fields: { flexGrow: 0, flexShrink: 1 },
   typingContent: { paddingBottom: FOCUSED_FIELD_CLEARANCE },
   keyboardDockedCard: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },

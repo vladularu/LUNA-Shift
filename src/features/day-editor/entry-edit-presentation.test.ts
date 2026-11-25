@@ -28,4 +28,29 @@ describe("entry editor presentation", () => {
       });
     },
   );
+
+  it("reserves the transparent iPhone host for an existing own shift", () => {
+    const saved = { mode: "SHIFT", entryId: "shift-1" };
+    expect(entryEditorScreenOptions("ios", "#151517", saved).presentation).toBe("transparentModal");
+    expect(
+      entryEditorScreenOptions("ios", "#151517", { ...saved, focus: "BILLING" }).presentation,
+    ).toBe("formSheet");
+    expect(
+      entryEditorScreenOptions("ios", "#151517", { ...saved, sharedCalendarId: "calendar-1" })
+        .presentation,
+    ).toBe("formSheet");
+  });
+
+  it("uses the transparent iPhone host for both saved and new appointments", () => {
+    const appointment = { mode: "APPOINTMENT", entryId: "appointment-1" };
+    expect(entryEditorScreenOptions("ios", "#151517", appointment).presentation).toBe(
+      "transparentModal",
+    );
+    expect(entryEditorScreenOptions("ios", "#151517", { mode: "APPOINTMENT" }).presentation).toBe(
+      "transparentModal",
+    );
+    expect(entryEditorScreenOptions("ios", "#151517", { mode: "SHIFT" }).presentation).toBe(
+      "formSheet",
+    );
+  });
 });

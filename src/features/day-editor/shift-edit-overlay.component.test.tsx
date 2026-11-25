@@ -183,11 +183,8 @@ describe("ShiftEditOverlay", () => {
     expect(props.onShiftTypeChange).toHaveBeenCalledWith("TRAINING");
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Station 3" }));
-    expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     const deleteAction = screen.getByRole("button", { name: "Dienst löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
-    expect(within(deleteAction).getByText("Dienst löschen")).toBeTruthy();
     expect(screen.queryByLabelText("Notizen")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
     const notes = screen.getByLabelText("Notizen");
@@ -249,18 +246,13 @@ describe("ShiftEditOverlay", () => {
     expect(screen.getByRole("button", { name: "Ort: Kein Ort" })).toBeTruthy();
   });
 
-  it("keeps the action menu inside the sheet hit area after the header grows and cancels without deleting", async () => {
+  it("keeps the direct delete action in the header outside the scrolling fields", async () => {
     const { screen, props } = await renderOverlay();
-    await fireEvent(screen.getByTestId("shift-edit-drag-handle"), "layout", {
-      nativeEvent: { layout: { x: 0, y: 0, width: 430, height: 148 } },
-    });
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
-    const menu = screen.getByRole("button", { name: "Dienst löschen" }).parent!;
-    expect(menu).toHaveStyle({ top: 148 });
-    expect(menu.parent).toBe(screen.getByTestId("shift-edit-card"));
-    await fireEvent.press(screen.getByRole("button", { name: "Aktionsmenü schließen" }));
-    expect(screen.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
-    expect(props.onDelete).not.toHaveBeenCalled();
+    const header = within(screen.getByTestId("shift-edit-drag-handle"));
+    const fields = within(screen.getByTestId("shift-edit-fields"));
+    expect(fields.queryByRole("button", { name: "Dienst löschen" })).toBeNull();
+    await fireEvent.press(header.getByRole("button", { name: "Dienst löschen" }));
+    expect(props.onDelete).toHaveBeenCalledTimes(1);
     expect(props.onRequestClose).not.toHaveBeenCalled();
   });
 
