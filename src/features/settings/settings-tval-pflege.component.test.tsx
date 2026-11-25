@@ -167,7 +167,7 @@ describe("TVA-L in the familiar salary form", () => {
   it("preserves the selection when editing personal weekly hours", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvalPflegeTariff: tval, weeklyMinutes: 1800, tariff: null }),
@@ -215,7 +215,7 @@ describe("TVA-L in the familiar salary form", () => {
   it("requires correcting contracted hours above West training full time", async () => {
     mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "40");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(

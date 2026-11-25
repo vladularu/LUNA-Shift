@@ -133,7 +133,7 @@ describe("TV-UK in the familiar simple salary form", () => {
   it("preserves the UK choice while editing work hours", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvUkNursingTariff: uk, weeklyMinutes: 1800, tariff: null }),
@@ -185,7 +185,7 @@ describe("TV-UK in the familiar simple salary form", () => {
   it("does not silently scale above the contracted full-time basis", async () => {
     mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "40");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText(/Wochenstunden liegen über der tariflichen Vollzeit/)).toBeTruthy();

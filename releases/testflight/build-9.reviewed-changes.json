@@ -10263,10 +10263,16 @@
       "reason": "Requested primary text refinement for the Work and Salary card rows: apply the existing RowButton titleColor override with palette.text to ProfileChoice labels. Preserve body typography, smaller selected-value captions, selection navigation, disabled/loading state and pending-save behavior; no tariff, calculation or stored-data changes. Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options. Reserve space for the iOS navigation controls and let both prompts wrap with the selected text size."
     },
     {
+      "path": "src/features/settings/profile-value-field.tsx",
+      "kind": "added",
+      "sha256": "5dce4b4ceebd599b800e03b3c57dc0dbd37ba42710cedeb6bebfe50a8661ad8a",
+      "reason": "Direct inline editing of weekly hours and employer with a pencil and a single header save was accepted in iOS Preview Build 56, update group e2b40896-774d-4026-ad41-4c16ce4a5c8a."
+    },
+    {
       "path": "src/features/settings/settings-editor-screen.tsx",
       "kind": "modified",
-      "sha256": "666e6f314423eb09befea63784c5530bdf0ea2b7d316d3377affb86a327cac6c",
-      "reason": "Paket 1: one disabled-aware header save for employment editors including More entry; remove duplicate bottom save. R2 follows iPhone screenshot feedback: use the existing template-editor Stack.Toolbar.View hidesSharedBackground pattern to remove the extra iOS glass backing. Existing save validation, period choice, persistence and identity editors are preserved. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+      "sha256": "4bf1093cc79eadd15a015f8855c19c3a8fb913ef81853dec264022ae2627bd84",
+      "reason": "Paket 1: one disabled-aware header save for employment editors including More entry; remove duplicate bottom save. R2 follows iPhone screenshot feedback: use the existing template-editor Stack.Toolbar.View hidesSharedBackground pattern to remove the extra iOS glass backing. Existing save validation, period choice, persistence and identity editors are preserved. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6. Direct inline editing of weekly hours and employer with a pencil and a single header save was accepted in iOS Preview Build 56, update group e2b40896-774d-4026-ad41-4c16ce4a5c8a."
     },
     {
       "path": "src/features/settings/settings-form-values.ts",
