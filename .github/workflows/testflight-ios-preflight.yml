@@ -55,7 +55,12 @@ jobs:
           [[ "$compiled" =~ ^luna-engine-v1:[0-9a-f]{64}$ ]]
           echo "LUNA_PREFLIGHT_ENGINE_VERSION=$compiled" >> "$GITHUB_ENV"
           node --test modules/luna-engine/scripts/native-config.test.mjs
-          rustup run 1.99.1 cargo test --locked --manifest-path modules/luna-engine/rust/Cargo.toml --test ffi_reports
+      - name: Run the native annual gross integration test
+        run: |
+          toolchain="$GITHUB_WORKSPACE/modules/luna-rest-pilot/.build"
+          CARGO_HOME="$toolchain/cargo" RUSTUP_HOME="$toolchain/rustup" \
+            "$toolchain/cargo/bin/cargo" +1.99.1 test --locked --jobs 2 \
+            --manifest-path modules/luna-engine/rust/Cargo.toml --test ffi_reports
       - run: npm ci
       - name: Verify the Production identity and prebuild fingerprint
         run: |
