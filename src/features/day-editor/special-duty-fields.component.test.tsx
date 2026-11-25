@@ -41,6 +41,16 @@ function Harness({
 }
 
 async function select(screen: Awaited<ReturnType<typeof render>>, field: string, option: string) {
+  const menu = field.startsWith("Dienstform:")
+    ? screen.getByTestId("duty-choice:Dienstform-options")
+    : null;
+  if (menu) {
+    const item = within(menu).getByTestId(`duty-choice:Dienstform-option:${option}`);
+    await fireEvent(menu, "selectionChange", {
+      nativeEvent: { selection: item.props.modifiers[0].tag },
+    });
+    return;
+  }
   jest
     .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
     .mockImplementation((options, callback) => {
@@ -57,8 +67,9 @@ async function setPause(
   minutes: number,
 ) {
   const block = within(screen.getByTestId(`duty-block-${title}`));
-  await fireEvent.press(block.getByTestId(`duty-pause-${title}-row`));
-  await fireEvent.press(block.getByRole("radio", { name: `${minutes} Minuten` }));
+  const picker = block.getByTestId(`duty-pause-${title}-options`);
+  expect(within(picker).getByTestId(`duty-pause-${title}-option:${minutes} Min.`)).toBeTruthy();
+  await fireEvent(picker, "selectionChange", { nativeEvent: { selection: String(minutes) } });
 }
 
 const split = {
@@ -154,15 +165,16 @@ describe("special duty editor", () => {
     await select(screen, "Dienstform: Bereitschaftsdienst", "Rufbereitschaft");
     await select(screen, "Dienstform: Rufbereitschaft", "Bereitschaftsdienst");
     expect(JSON.parse(screen.getByTestId("draft").props.children)).toEqual(initialDraft);
-    expect(
-      screen.getByRole("button", { name: "Bereitschaftszeitraum: Pause: 15 Minuten" }),
-    ).toBeTruthy();
+    expect(screen.getByTestId("duty-pause-Bereitschaftszeitraum-options")).toHaveProp(
+      "selection",
+      "15",
+    );
     expect(screen.getByText("Abrechnung")).toBeTruthy();
   });
   it("adds and removes a linked second part in the existing editor", async () => {
     const screen = await render(<Harness />);
     await fireEvent.press(screen.getByLabelText("Dienstteil hinzufügen"));
-    expect(screen.getByText("Geteilter Dienst")).toBeTruthy();
+    expect(screen.getByTestId("duty-choice:Dienstform-options")).toHaveProp("selection", "SPLIT");
     expect(screen.getByLabelText("Dienstteil 2 entfernen")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Dienstteil 2 entfernen"));
     expect(screen.queryByLabelText("Dienstteil 2 entfernen")).toBeNull();
@@ -195,9 +207,9 @@ describe("special duty editor", () => {
     const screen = await render(<Harness initial={split} />);
     await setPause(screen, "Dienstteil 1", 30);
     await select(screen, "Dienstform: Geteilter Dienst", "Rufbereitschaft");
-    expect(screen.queryByTestId("duty-pause-Rufbereitschaftszeitraum-row")).toBeNull();
+    expect(screen.queryByTestId("duty-pause-Rufbereitschaftszeitraum-menu")).toBeNull();
     await select(screen, "Dienstform: Rufbereitschaft", "Geteilter Dienst");
-    expect(screen.getByRole("button", { name: "Dienstteil 1: Pause: 30 Minuten" })).toBeTruthy();
+    expect(screen.getByTestId("duty-pause-Dienstteil 1-options")).toHaveProp("selection", "30");
     expect(screen.getByLabelText("Dienstteil 2 entfernen")).toBeTruthy();
     expect(screen.getByText("5 Std. 30 Min.")).toBeTruthy();
   });

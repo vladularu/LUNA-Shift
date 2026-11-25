@@ -1,9 +1,10 @@
 import * as Native from "react-native";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { SPACING } from "@/theme/tokens";
+import { selectNativeNetPayOption } from "@/testing/net-pay-menu-test-helpers";
 import { NetPaySetupForm } from "./net-pay-setup-form";
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -29,6 +30,7 @@ async function selectSettingOption(
   label: string,
   option: string,
 ) {
+  if (await selectNativeNetPayOption(screen, label, option)) return;
   const name = label + ": " + option;
   if (!screen.queryByRole("radio", { name })) {
     const selector = screen
@@ -65,11 +67,21 @@ async function chooseBirthDate(screen: Awaited<ReturnType<typeof render>>, value
   }
   await fireEvent.press(screen.getByRole("button", { name: /^Geburtsdatum auswählen:/ }));
   const [day, month, year] = value.split(".").map(Number);
-  await fireEvent(screen.getByLabelText("Geburtsdatum im Kalender"), "change", {
-    nativeEvent: { timestamp: new Date(year, month - 1, day, 12).getTime(), utcOffset: 0 },
+  await fireEvent(screen.getByTestId("net-pay-native-birth-date"), "dateChange", {
+    nativeEvent: { date: new Date(year, month - 1, day, 12).toISOString() },
   });
-  await fireEvent.press(screen.getByRole("button", { name: "Datum übernehmen" }));
+  await fireEvent(screen.getByTestId("net-pay-date-confirm"), "buttonPress");
 }
+function expectNativeValue(
+  screen: Awaited<ReturnType<typeof render>>,
+  field: string,
+  label: string,
+) {
+  const picker = screen.getByTestId(`net-pay-native-options:${field}`);
+  const option = within(picker).getByTestId(`net-pay-native-option:${label}`);
+  expect(picker).toHaveProp("selection", option.props.modifiers[0].tag);
+}
+
 function setup(
   initial: MonthlyNetPaySettings | null = null,
   busy = false,
@@ -97,12 +109,10 @@ describe("one continuous net forecast settings page", () => {
   it("uses selectable summary rows for the upper sections without changing their saved values", async () => {
     const { element, onSave } = setup(automatedSettings());
     const screen = await render(element);
-    expect(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Steuerklasse auswählen: 1" })).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Zahlst du Kirchensteuer? auswählen: Nein" }),
-    ).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Hast du Kinder? auswählen: Nein" })).toBeTruthy();
+    expectNativeValue(screen, "Gültig ab", "Juli 2026");
+    expectNativeValue(screen, "Steuerklasse", "1");
+    expectNativeValue(screen, "Zahlst du Kirchensteuer?", "Nein");
+    expectNativeValue(screen, "Hast du Kinder?", "Nein");
     expect(screen.queryByRole("radio", { name: "Steuerklasse: 1" })).toBeNull();
     expect(screen.getByRole("button", { name: "Geburtsdatum auswählen: 15.01.1990" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
@@ -254,10 +264,14 @@ describe("one continuous net forecast settings page", () => {
     const { element } = setup(automatedSettings(), true);
     const screen = await render(element);
     expect(screen.getByRole("button", { name: /^Krankenversicherung bearbeiten/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Beschäftigungsart auswählen/ })).toBeDisabled();
+    expect(
+      screen.getByTestId("net-pay-native-menu:Beschäftigungsart").props.modifiers,
+    ).toContainEqual(expect.objectContaining({ $type: "disabled", disabled: true }));
     expect(screen.getByLabelText("Weitere feste monatliche Zulage (€)").props.editable).toBe(false);
     expect(screen.getByRole("button", { name: /^Geburtsdatum auswählen:/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Gültig ab auswählen/ })).toBeDisabled();
+    expect(screen.getByTestId("net-pay-native-menu:Gültig ab").props.modifiers).toContainEqual(
+      expect.objectContaining({ $type: "disabled", disabled: true }),
+    );
     expect(screen.getByRole("checkbox", { name: "Weitere Abzüge vor Steuer / SV" })).toBeDisabled();
   });
 
@@ -267,8 +281,11 @@ describe("one continuous net forecast settings page", () => {
       const initial = automatedSettings();
       const { element, onSave } = setup(initial, false, section);
       const screen = await render(element);
-      await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
-      expect(screen.getAllByRole("radio", { name: /^Gültig ab:/ })).toHaveLength(12);
+      expect(
+        within(screen.getByTestId("net-pay-native-options:Gültig ab")).getAllByTestId(
+          /^net-pay-native-option:/,
+        ),
+      ).toHaveLength(12);
       await selectSettingOption(screen, "Gültig ab", "Januar 2026");
       await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
       expect(onSave).toHaveBeenCalledWith({ ...initial, month: "2026-07" }, "2026-01");
@@ -388,7 +405,7 @@ describe("one continuous net forecast settings page", () => {
     for (const title of ["Steuern", "Familie", "Versicherung & Vorsorge", "Weitere Angaben"])
       expect(screen.getByRole("header", { name: title })).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Änderungen speichern" })).toHaveLength(1);
-    expect(screen.getAllByRole("button", { name: /^Gültig ab auswählen/ })).toHaveLength(1);
+    expect(screen.getAllByTestId("net-pay-native-menu:Gültig ab")).toHaveLength(1);
     expect(screen.getByLabelText("Kinderfreibetrag laut Gehaltsabrechnung")).toBeTruthy();
     expect(screen.getByLabelText("Weitere feste monatliche Zulage (€)")).toBeTruthy();
     expect(screen.queryByTestId("net-pay-settings-overview")).toBeNull();
@@ -416,7 +433,7 @@ describe("one continuous net forecast settings page", () => {
     const { element, onSave } = setup();
     const screen = await render(element);
     expect(screen.getByText("Für das ganze Jahr 2026")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /^Gültig ab auswählen/ })).toBeNull();
+    expect(screen.queryByTestId("net-pay-native-menu:Gültig ab")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(screen.getByText("Bitte deine Steuerklasse auswählen.")).toBeTruthy();
     await selectSettingOption(screen, "Steuerklasse", "1");
@@ -521,7 +538,9 @@ describe("one continuous net forecast settings page", () => {
     await screen.rerender(setup(automatedSettings(), true).element);
     expect(mockGuard).toHaveBeenLastCalledWith(false, true);
     expect(screen.getByRole("button", { name: "Wird gespeichert" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Steuerklasse auswählen/ })).toBeDisabled();
+    expect(screen.getByTestId("net-pay-native-menu:Steuerklasse").props.modifiers).toContainEqual(
+      expect.objectContaining({ $type: "disabled", disabled: true }),
+    );
   });
   it("keeps supplementary pension selection compact and preserves it when reopening", async () => {
     const { element, onSave } = setup(automatedSettings(), false, "insurance");
@@ -574,7 +593,7 @@ describe("one continuous net forecast settings page", () => {
       };
       const { element, onSave } = setup(custom, false, section);
       const screen = await render(element);
-      expect(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" })).toBeTruthy();
+      expectNativeValue(screen, "Gültig ab", "Juli 2026");
       expect(screen.queryByRole("button", { name: "Weiter" })).toBeNull();
       expect(screen.queryByRole("button", { name: "Zurück" })).toBeNull();
       await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));

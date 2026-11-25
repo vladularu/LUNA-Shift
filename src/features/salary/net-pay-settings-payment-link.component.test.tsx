@@ -6,6 +6,8 @@ import { NetPaySettingsScreen } from "./net-pay-settings-screen";
 
 const mockNavigate = jest.fn();
 const mockSave = jest.fn();
+const mockDb = { getFirstAsync: async () => ({ value: "true" }) };
+jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockDb }));
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ month: "2027-01" }),
   router: { push: (route: unknown) => mockNavigate(route), canGoBack: () => true, back: jest.fn() },
@@ -63,9 +65,9 @@ jest.mock("./net-pay-setup-form", () => ({
 }));
 
 describe("allowance timing entry from net settings", () => {
-  it("retains the legacy net form without a hidden payout detour", async () => {
+  it("opens the regular net form without a payout detour after skipping the guide", async () => {
     const screen = await render(<NetPaySettingsScreen />);
-    expect(screen.getByText("Bestehendes Netto-Formular")).toBeTruthy();
+    expect(await screen.findByText("Bestehendes Netto-Formular")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Speichern und schließen" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Auszahlung der Zulagen" })).toBeNull();
     expect(mockNavigate).not.toHaveBeenCalled();

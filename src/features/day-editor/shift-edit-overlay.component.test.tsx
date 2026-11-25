@@ -79,6 +79,13 @@ async function renderOverlay(
   return { screen, props };
 }
 
+async function selectShiftKind(screen: Awaited<ReturnType<typeof render>>, label: string) {
+  const picker = screen.getByTestId("shift-edit-type-options");
+  const choice = within(picker).getByTestId(`shift-edit-type-option:${label}`);
+  const [{ tag }] = choice.props.modifiers;
+  await fireEvent(picker, "selectionChange", { nativeEvent: { selection: tag } });
+}
+
 describe("ShiftEditOverlay", () => {
   it("shows the saved location map without changing the location action", async () => {
     const { screen, props } = await renderOverlay({
@@ -128,7 +135,7 @@ describe("ShiftEditOverlay", () => {
 
     expect(screen.getByText("Do. 20. Aug.")).toBeTruthy();
     expect(screen.getByText("8h 30min")).toBeTruthy();
-    expect(screen.getByText("Spät")).toBeTruthy();
+    expect(screen.getByTestId("shift-edit-type-menu")).toBeTruthy();
     expect(screen.queryByText("Mein Job")).toBeNull();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
     expect(screen.getByTestId("shift-edit-pause-options")).toHaveProp("selection", "0");
@@ -178,8 +185,7 @@ describe("ShiftEditOverlay", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Wecker: Aus" }));
     expect(props.onAlarmPress).toHaveBeenCalledTimes(1);
 
-    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Fortbildung" }));
+    await selectShiftKind(screen, "Fortbildung");
     expect(props.onShiftTypeChange).toHaveBeenCalledWith("TRAINING");
 
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Station 3" }));
@@ -256,37 +262,33 @@ describe("ShiftEditOverlay", () => {
     expect(props.onRequestClose).not.toHaveBeenCalled();
   });
 
-  it("keeps the entry-kind selector anchored in the sheet", async () => {
-    const { screen } = await renderOverlay();
-    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
-    expect(screen.getByTestId("shift-edit-type-popover")).toHaveStyle({ top: 6 });
-    expect(screen.getByRole("radio", { name: "Fortbildung" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("radio", { name: "Fortbildung" }));
+  it("keeps the native entry-kind selector in the sheet header", async () => {
+    const { screen, props } = await renderOverlay();
+    const header = within(screen.getByTestId("shift-edit-drag-handle"));
+    expect(header.getByTestId("shift-edit-type-menu")).toBeTruthy();
+    await selectShiftKind(screen, "Fortbildung");
+    expect(props.onShiftTypeChange).toHaveBeenCalledWith("TRAINING");
   });
 
-  it("offers the same five entry kinds as the template editor with one checked option", async () => {
+  it("offers the same five native entry kinds as the template editor with Dienst selected", async () => {
     const { screen } = await renderOverlay();
-    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
-
-    const menu = within(screen.getByTestId("shift-edit-type-popover"));
-    expect(menu.getByText("Eintragsart")).toBeVisible();
-    expect(menu.getAllByRole("radio").map((row) => row.props.accessibilityLabel)).toEqual([
+    const picker = screen.getByTestId("shift-edit-type-options");
+    const options = within(picker).getAllByTestId(/^shift-edit-type-option:/);
+    expect(options.map((row) => row.props.testID.split(":")[1])).toEqual([
       "Dienst",
       "Fortbildung",
       "Urlaub",
       "Krank",
       "Frei",
     ]);
-    expect(menu.getAllByRole("radio", { checked: true })).toHaveLength(1);
-    expect(menu.getByRole("radio", { name: "Dienst", checked: true })).toBeVisible();
+    expect(picker).toHaveProp("selection", options[0].props.modifiers[0].tag);
   });
 
   it.each(["EARLY", "LATE", "NIGHT", "DAY", "CUSTOM"] as const)(
     "keeps an existing %s service unchanged when Dienst is selected again",
     async (shiftType) => {
       const { screen, props } = await renderOverlay({ shiftType, shiftTitle: "Station A" });
-      await fireEvent.press(screen.getByRole("button", { name: /^Dienst: / }));
-      await fireEvent.press(screen.getByRole("radio", { name: "Dienst", checked: true }));
+      await selectShiftKind(screen, "Dienst");
 
       expect(props.onShiftTypeChange).not.toHaveBeenCalled();
       expect(props.onStartTimeChange).not.toHaveBeenCalled();
@@ -302,8 +304,7 @@ describe("ShiftEditOverlay", () => {
     ["Frei", "FREE"],
   ])("changes the entry kind to %s", async (label, type) => {
     const { screen, props } = await renderOverlay();
-    await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
-    await fireEvent.press(screen.getByRole("radio", { name: label }));
+    await selectShiftKind(screen, label);
 
     expect(props.onShiftTypeChange).toHaveBeenCalledTimes(1);
     expect(props.onShiftTypeChange).toHaveBeenCalledWith(type);
@@ -412,7 +413,7 @@ describe("ShiftEditOverlay", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Benutzerdefiniert" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Abstand: 30" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Zurück zu Erinnerungen" }));
 
     expect(screen.getByTestId("shift-notification-presets")).toBeTruthy();
     expect(props.onNotificationChange).not.toHaveBeenCalled();

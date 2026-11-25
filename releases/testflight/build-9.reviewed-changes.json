@@ -10643,8 +10643,8 @@
     {
       "path": "src/ui/luna-choice-menu.ios.tsx",
       "kind": "added",
-      "sha256": "b08dc930b26be1c95c1af1fdf83dde696b7bf3eede0d08741cefc8fbd90c6a1b",
-      "reason": "Preserve the verified Preview native iOS choice menu behavior, including the pause field."
+      "sha256": "3c3d78131a1029363fe2c0fa7019f253a8493f9ebc5eb8043358c768562fb555",
+      "reason": "Preserve the Preview native iOS choice menu and give every visible option a stable automation identifier."
     },
     {
       "path": "src/ui/luna-choice-menu.tsx",

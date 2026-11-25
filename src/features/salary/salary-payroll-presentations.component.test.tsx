@@ -429,7 +429,7 @@ describe("payroll content wiring", () => {
     );
     jest.mocked(useAutomaticNetPay).mockReturnValue(forecast);
   });
-  it("places the old settings card above the statement and keeps payout choice separate", async () => {
+  it("places the net-pay settings in the statement card and keeps payout choice separate", async () => {
     const props = fixture();
     const screen = await render(
       <SalaryPayrollContent
@@ -455,11 +455,9 @@ describe("payroll content wiring", () => {
       />,
     );
     expect(screen.queryByRole("button", { name: "Auszahlungswechsel speichern" })).toBeNull();
-    const output = JSON.stringify(screen.toJSON());
-    expect(output.indexOf("net-pay-settings-entry")).toBeGreaterThan(-1);
-    expect(output.indexOf("net-pay-settings-entry")).toBeLessThan(
-      output.indexOf("salary-payroll-totals"),
-    );
+    const summary = within(screen.getByTestId("salary-payroll-summary-card"));
+    expect(summary.getByTestId("salary-payroll-totals")).toBeTruthy();
+    expect(summary.getByTestId("net-pay-settings-entry")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("net-pay-settings-entry"));
     const { router } = jest.requireMock<typeof import("expo-router")>("expo-router");
     expect(router.push).toHaveBeenLastCalledWith({

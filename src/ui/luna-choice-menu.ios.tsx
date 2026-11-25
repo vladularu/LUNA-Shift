@@ -167,7 +167,7 @@ export function LunaChoiceMenu<T extends string>({
               {options.map((option) => (
                 <Text
                   key={option.value}
-                  testID={embedded ? `${testPrefix}-option:${option.label}` : undefined}
+                  testID={`${testPrefix}-option:${option.label}`}
                   modifiers={[tag(option.value)]}
                 >
                   {option.label}

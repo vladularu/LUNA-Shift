@@ -13,6 +13,12 @@ import { employmentDataFromProfile } from "@/domain/employment-history";
 import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { SalaryPayrollSettings } from "./salary-payroll-settings";
 
+jest.mock("./salary-choice-menu", () => ({
+  SalaryChoiceMenu: jest.requireActual<typeof import("./net-pay-workflow-controls")>(
+    "./net-pay-workflow-controls",
+  ).NetPayWorkflowSelect,
+}));
+
 const mockPaymentSave = jest.fn<(preferences: SalaryPaymentPreferences) => Promise<void>>();
 const mockNetSave =
   jest.fn<(settings: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>>();
