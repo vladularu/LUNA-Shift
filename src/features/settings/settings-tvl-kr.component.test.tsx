@@ -207,7 +207,7 @@ describe("TV-L in the familiar salary form", () => {
   it("preserves TV-L on working-time edits", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ weeklyMinutes: 1800, tvlKrTariff: tvl, tariff: null }),
@@ -223,7 +223,7 @@ describe("TV-L in the familiar salary form", () => {
   it("requires a working-time correction above the selected full-time basis", async () => {
     mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "40");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(
