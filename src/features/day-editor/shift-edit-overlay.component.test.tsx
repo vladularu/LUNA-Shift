@@ -10,6 +10,7 @@ import {
   ShiftEditOverlay,
   shouldDismissShiftEditOverlay,
 } from "@/features/day-editor/shift-edit-overlay";
+import { ShiftNotificationOverlay } from "@/features/day-editor/shift-notification-overlay";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 
@@ -243,6 +244,60 @@ describe("ShiftEditOverlay", () => {
     } finally {
       Object.defineProperty(Platform, "OS", platformDescriptor);
     }
+  });
+
+  it("keeps Android entry type selection in the editor and applies only a different choice", async () => {
+    const platform = jest.replaceProperty(Platform, "OS", "android");
+    try {
+      const { screen, props } = await renderOverlay();
+      const open = () => fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
+      await open();
+      expect(screen.getByTestId("shift-edit-type-popover")).toBeTruthy();
+      await fireEvent.press(screen.getByRole("radio", { name: "Dienst", checked: true }));
+      expect(props.onShiftTypeChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("shift-edit-type-popover")).toBeNull();
+      await open();
+      await fireEvent.press(screen.getByRole("radio", { name: "Fortbildung" }));
+      expect(props.onShiftTypeChange).toHaveBeenCalledWith("TRAINING");
+    } finally {
+      platform.restore();
+    }
+  });
+
+  it("supports cancelling and applying the custom reminder in the appointment layout", async () => {
+    const onChange = jest.fn();
+    const onClose = jest.fn();
+    const screen = await render(
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { x: 0, y: 0, width: 430, height: 932 },
+          insets: { top: 59, right: 0, bottom: 34, left: 0 },
+        }}
+      >
+        <ShiftNotificationOverlay value={null} onChange={onChange} onClose={onClose} />
+      </SafeAreaProvider>,
+    );
+    const open = () => fireEvent.press(screen.getByRole("radio", { name: "Benutzerdefiniert" }));
+    await open();
+    await fireEvent.press(screen.getByRole("button", { name: "Eigene Erinnerung schließen" }));
+    expect(onChange).not.toHaveBeenCalled();
+    await open();
+    await fireEvent.press(screen.getByRole("radio", { name: "Abstand: 30" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(onChange).not.toHaveBeenCalled();
+    await open();
+    await fireEvent.press(screen.getByRole("radio", { name: "Abstand: 2" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Einheit: Stunden" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Richtung: nach" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Bezug: Ende" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Fertig" }));
+    expect(onChange).toHaveBeenCalledWith({
+      amount: 2,
+      unit: "HOUR",
+      direction: "AFTER",
+      reference: "END",
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it("hides deletion while entering a new shift", async () => {
