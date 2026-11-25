@@ -23,8 +23,9 @@ export function iosTargets(value, architecture = process.arch) {
 
 /** Local locked build only. The hook/CI must provision rustup before this step. */
 export async function build({ root, env = process.env, host = process.platform }) {
-  if (host !== "darwin" || env.APP_VARIANT !== "internal" || env.LUNA_FULL_ENGINE !== "1")
-    throw new Error("INTERNAL_MACOS_BUILD_REQUIRED");
+  const supportedVariant = env.APP_VARIANT === "internal" || env.APP_VARIANT === "production";
+  if (host !== "darwin" || !supportedVariant || env.LUNA_FULL_ENGINE !== "1")
+    throw new Error("OPTED_IN_MACOS_BUILD_REQUIRED");
   const targets = iosTargets(env.LUNA_IOS_TARGETS);
   const rustup = env.LUNA_RUSTUP ?? "rustup";
   const run = (file, args, extraEnv = env) =>

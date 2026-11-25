@@ -24,6 +24,27 @@ const TVOED_COVERAGE_KEY = "tvoed_workplace_coverage";
 const TVOED_ASSIGNMENT_KEY = "tvoed_assignment";
 export const PLANNING_HINTS_PREFERENCE_KEY = "check_show_planning_hints";
 export const YOUTH_PROTECTION_PREFERENCE_KEY = "check_youth_protection";
+const NET_PAY_GUIDE_SKIPPED_KEY = "net_pay_guide_skipped";
+
+export async function loadNetPayGuideSkipped(db: SQLiteDatabase): Promise<boolean> {
+  const row = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM app_preferences WHERE key = ?",
+    NET_PAY_GUIDE_SKIPPED_KEY,
+  );
+  return row?.value === "true";
+}
+
+export async function saveNetPayGuideSkipped(db: SQLiteDatabase): Promise<void> {
+  await withImmediateTransaction(db, async (transaction) => {
+    await transaction.runAsync(
+      `INSERT INTO app_preferences(key,value,updated_at) VALUES(?,?,?)
+       ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`,
+      NET_PAY_GUIDE_SKIPPED_KEY,
+      "true",
+      new Date().toISOString(),
+    );
+  });
+}
 
 export async function loadYouthProtectionPreference(db: SQLiteDatabase): Promise<boolean> {
   const row = await db.getFirstAsync<{ value: string }>(

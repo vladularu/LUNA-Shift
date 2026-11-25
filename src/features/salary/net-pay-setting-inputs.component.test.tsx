@@ -1,7 +1,8 @@
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
-import { ActionSheetIOS, Platform } from "react-native";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { selectNativeNetPayOption } from "@/testing/net-pay-menu-test-helpers";
 import { NetPaySettingChoice } from "./net-pay-setting-rows";
 import { NetPaySettingDate } from "./net-pay-setting-date";
 import { NetPayWorkflowSelect } from "./net-pay-workflow-controls";
@@ -16,9 +17,6 @@ describe("net pay native settings interactions", () => {
     "keeps boolean %s typed through a native selection and ignores cancel",
     async (value) => {
       const onChange = jest.fn<(value: boolean) => void>();
-      const native = jest
-        .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-        .mockImplementation(() => {});
       const screen = await render(
         <NetPaySettingChoice
           compact
@@ -31,21 +29,19 @@ describe("net pay native settings interactions", () => {
           onChange={onChange}
         />,
       );
-      await fireEvent.press(screen.getByRole("button", { name: "Hast du Kinder? auswählen: Ja" }));
-      const [config, choose] = native.mock.calls[0];
-      expect(config.message).toBe("Aktuell: Ja");
-      await act(() => choose(config.cancelButtonIndex!));
+      const picker = screen.getByTestId("net-pay-native-options:Hast du Kinder?");
+      await fireEvent(picker, "selectionChange", { nativeEvent: { selection: null } });
       expect(onChange).not.toHaveBeenCalled();
-      await act(() => choose(value ? 0 : 1));
+      expect(await selectNativeNetPayOption(screen, "Hast du Kinder?", value ? "Ja" : "Nein")).toBe(
+        true,
+      );
       expect(onChange).toHaveBeenCalledWith(value);
       expect(screen.queryByRole("radio")).toBeNull();
     },
   );
 
   it("does not open a native selection while saving", async () => {
-    const native = jest
-      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-      .mockImplementation(() => {});
+    const onChange = jest.fn();
     const screen = await render(
       <NetPaySettingChoice
         compact
@@ -53,11 +49,11 @@ describe("net pay native settings interactions", () => {
         label="Steuerklasse"
         value={1}
         options={[{ value: 1, label: "1" }]}
-        onChange={jest.fn()}
+        onChange={onChange}
       />,
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Steuerklasse auswählen: 1" }));
-    expect(native).not.toHaveBeenCalled();
+    expect(await selectNativeNetPayOption(screen, "Steuerklasse", "1")).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it("shows searchable choices in a modal and closes after selecting the filtered value", async () => {
@@ -105,18 +101,20 @@ describe("net pay native settings interactions", () => {
     const open = async () =>
       fireEvent.press(screen.getByRole("button", { name: "Geburtsdatum auswählen: 15.01.1990" }));
     const choose = async () =>
-      fireEvent(screen.getByLabelText("Geburtsdatum im Kalender"), "change", {
-        nativeEvent: { timestamp: new Date(1988, 3, 20, 12).getTime(), utcOffset: 120 },
+      fireEvent(screen.getByTestId("net-pay-native-birth-date"), "dateChange", {
+        nativeEvent: { date: new Date(1988, 3, 20, 12).toISOString() },
       });
     await open();
     await choose();
     expect(onChange).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
-    await waitFor(() => expect(screen.queryByLabelText("Geburtsdatum im Kalender")).toBeNull());
+    await fireEvent(screen.getByTestId("net-pay-date-cancel"), "buttonPress");
+    await waitFor(() =>
+      expect(screen.getByTestId("net-pay-native-date-sheet")).toHaveProp("isPresented", false),
+    );
     expect(onChange).not.toHaveBeenCalled();
     await open();
     await choose();
-    await fireEvent.press(screen.getByRole("button", { name: "Datum übernehmen" }));
+    await fireEvent(screen.getByTestId("net-pay-date-confirm"), "buttonPress");
     expect(onChange).toHaveBeenCalledWith("20.04.1988");
   });
 
@@ -130,8 +128,10 @@ describe("net pay native settings interactions", () => {
     await fireEvent.press(
       screen.getByRole("button", { name: "Geburtsdatum auswählen: Noch nicht angegeben" }),
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
-    await waitFor(() => expect(screen.queryByLabelText("Geburtsdatum im Kalender")).toBeNull());
+    await fireEvent(screen.getByTestId("net-pay-date-cancel"), "buttonPress");
+    await waitFor(() =>
+      expect(screen.getByTestId("net-pay-native-date-sheet")).toHaveProp("isPresented", false),
+    );
     expect(onChange).not.toHaveBeenCalled();
   });
 

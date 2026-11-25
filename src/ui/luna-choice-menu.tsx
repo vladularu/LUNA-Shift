@@ -7,8 +7,9 @@ export interface LunaChoiceMenuProps<T extends string> {
   readonly onChange: (value: T) => void;
   readonly disabled?: boolean;
   readonly compact?: boolean;
-  readonly layout?: "field";
+  readonly layout?: "row" | "field" | "inline";
   readonly displayLabel?: string;
+  readonly displayValue?: string;
   readonly accessibilityLabel?: string;
   readonly testPrefix?: string;
   readonly field?: {

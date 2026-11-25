@@ -47,6 +47,7 @@ fn original_raw_sql_gross_and_net_cross_the_real_c_scheduler_and_owned_buffers()
     ));
     let cases = golden["cases"].as_array().unwrap();
     assert_eq!(cases.len(), 54);
+    let mut summaries = 0;
     for (index, case) in cases.iter().enumerate() {
         let epoch = index as u64 + 1;
         let binding =
@@ -141,8 +142,43 @@ fn original_raw_sql_gross_and_net_cross_the_real_c_scheduler_and_owned_buffers()
             &case["expected"]["net"]["value"],
             case["id"].as_str().unwrap(),
         );
+        if case["period"]["kind"] == "YEAR" && case["perspective"] == "EARNED" {
+            let mut summary = request.clone();
+            summary["guard"]["requestId"] = json!(format!("ffi-summary-{index}"));
+            summary["guard"]["requestRevision"] = json!(2);
+            summary["sections"]["net"] = json!(false);
+            summary["annualGrossSummary"] = json!(true);
+
+            let mut invalid = summary.clone();
+            invalid["sections"]["net"] = json!(true);
+            assert!(
+                contract::parse_request(&envelope(json!({"kind":"CALCULATE","request":invalid})))
+                    .is_err()
+            );
+
+            let bytes = envelope(json!({"kind":"CALCULATE","request":summary}));
+            // SAFETY: the serialized request remains readable during synchronous admission.
+            let admitted = take(unsafe { luna_engine_admit(bytes.as_ptr(), bytes.len(), 0) });
+            assert_eq!(admitted["state"], "QUEUED", "{admitted}");
+            let buffer = luna_engine_run_next(0);
+            let size = buffer.length;
+            let result = take(buffer);
+            assert_eq!(result["state"], "COMPLETED", "{result}");
+            assert!(size < 8192, "annual summary was {size} bytes");
+            let report = &result["result"]["reports"][0];
+            assert_eq!(report["views"]["gross"]["state"], "NOT_REQUESTED");
+            let gross = &report["sections"]["gross"]["value"];
+            assert_eq!(gross.as_object().unwrap().len(), 1);
+            common::assert_json_eq(
+                &gross["legacy"]["value"],
+                &case["expected"]["legacy"]["value"],
+                case["id"].as_str().unwrap(),
+            );
+            summaries += 1;
+        }
         assert_eq!(take(luna_engine_run_next(0))["state"], "IDLE");
     }
+    assert!(summaries > 0);
     assert_eq!(take(luna_engine_reset())["ok"], true);
     assert_eq!(take(luna_engine_collect_retired())["ok"], true);
 }

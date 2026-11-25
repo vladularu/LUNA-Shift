@@ -92,34 +92,25 @@ describe("shared pause picker", () => {
     return <PausePicker value={value} onChange={setValue} />;
   }
 
-  it("opens the familiar wheel and changes the duration only after deliberate selection", async () => {
+  it("offers five native choices and changes only after a deliberate selection", async () => {
     const changed = jest.fn();
     const screen = await render(<PausePicker value="30" onChange={changed} />);
+    const picker = screen.getByTestId("pause-options");
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(screen.queryByRole("radiogroup")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 30 Minuten" }));
-    expect(screen.getAllByRole("radio")).toHaveLength(5);
+    expect(screen.getAllByTestId(/^pause-option:/)).toHaveLength(5);
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: null } });
     expect(changed).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("radio", { name: "45 Minuten" }));
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: "45" } });
     expect(changed).toHaveBeenCalledWith("45");
   });
 
-  it("preserves exact stored minutes when opening and keeps the selection stable after changing", async () => {
+  it("preserves exact stored minutes and falls back to the standard choices after changing", async () => {
     const screen = await render(<Harness initial="7" />);
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 7 Minuten" }));
-    expect(screen.getByRole("radio", { name: "7 Minuten" })).toHaveProp("accessibilityState", {
-      selected: true,
-    });
-    expect(screen.getByRole("button", { name: "Pause: 7 Minuten" })).toBeTruthy();
-    await fireEvent.press(screen.getByRole("radio", { name: "15 Minuten" }));
-    expect(screen.getByRole("radio", { name: "15 Minuten" })).toHaveProp("accessibilityState", {
-      selected: true,
-    });
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 15 Minuten" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 15 Minuten" }));
-    expect(screen.queryByRole("radio", { name: "7 Minuten" })).toBeNull();
-    expect(screen.getByRole("radio", { name: "15 Minuten" })).toHaveProp("accessibilityState", {
-      selected: true,
-    });
+    const picker = screen.getByTestId("pause-options");
+    expect(picker).toHaveProp("selection", "7");
+    expect(screen.getByTestId("pause-option:7 Min.")).toBeTruthy();
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: "15" } });
+    expect(screen.queryByTestId("pause-option:7 Min.")).toBeNull();
+    expect(screen.getByTestId("pause-options")).toHaveProp("selection", "15");
   });
 });

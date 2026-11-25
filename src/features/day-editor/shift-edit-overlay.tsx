@@ -30,8 +30,8 @@ import {
   EntryEditValueRow as ValueRow,
   ENTRY_EDIT_FIELD_STYLES,
 } from "@/features/day-editor/entry-edit-fields";
+import { PauseChoiceMenu } from "@/ui/pause-picker";
 import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
-import { PAUSE_OPTIONS } from "@/ui/pause-wheel";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { ResponsiveFieldRow } from "@/ui/form-controls";
 import { ShiftEditOverview } from "./shift-edit-overview";
@@ -41,44 +41,14 @@ export function shiftOverviewEntry(shift: ShiftEntry | null, billingFocus: boole
   return Platform.OS === "ios" && !billingFocus ? (shift ?? undefined) : undefined;
 }
 
-type Popup = "TYPE" | null;
-
 export function shouldDismissShiftEditOverlay(translationY: number, velocityY: number): boolean {
   "worklet";
   return shouldDismissEntryEditOverlay(translationY, velocityY);
 }
 
-function PauseRow({
-  disabled,
-  onChange,
-  onPress,
-  value,
-}: {
-  readonly disabled: boolean;
-  readonly onChange: (value: number) => void;
-  readonly onPress: () => void;
-  readonly value: string;
-}) {
+function PauseRow({ onPress, value }: { readonly onPress: () => void; readonly value: string }) {
   const palette = usePalette();
   const minutes = Number(value) || 0;
-  if (Platform.OS === "ios") {
-    const durations = [...new Set([...PAUSE_OPTIONS, minutes])].sort((a, b) => a - b);
-    return (
-      <LunaChoiceMenu
-        accessibilityLabel="Pause"
-        disabled={disabled}
-        label="Pause"
-        layout="field"
-        onChange={(selection) => onChange(Number(selection))}
-        options={durations.map((duration) => ({
-          label: `${duration} Min.`,
-          value: String(duration),
-        }))}
-        testPrefix="shift-edit-pause"
-        value={String(minutes)}
-      />
-    );
-  }
   return (
     <Pressable
       accessibilityLabel={`Pause: ${minutes} Minuten`}
@@ -152,10 +122,10 @@ export function ShiftEditOverlay({
   endTime,
 }: ShiftEditOverlayProps) {
   const palette = usePalette();
-  const [popup, setPopup] = useState<Popup>(null);
+  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const closePickers = () => {
-    setPopup(null);
+    setTypePickerOpen(false);
     setNotificationVisible(false);
   };
   const overviewStage = useEntryOverviewStage("SHIFT", overview !== undefined, closePickers);
@@ -169,7 +139,7 @@ export function ShiftEditOverlay({
       onNotificationPress();
       return;
     }
-    setPopup(null);
+    setTypePickerOpen(false);
     setNotificationVisible(true);
   }, [onNotificationPress]);
 
@@ -212,12 +182,17 @@ export function ShiftEditOverlay({
                       />
                       <View testID="shift-edit-pause-overtime-pair">
                         <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
-                          <PauseRow
-                            disabled={busy}
-                            onChange={onBreakMinutesChange}
-                            onPress={onBreakPress}
-                            value={breakMinutes}
-                          />
+                          {Platform.OS === "ios" ? (
+                            <PauseChoiceMenu
+                              disabled={busy}
+                              layout="field"
+                              onChange={onBreakMinutesChange}
+                              testID="shift-edit-pause"
+                              value={Number(breakMinutes) || 0}
+                            />
+                          ) : (
+                            <PauseRow onPress={onBreakPress} value={breakMinutes} />
+                          )}
                           <ShiftOvertimeFields
                             compact
                             confirmed={tariffOvertimeConfirmed}
@@ -279,7 +254,7 @@ export function ShiftEditOverlay({
                     label="Wecker"
                     separator={false}
                     onPress={() => {
-                      setPopup(null);
+                      setTypePickerOpen(false);
                       onAlarmPress();
                     }}
                     value={alarmEnabled ? "Zum Dienstbeginn" : "Aus"}
@@ -297,7 +272,7 @@ export function ShiftEditOverlay({
               {location ? <LocationPreview location={location} /> : null}
             </View>
 
-            {popup === "TYPE" ? (
+            {typePickerOpen ? (
               <View
                 style={[
                   styles.typePopup,
@@ -339,7 +314,7 @@ export function ShiftEditOverlay({
                           separator
                           onPress={() => {
                             if (!selected) onShiftTypeChange(type);
-                            setPopup(null);
+                            setTypePickerOpen(false);
                           }}
                         />
                       );
@@ -359,16 +334,42 @@ export function ShiftEditOverlay({
       hideHeaderDuration={showingOverview}
       headerAccessibilityLabel={`Dienst: ${serviceLabel}`}
       headerLeading={<ShiftSymbol color={headerColor} size={22} value={shiftSymbol} />}
-      onHeaderPress={showingOverview ? undefined : () => setPopup(popup === "TYPE" ? null : "TYPE")}
+      headerSubtitleControl={
+        Platform.OS === "ios" && !showingOverview
+          ? (disabled) => (
+              <LunaChoiceMenu
+                disabled={disabled}
+                displayValue={serviceLabel}
+                label="Eintragsart"
+                layout="inline"
+                onChange={(type) => {
+                  if (type !== entryType) onShiftTypeChange(type);
+                }}
+                options={DAY_EDITOR_SHIFT_TYPES.map((value) => ({
+                  value,
+                  label: SHIFT_TYPE_LABELS[value],
+                }))}
+                testPrefix="shift-edit-type"
+                value={entryType}
+              />
+            )
+          : undefined
+      }
+      onHeaderPress={
+        Platform.OS !== "ios" && !showingOverview
+          ? () => setTypePickerOpen((open) => !open)
+          : undefined
+      }
       onDelete={onDelete}
       deleteLabel="Dienst löschen"
-      onBackdropPress={() => setPopup(null)}
+      onBackdropPress={() => setTypePickerOpen(false)}
       onClosingStart={closePickers}
       onDismiss={onDismiss}
       onRequestClose={onRequestClose}
       overlay={
         notificationVisible && !showingOverview ? (
           <ShiftNotificationOverlay
+            luna
             onChange={onNotificationChange}
             onClose={() => setNotificationVisible(false)}
             value={notification}
@@ -403,7 +404,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontVariant: ["tabular-nums"],
   },
-  deleteLabel: { fontSize: TYPOGRAPHY.compact.fontSize, fontWeight: "500" },
   typePopup: {
     position: "absolute",
     left: 16,
@@ -416,13 +416,4 @@ const styles = StyleSheet.create({
     boxShadow: SHADOWS.overlay,
   },
   typeScroll: { maxHeight: 330 },
-  typeItem: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 15,
-  },
-  typeLabel: { fontSize: TYPOGRAPHY.compact.fontSize, fontWeight: "500" },
 });

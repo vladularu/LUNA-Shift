@@ -1,9 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { ActionSheetIOS } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TemplateEditorScreen } from "@/features/templates/template-editor-screen";
@@ -51,6 +50,14 @@ async function renderEditor() {
       <TemplateEditorScreen />
     </SafeAreaProvider>,
   );
+}
+
+async function selectNativeOption(prefix: string, label: string) {
+  const picker = screen.getByTestId(prefix + "-options");
+  const option = within(picker).getByTestId(prefix + "-option:" + label);
+  await fireEvent(picker, "selectionChange", {
+    nativeEvent: { selection: option.props.modifiers[0].tag },
+  });
 }
 
 describe("TemplateEditorScreen compact layout", () => {
@@ -122,11 +129,7 @@ describe("TemplateEditorScreen compact layout", () => {
       mockUpsertTemplate.mockResolvedValue(existing);
       await renderEditor();
 
-      expect(screen.getByLabelText("Eintragsart: Dienst")).toBeVisible();
-      jest
-        .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-        .mockImplementation((_options, callback) => callback(0));
-      await fireEvent.press(screen.getByTestId("template-type-row"));
+      await selectNativeOption("template-type", "Dienst");
       await fireEvent.changeText(screen.getByLabelText("Titel"), "Früh geändert");
       await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
 
@@ -192,9 +195,9 @@ describe("TemplateEditorScreen compact layout", () => {
 
     expect(screen.getByTestId("template-title-row")).toHaveStyle({ minHeight: 40 });
     expect(screen.getByTestId("template-appearance-toggle")).toHaveStyle({ minHeight: 56 });
-    expect(screen.getByTestId("template-type-row")).toHaveStyle({ minHeight: 56 });
+    expect(screen.getByTestId("template-type-menu")).toBeTruthy();
     expect(screen.getByTestId("template-all-day-row")).toHaveStyle({ minHeight: 56 });
-    expect(screen.getByTestId("template-pause-row")).toHaveStyle({ minHeight: 56 });
+    expect(screen.getByTestId("template-pause-menu")).toBeTruthy();
     expect(screen.getByTestId("template-notification-row")).toHaveStyle({ minHeight: 56 });
     expect(screen.getByTestId("template-location-row")).toHaveStyle({ minHeight: 56 });
   });
@@ -214,27 +217,16 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(screen.queryByTestId("template-appearance-options")).toBeNull();
   });
 
-  it("uses the compact service-editor pause wheel without a numeric input", async () => {
+  it("uses the native service-editor pause menu and keeps the choice when dismissed", async () => {
     await renderEditor();
 
-    expect(screen.getByTestId("template-pause-row").props.accessibilityState).toMatchObject({
-      expanded: false,
-    });
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 30 Minuten" }));
-
-    expect(screen.getByTestId("template-pause-popover")).toBeVisible();
-    expect(screen.getByTestId("template-pause-selection")).toHaveStyle({ height: 44 });
-    expect(screen.getAllByRole("radio")).toHaveLength(5);
-
-    await fireEvent.press(screen.getByRole("radio", { name: "45 Minuten" }));
-
-    expect(screen.getByRole("button", { name: "Pause: 45 Minuten" })).toBeVisible();
-    expect(
-      screen.getByRole("radio", { name: "45 Minuten" }).props.accessibilityState,
-    ).toMatchObject({ selected: true });
-
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 45 Minuten" }));
-    expect(screen.queryByTestId("template-pause-popover")).toBeNull();
+    const picker = screen.getByTestId("template-pause-options");
+    expect(picker).toHaveProp("selection", "30");
+    expect(within(picker).getAllByTestId(/^template-pause-option:/)).toHaveLength(5);
+    await selectNativeOption("template-pause", "45 Min.");
+    expect(screen.getByTestId("template-pause-options")).toHaveProp("selection", "45");
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: null } });
+    expect(screen.getByTestId("template-pause-options")).toHaveProp("selection", "45");
   });
 
   it("uses the same compact notification overlay as shift and appointment editing", async () => {
@@ -251,16 +243,13 @@ describe("TemplateEditorScreen compact layout", () => {
     expect(screen.getByLabelText("Erinnerung: 5 Min. vor Beginn")).toBeVisible();
   });
 
-  it.each<[number, string, ShiftType]>([
-    [0, "Dienst", "CUSTOM"],
-    [1, "Fortbildung", "TRAINING"],
-    [2, "Urlaub", "VACATION"],
-    [3, "Krank", "SICK"],
-    [4, "Frei", "FREE"],
-  ])("selects and saves entry type %s: %s", async (index, label, type) => {
-    const picker = jest
-      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-      .mockImplementation((_options, callback) => callback(index));
+  it.each<[string, ShiftType]>([
+    ["Dienst", "CUSTOM"],
+    ["Fortbildung", "TRAINING"],
+    ["Urlaub", "VACATION"],
+    ["Krank", "SICK"],
+    ["Frei", "FREE"],
+  ])("selects and saves entry type %s", async (label, type) => {
     mockUpsertTemplate.mockImplementation(async (input) => ({
       ...input,
       id: "saved-template",
@@ -271,22 +260,23 @@ describe("TemplateEditorScreen compact layout", () => {
     }));
     await renderEditor();
 
-    await fireEvent.press(screen.getByTestId("template-type-row"));
-
-    expect(picker).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Eintragsart",
-        options: ["Dienst", "Fortbildung", "Urlaub", "Krank", "Frei", "Abbrechen"],
-        cancelButtonIndex: 5,
-      }),
-      expect.any(Function),
+    const options = within(screen.getByTestId("template-type-options")).getAllByTestId(
+      /^template-type-option:/,
     );
-    expect(screen.getByLabelText(`Eintragsart: ${label}`)).toBeVisible();
+    expect(options.map((row) => row.props.testID.split(":")[1])).toEqual([
+      "Dienst",
+      "Fortbildung",
+      "Urlaub",
+      "Krank",
+      "Frei",
+    ]);
+    await selectNativeOption("template-type", label);
+    expect(screen.getByTestId("template-type-options")).toHaveProp("selection", type);
     const absence = (["VACATION", "SICK", "FREE"] as readonly ShiftType[]).includes(type);
     if (absence) {
       expect(screen.queryByTestId("template-start-row")).toBeNull();
       expect(screen.queryByTestId("template-end-row")).toBeNull();
-      expect(screen.queryByTestId("template-pause-row")).toBeNull();
+      expect(screen.queryByTestId("template-pause-menu")).toBeNull();
     } else {
       expect(screen.getByTestId("template-start-row")).toBeVisible();
     }
@@ -299,14 +289,10 @@ describe("TemplateEditorScreen compact layout", () => {
   });
 
   it("keeps Dienst selected when the entry-type picker is cancelled", async () => {
-    jest
-      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-      .mockImplementation((_options, callback) => callback(5));
     await renderEditor();
-
-    await fireEvent.press(screen.getByTestId("template-type-row"));
-
-    expect(screen.getByLabelText("Eintragsart: Dienst")).toBeVisible();
+    const picker = screen.getByTestId("template-type-options");
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: null } });
+    expect(picker).toHaveProp("selection", "CUSTOM");
     expect(mockUpsertTemplate).not.toHaveBeenCalled();
   });
 
@@ -317,7 +303,7 @@ describe("TemplateEditorScreen compact layout", () => {
 
     expect(screen.queryByTestId("template-start-row")).toBeNull();
     expect(screen.queryByTestId("template-end-row")).toBeNull();
-    expect(screen.queryByTestId("template-pause-row")).toBeNull();
+    expect(screen.queryByTestId("template-pause-menu")).toBeNull();
   });
 
   it.each(["SPLIT", "ON_CALL", "STANDBY"] as const)(
@@ -352,10 +338,10 @@ describe("TemplateEditorScreen compact layout", () => {
       mockUpsertTemplate.mockResolvedValue(existing);
       await renderEditor();
       expect(screen.queryByTestId("template-start-row")).toBeNull();
-      expect(screen.queryByTestId("template-pause-row")).toBeNull();
+      expect(screen.queryByTestId("template-pause-menu")).toBeNull();
       expect(screen.queryByLabelText("Einsatz hinzufügen")).toBeNull();
       if (kind === "SPLIT")
-        expect(screen.getByRole("button", { name: "Dienstteil 2: Pause: 7 Minuten" })).toBeTruthy();
+        expect(screen.getByTestId("duty-pause-Dienstteil 2-options")).toHaveProp("selection", "7");
       if (kind === "STANDBY") expect(screen.getByText("Stufe II")).toBeTruthy();
       await fireEvent.changeText(screen.getByLabelText("Titel"), "Sonderdienst geändert");
       await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
@@ -392,15 +378,8 @@ describe("TemplateEditorScreen compact layout", () => {
       createdAt: "2026-01-01T00:00:00Z",
       updatedAt: "2026-01-01T00:00:00Z",
     };
-    jest
-      .spyOn(ActionSheetIOS, "showActionSheetWithOptions")
-      .mockImplementation((options, callback) => {
-        const index = options.options.indexOf("Bereitschaftsdienst");
-        expect(index).toBeGreaterThanOrEqual(0);
-        callback(index);
-      });
     await renderEditor();
-    await fireEvent.press(screen.getByLabelText("Dienstform: Regulärer Dienst"));
+    await selectNativeOption("duty-choice:Dienstform", "Bereitschaftsdienst");
     await fireEvent.press(screen.getByText("Abrechnung"));
     expect(screen.getByText("Tarif aus deinem Profil: TVöD Pflege/Betreuung")).toBeTruthy();
     expect(screen.queryByText("Tarifbereich der Bereitschaft")).toBeNull();

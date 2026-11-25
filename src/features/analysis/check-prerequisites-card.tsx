@@ -149,6 +149,7 @@ export function CheckPrerequisitesCard({
       </Pressable>
       {showDetails ? (
         <SelectionSheet
+          luna
           title={selected ? "Details zur Tarifprüfung" : CHECK_STATUS_TITLE}
           visible
           cancelLabel="Schließen"

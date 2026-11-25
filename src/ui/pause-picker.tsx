@@ -1,13 +1,44 @@
 import { useMemo, useState } from "react";
-import { Keyboard, Pressable, View } from "react-native";
+import { Keyboard, Platform, Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { MOTION } from "@/theme/motion";
 import { usePalette } from "@/theme/palette";
 import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, SurfaceCard } from "./design-system";
+import { LunaChoiceMenu } from "./luna-choice-menu";
 import { PAUSE_OPTIONS, PauseWheel } from "./pause-wheel";
 import { Text } from "./text";
+
+export function PauseChoiceMenu({
+  value,
+  onChange,
+  accessibilityLabel = "Pause",
+  testID,
+  layout = "row",
+  disabled,
+}: {
+  readonly value: number;
+  readonly onChange: (value: number) => void;
+  readonly accessibilityLabel?: string;
+  readonly testID: string;
+  readonly layout?: "row" | "field";
+  readonly disabled?: boolean;
+}) {
+  const durations = [...new Set([...PAUSE_OPTIONS, value])].sort((a, b) => a - b);
+  return (
+    <LunaChoiceMenu
+      label="Pause"
+      accessibilityLabel={accessibilityLabel}
+      layout={layout}
+      testPrefix={testID}
+      value={String(value)}
+      options={durations.map((minutes) => ({ value: String(minutes), label: `${minutes} Min.` }))}
+      disabled={disabled}
+      onChange={(next) => onChange(Number(next))}
+    />
+  );
+}
 
 export function PausePicker({
   value,
@@ -104,5 +135,16 @@ export function PausePicker({
       ) : null}
     </>
   );
-  return embedded ? <View>{content}</View> : <SurfaceCard>{content}</SurfaceCard>;
+  const selection =
+    Platform.OS === "ios" ? (
+      <PauseChoiceMenu
+        accessibilityLabel={accessibilityLabel}
+        onChange={(next) => onChange(String(next))}
+        testID={testID}
+        value={minutes}
+      />
+    ) : (
+      content
+    );
+  return embedded ? <View>{selection}</View> : <SurfaceCard>{selection}</SurfaceCard>;
 }

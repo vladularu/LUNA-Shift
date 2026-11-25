@@ -5,6 +5,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
+import { selectNativeNetPayOption } from "@/testing/net-pay-menu-test-helpers";
 import { employmentDataFromProfile } from "@/domain/employment-history";
 import { remunerationDataFromLegacy } from "@/domain/remuneration-profile";
 import { newSpecialDuty } from "@/domain/special-duty";
@@ -66,6 +67,12 @@ const mockNativeGuard = {
 const mockNavigation = { dispatch: jest.fn() };
 let mockSettingsEnabled = true;
 const mockNativeToolbar = { placement: "", hidesSharedBackground: false };
+const mockNetPayDb = {
+  getFirstAsync: async () => null,
+  execAsync: async () => {},
+  runAsync: async () => {},
+};
+jest.mock("expo-sqlite", () => ({ useSQLiteContext: () => mockNetPayDb }));
 jest.mock("expo-router/react-navigation", () => ({
   useHeaderHeight: () => 100,
   HeaderBackButton: () => null,
@@ -196,6 +203,7 @@ async function selectSettingOption(
   label: string,
   option: string,
 ) {
+  if (await selectNativeNetPayOption(screen, label, option)) return;
   const name = label + ": " + option;
   if (!screen.queryByRole("radio", { name })) {
     const selector = screen
@@ -233,10 +241,10 @@ async function chooseBirthDate(screen: Awaited<ReturnType<typeof render>>, value
   }
   await fireEvent.press(screen.getByRole("button", { name: /^Geburtsdatum auswählen:/ }));
   const [day, month, year] = value.split(".").map(Number);
-  await fireEvent(screen.getByLabelText("Geburtsdatum im Kalender"), "change", {
-    nativeEvent: { timestamp: new Date(year, month - 1, day, 12).getTime(), utcOffset: 0 },
+  await fireEvent(screen.getByTestId("net-pay-native-birth-date"), "dateChange", {
+    nativeEvent: { date: new Date(year, month - 1, day, 12).toISOString() },
   });
-  await fireEvent.press(screen.getByRole("button", { name: "Datum übernehmen" }));
+  await fireEvent(screen.getByTestId("net-pay-date-confirm"), "buttonPress");
 }
 describe("integrated salary-to-net workflow", () => {
   beforeEach(() => {
@@ -357,7 +365,7 @@ describe("integrated salary-to-net workflow", () => {
     });
     await salary.unmount();
     const screen = await edit();
-    await fireEvent.press(screen.getByRole("button", { name: "Gültig ab auswählen: Juli 2026" }));
+    expect(screen.getByTestId("net-pay-native-options:Gültig ab").props.selection).toBe("2026-07");
     await selectSettingOption(screen, "Gültig ab", "Januar 2026");
     await selectSettingOption(screen, "Steuerklasse", "4");
     await fireEvent.press(screen.getByRole("button", { name: "Speichern und schließen" }));
@@ -383,15 +391,17 @@ describe("integrated salary-to-net workflow", () => {
     expect(salary.queryByText("Netto-Berechnung")).toBeNull();
     expect(salary.getByRole("header", { name: "Zusammensetzung" })).toBeTruthy();
     const output = JSON.stringify(salary.toJSON());
-    expect(output.indexOf("Zulagen werden ausgezahlt auswählen")).toBeGreaterThan(-1);
+    expect(
+      within(salary.getByTestId("salary-payment-timing-card")).getByText(/^Zulagenmonat:/),
+    ).toBeTruthy();
     expect(output.indexOf("salary-payroll-totals")).toBeLessThan(
-      output.indexOf("Zulagen werden ausgezahlt auswählen"),
+      output.indexOf("salary-payment-native-menu"),
     );
     expect(salary.queryByRole("button", { name: "Netto-Prognose öffnen" })).toBeNull();
     await salary.unmount();
     const net = await netOverview();
     expect(net.getAllByRole("button", { name: /^Netto-Einstellungen/ })).toHaveLength(1);
-    expect(net.queryByRole("button", { name: /^Zulagen werden ausgezahlt auswählen/ })).toBeNull();
+    expect(net.queryByTestId("salary-payment-native-menu")).toBeNull();
     expect(net.queryByText("Zusammensetzung")).toBeNull();
     expect(statement(net).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(gross);
     expect(totals(net).queryByLabelText(/^Gesamtbrutto:/)).toBeNull();
@@ -408,10 +418,9 @@ describe("integrated salary-to-net workflow", () => {
       mockPaymentError = "Der Auszahlungsmonat wurde zwischenzeitlich geändert. Erneut laden.";
       throw new Error(mockPaymentError);
     });
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Zulagen werden ausgezahlt auswählen: Im selben Monat" }),
-    );
-    await selectSettingOption(screen, "Zulagen werden ausgezahlt", "Im Folgemonat");
+    const payoutPicker = screen.getByTestId("salary-payment-native-options");
+    expect(payoutPicker.props.selection).toBe("0");
+    await fireEvent(payoutPicker, "selectionChange", { nativeEvent: { selection: "1" } });
     expect(mockPaymentSave).toHaveBeenCalledTimes(1);
     // A provider error update must not turn the ready salary page into an error screen.
     await screen.rerender(<SalaryScreen />);
@@ -420,9 +429,7 @@ describe("integrated salary-to-net workflow", () => {
         "Der Auszahlungsmonat wurde nicht gespeichert. Bitte erneut laden und versuchen.",
       ),
     ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Zulagen werden ausgezahlt auswählen: Im selben Monat" }),
-    ).toBeTruthy();
+    expect(screen.getByTestId("salary-payment-native-options").props.selection).toBe("0");
     expect(mockPaymentPreferences).toBe(beforePreferences);
     expect(totals(screen).getByLabelText(/^Gesamtbrutto:/).props.accessibilityLabel).toBe(
       beforeGross,
@@ -443,8 +450,8 @@ describe("integrated salary-to-net workflow", () => {
       )!;
       await act(() => cancel.onPress?.());
       expect(
-        settingsScreen.getByRole("button", { name: "Steuerklasse auswählen: 3" }),
-      ).toBeTruthy();
+        settingsScreen.getByTestId("net-pay-native-options:Steuerklasse").props.selection,
+      ).toBe("3");
       expect(mockNavigation.dispatch).not.toHaveBeenCalled();
       expect(mockSave).not.toHaveBeenCalled();
       expect(mockSettings?.profile.taxClass).toBe(1);
@@ -476,7 +483,7 @@ describe("integrated salary-to-net workflow", () => {
       await act(() => cancel.onPress?.());
       expect(router.setParams).not.toHaveBeenCalled();
       expect(mockParams.month).toBe("2026-07");
-      expect(screen.getByRole("button", { name: "Steuerklasse auswählen: 3" })).toBeTruthy();
+      expect(screen.getByTestId("net-pay-native-options:Steuerklasse").props.selection).toBe("3");
       expect(mockNavigation.dispatch).not.toHaveBeenCalled();
       await act(() => mockNativeGuard.callback({ data: { action } }));
       const discard = alert.mock.calls[1]![2]!.find(
@@ -726,13 +733,14 @@ describe("integrated salary-to-net workflow", () => {
     mockEntries = [];
     const screen = await overview("2026-11");
     expect(statement(screen).getByLabelText(/^Jahressonderzahlung:/)).toBeTruthy();
-    await screen.rerender(<NetPayScreen />);
-    expect(totals(screen).getByLabelText(/^Netto geschätzt: [\d.,]+\s€/)).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Jahressonderzahlung bearbeiten" }));
     expect(screen.getByText("Automatisch nach Tarif · November 2026")).toBeTruthy();
     expect(screen.queryByLabelText("Jahressonderzahlung brutto (€)")).toBeNull();
     expect(screen.queryByText(/Jahresprognose mit gleichbleibendem/)).toBeNull();
     expect(screen.getByRole("button", { name: /^Anpassen,/ })).toBeTruthy();
+    await screen.rerender(<NetPayScreen />);
+    expect(totals(screen).getByLabelText(/^Netto geschätzt: [\d.,]+\s€/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Jahressonderzahlung bearbeiten" })).toBeNull();
     expect(mockSave).not.toHaveBeenCalled();
   });
   it("keeps missing annual payment entry reachable in the salary view", async () => {
@@ -1508,7 +1516,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
 
-  it("opens first setup as a full page and saves the whole profile once", async () => {
+  it("saves the whole profile once in settings after skipping the first-use guide", async () => {
     mockSettings = null;
     const entry = await render(
       <NetPayAutomaticEntryCard month="2026-07" proposedGrossCents={500000} blocked={false} />,
@@ -1522,6 +1530,8 @@ describe("integrated salary-to-net workflow", () => {
     });
     await entry.unmount();
     const screen = await edit();
+    expect(await screen.findByRole("button", { name: "Fragen starten" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Später" }));
     for (const title of ["Steuern", "Familie", "Versicherung & Vorsorge", "Weitere Angaben"])
       expect(screen.getByRole("header", { name: title })).toBeTruthy();
     expect(screen.queryByTestId("dropdown-modal-content")).toBeNull();
@@ -1620,7 +1630,7 @@ describe("integrated salary-to-net workflow", () => {
       const buttons = alert.mock.calls[0]![2]!;
       await act(() => buttons.find((b) => b.text === "Weiter bearbeiten")!.onPress!());
       expect(mockNavigation.dispatch).not.toHaveBeenCalled();
-      expect(screen.getByRole("button", { name: "Steuerklasse auswählen: 3" })).toBeTruthy();
+      expect(screen.getByTestId("net-pay-native-options:Steuerklasse").props.selection).toBe("3");
       await act(() => mockNativeGuard.callback({ data: { action } }));
       const discard = alert.mock.calls[1]![2]!.find((b) => b.text === "Änderungen verwerfen")!;
       await act(() => discard.onPress!());
@@ -1628,7 +1638,7 @@ describe("integrated salary-to-net workflow", () => {
       expect(mockSave).not.toHaveBeenCalled();
       await screen.unmount();
       const reopened = await edit();
-      expect(reopened.getByRole("button", { name: "Steuerklasse auswählen: 1" })).toBeTruthy();
+      expect(reopened.getByTestId("net-pay-native-options:Steuerklasse").props.selection).toBe("1");
     } finally {
       alert.mockRestore();
     }
@@ -1783,7 +1793,7 @@ describe("integrated salary-to-net workflow", () => {
     expect(screen.queryByLabelText(/^Voraussichtliches Netto:/)).toBeNull();
     expect(screen.queryByRole("button", { name: /^Netto-Einstellungen/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Netto einmal einrichten" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /^Steuerklasse auswählen/ })).toBeNull();
+    expect(screen.queryByTestId("net-pay-native-options:Steuerklasse")).toBeNull();
     expect(statement(screen).getByLabelText("Netto geschätzt: Nicht verfügbar")).toBeTruthy();
     expect(screen.getByText("Für Testdaten gibt es keine Netto-Prognose.")).toBeTruthy();
     const deduction = await details("deductions");

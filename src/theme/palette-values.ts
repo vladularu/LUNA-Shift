@@ -36,6 +36,8 @@ export interface Palette {
   readonly tertiarySoft: string;
   readonly salaryAccent: string;
   readonly salaryAccentSoft: string;
+  readonly netPaySettingsSurface: string;
+  readonly netPaySettingsAction: string;
   readonly onPrimary: string;
   readonly sortAction: string;
   readonly onSortAction: string;
@@ -95,6 +97,8 @@ export const LIGHT_PALETTE: Palette = {
   tertiarySoft: "#F8F8FA",
   salaryAccent: "#C48A00",
   salaryAccentSoft: "#FFF8E8",
+  netPaySettingsSurface: "#EDEDFB",
+  netPaySettingsAction: "#344685",
   onPrimary: "#FAFAFA",
   sortAction: "#18181B",
   onSortAction: "#FAFAFA",
@@ -156,6 +160,8 @@ export const DARK_PALETTE: Palette = {
   tertiarySoft: "#19191C",
   salaryAccent: "#F1C767",
   salaryAccentSoft: "#292419",
+  netPaySettingsSurface: "#24263A",
+  netPaySettingsAction: "#B5BFFF",
   onPrimary: "#18181B",
   sortAction: "#FAFAFA",
   onSortAction: "#18181B",

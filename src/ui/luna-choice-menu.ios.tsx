@@ -29,27 +29,29 @@ export function LunaChoiceMenu<T extends string>({
   compact = false,
   layout,
   displayLabel = label,
+  displayValue,
   accessibilityLabel: spokenLabel,
   testPrefix = compact ? "net-pay-native" : "salary-payment-native",
   field,
 }: LunaChoiceMenuProps<T>) {
   const palette = usePalette();
   const selected = options.find((option) => option.value === value);
-  const selectedLabel = selected?.label ?? (compact || field ? "Bitte auswählen" : "Auswählen");
-  const inline = field?.inlineLabel;
+  const selectedLabel =
+    displayValue ?? selected?.label ?? (compact || field ? "Bitte auswählen" : "Auswählen");
+  const embedded = compact || layout !== undefined;
+  const inline = layout === "inline";
   const stackedField = layout === "field";
+  const inlineField = field?.inlineLabel;
+  const isLabelInRow = layout === "row" || inlineField;
   const testIDSuffix = compact || field ? `:${label}` : "";
-  const labelPadding = inline
-    ? { all: 0 }
-    : stackedField
-      ? { horizontal: SPACING.md }
-      : compact
-        ? { all: SPACING.lg }
-        : { horizontal: SPACING.md, vertical: SPACING.xs };
+  const labelModifiers = [foregroundStyle(palette.textMuted)];
+  const valueModifiers = inline
+    ? [font({ textStyle: "subheadline" }), ...labelModifiers]
+    : [foregroundStyle(selected ? palette.text : palette.textMuted)];
 
   return (
     <View style={{ gap: stackedField ? 0 : SPACING.xs }}>
-      {stackedField || (!compact && !inline) ? (
+      {stackedField || (!embedded && !inlineField) ? (
         <LunaText
           accessibilityElementsHidden={stackedField}
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
@@ -63,7 +65,7 @@ export function LunaChoiceMenu<T extends string>({
       ) : null}
       <View
         style={{
-          ...(compact || stackedField
+          ...(embedded || inlineField
             ? null
             : {
                 borderColor: palette.border,
@@ -73,35 +75,50 @@ export function LunaChoiceMenu<T extends string>({
           ...(field && {
             backgroundColor: palette.surface,
             borderColor: field.error ? palette.danger : palette.border,
-            borderWidth: inline ? 0 : 1,
+            borderWidth: inlineField ? 0 : 1,
           }),
           opacity: locked ? 0.55 : 1,
         }}
       >
-        <Host matchContents={{ vertical: true }} colorScheme={palette.dark ? "dark" : "light"}>
+        <Host
+          matchContents={inline ? true : { vertical: true }}
+          colorScheme={palette.dark ? "dark" : "light"}
+        >
           <Menu
             testID={`${testPrefix}-menu${testIDSuffix}`}
             label={
               <HStack
                 spacing={stackedField ? SPACING.xs : undefined}
                 modifiers={[
-                  padding(labelPadding),
+                  padding(
+                    inlineField
+                      ? { all: 0 }
+                      : layout === "row"
+                        ? { horizontal: SPACING.lg, vertical: SPACING.sm }
+                        : stackedField
+                          ? { horizontal: SPACING.md }
+                          : inline
+                            ? { vertical: SPACING.xxs }
+                            : compact
+                              ? { all: SPACING.lg }
+                              : { horizontal: SPACING.md, vertical: SPACING.xs },
+                  ),
                   frame({
-                    minHeight: field && !inline ? CONTROL_HEIGHT.large : MINIMUM_TOUCH_TARGET,
+                    minHeight: field && !inlineField ? CONTROL_HEIGHT.large : MINIMUM_TOUCH_TARGET,
                   }),
                 ]}
               >
                 {field?.leadingSymbol ? (
                   <Image systemName={field.leadingSymbol} color={palette.textMuted} size={16} />
                 ) : null}
-                {inline ? (
+                {isLabelInRow ? (
                   <>
-                    <Text modifiers={[foregroundStyle(palette.textMuted)]}>{displayLabel}</Text>
+                    <Text modifiers={labelModifiers}>{displayLabel}</Text>
                     <Spacer />
+                    <Text modifiers={valueModifiers}>{selectedLabel}</Text>
                   </>
-                ) : null}
-                {stackedField ? (
-                  <Text modifiers={[font({ textStyle: "callout" }), foregroundStyle(palette.text)]}>
+                ) : stackedField ? (
+                  <Text modifiers={[font({ textStyle: "callout" }), ...valueModifiers]}>
                     {selectedLabel}
                   </Text>
                 ) : compact ? (
@@ -114,22 +131,16 @@ export function LunaChoiceMenu<T extends string>({
                     >
                       {displayLabel}
                     </Text>
-                    <Text
-                      modifiers={[foregroundStyle(selected ? palette.text : palette.textMuted)]}
-                    >
-                      {selectedLabel}
-                    </Text>
+                    <Text modifiers={valueModifiers}>{selectedLabel}</Text>
                   </VStack>
                 ) : (
                   <Text
-                    modifiers={[
-                      foregroundStyle(field && !selected ? palette.textMuted : palette.text),
-                    ]}
+                    modifiers={inline || field ? valueModifiers : [foregroundStyle(palette.text)]}
                   >
                     {selectedLabel}
                   </Text>
                 )}
-                {inline || stackedField ? null : <Spacer />}
+                {inline || isLabelInRow || stackedField ? null : <Spacer />}
                 <Image systemName="chevron.up.chevron.down" color={palette.textMuted} size={14} />
                 {stackedField ? <Spacer minLength={0} /> : null}
               </HStack>
@@ -156,9 +167,7 @@ export function LunaChoiceMenu<T extends string>({
               {options.map((option) => (
                 <Text
                   key={option.value}
-                  testID={
-                    compact || stackedField ? `${testPrefix}-option:${option.label}` : undefined
-                  }
+                  testID={`${testPrefix}-option:${option.label}`}
                   modifiers={[tag(option.value)]}
                 >
                   {option.label}

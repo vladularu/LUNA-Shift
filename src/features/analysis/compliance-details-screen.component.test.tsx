@@ -26,6 +26,7 @@ let mockPlanning = true;
 let mockResult: MonthlyComplianceResult | null = mockCompliance;
 let mockArea: string | undefined;
 let mockWorkplaceCount = 0;
+const mockWorkplaceMount = jest.fn();
 jest.mock("@/features/settings/check-preferences", () => ({
   useCheckPreferences: () => ({ enabled: mockPlanning, error: null }),
 }));
@@ -36,14 +37,20 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/features/workplace/panel", () => {
+  const { useEffect } = jest.requireActual<typeof import("react")>("react");
   const { Text } = jest.requireActual<typeof import("react-native")>("react-native");
   return {
-    WorkplacePanel: ({ children }: { children?: (count: number) => ReactNode }) => (
-      <>
-        {children?.(mockWorkplaceCount)}
-        {mockWorkplaceCount > 0 ? <Text>Betrieblicher Testhinweis</Text> : null}
-      </>
-    ),
+    WorkplacePanel: ({ children }: { children?: (count: number) => ReactNode }) => {
+      useEffect(() => {
+        mockWorkplaceMount();
+      }, []);
+      return (
+        <>
+          {children?.(mockWorkplaceCount)}
+          {mockWorkplaceCount > 0 ? <Text>Betrieblicher Testhinweis</Text> : null}
+        </>
+      );
+    },
   };
 });
 
@@ -82,6 +89,7 @@ describe("ComplianceDetailsScreen", () => {
     mockResult = mockCompliance;
     mockArea = undefined;
     mockWorkplaceCount = 0;
+    mockWorkplaceMount.mockClear();
   });
 
   it.each([
@@ -157,5 +165,19 @@ describe("ComplianceDetailsScreen", () => {
     mockResult = { ...mockCompliance, issues: [] };
     await screen.rerender(<ComplianceDetailsScreen />);
     expect(screen.getByRole("button", { name: "Prüfungs-Dino" })).toBeVisible();
+  });
+
+  it("keeps the workplace questionnaire mounted while a saved rule recalculates the check", async () => {
+    const screen = await render(<ComplianceDetailsScreen />);
+    expect(mockWorkplaceMount).toHaveBeenCalledTimes(1);
+
+    mockResult = null;
+    await screen.rerender(<ComplianceDetailsScreen />);
+    expect(screen.queryByRole("header", { name: "Gesetz & Tarif" })).toBeNull();
+
+    mockResult = mockCompliance;
+    await screen.rerender(<ComplianceDetailsScreen />);
+    expect(screen.getByRole("header", { name: "Gesetz & Tarif" })).toBeVisible();
+    expect(mockWorkplaceMount).toHaveBeenCalledTimes(1);
   });
 });

@@ -16,9 +16,10 @@ function cleanup(root) {
 
 const config = (root) =>
   JSON.parse(readFileSync(path.join(root, "expo-module.config.json"), "utf8"));
-test("Production/design/no opt-in reset stale config without invoking a native builder", async () => {
+test("Unsupported platforms, variants and missing opt-in leave autolinking disabled", async () => {
   for (const env of [
-    { APP_VARIANT: "production", LUNA_FULL_ENGINE: "1" },
+    { APP_VARIANT: "production", LUNA_FULL_ENGINE: "1", EAS_BUILD_PLATFORM: "android" },
+    { APP_VARIANT: "production", EAS_BUILD_PLATFORM: "ios" },
     { APP_VARIANT: "design", LUNA_FULL_ENGINE: "1" },
     { APP_VARIANT: "internal" },
     {},
@@ -44,10 +45,10 @@ test("Production/design/no opt-in reset stale config without invoking a native b
     }
   }
 });
-test("explicit internal activation waits for a successful artifact", async () => {
+test("explicit Production iOS activation waits for a successful artifact", async () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "luna-config-"));
   try {
-    const env = { APP_VARIANT: "internal", LUNA_FULL_ENGINE: "1", EAS_BUILD_PLATFORM: "ios" };
+    const env = { APP_VARIANT: "production", LUNA_FULL_ENGINE: "1", EAS_BUILD_PLATFORM: "ios" };
     await assert.rejects(
       prepareNative({
         root,
@@ -80,7 +81,7 @@ test("explicit internal activation waits for a successful artifact", async () =>
     cleanup(root);
   }
 });
-test("invalid platform and non-internal iOS build fail closed", async () => {
+test("invalid platform and unsupported iOS builds fail closed", async () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "luna-config-"));
   try {
     await assert.rejects(
@@ -91,10 +92,10 @@ test("invalid platform and non-internal iOS build fail closed", async () => {
       /ENGINE_PLATFORM_REQUIRED/,
     );
     assert.deepEqual(config(root), { platforms: [] });
-    await assert.rejects(build({ root, env: {}, host: "darwin" }), /INTERNAL_MACOS_BUILD_REQUIRED/);
+    await assert.rejects(build({ root, env: {}, host: "darwin" }), /OPTED_IN_MACOS_BUILD_REQUIRED/);
     await assert.rejects(
       build({ root, env: { APP_VARIANT: "internal", LUNA_FULL_ENGINE: "1" }, host: "win32" }),
-      /INTERNAL_MACOS_BUILD_REQUIRED/,
+      /OPTED_IN_MACOS_BUILD_REQUIRED/,
     );
   } finally {
     cleanup(root);

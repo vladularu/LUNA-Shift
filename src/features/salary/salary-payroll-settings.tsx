@@ -11,13 +11,14 @@ import { employmentProfileAt } from "@/domain/employment-history";
 import { formatMonthTitle } from "@/engine/calendar";
 import { parseMonthRouteParam } from "@/navigation/route-params";
 import { SPACING } from "@/theme/tokens";
-import { InlineNotice } from "@/ui/design-system";
+import { InlineNotice, SurfaceCard } from "@/ui/design-system";
 import {
   NetPayWorkflowLink,
   NetPayWorkflowSelect,
   NetPayWorkflowText,
 } from "./net-pay-workflow-controls";
 import { NetPaySetupForm } from "./net-pay-setup-form";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
 import { useNetPayProfile } from "./use-net-pay-profile";
 
@@ -130,38 +131,45 @@ export function SalaryPayrollSettings({
     }
   }
 
+  const TimingSelect = timingOnly ? SalaryChoiceMenu : NetPayWorkflowSelect;
+  const timing = (
+    <View style={{ gap: SPACING.sm, padding: timingOnly ? SPACING.lg : undefined }}>
+      <TimingSelect<LagChoice>
+        label="Zulagen werden ausgezahlt"
+        value={choice}
+        options={OPTIONS}
+        disabled={locked}
+        onChange={(value) => void saveTiming(value)}
+      />
+      <NetPayWorkflowText>
+        {payment.ready ? sourceCaption : "Auszahlungsmonat wird geladen …"}
+      </NetPayWorkflowText>
+      {timingBusy || payment.saving ? (
+        <ActivityIndicator accessibilityLabel="Auszahlungsmonat wird gespeichert" />
+      ) : null}
+      {timingError || payment.error ? (
+        <>
+          <InlineNotice message={timingError ?? payment.error!} />
+          <NetPayWorkflowLink
+            disabled={timingBusy || payment.saving}
+            onPress={() => {
+              setTimingError(null);
+              void payment.reload();
+            }}
+          >
+            Erneut laden
+          </NetPayWorkflowLink>
+        </>
+      ) : null}
+    </View>
+  );
+
+  if (timingOnly) return <SurfaceCard testID="salary-payment-timing-card">{timing}</SurfaceCard>;
+
   return (
     <View style={{ gap: SPACING.lg }}>
-      <View style={{ gap: SPACING.sm }}>
-        <NetPayWorkflowSelect<LagChoice>
-          label="Zulagen werden ausgezahlt"
-          value={choice}
-          options={OPTIONS}
-          disabled={locked}
-          onChange={(value) => void saveTiming(value)}
-        />
-        <NetPayWorkflowText>
-          {payment.ready ? sourceCaption : "Auszahlungsmonat wird geladen …"}
-        </NetPayWorkflowText>
-        {timingBusy || payment.saving ? (
-          <ActivityIndicator accessibilityLabel="Auszahlungsmonat wird gespeichert" />
-        ) : null}
-        {timingError || payment.error ? (
-          <>
-            <InlineNotice message={timingError ?? payment.error!} />
-            <NetPayWorkflowLink
-              disabled={timingBusy || payment.saving}
-              onPress={() => {
-                setTimingError(null);
-                void payment.reload();
-              }}
-            >
-              Erneut laden
-            </NetPayWorkflowLink>
-          </>
-        ) : null}
-      </View>
-      {timingOnly ? null : blocked ? (
+      {timing}
+      {blocked ? (
         <InlineNotice message="Für Testdaten werden keine Abrechnungsangaben gespeichert." />
       ) : !root.ready || !profile || net.status === "loading" ? (
         <ActivityIndicator accessibilityLabel="Netto-Angaben werden geladen" />

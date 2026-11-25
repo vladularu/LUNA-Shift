@@ -19,7 +19,8 @@ import { SPACING } from "@/theme/tokens";
 import { InlineNotice } from "@/ui/design-system";
 import { PrimaryButton } from "@/ui/form-controls";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
-import { NetPayWorkflowSelect, NetPayWorkflowText } from "./net-pay-workflow-controls";
+import { NetPayWorkflowText } from "./net-pay-workflow-controls";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
 import { SalaryPage } from "./salary-ui";
 
@@ -127,7 +128,7 @@ export function SalaryPaymentSettingsForm({
   }
   return (
     <View style={{ gap: SPACING.lg }}>
-      <NetPayWorkflowSelect<LagChoice>
+      <SalaryChoiceMenu<LagChoice>
         label="Zulagen werden ausgezahlt"
         value={choice}
         options={LAG_OPTIONS}

@@ -4,6 +4,7 @@ import { MONTHLY_RUST_IOS_ENGINE_VERSION } from "./monthly-rust-engine-version";
 
 interface NativeMonthEngine {
   readonly transportAbiVersion: number;
+  readonly annualGrossSummaryEngineVersion?: string;
   invoke(operation: string, json: string, lane: "finance" | "checks" | null): Promise<string>;
   invokeSource(header: string, body: string): Promise<string>;
   invokeCalendarRanks(header: string, body: string): Promise<string>;
@@ -23,8 +24,13 @@ export function getMonthlyRustTransport(): MonthlyRustTransport | null {
     typeof native.invokeCatalogFinalize !== "function"
   )
     return null;
+  const summaryVersion = native.annualGrossSummaryEngineVersion;
+  // A present but invalid version signals a broken module, not an older build.
+  if (summaryVersion !== undefined && !/^luna-engine-v1:[a-f0-9]{64}$/.test(summaryVersion))
+    return null;
   singleton = {
-    expectedEngineVersion: MONTHLY_RUST_IOS_ENGINE_VERSION,
+    expectedEngineVersion: summaryVersion ?? MONTHLY_RUST_IOS_ENGINE_VERSION,
+    supportsAnnualGrossSummary: summaryVersion !== undefined,
     invoke: (operation, json) =>
       native.invoke(
         operation,

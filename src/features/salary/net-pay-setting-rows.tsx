@@ -9,11 +9,8 @@ import { Field } from "@/ui/form-controls";
 import { Text, TextInput } from "@/ui/text";
 import { NetPayCheck } from "./net-pay-controls";
 import { NetPaySheet } from "./net-pay-sheet";
-import {
-  NetPayWorkflowChoice,
-  NetPayWorkflowSelect,
-  NetPayWorkflowText,
-} from "./net-pay-workflow-controls";
+import { NetPayWorkflowChoice, NetPayWorkflowText } from "./net-pay-workflow-controls";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 
 export function NetPaySettingChoice<T extends string | number | boolean>({
   compact,
@@ -30,7 +27,7 @@ export function NetPaySettingChoice<T extends string | number | boolean>({
 }) {
   if (!compact) return <NetPayWorkflowChoice {...props} />;
   return (
-    <NetPayWorkflowSelect
+    <SalaryChoiceMenu
       compact
       separator={separator}
       label={props.label}

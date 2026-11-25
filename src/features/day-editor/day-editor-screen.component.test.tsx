@@ -856,9 +856,11 @@ describe("DayEditorScreen", () => {
   });
 });
 
-it("uses the normal editor frame without local mutations for a foreign shift and removes revoked data", async () => {
+it("shows shared shifts and appointments in the read-only overview and removes revoked data", async () => {
   mockUpsertShift.mockClear();
+  mockUpsertAppointment.mockClear();
   mockRemoveEntry.mockClear();
+  jest.mocked(router.back).mockClear();
   const calendarId = "20000000-0000-4000-8000-000000000001",
     entryId = "20000000-0000-4000-8000-000000000002";
   const cache: CachedSharedCalendar = {
@@ -904,7 +906,7 @@ it("uses the normal editor frame without local mutations for a foreign shift and
     </SafeAreaProvider>
   );
   const screen = await render(content([cache]));
-  expect(screen.getByTestId("shift-edit-time-group")).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Ganztägig" })).toBeVisible();
   expect(screen.getByText("Selena")).toBeTruthy();
   expect(screen.getAllByText("Urlaub").length).toBeGreaterThan(0);
   expect(screen.getByText("Freigegebene Notiz\nZweite Zeile")).toBeTruthy();
@@ -918,7 +920,56 @@ it("uses the normal editor frame without local mutations for a foreign shift and
   );
   expect(screen.queryByText("Freigegebene Notiz\nZweite Zeile")).toBeNull();
   expect(screen.getByText("Selena")).toBeTruthy();
+
+  const nightShift = cache.entries.map((entry) => ({
+    ...entry,
+    allDay: false,
+    title: "Nacht",
+    startsAt: "2026-08-04T19:00:00Z",
+    endsAt: "2026-08-05T05:30:00Z",
+    note: null,
+  }));
+  await screen.rerender(content([{ ...cache, entries: nightShift }]));
+  const overview = within(screen.getByTestId("shared-entry-overview"));
+  expect(overview.getByRole("header", { name: "21:00 – 07:30" })).toBeVisible();
+  expect(overview.getByText("Ende am 05.08.")).toBeVisible();
+  expect(overview.queryByText(/Arbeitszeit/)).toBeNull();
+  expect(screen.queryByText("Ganztägig")).toBeNull();
+
+  await screen.rerender(
+    content([{ ...cache, entries: nightShift.map((entry) => ({ ...entry, breakMinutes: 30 })) }]),
+  );
+  expect(screen.getByText("10 h 0 min")).toBeVisible();
+  expect(screen.getByText("Arbeitszeit · 30 Min. Pause")).toBeVisible();
+
+  const appointments = cache.entries.map((entry) => ({
+    ...entry,
+    kind: "APPOINTMENT" as const,
+    allDay: false,
+    title: "Physiotherapie",
+    startsAt: "2026-08-04T09:00:00Z",
+    endsAt: "2026-08-04T10:15:00Z",
+    note: "Freigegebene Terminnotiz",
+  }));
+  await screen.rerender(content([{ ...cache, entries: appointments }]));
+  expect(screen.getByRole("header", { name: "11:00 – 12:15" })).toBeVisible();
+  expect(screen.getByText("1 h 15 min")).toBeVisible();
+  expect(screen.getByText("Dauer")).toBeVisible();
+  expect(screen.getByText("Geteilter Termin · nur ansehen")).toBeVisible();
+  expect(screen.getByText("Freigegebene Terminnotiz")).toBeVisible();
+  expect(screen.queryByText(/Arbeitszeit|Pause|Ende am/)).toBeNull();
+  await dragEditorSheet(-110);
+  expect(screen.getByTestId("shared-entry-overview")).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Dienst bearbeiten" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Termin bearbeiten" })).toBeNull();
+  const footer = within(screen.getByTestId("shift-edit-close-arrival"));
+  await fireEvent.press(footer.getByRole("button", { name: "Schließen" }));
+  await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+  expect(mockUpsertShift).not.toHaveBeenCalled();
+  expect(mockUpsertAppointment).not.toHaveBeenCalled();
+  expect(mockRemoveEntry).not.toHaveBeenCalled();
+
   await screen.rerender(content([]));
-  expect(screen.queryByText("Urlaub")).toBeNull();
+  expect(screen.queryByText("Physiotherapie")).toBeNull();
   expect(screen.getByText("Dienst nicht mehr verfügbar")).toBeTruthy();
 });

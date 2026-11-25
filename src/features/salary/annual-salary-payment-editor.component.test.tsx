@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import { automatedSettings } from "@/domain/net-pay-automation-test-fixtures";
@@ -172,8 +172,11 @@ describe("compact automatic annual payment", () => {
     );
     await fireEvent.press(screen.getByRole("button", { name: /^Anpassen,/ }));
     await fireEvent.press(screen.getByRole("button", { name: "Weitere Angaben" }));
-    await fireEvent.press(screen.getByRole("button", { name: /^Auszahlungsmonat auswählen/ }));
-    await fireEvent.press(screen.getByRole("radio", { name: "Auszahlungsmonat: Dezember 2026" }));
+    const payout = screen.getByTestId("salary-payment-native-options");
+    const december = within(payout).getByTestId("salary-payment-native-option:Dezember 2026");
+    await fireEvent(payout, "selectionChange", {
+      nativeEvent: { selection: december.props.modifiers[0].tag },
+    });
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen speichern" }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import {
   DEFAULT_SALARY_PAYMENT_PREFERENCES,
@@ -39,13 +39,14 @@ describe("one allowance payout setting", () => {
     expect(screen.getByText("Gilt ab dieser Auszahlung.")).toBeTruthy();
     expect(screen.queryAllByRole("tab")).toHaveLength(0);
     expect(screen.queryByText(/TVöD-Vorschlag|Sozialversicherungsbeiträge/)).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Zulagen werden ausgezahlt auswählen: Im selben Monat" }),
-    );
-    expect(screen.getAllByRole("radio")).toHaveLength(3);
-    expect(
-      screen.getByRole("radio", { name: "Zulagen werden ausgezahlt: Im selben Monat" }),
-    ).toBeChecked();
+    const picker = screen.getByTestId("salary-payment-native-options");
+    const options = within(picker).getAllByTestId(/^salary-payment-native-option:/);
+    expect(options.map((option) => option.props.testID.split(":")[1])).toEqual([
+      "Im selben Monat",
+      "Im Folgemonat",
+      "Im übernächsten Monat",
+    ]);
+    expect(picker).toHaveProp("selection", options[0].props.modifiers[0].tag);
     await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
     await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
     expect(mockSave).toHaveBeenCalledWith(
@@ -60,14 +61,11 @@ describe("one allowance payout setting", () => {
     "saves $label uniformly from the displayed payout across the year boundary",
     async ({ label, lag }) => {
       const screen = await mount();
-      await fireEvent.press(
-        screen.getByRole("button", {
-          name: "Zulagen werden ausgezahlt auswählen: Im selben Monat",
-        }),
-      );
-      await fireEvent.press(
-        screen.getByRole("radio", { name: `Zulagen werden ausgezahlt: ${label}` }),
-      );
+      const picker = screen.getByTestId("salary-payment-native-options");
+      const option = within(picker).getByTestId(`salary-payment-native-option:${label}`);
+      await fireEvent(picker, "selectionChange", {
+        nativeEvent: { selection: option.props.modifiers[0].tag },
+      });
       expect(mockSave).not.toHaveBeenCalled();
       await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
       await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(1));

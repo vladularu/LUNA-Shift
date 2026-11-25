@@ -221,6 +221,7 @@ export function EmploymentSaveDialog({ flow }: { readonly flow: EmploymentSaveFl
   if (!flow.pending) return null;
   return (
     <SelectionSheet
+      luna
       title="Seit wann gelten diese Angaben?"
       visible={flow.pending !== null}
       onClose={flow.close}

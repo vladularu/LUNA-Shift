@@ -13,6 +13,7 @@ import { CONTROL_CORNERS, MINIMUM_TOUCH_TARGET, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text, TextInput } from "@/ui/text";
 import Ionicons from "@/ui/icon";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
 
 export function DutyValueRow({
   label,
@@ -110,6 +111,7 @@ export function DutyChoice({
   options,
   onChange,
   accessibilityLabel,
+  nativeMenu = false,
   stacked = false,
 }: {
   readonly label: string;
@@ -117,11 +119,26 @@ export function DutyChoice({
   readonly options: readonly { readonly label: string; readonly value: string }[];
   readonly onChange: (value: string) => void;
   readonly accessibilityLabel?: string;
+  readonly nativeMenu?: boolean;
   readonly stacked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const palette = usePalette();
   const selected = options.find((option) => option.value === value)?.label ?? value;
+  if (nativeMenu && Platform.OS === "ios") {
+    return (
+      <LunaChoiceMenu
+        label={label}
+        layout="row"
+        accessibilityLabel={accessibilityLabel ?? label}
+        options={options}
+        value={value}
+        displayValue={selected}
+        onChange={onChange}
+        testPrefix={`duty-choice:${accessibilityLabel ?? label}`}
+      />
+    );
+  }
   return (
     <>
       <DutyValueRow

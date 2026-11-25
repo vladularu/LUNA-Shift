@@ -5,9 +5,8 @@ import { Text, TextInput } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
-import { ActionSheetIOS, Platform, Pressable, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, View, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
-import { FullWindowOverlay } from "react-native-screens";
 
 import {
   usePflegeShiftEntries,
@@ -53,6 +52,7 @@ import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { deletionFeedback, successFeedback, warningFeedback } from "@/ui/haptics";
 import { LabeledSwitch } from "@/ui/labeled-switch";
 import { PausePicker } from "@/ui/pause-picker";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
 import { today } from "@/engine/calendar";
 import { editorDutyTariff } from "@/features/day-editor/special-duty-editor-state";
 import { ShiftSymbol } from "@/ui/shift-symbol";
@@ -320,28 +320,6 @@ function TemplateEditorForm({
     if (useCandidateSymbol) setSymbol(DEFAULT_SHIFT_SYMBOLS[candidate]);
   }
 
-  function openTypePicker() {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          cancelButtonIndex: TEMPLATE_TYPES.length,
-          options: [
-            ...TEMPLATE_TYPES.map((candidate) => SHIFT_TYPE_LABELS[candidate]),
-            "Abbrechen",
-          ],
-          title: "Eintragsart",
-          userInterfaceStyle: palette.dark ? "dark" : "light",
-        },
-        (index) => {
-          const candidate = TEMPLATE_TYPES[index];
-          if (candidate) changeType(candidate);
-        },
-      );
-      return;
-    }
-    setTypePickerExpanded((current) => !current);
-  }
-
   useFocusEffect(
     useCallback(() => {
       const selected = consumeLocationSelection();
@@ -514,14 +492,26 @@ function TemplateEditorForm({
       <View style={{ gap: SPACING.sm }}>
         <SectionHeader title="Standardwerte" />
         <SurfaceCard>
-          <CompactActionRow
-            disabled={typeLocked}
-            expanded={Platform.OS === "ios" ? undefined : typePickerExpanded}
-            label="Eintragsart"
-            onPress={openTypePicker}
-            testID="template-type-row"
-            value={SHIFT_TYPE_LABELS[entryType]}
-          />
+          {Platform.OS === "ios" ? (
+            <LunaChoiceMenu
+              disabled={typeLocked || saving}
+              label="Eintragsart"
+              layout="row"
+              onChange={changeType}
+              options={TEMPLATE_TYPES.map((value) => ({ value, label: SHIFT_TYPE_LABELS[value] }))}
+              testPrefix="template-type"
+              value={entryType}
+            />
+          ) : (
+            <CompactActionRow
+              disabled={typeLocked}
+              expanded={typePickerExpanded}
+              label="Eintragsart"
+              onPress={() => setTypePickerExpanded((current) => !current)}
+              testID="template-type-row"
+              value={SHIFT_TYPE_LABELS[entryType]}
+            />
+          )}
           {typePickerExpanded ? (
             <>
               <CardSeparator />
@@ -663,13 +653,12 @@ function TemplateEditorForm({
       ) : null}
       {notificationOpen ? (
         Platform.OS === "ios" ? (
-          <FullWindowOverlay>
-            <ShiftNotificationOverlay
-              onChange={setNotification}
-              onClose={() => setNotificationOpen(false)}
-              value={notification}
-            />
-          </FullWindowOverlay>
+          <ShiftNotificationOverlay
+            luna
+            onChange={setNotification}
+            onClose={() => setNotificationOpen(false)}
+            value={notification}
+          />
         ) : (
           <NotificationSheet
             onChange={setNotification}
