@@ -10,7 +10,8 @@ import {
   ShiftEditOverlay,
   shouldDismissShiftEditOverlay,
 } from "@/features/day-editor/shift-edit-overlay";
-import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
+import { TYPOGRAPHY } from "@/theme/typography";
 
 let mockNativePresentation = true;
 jest.mock("@/features/day-editor/entry-edit-overlay-frame", () => {
@@ -130,7 +131,7 @@ describe("ShiftEditOverlay", () => {
     expect(screen.getByText("Spät")).toBeTruthy();
     expect(screen.queryByText("Mein Job")).toBeNull();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
-    expect(screen.getByRole("button", { name: "Pause: 0 Minuten" })).toBeTruthy();
+    expect(screen.getByTestId("shift-edit-pause-options")).toHaveProp("selection", "0");
     expect(screen.queryByLabelText("Pausendauer in 15-Minuten-Schritten")).toBeNull();
     expect(screen.getByRole("button", { name: "Wecker: Aus" })).toBeTruthy();
     expect(screen.getByTestId("shift-edit-sheet")).toHaveProp("accessibilityViewIsModal", true);
@@ -145,45 +146,12 @@ describe("ShiftEditOverlay", () => {
       borderRadius: RADII.pill,
     });
 
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 0 Minuten" }));
-    expect(screen.getByTestId("shift-edit-pause-popover")).toHaveStyle({ height: 220, width: 210 });
-    const pauseWheel = screen.getByTestId("shift-edit-pause-wheel");
-    expect(pauseWheel.props).toMatchObject({
-      decelerationRate: 0.97,
-      scrollEventThrottle: 16,
-    });
-    expect(pauseWheel.props.disableIntervalMomentum).toBeUndefined();
-    expect(screen.getByTestId("shift-edit-pause-selection")).toHaveStyle({ height: 44 });
-    expect(screen.getAllByRole("radio")).toHaveLength(5);
-    expect(screen.getByRole("radio", { name: "60 Minuten" })).toBeTruthy();
-    expect(screen.queryByRole("radio", { name: "75 Minuten" })).toBeNull();
-
-    await fireEvent.scroll(pauseWheel, {
-      nativeEvent: { contentOffset: { x: 0, y: 88 } },
-    });
-    expect(screen.getByRole("radio", { name: "0 Minuten" }).props.accessibilityState).toMatchObject(
-      { selected: true },
-    );
-    expect(props.onBreakMinutesChange).not.toHaveBeenCalled();
-    await fireEvent(pauseWheel, "scrollEndDrag", {
-      nativeEvent: {
-        contentOffset: { x: 0, y: 88 },
-        targetContentOffset: { x: 0, y: 88 },
-      },
-    });
-    expect(props.onBreakMinutesChange).toHaveBeenCalledWith(30);
-
-    await fireEvent(pauseWheel, "momentumScrollEnd", {
-      nativeEvent: { contentOffset: { x: 0, y: 132 } },
-    });
-    expect(props.onBreakMinutesChange).toHaveBeenLastCalledWith(45);
-
-    await fireEvent.press(screen.getByRole("radio", { name: "60 Minuten" }));
-    expect(screen.getByTestId("shift-edit-pause-popover")).toBeTruthy();
-    expect(props.onBreakMinutesChange).toHaveBeenCalledWith(60);
+    const pause = screen.getByTestId("shift-edit-pause-options");
+    expect(screen.getAllByTestId(/^shift-edit-pause-option:/)).toHaveLength(5);
+    expect(screen.getByTestId("shift-edit-pause-option:60 Min.")).toBeTruthy();
+    await fireEvent(pause, "selectionChange", { nativeEvent: { selection: "45" } });
+    expect(props.onBreakMinutesChange).toHaveBeenCalledWith(45);
     expect(props.onBreakPress).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByLabelText("Auswahl schließen"));
-    expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
 
     await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     expect(screen.getByTestId("shift-notification-presets")).toBeTruthy();
@@ -234,19 +202,26 @@ describe("ShiftEditOverlay", () => {
     await waitFor(() => expect(props.onDismiss).toHaveBeenCalledTimes(1));
   });
 
-  it("closes the pause selector on a second tap without closing or saving the editor", async () => {
+  it("leaves the editor and its draft intact when the native pause menu is dismissed", async () => {
     const { screen, props } = await renderOverlay({ note: "Noch nicht gespeichert" });
-    const pause = screen.getByRole("button", { name: "Pause: 0 Minuten" });
-
-    await fireEvent.press(pause);
-    expect(screen.getByTestId("shift-edit-pause-popover")).toBeTruthy();
-    await fireEvent.press(pause);
-
-    expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
+    const picker = screen.getByTestId("shift-edit-pause-options");
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: null } });
     expect(screen.getByText("Noch nicht gespeichert")).toBeTruthy();
     expect(props.onBreakMinutesChange).not.toHaveBeenCalled();
     expect(props.onRequestClose).not.toHaveBeenCalled();
     expect(props.onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("uses matching field labels while keeping the native pause menu next to the overtime input", async () => {
+    const { screen } = await renderOverlay({ breakMinutes: "30" });
+    const pair = within(screen.getByTestId("shift-edit-pause-overtime-pair"));
+    expect(pair.getByText("Pause", { includeHiddenElements: true })).toHaveStyle(TYPOGRAPHY.small);
+    expect(pair.getByText("Überstunden (Min.)")).toHaveStyle(TYPOGRAPHY.small);
+    expect(pair.getByLabelText("Überstunden in Minuten")).toHaveStyle({
+      minHeight: MINIMUM_TOUCH_TARGET,
+      paddingHorizontal: SPACING.md,
+    });
+    expect(pair.getByTestId("shift-edit-pause-options")).toHaveProp("selection", "30");
   });
 
   it("uses the parent pause and notification pickers on Android instead of opening iOS selectors", async () => {
@@ -259,7 +234,7 @@ describe("ShiftEditOverlay", () => {
 
       expect(props.onBreakPress).toHaveBeenCalledTimes(1);
       expect(props.onNotificationPress).toHaveBeenCalledTimes(1);
-      expect(screen.queryByTestId("shift-edit-pause-popover")).toBeNull();
+      expect(screen.queryByTestId("shift-edit-pause-menu")).toBeNull();
       expect(screen.queryByTestId("shift-notification-presets")).toBeNull();
       expect(props.onRequestClose).not.toHaveBeenCalled();
     } finally {
@@ -289,18 +264,8 @@ describe("ShiftEditOverlay", () => {
     expect(props.onRequestClose).not.toHaveBeenCalled();
   });
 
-  it("anchors inline selectors to their measured groups after rows grow", async () => {
+  it("keeps the entry-kind selector anchored in the sheet", async () => {
     const { screen } = await renderOverlay();
-    await fireEvent(screen.getByTestId("shift-edit-time-group").parent!, "layout", {
-      nativeEvent: { layout: { x: 0, y: 108, width: 340, height: 260 } },
-    });
-    const pause = screen.getByRole("button", { name: "Pause: 0 Minuten" });
-    await fireEvent(screen.getByTestId("shift-edit-pause-overtime-pair"), "layout", {
-      nativeEvent: { layout: { x: 0, y: 140, width: 312, height: 64 } },
-    });
-    await fireEvent.press(pause);
-    expect(screen.getByTestId("shift-edit-pause-popover")).toHaveStyle({ top: 318 });
-    await fireEvent.press(screen.getByLabelText("Auswahl schließen"));
     await fireEvent.press(screen.getByRole("button", { name: "Dienst: Spät" }));
     expect(screen.getByTestId("shift-edit-type-popover")).toHaveStyle({ top: 6 });
     expect(screen.getByRole("radio", { name: "Fortbildung" })).toBeTruthy();
@@ -525,7 +490,7 @@ describe("ShiftEditOverlay", () => {
     async (kind) => {
       const { screen } = await renderOverlay({ specialDutyKind: kind, overtimeMinutes: "15" });
       expect(screen.queryByTestId("shift-edit-time-group")).toBeNull();
-      expect(screen.queryByRole("button", { name: "Pause: 0 Minuten" })).toBeNull();
+      expect(screen.queryByTestId("shift-edit-pause-menu")).toBeNull();
       if (kind === "SPLIT") {
         expect(screen.getByText("Überstunden im ersten Dienstteil")).toBeTruthy();
         expect(screen.getByTestId("shift-edit-split-overtime-group")).toBeTruthy();

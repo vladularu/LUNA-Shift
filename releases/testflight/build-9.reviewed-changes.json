@@ -9845,8 +9845,8 @@
     {
       "path": "src/features/day-editor/shift-edit-overlay.tsx",
       "kind": "modified",
-      "sha256": "b0ffab9f0122af3a9448b99dc47b401be6706f2badeca4c13366e6e750224fca",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "d6fded3935ced017c1bcce3365653e21d74b3f7cc2e8df1cbee2e1b7c74201c6",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Persists the iPhone-accepted native pause selection with labels and values aligned beside the overtime field."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
@@ -10637,14 +10637,14 @@
     {
       "path": "src/ui/luna-choice-menu.ios.tsx",
       "kind": "added",
-      "sha256": "2bbb64ae55a958f997c23bcd402c54a23dae2f53587ecbd40b30d4c419c0686b",
-      "reason": "Use the existing Expo UI SwiftUI Menu and Picker with an onboarding field layout, current selection and accessible validation feedback."
+      "sha256": "8ad17adba4d5a67a50976950c93a2b76351b2a973c43b55c047acb5c486b408a",
+      "reason": "Use the existing Expo UI SwiftUI Menu and Picker with an onboarding field layout, current selection and accessible validation feedback. Adds the stacked pause field layout using the accepted label, value inset and chevron placement."
     },
     {
       "path": "src/ui/luna-choice-menu.tsx",
       "kind": "added",
-      "sha256": "6e09bd56e79782a2033cdcb36e9dc117fef68e0715e5489a42f8c6b39339e7ef",
-      "reason": "Define the shared menu contract and retain the React Native modal fallback for other platforms."
+      "sha256": "8478b008fb083d3f33a049b2c0601136308cb35f0d8bde80ccd43e8868a442cd",
+      "reason": "Define the shared menu contract and retain the React Native modal fallback for other platforms. Allows callers to request the stacked pause field layout."
     },
     {
       "path": "src/ui/month-navigator.tsx",

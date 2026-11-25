@@ -27,6 +27,7 @@ export function LunaChoiceMenu<T extends string>({
   onChange,
   disabled: locked = false,
   compact = false,
+  layout,
   displayLabel = label,
   accessibilityLabel: spokenLabel,
   testPrefix = compact ? "net-pay-native" : "salary-payment-native",
@@ -36,30 +37,33 @@ export function LunaChoiceMenu<T extends string>({
   const selected = options.find((option) => option.value === value);
   const selectedLabel = selected?.label ?? (compact || field ? "Bitte auswählen" : "Auswählen");
   const inline = field?.inlineLabel;
+  const stackedField = layout === "field";
   const testIDSuffix = compact || field ? `:${label}` : "";
   const labelPadding = inline
     ? { all: 0 }
-    : compact
-      ? { all: SPACING.lg }
-      : { horizontal: SPACING.md, vertical: SPACING.xs };
+    : stackedField
+      ? { horizontal: SPACING.md }
+      : compact
+        ? { all: SPACING.lg }
+        : { horizontal: SPACING.md, vertical: SPACING.xs };
 
   return (
-    <View style={{ gap: SPACING.xs }}>
-      {compact || inline ? null : (
+    <View style={{ gap: stackedField ? 0 : SPACING.xs }}>
+      {stackedField || (!compact && !inline) ? (
         <LunaText
+          accessibilityElementsHidden={stackedField}
           maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          style={
-            field
-              ? { color: palette.text, ...TYPOGRAPHY.label }
-              : { color: palette.textMuted, ...TYPOGRAPHY.caption }
-          }
+          style={{
+            color: field && !stackedField ? palette.text : palette.textMuted,
+            ...(stackedField ? TYPOGRAPHY.small : field ? TYPOGRAPHY.label : TYPOGRAPHY.caption),
+          }}
         >
           {displayLabel}
         </LunaText>
-      )}
+      ) : null}
       <View
         style={{
-          ...(compact
+          ...(compact || stackedField
             ? null
             : {
                 borderColor: palette.border,
@@ -79,6 +83,7 @@ export function LunaChoiceMenu<T extends string>({
             testID={`${testPrefix}-menu${testIDSuffix}`}
             label={
               <HStack
+                spacing={stackedField ? SPACING.xs : undefined}
                 modifiers={[
                   padding(labelPadding),
                   frame({
@@ -95,7 +100,11 @@ export function LunaChoiceMenu<T extends string>({
                     <Spacer />
                   </>
                 ) : null}
-                {compact ? (
+                {stackedField ? (
+                  <Text modifiers={[font({ textStyle: "callout" }), foregroundStyle(palette.text)]}>
+                    {selectedLabel}
+                  </Text>
+                ) : compact ? (
                   <VStack alignment="leading" spacing={SPACING.xs}>
                     <Text
                       modifiers={[
@@ -120,8 +129,9 @@ export function LunaChoiceMenu<T extends string>({
                     {selectedLabel}
                   </Text>
                 )}
-                {inline ? null : <Spacer />}
+                {inline || stackedField ? null : <Spacer />}
                 <Image systemName="chevron.up.chevron.down" color={palette.textMuted} size={14} />
+                {stackedField ? <Spacer minLength={0} /> : null}
               </HStack>
             }
             modifiers={[
@@ -146,7 +156,9 @@ export function LunaChoiceMenu<T extends string>({
               {options.map((option) => (
                 <Text
                   key={option.value}
-                  testID={compact ? `${testPrefix}-option:${option.label}` : undefined}
+                  testID={
+                    compact || stackedField ? `${testPrefix}-option:${option.label}` : undefined
+                  }
                   modifiers={[tag(option.value)]}
                 >
                   {option.label}
