@@ -159,7 +159,7 @@ describe("TV-H in the existing simple salary form", () => {
   it("preserves TV-H selection on a work-hours edit", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ tvhKrTariff: h, weeklyMinutes: 1800 }),
@@ -189,7 +189,7 @@ describe("TV-H in the existing simple salary form", () => {
   it("requires hours within the selected contractual full-time basis", async () => {
     mockSection = "EMPLOYMENT";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "40");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "40");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(screen.getByText(/Wochenstunden liegen über der tariflichen Vollzeit/)).toBeTruthy();

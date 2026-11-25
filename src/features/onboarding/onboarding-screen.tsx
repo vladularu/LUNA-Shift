@@ -373,6 +373,7 @@ export function OnboardingScreen({
     return (
       <OnboardingStart
         testMode={testMode}
+        preview={preview}
         reducedMotion={reduced}
         onBack={back}
         onFinish={finish}

@@ -538,8 +538,9 @@ describe("DayEditorScreen", () => {
 
     expect(screen.getByTestId("shift-edit-overlay")).toBeTruthy();
     expect(screen.queryByLabelText("Pausendauer in 15-Minuten-Schritten")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Pause: 30 Minuten" }));
-    await fireEvent.press(screen.getByRole("radio", { name: "60 Minuten" }));
+    const pause = screen.getByTestId("shift-edit-pause-options");
+    expect(pause).toHaveProp("selection", "30");
+    await fireEvent(pause, "selectionChange", { nativeEvent: { selection: "60" } });
     await fireEvent.press(screen.getByRole("button", { name: "Wecker: Aus" }));
     expect(
       screen.getByText("Fokusmodus und Stummschaltung können den Ton unterdrücken."),

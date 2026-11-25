@@ -214,7 +214,7 @@ describe("simple nursing training salary form", () => {
   it("preserves the trainee salary choice when editing the work model", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({

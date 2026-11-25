@@ -234,7 +234,7 @@ describe("simple E table salary form", () => {
   it("retains E salary on work model changes", async () => {
     mockSection = "WORK";
     const screen = await render(editor());
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await saveSettingsChoice(screen);
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       expect.objectContaining({ weeklyMinutes: 1800, vkaETariff: e, tariff: null }),

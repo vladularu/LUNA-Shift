@@ -8,6 +8,9 @@ import {
 
 import { useState, type ReactElement } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+jest.mock("@/ui/luna-choice-menu", () => jest.requireActual("@/ui/luna-choice-menu.tsx"));
+
 function render(ui: ReactElement) {
   return renderNative(
     <SafeAreaProvider

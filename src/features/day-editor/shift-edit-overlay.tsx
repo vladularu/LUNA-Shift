@@ -2,8 +2,7 @@ import { SelectionRow } from "@/ui/selection-option";
 import { Text } from "@/ui/text";
 import { CONTROL_CORNERS, SHADOWS, SPACING } from "@/theme/tokens";
 import { useCallback, useState } from "react";
-import { Platform, Pressable, StyleSheet, View, type ViewProps } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
 import { EntryEditOverlayFrame } from "@/features/day-editor/entry-edit-overlay-frame";
@@ -18,7 +17,6 @@ import {
 } from "@/features/day-editor/shift-overtime-fields";
 import { LocationPreview } from "@/features/location/location-preview";
 import { accessibleChipBackgroundColor } from "@/theme/color-contrast";
-import { MOTION } from "@/theme/motion";
 import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
@@ -29,11 +27,12 @@ import {
   EntryEditValueRow as ValueRow,
   ENTRY_EDIT_FIELD_STYLES,
 } from "@/features/day-editor/entry-edit-fields";
-import { PauseWheel } from "@/ui/pause-wheel";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
+import { PAUSE_OPTIONS } from "@/ui/pause-wheel";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { ResponsiveFieldRow } from "@/ui/form-controls";
 
-type Popup = "PAUSE" | "TYPE" | null;
+type Popup = "TYPE" | null;
 
 export function shouldDismissShiftEditOverlay(translationY: number, velocityY: number): boolean {
   "worklet";
@@ -41,22 +40,41 @@ export function shouldDismissShiftEditOverlay(translationY: number, velocityY: n
 }
 
 function PauseRow({
-  onLayout,
+  disabled,
+  onChange,
   onPress,
   value,
 }: {
-  readonly onLayout: ViewProps["onLayout"];
+  readonly disabled: boolean;
+  readonly onChange: (value: number) => void;
   readonly onPress: () => void;
   readonly value: string;
 }) {
   const palette = usePalette();
   const minutes = Number(value) || 0;
+  if (Platform.OS === "ios") {
+    const durations = [...new Set([...PAUSE_OPTIONS, minutes])].sort((a, b) => a - b);
+    return (
+      <LunaChoiceMenu
+        accessibilityLabel="Pause"
+        disabled={disabled}
+        label="Pause"
+        layout="field"
+        onChange={(selection) => onChange(Number(selection))}
+        options={durations.map((duration) => ({
+          label: `${duration} Min.`,
+          value: String(duration),
+        }))}
+        testPrefix="shift-edit-pause"
+        value={String(minutes)}
+      />
+    );
+  }
   return (
     <Pressable
       accessibilityLabel={`Pause: ${minutes} Minuten`}
       accessibilityRole="button"
       onPress={onPress}
-      onLayout={onLayout}
       style={({ pressed }) => [
         styles.valueRow,
         {
@@ -124,23 +142,9 @@ export function ShiftEditOverlay({
   const palette = usePalette();
   const [popup, setPopup] = useState<Popup>(null);
   const [notificationVisible, setNotificationVisible] = useState(false);
-  const [timeGroupTop, setTimeGroupTop] = useState(0);
-  const [pauseRowBottom, setPauseRowBottom] = useState(144);
   const headerColor = palette.dark ? shiftColor : accessibleChipBackgroundColor(shiftColor);
   const serviceLabel = shiftType === "CUSTOM" ? shiftTitle : SHIFT_TYPE_LABELS[shiftType];
   const entryType = DAY_EDITOR_SHIFT_TYPES.includes(shiftType) ? shiftType : "CUSTOM";
-
-  const openPausePicker = useCallback(() => {
-    if (Platform.OS !== "ios") {
-      onBreakPress();
-      return;
-    }
-    if (popup === "PAUSE") {
-      setPopup(null);
-      return;
-    }
-    setPopup("PAUSE");
-  }, [onBreakPress, popup]);
 
   const openNotificationPicker = useCallback(() => {
     if (Platform.OS !== "ios") {
@@ -159,10 +163,7 @@ export function ShiftEditOverlay({
           <View style={styles.body}>
             {specialDutyFields}
             {!specialDutyKind ? (
-              <EntryEditGroup
-                testID="shift-edit-time-group"
-                onLayout={({ nativeEvent: { layout } }) => setTimeGroupTop(layout.y)}
-              >
+              <EntryEditGroup testID="shift-edit-time-group">
                 {shiftIsTimed ? (
                   <>
                     <EntryEditTimePair
@@ -171,16 +172,12 @@ export function ShiftEditOverlay({
                       onStartChange={onStartTimeChange}
                       onEndChange={onEndTimeChange}
                     />
-                    <View
-                      testID="shift-edit-pause-overtime-pair"
-                      onLayout={({ nativeEvent: { layout } }) =>
-                        setPauseRowBottom(layout.y + layout.height)
-                      }
-                    >
+                    <View testID="shift-edit-pause-overtime-pair">
                       <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
                         <PauseRow
-                          onLayout={undefined}
-                          onPress={openPausePicker}
+                          disabled={busy}
+                          onChange={onBreakMinutesChange}
+                          onPress={onBreakPress}
                           value={breakMinutes}
                         />
                         <ShiftOvertimeFields
@@ -257,41 +254,6 @@ export function ShiftEditOverlay({
             />
             {location ? <LocationPreview location={location} /> : null}
           </View>
-
-          {popup === "PAUSE" ? (
-            <Pressable
-              accessibilityLabel="Auswahl schließen"
-              onPress={() => setPopup(null)}
-              style={styles.popupDismissLayer}
-              testID="shift-edit-popup-dismiss-layer"
-            />
-          ) : null}
-
-          {popup === "PAUSE" ? (
-            <Animated.View
-              accessibilityLabel="Pausendauer auswählen"
-              entering={FadeIn.duration(MOTION.duration.fast).reduceMotion(MOTION.reduceMotion)}
-              style={[
-                styles.pausePopup,
-                {
-                  backgroundColor: palette.surfaceRaised,
-                  borderColor: palette.border,
-                  shadowColor: palette.shadow,
-                  top: timeGroupTop + pauseRowBottom + SPACING.xs,
-                },
-              ]}
-              testID="shift-edit-pause-popover"
-            >
-              <PauseWheel
-                animatedOptions
-                onChange={onBreakMinutesChange}
-                selectionStyle={styles.pauseWheelSelection}
-                selectionTestID="shift-edit-pause-selection"
-                testID="shift-edit-pause-wheel"
-                value={Number(breakMinutes) || 0}
-              />
-            </Animated.View>
-          ) : null}
 
           {popup === "TYPE" ? (
             <View
@@ -395,29 +357,6 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   deleteLabel: { fontSize: TYPOGRAPHY.compact.fontSize, fontWeight: "500" },
-  popupDismissLayer: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 1,
-  },
-  pausePopup: {
-    position: "absolute",
-    right: 16,
-    zIndex: 2,
-    width: 210,
-    height: 220,
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-    ...CONTROL_CORNERS,
-
-    boxShadow: SHADOWS.overlay,
-  },
-  pauseWheelSelection: {
-    ...CONTROL_CORNERS,
-  },
   typePopup: {
     position: "absolute",
     left: 16,

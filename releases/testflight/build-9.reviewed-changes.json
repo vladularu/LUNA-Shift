@@ -9845,8 +9845,8 @@
     {
       "path": "src/features/day-editor/shift-edit-overlay.tsx",
       "kind": "modified",
-      "sha256": "b0ffab9f0122af3a9448b99dc47b401be6706f2badeca4c13366e6e750224fca",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "d6fded3935ced017c1bcce3365653e21d74b3f7cc2e8df1cbee2e1b7c74201c6",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Persists the iPhone-accepted native pause selection with labels and values aligned beside the overtime field."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
@@ -9903,6 +9903,12 @@
       "reason": "Center the current LUNA logo on the dedicated Preview welcome page."
     },
     {
+      "path": "src/features/onboarding/onboarding-controls.tsx",
+      "kind": "modified",
+      "sha256": "901daf7f8198d5948f68e335a5c74ff93a2b8d4f519342b5f3daaab1802bff11",
+      "reason": "Use the shared native iOS menu for simple onboarding selections, preserve numeric and string values, and retain the existing modal on other platforms."
+    },
+    {
       "path": "src/features/onboarding/onboarding-header.tsx",
       "kind": "added",
       "sha256": "1f6575f466f49c2a2e405bca17f4e18b042bfda5ccd227dfa7a46e60b1c14f1b",
@@ -9923,8 +9929,8 @@
     {
       "path": "src/features/onboarding/onboarding-screen.tsx",
       "kind": "modified",
-      "sha256": "a6c95fb6ba4c169956b52284d87858851d29ddec2b18766580d475fd15652301",
-      "reason": "Open the account-first final page after the Preview summary and complete the existing profile flow directly. Fade out the Preview summary before opening the sign-in page and respect the active Reduce Motion setting. Keep the frame and scroll edge mounted between ordinary pages and the summary, and lay out each new page with the established modal insets."
+      "sha256": "c2dcd18dc3bf0732e6733e30d146fd3d0c63f7c47e6f9b86469a7ce1886b0120",
+      "reason": "Open the account-first final page after the Preview summary and complete the existing profile flow directly. Fade out the Preview summary before opening the sign-in page and respect the active Reduce Motion setting. Keep the frame and scroll edge mounted between ordinary pages and the summary, and lay out each new page with the established modal insets. Pass the explicit preview flag to the account page so an existing profile alone cannot enable test copy."
     },
     {
       "path": "src/features/onboarding/onboarding-start-art.tsx",
@@ -9935,8 +9941,8 @@
     {
       "path": "src/features/onboarding/onboarding-start.tsx",
       "kind": "added",
-      "sha256": "a05be5408ea2d370b6817b6bd621f36424cae61c53267195eb09d528b15a8c46",
-      "reason": "Show direct Apple and Google sign-in and the guest action on the iOS Preview final page. Preserve the draft on cancellation and avoid repeat sign-in for an existing session. Reveal the sync illustration first, then lift the sign-in sheet, reserving the iOS Apple button height to avoid a layout jump. Use the shared navigation header and the same already measured modal insets on the sign-in page."
+      "sha256": "5e8e6c5a15d471e1a42738e254660ed01efb619a9d75c217a40a66ce72293c79",
+      "reason": "Show direct Apple and Google sign-in and the guest action on the iOS Preview final page. Preserve the draft on cancellation and avoid repeat sign-in for an existing session. Reveal the sync illustration first, then lift the sign-in sheet, reserving the iOS Apple button height to avoid a layout jump. Use the shared navigation header and the same already measured modal insets on the sign-in page. Show the test disclosure only in the explicit onboarding preview and preserve the standard sign-in copy and account actions."
     },
     {
       "path": "src/features/onboarding/onboarding-workplace.tsx",
@@ -10263,10 +10269,16 @@
       "reason": "Requested primary text refinement for the Work and Salary card rows: apply the existing RowButton titleColor override with palette.text to ProfileChoice labels. Preserve body typography, smaller selected-value captions, selection navigation, disabled/loading state and pending-save behavior; no tariff, calculation or stored-data changes. Requested correction for the two Work and Salary selection pages. Use short navigation titles and display the complete questions above the options. Reserve space for the iOS navigation controls and let both prompts wrap with the selected text size."
     },
     {
+      "path": "src/features/settings/profile-value-field.tsx",
+      "kind": "added",
+      "sha256": "5dce4b4ceebd599b800e03b3c57dc0dbd37ba42710cedeb6bebfe50a8661ad8a",
+      "reason": "Direct inline editing of weekly hours and employer with a pencil and a single header save was accepted in iOS Preview Build 56, update group e2b40896-774d-4026-ad41-4c16ce4a5c8a."
+    },
+    {
       "path": "src/features/settings/settings-editor-screen.tsx",
       "kind": "modified",
-      "sha256": "666e6f314423eb09befea63784c5530bdf0ea2b7d316d3377affb86a327cac6c",
-      "reason": "Paket 1: one disabled-aware header save for employment editors including More entry; remove duplicate bottom save. R2 follows iPhone screenshot feedback: use the existing template-editor Stack.Toolbar.View hidesSharedBackground pattern to remove the extra iOS glass backing. Existing save validation, period choice, persistence and identity editors are preserved. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6."
+      "sha256": "4bf1093cc79eadd15a015f8855c19c3a8fb913ef81853dec264022ae2627bd84",
+      "reason": "Paket 1: one disabled-aware header save for employment editors including More entry; remove duplicate bottom save. R2 follows iPhone screenshot feedback: use the existing template-editor Stack.Toolbar.View hidesSharedBackground pattern to remove the extra iOS glass backing. Existing save validation, period choice, persistence and identity editors are preserved. Preview R2 accepted by the user on 2026-11-06, group 2acd4c71-ef83-4b8a-b036-ccae4e438be6. Direct inline editing of weekly hours and employer with a pencil and a single header save was accepted in iOS Preview Build 56, update group e2b40896-774d-4026-ad41-4c16ce4a5c8a."
     },
     {
       "path": "src/features/settings/settings-form-values.ts",
@@ -10627,6 +10639,18 @@
       "kind": "modified",
       "sha256": "8b7111c979572d3bafde7abf3271d32a5abb2afbd7a7f82387f9f14b5ba679de",
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/ui/luna-choice-menu.ios.tsx",
+      "kind": "added",
+      "sha256": "8ad17adba4d5a67a50976950c93a2b76351b2a973c43b55c047acb5c486b408a",
+      "reason": "Use the existing Expo UI SwiftUI Menu and Picker with an onboarding field layout, current selection and accessible validation feedback. Adds the stacked pause field layout using the accepted label, value inset and chevron placement."
+    },
+    {
+      "path": "src/ui/luna-choice-menu.tsx",
+      "kind": "added",
+      "sha256": "8478b008fb083d3f33a049b2c0601136308cb35f0d8bde80ccd43e8868a442cd",
+      "reason": "Define the shared menu contract and retain the React Native modal fallback for other platforms. Allows callers to request the stacked pause field layout."
     },
     {
       "path": "src/ui/month-navigator.tsx",

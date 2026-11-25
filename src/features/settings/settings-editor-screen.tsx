@@ -84,6 +84,7 @@ import { focusInvalidField, weeklyHoursFieldError } from "@/ui/form-validation";
 import { ProfileChoice, ProfileEditorBusyContext, useProfileSelection } from "./profile-selection";
 import { useProfileLeaveGuard } from "./use-profile-leave-guard";
 import { ProfilePage } from "./profile-page";
+import { ProfileValueField } from "./profile-value-field";
 import { requireProfileText, ValidationError } from "@/domain/validation";
 import {
   CardSeparator,
@@ -184,6 +185,7 @@ function SettingsEditorForm({
   const editTariff = section === "TARIFF" || section === "EMPLOYMENT";
   const editModel = section === "MODEL" || section === "WORK" || section === "EMPLOYMENT";
   const employment = section !== "PERSONAL" && section !== "EMPLOYER";
+  const usesToolbarSave = employment || section === "EMPLOYER";
   const pageTitle =
     section === "EMPLOYMENT"
       ? "Arbeit & Gehalt"
@@ -801,7 +803,7 @@ function SettingsEditorForm({
             headerTitle: compactHeader ? "" : pageTitle,
             presentation: "card",
             headerRight:
-              fromMore || employment
+              fromMore || usesToolbarSave
                 ? undefined
                 : () => (
                     <HeaderSaveAction
@@ -818,11 +820,11 @@ function SettingsEditorForm({
             statusBarStyle: palette.dark ? "light" : "dark",
           }}
         />
-        {employment ? (
+        {usesToolbarSave ? (
           <Stack.Toolbar placement="right">
             <Stack.Toolbar.View hidesSharedBackground>
               <HeaderSaveAction
-                closes={false}
+                closes={!employment}
                 busy={saving}
                 disabled={!dirty}
                 label="Speichern"
@@ -838,18 +840,16 @@ function SettingsEditorForm({
           />
         ) : null}
         {section === "EMPLOYER" ? (
-          <ProfileGroup title="Arbeitgeber">
-            <InputInset>
-              <Field
-                label="Arbeitgeber"
-                value={employerName}
-                onChangeText={setEmployerName}
-                maxLength={160}
-                editable={!saving}
-                autoCapitalize="words"
-              />
-            </InputInset>
-          </ProfileGroup>
+          <ProfileValueField
+            label="Name"
+            accessibilityLabel="Name des Arbeitgebers"
+            value={employerName}
+            onChangeText={setEmployerName}
+            placeholder="Name eingeben"
+            maxLength={160}
+            editable={!saving}
+            autoCapitalize="words"
+          />
         ) : section === "PERSONAL" ? (
           <ProfileGroup title="Persönliche Angaben">
             <InputInset>
@@ -877,22 +877,24 @@ function SettingsEditorForm({
         ) : null}
         {editWork ? (
           <>
-            <ProfileGroup title="Vertrag">
-              <InputInset>
-                <Field
-                  inputRef={weeklyHoursRef}
-                  error={weeklyHoursError}
-                  keyboardType="decimal-pad"
-                  label="Deine Wochenstunden (Std.)"
-                  editable={!saving}
-                  value={weeklyHours}
-                  onChangeText={(value) => {
-                    setWeeklyHours(value);
-                    setWeeklyHoursError(null);
-                  }}
-                />
-              </InputInset>
-            </ProfileGroup>
+            <View style={{ gap: SPACING.sm }}>
+              <SectionHeader title="Vertrag" />
+              <ProfileValueField
+                label="Wochenarbeitszeit"
+                accessibilityLabel="Wochenarbeitszeit in Stunden"
+                unit="Std."
+                inputRef={weeklyHoursRef}
+                error={weeklyHoursError}
+                keyboardType="decimal-pad"
+                selectTextOnFocus
+                editable={!saving}
+                value={weeklyHours}
+                onChangeText={(value) => {
+                  setWeeklyHours(value);
+                  setWeeklyHoursError(null);
+                }}
+              />
+            </View>
             <ProfileGroup
               title="Arbeitsort"
               caption="Feiertage richten sich nach deinem Arbeitsort."
@@ -1000,7 +1002,7 @@ function SettingsEditorForm({
           </>
         ) : null}
         {editModel ? <EmploymentModelFields value={model} onChange={setModel} /> : null}
-        {fromMore && !employment ? (
+        {fromMore && !usesToolbarSave ? (
           <PrimaryButton busy={saving} disabled={saving || !dirty} onPress={() => void submit()}>
             Speichern
           </PrimaryButton>

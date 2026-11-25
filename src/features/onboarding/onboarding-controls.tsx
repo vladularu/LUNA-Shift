@@ -3,6 +3,7 @@ import { ONBOARDING_TYPOGRAPHY, useOnboardingPalette } from "@/theme/onboarding"
 import MaterialCommunityIcons from "@/ui/icon";
 import { CORNER_CURVE, RADII, SPACING, CONTROL_HEIGHT } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
 import { useState, type RefObject } from "react";
 import {
   Keyboard,
@@ -99,15 +100,7 @@ export function Choice({
     </Pressable>
   );
 }
-export function SelectField<T extends string | number>({
-  label,
-  value,
-  options,
-  onChange,
-  error,
-  icon,
-  compact = false,
-}: {
+interface SelectFieldProps<T extends string | number> {
   readonly label: string;
   readonly value: T | null;
   readonly options: readonly {
@@ -119,7 +112,45 @@ export function SelectField<T extends string | number>({
   readonly error?: string;
   readonly icon?: BlueprintIconName;
   readonly compact?: boolean;
-}) {
+}
+
+export function SelectField<T extends string | number>(props: SelectFieldProps<T>) {
+  const { label, value, options, onChange, error, icon, compact = false } = props;
+  return (
+    <View style={s.field}>
+      <LunaChoiceMenu
+        label={label}
+        value={value === null ? null : String(value)}
+        options={options.map((option) => ({ value: String(option.value), label: option.label }))}
+        onChange={(selection) => {
+          const option = options.find((candidate) => String(candidate.value) === selection);
+          if (option) {
+            Keyboard.dismiss();
+            onChange(option.value);
+          }
+        }}
+        field={{
+          inlineLabel: compact,
+          leadingSymbol: icon === "map-marker-outline" ? "mappin" : undefined,
+          error,
+        }}
+        testPrefix="onboarding-native"
+        fallback={<SelectFieldModal {...props} />}
+      />
+      <FieldError message={error} />
+    </View>
+  );
+}
+
+function SelectFieldModal<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+  error,
+  icon,
+  compact = false,
+}: SelectFieldProps<T>) {
   const p = useOnboardingPalette();
   const [open, setOpen] = useState(false);
   const { height } = useWindowDimensions();
@@ -159,7 +190,6 @@ export function SelectField<T extends string | number>({
           ⌄
         </Text>
       </Pressable>
-      <FieldError message={error} />
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View
           style={[

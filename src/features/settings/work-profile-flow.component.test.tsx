@@ -183,7 +183,7 @@ describe("work profile draft flow", () => {
       } else if (section === "MODEL") {
         await select(screen, "Sonn- und Feiertagsarbeit", "Ja");
       } else {
-        await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+        await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
       }
       expect(saveButton(screen)).toBeEnabled();
       await openSave(screen);
@@ -194,9 +194,38 @@ describe("work profile draft flow", () => {
       expect(saveButton(screen)).toBeDisabled();
     },
   );
+  it("shows the employer as an editable value and saves it from the right toolbar", async () => {
+    mockSection = "EMPLOYER";
+    mockOrigin = "settings";
+    const screen = await render(<SettingsEditorTestFlow />);
+    const field = screen.getByLabelText("Name des Arbeitgebers");
+    const save = screen.getByRole("button", { name: "Speichern und schließen" });
+    expect(mockToolbarPlacement).toBe("right");
+    expect(mockHeaderOptions.headerRight).toBeUndefined();
+    expect(screen.queryByRole("button", { name: "Speichern" })).toBeNull();
+    expect(field.props.value).toBe("Klinikum");
+    expect(save).toBeDisabled();
+    await fireEvent.changeText(field, "Vitos Klinikum");
+    await fireEvent.press(save);
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ displayName: "Alex", employerName: "Vitos Klinikum" }),
+    );
+    expect(router.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the weekly input decimal and the unit outside the editable value", async () => {
+    const screen = await render(<SettingsEditorTestFlow />);
+    const field = screen.getByLabelText("Wochenarbeitszeit in Stunden");
+    expect(field.props.value).toBe("38,5");
+    expect(field.props.keyboardType).toBe("decimal-pad");
+    expect(field.props.selectTextOnFocus).toBe(true);
+    expect(screen.getByText("Std.")).toBeTruthy();
+  });
+
   it("asks for the period only after saving a changed value", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     expect(screen.getByText("Seit wann gelten diese Angaben?")).toBeTruthy();
     expect(screen.getByText("Wochenstunden: 38,5 Std. → 30 Std.")).toBeTruthy();
@@ -219,7 +248,7 @@ describe("work profile draft flow", () => {
   });
   it("sets a concrete effective day at the end and preserves the original guard", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await fireEvent.press(screen.getByRole("radio", { name: "Ab einem Datum" }));
     await fireEvent(
@@ -242,17 +271,17 @@ describe("work profile draft flow", () => {
   });
   it("returns from the period dialog without losing the draft", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await fireEvent.press(screen.getByRole("button", { name: "Zurück zu deinen Angaben" }));
     await waitFor(() => expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull());
-    expect(screen.getByLabelText("Deine Wochenstunden (Std.)").props.value).toBe("30");
+    expect(screen.getByLabelText("Wochenarbeitszeit in Stunden").props.value).toBe("30");
     expect(mockUpdate).not.toHaveBeenCalled();
   });
   it("does not create a period after returning a draft value to its original value", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "38,5");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "38,5");
     expect(saveButton(screen)).toBeDisabled();
     await fireEvent.press(saveButton(screen));
     expect(mockUpdate).not.toHaveBeenCalled();
@@ -263,7 +292,7 @@ describe("work profile draft flow", () => {
     mockOrigin = "settings";
     const screen = await render(<SettingsEditorTestFlow />);
     expect(screen.queryByRole("button", { name: "Name & Arbeitgeber" })).toBeNull();
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await select(screen, "Stufe", "Stufe 2");
     await select(screen, "Sonn- und Feiertagsarbeit", "Ja");
     expect(mockUpdate).not.toHaveBeenCalled();
@@ -290,7 +319,7 @@ describe("work profile draft flow", () => {
     };
     const tariff = mockProfile.tariff;
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await whole(screen);
     expect(mockUpdate).toHaveBeenCalledWith(
@@ -347,14 +376,14 @@ describe("work profile draft flow", () => {
   });
   it("discards all local changes without writing", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await fireEvent.press(screen.getByRole("button", { name: "Änderungen verwerfen" }));
-    expect(screen.getByLabelText("Deine Wochenstunden (Std.)").props.value).toBe("38,5");
+    expect(screen.getByLabelText("Wochenarbeitszeit in Stunden").props.value).toBe("38,5");
     expect(mockUpdate).not.toHaveBeenCalled();
   });
   it("requests an actual guarded undo rather than adding a dated reverse change", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await whole(screen);
     await fireEvent.press(screen.getByRole("button", { name: "Letzte Änderung rückgängig" }));
@@ -368,7 +397,7 @@ describe("work profile draft flow", () => {
   it("keeps a failed save and its input available for correction", async () => {
     mockUpdate.mockRejectedValueOnce(new Error("storage"));
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await whole(screen);
     expect(screen.getByText("Seit wann gelten diese Angaben?")).toBeTruthy();
@@ -384,7 +413,7 @@ describe("work profile draft flow", () => {
         }),
     );
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     await fireEvent.press(screen.getByRole("radio", { name: "Für den gesamten Zeitraum" }));
     await fireEvent.press(screen.getByRole("button", { name: "Gesamten Zeitraum berichtigen" }));
@@ -393,7 +422,7 @@ describe("work profile draft flow", () => {
   });
   it("validates hours before asking for a period", async () => {
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "");
     await openSave(screen);
     expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(mockUpdate).not.toHaveBeenCalled();
@@ -418,8 +447,8 @@ describe("work profile draft flow", () => {
     await fireEvent.press(
       screen.getByRole("button", { name: "Angaben ab 10.10.2026 berichtigen" }),
     );
-    expect(screen.getByLabelText("Deine Wochenstunden (Std.)").props.value).toBe("30");
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "38,5");
+    expect(screen.getByLabelText("Wochenarbeitszeit in Stunden").props.value).toBe("30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "38,5");
     await openSave(screen);
     expect(
       screen.getByRole("radio", { name: "Ab einem Datum" }).props.accessibilityState.checked,
@@ -479,7 +508,7 @@ describe("work profile draft flow", () => {
       allEmploymentWorkRecorded: null,
     };
     const screen = await render(<SettingsEditorTestFlow />);
-    await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+    await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
     await openSave(screen);
     expect(screen.queryByText("Seit wann gelten diese Angaben?")).toBeNull();
     expect(mockUpdate).toHaveBeenCalledWith(
@@ -490,7 +519,7 @@ describe("work profile draft flow", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     try {
       const screen = await render(<SettingsEditorTestFlow />);
-      await fireEvent.changeText(screen.getByLabelText("Deine Wochenstunden (Std.)"), "30");
+      await fireEvent.changeText(screen.getByLabelText("Wochenarbeitszeit in Stunden"), "30");
       expect(mockGuard.active).toBe(true);
       await act(async () => mockGuard.callback({ data: { action: { type: "GO_BACK" } } }));
       expect(alert).toHaveBeenCalledWith(
@@ -501,7 +530,7 @@ describe("work profile draft flow", () => {
       await act(async () =>
         alert.mock.calls[0][2]?.find((button) => button.text === "Weiter bearbeiten")?.onPress?.(),
       );
-      expect(screen.getByLabelText("Deine Wochenstunden (Std.)").props.value).toBe("30");
+      expect(screen.getByLabelText("Wochenarbeitszeit in Stunden").props.value).toBe("30");
       expect(mockUpdate).not.toHaveBeenCalled();
       expect(mockDispatch).not.toHaveBeenCalled();
     } finally {
