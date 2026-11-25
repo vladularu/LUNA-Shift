@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { AccessibilityInfo, Animated } from "react-native";
 import type { ReactNode } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import OnboardingRoute from "../../../app/onboarding";
 import { TARIFF_REGION_LABELS, type SaveProfileInput, type ShiftEntry } from "@/domain/types";
 import { emptyWorkplaceData, rulesAt, type WorkplaceData } from "@/domain/workplace-rules";
 import { DARK_PALETTE, LIGHT_PALETTE } from "@/theme/palette-values";
@@ -55,6 +56,12 @@ jest.mock("expo-apple-authentication", () => ({
 let mockProfile: object | null = null;
 let mockPalette = LIGHT_PALETTE;
 let mockEntries: ShiftEntry[] = [];
+let mockDevToolsAvailable = true;
+jest.mock("@/infrastructure/dev-tools-policy", () => ({
+  get DEV_TOOLS_AVAILABLE() {
+    return mockDevToolsAvailable;
+  },
+}));
 jest.mock("@/theme/palette", () => ({ usePalette: () => mockPalette }));
 jest.mock("@/application/pflegeshift-provider", () => ({
   usePflegeShiftProfile: () => ({ profile: mockProfile, updateProfile: mockUpdateProfile }),
@@ -62,6 +69,7 @@ jest.mock("@/application/pflegeshift-provider", () => ({
 }));
 jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), back: jest.fn(), push: jest.fn() },
+  useLocalSearchParams: jest.fn(),
 }));
 const metrics = {
   frame: { x: 0, y: 0, width: 430, height: 932 },
@@ -152,6 +160,8 @@ beforeEach(() => {
   mockProfile = null;
   mockEntries = [];
   jest.clearAllMocks();
+  mockDevToolsAvailable = true;
+  jest.mocked(useLocalSearchParams).mockReturnValue({});
   mockUpdateProfile.mockReset();
   mockUpdateProfile.mockResolvedValue(undefined);
   mockAuthConfigured = true;
@@ -813,20 +823,31 @@ describe("short onboarding with contextual salary", () => {
   });
 });
 
-describe("Einrichtungsplan in der Preview", () => {
+describe("Einrichtungsplan", () => {
   beforeEach(() => {
     jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
   });
   afterEach(() => {
     jest.restoreAllMocks();
   });
-  it.each([false, true])(
-    "accepts rules first, then working time, with optional salary (test mode %s)",
-    async (preview) => {
+  it.each([
+    { build: "Production", devToolsAvailable: false, previewParameter: undefined, testMode: false },
+    {
+      build: "Production with preview URL",
+      devToolsAvailable: false,
+      previewParameter: "1",
+      testMode: false,
+    },
+    { build: "Preview test mode", devToolsAvailable: true, previewParameter: "1", testMode: true },
+  ])(
+    "runs the complete iOS onboarding through the route in $build",
+    async ({ devToolsAvailable, previewParameter, testMode }) => {
+      mockDevToolsAvailable = devToolsAvailable;
+      jest
+        .mocked(useLocalSearchParams)
+        .mockReturnValue(previewParameter === undefined ? {} : { preview: previewParameter });
       const storage = workplaceDatabase();
-      const screen = await render(
-        appScreen(<OnboardingScreen setupPlan preview={preview} />, storage.db),
-      );
+      const screen = await render(appScreen(<OnboardingRoute />, storage.db));
       expect(screen.getByTestId("onboarding-brand-image")).toBeVisible();
       expect(screen.getByRole("header", { name: "Willkommen bei LUNA Shift" })).toBeVisible();
       await press(screen, "Los geht’s");
@@ -854,7 +875,7 @@ describe("Einrichtungsplan in der Preview", () => {
       await press(screen, "Als Gast starten");
       expect(mockApple).not.toHaveBeenCalled();
       expect(mockGoogle).not.toHaveBeenCalled();
-      if (preview) {
+      if (testMode) {
         expect(router.back).toHaveBeenCalled();
         expect(mockUpdateProfile).not.toHaveBeenCalled();
         expect(storage.write).not.toHaveBeenCalled();

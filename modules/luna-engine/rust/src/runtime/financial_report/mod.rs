@@ -19,6 +19,22 @@ use crate::{
     runtime::{facts::SnapshotFacts, report::ReportIssue},
 };
 use serde_json::Value;
+
+pub(crate) fn annual_gross_summary(facts: &SnapshotFacts, year: i16) -> Result<Value, ReportIssue> {
+    let owner = facts.financial_context().map_err(model::source_error)?;
+    let mut context = owner
+        .lock()
+        .map_err(|_| ReportIssue::new("FINANCIAL_CONTEXT_UNAVAILABLE"))?;
+    let summary =
+        crate::report::financial::gross::annual_monthly_earned_gross(i32::from(year), &mut context)
+            .map_err(model::calculation_error)?;
+    Ok(serde_json::json!({
+        "legacy": crate::runtime::report::SectionOutput::Ready {
+            value: model::output(&summary)?,
+        }
+    }))
+}
+
 pub fn gross(
     facts: &SnapshotFacts,
     period: &ReportPeriod,

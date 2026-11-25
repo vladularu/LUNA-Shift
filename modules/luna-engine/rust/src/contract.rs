@@ -578,6 +578,8 @@ pub struct CalculationRequest {
     sections: RequestedSections,
     perspective: SalaryPerspective,
     priority: RequestPriority,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    annual_gross_summary: bool,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
@@ -628,6 +630,9 @@ impl CalculationRequest {
     }
     pub fn perspective(&self) -> SalaryPerspective {
         self.perspective
+    }
+    pub fn annual_gross_summary(&self) -> bool {
+        self.annual_gross_summary
     }
     pub fn financial_details(&self) -> Option<&financial_details::FinancialDetailsIntent> {
         self.financial_details.as_ref()
@@ -1016,6 +1021,19 @@ impl CalculationRequest {
                 || (self.payroll_page.is_some() && self.payroll_panel.is_some())
                 || self.perspective != SalaryPerspective::Payout
                 || !matches!(self.periods.as_slice(), [ReportPeriod::Month { .. }]))
+        {
+            return Err(ContractError::InvalidRequest);
+        }
+        if self.annual_gross_summary
+            && (!self.sections.gross()
+                || self.sections.time()
+                || self.sections.net()
+                || self.sections.checks()
+                || self.financial_details.is_some()
+                || self.export_report.is_some()
+                || self.checks_details.is_some()
+                || self.perspective != SalaryPerspective::Earned
+                || !matches!(self.periods.as_slice(), [ReportPeriod::Year { .. }]))
         {
             return Err(ContractError::InvalidRequest);
         }

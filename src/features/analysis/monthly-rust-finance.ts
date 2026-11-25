@@ -16,6 +16,7 @@ type MonthlyRustOperation =
 type RecordValue = Record<string, unknown>;
 export interface MonthlyRustTransport {
   readonly expectedEngineVersion: string;
+  readonly supportsAnnualGrossSummary?: boolean;
   invoke(operation: MonthlyRustOperation, json: string): Promise<string>;
   source(header: string, body: string): Promise<string>;
   calendarRanks(header: string, body: string): Promise<string>;
@@ -331,7 +332,15 @@ export function createMonthlyRustFinanceBridge(
       sections.time = report.sections.time;
       sections.net = report.sections.net;
     }
-    if (request.sections.gross) {
+    if (request.sections.gross && transport.supportsAnnualGrossSummary) {
+      const report = await run(
+        period,
+        { time: false, gross: true, net: false, checks: false },
+        false,
+        { annualGrossSummary: true },
+      );
+      sections.gross = report.sections.gross;
+    } else if (request.sections.gross) {
       if (!request.grossSource || request.perspective !== "EARNED")
         throw new Error("RUST_ANNUAL_GROSS_REQUEST_INVALID");
       const months: unknown[] = [];

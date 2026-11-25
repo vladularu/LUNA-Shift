@@ -2,7 +2,7 @@ import { restFindingKeys } from "@/engine/workplace-resolution";
 import { WorkplacePanel } from "@/features/workplace/panel";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import Ionicons from "@/ui/icon";
 
 import {
@@ -11,7 +11,7 @@ import {
   usePflegeShiftStatus,
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import { currentMonth, formatMonthTitle, monthRange } from "@/engine/calendar";
+import { currentMonth, monthRange } from "@/engine/calendar";
 import { selectComplianceShifts } from "@/features/analysis/analysis-data";
 import { captureRuleComputation, RuleComputationNotice } from "./rule-computation";
 import { requireResolvedPackage } from "@/rules/rule-resolver";
@@ -21,11 +21,9 @@ import { useDeferredMonthlyCompliance } from "@/features/analysis/use-monthly-co
 import { useCheckPreferences } from "@/features/settings/check-preferences";
 import { selectVisibleCompliance } from "./check-visibility";
 import { AnalysisCoverageNote } from "./analysis-coverage-note";
-import { CheckPeriod } from "./check-summary-card";
 import { parseMonthRouteParam, type RouteParam } from "@/navigation/route-params";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { ScreenScrollView } from "@/ui/screen-layout";
-import { ReportScrollView } from "@/ui/report-layout";
 import { BackFooterLayout } from "@/ui/back-footer-layout";
 import { Text } from "@/ui/text";
 import { SecondaryButton } from "@/ui/form-controls";
@@ -97,51 +95,62 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
   if (ready && error) {
     return <LoadFailureView message={error} onRetry={() => void reload()} />;
   }
-  if (window && !window.ok)
-    return (
-      <ReportScrollView bottomPadding={bottomPadding}>
-        <CheckPeriod period={formatMonthTitle(month)} />
-        <WorkplacePanel period={month} />
-        <RuleComputationNotice
-          failure={window}
-          onRetry={() => setRetryRevision((value) => value + 1)}
-          title="Arbeitszeitprüfung nicht verfügbar"
-        />
-      </ReportScrollView>
-    );
-  if (monthlyCompliance.error) {
-    return (
-      <ReportScrollView bottomPadding={bottomPadding}>
-        <CheckPeriod period={formatMonthTitle(month)} />
-        <WorkplacePanel period={month} />
-        <AnalysisCoverageNote message={monthlyCompliance.error} />
-        <SecondaryButton onPress={monthlyCompliance.retry}>
-          Arbeitszeitprüfung erneut versuchen
-        </SecondaryButton>
-      </ReportScrollView>
-    );
-  }
-  if (!ready || profile === null || compliance === null) return <LoadingView />;
+  if (!ready || profile === null) return <LoadingView />;
+
   const { start, end } = monthRange(month);
   const area = params.area;
   const legalOrPlanning = area === "legal" || area === "planning" ? area : undefined;
+  const windowFailure = window?.ok === false ? window : null;
+  const calculationFailed = windowFailure !== null || monthlyCompliance.error !== null;
   const selectedArea =
     legalOrPlanning &&
-    checkDisplayProjection(compliance).issues.some(
-      (issue) => (issue.kind === "PLANNING" ? "planning" : "legal") === legalOrPlanning,
-    )
+    !calculationFailed &&
+    (compliance === null ||
+      checkDisplayProjection(compliance).issues.some(
+        (issue) => (issue.kind === "PLANNING" ? "planning" : "legal") === legalOrPlanning,
+      ))
       ? legalOrPlanning
       : undefined;
-  const renderCheck = (hasWorkplaceFindings: boolean) => (
-    <ComplianceDayList
-      area={selectedArea}
-      hasWorkplaceFindings={hasWorkplaceFindings}
-      compliance={sourceCompliance!}
-      showPlanning={preferences.enabled !== false}
-      shifts={window?.ok ? window.value : EMPTY_SHIFTS}
-      timeZone={profile.timeZone}
-    />
-  );
+  const renderCheck = (workplaceCount: number) => {
+    if (windowFailure)
+      return (
+        <RuleComputationNotice
+          failure={windowFailure}
+          onRetry={() => setRetryRevision((value) => value + 1)}
+          title="Arbeitszeitprüfung nicht verfügbar"
+        />
+      );
+    if (monthlyCompliance.error)
+      return (
+        <>
+          <AnalysisCoverageNote message={monthlyCompliance.error} />
+          <SecondaryButton onPress={monthlyCompliance.retry}>
+            Arbeitszeitprüfung erneut versuchen
+          </SecondaryButton>
+        </>
+      );
+    if (area === "workplace" && workplaceCount > 0) return null;
+    if (sourceCompliance === null)
+      return (
+        <ActivityIndicator
+          accessible
+          accessibilityLabel="Dienstplan-Check wird berechnet"
+          accessibilityRole="progressbar"
+          color={palette.primary}
+          style={{ marginVertical: SPACING.lg }}
+        />
+      );
+    return (
+      <ComplianceDayList
+        area={selectedArea}
+        hasWorkplaceFindings={workplaceCount > 0}
+        compliance={sourceCompliance}
+        showPlanning={preferences.enabled !== false}
+        shifts={window?.ok ? window.value : EMPTY_SHIFTS}
+        timeZone={profile.timeZone}
+      />
+    );
+  };
 
   return (
     <ScreenScrollView
@@ -171,10 +180,13 @@ function ComplianceDetailsContent({ bottomPadding }: { readonly bottomPadding: n
         </View>
       </View>
       {selectedArea ? (
-        renderCheck(false)
+        renderCheck(0)
       ) : (
-        <WorkplacePanel period={month} restKeys={restFindingKeys(compliance.issues)}>
-          {(count) => (area === "workplace" && count > 0 ? null : renderCheck(count > 0))}
+        <WorkplacePanel
+          period={month}
+          restKeys={compliance ? restFindingKeys(compliance.issues) : undefined}
+        >
+          {renderCheck}
         </WorkplacePanel>
       )}
     </ScreenScrollView>

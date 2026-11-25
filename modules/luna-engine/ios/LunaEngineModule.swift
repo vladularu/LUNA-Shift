@@ -21,6 +21,7 @@ public final class LunaEngineModule: Module {
   public func definition() -> ModuleDefinition {
     Name("LunaEngine")
     Constant("transportAbiVersion") { 1 }
+    Constant("annualGrossSummaryEngineVersion") { Self.annualGrossSummaryEngineVersion() }
     AsyncFunction("invoke") { (operation: String, payload: String, lane: String?, promise: Promise) in
       do {
         let (queue, slots) = try self.queue(operation: operation, lane: lane)
@@ -186,6 +187,13 @@ public final class LunaEngineModule: Module {
       }
     }
     return try copy(result, large: operation == "runFinance" || operation == "runChecks")
+  }
+
+  private static func annualGrossSummaryEngineVersion() -> String {
+    guard let text = try? copy(luna_engine_info()),
+          let info = (try? JSONSerialization.jsonObject(with: Data(text.utf8))) as? [String: Any],
+          let version = info["engineVersion"] as? String else { return "" }
+    return version
   }
 
   private static func copy(_ result: LunaEngineBuffer, large: Bool = false) throws -> String {

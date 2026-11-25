@@ -29,7 +29,7 @@ describe("entry editor presentation", () => {
     },
   );
 
-  it("reserves the transparent iPhone host for an existing own shift", () => {
+  it("uses the transparent iPhone host for saved own and shared shifts", () => {
     const saved = { mode: "SHIFT", entryId: "shift-1" };
     expect(entryEditorScreenOptions("ios", "#151517", saved).presentation).toBe("transparentModal");
     expect(
@@ -38,6 +38,9 @@ describe("entry editor presentation", () => {
     expect(
       entryEditorScreenOptions("ios", "#151517", { ...saved, sharedCalendarId: "calendar-1" })
         .presentation,
+    ).toBe("transparentModal");
+    expect(
+      entryEditorScreenOptions("ios", "#151517", { ...saved, sharedCalendarId: "" }).presentation,
     ).toBe("formSheet");
   });
 

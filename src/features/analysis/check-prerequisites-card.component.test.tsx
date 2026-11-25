@@ -94,6 +94,9 @@ describe("compact check status", () => {
 
     await fireEvent.press(button);
     const details = screen.getByTestId("check-status-details");
+    expect(
+      within(screen.getByTestId("back-footer-surface")).getByRole("button", { name: "Schließen" }),
+    ).toBeVisible();
     expect(within(details).getByText("Prüfung eingeschränkt")).toBeVisible();
     expect(within(details).getByText(work.description)).toBeVisible();
     expect(within(details).queryByTestId("check-scope-details")).toBeNull();

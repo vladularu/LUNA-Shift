@@ -166,6 +166,19 @@ describe("work profile draft flow", () => {
     await fireEvent.press(saveButton(screen));
     expect(mockUpdate).not.toHaveBeenCalled();
   });
+  it("uses the native LUNA menus in Arbeitsmodell when opened from the check", async () => {
+    mockSection = "MODEL";
+    const screen = await render(<SettingsEditorTestFlow />);
+    expect(screen.getAllByTestId(/^profile-native-options:/)).toHaveLength(5);
+    await select(screen, "Sonn- und Feiertagsarbeit", "Ja");
+    expect(router.push).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+    await openSave(screen);
+    await whole(screen);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ sundayHolidayWorkEligible: true }),
+    );
+  });
   it.each(["WORK", "TARIFF", "EMPLOYMENT", "MODEL"])(
     "uses one header save for %s from More and preserves draft state",
     async (section) => {

@@ -7,7 +7,10 @@ export function usesEntryOverviewSheet(params?: object, mode?: "SHIFT" | "APPOIN
     ("entryId" in params
       ? typeof params.entryId === "string" && params.entryId.length > 0
       : params.mode === "APPOINTMENT") &&
-    !("sharedCalendarId" in params) &&
+    (!("sharedCalendarId" in params) ||
+      (typeof params.sharedCalendarId === "string" &&
+        params.sharedCalendarId.length > 0 &&
+        "entryId" in params)) &&
     !("focus" in params)
   );
 }

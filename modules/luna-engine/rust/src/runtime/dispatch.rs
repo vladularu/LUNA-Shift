@@ -118,7 +118,18 @@ pub fn calculate(work: &Work) -> Result<Option<ComputedCalculation>, JobError> {
             return Ok(None);
         }
         let gross = if finance_lane && requested.gross() {
-            source.gross(period, request.perspective())
+            if let ReportPeriod::Year { year } = period
+                && request.annual_gross_summary()
+            {
+                SectionPresentation {
+                    output: SectionOutput::from_result(
+                        super::financial_report::annual_gross_summary(lease.facts(), *year),
+                    ),
+                    ..not_requested()
+                }
+            } else {
+                source.gross(period, request.perspective())
+            }
         } else {
             not_requested()
         };

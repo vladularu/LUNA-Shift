@@ -810,7 +810,9 @@ function SettingsEditorForm({
     />
   );
   return (
-    <ProfileEditorControlContext.Provider value={{ busy: saving, nativeChoices: fromMore }}>
+    <ProfileEditorControlContext.Provider
+      value={{ busy: saving, nativeChoices: fromMore || section === "MODEL" }}
+    >
       <ProfilePage
         title={pageTitle}
         backLabel={fromMore ? "Zurück zu Mehr" : employment ? "Zurück" : "Zurück zum Arbeitsprofil"}

@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   production-ios:
-    if: github.head_ref == 'codex/testflight-build10'
+    if: github.head_ref == 'codex/production-ios-ready'
     runs-on: macos-26
     timeout-minutes: 55
     env:
@@ -49,11 +49,13 @@ jobs:
           npm run eas-build-pre-install
           test -f modules/luna-rest-pilot/ios/LunaRestCore.xcframework/Info.plist
           test -f modules/luna-engine/ios/LunaEngineCore.xcframework/Info.plist
-          expected="$(grep -oE 'luna-engine-v1:[0-9a-f]{64}' src/features/analysis/monthly-rust-engine-version.ts)"
           identities=(modules/luna-engine/.build/ios/target/aarch64-apple-ios/release/build/luna-engine-*/out/engine_identity.rs)
           test "${#identities[@]}" -eq 1
-          grep -Fq "$expected" "${identities[0]}"
+          compiled="$(grep -oE 'luna-engine-v1:[0-9a-f]{64}' "${identities[0]}")"
+          [[ "$compiled" =~ ^luna-engine-v1:[0-9a-f]{64}$ ]]
+          echo "LUNA_PREFLIGHT_ENGINE_VERSION=$compiled" >> "$GITHUB_ENV"
           node --test modules/luna-engine/scripts/native-config.test.mjs
+          rustup run 1.99.1 cargo test --locked --manifest-path modules/luna-engine/rust/Cargo.toml --test ffi_reports
       - run: npm ci
       - name: Verify the Production identity and prebuild fingerprint
         run: |
@@ -84,6 +86,14 @@ jobs:
               tail -n 100 "$RUNNER_TEMP/testflight-xcodebuild.log"
               exit 1
             }
+      - name: Verify the Rust engine embedded in the iOS executable
+        run: |
+          apps=("$RUNNER_TEMP"/luna-build/Build/Products/Release-iphoneos/*.app)
+          test "${#apps[@]}" -eq 1
+          executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "${apps[0]}/Info.plist")"
+          strings "${apps[0]}/$executable" > "$RUNNER_TEMP/luna-binary-strings.txt"
+          grep -Fq "$LUNA_PREFLIGHT_ENGINE_VERSION" "$RUNNER_TEMP/luna-binary-strings.txt"
+          grep -Fq 'annualGrossSummaryEngineVersion' "$RUNNER_TEMP/luna-binary-strings.txt"
       - name: Preserve Xcode output if compilation fails
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

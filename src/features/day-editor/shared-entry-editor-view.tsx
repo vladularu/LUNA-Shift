@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { Temporal } from "@js-temporal/polyfill";
 import { useVisibleSharedCalendars } from "@/application/shared-calendars-context";
 import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
 import { sharedCalendarDays } from "@/features/calendar/shared-calendar-display";
+import { sharedShiftNetMinutes } from "@/features/calendar/shared-shift-detail";
 import { EntryEditOverlayFrame } from "./entry-edit-overlay-frame";
 import { EntryEditGroup, EntryEditValueRow } from "./entry-edit-fields";
 import { LoadFailureView } from "@/ui/loading-view";
@@ -15,7 +16,7 @@ import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { accessibleChipBackgroundColor } from "@/theme/color-contrast";
 
-/** Same editor frame and fields; foreign records never enter the local editing form. */
+/** Foreign records stay in the read-only overview. */
 export function SharedEntryEditorView({
   date,
   calendarId,
@@ -45,17 +46,24 @@ export function SharedEntryEditorView({
         onRetry={() => router.back()}
       />
     );
-  const start = Temporal.Instant.from(row.entry.startsAt).toZonedDateTimeISO(
-    row.entry.allDay ? row.entry.timeZone : timeZone,
-  );
-  const end = Temporal.Instant.from(row.entry.endsAt).toZonedDateTimeISO(
-    row.entry.allDay ? row.entry.timeZone : timeZone,
-  );
+  const { entry } = row;
+  const start = Temporal.Instant.from(entry.startsAt).toZonedDateTimeISO(timeZone);
+  const end = Temporal.Instant.from(entry.endsAt).toZonedDateTimeISO(timeZone);
   const clock = (value: Temporal.ZonedDateTime) =>
-    `${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}`;
-  const headerColor = palette.dark
-    ? row.entry.color
-    : accessibleChipBackgroundColor(row.entry.color);
+    value.toPlainTime().toString({ smallestUnit: "minute" });
+  const endsAnotherDay = !entry.allDay && !start.toPlainDate().equals(end.toPlainDate());
+  const endDate = `${String(end.day).padStart(2, "0")}.${String(end.month).padStart(2, "0")}.`;
+  const appointment = entry.kind === "APPOINTMENT";
+  const durationMinutes =
+    appointment && !entry.allDay
+      ? Math.round((end.epochMilliseconds - start.epochMilliseconds) / 60_000)
+      : sharedShiftNetMinutes(entry);
+  const sharedLabel = appointment
+    ? "Geteilter Termin"
+    : entry.kind === "SHIFT"
+      ? "Geteilter Dienst"
+      : "Geteilter Eintrag";
+  const headerColor = palette.dark ? entry.color : accessibleChipBackgroundColor(entry.color);
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -65,46 +73,50 @@ export function SharedEntryEditorView({
         durationMinutes={null}
         error={null}
         headerColor={headerColor}
-        headerSubtitle={row.entry.title}
-        headerLeading={<SharedShiftSymbol value={row.entry.symbol} color={headerColor} size={22} />}
+        headerSubtitle={entry.title}
+        headerLeading={<SharedShiftSymbol value={entry.symbol} color={headerColor} size={22} />}
+        hideHeaderDuration
+        nativePresentation={false}
         onDismiss={() => router.back()}
         onRequestClose={async () => true}
+        readOnly
         testIDPrefix="shift-edit"
         cardContent={
-          <View style={{ padding: SPACING.md, gap: SPACING.md }}>
-            <EntryEditGroup testID="shared-edit-service-group">
-              <EntryEditValueRow label="Dienst" value={row.entry.title} separator={false} />
-            </EntryEditGroup>
-            <EntryEditGroup testID="shift-edit-time-group">
-              {row.entry.allDay ? (
-                <EntryEditValueRow label="Dauer" value="Ganztägig" separator={false} />
-              ) : (
+          <View style={styles.content}>
+            <View style={styles.overview} testID="shared-entry-overview">
+              <Text
+                accessibilityRole="header"
+                style={[TYPOGRAPHY.highlightValue, styles.centered, { color: palette.text }]}
+              >
+                {entry.allDay ? "Ganztägig" : `${clock(start)} – ${clock(end)}`}
+              </Text>
+              {endsAnotherDay ? (
+                <Text style={[TYPOGRAPHY.small, styles.centered, { color: palette.textMuted }]}>
+                  {`Ende am ${endDate}`}
+                </Text>
+              ) : null}
+              {durationMinutes !== null ? (
                 <>
-                  <EntryEditValueRow label="Beginn" value={clock(start)} />
-                  <EntryEditValueRow
-                    label="Ende"
-                    value={
-                      clock(end) +
-                      (start.toPlainDate().equals(end.toPlainDate())
-                        ? ""
-                        : ` · ${String(end.day).padStart(2, "0")}.${String(end.month).padStart(2, "0")}.`)
-                    }
-                    separator={false}
-                  />
+                  <Text style={[TYPOGRAPHY.screenTitle, styles.centered, { color: palette.text }]}>
+                    {`${Math.floor(durationMinutes / 60)} h ${durationMinutes % 60} min`}
+                  </Text>
+                  <Text style={[TYPOGRAPHY.small, styles.centered, { color: palette.textMuted }]}>
+                    {appointment ? "Dauer" : `Arbeitszeit · ${entry.breakMinutes} Min. Pause`}
+                  </Text>
                 </>
-              )}
-            </EntryEditGroup>
+              ) : null}
+            </View>
             <EntryEditGroup testID="shared-edit-calendar-group">
               <EntryEditValueRow label="Kalender" value={row.calendarName} separator={false} />
             </EntryEditGroup>
             <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>
-              Geteilter Dienst · nur ansehen
+              {`${sharedLabel} · nur ansehen`}
             </Text>
-            {row.entry.note ? (
+            {entry.note ? (
               <EntryEditGroup testID="shared-edit-note-group">
                 <Text style={{ ...TYPOGRAPHY.caption, color: palette.textMuted }}>Notizen</Text>
                 <Text selectable style={{ ...TYPOGRAPHY.body, color: palette.text }}>
-                  {row.entry.note}
+                  {entry.note}
                 </Text>
               </EntryEditGroup>
             ) : null}
@@ -114,3 +126,9 @@ export function SharedEntryEditorView({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  content: { padding: SPACING.md, gap: SPACING.md },
+  overview: { paddingVertical: SPACING.sm, gap: SPACING.xs },
+  centered: { textAlign: "center", fontVariant: ["tabular-nums"] },
+});

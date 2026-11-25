@@ -109,6 +109,7 @@ export function EntryEditOverlayFrame({
   onRequestClose,
   overlay,
   overviewStage,
+  readOnly = false,
   testIDPrefix,
   ...header
 }: EntryEditHeaderProps & {
@@ -125,12 +126,14 @@ export function EntryEditOverlayFrame({
   readonly onRequestClose: () => Promise<boolean>;
   readonly overlay?: ReactNode;
   readonly overviewStage?: EntryOverviewStage;
+  readonly readOnly?: boolean;
   readonly testIDPrefix: string;
 }) {
   const palette = usePalette();
   const { nativeGlass } = useGlassAppearance();
-  const stagedSheet = overviewStage !== undefined;
-  const compactSheet = overviewStage?.expanded === false;
+  const canResize = overviewStage !== undefined;
+  const stagedSheet = canResize || readOnly;
+  const compactSheet = readOnly || overviewStage?.expanded === false;
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const viewportTop = Math.max(insets.top, 16);
@@ -350,13 +353,13 @@ export function EntryEditOverlayFrame({
           cancelAnimation(sheetTranslateY);
           cancelAnimation(backdropProgress);
           dragOriginY.value = sheetTranslateY.value;
-          if (stagedSheet) {
+          if (canResize) {
             cancelAnimation(overviewHeight);
             dragOriginHeight.value = overviewHeight.value;
           }
         })
         .onUpdate((event) => {
-          if (stagedSheet) {
+          if (canResize) {
             overviewHeight.value = Math.min(
               expandedHeight,
               Math.max(compactHeight, dragOriginHeight.value - event.translationY),
@@ -432,7 +435,9 @@ export function EntryEditOverlayFrame({
       testID={`${testIDPrefix}-close-arrival`}
     >
       <SheetBackFooter
-        accessibilityLabel={closeLabel === "Speichern" ? "Speichern" : "Schließen und speichern"}
+        accessibilityLabel={
+          readOnly || closeLabel === "Speichern" ? closeLabel : "Schließen und speichern"
+        }
         busy={busy || closing}
         disabled={closing}
         icon={closeLabel === "Speichern" ? "checkmark" : "close"}

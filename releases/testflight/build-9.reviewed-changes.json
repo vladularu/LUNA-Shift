@@ -23,8 +23,8 @@
     {
       "path": "app/onboarding.tsx",
       "kind": "modified",
-      "sha256": "8874a5d4750a6c50f9c31eea90bc07713a2371b80aae8d6f02ca770c8ef43e5d",
-      "reason": "Aktiviert den Einrichtungsplan im internen Onboarding zum Testen."
+      "sha256": "888bb0ba6e0d480d4a7da0128ad6ec6ae7a222b7dfd1eba3450ed1bcbc316971",
+      "reason": "Bettet den vollständigen iPhone-Erststart aus Preview 56 im Production-Profil ein und belässt die Vorschau-Parameter im internen Modus."
     },
     {
       "path": "eas.json",
@@ -125,8 +125,8 @@
     {
       "path": "modules/luna-engine/ios/LunaEngineModule.swift",
       "kind": "added",
-      "sha256": "c0a0cdeefbccdc933808f9dd389282300155227c0782077822080871885c72ce",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "4c727da3169397f13628ea44a9a01c424978b38d792915dd0839d135fb07aac0",
+      "reason": "Exportiert die native Fähigkeit und tatsächlich kompilierte Rust-Engine-Version für die Jahresbrutto-Summe."
     },
     {
       "path": "modules/luna-engine/package.json",
@@ -2615,8 +2615,8 @@
     {
       "path": "modules/luna-engine/rust/src/contract.rs",
       "kind": "added",
-      "sha256": "c1c10d84673147ffe7aefe5bd4c66fa6e6baf0c8146d9b41f6432785b4aab80d",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "323f6f58b3fc4f634e5f545b808e4faa2e887a75804d7117fd3cadf7b05babb8",
+      "reason": "Validiert den kompakten nativen Jahresbrutto-Auftrag aus Preview 56 als reinen Brutto-Auftrag im Verdienerzeitraum."
     },
     {
       "path": "modules/luna-engine/rust/src/contract/assembly.rs",
@@ -4649,8 +4649,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/financial/gross.rs",
       "kind": "added",
-      "sha256": "9cfc3f521792702b8558bef096747e0a36a6c6c1b022774b55c836f8c6e2d549",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "f82a2a06e8a16e0b7f86b05d7fe3454f9552367e1b18bfbd1bf851ca49099bbf",
+      "reason": "Summiert Jahresbrutto mit denselben Monatsregeln wie die bereits ausgelieferte Berechnung."
     },
     {
       "path": "modules/luna-engine/rust/src/report/financial/mod.rs",
@@ -5279,8 +5279,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/dispatch.rs",
       "kind": "added",
-      "sha256": "e4112f64b6b905322f806e2f21c799289415fd071e0a94a3a1ce62207c76fd62",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "0768e960a5bb2867475a8a50d289dac3794e309578de0f3202ae07391df3698b",
+      "reason": "Leitet den kompakten Jahresbrutto-Auftrag an die native Rust-Auswertung weiter."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/export_report/collation.rs",
@@ -5429,8 +5429,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/mod.rs",
       "kind": "added",
-      "sha256": "0dd5abd5fcb219d36ceef40f145434098bec6bbd4248bc0de6f23b88b3b51d1a",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "d77b5dc00f4928a4f18120cdf4f1411b23cd316cfe60ab6f7de4b3cc581fbf15",
+      "reason": "Verpackt die native Jahresbrutto-Auswertung im vorhandenen Berichtsformat."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/model.rs",
@@ -6893,8 +6893,8 @@
     {
       "path": "modules/luna-engine/rust/tests/ffi_reports.rs",
       "kind": "added",
-      "sha256": "e36e93ca4e2946085455e76bb09e0ee1f897d8e1808eb68873c9e4b1cd8934e4",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "ad1795f05cefde0db59044b8f18f5a9861abdc49a73d797a0660da903267a63c",
+      "reason": "Prüft die native Jahresbrutto-Summe, die Antwortgröße und unzulässige Auftragskombinationen."
     },
     {
       "path": "modules/luna-engine/rust/tests/ffi_salary_payment_timing.rs",
@@ -8921,8 +8921,8 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "cf2a481fed68d88e24fb8f0ea893e4a6371cdac0813862c2c4e73f60b16efba4",
-      "reason": "Regenerate the analysis cache identity for the verified Production Rust build preparation and the adopted net-pay sources, so older cached rows are recalculated."
+      "sha256": "ea42e523eb25e9892b39f443341967f29ceef01fc10b8caea220bfa5b26013c4",
+      "reason": "Versioniert die Analyse-Ergebnisse für die Änderungen an Rust-Bericht und Analyse-Bridge."
     },
     {
       "path": "src/features/analysis/analysis-compliance-cache.ts",
@@ -9209,8 +9209,8 @@
     {
       "path": "src/features/analysis/check-prerequisites-card.tsx",
       "kind": "modified",
-      "sha256": "91f038be05c1ec64c65246adf2a5a1d00073167fb7f5384a8d7deecf5fa1e74f",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks."
+      "sha256": "38cc00bb974b64b5ff6720195f2fe2856eeb41ec0d93e76d7527d545177b8428",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Prüfstatus verwendet auf iOS das vorhandene LUNA-Popup mit dem zugehörigen Schließen-Button."
     },
     {
       "path": "src/features/analysis/check-presentation.ts",
@@ -9257,8 +9257,8 @@
     {
       "path": "src/features/analysis/compliance-details-screen.tsx",
       "kind": "modified",
-      "sha256": "b8131f43d0df6bd489766654609f4d3e90032be9936b01cb96943fe237531d9f",
-      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Bietet die erstmalige Erfassung im Monatscheck an und zeigt die Hinweise für den gewählten Monat. Keep workplace settings available when compliance preparation fails. Place workplace findings after the monthly check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Verwendet die bestehenden Details für den gewählten Prüfbereich und den unveränderten Monatszeitraum. Ein veralteter Einstieg führt zur verfügbaren Übersicht."
+      "sha256": "7011f118035b6d338c81230688e8eb400624435d81ff98fba5afdcd3f17e18fb",
+      "reason": "Abgenommene Dienstplan-Check-Oberfläche mit chronologischer Übersicht, Hinweisdetails und sichtbaren Quellenlinks. Bietet die erstmalige Erfassung im Monatscheck an und zeigt die Hinweise für den gewählten Monat. Keep workplace settings available when compliance preparation fails. Place workplace findings after the monthly check sections. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Verwendet die bestehenden Details für den gewählten Prüfbereich und den unveränderten Monatszeitraum. Ein veralteter Einstieg führt zur verfügbaren Übersicht. Build-10-Korrektur: Hält den Fragebogen nach dem Speichern einer Sonderregel während der Neuberechnung des Monatschecks geöffnet. Der Regressionstest prüft, dass die Ansicht dabei bestehen bleibt."
     },
     {
       "path": "src/features/analysis/compliance-details.tsx",
@@ -9365,8 +9365,8 @@
     {
       "path": "src/features/analysis/monthly-rust-finance.ts",
       "kind": "added",
-      "sha256": "e95f503e5ba9c3fe88b62fab6f4b536a233d013313d767ea6c4088a020b50643",
-      "reason": "Preview salary preparation package5, 2026-11-16: Add bounded MONTH salary-preparation requests on the existing serialized owner: native gross/net sections followed by a separate permitted payroll request on the same snapshot, extracting only four original mathematical annual-forecast fields; never forward native views. Preserve existing monthly/yearly/checks requests and the 4-MiB cap. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. User-authorized scoped cleanup 2026-11-16: Keep MonthlyRustFinanceRequest and AnnualRustFinanceRequest as internal interfaces; all references are local. Emitted JavaScript, requests, owner queue and annual summation unchanged. UI/JSX, export, fallbacks, native files, stored data and TestFlight preserved. Local verification only; no Git or OTA release approved. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required."
+      "sha256": "128a60a775d86c7767bf724f8858beb0ffdd4499a6bd1e33ef6053c4a6d5f9ac",
+      "reason": "Nutzt für Jahresbrutto einen nativen Rust-Auftrag bei unterstützten iOS-Builds und behält die zwölf Monatsantworten für vorhandene Builds."
     },
     {
       "path": "src/features/analysis/monthly-rust-native.fixture.json",
@@ -9413,8 +9413,8 @@
     {
       "path": "src/features/analysis/monthly-rust-transport.native.ts",
       "kind": "added",
-      "sha256": "6df7a0f34f6c9a489fd31579ee4b58a8da289f3111238722acf52de7e3dcb03d",
-      "reason": "Preview Rust annual package 3, 2026-11-16: Map the already installed runChecks operation to its existing native checks lane. No native module, source, ABI or build change. iPhone package-3 acceptance remains pending. TestFlight unchanged."
+      "sha256": "62d502f5ff305e6ea35078b698207ff9f5e9bc6d4089cb97b8b06457bb1df5bb",
+      "reason": "Erkennt die native Jahresbrutto-Fähigkeit und verwendet die vom nativen Modul gelieferte Engine-Version."
     },
     {
       "path": "src/features/analysis/monthly-rust-transport.ts",
@@ -9833,8 +9833,8 @@
     {
       "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
       "kind": "modified",
-      "sha256": "17fe12d72eae7c9a6a410951cbc9fdbdcdd4c7428bfb4d4bd0729fbfbcf6976d",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Platziert die Glasübersicht und den separaten Schließen-Button übereinander. Koppelt die Gesten an Übersicht, Bearbeitung und gemeinsames Schließen."
+      "sha256": "5e669b39eb2147fa463538f6fbb9277e5879e3d8d8218882f996c4500c9d22ae",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Platziert die Glasübersicht und den separaten Schließen-Button übereinander. Koppelt die Gesten an Übersicht, Bearbeitung und gemeinsames Schließen. Die kompakte Ansicht für Freigaben bietet nur Schließen und lässt sich nicht zum Editor erweitern."
     },
     {
       "path": "src/features/day-editor/entry-options.tsx",
@@ -10277,8 +10277,8 @@
     {
       "path": "src/features/settings/settings-editor-screen.tsx",
       "kind": "modified",
-      "sha256": "ea665a8e138f536387fa6208f533d258c1bddae9bf4f7106ffbb45f7a93a9a67",
-      "reason": "Verified Preview Build 56 iOS profile editing, date validity and net-pay setup integration."
+      "sha256": "418a38c9220762bc094cdd022356016094309bc0ff12795fd4188da3f5b2c93c",
+      "reason": "Verified Preview Build 56 iOS profile editing, date validity and net-pay setup integration. Arbeitsmodell nutzt die nativen LUNA-Auswahlen auch beim Einstieg aus dem Dienstplan-Check."
     },
     {
       "path": "src/features/settings/settings-form-values.ts",
@@ -10787,8 +10787,8 @@
     {
       "path": "src/features/day-editor/entry-edit-presentation.ts",
       "kind": "modified",
-      "sha256": "26948bb0dc340cba66e12b974a50b53e7f400264f49c9862abae9034c1e5d58b",
-      "reason": "Wählt auf iOS die transparente Präsentation für die erfassten Dienst- und Terminpfade."
+      "sha256": "d2aaa619c49cc9f73d12bcd938a52363286cc75305a0a3d7224e3acde28af37f",
+      "reason": "Wählt auf iOS die transparente Präsentation für eigene und geteilte Dienste und Termine mit kompakter Übersicht."
     },
     {
       "path": "src/features/day-editor/shift-edit-overlay.types.ts",
@@ -10897,6 +10897,18 @@
       "kind": "modified",
       "sha256": "1d2a1645817edb40f3613ca90a95f99354352ef157d0986f3ce9ff3b6ff11c47",
       "reason": "Use the verified Preview native pause selection for supported iOS editor paths."
+    },
+    {
+      "path": "src/features/calendar/shared-shift-detail.ts",
+      "kind": "modified",
+      "sha256": "97dc68dd76888d9249243cb0db88b769a30795cc8a755b0113bd20e883bc968e",
+      "reason": "Verwendet dieselbe Nettodauer für Kalender und Detailansicht. Die Berechnung setzt eine freigegebene Pausenangabe voraus."
+    },
+    {
+      "path": "src/features/day-editor/shared-entry-editor-view.tsx",
+      "kind": "modified",
+      "sha256": "f5e8f34d0811a015231785b47431ea873dd193344e82be5b4f7d912d90acc513",
+      "reason": "Zeigt geteilte Dienste und Termine als kompakte Nur-Lesen-Übersicht mit den freigegebenen Zeiten und Notizen."
     }
   ]
 }

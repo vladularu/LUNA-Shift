@@ -55,6 +55,22 @@ pub fn annual_legacy_financial_report(
     year: i32,
     context: &mut FinancialContext<'_>,
 ) -> Result<FinancialGrossReport, FinancialError> {
+    annual_gross(year, context, true)
+}
+
+/// Aggregate the same earned month results that the Preview used individually.
+pub(crate) fn annual_monthly_earned_gross(
+    year: i32,
+    context: &mut FinancialContext<'_>,
+) -> Result<FinancialGrossReport, FinancialError> {
+    annual_gross(year, context, false)
+}
+
+fn annual_gross(
+    year: i32,
+    context: &mut FinancialContext<'_>,
+    use_annual_profile: bool,
+) -> Result<FinancialGrossReport, FinancialError> {
     if !(1900..=4099).contains(&year) {
         return Err(FinancialError::invalid("Ungültiges Berichtsjahr."));
     }
@@ -78,7 +94,12 @@ pub fn annual_legacy_financial_report(
     };
     for index in 1..=12 {
         let month = format!("{year}-{index:02}");
-        let source = match context.annual_salary_month(&month) {
+        let source = if use_annual_profile {
+            context.annual_salary_month(&month)
+        } else {
+            context.salary_month(&month)
+        };
+        let source = match source {
             Ok(source) => Some(source),
             Err(error) if error.rule_failure => None,
             Err(error) => return Err(error),
