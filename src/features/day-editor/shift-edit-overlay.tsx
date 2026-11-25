@@ -5,7 +5,10 @@ import { useCallback, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { SHIFT_TYPE_LABELS } from "@/domain/types";
-import { EntryEditOverlayFrame } from "@/features/day-editor/entry-edit-overlay-frame";
+import {
+  EntryEditOverlayFrame,
+  useEntryOverviewStage,
+} from "@/features/day-editor/entry-edit-overlay-frame";
 import { shouldDismissEntryEditOverlay } from "@/features/day-editor/entry-edit-overlay-pattern";
 import { notificationLabel } from "@/features/day-editor/entry-options";
 import { DAY_EDITOR_SHIFT_TYPES } from "@/features/day-editor/day-editor-layout";
@@ -31,6 +34,12 @@ import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
 import { PAUSE_OPTIONS } from "@/ui/pause-wheel";
 import { ShiftSymbol } from "@/ui/shift-symbol";
 import { ResponsiveFieldRow } from "@/ui/form-controls";
+import { ShiftEditOverview } from "./shift-edit-overview";
+import type { ShiftEntry } from "@/domain/types";
+
+export function shiftOverviewEntry(shift: ShiftEntry | null, billingFocus: boolean) {
+  return Platform.OS === "ios" && !billingFocus ? (shift ?? undefined) : undefined;
+}
 
 type Popup = "TYPE" | null;
 
@@ -104,6 +113,9 @@ function PauseRow({
 export function ShiftEditOverlay({
   specialDutyFields,
   specialDutyKind,
+  specialDuty,
+  overview,
+  children,
   alarmEnabled,
   breakMinutes,
   busy,
@@ -142,9 +154,15 @@ export function ShiftEditOverlay({
   const palette = usePalette();
   const [popup, setPopup] = useState<Popup>(null);
   const [notificationVisible, setNotificationVisible] = useState(false);
+  const closePickers = () => {
+    setPopup(null);
+    setNotificationVisible(false);
+  };
+  const overviewStage = useEntryOverviewStage("SHIFT", overview !== undefined, closePickers);
   const headerColor = palette.dark ? shiftColor : accessibleChipBackgroundColor(shiftColor);
   const serviceLabel = shiftType === "CUSTOM" ? shiftTitle : SHIFT_TYPE_LABELS[shiftType];
   const entryType = DAY_EDITOR_SHIFT_TYPES.includes(shiftType) ? shiftType : "CUSTOM";
+  const showingOverview = overview !== undefined && overviewStage?.expanded === false;
 
   const openNotificationPicker = useCallback(() => {
     if (Platform.OS !== "ios") {
@@ -155,178 +173,201 @@ export function ShiftEditOverlay({
     setNotificationVisible(true);
   }, [onNotificationPress]);
 
-  return (
+  const frame = (
     <EntryEditOverlayFrame
       busy={busy}
+      contentKey={showingOverview ? "overview" : "editor"}
+      closeLabel={overviewStage?.expanded ? "Speichern" : "Schließen"}
+      nativePresentation={overviewStage ? false : undefined}
+      overviewStage={overviewStage}
       cardContent={
-        <>
-          <View style={styles.body}>
-            {specialDutyFields}
-            {!specialDutyKind ? (
-              <EntryEditGroup testID="shift-edit-time-group">
-                {shiftIsTimed ? (
-                  <>
-                    <EntryEditTimePair
-                      startTime={startTime}
-                      endTime={endTime}
-                      onStartChange={onStartTimeChange}
-                      onEndChange={onEndTimeChange}
-                    />
-                    <View testID="shift-edit-pause-overtime-pair">
-                      <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
-                        <PauseRow
-                          disabled={busy}
-                          onChange={onBreakMinutesChange}
-                          onPress={onBreakPress}
-                          value={breakMinutes}
-                        />
-                        <ShiftOvertimeFields
-                          compact
-                          confirmed={tariffOvertimeConfirmed}
-                          inputRef={overtimeInputRef}
-                          onConfirmedChange={onTariffOvertimeConfirmedChange}
-                          onMinutesChange={onOvertimeMinutesChange}
-                          overtimeMinutes={overtimeMinutes}
-                        />
-                      </ResponsiveFieldRow>
-                    </View>
-                    {Number(overtimeMinutes) > 0 ? (
-                      <ShiftOvertimeConfirmation
-                        confirmed={tariffOvertimeConfirmed}
-                        onConfirmedChange={onTariffOvertimeConfirmedChange}
+        showingOverview ? (
+          <ShiftEditOverview
+            durationMinutes={durationMinutes}
+            shift={{
+              ...overview,
+              allDay: !shiftIsTimed,
+              type: shiftType,
+              startTime: shiftIsTimed ? startTime : null,
+              endTime: shiftIsTimed ? endTime : null,
+              breakMinutes: Number(breakMinutes) || 0,
+              overtimeMinutes: Number(overtimeMinutes) || 0,
+              tariffOvertimeConfirmed,
+              specialDuty,
+            }}
+          />
+        ) : (
+          <>
+            <View style={styles.body}>
+              {specialDutyFields}
+              {!specialDutyKind ? (
+                <EntryEditGroup testID="shift-edit-time-group">
+                  {shiftIsTimed ? (
+                    <>
+                      <EntryEditTimePair
+                        startTime={startTime}
+                        endTime={endTime}
+                        onStartChange={onStartTimeChange}
+                        onEndChange={onEndTimeChange}
                       />
-                    ) : null}
-                  </>
-                ) : (
-                  <ValueRow label="Dauer" separator={false} value="Ganztägig" />
-                )}
-              </EntryEditGroup>
-            ) : null}
-            {specialDutyKind === "SPLIT" ? (
-              <EntryEditGroup testID="shift-edit-split-overtime-group">
-                <Text
-                  style={{ ...TYPOGRAPHY.small, color: palette.textSecondary, padding: SPACING.md }}
-                >
-                  Überstunden im ersten Dienstteil
-                </Text>
-                <ShiftOvertimeFields
-                  compact
-                  confirmed={tariffOvertimeConfirmed}
-                  inputRef={overtimeInputRef}
-                  onConfirmedChange={onTariffOvertimeConfirmedChange}
-                  onMinutesChange={onOvertimeMinutesChange}
-                  overtimeMinutes={overtimeMinutes}
-                />
-                {Number(overtimeMinutes) > 0 ? (
-                  <ShiftOvertimeConfirmation
+                      <View testID="shift-edit-pause-overtime-pair">
+                        <ResponsiveFieldRow style={ENTRY_EDIT_FIELD_STYLES.pair}>
+                          <PauseRow
+                            disabled={busy}
+                            onChange={onBreakMinutesChange}
+                            onPress={onBreakPress}
+                            value={breakMinutes}
+                          />
+                          <ShiftOvertimeFields
+                            compact
+                            confirmed={tariffOvertimeConfirmed}
+                            inputRef={overtimeInputRef}
+                            onConfirmedChange={onTariffOvertimeConfirmedChange}
+                            onMinutesChange={onOvertimeMinutesChange}
+                            overtimeMinutes={overtimeMinutes}
+                          />
+                        </ResponsiveFieldRow>
+                      </View>
+                      {Number(overtimeMinutes) > 0 ? (
+                        <ShiftOvertimeConfirmation
+                          confirmed={tariffOvertimeConfirmed}
+                          onConfirmedChange={onTariffOvertimeConfirmedChange}
+                        />
+                      ) : null}
+                    </>
+                  ) : (
+                    <ValueRow label="Dauer" separator={false} value="Ganztägig" />
+                  )}
+                </EntryEditGroup>
+              ) : null}
+              {specialDutyKind === "SPLIT" ? (
+                <EntryEditGroup testID="shift-edit-split-overtime-group">
+                  <Text
+                    style={{
+                      ...TYPOGRAPHY.small,
+                      color: palette.textSecondary,
+                      padding: SPACING.md,
+                    }}
+                  >
+                    Überstunden im ersten Dienstteil
+                  </Text>
+                  <ShiftOvertimeFields
+                    compact
                     confirmed={tariffOvertimeConfirmed}
+                    inputRef={overtimeInputRef}
                     onConfirmedChange={onTariffOvertimeConfirmedChange}
+                    onMinutesChange={onOvertimeMinutesChange}
+                    overtimeMinutes={overtimeMinutes}
+                  />
+                  {Number(overtimeMinutes) > 0 ? (
+                    <ShiftOvertimeConfirmation
+                      confirmed={tariffOvertimeConfirmed}
+                      onConfirmedChange={onTariffOvertimeConfirmedChange}
+                    />
+                  ) : null}
+                </EntryEditGroup>
+              ) : null}
+              <EntryEditGroup testID="shift-edit-reminder-group">
+                <ValueRow
+                  label="Erinnerung"
+                  onPress={openNotificationPicker}
+                  separator={shiftIsTimed}
+                  value={notificationLabel(notification)}
+                />
+                {shiftIsTimed ? (
+                  <ValueRow
+                    label="Wecker"
+                    separator={false}
+                    onPress={() => {
+                      setPopup(null);
+                      onAlarmPress();
+                    }}
+                    value={alarmEnabled ? "Zum Dienstbeginn" : "Aus"}
                   />
                 ) : null}
               </EntryEditGroup>
-            ) : null}
-            <EntryEditGroup testID="shift-edit-reminder-group">
-              <ValueRow
-                label="Erinnerung"
-                onPress={openNotificationPicker}
-                separator={shiftIsTimed}
-                value={notificationLabel(notification)}
+              <EntryEditNotesLocation
+                emptyLocationLabel="Kein Ort"
+                location={location}
+                note={note}
+                onLocationPress={onLocationPress}
+                onNoteChange={onNoteChange}
+                testID="shift-edit-notes-location"
               />
-              {shiftIsTimed ? (
-                <ValueRow
-                  label="Wecker"
-                  separator={false}
-                  onPress={() => {
-                    setPopup(null);
-                    onAlarmPress();
-                  }}
-                  value={alarmEnabled ? "Zum Dienstbeginn" : "Aus"}
-                />
-              ) : null}
-            </EntryEditGroup>
-            <EntryEditNotesLocation
-              emptyLocationLabel="Kein Ort"
-              location={location}
-              note={note}
-              onLocationPress={onLocationPress}
-              onNoteChange={onNoteChange}
-              testID="shift-edit-notes-location"
-            />
-            {location ? <LocationPreview location={location} /> : null}
-          </View>
-
-          {popup === "TYPE" ? (
-            <View
-              style={[
-                styles.typePopup,
-                {
-                  backgroundColor: palette.surfaceRaised,
-                  borderColor: palette.border,
-                  shadowColor: palette.shadow,
-                  top: SPACING.xs,
-                },
-              ]}
-              testID="shift-edit-type-popover"
-            >
-              <SoftScrollScope>
-                <SoftScrollAnchor>
-                  <Text
-                    style={{
-                      ...TYPOGRAPHY.label,
-                      color: palette.textSecondary,
-                      paddingHorizontal: SPACING.lg,
-                      paddingTop: SPACING.md,
-                      paddingBottom: SPACING.sm,
-                    }}
-                  >
-                    Eintragsart
-                  </Text>
-                </SoftScrollAnchor>
-                <SoftScrollView
-                  accessibilityRole="radiogroup"
-                  accessibilityLabel="Eintragsart auswählen"
-                  style={styles.typeScroll}
-                >
-                  {DAY_EDITOR_SHIFT_TYPES.map((type) => {
-                    const selected = type === entryType;
-                    return (
-                      <SelectionRow
-                        key={type}
-                        label={SHIFT_TYPE_LABELS[type]}
-                        selected={selected}
-                        separator
-                        onPress={() => {
-                          if (!selected) onShiftTypeChange(type);
-                          setPopup(null);
-                        }}
-                      />
-                    );
-                  })}
-                </SoftScrollView>
-              </SoftScrollScope>
+              {location ? <LocationPreview location={location} /> : null}
             </View>
-          ) : null}
-        </>
+
+            {popup === "TYPE" ? (
+              <View
+                style={[
+                  styles.typePopup,
+                  {
+                    backgroundColor: palette.surfaceRaised,
+                    borderColor: palette.border,
+                    shadowColor: palette.shadow,
+                    top: SPACING.xs,
+                  },
+                ]}
+                testID="shift-edit-type-popover"
+              >
+                <SoftScrollScope>
+                  <SoftScrollAnchor>
+                    <Text
+                      style={{
+                        ...TYPOGRAPHY.label,
+                        color: palette.textSecondary,
+                        paddingHorizontal: SPACING.lg,
+                        paddingTop: SPACING.md,
+                        paddingBottom: SPACING.sm,
+                      }}
+                    >
+                      Eintragsart
+                    </Text>
+                  </SoftScrollAnchor>
+                  <SoftScrollView
+                    accessibilityRole="radiogroup"
+                    accessibilityLabel="Eintragsart auswählen"
+                    style={styles.typeScroll}
+                  >
+                    {DAY_EDITOR_SHIFT_TYPES.map((type) => {
+                      const selected = type === entryType;
+                      return (
+                        <SelectionRow
+                          key={type}
+                          label={SHIFT_TYPE_LABELS[type]}
+                          selected={selected}
+                          separator
+                          onPress={() => {
+                            if (!selected) onShiftTypeChange(type);
+                            setPopup(null);
+                          }}
+                        />
+                      );
+                    })}
+                  </SoftScrollView>
+                </SoftScrollScope>
+              </View>
+            ) : null}
+          </>
+        )
       }
       date={date}
       durationMinutes={durationMinutes}
       error={error}
       headerColor={headerColor}
       headerSubtitle={serviceLabel}
+      hideHeaderDuration={showingOverview}
       headerAccessibilityLabel={`Dienst: ${serviceLabel}`}
       headerLeading={<ShiftSymbol color={headerColor} size={22} value={shiftSymbol} />}
-      onHeaderPress={() => setPopup(popup === "TYPE" ? null : "TYPE")}
+      onHeaderPress={showingOverview ? undefined : () => setPopup(popup === "TYPE" ? null : "TYPE")}
       onDelete={onDelete}
       deleteLabel="Dienst löschen"
       onBackdropPress={() => setPopup(null)}
-      onClosingStart={() => {
-        setPopup(null);
-        setNotificationVisible(false);
-      }}
+      onClosingStart={closePickers}
       onDismiss={onDismiss}
       onRequestClose={onRequestClose}
       overlay={
-        notificationVisible ? (
+        notificationVisible && !showingOverview ? (
           <ShiftNotificationOverlay
             onChange={onNotificationChange}
             onClose={() => setNotificationVisible(false)}
@@ -336,6 +377,12 @@ export function ShiftEditOverlay({
       }
       testIDPrefix="shift-edit"
     />
+  );
+  return (
+    <>
+      {frame}
+      {children}
+    </>
   );
 }
 

@@ -1,9 +1,11 @@
 import { SharedCalendarsContext } from "@/application/shared-calendars-context";
 import type { CachedSharedCalendar } from "@/domain/calendar-sharing";
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { router } from "expo-router";
-import { Alert } from "react-native";
+import { Alert, Dimensions } from "react-native";
+import { State } from "react-native-gesture-handler";
+import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import type { Appointment, CalendarEntry, SaveAppointmentInput, ShiftEntry } from "@/domain/types";
@@ -19,6 +21,14 @@ let mockBeforeRemoveListener:
   ((event: { preventDefault: () => void; data: { action: { type: string } } }) => void) | null =
   null;
 const mockNavigationDispatch = jest.fn();
+const dragEditorSheet = (translationY: number, editor = "shift") =>
+  act(() => {
+    fireGestureHandler(getByGestureTestId(`${editor}-edit-dismiss-gesture`), [
+      { state: State.BEGAN, translationY: 0, velocityY: 0 },
+      { state: State.ACTIVE, translationY, velocityY: 0 },
+      { state: State.END, translationY, velocityY: 0 },
+    ]);
+  });
 let mockRouteParams: {
   date: string;
   mode: "SHIFT" | "APPOINTMENT";
@@ -37,13 +47,7 @@ jest.mock("expo-router", () => ({
   },
   useFocusEffect: (effect: () => void) => effect(),
   useNavigation: () => ({
-    addListener: (
-      _event: string,
-      listener: (event: { preventDefault: () => void; data: { action: { type: string } } }) => void,
-    ) => {
-      mockBeforeRemoveListener = listener;
-      return jest.fn();
-    },
+    addListener: () => jest.fn(),
     dispatch: mockNavigationDispatch,
   }),
   useLocalSearchParams: () => mockRouteParams,
@@ -246,14 +250,177 @@ describe("DayEditorScreen", () => {
     );
   }
 
-  it("closes a new untouched appointment without creating an entry or intercepting native dismissal", async () => {
+  it("opens the full editor by button or swipe and keeps the draft when returning to the overview", async () => {
+    const saved = deletionEntry("SHIFT");
+    if (saved.kind !== "SHIFT") throw new Error("Expected a shift fixture");
+    const entry = {
+      ...saved,
+      date: "2026-11-27",
+      type: "NIGHT",
+      startTime: "21:00",
+      endTime: "07:30",
+      breakMinutes: 60,
+    } satisfies CalendarEntry;
+    mockEntries = [entry];
+    mockRouteParams = { date: entry.date, mode: "SHIFT", entryId: entry.id };
+    const screen = await render(deletionScreen());
+    expect(screen.getByText("21:00 – 07:30")).toBeTruthy();
+    expect(screen.getByText(/Ende am Sa\.? · 60 Min\. Pause/)).toBeTruthy();
+    expect(screen.getByText("9 h 30 min")).toBeTruthy();
+    expect(screen.getByText("Zuschlag gesamt")).toBeTruthy();
+    expect(screen.getByLabelText("Nicht verfügbar")).toBeTruthy();
+    expect(screen.queryByText("Notiz behalten")).toBeNull();
+    const card = within(screen.getByTestId("shift-edit-card"));
+    const footer = within(screen.getByTestId("shift-edit-close-arrival"));
+    expect(card.queryByRole("button", { name: "Schließen und speichern" })).toBeNull();
+    expect(footer.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
+    await fireEvent.press(card.getByRole("button", { name: "Dienst bearbeiten" }));
+    expect(screen.getByText("Notiz behalten")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }));
+    await fireEvent.changeText(screen.getByLabelText("Notizen"), "Geänderte Übergabe");
+    await dragEditorSheet(110);
+    expect(screen.getByText("Zuschlag gesamt")).toBeTruthy();
+    expect(screen.queryByText("Notiz behalten")).toBeNull();
+    expect(screen.queryByLabelText("Notizen")).toBeNull();
+    expect(mockUpsertShift).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    await dragEditorSheet(-110);
+    expect(screen.getByText("Geänderte Übergabe")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Speichern" })).toBeTruthy();
+  });
+
+  it.each<{ mode: "light" | "dark"; opacity: number }>([
+    { mode: "light", opacity: 0.9 },
+    { mode: "dark", opacity: 1 },
+  ])(
+    "dims the $mode overview and closes it with a full downward swipe",
+    async ({ mode, opacity }) => {
+      const colorScheme = jest
+        .spyOn(jest.requireActual<typeof import("react-native")>("react-native"), "useColorScheme")
+        .mockReturnValue(mode);
+      try {
+        const entry = deletionEntry("SHIFT");
+        mockEntries = [entry];
+        mockRouteParams = { date: entry.date, mode: "SHIFT", entryId: entry.id };
+        const screen = await render(deletionScreen());
+        expect(screen.getByTestId("shift-edit-backdrop")).toHaveStyle({ opacity });
+        await dragEditorSheet(25);
+        expect(screen.getByTestId("shift-edit-overview")).toBeTruthy();
+        expect(router.back).not.toHaveBeenCalled();
+        await dragEditorSheet(110);
+        await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+        expect(mockUpsertShift).not.toHaveBeenCalled();
+      } finally {
+        colorScheme.mockRestore();
+      }
+    },
+  );
+
+  it("stages a saved appointment in the detached overview and keeps its draft across swipes", async () => {
+    const saved = deletionEntry("APPOINTMENT");
+    if (saved.kind !== "APPOINTMENT") throw new Error("Expected an appointment fixture");
+    const entry = {
+      ...saved,
+      title: "Digidata",
+      startTime: "12:00",
+      endTime: "13:00",
+      location: {
+        name: "Besprechungsort",
+        address: "Musterstraße 1",
+        latitude: 49.64,
+        longitude: 8.64,
+      },
+    };
+    mockEntries = [entry];
+    mockRouteParams = { date: entry.date, mode: entry.kind, entryId: entry.id };
+    const screen = await render(deletionScreen());
+    const card = screen.getByTestId("appointment-edit-card");
+    const footer = screen.getByTestId("appointment-edit-close-arrival");
+    expect(card).toHaveStyle({ marginHorizontal: 16 });
+    expect(footer).toHaveStyle({ paddingHorizontal: 16 });
+    expect(within(card).getByText("Digidata")).toBeTruthy();
+    expect(within(card).getByText("12:00 – 13:00")).toBeTruthy();
+    const map = screen.getByTestId("appointment-overview-map");
+    expect(map).toHaveStyle({ marginTop: "auto" });
+    expect(
+      within(map).getByRole("button", { name: "Besprechungsort in Karten öffnen" }),
+    ).toHaveStyle({ height: 100 });
+    expect(screen.getByTestId("appointment-edit-sheet").parent).toHaveStyle({
+      height: Dimensions.get("window").height * 0.54,
+    });
+    expect(within(card).queryByText("Notiz behalten")).toBeNull();
+    expect(within(card).queryByText("Musterstraße 1")).toBeNull();
+    expect(within(card).queryByText("Schließen")).toBeNull();
+    expect(within(footer).getByText("Schließen")).toBeTruthy();
+    const confirmDeletion = jest.spyOn(Alert, "alert");
+    await fireEvent.press(within(card).getByRole("button", { name: "Termin löschen" }));
+    expect(confirmDeletion.mock.calls.at(-1)?.[0]).toBe("Termin löschen?");
+    expect(mockRemoveEntry).not.toHaveBeenCalled();
+    await fireEvent.press(within(card).getByRole("button", { name: "Termin bearbeiten" }));
+    expect(screen.getByText("Notiz behalten")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Besprechungsort in Karten öffnen" })).toHaveStyle({
+      height: 126,
+    });
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Geänderter Termin");
+    await dragEditorSheet(110, "appointment");
+    expect(screen.getByText("Geänderter Termin")).toBeTruthy();
+    expect(mockUpsertAppointment).not.toHaveBeenCalled();
+    await dragEditorSheet(-110, "appointment");
+    expect(screen.getByLabelText("Titel")).toHaveProp("value", "Geänderter Termin");
+    await dragEditorSheet(110, "appointment");
+    await dragEditorSheet(110, "appointment");
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(mockUpsertAppointment).toHaveBeenCalledWith(
+      expect.objectContaining({ id: entry.id, title: "Geänderter Termin" }),
+    );
+  });
+
+  it.each([
+    {
+      scenario: "a blank note",
+      note: "  ",
+      location: { name: "Musterstraße 1", latitude: 49.64, longitude: 8.64 },
+      hasMap: true,
+    },
+    { scenario: "no address", note: "Agenda", location: null, hasMap: false },
+    {
+      scenario: "an address without coordinates",
+      note: "Agenda",
+      location: { name: "Musterstraße 1" },
+      hasMap: false,
+    },
+  ])("handles $scenario in the appointment overview", async ({ note, location, hasMap }) => {
+    const saved = deletionEntry("APPOINTMENT");
+    mockEntries = [{ ...saved, note, location }];
+    mockRouteParams = { date: saved.date, mode: "APPOINTMENT", entryId: saved.id };
+    const screen = await render(deletionScreen());
+    const overview = within(screen.getByTestId("appointment-edit-overview"));
+    expect(Boolean(overview.queryByRole("button", { name: /in Karten öffnen/ }))).toBe(hasMap);
+    expect(overview.queryByText("Agenda")).toBeNull();
+    expect(overview.queryByText("Musterstraße 1")).toBeNull();
+  });
+
+  it("opens a new appointment in the glass sheet and dismisses an untouched draft by swipe", async () => {
     mockRouteParams = { date: "2026-08-23", mode: "APPOINTMENT" };
     const screen = await render(deletionScreen());
 
+    const card = within(screen.getByTestId("appointment-edit-card"));
+    const footer = within(screen.getByTestId("appointment-edit-close-arrival"));
+    expect(screen.getByTestId("appointment-edit-backdrop")).toBeTruthy();
+    expect(card.getByLabelText("Titel")).toBeTruthy();
+    expect(card.queryByRole("button", { name: "Schließen und speichern" })).toBeNull();
+    expect(card.queryByRole("button", { name: "Termin bearbeiten" })).toBeNull();
+    expect(footer.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
     expect(mockBeforeRemoveListener).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
 
-    expect(router.back).toHaveBeenCalledTimes(1);
+    await dragEditorSheet(-110, "appointment");
+    expect(card.getByRole("button", { name: "Speichern" })).toBeTruthy();
+    await dragEditorSheet(110, "appointment");
+    expect(screen.getByLabelText("Titel")).toBeTruthy();
+    expect(router.back).not.toHaveBeenCalled();
+    await dragEditorSheet(110, "appointment");
+
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     expect(mockUpsertAppointment).not.toHaveBeenCalled();
     expect(mockUpsertShift).not.toHaveBeenCalled();
     expect(mockRemoveEntry).not.toHaveBeenCalled();
@@ -278,7 +445,7 @@ describe("DayEditorScreen", () => {
 
     expect(mockBeforeRemoveListener).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
-    expect(router.back).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     expect(mockUpsertAppointment).not.toHaveBeenCalled();
   });
 
@@ -306,12 +473,17 @@ describe("DayEditorScreen", () => {
   });
 
   it.each(["SHIFT", "APPOINTMENT"] as const)(
-    "lets unchanged saved %s entries dismiss natively and protects edits until saved",
+    "lets unchanged saved %s entries dismiss and protects edits until saved",
     async (kind) => {
       const entry = deletionEntry(kind);
       mockEntries = [entry];
       mockRouteParams = { date: entry.date, mode: kind, entryId: entry.id };
       const screen = await render(deletionScreen());
+      await fireEvent.press(
+        screen.getByRole("button", {
+          name: kind === "SHIFT" ? "Dienst bearbeiten" : "Termin bearbeiten",
+        }),
+      );
       expect(screen.getByText("Notiz behalten")).toBeTruthy();
       expect(mockBeforeRemoveListener).toBeNull();
       await fireEvent.press(
@@ -321,7 +493,7 @@ describe("DayEditorScreen", () => {
       expect(mockBeforeRemoveListener).not.toBeNull();
       await fireEvent.changeText(screen.getByLabelText("Notizen"), "Notiz behalten");
       expect(mockBeforeRemoveListener).toBeNull();
-      await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
+      await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
       await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
       expect(mockUpsertShift).not.toHaveBeenCalled();
       expect(mockUpsertAppointment).not.toHaveBeenCalled();
@@ -334,8 +506,12 @@ describe("DayEditorScreen", () => {
     mockRouteParams = { date: entry.date, mode: kind, entryId: entry.id };
     const alert = jest.spyOn(Alert, "alert");
     const screen = await render(deletionScreen());
+    await fireEvent.press(
+      screen.getByRole("button", {
+        name: kind === "SHIFT" ? "Dienst bearbeiten" : "Termin bearbeiten",
+      }),
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }));
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     await fireEvent.press(
       screen.getByRole("button", {
         name: kind === "SHIFT" ? "Dienst löschen" : "Termin löschen",
@@ -357,7 +533,7 @@ describe("DayEditorScreen", () => {
       expect(mockUpsertShift).not.toHaveBeenCalled();
       expect(mockUpsertAppointment).not.toHaveBeenCalled();
       expect(router.back).not.toHaveBeenCalled();
-      expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Speichern" })).toBeEnabled();
       expect(deletionFeedback).not.toHaveBeenCalled();
       expect(mockEntries).toEqual([entry]);
       expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
@@ -384,7 +560,7 @@ describe("DayEditorScreen", () => {
       await screen.rerender(deletionScreen());
       expect(screen.queryByText("Eintrag nicht verfügbar")).toBeNull();
       expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Speichern" })).toBeDisabled();
       expect(router.back).not.toHaveBeenCalled();
       const preventDefault = jest.fn();
       await act(async () => {
@@ -425,7 +601,6 @@ describe("DayEditorScreen", () => {
     expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
     expect(router.back).not.toHaveBeenCalled();
     expect(deletionFeedback).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole("button", { name: "Weitere Aktionen" }));
     await fireEvent.press(screen.getByRole("button", { name: "Dienst löschen" }));
     const retry = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2]?.[1];
     await act(async () => {
@@ -537,6 +712,7 @@ describe("DayEditorScreen", () => {
     );
 
     expect(screen.getByTestId("shift-edit-overlay")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Dienst bearbeiten" }));
     expect(screen.queryByLabelText("Pausendauer in 15-Minuten-Schritten")).toBeNull();
     const pause = screen.getByTestId("shift-edit-pause-options");
     expect(pause).toHaveProp("selection", "30");
@@ -614,6 +790,7 @@ describe("DayEditorScreen", () => {
     );
 
     expect(screen.getByTestId("appointment-edit-overlay")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Termin bearbeiten" }));
     await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
     const preventDefault = jest.fn();
     await act(async () => {

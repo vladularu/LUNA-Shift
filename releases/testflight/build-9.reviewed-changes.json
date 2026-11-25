@@ -5,8 +5,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "2e7c251d0bb83351007148a1271c8ceec531b327bafd425aad32419711529694",
-      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "9933b0145ff1040aa7d7f4e9455052530746d212b7ce650411cabd0ad5a293ea",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Wählt auf dem iPhone den transparenten Host für eigene gespeicherte Dienste sowie bestehende und neue Termine."
     },
     {
       "path": "app/check-issue.tsx",
@@ -9809,8 +9809,8 @@
     {
       "path": "src/features/day-editor/day-editor-form.tsx",
       "kind": "modified",
-      "sha256": "0819de3975cc8998857fde45f66e9954b8864f8cebaf3e9e3cd21e60025a2482",
-      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts."
+      "sha256": "65404e928129dd45902d9f594136cf4d1aeb8050277241c8537d5e4b1441d3df",
+      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts. Verbindet den bestehenden Editorentwurf mit dem Wechsel zwischen der Übersicht und der Bearbeitung von Dienst oder Termin."
     },
     {
       "path": "src/features/day-editor/day-editor-screen.tsx",
@@ -9833,8 +9833,8 @@
     {
       "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
       "kind": "modified",
-      "sha256": "729002bb9660f21b1eb2fc9728239733d3f9a85e0755c47131059b3ab9fe33cd",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "17fe12d72eae7c9a6a410951cbc9fdbdcdd4c7428bfb4d4bd0729fbfbcf6976d",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Platziert die Glasübersicht und den separaten Schließen-Button übereinander. Koppelt die Gesten an Übersicht, Bearbeitung und gemeinsames Schließen."
     },
     {
       "path": "src/features/day-editor/entry-options.tsx",
@@ -9845,8 +9845,8 @@
     {
       "path": "src/features/day-editor/shift-edit-overlay.tsx",
       "kind": "modified",
-      "sha256": "d6fded3935ced017c1bcce3365653e21d74b3f7cc2e8df1cbee2e1b7c74201c6",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Persists the iPhone-accepted native pause selection with labels and values aligned beside the overtime field."
+      "sha256": "504863d7dd2cfbc4045e9e0fa009828b7e94750e2906b48ca17bfa815a480366",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Persists the iPhone-accepted native pause selection with labels and values aligned beside the overtime field. Öffnet die kompakte Dienstübersicht und hält beim Bearbeiten die native Pausenauswahl aus master verfügbar."
     },
     {
       "path": "src/features/day-editor/shift-notification-overlay.tsx",
@@ -10765,6 +10765,60 @@
       "kind": "modified",
       "sha256": "f7b47419d84d9c3130c9e64b4e3c8417fe3268c97c289a405cfd6150dee78645",
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+    },
+    {
+      "path": "src/features/day-editor/appointment-edit-overlay.tsx",
+      "kind": "modified",
+      "sha256": "22ff9154f156244684cd1bf94de415e06e7916d8562486fb882a092e741060b9",
+      "reason": "Zeigt Titel, Zeiten und bei Koordinaten die kompakte Kartenkachel innerhalb der vorhandenen Höhe. Neue Termine öffnen direkt das Formular."
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-header.tsx",
+      "kind": "modified",
+      "sha256": "3a77d1a30d0bd82cea3a600ccd6c5992f8bf0302b37f87cbd4d0ddd83927f827",
+      "reason": "Ersetzt das Aktionsmenü durch den roten Papierkorb mit bestehender Löschbestätigung und vermeidet doppelte Dauerangaben."
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-overlay-motion.ts",
+      "kind": "modified",
+      "sha256": "8ef4510bef63d288c2699d2f245d0c7596c3c5ecbd03f8340f5562b2e638d0c1",
+      "reason": "Lässt den Button nach Öffnen des Fensters in 100 ms einfahren und bewegt Fenster und Button beim Schließen gemeinsam sanft nach unten."
+    },
+    {
+      "path": "src/features/day-editor/entry-edit-presentation.ts",
+      "kind": "modified",
+      "sha256": "26948bb0dc340cba66e12b974a50b53e7f400264f49c9862abae9034c1e5d58b",
+      "reason": "Wählt auf iOS die transparente Präsentation für die erfassten Dienst- und Terminpfade."
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overlay.types.ts",
+      "kind": "modified",
+      "sha256": "8f41d8921d6b2af5b833767a808aab8f934fd318cb0e82e76d69bb2c31172163",
+      "reason": "Typisiert die gespeicherte Schicht als Grundlage der kompakten Übersicht und für den bestehenden Editor."
+    },
+    {
+      "path": "src/features/day-editor/shift-edit-overview.tsx",
+      "kind": "added",
+      "sha256": "c885c2119b7433522b2c1dca6981a5fa51a96df5c807532a78a502b070639e62",
+      "reason": "Zeigt Uhrzeiten, Arbeitszeit, Pause und Zuschlagsgesamtwert aus der bestehenden Berechnung."
+    },
+    {
+      "path": "src/features/location/location-preview.tsx",
+      "kind": "modified",
+      "sha256": "e53c2db8753abb257d4a34a22f2958642f804b717395d6c5413f1c80a3768c33",
+      "reason": "Erlaubt die Wiederverwendung der Kartenkachel in fester kompakter Höhe für die Terminvorschau."
+    },
+    {
+      "path": "src/ui/floating-glass-background.tsx",
+      "kind": "added",
+      "sha256": "aa3059bc72a731b2ec68c3ae6e0aae428ed9eb544434178b6eb573bf2efcf5c1",
+      "reason": "Stellt die einzelne gemeinsame Glasfläche mit der auf dem iPhone bestätigten weicheren Variante für den Hellmodus bereit."
+    },
+    {
+      "path": "src/ui/sheet-back-footer.tsx",
+      "kind": "modified",
+      "sha256": "6093c11e49b55a20a2398ee4ac75c900dff996c127feee4d80e288471ba51832",
+      "reason": "Ergänzt die Darstellungsoptionen für die getrennte Schließen-Leiste der Dienst- und Terminfenster."
     }
   ]
 }

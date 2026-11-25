@@ -17,7 +17,7 @@ import { userFacingErrorMessage } from "@/domain/errors";
 import { ValidationError } from "@/domain/validation";
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
 import { resolveShiftTypePreset } from "@/features/day-editor/shift-type-preset";
-import { ShiftEditOverlay } from "@/features/day-editor/shift-edit-overlay";
+import { ShiftEditOverlay, shiftOverviewEntry } from "./shift-edit-overlay";
 import { useEntryEditorDraft } from "@/features/day-editor/use-entry-editor-draft";
 import { criticalIssueForSavedShift } from "@/features/day-editor/saved-shift-compliance";
 import { AlarmSheet, NotificationSheet, PauseSheet } from "@/features/day-editor/entry-options";
@@ -309,7 +309,6 @@ export function DayEditorForm({
     if (exit.action) navigation.dispatch(exit.action);
     else router.back();
   }, [exit, navigation]);
-
   if (mode === "SHIFT") {
     const durationMinutes = editorDutyDuration(
       shiftIsTimed,
@@ -327,6 +326,8 @@ export function DayEditorForm({
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <ShiftEditOverlay
+          overview={shiftOverviewEntry(initialShift, billingFocus)}
+          specialDuty={specialDuty}
           specialDutyKind={specialDuty?.kind}
           specialDutyFields={
             shiftIsTimed && shiftType !== "TRAINING" ? billingReview.fields : undefined
@@ -347,9 +348,7 @@ export function DayEditorForm({
             if (breakError) setBreakError(null);
           }}
           onBreakPress={() => setOptionSheet("PAUSE")}
-          onDismiss={() => {
-            setExit({});
-          }}
+          onDismiss={() => setExit({})}
           onDelete={
             initialShift
               ? () =>
@@ -378,36 +377,36 @@ export function DayEditorForm({
           shiftType={shiftType}
           startTime={startTime}
           tariffOvertimeConfirmed={tariffOvertimeConfirmed}
-        />
-        {optionSheet === "NOTIFICATION" ? (
-          <NotificationSheet
-            deferredSelection
-            onChange={setShiftNotification}
-            onClose={() => setOptionSheet(null)}
-            value={shiftNotification}
-          />
-        ) : null}
-        {optionSheet === "PAUSE" ? (
-          <PauseSheet
-            onChange={(value) => {
-              setBreakMinutes(String(value));
-              if (breakError) setBreakError(null);
-            }}
-            onClose={() => setOptionSheet(null)}
-            value={Number(breakMinutes) || 0}
-          />
-        ) : null}
-        {optionSheet === "ALARM" ? (
-          <AlarmSheet
-            onChange={setShiftAlarmEnabled}
-            onClose={() => setOptionSheet(null)}
-            value={shiftAlarmEnabled}
-          />
-        ) : null}
+        >
+          {optionSheet === "NOTIFICATION" ? (
+            <NotificationSheet
+              deferredSelection
+              onChange={setShiftNotification}
+              onClose={() => setOptionSheet(null)}
+              value={shiftNotification}
+            />
+          ) : null}
+          {optionSheet === "PAUSE" ? (
+            <PauseSheet
+              onChange={(value) => {
+                setBreakMinutes(String(value));
+                if (breakError) setBreakError(null);
+              }}
+              onClose={() => setOptionSheet(null)}
+              value={Number(breakMinutes) || 0}
+            />
+          ) : null}
+          {optionSheet === "ALARM" ? (
+            <AlarmSheet
+              onChange={setShiftAlarmEnabled}
+              onClose={() => setOptionSheet(null)}
+              value={shiftAlarmEnabled}
+            />
+          ) : null}
+        </ShiftEditOverlay>
       </>
     );
   }
-
   const durationMinutes = allDay
     ? null
     : calculateTimedShiftMinutes(
@@ -425,6 +424,7 @@ export function DayEditorForm({
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppointmentEditOverlay
+        existing={initialAppointment !== null}
         allDay={allDay}
         appointmentColor={appointmentColor}
         busy={saving}

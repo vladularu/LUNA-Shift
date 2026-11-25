@@ -1,12 +1,15 @@
 import type { ReactNode, Ref } from "react";
 import type { TextInput } from "react-native";
 
-import type { EntryLocation, EntryNotification, ShiftType } from "@/domain/types";
+import type { EntryLocation, EntryNotification, ShiftEntry, ShiftType } from "@/domain/types";
 import type { SpecialDuty } from "@/domain/special-duty";
 
 export interface ShiftEditOverlayProps {
   readonly specialDutyFields?: ReactNode;
   readonly specialDutyKind?: SpecialDuty["kind"];
+  readonly overview?: ShiftEntry | undefined;
+  readonly specialDuty?: SpecialDuty | null;
+  readonly children?: ReactNode;
   readonly alarmEnabled: boolean;
   readonly breakMinutes: string;
   readonly busy: boolean;

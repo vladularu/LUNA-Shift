@@ -5,18 +5,23 @@ import type { EntryLocation, GeocodedEntryLocation } from "@/domain/types";
 import { LocationMap } from "@/features/location/location-map";
 import { usePalette } from "@/theme/palette";
 
-export function LocationPreview({ location }: { readonly location: EntryLocation }) {
+export function hasLocationCoordinates(
+  location: EntryLocation | null,
+): location is GeocodedEntryLocation {
+  return typeof location?.latitude === "number" && typeof location.longitude === "number";
+}
+
+export function LocationPreview({
+  location,
+  height = 126,
+}: {
+  readonly location: EntryLocation;
+  readonly height?: number;
+}) {
   const palette = usePalette();
 
-  if (typeof location.latitude !== "number" || typeof location.longitude !== "number") {
-    return null;
-  }
-
-  const geocodedLocation: GeocodedEntryLocation = {
-    ...location,
-    latitude: location.latitude,
-    longitude: location.longitude,
-  };
+  if (!hasLocationCoordinates(location)) return null;
+  const geocodedLocation = location;
 
   function openMap() {
     const encodedName = encodeURIComponent(geocodedLocation.name);
@@ -42,7 +47,7 @@ export function LocationPreview({ location }: { readonly location: EntryLocation
       onPress={openMap}
       style={{
         borderCurve: CORNER_CURVE,
-        height: 126,
+        height,
         overflow: "hidden",
         borderWidth: 1,
         borderColor: palette.border,

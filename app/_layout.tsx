@@ -200,24 +200,33 @@ function ThemedApp() {
                           <Stack.Screen name="work-profile" options={{ presentation: "card" }} />
                           <Stack.Screen
                             name="day-editor"
-                            options={entryEditorScreenOptions(
-                              Platform.OS,
-                              palette.groupedBackground,
-                            )}
+                            options={({ route }) =>
+                              entryEditorScreenOptions(
+                                Platform.OS,
+                                palette.groupedBackground,
+                                route.params,
+                              )
+                            }
                           />
                           <Stack.Screen
                             name="shift-editor"
-                            options={entryEditorScreenOptions(
-                              Platform.OS,
-                              palette.groupedBackground,
-                            )}
+                            options={({ route }) =>
+                              entryEditorScreenOptions(
+                                Platform.OS,
+                                palette.groupedBackground,
+                                route.params,
+                              )
+                            }
                           />
                           <Stack.Screen
                             name="appointment-editor"
-                            options={entryEditorScreenOptions(
-                              Platform.OS,
-                              palette.groupedBackground,
-                            )}
+                            options={({ route }) =>
+                              entryEditorScreenOptions(
+                                Platform.OS,
+                                palette.groupedBackground,
+                                route.params,
+                              )
+                            }
                           />
                           <Stack.Screen
                             name="day-details"

@@ -1,5 +1,23 @@
-export function entryEditorScreenOptions(platform: string, backgroundColor: string) {
-  if (platform === "ios") {
+export function usesEntryOverviewSheet(params?: object, mode?: "SHIFT" | "APPOINTMENT"): boolean {
+  return (
+    params !== undefined &&
+    "mode" in params &&
+    (params.mode === "SHIFT" || params.mode === "APPOINTMENT") &&
+    (mode === undefined || params.mode === mode) &&
+    ("entryId" in params
+      ? typeof params.entryId === "string" && params.entryId.length > 0
+      : params.mode === "APPOINTMENT") &&
+    !("sharedCalendarId" in params) &&
+    !("focus" in params)
+  );
+}
+
+export function entryEditorScreenOptions(
+  platform: string,
+  backgroundColor: string,
+  params?: object,
+) {
+  if (platform === "ios" && !usesEntryOverviewSheet(params)) {
     return {
       headerShown: false,
       presentation: "formSheet" as const,
