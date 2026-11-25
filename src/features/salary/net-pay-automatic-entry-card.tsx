@@ -273,63 +273,96 @@ export function NetPaySettingsEntry({
   settings,
   disabled,
   onPress,
+  embedded = false,
 }: {
-  readonly settings: MonthlyNetPaySettings;
+  readonly settings: MonthlyNetPaySettings | null;
   readonly disabled: boolean;
   readonly onPress: () => void;
+  readonly embedded?: boolean;
 }) {
   const palette = usePalette();
-  const p = settings.profile;
-  const family = p.isParent
+  const p = settings?.profile;
+  const family = p?.isParent
     ? p.childrenUnder25 === 0
       ? "Kinder · keine unter 25"
       : `${p.childrenUnder25} ${p.childrenUnder25 === 1 ? "Kind" : "Kinder"} unter 25`
     : "Keine Kinder";
-  const insurance = settings.specialCases?.includes("PRIVATE_INSURANCE")
+  const insurance = settings?.specialCases?.includes("PRIVATE_INSURANCE")
     ? "privat versichert"
-    : settings.specialCases?.includes("OTHER_INSURANCE_STATUS")
+    : settings?.specialCases?.includes("OTHER_INSURANCE_STATUS")
       ? "abweichender Versicherungsstatus"
       : "gesetzlich versichert";
-  const pension = NET_PAY_PENSION_LABELS[settings.automation?.pensionScheme ?? "UNKNOWN"];
+  const pension = NET_PAY_PENSION_LABELS[settings?.automation?.pensionScheme ?? "UNKNOWN"];
+  const taxDetails = p
+    ? `${p.taxClass}${p.factorPermille === null ? "" : " mit Faktor"} · ${p.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer`
+    : null;
+  const action = settings ? "Bearbeiten" : "Netto einrichten";
+  const actionColor = embedded ? palette.netPaySettingsAction : palette.primary;
   return (
     <Pressable
       testID="net-pay-settings-entry"
       accessibilityRole="button"
-      accessibilityLabel={`Netto-Einstellungen. Steuerklasse ${p.taxClass} · ${p.churchTaxRatePercent ? "mit" : "ohne"} Kirchensteuer. ${family} · ${insurance}. ${pension}. Angaben ansehen und ändern.`}
+      accessibilityLabel={
+        taxDetails
+          ? `Netto-Einstellungen. Steuerklasse ${taxDetails}. ${family} · ${insurance}. ${pension}. Angaben ansehen und ändern.`
+          : "Netto-Einstellungen. Netto einrichten."
+      }
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
         padding: SPACING.lg,
         gap: SPACING.sm,
-        borderWidth: 1,
-        borderColor: palette.primary,
-        borderRadius: RADII.card,
-        borderCurve: "continuous",
-        backgroundColor: palette.primarySoft,
+        ...(embedded
+          ? { backgroundColor: palette.netPaySettingsSurface }
+          : {
+              borderWidth: 1,
+              borderColor: palette.primary,
+              borderRadius: RADII.card,
+              borderCurve: "continuous" as const,
+              backgroundColor: palette.primarySoft,
+            }),
         opacity: disabled ? 0.5 : pressed ? 0.75 : 1,
       })}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.md }}>
-        <Text style={{ flex: 1, color: palette.text, ...TYPOGRAPHY.sectionTitle }}>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          columnGap: SPACING.sm,
+          rowGap: SPACING.xs,
+        }}
+      >
+        <Text style={{ flexShrink: 1, color: palette.text, ...TYPOGRAPHY.sectionTitle }}>
           Netto-Einstellungen
         </Text>
-        <Ionicons
-          accessibilityElementsHidden
-          name="chevron-forward"
-          size={20}
-          color={palette.primary}
-        />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACING.xs }}>
+          {embedded ? (
+            <Text style={{ color: actionColor, ...TYPOGRAPHY.label }}>{action}</Text>
+          ) : null}
+          <Ionicons
+            accessibilityElementsHidden
+            name="chevron-forward"
+            size={embedded ? 16 : 20}
+            color={actionColor}
+          />
+        </View>
       </View>
-      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
-        Klasse {p.taxClass}
-        {p.factorPermille === null ? "" : " mit Faktor"} · {p.churchTaxRatePercent ? "mit" : "ohne"}{" "}
-        Kirchensteuer
-      </Text>
-      <Text style={{ color: palette.textMuted, ...TYPOGRAPHY.caption }}>
-        {family} · {insurance}
-      </Text>
-      <Text style={{ color: palette.primary, ...TYPOGRAPHY.label }}>Angaben ansehen & ändern</Text>
+      {taxDetails ? (
+        <>
+          <Text style={{ color: palette.textSecondary, ...TYPOGRAPHY.caption }}>
+            {embedded ? "Steuerklasse" : "Klasse"} {taxDetails}
+          </Text>
+          <Text style={{ color: palette.textSecondary, ...TYPOGRAPHY.caption }}>
+            {family} · {insurance}
+          </Text>
+        </>
+      ) : null}
+      {embedded ? null : (
+        <Text style={{ color: actionColor, ...TYPOGRAPHY.label }}>Angaben ansehen & ändern</Text>
+      )}
     </Pressable>
   );
 }

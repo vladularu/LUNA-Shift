@@ -6,10 +6,10 @@ import path from "node:path";
 import { prepareNative } from "../../luna-engine/scripts/native-config.mjs";
 
 // Runs before pod install: prepare_command is not executed for local pods.
-// Only the authorized internal device Preview is supported in this pilot.
 if (process.env.EAS_BUILD_PLATFORM !== "ios") process.exit(0);
-if (process.platform !== "darwin" || process.env.APP_VARIANT !== "internal") {
-  throw new Error("Rust pilot builds require macOS and APP_VARIANT=internal");
+const variant = process.env.APP_VARIANT;
+if (process.platform !== "darwin" || (variant !== "internal" && variant !== "production")) {
+  throw new Error("Rust iOS builds require macOS and the internal or production app variant");
 }
 const root = fileURLToPath(new URL("../", import.meta.url));
 const build = path.join(root, ".build");
@@ -78,7 +78,7 @@ run("xcodebuild", [
   "-output",
   output,
 ]);
-console.log("Prepared pinned Rust device library for internal Preview pod installation.");
+console.log(`Prepared pinned Rust device library for ${variant} pod installation.`);
 if (process.env.LUNA_FULL_ENGINE === "1") {
   await prepareNative({ env: { ...env, LUNA_RUSTUP: path.join(cargoHome, "bin/rustup") } });
 }

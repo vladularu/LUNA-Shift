@@ -17,12 +17,12 @@ import { NetPayCheck } from "./net-pay-controls";
 import { decimalFormValue, parseNetPayDecimal } from "./net-pay-form-values";
 import {
   NetPayWorkflowAction,
-  NetPayWorkflowSelect,
   NetPayWorkflowText,
   NetPayWorkflowLink,
 } from "./net-pay-workflow-controls";
 import { SalarySectionCard, SalaryNavigationRow } from "./salary-ui";
 import { NetPaySheet } from "./net-pay-sheet";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 import { netPayEuro } from "./net-pay-format";
 import { formatMonthTitle } from "@/engine/calendar";
 import type { AnnualSalaryProposal } from "./annual-salary-proposal";
@@ -299,7 +299,7 @@ export function AnnualSalaryPaymentEditor({
         </NetPayWorkflowLink>
         {details ? (
           <View style={{ gap: SPACING.md }}>
-            <NetPayWorkflowSelect
+            <SalaryChoiceMenu
               label="Auszahlungsmonat"
               value={payout}
               disabled={locked}

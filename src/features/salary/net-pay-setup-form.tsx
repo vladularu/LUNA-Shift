@@ -18,6 +18,7 @@ import { FormSection, FormStatus, HeaderSaveAction } from "@/ui/form-layout";
 import { useProfileLeaveGuard } from "@/features/settings/use-profile-leave-guard";
 import { NetPayValidity } from "./net-pay-validity";
 import { NetPaySettingDate } from "./net-pay-setting-date";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 import {
   NetPaySettingAmount,
   NetPaySettingCheck,
@@ -41,6 +42,7 @@ import {
   NET_PAY_HEALTH_FORECAST_RATE,
   netPaySetupSettings,
   netPaySetupValues,
+  validateNetPaySetupStep,
 } from "./net-pay-setup-values";
 
 const YES_NO = [
@@ -55,6 +57,7 @@ const EMPLOYMENT_CASES = new Set([
   "PENSIONER",
   "APPRENTICE",
 ]);
+const GUIDE_LAST_STEP = 4;
 
 export function NetPaySetupForm({
   month,
@@ -65,6 +68,7 @@ export function NetPaySetupForm({
   onSave,
   firstSetup = initial === null,
   onSaved,
+  onSkipGuide,
   onValidationFailure,
   renderLayout,
   inline = false,
@@ -78,6 +82,7 @@ export function NetPaySetupForm({
   readonly onSave: (settings: MonthlyNetPaySettings, effectiveMonth?: string) => Promise<void>;
   readonly firstSetup?: boolean;
   readonly onSaved?: () => void;
+  readonly onSkipGuide?: () => Promise<void>;
   readonly onValidationFailure?: () => void;
   readonly inline?: boolean;
   readonly onDirtyChange?: (dirty: boolean) => void;
@@ -85,9 +90,13 @@ export function NetPaySetupForm({
     readonly content: ReactNode;
     readonly footer: ReactNode;
     readonly locked: boolean;
-    readonly headerAction: ReactElement;
+    readonly headerAction: ReactElement | null;
+    readonly guideStep: number | null;
+    readonly onGuideBack?: () => void;
   }) => ReactNode;
 }) {
+  const [guideStep, setGuideStep] = useState<number | null>(onSkipGuide ? 0 : null);
+  const palette = usePalette();
   const [form, setForm] = useState(() => netPaySetupValues(initial, worksInSaxony));
   const [effectiveMonth, setEffectiveMonth] = useState(month);
   const [saving, setSaving] = useState(false);
@@ -141,19 +150,56 @@ export function NetPaySetupForm({
     setForm((current) => ({ ...current, [key]: value }));
     setError(null);
   }
+  function buildSettings(gross: string, net: string) {
+    return netPaySetupSettings(
+      month,
+      { ...form, worksInSaxony },
+      pensionScheme,
+      gross,
+      net,
+      initial,
+      pensionEmployeeRate,
+    );
+  }
+  function moveGuide(step: number | null) {
+    Keyboard.dismiss();
+    setError(null);
+    setGuideStep(step);
+  }
+  function nextGuideStep() {
+    if (locked || guideStep === null) return;
+    try {
+      if (guideStep === 1 || guideStep === 2) {
+        validateNetPaySetupStep(month, guideStep - 1, form);
+      } else if (guideStep === 3) {
+        buildSettings("0", "0");
+      }
+      moveGuide(guideStep + 1);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Bitte prüfe deine Angaben.");
+      onValidationFailure?.();
+    }
+  }
+  async function skipGuide() {
+    if (locked || submitting.current || !onSkipGuide) return;
+    submitting.current = true;
+    setSaving(true);
+    try {
+      await onSkipGuide();
+      moveGuide(null);
+    } catch {
+      setError("„Später“ konnte nicht gespeichert werden. Versuch es erneut.");
+      onValidationFailure?.();
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
+  }
   async function save() {
     if (locked || submitting.current) return;
     setError(null);
     try {
-      const value = netPaySetupSettings(
-        month,
-        { ...form, worksInSaxony },
-        pensionScheme,
-        additionalGross,
-        additionalNet,
-        initial,
-        pensionEmployeeRate,
-      );
+      const value = buildSettings(additionalGross, additionalNet);
       Keyboard.dismiss();
       submitting.current = true;
       setSaving(true);
@@ -211,31 +257,58 @@ export function NetPaySetupForm({
       ) : null}
     </>
   );
+  const validity =
+    !inline || expanded ? (
+      <ValidityContainer>
+        <NetPayValidity
+          compact={!inline}
+          month={month}
+          firstSetup={firstSetup}
+          value={effectiveMonth}
+          onChange={setEffectiveMonth}
+          disabled={locked}
+        />
+        {initial?.version === 1 ? (
+          <View style={{ padding: inline ? 0 : SPACING.lg }}>
+            <NetPayText>
+              Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden sie
+              auch für folgende Monate übernommen.
+            </NetPayText>
+          </View>
+        ) : null}
+      </ValidityContainer>
+    ) : null;
+  const EmploymentSelect = inline ? NetPayWorkflowSelect : SalaryChoiceMenu;
   const content = (
     <View style={{ gap: SPACING.xl }}>
-      {!inline || expanded ? (
-        <ValidityContainer>
-          <NetPayValidity
-            compact={!inline}
-            month={month}
-            firstSetup={firstSetup}
-            value={effectiveMonth}
-            onChange={setEffectiveMonth}
-            disabled={locked}
-          />
-          {initial?.version === 1 ? (
-            <View style={{ padding: inline ? 0 : SPACING.lg }}>
-              <NetPayText>
-                Deine bisherigen Angaben gelten nur für diesen Monat. Nach dem Speichern werden sie
-                auch für folgende Monate übernommen.
-              </NetPayText>
-            </View>
-          ) : null}
-        </ValidityContainer>
+      {guideStep === null ? validity : null}
+      {guideStep !== null && guideStep > 0 ? (
+        <NetPayText>
+          Schritt {guideStep} von {GUIDE_LAST_STEP}
+        </NetPayText>
       ) : null}
       <FormStatus error={error} />
+      {guideStep === 0 ? (
+        <View style={{ gap: SPACING.sm }}>
+          <Text
+            accessibilityRole="header"
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{ ...TYPOGRAPHY.screenTitle, color: palette.text }}
+          >
+            Netto einrichten
+          </Text>
+          <Text
+            maxFontSizeMultiplier={TEXT_MAX_SCALE}
+            style={{ ...TYPOGRAPHY.body, color: palette.textMuted }}
+          >
+            Ein paar Angaben zu Steuern, Familie und Versicherung helfen, dein Netto zu schätzen.
+            Vieles findest du auf deiner Gehaltsabrechnung.
+          </Text>
+        </View>
+      ) : null}
       <NetPaySettingsSection
         title="Steuern"
+        hidden={guideStep !== null && guideStep !== 1}
         grouped={!inline}
         footer={
           !inline && form.taxClass !== null && form.taxClass <= 4 ? (
@@ -405,7 +478,7 @@ export function NetPaySetupForm({
       ) : null}
       <NetPaySettingsSection
         title="Familie"
-        hidden={inline && !expanded}
+        hidden={guideStep !== null ? guideStep !== 2 : inline && !expanded}
         grouped={!inline}
         footer={inline ? undefined : familyExplanation}
       >
@@ -450,13 +523,13 @@ export function NetPaySetupForm({
       </NetPaySettingsSection>
       <NetPaySettingsSection
         title="Versicherung & Vorsorge"
-        hidden={inline && !expanded}
+        hidden={guideStep !== null ? guideStep !== 3 : inline && !expanded}
         grouped={!inline}
         footer={inline ? undefined : insuranceExplanation}
       >
         <View style={{ gap: inline ? SPACING.lg : 0 }}>
           <NetPaySettingDetails
-            compact={!inline}
+            compact={!inline && guideStep === null}
             disabled={locked}
             label="Krankenversicherung"
             value={
@@ -470,6 +543,7 @@ export function NetPaySetupForm({
             <NetPayChoice
               compact={!inline}
               label="Versicherungsart"
+              separator={guideStep === null}
               value={
                 form.specialCases?.includes("PRIVATE_INSURANCE")
                   ? "PRIVATE_INSURANCE"
@@ -493,11 +567,17 @@ export function NetPaySetupForm({
               }
             />
             {specialInsurance ? (
-              <NetPayText>
-                {form.specialCases?.includes("PRIVATE_INSURANCE")
-                  ? "Privat versichert · Standardprognose nicht verfügbar"
-                  : "Abweichender Versicherungsfall · Standardprognose nicht verfügbar"}
-              </NetPayText>
+              <View
+                style={
+                  inline ? undefined : { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg }
+                }
+              >
+                <NetPayText>
+                  {form.specialCases?.includes("PRIVATE_INSURANCE")
+                    ? "Privat versichert · Standardprognose nicht verfügbar"
+                    : "Abweichender Versicherungsfall · Standardprognose nicht verfügbar"}
+                </NetPayText>
+              </View>
             ) : (
               <>
                 <NetPayChoice
@@ -528,13 +608,24 @@ export function NetPaySetupForm({
                   />
                 ) : null}
                 {!customHealth ? (
-                  <NetPayText>Gesetzlich · Zusatzbeitrag {form.healthAdditionalRate} %</NetPayText>
+                  <View
+                    style={
+                      inline
+                        ? undefined
+                        : { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg }
+                    }
+                  >
+                    <NetPayText>
+                      Gesetzlich · Zusatzbeitrag {form.healthAdditionalRate} %
+                    </NetPayText>
+                  </View>
                 ) : null}
               </>
             )}
           </NetPaySettingDetails>
           <NetPayWorkflowSelect<NetPayPensionScheme>
             label="Zusatzversorgung"
+            luna
             compact={!inline}
             separator
             value={pensionScheme}
@@ -591,12 +682,16 @@ export function NetPaySetupForm({
       </NetPaySettingsSection>
       <NetPaySettingsSection
         title="Weitere Angaben"
-        hidden={inline && !expanded}
+        hidden={guideStep !== null ? guideStep !== GUIDE_LAST_STEP : inline && !expanded}
         grouped={!inline}
-        footer={inline ? undefined : <NetPayText>Zusatzversorgung oben auswählen.</NetPayText>}
+        footer={
+          !inline && guideStep === null ? (
+            <NetPayText>Zusatzversorgung oben auswählen.</NetPayText>
+          ) : undefined
+        }
       >
         <View style={{ gap: inline ? SPACING.lg : 0 }}>
-          <NetPayWorkflowSelect
+          <EmploymentSelect
             label={inline ? "Beschäftigungsfall" : "Beschäftigungsart"}
             compact={!inline}
             value={
@@ -700,6 +795,27 @@ export function NetPaySetupForm({
           ) : null}
         </View>
       </NetPaySettingsSection>
+      {guideStep === GUIDE_LAST_STEP ? validity : null}
+      {guideStep !== null ? (
+        <View>
+          <NetPayWorkflowAction
+            disabled={locked}
+            busy={locked}
+            onPress={guideStep === GUIDE_LAST_STEP ? () => void save() : nextGuideStep}
+          >
+            {guideStep === 0
+              ? "Fragen starten"
+              : guideStep === GUIDE_LAST_STEP
+                ? "Speichern"
+                : "Weiter"}
+          </NetPayWorkflowAction>
+          <View style={{ alignItems: "center" }}>
+            <NetPayWorkflowLink disabled={locked} onPress={() => void skipGuide()}>
+              Später
+            </NetPayWorkflowLink>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
   const footer = (
@@ -712,14 +828,22 @@ export function NetPaySetupForm({
       content,
       footer,
       locked,
-      headerAction: (
-        <HeaderSaveAction busy={locked} label="Speichern" onPress={() => void save()} />
-      ),
+      guideStep,
+      onGuideBack:
+        guideStep !== null && guideStep > 0
+          ? () => {
+              if (!locked) moveGuide(guideStep - 1);
+            }
+          : undefined,
+      headerAction:
+        guideStep === null ? (
+          <HeaderSaveAction busy={locked} label="Speichern" onPress={() => void save()} />
+        ) : null,
     })
   ) : (
     <View style={{ gap: SPACING.lg }}>
       {content}
-      {footer}
+      {guideStep === null ? footer : null}
     </View>
   );
 }

@@ -8,6 +8,7 @@ import { Alert, Platform, View, useWindowDimensions } from "react-native";
 import { AccountSummaryCard } from "@/features/account/account-summary-card";
 import { PRODUCT_NAME } from "@/brand";
 import { usePflegeShiftProfile, usePflegeShiftStatus } from "@/application/pflegeshift-provider";
+import { currentMonth } from "@/engine/calendar";
 import {
   isDeveloperModeEnabled,
   setDeveloperMode,
@@ -15,7 +16,12 @@ import {
 import { DEV_TOOLS_AVAILABLE } from "@/infrastructure/dev-tools-policy";
 import { APP_RUNTIME_LABEL } from "@/infrastructure/app-version";
 import { CalendarPerformanceControls } from "@/features/calendar/calendar-performance-controls";
-import { localBackupRoute, settingsInfoRoute, settingsEditorRoute } from "@/navigation/routes";
+import {
+  localBackupRoute,
+  netPaySettingsRoute,
+  settingsInfoRoute,
+  settingsEditorRoute,
+} from "@/navigation/routes";
 import { usePalette } from "@/theme/palette";
 import { calendarDesignRoute } from "@/navigation/calendar-design-route";
 import { profileSalaryLabel, profileWorkLabel } from "./work-profile-summary";
@@ -135,6 +141,20 @@ export function SettingsScreen() {
                   onPress={() => router.push({ pathname: "/onboarding", params: { preview: "1" } })}
                   subtitle="Ausprobieren, ohne deine Daten zu ändern"
                   title="Onboarding testen"
+                />
+                <CardSeparator />
+                <RowButton
+                  titleColor={palette.text}
+                  subtitleBelow={subtitleBelow}
+                  leading={<SettingsIcon name="calculator-outline" />}
+                  onPress={() => {
+                    const { pathname, params } = netPaySettingsRoute(
+                      currentMonth(profile.timeZone),
+                    );
+                    router.push({ pathname, params: { ...params, preview: "1" } });
+                  }}
+                  subtitle="Mit Testangaben ausprobieren"
+                  title="Netto-Fragen testen"
                 />
                 {developerMode ? (
                   <>

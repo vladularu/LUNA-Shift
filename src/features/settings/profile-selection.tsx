@@ -21,6 +21,8 @@ import { CardSeparator, RowButton, SectionHeader, SurfaceCard } from "@/ui/desig
 import { Field, type DropdownOption } from "@/ui/form-controls";
 import { ProfilePage, ProfilePageTitleContext } from "./profile-page";
 import { LoadFailureView } from "@/ui/loading-view";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
+import { SelectionSheet } from "@/ui/selection-sheet";
 
 type ChoiceValue = string | number;
 interface SelectionRequest {
@@ -38,7 +40,7 @@ interface SelectionContextValue {
   readonly clear: (requestId?: string) => void;
 }
 const SelectionContext = createContext<SelectionContextValue | null>(null);
-export const ProfileEditorBusyContext = createContext(false);
+export const ProfileEditorControlContext = createContext({ busy: false, nativeChoices: false });
 export function ProfileSelectionProvider({ children }: PropsWithChildren) {
   const [request, setRequest] = useState<SelectionRequest | null>(null);
   const sequence = useRef(0);
@@ -85,33 +87,95 @@ export function ProfileChoice<T extends ChoiceValue>({
 }) {
   const palette = usePalette();
   const context = useContext(SelectionContext);
-  const busy = useContext(ProfileEditorBusyContext);
+  const { busy, nativeChoices } = useContext(ProfileEditorControlContext);
   const returnTo = useContext(ProfilePageTitleContext);
+  const [popup, setPopup] = useState(false);
+  const useLunaPresentation = nativeChoices && Platform.OS === "ios";
+  const locked = busy || disabled;
   const selected = options.find((option) => option.value === value);
   const valueLabel = selected?.selectionLabel ?? selected?.label ?? "Bitte auswählen";
   if (!context) throw new Error("ProfileSelectionProvider fehlt.");
-  return (
+  const request = {
+    title: modalTitle ?? label,
+    prompt: selectionPrompt,
+    returnTo,
+    value,
+    options,
+    onChange: (next: ChoiceValue) => {
+      const option = options.find((candidate) => candidate.value === next);
+      if (option) onChange(option.value);
+    },
+  };
+  const row = (
     <RowButton
       titleColor={palette.text}
       title={label}
       subtitle={valueLabel}
-      disabled={busy || disabled}
+      disabled={locked}
       accessibilityLabel={`${label}: ${valueLabel}`}
-      accessibilityHint="Öffnet eine Auswahlseite. Auswahl wird erst beim Speichern übernommen."
-      onPress={() =>
-        context.open({
-          title: modalTitle ?? label,
-          prompt: selectionPrompt,
-          returnTo,
-          value,
-          options,
-          onChange: (next) => {
-            const option = options.find((candidate) => candidate.value === next);
-            if (option) onChange(option.value);
-          },
-        })
-      }
+      accessibilityHint="Öffnet die Auswahl. Deine Angaben werden beim Speichern übernommen."
+      onPress={() => {
+        if (useLunaPresentation) {
+          Keyboard.dismiss();
+          setPopup(true);
+        } else context.open(request);
+      }}
     />
+  );
+  const menuOptions = options.filter((option) => option.value !== "UNSET");
+  if (!useLunaPresentation) return row;
+  if (menuOptions.length > 0 && !menuOptions.some((option) => option.group || option.subtitle))
+    return (
+      <LunaChoiceMenu
+        compact
+        label={label}
+        displayLabel={selectionPrompt}
+        accessibilityLabel={selectionPrompt}
+        value={selected && selected.value !== "UNSET" ? String(selected.value) : null}
+        options={menuOptions.map((option) => ({
+          value: String(option.value),
+          label: option.label,
+        }))}
+        disabled={locked}
+        onChange={(next) => {
+          const option = menuOptions.find((candidate) => String(candidate.value) === next);
+          if (option) onChange(option.value);
+        }}
+        testPrefix="profile-native"
+        fallback={row}
+      />
+    );
+  return (
+    <>
+      {row}
+      {popup ? (
+        <SelectionSheet
+          luna
+          title={request.title}
+          visible
+          disabled={locked}
+          onClose={() => setPopup(false)}
+          cancelLabel={`Zurück zu ${returnTo}`}
+          keyboardAware
+        >
+          {(dismiss) => (
+            <View
+              testID="profile-selection-content"
+              style={{ gap: SPACING.md, padding: SPACING.lg }}
+            >
+              <ProfileOptionList
+                request={request}
+                searchable={!selectionPrompt}
+                onSelect={(next) => {
+                  request.onChange(next);
+                  dismiss();
+                }}
+              />
+            </View>
+          )}
+        </SelectionSheet>
+      ) : null}
+    </>
   );
 }
 export function ProfileSelectionScreen() {
@@ -147,18 +211,8 @@ function SelectionPage({
   const headerSide =
     Math.max(insets.left, insets.right) + SPACING.lg + MINIMUM_TOUCH_TARGET + SPACING.sm;
   const titleMaxWidth = Math.max(0, width - 2 * headerSide);
-  const [query, setQuery] = useState("");
   const choosing = useRef(false);
   useEffect(() => () => clear(request.id), [clear, request.id]);
-  const search = query.trim().toLocaleLowerCase("de-DE");
-  const options = request.options
-    .filter((option) => option.value !== "UNSET")
-    .filter((option) =>
-      `${option.label} ${option.subtitle ?? ""} ${option.group ?? ""}`
-        .toLocaleLowerCase("de-DE")
-        .includes(search),
-    );
-  const groups = [...new Set(options.map((option) => option.group ?? ""))];
   return (
     <ProfilePage
       title={request.title}
@@ -189,6 +243,44 @@ function SelectionPage({
           statusBarStyle: palette.dark ? "light" : "dark",
         }}
       />
+      <ProfileOptionList
+        request={request}
+        searchable={request.title === "Tarifvertrag"}
+        onSelect={(value) => {
+          if (choosing.current) return;
+          choosing.current = true;
+          request.onChange(value);
+          clear(request.id);
+          router.back();
+        }}
+      />
+    </ProfilePage>
+  );
+}
+
+function ProfileOptionList({
+  request,
+  searchable,
+  onSelect,
+}: {
+  readonly request: Omit<SelectionRequest, "id">;
+  readonly searchable: boolean;
+  readonly onSelect: (value: ChoiceValue) => void;
+}) {
+  const palette = usePalette();
+  const [query, setQuery] = useState("");
+  const search = query.trim().toLocaleLowerCase("de-DE");
+  const options = request.options.filter(
+    (option) =>
+      option.value !== "UNSET" &&
+      `${option.label} ${option.subtitle ?? ""} ${option.group ?? ""}`
+        .toLocaleLowerCase("de-DE")
+        .includes(search),
+  );
+  const groups = [...new Set(options.map((option) => option.group ?? ""))];
+  const searchLabel = request.title === "Tarifvertrag" ? "Tarif suchen" : `${request.title} suchen`;
+  return (
+    <>
       {request.prompt ? (
         <Text
           accessibilityRole="header"
@@ -198,12 +290,12 @@ function SelectionPage({
           {request.prompt}
         </Text>
       ) : null}
-      {request.title === "Tarifvertrag" ? (
+      {searchable ? (
         <Field
-          label="Tarif suchen"
+          label={searchLabel}
           value={query}
           onChangeText={setQuery}
-          placeholder="Tarif suchen"
+          placeholder={searchLabel}
           autoCorrect={false}
           clearButtonMode="while-editing"
         />
@@ -234,13 +326,7 @@ function SelectionPage({
                         <View style={{ width: 22 }} />
                       )
                     }
-                    onPress={() => {
-                      if (choosing.current) return;
-                      choosing.current = true;
-                      request.onChange(option.value);
-                      clear(request.id);
-                      router.back();
-                    }}
+                    onPress={() => onSelect(option.value)}
                   />
                 </View>
               ))}
@@ -252,7 +338,9 @@ function SelectionPage({
           accessibilityLiveRegion="polite"
           style={{ color: palette.textMuted, ...TYPOGRAPHY.body }}
         >
-          Keine passenden Tarife gefunden.
+          {request.title === "Tarifvertrag" || request.title === "Tarif"
+            ? "Keine passenden Tarife gefunden."
+            : "Keine passenden Einträge gefunden."}
         </Text>
       ) : null}
       <Text
@@ -261,7 +349,7 @@ function SelectionPage({
       >
         Auswahl wird in deinen Entwurf übernommen.
       </Text>
-    </ProfilePage>
+    </>
   );
 }
 export function useProfileSelection() {

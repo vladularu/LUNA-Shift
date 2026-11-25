@@ -19,11 +19,13 @@ export function writeNativeConfig(root, platforms) {
   renameSync(`${target}.tmp`, target);
 }
 
-/** Reset first, even on Production and on failed builds. No implicit opt-in. */
+/** Reset first so only verified artifacts are exposed to autolinking. */
 export async function prepareNative({ root = moduleRoot, env = process.env, build } = {}) {
   writeNativeConfig(root, []);
-  if (env.APP_VARIANT !== "internal" || env.LUNA_FULL_ENGINE !== "1") return [];
   const platform = env.EAS_BUILD_PLATFORM ?? env.LUNA_ENGINE_PLATFORM;
+  const supportedVariant =
+    env.APP_VARIANT === "internal" || (env.APP_VARIANT === "production" && platform === "ios");
+  if (!supportedVariant || env.LUNA_FULL_ENGINE !== "1") return [];
   if (platform !== "ios" && platform !== "android") throw new Error("ENGINE_PLATFORM_REQUIRED");
   if (!build) {
     const builder = await import(platform === "ios" ? "./build-ios.mjs" : "./build-android.mjs");

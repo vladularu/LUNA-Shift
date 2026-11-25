@@ -42,12 +42,6 @@ export async function selectSettingsChoice(screen: Screen, field: string, option
           : field === "Tarifliche Vollzeit pro Woche"
             ? "Vollzeit laut Tarif"
             : field;
-  await fireEvent.press(screen.getByRole("button", { name: new RegExp(`^${mapped}:`) }));
-  const page = within(screen.getByTestId("profile-selection-content"));
-  const choices = page
-    .getAllByRole("button")
-    .filter((button) => typeof button.props.accessibilityState?.selected === "boolean")
-    .map((button) => button.props.accessibilityLabel as string);
   const next =
     field === "Tarifbereich"
       ? option
@@ -56,6 +50,23 @@ export async function selectSettingsChoice(screen: Screen, field: string, option
       : field === "Tarifliche Vollzeit pro Woche"
         ? `${option} Std.`
         : option;
+  const picker = screen.queryByTestId(`profile-native-options:${mapped}`);
+  if (picker) {
+    const options = within(picker);
+    const target = options.getByTestId(`profile-native-option:${next}`);
+    const [{ tag }] = target.props.modifiers;
+    await fireEvent(picker, "selectionChange", { nativeEvent: { selection: tag } });
+    return options.getAllByTestId(/^profile-native-option:/).map((choice) => {
+      const label = (choice.props.testID as string).slice("profile-native-option:".length);
+      return field === "Tarifliche Vollzeit pro Woche" ? label.replace(" Std.", "") : label;
+    });
+  }
+  await fireEvent.press(screen.getByRole("button", { name: new RegExp(`^${mapped}:`) }));
+  const page = within(screen.getByTestId("profile-selection-content"));
+  const choices = page
+    .getAllByRole("button")
+    .filter((button) => typeof button.props.accessibilityState?.selected === "boolean")
+    .map((button) => button.props.accessibilityLabel as string);
   await fireEvent.press(page.getByRole("button", { name: next }));
   await waitFor(() => expect(screen.queryByTestId("profile-selection-content")).toBeNull());
   return field === "Tarifliche Vollzeit pro Woche"

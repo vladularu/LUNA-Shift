@@ -76,6 +76,7 @@ export function ProfileDateField({
         mode="date"
         display="compact"
         locale="de-DE"
+        themeVariant={palette.dark ? "dark" : "light"}
         value={date}
         disabled={disabled}
         onValueChange={(_, next) => choose(next)}

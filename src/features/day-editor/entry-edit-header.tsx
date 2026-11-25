@@ -17,6 +17,7 @@ export interface EntryEditHeaderProps {
   readonly headerColor: string;
   readonly headerLeading?: ReactNode;
   readonly headerSubtitle?: string;
+  readonly headerSubtitleControl?: (disabled: boolean) => ReactNode;
   readonly hideHeaderDuration?: boolean;
   readonly headerAccessibilityLabel?: string;
   readonly onHeaderPress?: () => void;
@@ -31,6 +32,7 @@ export function EntryEditHeader({
   headerColor,
   headerLeading,
   headerSubtitle,
+  headerSubtitleControl,
   hideHeaderDuration,
   headerAccessibilityLabel,
   onHeaderPress,
@@ -48,17 +50,21 @@ export function EntryEditHeader({
         <Text style={[TYPOGRAPHY.sectionTitle, { color: palette.text }]}>
           {entryEditShortDate(date)}
         </Text>
-        <View style={styles.subtitle}>
-          <Text style={[TYPOGRAPHY.small, { color: palette.textMuted }]}>{headerSubtitle}</Text>
-          {onHeaderPress ? (
-            <Ionicons
-              accessibilityElementsHidden
-              name="chevron-forward"
-              size={14}
-              color={palette.textMuted}
-            />
-          ) : null}
-        </View>
+        {headerSubtitleControl ? (
+          headerSubtitleControl(busy)
+        ) : (
+          <View style={styles.subtitle}>
+            <Text style={[TYPOGRAPHY.small, { color: palette.textMuted }]}>{headerSubtitle}</Text>
+            {onHeaderPress ? (
+              <Ionicons
+                accessibilityElementsHidden
+                name="chevron-forward"
+                size={14}
+                color={palette.textMuted}
+              />
+            ) : null}
+          </View>
+        )}
       </View>
     </>
   );

@@ -206,6 +206,7 @@ export function SpecialDutyFields({
       <EntryEditGroup>
         <DutyChoice
           label="Dienstform"
+          nativeMenu
           value={value?.kind ?? "REGULAR"}
           options={[
             { value: "REGULAR", label: "Regulärer Dienst" },

@@ -5,6 +5,7 @@ import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { Text } from "@/ui/text";
 import { NetPayWorkflowSelect, NetPayWorkflowText } from "./net-pay-workflow-controls";
+import { SalaryChoiceMenu } from "./salary-choice-menu";
 
 export function NetPayValidity({
   month,
@@ -36,8 +37,9 @@ export function NetPayValidity({
     const value = year + "-" + String(index + 1).padStart(2, "0");
     return { value, label: formatMonthTitle(value) };
   });
+  const MonthSelect = compact ? SalaryChoiceMenu : NetPayWorkflowSelect;
   return (
-    <NetPayWorkflowSelect
+    <MonthSelect
       label="Gültig ab"
       compact={compact}
       value={value}

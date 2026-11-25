@@ -1,4 +1,5 @@
 import { nativePageHeaderStyle } from "@/theme/page-header";
+import { LunaChoiceMenu } from "@/ui/luna-choice-menu";
 import { TVAL_WORKPLACE_OPTIONS, tvalWorkplaceFields } from "./tval-workplace-choice";
 import {
   useEmploymentSaveFlow,
@@ -81,7 +82,11 @@ import { Field, PrimaryButton, SecondaryButton } from "@/ui/form-controls";
 import { FormStatus, HeaderSaveAction } from "@/ui/form-layout";
 import { LoadFailureView, LoadingView } from "@/ui/loading-view";
 import { focusInvalidField, weeklyHoursFieldError } from "@/ui/form-validation";
-import { ProfileChoice, ProfileEditorBusyContext, useProfileSelection } from "./profile-selection";
+import {
+  ProfileChoice,
+  ProfileEditorControlContext,
+  useProfileSelection,
+} from "./profile-selection";
 import { useProfileLeaveGuard } from "./use-profile-leave-guard";
 import { ProfilePage } from "./profile-page";
 import { ProfileValueField } from "./profile-value-field";
@@ -786,8 +791,26 @@ function SettingsEditorForm({
       )}
     </ProfileGroup>
   );
+  const basisOptions = [
+    { value: "TARIFF", label: "Nach Tarif" },
+    { value: "MANUAL", label: "Eigenes Brutto" },
+  ] as const;
+  const basisValue = salaryMode === "MANUAL" ? "MANUAL" : "TARIFF";
+  const changeBasis = (value: string) => {
+    if (!saving) changeSalaryMode(value === "MANUAL" ? "MANUAL" : lastTariffMode);
+  };
+  const basisControl = (
+    <SegmentedControl
+      accessibilityLabel="Gehaltsgrundlage"
+      testID="salary-basis-selection"
+      disabled={saving}
+      value={basisValue}
+      items={basisOptions}
+      onChange={changeBasis}
+    />
+  );
   return (
-    <ProfileEditorBusyContext.Provider value={saving}>
+    <ProfileEditorControlContext.Provider value={{ busy: saving, nativeChoices: fromMore }}>
       <ProfilePage
         title={pageTitle}
         backLabel={fromMore ? "Zurück zu Mehr" : employment ? "Zurück" : "Zurück zum Arbeitsprofil"}
@@ -928,20 +951,25 @@ function SettingsEditorForm({
         {editTariff ? (
           <>
             {!fromMore || salaryMode === "MANUAL" || profile.salaryBasisConflict ? (
-              <SelectionGroup title="Gehaltsgrundlage">
-                <SegmentedControl
-                  accessibilityLabel="Gehaltsgrundlage"
-                  testID="salary-basis-selection"
-                  disabled={saving}
-                  value={salaryMode === "MANUAL" ? "MANUAL" : "TARIFF"}
-                  items={[
-                    { value: "TARIFF", label: "Nach Tarif" },
-                    { value: "MANUAL", label: "Eigenes Brutto" },
-                  ]}
-                  onChange={(value) => {
-                    if (!saving) changeSalaryMode(value === "MANUAL" ? "MANUAL" : lastTariffMode);
-                  }}
-                />
+              <View style={{ gap: SPACING.sm }}>
+                {fromMore ? (
+                  <SurfaceCard>
+                    <LunaChoiceMenu
+                      compact
+                      label="Gehaltsgrundlage"
+                      value={basisValue}
+                      options={basisOptions}
+                      disabled={saving}
+                      onChange={changeBasis}
+                      testPrefix="profile-native"
+                      fallback={
+                        <SelectionGroup title="Gehaltsgrundlage">{basisControl}</SelectionGroup>
+                      }
+                    />
+                  </SurfaceCard>
+                ) : (
+                  <SelectionGroup title="Gehaltsgrundlage">{basisControl}</SelectionGroup>
+                )}
 
                 {profile.salaryBasisConflict ? (
                   <Hint>
@@ -949,7 +977,7 @@ function SettingsEditorForm({
                     werden erst beim Speichern abgelöst.
                   </Hint>
                 ) : null}
-              </SelectionGroup>
+              </View>
             ) : null}
             {salaryMode === "MANUAL" ? (
               <ProfileGroup title="Eigenes Brutto">
@@ -1015,7 +1043,7 @@ function SettingsEditorForm({
         <FormStatus message={message} error={error} />
         {employment ? <EmploymentSaveFeedback flow={flow} dirty={dirty} /> : null}
       </ProfilePage>
-    </ProfileEditorBusyContext.Provider>
+    </ProfileEditorControlContext.Provider>
   );
 }
 function ProfileGroup({

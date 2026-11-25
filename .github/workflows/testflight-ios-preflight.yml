@@ -1,0 +1,94 @@
+name: TestFlight iOS preflight
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-ios-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-ios:
+    if: github.head_ref == 'codex/testflight-build10'
+    runs-on: macos-26
+    timeout-minutes: 55
+    env:
+      CI: "1"
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      EAS_BUILD_PLATFORM: ios
+      EXPO_NO_TELEMETRY: "1"
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Resolve the Production build profile
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_ENV"
+          import { readFileSync } from "node:fs";
+          const { build: { production } } = JSON.parse(readFileSync("eas.json", "utf8"));
+          for (const [key, value] of Object.entries({ ...production.env, ...production.ios.env })) {
+            if (!/^[A-Z_][A-Z_0-9]*$/.test(key) || /[\r\n]/.test(value)) {
+              throw new Error("Invalid Production profile environment");
+            }
+            console.log(`${key}=${value}`);
+          }
+          NODE
+      - name: Compile the Production Rust libraries
+        run: |
+          xcodebuild -version
+          npm run eas-build-pre-install
+          test -f modules/luna-rest-pilot/ios/LunaRestCore.xcframework/Info.plist
+          test -f modules/luna-engine/ios/LunaEngineCore.xcframework/Info.plist
+          expected="$(grep -oE 'luna-engine-v1:[0-9a-f]{64}' src/features/analysis/monthly-rust-engine-version.ts)"
+          identities=(modules/luna-engine/.build/ios/target/aarch64-apple-ios/release/build/luna-engine-*/out/engine_identity.rs)
+          test "${#identities[@]}" -eq 1
+          grep -Fq "$expected" "${identities[0]}"
+          node --test modules/luna-engine/scripts/native-config.test.mjs
+      - run: npm ci
+      - name: Verify the Production identity and prebuild fingerprint
+        run: |
+          node node_modules/expo/bin/cli config --type public --json > "$RUNNER_TEMP/expo-config.json"
+          node -e 'const c=require(process.argv[1]); if(c.ios.bundleIdentifier!=="com.lunashift.app" || c.runtimeVersion.policy!=="fingerprint") process.exit(1)' "$RUNNER_TEMP/expo-config.json"
+          runtime() {
+            node node_modules/expo-updates/bin/cli.js runtimeversion:resolve --platform ios |
+              node -e 'console.log(JSON.parse(require("node:fs").readFileSync(0,"utf8")).runtimeVersion)'
+          }
+          before="$(runtime)"
+          [[ "$before" =~ ^[0-9a-f]{40}$ ]]
+          node node_modules/expo/bin/cli prebuild --platform ios --no-install
+          test "$(runtime)" = "$before"
+          echo "Production iOS runtime: $before"
+      - name: Install pods
+        run: pod install --project-directory=ios
+      - name: Compile the unsigned iOS Release app
+        run: |
+          workspaces=(ios/*.xcworkspace)
+          test "${#workspaces[@]}" -eq 1
+          workspace="${workspaces[0]}"
+          scheme="$(basename "$workspace" .xcworkspace)"
+          xcodebuild -workspace "$workspace" -scheme "$scheme" \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/luna-build" CODE_SIGNING_ALLOWED=NO build \
+            > "$RUNNER_TEMP/testflight-xcodebuild.log" 2>&1 || {
+              grep -E 'error:|BUILD FAILED' "$RUNNER_TEMP/testflight-xcodebuild.log" | tail -n 80
+              tail -n 100 "$RUNNER_TEMP/testflight-xcodebuild.log"
+              exit 1
+            }
+      - name: Preserve Xcode output if compilation fails
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: testflight-xcodebuild
+          path: ${{ runner.temp }}/testflight-xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 3

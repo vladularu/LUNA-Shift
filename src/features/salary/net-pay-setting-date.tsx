@@ -1,13 +1,13 @@
-import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { Keyboard, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import { usePalette } from "@/theme/palette";
 import { CONTROL_HEIGHT, SELECTION_METRICS, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
-import { Field, PrimaryButton } from "@/ui/form-controls";
+import { Field } from "@/ui/form-controls";
 import Ionicons from "@/ui/icon";
-import { SelectionSheet } from "@/ui/selection-sheet";
 import { Text } from "@/ui/text";
+import { NetPayDateSheet } from "./net-pay-date-sheet";
 
 export function NetPaySettingDate({
   value,
@@ -105,43 +105,23 @@ export function NetPaySettingDate({
           />
         </View>
       </Pressable>
-      {visible ? (
-        <SelectionSheet
-          title="Geburtsdatum"
-          visible
-          disabled={disabled}
-          onClose={() => setVisible(false)}
-          cancelLabel="Abbrechen"
-          closeInHeader
-        >
-          {() => (
-            <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
-              <DateTimePicker
-                accessibilityLabel="Geburtsdatum im Kalender"
-                value={draft}
-                mode="date"
-                display="inline"
-                locale="de-DE"
-                themeVariant={palette.dark ? "dark" : "light"}
-                accentColor={palette.text}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
-                disabled={disabled}
-                onValueChange={(_, next) => setDraft(next)}
-              />
-              <PrimaryButton
-                disabled={disabled}
-                onPress={() => {
-                  onChange(formatted(draft));
-                  setVisible(false);
-                }}
-              >
-                Datum übernehmen
-              </PrimaryButton>
-            </View>
-          )}
-        </SelectionSheet>
-      ) : null}
+      <NetPayDateSheet
+        visible={visible}
+        disabled={disabled}
+        value={draft}
+        minimumDate={minimumDate}
+        maximumDate={maximumDate}
+        onChange={(date) => {
+          const localDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+          if (!disabled && localDay >= minimumDate && localDay <= maximumDate) setDraft(localDay);
+        }}
+        onClose={() => setVisible(false)}
+        onConfirm={() => {
+          if (disabled) return;
+          onChange(formatted(draft));
+          setVisible(false);
+        }}
+      />
     </>
   );
 }

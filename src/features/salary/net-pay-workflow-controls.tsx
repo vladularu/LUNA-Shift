@@ -16,6 +16,7 @@ import { CONTROL_HEIGHT, RADII, SPACING } from "@/theme/tokens";
 import { Field, PrimaryButton } from "@/ui/form-controls";
 
 import { SelectionSheet } from "@/ui/selection-sheet";
+import { SurfaceCard } from "@/ui/design-system";
 
 export function NetPayWorkflowText({
   children,
@@ -187,6 +188,7 @@ export function NetPayWorkflowSelect<T extends string>({
   searchable = false,
   compact = false,
   separator: _separator,
+  luna = false,
 }: {
   readonly label: string;
   readonly value: T | null;
@@ -196,6 +198,7 @@ export function NetPayWorkflowSelect<T extends string>({
   readonly searchable?: boolean;
   readonly compact?: boolean;
   readonly separator?: boolean;
+  readonly luna?: boolean;
 }) {
   const palette = usePalette();
   const [expanded, setExpanded] = useState(false);
@@ -362,6 +365,7 @@ export function NetPayWorkflowSelect<T extends string>({
       </Pressable>
       {expanded && compact ? (
         <SelectionSheet
+          luna={luna}
           title={label}
           visible
           disabled={disabled}
@@ -369,7 +373,15 @@ export function NetPayWorkflowSelect<T extends string>({
           keyboardAware={searchable}
         >
           {(dismiss) => (
-            <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>{renderOptions(dismiss)}</View>
+            <View style={{ padding: SPACING.lg, gap: SPACING.sm }}>
+              {luna && Platform.OS === "ios" ? (
+                <SurfaceCard style={{ padding: SPACING.md, gap: SPACING.sm }}>
+                  {renderOptions(dismiss)}
+                </SurfaceCard>
+              ) : (
+                renderOptions(dismiss)
+              )}
+            </View>
           )}
         </SelectionSheet>
       ) : expanded ? (

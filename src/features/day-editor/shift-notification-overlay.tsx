@@ -1,6 +1,6 @@
 import { SelectionRow } from "@/ui/selection-option";
 import { Text } from "@/ui/text";
-import { CORNER_CURVE, RADII } from "@/theme/tokens";
+import { CORNER_CURVE, RADII, SPACING } from "@/theme/tokens";
 import Ionicons from "@/ui/icon";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -31,6 +31,9 @@ import { MOTION } from "@/theme/motion";
 import { SoftScrollAnchor, SoftScrollScope, SoftScrollView } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY as FONT } from "@/theme/typography";
+import { SurfaceCard } from "@/ui/design-system";
+import { PrimaryButton } from "@/ui/form-controls";
+import { SelectionSheet } from "@/ui/selection-sheet";
 
 const DEFAULT_NOTIFICATION: EntryNotification = {
   amount: 0,
@@ -102,22 +105,6 @@ function notificationsEqual(
 
 function isPreset(value: EntryNotification | null): boolean {
   return PRESETS.some((preset) => notificationsEqual(preset.value, value));
-}
-
-function customSummary(value: EntryNotification): string {
-  return notificationLabel(value);
-}
-
-function PresetRow({
-  label,
-  onPress,
-  selected,
-}: {
-  readonly label: string;
-  readonly onPress: () => void;
-  readonly selected: boolean;
-}) {
-  return <SelectionRow label={label} onPress={onPress} selected={selected} separator />;
 }
 
 function WheelColumn<T extends string | number>({
@@ -209,6 +196,55 @@ function WheelColumn<T extends string | number>({
   );
 }
 
+function CustomNotificationFields({
+  draft,
+  onChange,
+}: {
+  readonly draft: EntryNotification;
+  readonly onChange: (value: EntryNotification) => void;
+}) {
+  const palette = usePalette();
+  return (
+    <>
+      <View style={[styles.wheelCard, { backgroundColor: palette.surface }]}>
+        <WheelColumn
+          accessibilityLabel="Abstand"
+          onChange={(amount) => onChange({ ...draft, amount })}
+          options={AMOUNTS}
+          value={draft.amount}
+        />
+        <WheelColumn
+          accessibilityLabel="Einheit"
+          onChange={(unit) => onChange({ ...draft, unit })}
+          options={UNITS}
+          value={draft.unit}
+        />
+      </View>
+      <View style={[styles.wheelCard, { backgroundColor: palette.surface }]}>
+        <WheelColumn
+          accessibilityLabel="Richtung"
+          onChange={(direction) => onChange({ ...draft, direction })}
+          options={DIRECTIONS}
+          value={draft.direction}
+        />
+        <WheelColumn
+          accessibilityLabel="Bezug"
+          onChange={(reference) => onChange({ ...draft, reference })}
+          options={REFERENCES}
+          value={draft.reference}
+        />
+      </View>
+      <Text
+        accessibilityLiveRegion="polite"
+        maxFontSizeMultiplier={TEXT_MAX_SCALE}
+        style={[styles.summary, { color: palette.textSecondary }]}
+      >
+        {notificationLabel(draft)}
+      </Text>
+    </>
+  );
+}
+
 function CustomNotificationView({
   draft,
   onCancel,
@@ -261,42 +297,7 @@ function CustomNotificationView({
         <View style={styles.headerBalance} />
       </View>
 
-      <View style={[styles.wheelCard, { backgroundColor: palette.surface }]}>
-        <WheelColumn
-          accessibilityLabel="Abstand"
-          onChange={(amount) => onChange({ ...draft, amount })}
-          options={AMOUNTS}
-          value={draft.amount}
-        />
-        <WheelColumn
-          accessibilityLabel="Einheit"
-          onChange={(unit) => onChange({ ...draft, unit })}
-          options={UNITS}
-          value={draft.unit}
-        />
-      </View>
-
-      <View style={[styles.wheelCard, { backgroundColor: palette.surface }]}>
-        <WheelColumn
-          accessibilityLabel="Richtung"
-          onChange={(direction) => onChange({ ...draft, direction })}
-          options={DIRECTIONS}
-          value={draft.direction}
-        />
-        <WheelColumn
-          accessibilityLabel="Bezug"
-          onChange={(reference) => onChange({ ...draft, reference })}
-          options={REFERENCES}
-          value={draft.reference}
-        />
-      </View>
-
-      <Text
-        maxFontSizeMultiplier={TEXT_MAX_SCALE}
-        style={[styles.summary, { color: palette.textSecondary }]}
-      >
-        {customSummary(draft)}
-      </Text>
+      <CustomNotificationFields draft={draft} onChange={onChange} />
 
       <View style={styles.customFooter}>
         <Pressable
@@ -329,10 +330,12 @@ function CustomNotificationView({
 }
 
 export function ShiftNotificationOverlay({
+  luna = false,
   onChange,
   onClose,
   value,
 }: {
+  readonly luna?: boolean;
   readonly onChange: (value: EntryNotification | null) => void;
   readonly onClose: () => void;
   readonly value: EntryNotification | null;
@@ -372,32 +375,123 @@ export function ShiftNotificationOverlay({
   }, [permission]);
 
   const applyValue = useCallback(
-    async (nextValue: EntryNotification | null): Promise<NotificationPermissionState | "NONE"> => {
+    async (
+      nextValue: EntryNotification | null,
+      finish = onClose,
+    ): Promise<NotificationPermissionState | "NONE"> => {
       setSelectedValue(nextValue);
       onChange(nextValue);
       if (nextValue === null) {
-        onClose();
+        finish();
         return "NONE";
       }
       const state = await ensurePermission();
       if (state === "DENIED") return state;
-      onClose();
+      finish();
       return state;
     },
     [ensurePermission, onChange, onClose],
   );
 
+  const returnToPresets = () => setView("PRESETS");
+  const saveCustom = () => {
+    void applyValue(draft).then((state) => {
+      if (state === "DENIED") returnToPresets();
+    });
+  };
+  const customRow = (
+    <SelectionRow
+      label="Benutzerdefiniert"
+      selected={selectedValue !== null && !isPreset(selectedValue)}
+      navigation
+      onPress={() => {
+        setDraft(selectedValue ?? DEFAULT_NOTIFICATION);
+        setView("CUSTOM");
+      }}
+    />
+  );
+  const presetRows = (finish?: () => void) =>
+    PRESETS.map((preset) => (
+      <SelectionRow
+        key={preset.label}
+        label={preset.label}
+        onPress={() => void applyValue(preset.value, finish)}
+        selected={notificationsEqual(selectedValue, preset.value)}
+        separator
+      />
+    ));
+  const permissionNotice =
+    permission === "DENIED" ? (
+      <View
+        accessibilityRole="alert"
+        style={[styles.permissionCard, { backgroundColor: palette.surface }]}
+      >
+        <Text
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          style={[styles.permissionText, { color: palette.textSecondary }]}
+        >
+          Aktiviere Mitteilungen für LUNA in den iOS-Einstellungen.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            void Linking.openSettings().catch(() => undefined);
+          }}
+          style={({ pressed }) => [
+            styles.settingsButton,
+            { backgroundColor: palette.primaryAction, opacity: pressed ? 0.76 : 1 },
+          ]}
+        >
+          <Text style={[styles.settingsLabel, { color: palette.onPrimaryAction }]}>
+            iOS-Einstellungen
+          </Text>
+        </Pressable>
+      </View>
+    ) : null;
+
+  if (luna) {
+    const custom = view === "CUSTOM";
+    return (
+      <SelectionSheet
+        luna
+        visible
+        title={custom ? "Eigene Erinnerung" : "Erinnerung"}
+        cancelLabel="Schließen"
+        onClose={onClose}
+        onBack={custom ? returnToPresets : undefined}
+        backLabel="Zurück zu Erinnerungen"
+        contentKey={view}
+        footer={custom ? <PrimaryButton onPress={saveCustom}>Fertig</PrimaryButton> : undefined}
+      >
+        {(dismiss) => (
+          <View
+            style={{ padding: SPACING.lg, gap: SPACING.md }}
+            testID={custom ? "shift-notification-custom" : "shift-notification-presets"}
+          >
+            {custom ? (
+              <CustomNotificationFields draft={draft} onChange={setDraft} />
+            ) : (
+              <>
+                {permissionNotice}
+                <SurfaceCard>
+                  <View accessibilityRole="radiogroup">{presetRows(dismiss)}</View>
+                  {customRow}
+                </SurfaceCard>
+              </>
+            )}
+          </View>
+        )}
+      </SelectionSheet>
+    );
+  }
+
   if (view === "CUSTOM") {
     return (
       <CustomNotificationView
         draft={draft}
-        onCancel={() => setView("PRESETS")}
+        onCancel={returnToPresets}
         onChange={setDraft}
-        onDone={() => {
-          void applyValue(draft).then((state) => {
-            if (state === "DENIED") setView("PRESETS");
-          });
-        }}
+        onDone={saveCustom}
       />
     );
   }
@@ -433,33 +527,7 @@ export function ShiftNotificationOverlay({
           },
         ]}
       >
-        {permission === "DENIED" ? (
-          <View
-            accessibilityRole="alert"
-            style={[styles.permissionCard, { backgroundColor: palette.surface }]}
-          >
-            <Text
-              maxFontSizeMultiplier={TEXT_MAX_SCALE}
-              style={[styles.permissionText, { color: palette.textSecondary }]}
-            >
-              Aktiviere Mitteilungen für LUNA in den iOS-Einstellungen.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                void Linking.openSettings().catch(() => undefined);
-              }}
-              style={({ pressed }) => [
-                styles.settingsButton,
-                { backgroundColor: palette.primaryAction, opacity: pressed ? 0.76 : 1 },
-              ]}
-            >
-              <Text style={[styles.settingsLabel, { color: palette.onPrimaryAction }]}>
-                iOS-Einstellungen
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
+        {permissionNotice}
 
         <SoftScrollScope edge="bottom">
           <SoftScrollView
@@ -467,14 +535,7 @@ export function ShiftNotificationOverlay({
             accessibilityRole="radiogroup"
             style={[styles.presetCard, { backgroundColor: palette.surface }]}
           >
-            {PRESETS.map((preset) => (
-              <PresetRow
-                key={preset.label}
-                label={preset.label}
-                onPress={() => void applyValue(preset.value)}
-                selected={notificationsEqual(selectedValue, preset.value)}
-              />
-            ))}
+            {presetRows()}
           </SoftScrollView>
 
           <SoftScrollAnchor>
@@ -486,15 +547,7 @@ export function ShiftNotificationOverlay({
                 backgroundColor: palette.surface,
               }}
             >
-              <SelectionRow
-                label="Benutzerdefiniert"
-                selected={selectedValue !== null && !isPreset(selectedValue)}
-                navigation
-                onPress={() => {
-                  setDraft(selectedValue ?? DEFAULT_NOTIFICATION);
-                  setView("CUSTOM");
-                }}
-              />
+              {customRow}
             </View>
           </SoftScrollAnchor>
         </SoftScrollScope>
@@ -543,33 +596,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: RADII.card,
     borderCurve: CORNER_CURVE,
-  },
-  presetRow: {
-    minHeight: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderBottomWidth: 0,
-    paddingHorizontal: 16,
-  },
-  presetLabel: { ...FONT.editorRow, flex: 1 },
-  radioOuter: {
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderRadius: 12,
-  },
-  radioInner: { width: 10, height: 10, borderRadius: 5 },
-  customRow: {
-    minHeight: 58,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderRadius: RADII.control,
-    borderCurve: CORNER_CURVE,
-    paddingHorizontal: 16,
   },
   customScreen: {
     ...StyleSheet.absoluteFill,

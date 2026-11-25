@@ -168,6 +168,7 @@ export function SalaryPayrollStatement({
   payrollTimingEstimate,
   blocked = false,
   onReviewAllowance,
+  netSettings,
   afterTotals,
   afterStatement,
 }: {
@@ -184,6 +185,7 @@ export function SalaryPayrollStatement({
   readonly payrollTimingEstimate?: AutomaticNetPayForecast["payrollTimingEstimate"];
   readonly blocked?: boolean;
   readonly onReviewAllowance: (months: readonly string[]) => void;
+  readonly netSettings?: ReactNode;
   readonly afterTotals?: ReactNode;
   readonly afterStatement?: ReactNode;
 }) {
@@ -262,7 +264,7 @@ export function SalaryPayrollStatement({
   ].sort();
   return (
     <>
-      <SurfaceCard>
+      <SurfaceCard testID="salary-payroll-summary-card">
         <View
           testID="salary-payroll-totals"
           style={{
@@ -305,6 +307,12 @@ export function SalaryPayrollStatement({
         ) : null}
         {view === "net" && available && netPayCrossYearLabel(payrollTimingEstimate) ? (
           <PayrollNote>{netPayCrossYearLabel(payrollTimingEstimate)}</PayrollNote>
+        ) : null}
+        {netSettings ? (
+          <>
+            <CardSeparator inset={0} visible />
+            {netSettings}
+          </>
         ) : null}
       </SurfaceCard>
       {afterTotals}
@@ -569,21 +577,6 @@ export function SalaryPayrollContent({
             : null;
   return (
     <>
-      {view === "net" && !blocked && data.status === "ready" ? (
-        settings ? (
-          <NetPaySettingsEntry
-            settings={settings}
-            disabled={data.busy}
-            onPress={() => router.push(netPaySettingsRoute(month))}
-          />
-        ) : (
-          <SalaryNavigationRow
-            title="Netto-Einstellungen"
-            subtitle="Netto einrichten"
-            onPress={() => router.push(netPaySettingsRoute(month))}
-          />
-        )
-      ) : null}
       {!hasBasis ? (
         <>
           <InlineNotice message="Hinterlege einen Tarif oder dein Monatsbrutto." />
@@ -633,6 +626,16 @@ export function SalaryPayrollContent({
         payrollTimingEstimate={forecast?.payrollTimingEstimate}
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
+        netSettings={
+          view === "net" && !blocked && data.status === "ready" ? (
+            <NetPaySettingsEntry
+              embedded
+              settings={settings}
+              disabled={data.busy}
+              onPress={() => router.push(netPaySettingsRoute(month))}
+            />
+          ) : null
+        }
         afterTotals={
           view === "salary" ? (
             <SalaryPayrollSettings
@@ -644,6 +647,7 @@ export function SalaryPayrollContent({
           ) : null
         }
         afterStatement={
+          view === "salary" &&
           configured &&
           settings &&
           !blocked &&
