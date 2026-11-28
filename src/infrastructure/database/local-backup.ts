@@ -38,7 +38,7 @@ import { withImmediateTransaction } from "@/infrastructure/database/transaction"
 import { REMUNERATION_PROFILE_COLUMNS } from "./remuneration-profile-repository";
 
 export const LOCAL_BACKUP_FORMAT = "lunashift-local-backup";
-export const LOCAL_BACKUP_VERSION = 24;
+export const LOCAL_BACKUP_VERSION = 25;
 
 type BackupScalar = string | number | null;
 type BackupRow = Readonly<Record<string, BackupScalar>>;
@@ -99,6 +99,7 @@ interface UnsignedLocalBackupDocument {
     | 21
     | 22
     | 23
+    | 24
     | typeof LOCAL_BACKUP_VERSION;
   readonly createdAt: string;
   readonly appVersion: string | null;
@@ -278,7 +279,7 @@ export async function readLocalBackupSnapshotInTransaction(
   const shifts = await transaction.getAllAsync<BackupRow>(
     `SELECT id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,
               color,symbol,note,notification_json,alarm_enabled,location_json,
-              overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,
+              overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,absence_pay_json,
               revision,created_at,updated_at,deleted_at
          FROM shift_entries
         ORDER BY date,id`,

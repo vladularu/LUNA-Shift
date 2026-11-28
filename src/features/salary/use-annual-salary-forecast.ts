@@ -18,7 +18,8 @@ function useOriginalAnnualSalaryForecast(
   enabled = true,
   testMonths: readonly string[] = NO_TEST_MONTHS,
 ) {
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { resolver } = useRuleCatalogRuntime();

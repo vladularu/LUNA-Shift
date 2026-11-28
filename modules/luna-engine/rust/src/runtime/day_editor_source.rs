@@ -299,10 +299,15 @@ fn read(group: Option<&RawDayEntrySource<'_>>) -> Result<Option<Value>, DayEdito
     }
 }
 fn check_columns(row: &Value, columns: &[&str]) -> Result<(), DayEditorSourceError> {
-    if row
-        .as_object()
-        .is_some_and(|v| v.len() == columns.len() && columns.iter().all(|c| v.contains_key(*c)))
-    {
+    if row.as_object().is_some_and(|v| {
+        v.len()
+            == columns.len()
+                + usize::from(
+                    columns == calendar_rows::SHIFT_ROW_FIELDS
+                        && v.contains_key("absence_pay_json"),
+                )
+            && columns.iter().all(|c| v.contains_key(*c))
+    }) {
         Ok(())
     } else {
         Err(DayEditorSourceError::InvalidSource)

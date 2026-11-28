@@ -9,6 +9,7 @@ import type {
 import { ValidationError, validateAppointment, validateShift } from "@/domain/validation";
 import { parseJson } from "./repository-shared";
 export interface ShiftRow {
+  absence_pay_json?: string | null;
   special_duty_json: string | null;
   id: string;
   date: string;
@@ -58,6 +59,10 @@ export function mapShift(row: ShiftRow): ShiftEntry {
     throw new ValidationError("Gespeicherte Dienstdaten sind ungültig.");
   }
   const validated = validateShift({
+    absencePay: parseJson<import("@/domain/absence-pay").AbsencePayFacts>(
+      row.absence_pay_json ?? null,
+      "Abwesenheitsaufschlag",
+    ),
     specialDuty: parseJson<SpecialDuty>(row.special_duty_json ?? null, "Sonderdienst"),
     id: row.id,
     date: row.date,
@@ -80,6 +85,7 @@ export function mapShift(row: ShiftRow): ShiftEntry {
   });
   return Object.freeze({
     kind: "SHIFT",
+    ...(validated.absencePay ? { absencePay: validated.absencePay } : {}),
     specialDuty: validated.specialDuty ?? null,
     id: row.id,
     date: validated.date,

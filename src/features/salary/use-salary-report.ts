@@ -15,7 +15,8 @@ import { useRustSalaryPreparation } from "./use-rust-salary-preparation";
 
 function useOriginalSalaryReport(month: string, enabled = true) {
   const { error, ready, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
@@ -76,6 +77,11 @@ function useOriginalSalaryReport(month: string, enabled = true) {
   ]);
 
   return {
+    absenceNetBasis: {
+      profile,
+      resolver: ruleResolver,
+      attribution: payment.preferences.socialInsuranceAttribution,
+    },
     // A failed inline write leaves the loaded preferences valid and must not discard form drafts.
     error: error ?? (!paymentReady ? payment.error : null),
     ready: ready && paymentReady,
@@ -152,6 +158,11 @@ export function useNativeSalaryReport(
     };
   }, [projection, month]);
   return {
+    absenceNetBasis: {
+      profile: prepared.profile,
+      resolver: prepared.resolver,
+      attribution: prepared.payment.preferences.socialInsuranceAttribution,
+    },
     error: prepared.sourceError ?? (projection ? null : prepared.error),
     ready: prepared.sourceReady && (prepared.ready || projection !== undefined),
     reload: prepared.reload,

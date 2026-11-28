@@ -360,7 +360,10 @@ describe("canonical salary payment input", () => {
       prefs(),
       "EARNED",
     );
-    expect(absence.available).toBe(true);
+    expect(absence.available).toBe(false);
+    expect(absence.pay.absencePayNotes).toEqual([
+      "2026-08-03 · Für die Schätzung fehlen erfasste Dienste für Mai 2026, Juni 2026.",
+    ]);
     expect(absence.pay.allowanceAmount).toBeGreaterThan(0);
     expect(absence.warnings.some((warning) => /Fortzahlung nicht bestätigt/.test(warning))).toBe(
       true,

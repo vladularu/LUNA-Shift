@@ -1,3 +1,4 @@
+import { validateAbsencePay } from "@/domain/absence-pay";
 import { validateSpecialDuty, validateDutyParent } from "@/domain/special-duty";
 import { validateDevTraining } from "./dev-training-backup";
 import type { ShiftTrainingRow } from "./training-repository";
@@ -26,6 +27,7 @@ export interface RawShiftRow {
   overtime_minutes: number;
   tariff_overtime_confirmed: number;
   holiday_premium_mode: string;
+  absence_pay_json?: string | null;
   special_duty_json?: string | null;
   revision: number;
   created_at: string;
@@ -162,6 +164,12 @@ function validateShift(value: unknown, month: string, currentPayload: boolean): 
   if (!PREMIUM_MODES.has(stringValue(row, "holiday_premium_mode"))) {
     invalid("Feiertagsmodus");
   }
+  const absenceJson = versionedNullableString(row, "absence_pay_json", false);
+  validateAbsencePay(
+    absenceJson === null ? null : JSON.parse(absenceJson),
+    stringValue(row, "type"),
+    date,
+  );
   const dutyJson = row.special_duty_json;
   if (dutyJson !== undefined && dutyJson !== null && typeof dutyJson !== "string")
     throw new Error("Ungültige Sonderdienstdaten im Backup.");
@@ -204,6 +212,7 @@ function validateShift(value: unknown, month: string, currentPayload: boolean): 
     overtime_minutes: integerValue(row, "overtime_minutes"),
     tariff_overtime_confirmed: tariffOvertimeConfirmed,
     holiday_premium_mode: stringValue(row, "holiday_premium_mode"),
+    absence_pay_json: absenceJson,
     special_duty_json: (dutyJson as string | null) ?? null,
     revision: integerValue(row, "revision", 1),
     created_at: stringValue(row, "created_at"),

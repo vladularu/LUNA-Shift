@@ -64,15 +64,32 @@ export function selectAnnualReportInputs(
       rangeEnd = complianceEnd;
     }
   }
-  const rangeStartValue = rangeStart.toString();
+  // January absences can depend on prior-year pay and on the start of an earlier continuous absence.
+  const hasAbsence = entries.some(
+    (e) =>
+      e.kind === "SHIFT" &&
+      e.deletedAt == null &&
+      (e.type === "SICK" || e.type === "VACATION") &&
+      e.date.startsWith(String(year) + "-"),
+  );
+  const rangeStartValue = hasAbsence
+    ? entries.reduce(
+        (first, entry) => (entry.date < first ? entry.date : first),
+        rangeStart.toString(),
+      )
+    : rangeStart.toString();
   const rangeEndValue = rangeEnd.toString();
   // Window reloads may return the same rows in another order. Both visible and
   // background requests must hash and calculate the same canonical timeline.
   const selectedEntries = sortCalendarEntries(
     entries.filter((entry) => entry.date >= rangeStartValue && entry.date <= rangeEndValue),
   );
-  const selectedDecisions = tariffDecisions.filter((decision) =>
-    decision.month.startsWith(`${year}-`),
+  const selectedDecisions = tariffDecisions.filter(
+    (decision) =>
+      (hasAbsence &&
+        decision.month >= rangeStartValue.slice(0, 7) &&
+        decision.month < String(year)) ||
+      decision.month.startsWith(`${year}-`),
   );
   const canReuse =
     previous?.year === year &&

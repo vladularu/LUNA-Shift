@@ -278,6 +278,7 @@ export interface ShiftTemplate {
 }
 
 export interface ShiftEntry {
+  readonly absencePay?: import("./absence-pay").AbsencePayFacts | null;
   readonly specialDuty?: SpecialDuty | null;
   readonly kind: "SHIFT";
   readonly id: string;
@@ -381,6 +382,7 @@ export interface SaveShiftTemplateInput {
 }
 
 export interface SaveShiftInput {
+  readonly absencePay?: import("./absence-pay").AbsencePayFacts | null;
   readonly specialDuty?: SpecialDuty | null;
   readonly id?: string;
   readonly expectedRevision?: number;
@@ -553,6 +555,15 @@ export interface MonthlyPayEstimate {
   readonly knownGrossAmount?: number;
   /** Tariff months used where rules for the payroll date are still missing. */
   readonly provisionalTariffMonths?: readonly string[];
+  readonly absencePayAmount?: number;
+  readonly absencePayNotes?: readonly string[];
+  readonly absencePayDays?: readonly {
+    readonly date: string;
+    readonly type: string;
+    readonly eventStart: string;
+    readonly dailyRateCents: number;
+    readonly manual: boolean;
+  }[];
   readonly specialDutyAmount?: number;
   readonly specialDutyBreakdowns?: readonly import("./special-duty-pay").SpecialDutyPayLine[];
   readonly specialDutyNotes?: readonly string[];

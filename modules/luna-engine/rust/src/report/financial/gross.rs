@@ -119,7 +119,8 @@ fn annual_gross(
             let gross = number(pay, "estimatedGrossAmount")?;
             let premium = number(pay, "timePremiumAmount")?;
             let overtime = number(pay, "overtimeAmount")?;
-            let allowance = number(pay, "allowanceAmount")?;
+            let allowance =
+                number(pay, "allowanceAmount")? + pay["absencePayAmount"].as_f64().unwrap_or(0.0);
             let tvoed = number(pay, "tvoedAllowanceAmount")?;
             let care = number(pay, "careAllowanceAmount")?;
             row.estimated_gross_amount = Some(gross);

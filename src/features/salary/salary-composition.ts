@@ -1,7 +1,59 @@
+import { tariffFullTimeWeeklyMinutes } from "@/domain/employment-profile";
+import { applicableAllowanceRules, vkaEFixedAllowanceCents } from "@/engine/pay-allowances";
+import { getTariffFullTimeWeeklyMinutes, getTariffRulePackage } from "@/engine/tariff";
+import type { RuleResolver } from "@/rules/rule-resolver";
 import type { AllowanceStatus, MonthlyPayEstimate, UserProfile } from "@/domain/types";
 import type { SalaryPaymentProjection } from "@/domain/salary-payment";
 import { formatMonthTitle } from "@/engine/calendar";
 import { provisionalTariffCaption } from "./provisional-tariff-caption";
+
+export function tariffAllowanceBasis(
+  profile: UserProfile,
+  pay: MonthlyPayEstimate,
+  resolver?: RuleResolver,
+): string | undefined {
+  const selection = profile.tariff ?? profile.vkaETariff;
+  if (!selection || !pay.tvoedAllowanceAmount) return undefined;
+  const date = pay.month + "-01";
+  let rateCents: number, fullTimeWeeklyMinutes: number;
+  if (profile.tariff) {
+    const rulePackage = getTariffRulePackage(date, resolver);
+    const fullTime = getTariffFullTimeWeeklyMinutes(profile.tariff, date, resolver);
+    if (!rulePackage || !fullTime) return undefined;
+    const rules = applicableAllowanceRules("tvoed", {
+      date,
+      profile,
+      fullTimeWeeklyMinutes: fullTime,
+      rulePackage,
+      status: null,
+      workMinutes: 0,
+    });
+    if (rules.length !== 1 || !rules[0].prorateByPartTime) return undefined;
+    rateCents = rules[0].amountCents;
+    fullTimeWeeklyMinutes = fullTime;
+  } else if (profile.vkaETariff) {
+    rateCents = vkaEFixedAllowanceCents(profile.vkaETariff);
+    fullTimeWeeklyMinutes = tariffFullTimeWeeklyMinutes(selection.sector, selection.tariffRegion);
+  } else return undefined;
+  const factor = profile.weeklyMinutes / fullTimeWeeklyMinutes;
+  if (Math.round(rateCents * factor) !== Math.round(pay.tvoedAllowanceAmount * 100))
+    return undefined;
+  const hours = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 });
+  const rate = euro(rateCents / 100);
+  const region =
+    selection.tariffRegion === "KAV_BW" ? "KAV Baden-Württemberg · " : "Übrige VKA-Tarifgebiete · ";
+  return (
+    region +
+    (factor === 1
+      ? rate + " bei Vollzeit"
+      : rate +
+        " × " +
+        hours.format(profile.weeklyMinutes / 60) +
+        " / " +
+        hours.format(fullTimeWeeklyMinutes / 60) +
+        " Wochenstunden")
+  );
+}
 
 export function salaryPaymentHint(
   projection: Pick<SalaryPaymentProjection, "month" | "contributions"> &
@@ -18,9 +70,14 @@ export function salaryPaymentHint(
     return `Zulagen für ${missing.map(formatMonthTitle).join(" und ")} noch offen`;
   const variable = projection.contributions.filter(
     (part) =>
-      ["PREMIUMS", "MONTHLY_ALLOWANCE", "HOURLY_ALLOWANCE", "OVERTIME", "SPECIAL_DUTY"].includes(
-        part.group,
-      ) &&
+      [
+        "PREMIUMS",
+        "MONTHLY_ALLOWANCE",
+        "HOURLY_ALLOWANCE",
+        "OVERTIME",
+        "SPECIAL_DUTY",
+        "ABSENCE_PAY",
+      ].includes(part.group) &&
       part.paymentMonth === projection.month &&
       part.amountCents > 0,
   );
@@ -134,6 +191,7 @@ export function salaryComposition(
           ? [
               {
                 label: "TVöD-Zulage",
+                subtitle: tariffAllowanceBasis(profile, pay),
                 value: euro(pay.tvoedAllowanceAmount),
               },
             ]

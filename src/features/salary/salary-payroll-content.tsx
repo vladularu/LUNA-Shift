@@ -1,6 +1,8 @@
+import type { RuleResolver } from "@/rules/rule-resolver";
 import { incompleteSpecialDuties } from "@/domain/special-duty-review";
 import { SpecialDutyReviewRow } from "./special-duty-review-row";
 import { router } from "expo-router";
+import { useNetFromKnownAbsencePay, type AbsenceNetBasis } from "./net-from-known-absence-pay";
 import { useState, type ReactNode } from "react";
 import { Alert, Pressable, View, useWindowDimensions } from "react-native";
 import type { NetPayResult } from "@/domain/net-pay";
@@ -27,7 +29,7 @@ import { SecondaryButton } from "@/ui/form-controls";
 import Ionicons from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { SalaryAmountRow, SalaryNavigationRow, SalarySectionCard } from "./salary-ui";
-import { salaryProfileCaption } from "./salary-composition";
+import { salaryProfileCaption, tariffAllowanceBasis } from "./salary-composition";
 import { salaryDeductions } from "./salary-deductions";
 import {
   netPayEuro,
@@ -55,7 +57,14 @@ const ALLOWANCE_LABELS: Readonly<Record<AllowanceStatus, string>> = {
   ALTERNATING_MONTHLY: "Ständige Wechselschichtzulage",
   ALTERNATING_HOURLY: "Nichtständige Wechselschichtzulage",
 };
-const VARIABLE = ["PREMIUMS", "MONTHLY_ALLOWANCE", "HOURLY_ALLOWANCE", "OVERTIME", "SPECIAL_DUTY"];
+const VARIABLE = [
+  "PREMIUMS",
+  "MONTHLY_ALLOWANCE",
+  "HOURLY_ALLOWANCE",
+  "OVERTIME",
+  "SPECIAL_DUTY",
+  "ABSENCE_PAY",
+];
 
 function hasTariff(profile: UserProfile) {
   return !!(
@@ -143,12 +152,21 @@ function PayrollNote({ children }: { readonly children: ReactNode }) {
   );
 }
 
+function absencePayDetail(days: readonly { dailyRateCents: number }[]) {
+  if (!days.length) return undefined;
+  const first = days[0].dailyRateCents;
+  const label = days.length === 1 ? "Ausfalltag" : "Ausfalltage";
+  return days.every((day) => day.dailyRateCents === first)
+    ? days.length + " " + label + " × " + netPayEuro(first)
+    : days.length + " " + label;
+}
 function contributionLabel(part: SalaryPaymentContribution, projection: SalaryPaymentProjection) {
   const source = projection.sources.find((value) => value.month === part.claimMonth)!;
   if (part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE")
     return ALLOWANCE_LABELS[
       source.pay.confirmedAllowance ?? source.pay.assessment.suggestedAllowance
     ];
+  if (part.group === "ABSENCE_PAY") return "Aufschlag Urlaub/Krankheit";
   if (part.group === "PREMIUMS") return "Zeitzuschläge";
   if (part.group === "OVERTIME") return "Überstunden";
   return "Bereitschaftsvergütung";
@@ -156,6 +174,7 @@ function contributionLabel(part: SalaryPaymentContribution, projection: SalaryPa
 
 export function SalaryPayrollStatement({
   view = "salary",
+  ruleResolver,
   month,
   profile,
   pay,
@@ -166,6 +185,7 @@ export function SalaryPayrollStatement({
   annualPayment,
   pensionOmitted = false,
   payrollTimingEstimate,
+  provisionalAbsence = false,
   blocked = false,
   onReviewAllowance,
   netSettings,
@@ -173,6 +193,7 @@ export function SalaryPayrollStatement({
   afterStatement,
 }: {
   readonly view?: PayrollView;
+  readonly ruleResolver?: RuleResolver;
   readonly month: string;
   readonly profile: UserProfile;
   readonly pay: MonthlyPayEstimate;
@@ -182,6 +203,7 @@ export function SalaryPayrollStatement({
   readonly additionalGrossCents: number;
   readonly annualPayment?: AnnualPaymentForecast;
   readonly pensionOmitted?: boolean;
+  readonly provisionalAbsence?: boolean;
   readonly payrollTimingEstimate?: AutomaticNetPayForecast["payrollTimingEstimate"];
   readonly blocked?: boolean;
   readonly onReviewAllowance: (months: readonly string[]) => void;
@@ -192,27 +214,29 @@ export function SalaryPayrollStatement({
   const palette = usePalette();
   const { width, fontScale } = useWindowDimensions();
   const stacked = width < 360 || fontScale >= 1.4;
-  const available = blocked || !pay.available ? null : net;
+  const available = blocked || (!pay.available && !provisionalAbsence) ? null : net;
   const fullAnnual = pay.available
     ? (annualPayment?.grossCents ?? annualGrossCents)
     : annualGrossCents;
   const partial = !pay.available && pay.knownGrossAmount !== undefined;
   const tariffCaption = salaryTariffCaption(pay);
-  const grossLabel = partial
-    ? "Bekanntes Brutto"
-    : pay.provisionalTariffMonths?.length
-      ? "Brutto vorläufig"
-      : "Gesamtbrutto";
+  const grossLabel =
+    partial || provisionalAbsence
+      ? "Bekanntes Brutto"
+      : pay.provisionalTariffMonths?.length
+        ? "Brutto vorläufig"
+        : "Gesamtbrutto";
   const monthlyGross = pay.estimatedGrossAmount ?? pay.knownGrossAmount ?? null;
   const gross =
-    (pay.available ? annualPayment?.totalGrossCents : null) ??
+    (pay.available || provisionalAbsence ? annualPayment?.totalGrossCents : null) ??
     available?.amounts.grossCents ??
     (monthlyGross === null
       ? null
       : Math.round(monthlyGross * 100) + additionalGrossCents + fullAnnual);
   const deductions = available ? salaryDeductions(available) : null;
-  const netLabel =
-    annualPayment && !annualPayment.netIncluded
+  const netLabel = provisionalAbsence
+    ? "Netto vorläufig"
+    : annualPayment && !annualPayment.netIncluded
       ? "Netto ohne Jahressonderzahlung"
       : pensionOmitted
         ? "Netto vor Zusatzversorgung"
@@ -243,7 +267,13 @@ export function SalaryPayrollStatement({
         ]
       : []),
     ...(pay.tvoedAllowanceAmount > 0
-      ? [{ label: "TVöD-Zulage", value: Math.round(pay.tvoedAllowanceAmount * 100) }]
+      ? [
+          {
+            label: "TVöD-Zulage",
+            value: Math.round(pay.tvoedAllowanceAmount * 100),
+            subtitle: tariffAllowanceBasis(profile, pay, ruleResolver),
+          },
+        ]
       : []),
     ...(additionalGrossCents > 0
       ? [{ label: "Weitere feste monatliche Zulage", value: additionalGrossCents }]
@@ -330,6 +360,7 @@ export function SalaryPayrollStatement({
                 {index ? <CardSeparator /> : null}
                 <SalaryAmountRow
                   label={row.label}
+                  subtitle={row.subtitle}
                   value={row.value === null ? "Noch offen" : netPayEuro(row.value)}
                   quiet
                 />
@@ -343,7 +374,11 @@ export function SalaryPayrollStatement({
                   (issue) => issue.month === claimMonth && issue.group === part.group,
                 ),
               );
-              const visible = sourceParts.filter((part) => part.amountCents > 0);
+              const visible = sourceParts.filter(
+                (part) =>
+                  part.amountCents > 0 ||
+                  (part.group === "ABSENCE_PAY" && !!source.pay.absencePayDays?.length),
+              );
               const openParts = sourceParts.filter(
                 (part) =>
                   part.amountCents === 0 &&
@@ -372,15 +407,19 @@ export function SalaryPayrollStatement({
                         label={contributionLabel(part, projection)}
                         value={netPayEuro(part.amountCents)}
                         subtitle={
-                          part.group === "MONTHLY_ALLOWANCE" || part.group === "HOURLY_ALLOWANCE"
-                            ? projection.issues.some(
-                                (issue) => issue.month === claimMonth && issue.group === part.group,
-                              )
-                              ? "Prüfung offen"
-                              : source.pay.confirmedAllowance === null
-                                ? "Geschätzt"
-                                : "Monatsangabe gespeichert"
-                            : undefined
+                          part.group === "ABSENCE_PAY"
+                            ? absencePayDetail(source.pay.absencePayDays ?? [])
+                            : part.group === "MONTHLY_ALLOWANCE" ||
+                                part.group === "HOURLY_ALLOWANCE"
+                              ? projection.issues.some(
+                                  (issue) =>
+                                    issue.month === claimMonth && issue.group === part.group,
+                                )
+                                ? "Prüfung offen"
+                                : source.pay.confirmedAllowance === null
+                                  ? "Geschätzt"
+                                  : "Monatsangabe gespeichert"
+                              : undefined
                         }
                         quiet
                       />
@@ -393,7 +432,9 @@ export function SalaryPayrollStatement({
                         label={
                           openParts.length === 1 && openParts[0].group === "SPECIAL_DUTY"
                             ? "Bereitschaftsvergütung"
-                            : "Weitere Zulagen"
+                            : openParts.length === 1 && openParts[0].group === "ABSENCE_PAY"
+                              ? "Aufschlag Urlaub/Krankheit"
+                              : "Weitere Zulagen"
                         }
                         value="Noch offen"
                         quiet
@@ -498,7 +539,9 @@ export function SalaryPayrollContent({
   profile,
   pay,
   projection,
+  absenceNetBasis,
 }: {
+  readonly absenceNetBasis?: AbsenceNetBasis;
   readonly view?: PayrollView;
   readonly month: string;
   readonly blocked: boolean;
@@ -517,12 +560,20 @@ export function SalaryPayrollContent({
     testMonths,
     month,
   );
-  const forecast = useAutomaticNetPay(
+  const baseForecast = useAutomaticNetPay(
     month,
     settings,
     !blocked && configured && data.status === "ready",
     testMonths,
     data.timeline,
+  );
+  const { forecast, notice: absenceNotice } = useNetFromKnownAbsencePay(
+    baseForecast,
+    view === "net" && !blocked && configured && data.status === "ready" ? projection : undefined,
+    absenceNetBasis,
+    settings,
+    data.timeline,
+    annual.payments,
   );
   const net = forecast?.result.status === "available" ? forecast.result.pay : null;
   function reviewAllowance(months: readonly string[]) {
@@ -564,7 +615,7 @@ export function SalaryPayrollContent({
           ? "Ergänze deine Netto-Angaben über die Einstellungskarte."
           : forecast?.result.status === "unavailable"
             ? forecast.result.reason
-            : null;
+            : (absenceNotice ?? null);
   const notice =
     view === "net"
       ? netNotice
@@ -613,6 +664,7 @@ export function SalaryPayrollContent({
         </View>
       ) : null}
       <SalaryPayrollStatement
+        ruleResolver={absenceNetBasis?.resolver}
         view={view}
         month={month}
         profile={profile}
@@ -624,6 +676,7 @@ export function SalaryPayrollContent({
         annualPayment={forecast?.annualPayment}
         pensionOmitted={forecast?.pensionOmitted ?? false}
         payrollTimingEstimate={forecast?.payrollTimingEstimate}
+        provisionalAbsence={!!absenceNotice}
         blocked={blocked}
         onReviewAllowance={reviewAllowance}
         netSettings={

@@ -26,7 +26,7 @@ export async function listCalendarEntries(
       COALESCE(templates.color,entries.color) AS color,
       COALESCE(templates.symbol,entries.symbol) AS symbol,
       entries.note,entries.notification_json,entries.alarm_enabled,entries.location_json,
-      entries.special_duty_json,entries.overtime_minutes,entries.tariff_overtime_confirmed,entries.holiday_premium_mode,
+      entries.absence_pay_json,entries.special_duty_json,entries.overtime_minutes,entries.tariff_overtime_confirmed,entries.holiday_premium_mode,
       entries.revision,entries.created_at,entries.updated_at,entries.deleted_at
      FROM shift_entries entries
      LEFT JOIN shift_templates templates ON templates.id=entries.template_id
@@ -57,9 +57,9 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
       `INSERT INTO shift_entries(
         id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,color,
         symbol,note,notification_json,alarm_enabled,location_json,overtime_minutes,
-        tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,
+        tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,absence_pay_json,
         revision,created_at,updated_at,deleted_at
-      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,NULL)`,
+      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,NULL)`,
       id,
       input.date,
       input.templateId ?? null,
@@ -79,6 +79,7 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
       input.tariffOvertimeConfirmed ? 1 : 0,
       input.holidayPremiumMode ?? "WITH_TIME_OFF",
       serializeJson(input.specialDuty),
+      serializeJson(input.absencePay),
       now,
       now,
     );
@@ -88,6 +89,7 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
         date=?,template_id=?,title=?,type=?,all_day=?,start_time=?,end_time=?,break_minutes=?,
         color=?,symbol=?,note=?,notification_json=?,alarm_enabled=?,location_json=?,
         overtime_minutes=?,tariff_overtime_confirmed=?,holiday_premium_mode=?,special_duty_json=?,
+        absence_pay_json=CASE WHEN ? AND type=? AND date=? THEN absence_pay_json ELSE ? END,
         revision=revision+1,updated_at=?
        WHERE id=? AND revision=? AND deleted_at IS NULL`,
       input.date,
@@ -108,6 +110,12 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
       input.tariffOvertimeConfirmed ? 1 : 0,
       input.holidayPremiumMode ?? "WITH_TIME_OFF",
       serializeJson(input.specialDuty),
+      input.absencePay === undefined && (input.type === "VACATION" || input.type === "SICK")
+        ? 1
+        : 0,
+      input.type,
+      input.date,
+      serializeJson(input.absencePay),
       now,
       id,
       input.expectedRevision ?? -1,
@@ -118,7 +126,7 @@ export async function saveShift(db: SQLiteDatabase, rawInput: SaveShiftInput): P
   const row = await db.getFirstAsync<ShiftRow>(
     `SELECT id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,color,
       symbol,note,notification_json,alarm_enabled,location_json,overtime_minutes,
-      tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,
+      tariff_overtime_confirmed,holiday_premium_mode,special_duty_json,absence_pay_json,
       revision,created_at,updated_at,deleted_at
      FROM shift_entries WHERE id=?`,
     id,

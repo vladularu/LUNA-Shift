@@ -1,3 +1,5 @@
+import { isTariffAbsence } from "@/domain/absence-pay";
+import { needsCalendarSalaryInYear } from "./calendar-salary-projection";
 import type { AnnualSalaryPayment } from "@/domain/annual-salary-payment";
 import type { MonthlyNetPaySettings } from "@/domain/net-pay-profile";
 import type { UserProfile } from "@/domain/types";
@@ -80,6 +82,9 @@ export function analysisSalaryKey(request: AnalysisSalaryRequest) {
     settings,
     annualPayments,
     dependencies,
+    ...(context.entries.some((e) => isTariffAbsence(e, profile))
+      ? [entryKeys.entries(context.entries)]
+      : []),
     context.tariffDecisions,
     context.workPatternSettings,
     context.testMonths,
@@ -131,7 +136,16 @@ export function* prepareAnalysisSalarySteps(
   onAnnualReady?: (annual: PreparedAnalysisSalary["annual"]) => void,
   netCalculator?: MonthlyRustNetCalculator | null,
 ): Generator<AnalysisWorkYield, PreparedAnalysisSalary, void> {
-  if (request.month.startsWith("2027-")) netCalculator = null;
+  if (
+    request.month.startsWith("2027-") ||
+    (netCalculator &&
+      needsCalendarSalaryInYear(
+        Number(request.month.slice(0, 4)),
+        request.context.entries,
+        request.profile,
+      ))
+  )
+    netCalculator = null;
   if (netCalculator?.prepare && request.payment?.perspective !== "EARNED") {
     let prepared: PreparedAnalysisSalary | undefined;
     yield netCalculator.prepare(request).then((value) => {

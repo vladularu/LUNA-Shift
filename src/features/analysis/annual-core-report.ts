@@ -1,3 +1,5 @@
+import { isTariffAbsence } from "@/domain/absence-pay";
+import { tariffAbsenceMonthPay } from "@/features/salary/salary-month-input";
 import { restFindingKeys } from "@/engine/workplace-resolution";
 import { employmentProfileAt } from "@/domain/employment-history";
 import type { CompliancePreparation } from "@/engine/compliance-preparation";
@@ -266,6 +268,7 @@ function* calculateAvailableMonth(
   referenceDate: string,
   ruleResolver: RuleResolver,
   cached: AvailableMonthCache,
+  tariffDecisions: readonly MonthlyTariffDecision[],
   remuneration?: AnnualRemunerationInput,
   youthProtection = false,
   restPreparation?: AnnualRestPreparation,
@@ -409,7 +412,9 @@ function* calculateAvailableMonth(
                 ? monthlyEntries.monthShifts
                 : selectAllowanceShifts(entries, month, ruleResolver),
   );
+  const absenceMonth = monthlyEntries.monthShifts.some((e) => isTariffAbsence(e, profile));
   const payKey = annualInputKey([
+    ...(absenceMonth ? [entries, tariffDecisions] : []),
     monthlyEntries.monthShifts,
     allowanceShifts,
     profile,
@@ -431,6 +436,15 @@ function* calculateAvailableMonth(
       ? cached.pay.value
       : captureRuleValue(() => {
           if (allowanceShifts === null) return null;
+          if (absenceMonth)
+            return tariffAbsenceMonthPay(
+              month,
+              profile,
+              entries,
+              tariffDecisions,
+              workPatternSettings,
+              ruleResolver,
+            );
           return calculateMonthlyPayEstimate(
             month,
             monthlyEntries.monthShifts,
@@ -498,6 +512,7 @@ export function* buildAnnualAvailableReportSteps(
       referenceDate,
       ruleResolver,
       cached,
+      tariffDecisions,
       options.remuneration,
       options.youthProtection,
       options.restPreparation,
@@ -554,7 +569,8 @@ export function* buildAnnualAvailableReportSteps(
       allowanceAmount +=
         available.pay.allowanceAmount +
         available.pay.tvoedAllowanceAmount +
-        available.pay.careAllowanceAmount;
+        available.pay.careAllowanceAmount +
+        (available.pay.absencePayAmount ?? 0);
     }
     months.push(
       Object.freeze({
@@ -590,7 +606,8 @@ export function* buildAnnualAvailableReportSteps(
             (available.pay?.overtimeAmount ?? 0) +
             (available.pay?.allowanceAmount ?? 0) +
             (available.pay?.tvoedAllowanceAmount ?? 0) +
-            (available.pay?.careAllowanceAmount ?? 0)
+            (available.pay?.careAllowanceAmount ?? 0) +
+            (available.pay?.absencePayAmount ?? 0)
           : 0,
         ...countChecks(compliance?.issues ?? []),
         ...(profile.workplaceHistory?.length

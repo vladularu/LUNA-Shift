@@ -244,7 +244,9 @@ describe("available annual report", () => {
     expect(report.targetMinutes).not.toBeNull();
     expect(report.worktimeCoverageComplete).toBe(true);
     expect(report.complianceCoverageComplete).toBe(false);
-    expect(report.availablePayMonthCount).toBe(12);
+    // January has a vacation entry with no confirmed paid workday or reference rate.
+    expect(report.availablePayMonthCount).toBe(11);
+    expect(report.availablePayMonthCount).toBe(build(resolver({})).availablePayMonthCount);
     expect(report.months.slice(0, 3).every((month) => !month.provisionalTariffMonths)).toBe(true);
     expect(report.months.slice(3).map((month) => month.provisionalTariffMonths)).toEqual(
       Array.from({ length: 9 }, () => ["2027-03"]),

@@ -78,6 +78,7 @@ pub fn payment_hint(projection: &Value) -> Result<Option<String>, DashboardError
             "HOURLY_ALLOWANCE",
             "OVERTIME",
             "SPECIAL_DUTY",
+            "ABSENCE_PAY",
         ]
         .iter()
         .any(|g| part["group"] == *g)
@@ -205,6 +206,7 @@ pub fn present(input: &DashboardInput<'_>) -> Result<Value, DashboardError> {
         let allowances = required_number(estimate.get("allowanceAmount"))?
             + required_number(estimate.get("tvoedAllowanceAmount"))?
             + required_number(estimate.get("careAllowanceAmount"))?
+            + number(estimate.get("absencePayAmount"))?.unwrap_or(0.0)
             + number(estimate.get("specialDutyAmount"))?.unwrap_or(0.0)
             + if manual { 0.0 } else { recurring / 100.0 };
         pay.insert("allowances".into(), json!(allowances));

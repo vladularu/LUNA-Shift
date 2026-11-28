@@ -1,3 +1,4 @@
+import { needsCalendarSalaryInYear } from "./calendar-salary-projection";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useIsFocused } from "expo-router";
 import {
@@ -40,7 +41,8 @@ export function useAnnualNetPay(
   testMonths: readonly string[],
 ): AnnualNetPayState {
   const focused = useIsFocused();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { resolver } = useRuleCatalogRuntime();
@@ -88,7 +90,17 @@ export function usePreparedAnnualNetPay(
   priority = -1,
 ): AnnualNetPayState {
   const nativeCalculator = useAnnualRustCalculator();
-  const calculator = inputRequest?.year === 2027 ? null : nativeCalculator;
+  const calculator =
+    inputRequest &&
+    (inputRequest.year === 2027 ||
+      (nativeCalculator &&
+        needsCalendarSalaryInYear(
+          inputRequest.year,
+          inputRequest.context.entries,
+          inputRequest.profile,
+        )))
+      ? null
+      : nativeCalculator;
   const request = useMemo(
     () => (inputRequest ? annualRustNetRequest(inputRequest, calculator) : null),
     [inputRequest, calculator],

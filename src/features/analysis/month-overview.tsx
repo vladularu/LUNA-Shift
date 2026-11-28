@@ -107,6 +107,13 @@ export function MonthOverview({
   const paymentHint = projection ? salaryPaymentHint(projection) : null;
   const monthlyGross = estimate?.estimatedGrossAmount ?? estimate?.knownGrossAmount ?? null;
   const annualGross = annualSalaryGrossCents(month, annualPayments) / 100;
+  const earned = pay.ok ? pay.value : null;
+  const absencePending =
+    !!earned &&
+    !earned.available &&
+    earned.knownGrossAmount != null &&
+    !!earned.absencePayNotes?.length;
+  const earnedKnown = earned?.available || absencePending;
   const hasAccount = summary.ok && summary.value.timeAccountMinutes !== undefined;
   return (
     <AnalysisDashboard
@@ -174,14 +181,14 @@ export function MonthOverview({
         PREMIUM: (
           <EarnedPremiumsCard
             month={month}
-            amount={pay.ok && pay.value.available ? pay.value.timePremiumAmount : null}
-            specialDutyAmount={pay.ok && pay.value.available ? pay.value.specialDutyAmount : 0}
+            amount={earned && earnedKnown ? earned.timePremiumAmount : null}
+            absenceAmount={
+              pay.ok && pay.value.absencePayDays?.length ? pay.value.absencePayAmount : undefined
+            }
+            absencePending={absencePending}
+            specialDutyAmount={earned && earnedKnown ? earned.specialDutyAmount : 0}
             status={
-              !salaryReady
-                ? "Tarif hinterlegen"
-                : !pay.ok || !pay.value.available
-                  ? "Nicht verfügbar"
-                  : undefined
+              !salaryReady ? "Tarif hinterlegen" : !earnedKnown ? "Nicht verfügbar" : undefined
             }
           />
         ),

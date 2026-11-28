@@ -14,6 +14,7 @@ import { SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { useSalaryReport } from "./use-salary-report";
 import { useNetPayProfile } from "./use-net-pay-profile";
+import { useNetFromKnownAbsencePay } from "./net-from-known-absence-pay";
 import { useAutomaticNetPay } from "./use-automatic-net-pay";
 import { useAnnualSalaryForecast } from "./use-annual-salary-forecast";
 import {
@@ -82,12 +83,22 @@ function SalaryDetailsMonthPage({
     report.testMonths,
     month,
   );
-  const forecast = useAutomaticNetPay(
+  const baseForecast = useAutomaticNetPay(
     month,
     settings,
     valid && !blocked && data.status === "ready" && settings?.version === 2,
     report.testMonths,
     data.timeline,
+  );
+  const { forecast, notice: absenceNotice } = useNetFromKnownAbsencePay(
+    baseForecast,
+    !blocked && data.status === "ready" && report.calculation?.ok
+      ? report.calculation.value.projection
+      : undefined,
+    report.absenceNetBasis,
+    settings,
+    data.timeline,
+    annual.payments,
   );
   const available = forecast?.result.status === "available" ? forecast.result : null;
   const palette = usePalette();
@@ -294,6 +305,9 @@ function SalaryDetailsMonthPage({
   }
   return (
     <SalaryPage {...pageProps}>
+      {absenceNotice ? (
+        <Text style={{ ...TYPOGRAPHY.small, color: palette.textMuted }}>{absenceNotice}</Text>
+      ) : null}
       {available &&
       (section === "premiums" || section === "services") &&
       netPayForecastLabel(available.pay) ? (

@@ -35,8 +35,8 @@
     {
       "path": "eas.json",
       "kind": "modified",
-      "sha256": "c89980c59c216fd426f26c9a5166e4110fd40d2852ae89b7c7c9b287b0d44d3d",
-      "reason": "Enable the five verified Preview Rust calculation paths only for the signed Production iOS device profile."
+      "sha256": "a05d14f5123969121721336bd84fa99db51474e4ade38762d41cb5aba8d06498",
+      "reason": "Enable the five verified Preview Rust calculation paths only for the signed Production iOS device profile. VKA-Preview § 21: Aktiviert die bereits im installierten Preview verwendeten iOS-Rust-Brücken für den neuen nativen Build."
     },
     {
       "path": "fingerprint.config.js",
@@ -2897,14 +2897,14 @@
     {
       "path": "modules/luna-engine/rust/src/input/calendar_rows.rs",
       "kind": "added",
-      "sha256": "e27082e971358b2dbad5bc9f76f82adf8d09b416c4a04f6e0bfd19c1eb759c37",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "54859ea1eb7fc329cd67f1f1d772185621b6300b290a60859857bcbe2738987a",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Liest optionale Abwesenheitsangaben aus alten und neuen Kalenderzeilen."
     },
     {
       "path": "modules/luna-engine/rust/src/input/day_write.rs",
       "kind": "added",
-      "sha256": "39e0471308208468af643de3365fd099f6133e9abdd585b85d1f259ab7a5f635",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "76e064e20f1dfec0e3c556bd5009d8851de0aeca5be7b06f70d6174176051252",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Schreibt geprüfte Abwesenheitsangaben und bewahrt nicht bearbeitete Tagesdaten beim Speichern."
     },
     {
       "path": "modules/luna-engine/rust/src/input/draft_rows.rs",
@@ -3389,20 +3389,20 @@
     {
       "path": "modules/luna-engine/rust/src/net/gross_evidence.rs",
       "kind": "added",
-      "sha256": "95a34ece1898b931148d0f89b8037aa882a5653761da810b11f3cf058fd2d22a",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "408724e023222827ad9ceb4bf0f737df2fb697f71d99aec6bf811bf608deb313",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Berücksichtigt den Aufschlag beim Bruttoabgleich für das automatische Netto."
     },
     {
       "path": "modules/luna-engine/rust/src/net/mod.rs",
       "kind": "added",
-      "sha256": "e7418c4710138991af38c141b210967dee49bf79448daedf8fb779620e61f930",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "cea3f65d241ad2a02c45959d8ee2b4c6a3bf56ed0d2b60747c92cc83a6bc00b3",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Bindet die native Berechnung des Aufschlags im Nettomodul ein."
     },
     {
       "path": "modules/luna-engine/rust/src/net/payment_projection.rs",
       "kind": "added",
-      "sha256": "7550a7be74948c9d10771c511a996d4a9ced87dc70cffac605bb026a3dc192e3",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "c39954ee33863f7abd70309b55164654f81d1dbd1075cda40ba923e54a9d4b24",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Führt Aufschläge als eigene Anspruchs- und Zahlungsposition mit zwei Monaten Versatz."
     },
     {
       "path": "modules/luna-engine/rust/src/net/payment_schedule.rs",
@@ -3413,8 +3413,8 @@
     {
       "path": "modules/luna-engine/rust/src/net/payout_forecast.rs",
       "kind": "added",
-      "sha256": "103ff7997159cdf233d305cc3a5019756dba55c2dd30cf0af1f87ee0009a2e0a",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "9e26797fa5b660566a65449cf882c2767af1563a8b686bbcfcb7ed1821933660",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Übernimmt bezahlte Ausfalltage und die eigene Zahlungsgruppe in die Auszahlungsprognose."
     },
     {
       "path": "modules/luna-engine/rust/src/net/pension.rs",
@@ -3431,8 +3431,8 @@
     {
       "path": "modules/luna-engine/rust/src/net/provider.rs",
       "kind": "added",
-      "sha256": "14a962f4bf57c8761e8e9a5a7f8622063bfb7529257bb599ac60a0a6464559b4",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "2047753bd9a6349568018a392ef340e696f3a9f1afc1dfb8568693119ae1fea9",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Lädt die vorherigen Anspruchsmonate für die Durchschnittsberechnung aus dem ursprünglichen Dienstplan."
     },
     {
       "path": "modules/luna-engine/rust/src/net/provider_reuse.rs",
@@ -3443,8 +3443,8 @@
     {
       "path": "modules/luna-engine/rust/src/net/provider_tests.rs",
       "kind": "added",
-      "sha256": "f8cefefb4a84c2036387c3fae934774685d0c4c83734fe989d3b7e1b52a98bf1",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "022b268229051807effb9342b0f8e087d2e2736f2062ad6e2eec3d13f08c8f50",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Prüft für beide Tabellen den Aufschlag, die verzögerte Auszahlung sowie Steuer- und SV-Brutto."
     },
     {
       "path": "modules/luna-engine/rust/src/net/settings.rs",
@@ -4475,8 +4475,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/export_document/rows.rs",
       "kind": "added",
-      "sha256": "56219b30da89e2fcf55e69d2bc8aca1e07cdec3745fec96c7f363ad1e8d82691",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "c8220a7d1b9a1dd590f2726718c5d6ac3d37a71f271d3678e2c6d04504e8ac36",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Gibt den §-21-Betrag als eigene Zeile im nativen Bericht aus."
     },
     {
       "path": "modules/luna-engine/rust/src/report/export_document/shape.rs",
@@ -4487,8 +4487,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/export_document/text.json",
       "kind": "added",
-      "sha256": "78289eea1f7c6dc5523ca08c33d4d751463a1662eaa28331cf4bc417f3e9de89",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "ce41f1470aaf77610f340051dbbcc831a2d64789b900c09fb78dd2a60120b8ac",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Benennt die neue Position für den deutschsprachigen Export."
     },
     {
       "path": "modules/luna-engine/rust/src/report/export_pdf/calendar.rs",
@@ -4619,8 +4619,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/financial/dashboard.rs",
       "kind": "added",
-      "sha256": "e0bcd64d7ec9be051f8ddedde24b23e3bdf837f63d9d60fb07c1274a9ad07422",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "678f8f50fc97ed4358b6b8bec0dc5d178699c58d5f634e18e30705ec8cc6400c",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Ordnet die neue Position in den nativen Gehaltskacheln den Zulagen zu."
     },
     {
       "path": "modules/luna-engine/rust/src/report/financial/fingerprint/canonical.rs",
@@ -4655,8 +4655,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/financial/gross.rs",
       "kind": "added",
-      "sha256": "f82a2a06e8a16e0b7f86b05d7fe3454f9552367e1b18bfbd1bf851ca49099bbf",
-      "reason": "Summiert Jahresbrutto mit denselben Monatsregeln wie die bereits ausgelieferte Berechnung."
+      "sha256": "b9ff02117cb90ceca52e99ab2b155278e58850d869c4956e9cafe9212da90500",
+      "reason": "Summiert Jahresbrutto mit denselben Monatsregeln wie die bereits ausgelieferte Berechnung. VKA-Preview § 21: Berücksichtigt die Fortzahlung in der nativen Übersicht der Bruttobestandteile."
     },
     {
       "path": "modules/luna-engine/rust/src/report/financial/mod.rs",
@@ -4715,8 +4715,8 @@
     {
       "path": "modules/luna-engine/rust/src/report/financial/source.rs",
       "kind": "added",
-      "sha256": "35e7a4a7a45a61f9350a562adbc130874aa3f37c4b153c7c867b5f5ff22a3a25",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "68e21fa4ebc783c6b7fe4942d0e56c5603e228eb3267e837cd3a9d97ceace1a6",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Ermittelt den Herkunftsmonat für eingehende §-21-Zahlungen aus dem Kalender."
     },
     {
       "path": "modules/luna-engine/rust/src/report/mod.rs",
@@ -5279,8 +5279,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/day_editor_source.rs",
       "kind": "added",
-      "sha256": "1a3f24660e0de4e3049c7fffafb884a0371711b64bf57e7565e187fc19ab8eba",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "5fdb84c466f01310af8307e599d4810c664ec101cc4f181fe8adb225ebe8fb53",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Akzeptiert die optionale SQLite-Spalte beim Öffnen von Diensten im nativen Tageseditor."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/dispatch.rs",
@@ -5471,8 +5471,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/payroll/panels/components.rs",
       "kind": "added",
-      "sha256": "aa77485dfa21a3012c6ce43e9962f8f8866cdb2b43b0cbe1db15972172743504",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "76062221d8e561b046c88da6707c412558e210d2513689dd660b131283681e2d",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Zeigt die §-21-Zulage als Gehaltsbestandteil in nativen Detailansichten."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/payroll/panels/mod.rs",
@@ -5501,8 +5501,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/payroll/statement.rs",
       "kind": "added",
-      "sha256": "5b5b6ae3f216e7eaf7dce3cc2a5fa26800f0d5db52b9e924a937e510d0504750",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "a172af51ac9f06a9bcf726be3d9f51485773472fde8028a6cdd44ee3fe8fe331",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Listet den Aufschlag und die berücksichtigten Tage in der nativen Gehaltsaufstellung."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_report/presentation.rs",
@@ -5519,8 +5519,8 @@
     {
       "path": "modules/luna-engine/rust/src/runtime/financial_source.rs",
       "kind": "added",
-      "sha256": "3a5e7ad4b39b27a5f60c3f7e00eedd99f1767fc3885abc3872c8412a9aade1f9",
-      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending."
+      "sha256": "bf3bb748aa54032512b87f20d5d7bc57d8e0b58688fc61dcf607f47c8691df6e",
+      "reason": "Preview recovery package 1, 2026-11-15: Reuse the exact frozen Build-54 native input, independently checked against the preserved archive/import manifest. No native source modification, new native build, UI adoption or TestFlight delivery. This input restores the existing Preview runtime for the monthly calculation adapter only. Physical iPhone acceptance remains pending. VKA-Preview § 21: Stellt bei VKA-Abwesenheiten Dienstplanmodell und bestätigte Ausfalltage aus dem gespeicherten Profil bereit."
     },
     {
       "path": "modules/luna-engine/rust/src/runtime/form_resource/day.rs",
@@ -8645,8 +8645,8 @@
     {
       "path": "src/domain/types.ts",
       "kind": "modified",
-      "sha256": "a7f1a9feb3142edb19a164c65c9d0eb713ad90a9e6dad9a4fef5029d6a287c42",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+      "sha256": "0fca2a859a70274af216c324c7c3e5ef0281bf121769bc2729b226d7b4787845",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Weekend implementation: Attach optional monthly weekend assessment metadata to calculated compliance results. User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen. VKA-Preview § 21: Beschreibt Abwesenheitsangaben im Dienst und nachvollziehbare Beträge im Monatsergebnis."
     },
     {
       "path": "src/domain/workplace-rules.ts",
@@ -8723,8 +8723,8 @@
     {
       "path": "src/engine/pay-allowances.ts",
       "kind": "modified",
-      "sha256": "586632a6ca60f6071e9d6883f68f0124f4ef13fcc79a4324232a0e1a1087c5e5",
-      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+      "sha256": "94bdd5378b1162757bca9ddb1f774c487cee92262e05e45cca0722ce7f758061",
+      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen. U/K-Preview: Wertet bei der nicht dynamischen P-Zulage auch ältere Regelpakete anhand der Arbeitgeber-Tarifregion aus."
     },
     {
       "path": "src/engine/payroll-tariff-continuation.ts",
@@ -8753,8 +8753,8 @@
     {
       "path": "src/engine/salary-payment.ts",
       "kind": "modified",
-      "sha256": "7ec1185ec61f70a844725f8bbadf5f6c7621b8869b4b62966d9f5fde9a91cbea",
-      "reason": "User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+      "sha256": "13a48cd5714d40a8d5d3b8b0f3317a8b04649edc4a6a3f310fa0412af5e7419d",
+      "reason": "User-approved special-duty recovery: retain known salary amounts with an explicit partial total and compact existing-card recovery links; preserve strict full net and annual-reference completeness. Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen. VKA-Preview § 21: Projiziert den Aufschlag mit festem Auszahlungsversatz und erhält bekannte Teilergebnisse. U/K-Zahlungen bei gleichem, versetztem und wechselndem Rhythmus einmal je Anspruch verbuchen."
     },
     {
       "path": "src/engine/simple-nursing-training-pay.ts",
@@ -8813,8 +8813,8 @@
     {
       "path": "src/engine/simple-tvuk-nursing-pay.ts",
       "kind": "modified",
-      "sha256": "8988dbb6ec9af11996353679db583e0dc242a8b86d9f9c7fc06a83e7d87cbdf3",
-      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+      "sha256": "335ff799e50245b95243f3f108871b7e1228a6bf5bdbf0500c4b8cb73a598dff",
+      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen. Preview Build 57: Uses the adjusted TV-UK table to reprice historical duties with original working days, hours and group."
     },
     {
       "path": "src/engine/simple-tvuk-nursing-profile-pay.ts",
@@ -8825,8 +8825,8 @@
     {
       "path": "src/engine/simple-vka-e-pay.ts",
       "kind": "modified",
-      "sha256": "ea08d986e5867c25ddc7bf23665c6ecfe84f172ee6a60c2774f06d4afe2cded2",
-      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen."
+      "sha256": "016f60d56eb60e8bdb5dea016381e7defa772be2e9cb7b9c02bc896a11178d06",
+      "reason": "Tariffortrechnung aus iOS Preview Build 56. Berechnung mit den letzten passenden Tarifwerten und datumsgerechten Pruefgrenzen. U/K-Preview: Nutzt den gemeinsamen E-Tabellenwert für die Berechnung und Anzeige der festen Zulage."
     },
     {
       "path": "src/engine/simple-youth-duty-week.ts",
@@ -8927,8 +8927,8 @@
     {
       "path": "src/features/analysis/analysis-cache-version.generated.ts",
       "kind": "added",
-      "sha256": "ea42e523eb25e9892b39f443341967f29ceef01fc10b8caea220bfa5b26013c4",
-      "reason": "Versioniert die Analyse-Ergebnisse für die Änderungen an Rust-Bericht und Analyse-Bridge."
+      "sha256": "1ba5ad83b9d69b3da51e8a5c7a1977e999142c120fa44568ee6176f061470152",
+      "reason": "Versioniert die Analyse-Ergebnisse für die Änderungen an Rust-Bericht und Analyse-Bridge. VKA-Preview § 21: Bindet gespeicherte Analysen an den geänderten Stand der Berechnungsquellen. Kennzeichnet den geänderten Stand der Quellen für Gehaltsauswertungen. Preview Build 57, U/K-Automatik: Verwirft vorbereitete Ergebnisse aus der früheren Abwesenheitsberechnung. U/K-Preview: Invalidiert zuvor zwischengespeicherte Beträge und Netto-Fehlermeldungen. Zwischengespeicherte Beträge aus der früher festen U/K-Fälligkeit neu berechnen. Preview Build 57: Invalidates cached results after the additional continued-pay rules."
     },
     {
       "path": "src/features/analysis/analysis-compliance-cache.ts",
@@ -9005,8 +9005,8 @@
     {
       "path": "src/features/analysis/analysis-salary.ts",
       "kind": "modified",
-      "sha256": "649872122f0ec187173abe5fc8ca6c1ed76982c77e31701db74b6ba5ed6475ff",
-      "reason": "Preview salary preparation package5, 2026-11-16: Route active payout salary preparation through the supplied complete native calculator before any TS annual or payout math. Preserve the existing full salary cache and progress contract; default/reference path unchanged. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "40746c4ab51627583757fa758d035b06c4425a9f0d772bace1602f25fcdb13f2",
+      "reason": "Preview salary preparation package5, 2026-11-16: Route active payout salary preparation through the supplied complete native calculator before any TS annual or payout math. Preserve the existing full salary cache and progress contract; default/reference path unchanged. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. VKA-Preview § 21: Bezieht Referenzdienste bei der Wiederverwendung berechneter Gehaltsmonate ein. Preview Build 57, U/K-Automatik: Verwendet die Kalenderprognose für Auszahlung und Netto auf Build 57. U/K-Preview: Verwendet die kalenderbasierte Berechnung für betroffene Gehaltsprognosen auf Preview 57. Preview Build 57: Includes the reference calendar in salary cache keys for the supported agreements."
     },
     {
       "path": "src/features/analysis/analysis-screen.tsx",
@@ -9023,8 +9023,8 @@
     {
       "path": "src/features/analysis/analysis-warmup-runtime.ts",
       "kind": "modified",
-      "sha256": "cfffa9c9351cf0910a5b1a04b51c62493b58e261e390504f438e523f298f3b59",
-      "reason": "Preview monthly checks package 4, 2026-11-16: Prepare monthly checks using the same native calculator and versioned key as visible consumers; retain the original background scheduling, cancellation and persistence. Implementation only; iPhone acceptance pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "750d526918dad1268626318ff91f187dcdb4789e96d659d5599712967a6571f6",
+      "reason": "Preview monthly checks package 4, 2026-11-16: Prepare monthly checks using the same native calculator and versioned key as visible consumers; retain the original background scheduling, cancellation and persistence. Implementation only; iPhone acceptance pending. TestFlight unchanged. Diagnosis-only follow-up after matching iPhone report 1794867274877 confirms the quick-stamp JS input stall persists on OTA 01a1e664-ef9c-7318-9702-3c41dc8a2018. Include untagged input-preparation jobs as numeric Stage 0 and measure synchronous spans >=8ms in source/catalog JSON decode, native transport encode/decode, rank ordering, annual selection and month/year/salary/compliance key preparation. No payloads, identifiers, titles, errors or prototypes are recorded/modified. Preserve all operation results, original error identity, ordering, persistence, domain rules and native runtime; regenerate only the required calculation-cache identity with the unchanged generator. No claimed latency fix or TestFlight authorization; another device report is required. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Preview Build 57, U/K-Automatik: Bereitet VKA-Monate mit derselben Berechnung wie die sichtbare Ansicht vor. U/K-Preview: Bereitet dieselbe kalenderbasierte Monatsberechnung wie die Auswertung vor."
     },
     {
       "path": "src/features/analysis/analysis-work-queue.ts",
@@ -9047,14 +9047,14 @@
     {
       "path": "src/features/analysis/annual-analysis.ts",
       "kind": "modified",
-      "sha256": "26664f85364426beabfe6b3690c3ea1a0c48d04051118327425519febf212d46",
-      "reason": "Preview Rust annual package 3, 2026-11-16: Inject the optional native year calculation into the original shared/persistent annual task; use engine-bound keys and skip unused legacy monthly-part reads. iPhone package-3 acceptance remains pending. TestFlight unchanged."
+      "sha256": "a606fc967905dda06c8296c2faffe1e8f031511d905dda82ced6d03aaa8c7588",
+      "reason": "Preview Rust annual package 3, 2026-11-16: Inject the optional native year calculation into the original shared/persistent annual task; use engine-bound keys and skip unused legacy monthly-part reads. iPhone package-3 acceptance remains pending. TestFlight unchanged. Preview Build 57, U/K-Automatik: Übernimmt automatische Aufschläge bei den monatlichen Bruttowerten im Jahresbericht. U/K-Preview: Hält in Jahresberichten die Berechnung der regionalen Tarifzulage konsistent."
     },
     {
       "path": "src/features/analysis/annual-core-report.ts",
       "kind": "modified",
-      "sha256": "ed23d5dcc15350913ebf1cd348f42c63c982caff200fde5dfdca1a97601805c2",
-      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Share exact selected monthly inputs and prepared contexts with the existing annual report builder and monthly cache keys. Preview only; TestFlight unchanged; iPhone latency acceptance pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "f103155733b6ef8d278fb3e47c36215d53157a6f675530d7b19514e17a4e760f",
+      "reason": "User-authorized batched annual Rust integration, 2026-11-12. Share exact selected monthly inputs and prepared contexts with the existing annual report builder and monthly cache keys. Preview only; TestFlight unchanged; iPhone latency acceptance pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. VKA-Preview § 21: Wertet die gezahlte Fortzahlung und historische Dienstplanänderungen im verfügbaren Jahresbericht aus. Preview Build 57: Uses tariff-specific paid absence amounts in annual reports."
     },
     {
       "path": "src/features/analysis/annual-details-screen.tsx",
@@ -9089,8 +9089,8 @@
     {
       "path": "src/features/analysis/annual-net-pay.ts",
       "kind": "added",
-      "sha256": "c7ef6f1ff40358bcc5f47e9d60922aae9c90691e59fe893155dd7ec4a4ba6648",
-      "reason": "Preview Rust annual package 3, 2026-11-16: Add only optional engine cache identity and the original salary forecast DTO to annual net request/result types. Original TS computation remains unchanged when disabled. iPhone package-3 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "c9d9a80a46a8806edb370e8383732194a2c1b957bc62d0df8afd6999ddde7b2a",
+      "reason": "Preview Rust annual package 3, 2026-11-16: Add only optional engine cache identity and the original salary forecast DTO to annual net request/result types. Original TS computation remains unchanged when disabled. iPhone package-3 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Preview Build 57, U/K-Automatik: Erhält die Sonderzahlungsprognose im Jahresnetto mit VKA-Abwesenheit. U/K-Preview: Verwendet dieselben Voraussetzungen für die Jahresprognose mit Arbeitgeber-Tarifregion."
     },
     {
       "path": "src/features/analysis/annual-overview.tsx",
@@ -9113,8 +9113,8 @@
     {
       "path": "src/features/analysis/annual-report-inputs.ts",
       "kind": "modified",
-      "sha256": "127df5c097be2a16b83221619250d0c306526a931ca1bac44787c5e170fa80a2",
-      "reason": "Annual/swipe package 2026-11-11: Use the existing canonical calendar-entry order before both visible/background annual keys and calculation, so a reload of the same rows in another order cannot trigger another full year. Preserve every complete entry value, selection horizon and actual edit invalidation. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged."
+      "sha256": "a16241563122d36cbd620bacca9997447d701d6080c2fd97bdfc5121e671be11",
+      "reason": "Annual/swipe package 2026-11-11: Use the existing canonical calendar-entry order before both visible/background annual keys and calculation, so a reload of the same rows in another order cannot trigger another full year. Preserve every complete entry value, selection horizon and actual edit invalidation. Preview-only delivery authorized; physical iPhone acceptance pending; TestFlight/Production unchanged. Preview Build 57, U/K-Automatik: Stellt frühere Referenzmonate für jahresübergreifende Abwesenheiten bereit."
     },
     {
       "path": "src/features/analysis/annual-report-view.tsx",
@@ -9125,8 +9125,8 @@
     {
       "path": "src/features/analysis/annual-report.ts",
       "kind": "modified",
-      "sha256": "fd2191e904ef968bddd2773acba2086b817f4926cd8fdb0ed8a50bdbbf8c8543",
-      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "791e0fd46f70130dfac337393862c43c3381c1adab6cc72ebc8ee05d1ea21e25",
+      "reason": "Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. VKA-Preview § 21: Berücksichtigt den Kalendervorlauf für Aufschläge beim Erstellen und Wiederverwenden des Jahresberichts. Preview Build 57: Uses the same tariff-specific paid absence amounts in annual projection."
     },
     {
       "path": "src/features/analysis/annual-rest-preparation.ts",
@@ -9167,8 +9167,8 @@
     {
       "path": "src/features/analysis/annual-rust-month-totals.ts",
       "kind": "added",
-      "sha256": "4099300561b722c2751b9a6bb74fae5d7c7b66181c76d8037c655c2b7c3fdd2c",
-      "reason": "Preview annual buffer fix, 2026-11-16: Explicitly user-authorized temporary TS summation of twelve completed Rust monthly financial results, using the original field ownership and cent-rounding; no salary, tax, SFN or compliance recalculation in TS. iPhone package-3 acceptance remains pending. TestFlight unchanged."
+      "sha256": "2c4ad8206dfd685ad4cd4689767f2b1562b2b8457ecb2843bc4099d4e74be041",
+      "reason": "Preview annual buffer fix, 2026-11-16: Explicitly user-authorized temporary TS summation of twelve completed Rust monthly financial results, using the original field ownership and cent-rounding; no salary, tax, SFN or compliance recalculation in TS. iPhone package-3 acceptance remains pending. TestFlight unchanged. VKA-Preview § 21: Rechnet den ausgewiesenen Aufschlag in die Zulagensumme der nativen Monatsergebnisse ein."
     },
     {
       "path": "src/features/analysis/check-copy.ts",
@@ -9323,14 +9323,14 @@
     {
       "path": "src/features/analysis/month-overview.tsx",
       "kind": "modified",
-      "sha256": "cfc04fff7f59b42413269ed8e57a0c34bc1fa7f0e6dd82d579bb693854275c79",
-      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Setzt die gewählte Variante Nach Prüfbereich in der Monatsauswertung ein und verbindet die Zeilen mit dem jeweiligen Prüfbereich."
+      "sha256": "da39c3f2005f7d79eafb3cdcf73421e950e2b982145c3d9feeef1205b235dacf",
+      "reason": "Abgenommene iOS-Preview-Darstellung mit Zählung sichtbarer Planungshinweise und passenden Symbolen. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. iPhone-Preview: ein Ausgleichsfeld und einheitliche Anzeige betrieblicher Auffälligkeiten in Auswertung und Dienstplan-Check. Setzt die gewählte Variante Nach Prüfbereich in der Monatsauswertung ein und verbindet die Zeilen mit dem jeweiligen Prüfbereich. U/K-Preview: Übernimmt U/K-Ausfalltage in die Übersicht der erarbeiteten Zuschläge."
     },
     {
       "path": "src/features/analysis/monthly-analysis.ts",
       "kind": "modified",
-      "sha256": "58f4bcd0341d1b12fc5ba8b28233ccce6e513f83823b17fc8e7bde2eb250affc",
-      "reason": "Preview recovery package 1, 2026-11-15: Add an optional engine identity to existing monthly cache keys; preserve the original key when the Rust calculator is absent. Physical iPhone acceptance remains pending."
+      "sha256": "1ca94b88a779f4212b0625c666ee916e0b6b8cf5ba804148513196f1515dc866",
+      "reason": "Preview recovery package 1, 2026-11-15: Add an optional engine identity to existing monthly cache keys; preserve the original key when the Rust calculator is absent. Physical iPhone acceptance remains pending. VKA-Preview § 21: Verwendet die erfassten Referenzdienste für Aufschläge in der Monatsanalyse. Preview Build 57: Uses the dated continued-pay calculation in monthly analysis."
     },
     {
       "path": "src/features/analysis/monthly-check-card.tsx",
@@ -9389,8 +9389,8 @@
     {
       "path": "src/features/analysis/monthly-rust-net.ts",
       "kind": "added",
-      "sha256": "36a19d7d6e58a79873b780db68ed6075ba5ab00fb9a4f00a6e0e6954a08b0f4b",
-      "reason": "Preview salary preparation package5, 2026-11-16: Provide an optional complete salary-preparation method and distinct engine cache identity behind EXPO_PUBLIC_RUST_SALARY_PREPARATION=1. Preserve the existing native earned-net path and default bundle behavior. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "9caffce9c9d6571def29410f1c3243866ead772e851cd22f86a46753cbe6f1bb",
+      "reason": "Preview salary preparation package5, 2026-11-16: Provide an optional complete salary-preparation method and distinct engine cache identity behind EXPO_PUBLIC_RUST_SALARY_PREPARATION=1. Preserve the existing native earned-net path and default bundle behavior. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Preview Build 57, U/K-Automatik: Verwendet die konsistente Netto-Prognose für VKA-Abwesenheiten in der Dienstmonatsansicht. U/K-Preview: Verwendet für regionale Abweichungen dieselbe Nettobasis wie die Auszahlung."
     },
     {
       "path": "src/features/analysis/monthly-rust-salary-preparation.fixture.json",
@@ -9413,8 +9413,8 @@
     {
       "path": "src/features/analysis/monthly-rust-sql.ts",
       "kind": "added",
-      "sha256": "4dfb5d50a2685ce3a64e37ed6de112f8fccb795c69198b75b68f8a0c40e6d046",
-      "reason": "Preview recovery package 1, 2026-11-15: Copy the Build-54 source read queries as an I/O adapter to existing tables; no persisted data, migrations, native lifecycle tables or UI changes. Physical iPhone acceptance remains pending."
+      "sha256": "ff2732445e16d0c323aebccc0f73c9c17d54ff237c1b5bc0631b4b49ca4748b9",
+      "reason": "Preview recovery package 1, 2026-11-15: Copy the Build-54 source read queries as an I/O adapter to existing tables; no persisted data, migrations, native lifecycle tables or UI changes. Physical iPhone acceptance remains pending. VKA-Preview § 21: Lädt die optionalen §-21-Fakten aus SQLite in den nativen Eingabedatensatz."
     },
     {
       "path": "src/features/analysis/monthly-rust-transport.native.ts",
@@ -9443,8 +9443,8 @@
     {
       "path": "src/features/analysis/persistent-salary-value.ts",
       "kind": "added",
-      "sha256": "213437bcec03458fe9846d672f28ebf8e3f11f38bfc72553b6ddf137a83275fa",
-      "reason": "Preview salary preparation package5, 2026-11-16: Export the existing exact projection validator for the native boundary; no change to existing validation policy or stored-data schema. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "12ee88dcfd77f87fa88a14ab479a7aaea0ad3f0416bac9049d7b4114591be03d",
+      "reason": "Preview salary preparation package5, 2026-11-16: Export the existing exact projection validator for the native boundary; no change to existing validation policy or stored-data schema. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. VKA-Preview § 21: Prüft gespeicherte Ergebnisse mit der zusätzlichen Gehaltsgruppe und den optionalen Tagesbeträgen."
     },
     {
       "path": "src/features/analysis/planning-hint-details.tsx",
@@ -9467,8 +9467,8 @@
     {
       "path": "src/features/analysis/premium-details-screen.tsx",
       "kind": "modified",
-      "sha256": "5e4ea1ce3e22af0ca76d0b6e39dcda2071deb453b55a78a531ea5fabd7b7ca4e",
-      "reason": "Preview Rust net package 2, 2026-11-15: Replace only the activated earned-month SFN data call with the same native net hook; preserve all rendered JSX, original earned perspective and the disabled legacy behavior. iPhone package-2 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "fadb994bf61e72349dbc4d348367ae1aace45837a5504db7c01ac163d9f138f8",
+      "reason": "Preview Rust net package 2, 2026-11-15: Replace only the activated earned-month SFN data call with the same native net hook; preserve all rendered JSX, original earned perspective and the disabled legacy behavior. iPhone package-2 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Zeigt die tariflich erarbeiteten Dienstzuschläge und prüft deren Steueraufteilung bei einem offenen Abwesenheitsaufschlag. Preview Build 57, U/K-Automatik: Zeigt den geschätzten U/K-Aufschlag getrennt von den Zeitzuschlägen sowie offene Referenzmonate. U/K-Preview: Integriert berechnete Urlaubszuschläge in die reguläre Zuschlagsansicht. Preview Build 57: Explains open amounts without attributing TV-UK to the TVöD paragraph."
     },
     {
       "path": "src/features/analysis/rest-check-details.tsx",
@@ -9491,8 +9491,8 @@
     {
       "path": "src/features/analysis/salary-overview-cards.tsx",
       "kind": "modified",
-      "sha256": "f989b4fd67ef10db453e8066491ffb24f613c75beb3f754f8ea588cd6bfe0441",
-      "reason": "Preview-only preservation of src/features/analysis/salary-overview-cards.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration."
+      "sha256": "aff3a972d2bc7f374d714e2dbc2e574e78aa6d8c2928db13cde41b595e4f2d26",
+      "reason": "Preview-only preservation of src/features/analysis/salary-overview-cards.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. U/K-Preview: Zeigt den U/K-Aufschlag als eigenen Betrag in der Karte Zuschläge erarbeitet."
     },
     {
       "path": "src/features/analysis/salary-persistence-test-fixtures.ts",
@@ -9539,8 +9539,8 @@
     {
       "path": "src/features/analysis/use-annual-net-pay.ts",
       "kind": "added",
-      "sha256": "5473cebc4e6776a2b85c9cca0fdde5a74522ad8362571ff3503ac3990b94a890",
-      "reason": "Preview annual buffer fix, 2026-11-16: Preserve original test-month cache acceptance when no annual supplement is requested; normal native annual results continue to require the validated mathematical salary forecast. iPhone package-3 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "feba846ef89067859d040dd8d6a4243cc812dc6bd69f4d0477e1dbcecf283d10",
+      "reason": "Preview annual buffer fix, 2026-11-16: Preserve original test-month cache acceptance when no annual supplement is requested; normal native annual results continue to require the validated mathematical salary forecast. iPhone package-3 acceptance remains pending. TestFlight unchanged. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Preview Build 57, U/K-Automatik: Berechnet das Jahresnetto aus den Monatsprognosen und dem verfügbaren Arbeitsmodell. U/K-Preview: Hält den Jahresnettobericht mit den korrigierten Einzelmonaten konsistent."
     },
     {
       "path": "src/features/analysis/use-annual-report.ts",
@@ -9593,8 +9593,8 @@
     {
       "path": "src/features/analysis/use-prepared-monthly-analysis.ts",
       "kind": "modified",
-      "sha256": "46126ef4258a1cdefb4786c2eec1729ff9e81af6f7f2a3d0b3813d10535f1b7f",
-      "reason": "Preview recovery package 1, 2026-11-15: Use the existing shared queue, cancellation and persistent cache with the Rust monthly calculator and its engine-bound request; retain the original hook/UI contract. Physical iPhone acceptance remains pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Identify preparation failures so the report page can recover and be retried."
+      "sha256": "3c733d7b71fd6e95b08c531e32c8836253a25e53365ddddf5ca52c710822f0cc",
+      "reason": "Preview recovery package 1, 2026-11-15: Use the existing shared queue, cancellation and persistent cache with the Rust monthly calculator and its engine-bound request; retain the original hook/UI contract. Physical iPhone acceptance remains pending. Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. Identify preparation failures so the report page can recover and be retried. Preview Build 57, U/K-Automatik: Wählt die kalenderbasierte Bruttoberechnung für VKA-Abwesenheitsmonate. U/K-Preview: Wählt bei unterschiedlichen Regionen die korrigierten monatlichen Zulagen."
     },
     {
       "path": "src/features/analysis/use-simple-annual-report.ts",
@@ -9815,8 +9815,8 @@
     {
       "path": "src/features/day-editor/day-editor-form.tsx",
       "kind": "modified",
-      "sha256": "65404e928129dd45902d9f594136cf4d1aeb8050277241c8537d5e4b1441d3df",
-      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts. Verbindet den bestehenden Editorentwurf mit dem Wechsel zwischen der Übersicht und der Bearbeitung von Dienst oder Termin."
+      "sha256": "3adac46006b6963acc33b9c9900549ff7a1f30aaefc31e5ddd14dc45d434a46a",
+      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts. Verbindet den bestehenden Editorentwurf mit dem Wechsel zwischen der Übersicht und der Bearbeitung von Dienst oder Termin. VKA-Preview § 21: Bindet die Erfassung an die Dienstbearbeitung und übermittelt bestätigte Werte beim Speichern. Preview Build 57, U/K-Automatik: Übergibt Arbeitsmodell und vorhandenen Dienst an die Abwesenheitsvorschau. U/K-Preview: Verbindet die reine Tagessatzanzeige mit dem Kalender und erhält gespeicherte Abwesenheitsdaten."
     },
     {
       "path": "src/features/day-editor/day-editor-screen.tsx",
@@ -9989,8 +9989,8 @@
     {
       "path": "src/features/report-export/report-document.ts",
       "kind": "modified",
-      "sha256": "bad1fbb647d377beff1d5b36b5642d83cc0000e1c5cc2377c743199b1d4378b5",
-      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys and complete export coverage. iPhone visual acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use readable German labels for the newly exported weekend facts; do not change exported values or pay calculations. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Label new weekend evidence readably in exports while preserving salary and time calculations. User-approved special-duty recovery: preserve known salary components and label the partial payout consistently in the existing PDF report; full gross and net stay unavailable until billing is complete."
+      "sha256": "f7ef95d349310ae5692d361983fc11f0f4aa4bc1902d1404f5ffc53a12ef4f70",
+      "reason": "Use Dienstfolgen & Erholung in human-readable export labels and scope text. Preserve internal keys and complete export coverage. iPhone visual acceptance pending. Explicitly authorized Preview OTA: integrate tariff working-time checks, preserve separate optional recommendations and compact source details; all unrelated accepted Preview sources remain exact. User-requested local check correction: Use readable German labels for the newly exported weekend facts; do not change exported values or pay calculations. Preserve all other accepted Preview sources; no device acceptance or release is asserted. Weekend implementation: Label new weekend evidence readably in exports while preserving salary and time calculations. User-approved special-duty recovery: preserve known salary components and label the partial payout consistently in the existing PDF report; full gross and net stay unavailable until billing is complete. VKA-Preview § 21: Gibt den VKA-Aufschlag im TypeScript-Berichtsexport aus. Preview Build 57: Names continued pay consistently in exports across agreements."
     },
     {
       "path": "src/features/report-export/report-export-action.tsx",
@@ -10055,8 +10055,8 @@
     {
       "path": "src/features/salary/net-pay-automatic-screen.component.test.tsx",
       "kind": "modified",
-      "sha256": "92245b844f809095a877e862b7ee0c17341b09f435a14da88025312541405d9d",
-      "reason": "Verified Preview Build 56 salary and net-pay setup, native choice/date menus, and payout timing controls."
+      "sha256": "a6934e517cf3aab1d7a9940993a9cc728d96102e81de9d0bd8ec14be5589ad71",
+      "reason": "Verified Preview Build 56 salary and net-pay setup, native choice/date menus, and payout timing controls. Prüft den Oktoberfall mit offenem Urlaubstag, bekanntem Brutto und vorläufigem Netto bis in die Abzugsdetails."
     },
     {
       "path": "src/features/salary/net-pay-automatic-screen.tsx",
@@ -10085,8 +10085,8 @@
     {
       "path": "src/features/salary/net-pay-service-details.tsx",
       "kind": "modified",
-      "sha256": "5c21e73f648ea105097e025811c9fb219346162f982438ca975a0d8a4cf9594f",
-      "reason": "Zuschläge je Dienst uses the shared LUNA dialog for the iPhone-accepted detail view."
+      "sha256": "3e9175048d3340d93ec14f4da65a1f04392771f01f709f099ba26429a72a6772",
+      "reason": "Zuschläge je Dienst uses the shared LUNA dialog for the iPhone-accepted detail view. U/K-Preview: Zeigt U/K im Gesamtbetrag, als Filter und pro Tag mit steuerpflichtigem Anteil. Am ausgewählten Ausfalltag den vorgesehenen Auszahlungsmonat anzeigen."
     },
     {
       "path": "src/features/salary/net-pay-setting-rows.tsx",
@@ -10133,26 +10133,26 @@
     {
       "path": "src/features/salary/salary-composition.ts",
       "kind": "modified",
-      "sha256": "96600ce05e1ae62b8b8891e28c187e6f9634675161099a6f4c7c1f08e80ecc34",
-      "reason": "Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen."
+      "sha256": "0c87be1e509ed5390d59ad0035abd964673cfa02fb172ac87b8c664669ac3229",
+      "reason": "Tariffortrechnung aus iOS Preview Build 56. Vorlaeufigen Tarifstand in Gehalt und Auswertung weitergeben oder anzeigen. VKA-Preview § 21: Erklärt den Aufschlag als gesonderten Teil des Bruttogehalts. U/K-Preview: Erläutert die nachprüfbare Berechnung der festen TVöD-Zulage im Arbeitsprofil. Auch das übrige VKA-Tarifgebiet bei der festen TVöD-Zulage kenntlich machen."
     },
     {
       "path": "src/features/salary/salary-details-screen.tsx",
       "kind": "modified",
-      "sha256": "859104485f2f7c2cb27a7159e797a5c60aebfaed6d0b1b8ce45fdb234479383b",
-      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook so it shares the exact prepared salary/cache with the parent report. Entire JSX and every other original byte protected against accepted package4. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Vorschau: Entfernt die Monatspfeile bei Gehaltsbestandteilen und zeigt den aus der Route übernommenen Monat in der bestehenden Kopfzeile."
+      "sha256": "73ed68fe97ee3e31b75f4fb1c4cf68ca50550f0173be5bf1cdf0290b24e68235",
+      "reason": "Preview salary preparation package5, 2026-11-16: Pass only the existing active month to the annual data hook so it shares the exact prepared salary/cache with the parent report. Entire JSX and every other original byte protected against accepted package4. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Vorschau: Entfernt die Monatspfeile bei Gehaltsbestandteilen und zeigt den aus der Route übernommenen Monat in der bestehenden Kopfzeile. Erhält die Kennzeichnung des vorläufigen Ergebnisses und die zugehörigen Werte beim Öffnen der Gehaltsdetails."
     },
     {
       "path": "src/features/salary/salary-month-input.ts",
       "kind": "modified",
-      "sha256": "35909781240a24991e42be01a760ec36929771b384f5da3b3c6a40392a55a3e9",
-      "reason": "Correction D: bound and share immutable successful monthly salary inputs across annual/payment preparation using complete effective profile, selected shift/reference contents, monthly decision, work pattern and resolver identity. Failed attempts are not cached. Preserve formulas. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview."
+      "sha256": "4aacab7cf67a7860042e85655fbfe714476ffc30da1393300de22763ed249e37",
+      "reason": "Correction D: bound and share immutable successful monthly salary inputs across annual/payment preparation using complete effective profile, selected shift/reference contents, monthly decision, work pattern and resolver identity. Failed attempts are not cached. Preserve formulas. Preview device acceptance confirmed on 2026-11-07. Corrections B/C/D accepted by the user on 2026-11-07 in light/dark and after restart, Preview update 01a1b3c9-00f7-77f9-99bb-37fe6b70ea25. Git delivery authorized; preserve the separate Luftig Preview. VKA-Preview § 21: Erzeugt den Monatsanspruch einschließlich der nötigen Referenzmonate und verhindert zyklische Berechnungen. Preview Build 57: Prices full or partial reference periods, applying the adjusted TV-UK rates to historical duties."
     },
     {
       "path": "src/features/salary/salary-payroll-content.tsx",
       "kind": "modified",
-      "sha256": "58609e4988e2e5dc6a51c814ba0d48f14e9983e0f9c0ae0fae9d8f7f88a3b74f",
-      "reason": "Verified Preview Build 56 salary and net-pay setup, native choice/date menus, and payout timing controls."
+      "sha256": "d5ff0dc3d1ac878efe4a0df9322056c88518981669c89d6cb74ec0f60dd2a825",
+      "reason": "Verified Preview Build 56 salary and net-pay setup, native choice/date menus, and payout timing controls. VKA-Preview § 21: Zeigt Betrag, Zahl der Ausfalltage und Tagessatz in der Gehaltsaufstellung. Zeigt im Nettobeleg die vorläufige Summe, das bekannte Brutto und den betroffenen Ausfalltag. U/K-Preview: Zeigt Vollzeitbetrag und anteilige Wochenstunden direkt bei der festen TVöD-Zulage. Preview Build 57: Labels the continued-pay item accurately across agreements."
     },
     {
       "path": "src/features/salary/salary-payroll-settings.tsx",
@@ -10163,8 +10163,8 @@
     {
       "path": "src/features/salary/salary-screen.tsx",
       "kind": "modified",
-      "sha256": "4f592bc6cdc4b8dedd50681c2b3fb46eebb38120bbe0a1d59235eeec74c3bcf8",
-      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards. Vorschau: Entfernt den direkten Monatswechsel aus Gehalt und Netto-Prognose. Der Kopf und der Export verwenden den ausgewählten Berichtsmonat."
+      "sha256": "962c16758d4360590b18102f4f212f36611e4d4db3fbb3a25081b0f578dad8de",
+      "reason": "Paket 4 correction: keep separated gross/net detail presentations and existing monthly report export, remove provisional peer links now that both have independent overview entry cards. Vorschau: Entfernt den direkten Monatswechsel aus Gehalt und Netto-Prognose. Der Kopf und der Export verwenden den ausgewählten Berichtsmonat. Reicht die für den gewählten Auszahlungsmonat geprüften Grundlagen in den Nettobeleg durch."
     },
     {
       "path": "src/features/salary/salary-ui.tsx",
@@ -10187,8 +10187,8 @@
     {
       "path": "src/features/salary/use-annual-salary-forecast.ts",
       "kind": "modified",
-      "sha256": "bea130fc4190f15360452dbda61bf6cb6d0d8e3696369c7c901c0477bdd74f61",
-      "reason": "Preview salary preparation package5, 2026-11-16: Bundle-gated annual data hook reads the same completed native monthly salary preparation instead of synchronous TS annual math. Preserve the original four-field DTO, disabled state and default hook. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "183e1795df3045a91384f466e1a34149d7c50bbde7d1b58636b66218302da7bc",
+      "reason": "Preview salary preparation package5, 2026-11-16: Bundle-gated annual data hook reads the same completed native monthly salary preparation instead of synchronous TS annual math. Preserve the original four-field DTO, disabled state and default hook. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Preview Build 57, U/K-Automatik: Berücksichtigt den verfügbaren Dienstplan bei der Jahresprognose."
     },
     {
       "path": "src/features/salary/use-automatic-net-pay.ts",
@@ -10205,20 +10205,20 @@
     {
       "path": "src/features/salary/use-rust-automatic-net-pay.ts",
       "kind": "added",
-      "sha256": "f570c5062b480dd4443342f62bddde583585f3ff29e6927b94bfaaffece8f4ac",
-      "reason": "Preview salary preparation package5, 2026-11-16: Join complete prepared payout salary results when enabled; preserve the existing native earned-net path, error copy and nullable forecast format. No form or rendering change. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "25b4e928ef1eaec74e9561d2ef0c69910d4fd32bd48774f9d55960a12c4393d1",
+      "reason": "Preview salary preparation package5, 2026-11-16: Join complete prepared payout salary results when enabled; preserve the existing native earned-net path, error copy and nullable forecast format. No form or rendering change. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Preview Build 57, U/K-Automatik: Nutzt das verfügbare Arbeitsmodell für die Prognose im Anspruchsmonat."
     },
     {
       "path": "src/features/salary/use-rust-salary-preparation.ts",
       "kind": "added",
-      "sha256": "a50d3d8a98c1d572427e5f0dd1583ccd6188d2c4cb2c8703a03cc9e6361a6848",
-      "reason": "Preview salary preparation package5, 2026-11-16: Reuse the existing committed salary-input store, persistent full salary cache and provider facts for report, annual editor, net and background. Preserve unknown-input loading/error handling and never calculate salary in the hook. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "09e6966327f4bf5b5d43ea45eb7511f710450124df1ba11f01d822ed01083096",
+      "reason": "Preview salary preparation package5, 2026-11-16: Reuse the existing committed salary-input store, persistent full salary cache and provider facts for report, annual editor, net and background. Preserve unknown-input loading/error handling and never calculate salary in the hook. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Preview Build 57, U/K-Automatik: Gibt das hinterlegte Arbeitsmodell an die vorbereitete Gehaltsprognose weiter."
     },
     {
       "path": "src/features/salary/use-salary-report.ts",
       "kind": "modified",
-      "sha256": "fabbbcf0b56184f78d0576fac1d0caaf179067a94c656b22edfd1f198b6debe0",
-      "reason": "Preview salary preparation package5, 2026-11-16: Bundle-gated native payout preparation mapped to the existing salary-report data shape and display metadata. Default hook and all JSX consumers unchanged. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged."
+      "sha256": "b53c051d841e6a7432491c10ac7504c32cdc431c291c1061b6d412855b5b758c",
+      "reason": "Preview salary preparation package5, 2026-11-16: Bundle-gated native payout preparation mapped to the existing salary-report data shape and display metadata. Default hook and all JSX consumers unchanged. Implementation/local verification only; iPhone acceptance pending. TestFlight unchanged. Stellt in beiden Rechenwegen das originale Beschäftigungsprofil, den Regelkatalog und den bestätigten SV-Auszahlungsmodus für die vorläufige Nettoanzeige bereit. Preview Build 57, U/K-Automatik: Verwendet für die Auszahlung die gleiche Arbeitszeitgrundlage wie die Tagesansicht."
     },
     {
       "path": "src/features/settings/appearance-calendar-preview.tsx",
@@ -10481,8 +10481,8 @@
     {
       "path": "src/infrastructure/database/calendar-entry-repository.ts",
       "kind": "modified",
-      "sha256": "b72835929c04d11adfe4a08e7b55eae34f1119a0901a50d7eb3fa9f1dcebb377",
-      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts."
+      "sha256": "f41b2dfb60a791fd1bf50aa8a6b6360484fd582ad331b95577befc7389ce26be",
+      "reason": "User-approved special-duty recovery: direct billing entry and explicitly selected, revision-guarded atomic transfer within the same employment period, preserving individual duty facts. VKA-Preview § 21: Speichert Abwesenheitsnachweise beim Anlegen und Ändern eines Dienstes revisionsgebunden."
     },
     {
       "path": "src/infrastructure/database/local-backup-restore.ts",
@@ -10493,8 +10493,8 @@
     {
       "path": "src/infrastructure/database/local-backup-validation.ts",
       "kind": "modified",
-      "sha256": "64b2bbb864df607b72522bdfc2ffc259f2b50a584458e5b4a5d10b7392a50f1c",
-      "reason": "Validiert die betrieblichen Regeln beim Import eines lokalen Backups."
+      "sha256": "c9d29ff0233c153bdd34057532a87232bfc43f1e4876eaf9384f351594dbc3e6",
+      "reason": "Validiert die betrieblichen Regeln beim Import eines lokalen Backups. VKA-Preview § 21: Validiert alte Sicherungen und das neue optionale Feld einschließlich bestätigtem Nullbetrag."
     },
     {
       "path": "src/infrastructure/database/preferences-repository.ts",
@@ -10823,8 +10823,8 @@
     {
       "path": "src/features/day-editor/shift-edit-overview.tsx",
       "kind": "added",
-      "sha256": "c885c2119b7433522b2c1dca6981a5fa51a96df5c807532a78a502b070639e62",
-      "reason": "Zeigt Uhrzeiten, Arbeitszeit, Pause und Zuschlagsgesamtwert aus der bestehenden Berechnung."
+      "sha256": "0df68e016bde8b34114b0d422068e929f3dff47cfa151e4b2d9d76bbc2395541",
+      "reason": "Zeigt Uhrzeiten, Arbeitszeit, Pause und Zuschlagsgesamtwert aus der bestehenden Berechnung. Preview: Beim Öffnen eines U/K-Tages Nur Tagessatz bzw. fehlende Grundlage anzeigen. Preview Build 57: Uses the tariff-specific value on the compact calendar card."
     },
     {
       "path": "src/features/location/location-preview.tsx",
@@ -10945,6 +10945,138 @@
       "kind": "added",
       "sha256": "34aa1b51c5432c09b521701c6d9c7861ce86373ab78e75701837aca2ca756b56",
       "reason": "Definiert die gemeinsamen LUNA-Abstände und Eingabeflächen für die drei Eingabemasken."
+    },
+    {
+      "path": "modules/luna-engine/rust/src/net/absence_pay.rs",
+      "kind": "added",
+      "sha256": "98e8e61430858bef4f65db06b258aa6d2f26b873699051678c74ef4b21a05677",
+      "reason": "VKA-Preview § 21: Ermittelt für VKA P und E bezahlte Ausfalltage, Vergleichszeitraum, Tagessatz und fehlende Nachweise."
+    },
+    {
+      "path": "src/domain/absence-pay.ts",
+      "kind": "added",
+      "sha256": "d54a029de29f16c53bb04c214d628b3df3e0dd97f2ceb030bbcdab89af2a78c1",
+      "reason": "VKA-Preview § 21: Prüft Tarifzuordnung, Angaben aus der Abrechnung und den erhaltenen ursprünglich geplanten Dienst. Preview Build 57, U/K-Automatik: Wählt die Monats- und Jahresprognose anhand aktiver VKA-Abwesenheiten. Preview Build 57: Selects the dated work-profile agreement for sick leave and vacation."
+    },
+    {
+      "path": "src/domain/salary-payment.ts",
+      "kind": "modified",
+      "sha256": "f0ca118701a01c5491adc1310d0b46c276397086dbd0ed96e8fb293cea6e661b",
+      "reason": "VKA-Preview § 21: Erweitert die Gehaltsprojektion um eine gesonderte Anspruchsgruppe für bezahlte Abwesenheit. Der §-21-Aufschlag verwendet den gespeicherten Rhythmus der Zeitzuschläge im Anspruchsmonat oder die tarifliche Fälligkeit."
+    },
+    {
+      "path": "src/domain/validation.ts",
+      "kind": "modified",
+      "sha256": "cf3a6042baacc2705157766d8e1b3ce3d83b875dd032c1e48a5e2b74ea8b8b8b",
+      "reason": "VKA-Preview § 21: Prüft §-21-Einträge beim Speichern mit der bestehenden Dienstvalidierung."
+    },
+    {
+      "path": "src/engine/net-pay-automatic-forecast.ts",
+      "kind": "modified",
+      "sha256": "bcbac396c17008f9a17fa2887afc37db676036d8bb9305a54273faae435ee6af",
+      "reason": "VKA-Preview § 21: Erhält steuerpflichtige Aufschläge bei der Abstimmung des Bruttos für die Nettoprognose."
+    },
+    {
+      "path": "src/engine/net-pay-payment-forecast.test.ts",
+      "kind": "modified",
+      "sha256": "7d77d90973941fb5725a642af564c01a300d8f8c3afdd251821e66b8f1fcb757",
+      "reason": "VKA-Preview § 21: Prüft die Verarbeitung der zusätzlichen Zahlungsgruppe im bestehenden Netto-Regressionsfall."
+    },
+    {
+      "path": "src/engine/net-pay-payment-forecast.ts",
+      "kind": "modified",
+      "sha256": "11ff145fab8b59b6862ef1b4756a30956c6b3982756cadda67250f2bc706dcb6",
+      "reason": "VKA-Preview § 21: Übernimmt den Aufschlag mit seinem Zahlungsmonat für das geschätzte Netto. U/K-Preview: Verteilt den U/K-Aufschlag und verschobene Zulagen anhand ihrer Anspruchsmonate und bewahrt die gesonderte Jahreszahlung."
+    },
+    {
+      "path": "src/engine/vka-absence-pay.ts",
+      "kind": "added",
+      "sha256": "6f5e1bb08be45a5562cfa6794802e6ba2e8652b7b88096fe7a8a8e92d65ce3d3",
+      "reason": "VKA-Preview § 21: Berechnet VKA-Ausfalltage, Tagesdurchschnitt und offene Nachweise im TypeScript-Rechenweg. Preview Build 57, U/K-Automatik: Ermittelt Ausfalltage und Tagessatz aus Dienstplan und erfassten Referenzmonaten und benennt fehlende Quellen. U/K-Preview: Erklärt fehlende Grundlagen ohne Verweis auf entfernte Eingabefelder. Preview Build 57: Computes separate TV-L, TV-H and TV-UK daily averages and handles continued training pay."
+    },
+    {
+      "path": "src/features/day-editor/absence-pay-fields.tsx",
+      "kind": "added",
+      "sha256": "f5df0e3c7022b3ef94aab46e7a50614c8a4217eb773eb7bee5e6ed632e647125",
+      "reason": "VKA-Preview § 21: Ermöglicht die Erfassung von bezahltem Ausfall und optionalem Referenznachweis bei Urlaub oder Krankheit. Preview Build 57, U/K-Automatik: Zeigt Tagessatz und Ausnahmen hinter einer freiwilligen Detailaktion. U/K-Preview: Zeigt den automatischen Tagessatz für Urlaub und Krankheit ohne Abrechnungsformular. Preview Build 57: Shows daily estimates or continued training pay in the calendar editor."
+    },
+    {
+      "path": "src/features/day-editor/use-entry-editor-draft.ts",
+      "kind": "modified",
+      "sha256": "3c5a35c01952e24d6b5aba185bba60349173c3cc59f4d00e8144732036312461",
+      "reason": "VKA-Preview § 21: Übernimmt die ursprüngliche Dienstzeit und bereits gespeicherte §-21-Angaben in den Editorentwurf."
+    },
+    {
+      "path": "src/features/salary/salary-payment-input.ts",
+      "kind": "modified",
+      "sha256": "47082a15f027df1693c53caa05825c15c1017cb1fc7896ed3e93b3e9751be32a",
+      "reason": "VKA-Preview § 21: Findet für Auszahlungen im Folgemonatsverlauf den zugehörigen Abwesenheitsmonat. Nur tatsächlich entstandene, fällige U/K-Ansprüche aus dem Kalender einlesen. Preview Build 57: Routes the absence claim from the claim month to its configured payout month."
+    },
+    {
+      "path": "src/infrastructure/database/calendar-entry-row.ts",
+      "kind": "modified",
+      "sha256": "2766bc979ae961c8e94e7dbe0fa01011938a20ebe1457117ba687415aea80584",
+      "reason": "VKA-Preview § 21: Überführt die optionale Datenbankspalte in den Kalendereintrag."
+    },
+    {
+      "path": "src/infrastructure/database/dev-backup-payload.ts",
+      "kind": "modified",
+      "sha256": "4e95462a2eea0c2585939e810a30701d44f16c44f4494f78492ad3f1b4286493",
+      "reason": "VKA-Preview § 21: Erhält den Abwesenheitsnachweis beim Lesen von Entwicklungsdatensicherungen."
+    },
+    {
+      "path": "src/infrastructure/database/dev-tools-repository.ts",
+      "kind": "modified",
+      "sha256": "bbd85a1f47d949719c8e33270b7ebffc76f18b42e2f6f9bdbaebb04f7ef21171",
+      "reason": "VKA-Preview § 21: Übernimmt die optionale Spalte beim lokalen Sichern und Wiederherstellen der Dienste."
+    },
+    {
+      "path": "src/infrastructure/database/local-backup.ts",
+      "kind": "modified",
+      "sha256": "31655b67eb261ce99c9fd5571ec1456509307ca38d0ec6bdcb7617eb12eda331",
+      "reason": "VKA-Preview § 21: Versioniert lokale Sicherungen mit §-21-Daten und unterstützt das vorangegangene Format."
+    },
+    {
+      "path": "src/infrastructure/database/migrations.ts",
+      "kind": "modified",
+      "sha256": "77cddfd5075fab01284803d91639ab47dca29e7418f7290942b7e3d36728e20a",
+      "reason": "VKA-Preview § 21: Ergänzt bestehende Kalendereinträge mit einer optionalen Spalte für die Abwesenheitsangaben."
+    },
+    {
+      "path": "src/infrastructure/private-cloud/cloud-document.ts",
+      "kind": "modified",
+      "sha256": "c7a18a399091f89263f23c818e3d5daffe0f960e0f3f4d11d012813f8b9418da",
+      "reason": "VKA-Preview § 21: Akzeptiert die neue und die vorherige Sicherungsversion beim Lesen persönlicher Cloud-Dokumente."
+    },
+    {
+      "path": "src/features/analysis/salary-summary-state.tsx",
+      "kind": "modified",
+      "sha256": "af19054d0e5463bd7b0fef02ae65dbe254162f84ec3132ac70fc195e0eccd3c9",
+      "reason": "Benennt das bekannte Brutto und den offenen Aufschlag in der Analyseübersicht. Preview Build 57: Shows open continued-pay amounts across agreements."
+    },
+    {
+      "path": "src/features/salary/net-from-known-absence-pay.ts",
+      "kind": "added",
+      "sha256": "db04b04a01bcf118103bbf3badace3b69bcfc294c507c602ba991b48e5c32132",
+      "reason": "Berechnet eine ausdrücklich vorläufige Nettoanzeige aus belegten Auszahlungsbeträgen mit den bestehenden Steuer- und SV-Prüfungen. Die beiden tatsächlich von Preview-Build 57 gelieferten Fehlerzustände sind für Oktober und Dezember mit P und E geprüft. Preview Build 57, U/K-Automatik: Erklärt beim vorläufigen Netto, welche Grundlage für den offenen Aufschlag fehlt. Preview Build 57: Uses agreement-aware wording for estimated take-home pay."
+    },
+    {
+      "path": "src/features/day-editor/use-absence-pay-preview.ts",
+      "kind": "added",
+      "sha256": "069aec713a6b3bfd9768d0c5ea3efdfb97f9a99000e78f461c7006c4dce690ef",
+      "reason": "Preview Build 57, U/K-Automatik: Zeigt für bestehende und neue Urlaubstage oder Krankheitstage den kalkulierten Tagessatz vor dem Speichern. Preview: Gespeicherte Abwesenheiten im selben Kalenderbestand wie die Auswertung prüfen. Preview Build 57: Displays the appropriate legal basis for vacation and sickness or monthly training pay."
+    },
+    {
+      "path": "src/features/analysis/calendar-salary-projection.ts",
+      "kind": "added",
+      "sha256": "01f2a2f5e557ed54c6320ac3b578197ba4ba676ae297cb2b19495f05b014145b",
+      "reason": "U/K-Preview: Wählt den kompatiblen Rechenweg für Abwesenheiten und abweichende Arbeitgeber-Tarifregion anhand des datierten Profils. Preview Build 57: Routes affected months and payout years through the calendar calculation on Build 57."
+    },
+    {
+      "path": "src/features/salary/earned-service-pay.ts",
+      "kind": "modified",
+      "sha256": "38e3e8fd1bf84174e3c8091268f5861113fae912363f3dc939116fc6531f50c3",
+      "reason": "U/K-Preview: Ergänzt eindeutig zugeordnete und filterbare Tagesbeträge für Urlaub und Krankheit."
     }
   ]
 }

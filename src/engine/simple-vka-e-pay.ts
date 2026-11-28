@@ -1,3 +1,4 @@
+import { vkaEFixedAllowanceCents } from "./pay-allowances";
 import { Temporal } from "@js-temporal/polyfill";
 import table2025 from "../../rules/packages/reviewed/tvoed-vka-anlage-a/2025-04-01-draft1.json";
 import table2026 from "../../rules/packages/reviewed/tvoed-vka-anlage-a/2026-05-01-draft1.json";
@@ -448,12 +449,7 @@ export function calculateVkaEMonth(
             (allowance.prorateByPartTime ? profile.weeklyMinutes : context.fullTimeWeeklyMinutes),
           context.fullTimeWeeklyMinutes,
         ) / 100;
-  const fixedCents =
-    selection.sector === "BT_K" && !["E1", "E2", "E3", "E4"].includes(selection.payGroup)
-      ? selection.tariffRegion === "KAV_BW"
-        ? 3500
-        : 2500
-      : 0;
+  const fixedCents = vkaEFixedAllowanceCents(selection);
   const tvoedAllowanceAmount =
     roundRemunerationCents(fixedCents * profile.weeklyMinutes, context.fullTimeWeeklyMinutes) / 100;
   return {

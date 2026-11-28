@@ -1,3 +1,4 @@
+import { absencePayEditor } from "./absence-pay-fields";
 import { editorDutyDuration } from "./special-duty-editor-state";
 import { useStandbyBillingReview } from "./use-standby-billing-review";
 import { calculateTimedShiftMinutes } from "@/engine/working-time";
@@ -12,11 +13,10 @@ import {
   usePflegeShiftTemplates,
 } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
-import { type CalendarEntry, type EntryLocation, type ShiftType } from "@/domain/types";
+import { type CalendarEntry, type EntryLocation } from "@/domain/types";
 import { userFacingErrorMessage } from "@/domain/errors";
 import { ValidationError } from "@/domain/validation";
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
-import { resolveShiftTypePreset } from "@/features/day-editor/shift-type-preset";
 import { ShiftEditOverlay, shiftOverviewEntry } from "./shift-edit-overlay";
 import { useEntryEditorDraft } from "@/features/day-editor/use-entry-editor-draft";
 import { criticalIssueForSavedShift } from "@/features/day-editor/saved-shift-compliance";
@@ -27,7 +27,7 @@ import {
 } from "@/features/location/location-selection";
 import { useStableEditorSession } from "@/features/editor-session";
 import { APPOINTMENT_COLOR } from "@/theme/palette";
-import { deletionFeedback, selectionFeedback, warningFeedback } from "@/ui/haptics";
+import { deletionFeedback, warningFeedback } from "@/ui/haptics";
 import {
   focusInvalidField,
   integerRangeFieldError,
@@ -52,7 +52,7 @@ export function DayEditorForm({
   readonly sessionKey: string;
 }) {
   const navigation = useNavigation();
-  const { profile } = usePflegeShiftProfile();
+  const { profile, calculationProfile } = usePflegeShiftProfile();
   const { templates } = usePflegeShiftTemplates();
   const { entries, removeEntry, upsertShift, upsertShifts, upsertAppointment } =
     usePflegeShiftEntries();
@@ -62,7 +62,8 @@ export function DayEditorForm({
   const initialShift = existing?.kind === "SHIFT" ? existing : null;
   const initialAppointment = existing?.kind === "APPOINTMENT" ? existing : null;
   const draftState = useEntryEditorDraft(initialShift, initialAppointment, mode);
-  const [specialDuty, setSpecialDuty] = draftState.specialDuty;
+  const [absencePay] = draftState.absencePay;
+  const [specialDuty] = draftState.specialDuty;
   const billingReview = useStandbyBillingReview({
     original: initialShift,
     draft: draftState,
@@ -73,15 +74,15 @@ export function DayEditorForm({
     resolver: ruleResolver,
     focused: billingFocus,
   });
-  const [shiftType, setShiftType] = draftState.shiftType;
-  const [shiftAllDay, setShiftAllDay] = draftState.shiftAllDay;
-  const [selectedTemplateId, setSelectedTemplateId] = draftState.selectedTemplateId;
-  const [shiftTitle, setShiftTitle] = draftState.shiftTitle;
+  const [shiftType] = draftState.shiftType;
+  const [shiftAllDay] = draftState.shiftAllDay;
+  const [selectedTemplateId] = draftState.selectedTemplateId;
+  const [shiftTitle] = draftState.shiftTitle;
   const [startTime, setStartTime] = draftState.startTime;
   const [endTime, setEndTime] = draftState.endTime;
   const [breakMinutes, setBreakMinutes] = draftState.breakMinutes;
-  const [shiftColor, setShiftColor] = draftState.shiftColor;
-  const [shiftSymbol, setShiftSymbol] = draftState.shiftSymbol;
+  const [shiftColor] = draftState.shiftColor;
+  const [shiftSymbol] = draftState.shiftSymbol;
   const [shiftNote, setShiftNote] = draftState.shiftNote;
   const [shiftNotification, setShiftNotification] = draftState.shiftNotification;
   const [shiftAlarmEnabled, setShiftAlarmEnabled] = draftState.shiftAlarmEnabled;
@@ -127,21 +128,6 @@ export function DayEditorForm({
   }
   const shiftIsAbsence = ["VACATION", "SICK", "FREE"].includes(shiftType);
   const shiftIsTimed = !shiftIsAbsence && !shiftAllDay;
-
-  function chooseType(type: ShiftType) {
-    const preset = resolveShiftTypePreset(type, templates);
-    setSpecialDuty(null);
-    setShiftType(type);
-    setShiftAllDay(preset.allDay ?? ["VACATION", "SICK", "FREE"].includes(type));
-    setSelectedTemplateId(preset.templateId);
-    setShiftTitle(preset.title);
-    setStartTime(preset.startTime ?? "08:00");
-    setEndTime(preset.endTime ?? "16:00");
-    setBreakMinutes(String(preset.breakMinutes));
-    setShiftColor(preset.color);
-    setShiftSymbol(preset.symbol);
-    selectionFeedback();
-  }
 
   async function save(closeAfterSave = true): Promise<boolean> {
     if (savingRef.current) return false;
@@ -216,6 +202,7 @@ export function DayEditorForm({
           ...(initialShift ? { id: initialShift.id, expectedRevision: initialShift.revision } : {}),
           date: initialShift?.date ?? date,
           specialDuty,
+          absencePay: shiftType === "VACATION" || shiftType === "SICK" ? absencePay : null,
           templateId: shiftIsTimed ? selectedTemplateId : null,
           title: shiftTitle,
           type: shiftType,
@@ -330,7 +317,15 @@ export function DayEditorForm({
           specialDuty={specialDuty}
           specialDutyKind={specialDuty?.kind}
           specialDutyFields={
-            shiftIsTimed && shiftType !== "TRAINING" ? billingReview.fields : undefined
+            shiftIsTimed && shiftType !== "TRAINING"
+              ? billingReview.fields
+              : absencePayEditor(
+                  calculationProfile ?? profile,
+                  initialShift?.date ?? date,
+                  shiftType,
+                  absencePay,
+                  initialShift,
+                )
           }
           alarmEnabled={shiftAlarmEnabled}
           breakMinutes={breakMinutes}
@@ -365,7 +360,7 @@ export function DayEditorForm({
           onNotificationPress={() => setOptionSheet("NOTIFICATION")}
           onOvertimeMinutesChange={setOvertimeMinutes}
           onRequestClose={() => save(false)}
-          onShiftTypeChange={chooseType}
+          onShiftTypeChange={(type) => draftState.chooseShiftType(type, templates)}
           onStartTimeChange={setStartTime}
           onTariffOvertimeConfirmedChange={setTariffOvertimeConfirmed}
           overtimeInputRef={overtimeRef}

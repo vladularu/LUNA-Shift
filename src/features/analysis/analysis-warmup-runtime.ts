@@ -1,3 +1,4 @@
+import { needsCalendarSalaryInMonth } from "./calendar-salary-projection";
 import { monthlyRustNetRequest, type MonthlyRustNetCalculator } from "./monthly-rust-net";
 import {
   monthlyRustChecksKey,
@@ -255,7 +256,12 @@ export function createAnalysisWarmupRuntime(
           const priority = ANALYSIS_WARMUP_PRIORITY + index;
           setup(
             (function* () {
-              const monthlyCalculator = month.startsWith("2027-") ? null : input.monthlyCalculator;
+              const monthlyCalculator =
+                month.startsWith("2027-") ||
+                (input.monthlyCalculator &&
+                  needsCalendarSalaryInMonth(month, input.entries, input.profile))
+                  ? null
+                  : input.monthlyCalculator;
               const request = monthlyRustRequest(
                 {
                   month,

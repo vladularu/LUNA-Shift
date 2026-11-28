@@ -14,6 +14,7 @@ import { employmentProfileAt } from "@/domain/employment-history";
 import { formatMonthTitle } from "@/engine/calendar";
 import { prepareAutomaticNetPay } from "@/features/salary/automatic-net-pay-preparation";
 import { useOptionalRustAutomaticNetPay } from "@/features/salary/use-rust-automatic-net-pay";
+import { classifyServicesWithOpenAbsence } from "@/features/salary/net-from-known-absence-pay";
 import { NetPayServiceDetails } from "@/features/salary/net-pay-service-details";
 import { NetPayText } from "@/features/salary/net-pay-controls";
 import { salaryMonthInput } from "@/features/salary/salary-month-input";
@@ -31,7 +32,8 @@ import { EmptyState } from "@/ui/design-system";
 export function PremiumDetailsScreen() {
   const params = useLocalSearchParams<{ month?: RouteParam }>();
   const { error, ready, reload } = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths } = usePflegeShiftTestData();
@@ -73,11 +75,16 @@ export function PremiumDetailsScreen() {
       !enabled ||
       !profile ||
       !calculation?.ok ||
-      !calculation.value.pay.available ||
       data.status !== "ready" ||
       settings?.version !== 2
     )
       return null;
+    if (!calculation.value.pay.available) {
+      return classifyServicesWithOpenAbsence(
+        { month, profile, settings, pay: calculation.value.pay, shifts: calculation.value.shifts },
+        context.resolver,
+      );
+    }
     // Keep original service dates and ignore payment preferences on this earned-month page.
     const forecast =
       process.env.EXPO_PUBLIC_RUST_NET_BRIDGE === "1"
@@ -135,7 +142,9 @@ export function PremiumDetailsScreen() {
         message="Für manuell hinterlegtes Gehalt werden keine Zeitzuschläge berechnet."
       />,
     );
-  if (!pay.available) {
+  const pendingAbsence =
+    !pay.available && pay.knownGrossAmount != null && !!pay.absencePayNotes?.length;
+  if (!pay.available && !pendingAbsence) {
     return page(
       <EmptyState
         message="Für diesen Zeitraum fehlen geprüfte Tarifdaten."
@@ -146,6 +155,12 @@ export function PremiumDetailsScreen() {
   const provisional = provisionalTariffCaption(pay.provisionalTariffMonths);
   return page(
     <>
+      {pendingAbsence ? (
+        <NetPayText>
+          Der Aufschlag für Urlaub oder Krankheit ist noch offen. Hier siehst du die Zuschläge der
+          erfassten Dienste. {pay.absencePayNotes?.[0]?.slice(13)}
+        </NetPayText>
+      ) : null}
       {provisional ? <NetPayText>{provisional}</NetPayText> : null}
       <NetPayServiceDetails
         key={month}

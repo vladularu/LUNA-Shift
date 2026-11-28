@@ -1,3 +1,4 @@
+import { validateAbsencePay } from "./absence-pay";
 import { validateSpecialDuty, validateDutyParent } from "./special-duty";
 import { requireTvalPflegeTariff } from "./tval-pflege-tariff";
 import { requireTvhKrTariff } from "./tvh-kr-tariff";
@@ -384,6 +385,8 @@ export function validateTemplate(input: SaveShiftTemplateInput): SaveShiftTempla
 }
 
 export function validateShift(input: SaveShiftInput): SaveShiftInput {
+  if (input.absencePay !== undefined)
+    input = { ...input, absencePay: validateAbsencePay(input.absencePay, input.type, input.date) };
   if (input.specialDuty && input.specialDuty.kind !== "SPLIT" && (input.overtimeMinutes ?? 0) > 0)
     throw new ValidationError(
       "Überstunden bei Sonderdiensten sind noch nicht zugeordnet. Erfasse hier nur die tatsächlichen Zeiten.",

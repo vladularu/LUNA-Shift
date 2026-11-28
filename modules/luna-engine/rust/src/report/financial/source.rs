@@ -4,7 +4,7 @@ use crate::net::gross_evidence::{
     EvidenceNeed, GrossEvidenceError, GrossEvidenceProvider, GrossMonthEvidence,
 };
 use crate::net::payment_projection::{
-    ProjectionError, SalaryPaymentProjection, SalaryPaymentSource, project_salary_payment,
+    ProjectionError, SalaryPaymentProjection, SalaryPaymentSource,
 };
 use crate::net::payment_schedule::{
     PAYMENT_GROUPS, PaymentPreferences, SalaryPerspective, add_salary_payment_months,
@@ -344,18 +344,53 @@ impl<'a> SalarySourceBook<'a> {
         perspective: SalaryPerspective,
     ) -> Result<SalaryPaymentProjection, FinancialError> {
         let effective = self.effective_preferences(month, preferences, perspective)?;
-        let months = salary_payment_required_months(month, &effective, perspective)
+        let mut months = salary_payment_required_months(month, &effective, perspective)
             .map_err(|failure| FinancialError::invalid(failure.to_string()))?;
+        let incoming = add_salary_payment_months(month, -2)
+            .map_err(|e| FinancialError::invalid(e.to_string()))?;
+        let mut has_incoming = false;
+        if perspective == SalaryPerspective::Payout {
+            for s in self
+                .raw_shifts
+                .iter()
+                .filter(|s| crate::net::absence_pay::absence(s))
+            {
+                if let Some(date) = s["date"].as_str().filter(|d| d.starts_with(&incoming))
+                    && crate::net::absence_pay::eligible(
+                        &self
+                            .native
+                            .profile_view_at(date)
+                            .map_err(|_| error())?
+                            .calculation,
+                    )
+                {
+                    has_incoming = true;
+                    break;
+                }
+            }
+        }
+        let incoming = has_incoming.then_some(incoming);
+        if let Some(claim) = &incoming
+            && !months.contains(claim)
+        {
+            months.push(claim.clone());
+        }
         let mut sources = BTreeMap::new();
         for source in months {
             sources.insert(source.clone(), self.source(&source, month)?);
         }
-        let mut result = project_salary_payment(month, perspective, &effective, |month| {
-            sources
-                .get(month)
-                .cloned()
-                .ok_or(ProjectionError::MissingSource)
-        })
+        let mut result = crate::net::payment_projection::project_with_absences(
+            month,
+            perspective,
+            &effective,
+            incoming.as_deref(),
+            |month| {
+                sources
+                    .get(month)
+                    .cloned()
+                    .ok_or(ProjectionError::MissingSource)
+            },
+        )
         .map_err(|failure| FinancialError::invalid(failure.to_string()))?;
         let blocked: Vec<_> = result
             .sources

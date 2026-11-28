@@ -141,7 +141,7 @@ describe("separate earned and payout salary cards", () => {
       expect(
         screen.getByLabelText(`Bereitschaftsvergütung · brutto: ${formatEuro(amount)}`),
       ).toBeTruthy();
-      expect(screen.getByText("Für Dienste im Oktober 2026")).toBeTruthy();
+      expect(screen.getByText("Erarbeitet im Oktober 2026")).toBeTruthy();
     },
   );
   it("keeps earned amounts and work in October while payout follows September", async () => {

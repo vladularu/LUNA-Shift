@@ -1,3 +1,5 @@
+import { needsCalendarSalaryInYear } from "./calendar-salary-projection";
+import { prepareAutomaticNetPaySteps } from "@/features/salary/automatic-net-pay-preparation";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { RuleCatalogRuntimeDiagnosis } from "@/application/rule-catalog-runtime";
 import type { AutomaticNetPayForecast } from "@/engine/net-pay-automatic-forecast";
@@ -157,6 +159,21 @@ export function* monthlyRustNetSteps(
   request: AnalysisSalaryRequest,
   calculator: MonthlyRustNetCalculator,
 ): Generator<AnalysisWorkYield, AutomaticNetPayForecast, void> {
+  if (
+    request.settings &&
+    needsCalendarSalaryInYear(
+      Number(request.month.slice(0, 4)),
+      request.context.entries,
+      request.profile,
+    )
+  )
+    return yield* prepareAutomaticNetPaySteps(
+      request.month,
+      request.settings,
+      request.profile,
+      request.context,
+      request.payment,
+    );
   let result: AutomaticNetPayForecast | undefined;
   yield calculator(request).then((value) => {
     result = value;

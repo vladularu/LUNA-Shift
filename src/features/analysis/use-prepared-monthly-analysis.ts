@@ -1,3 +1,4 @@
+import { needsCalendarSalaryInMonth } from "./calendar-salary-projection";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MonthPreparationError } from "./analysis-preparation-failure";
 import {
@@ -29,7 +30,13 @@ export function usePreparedMonthlyAnalysis(
   nativeCalculator: MonthlyRustCalculator | null = null,
 ) {
   const rust = useMemo(() => {
-    if (!request || !nativeCalculator || request.month >= "2027-01") return null;
+    if (
+      !request ||
+      !nativeCalculator ||
+      request.month >= "2027-01" ||
+      needsCalendarSalaryInMonth(request.month, request.entries, request.profile)
+    )
+      return null;
     try {
       return hasProvisionalPayrollTariff(request.month, request.profile, request.ruleResolver)
         ? null

@@ -1,7 +1,8 @@
-import type { SpecialDuty } from "@/domain/special-duty";
-import { useState } from "react";
-
+import { plannedAbsence } from "@/domain/absence-pay";
+import { resolveShiftTypePreset } from "./shift-type-preset";
+import { selectionFeedback } from "@/ui/haptics";
 import type {
+  ShiftTemplate,
   Appointment,
   EntryLocation,
   EntryNotification,
@@ -9,6 +10,9 @@ import type {
   ShiftEntry,
   ShiftType,
 } from "@/domain/types";
+import type { SpecialDuty } from "@/domain/special-duty";
+import { useState } from "react";
+
 import { SHIFT_TYPE_COLORS } from "@/theme/palette";
 
 export function useEntryEditorDraft(
@@ -16,6 +20,7 @@ export function useEntryEditorDraft(
   initialAppointment: Appointment | null,
   mode: "SHIFT" | "APPOINTMENT",
 ) {
+  const absencePay = useState(initialShift?.absencePay ?? null);
   const specialDuty = useState<SpecialDuty | null>(initialShift?.specialDuty ?? null);
   const shiftType = useState<ShiftType>(initialShift?.type ?? "CUSTOM");
   const shiftAllDay = useState(initialShift?.allDay ?? false);
@@ -49,6 +54,7 @@ export function useEntryEditorDraft(
       ? [
           shiftType[0],
           specialDuty[0],
+          absencePay[0],
           shiftAllDay[0],
           selectedTemplateId[0],
           shiftTitle[0],
@@ -77,9 +83,33 @@ export function useEntryEditorDraft(
   );
   const [initialDraft] = useState(draft);
   return {
+    chooseShiftType(type: ShiftType, templates: readonly ShiftTemplate[]) {
+      const preset = resolveShiftTypePreset(type, templates);
+      specialDuty[1](null);
+      if (type !== shiftType[0])
+        absencePay[1](
+          plannedAbsence(
+            initialShift,
+            shiftType[0],
+            type,
+            !shiftAllDay[0] && !["VACATION", "SICK", "FREE"].includes(shiftType[0]),
+          ),
+        );
+      shiftType[1](type);
+      shiftAllDay[1](preset.allDay);
+      selectedTemplateId[1](preset.templateId);
+      shiftTitle[1](preset.title);
+      startTime[1](preset.startTime ?? "08:00");
+      endTime[1](preset.endTime ?? "16:00");
+      breakMinutes[1](String(preset.breakMinutes));
+      shiftColor[1](preset.color);
+      shiftSymbol[1](preset.symbol);
+      selectionFeedback();
+    },
     // Opening an appointment sheet alone must not create its default values.
     hasChanges: (mode === "SHIFT" && initialShift === null) || draft !== initialDraft,
     specialDuty,
+    absencePay,
     shiftType,
     shiftAllDay,
     selectedTemplateId,

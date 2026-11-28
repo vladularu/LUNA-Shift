@@ -1,4 +1,5 @@
 //! Offline monthly net pay. Domain statuses remain distinct from kernel errors.
+pub(crate) mod absence_pay;
 pub mod annual_payment;
 pub mod automation;
 pub mod gross_evidence;

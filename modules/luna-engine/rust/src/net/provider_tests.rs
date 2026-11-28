@@ -297,3 +297,125 @@ fn month_cache_is_bounded_and_all_months_share_one_projected_plan() {
     assert_eq!(provider.calculations, MAX_CACHED_MONTHS + 2);
     assert_eq!(provider.months.len(), MAX_CACHED_MONTHS);
 }
+
+#[test]
+fn vka_absence_pay_earned_and_delayed_payout_from_real_native_salary_provider() {
+    use crate::net::payment_projection::project_with_absences;
+    use crate::net::payment_schedule::SalaryPerspective;
+    let reference: Value = serde_json::from_str(include_str!(
+        "../../../reference/native-gross-provider-golden.json"
+    ))
+    .unwrap();
+    let resolver = RuleResolver::bundled().unwrap();
+    let prefs = validate_salary_payment_preferences(
+        &json!({"version":1,"periods":[],"reviewedEmptyMonths":[]}),
+    )
+    .unwrap();
+    for id in ["month-legacy-6", "month-family-route-545"] {
+        let case = reference["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == id)
+            .unwrap();
+        let mut input: Value = serde_json::from_str(case["inputJson"].as_str().unwrap()).unwrap();
+        let mut shift = input["shifts"][0].clone();
+        shift["id"] = json!("absent");
+        shift["date"] = json!("2026-09-01");
+        shift["startTime"] = Value::Null;
+        shift["endTime"] = Value::Null;
+        shift["breakMinutes"] = json!(0);
+        shift["allDay"] = json!(true);
+        shift["type"] = json!("VACATION");
+        shift["overtimeMinutes"] = json!(0);
+        shift["tariffOvertimeConfirmed"] = json!(false);
+        shift["absencePay"] = json!({"day":"PAID","workdaysPerWeek":5,"referenceCents":97500,"historyComplete":true,"dailyRateCents":null,"eventStart":null});
+        let mut entries = vec![];
+        for day in 1..=3 {
+            let mut s = shift.clone();
+            s["date"] = json!(format!("2026-09-0{day}"));
+            s["id"] = json!(format!("absent-{day}"));
+            entries.push(s);
+        }
+        input["shifts"] = json!(entries);
+        input["assessmentShifts"] = json!(entries);
+        input["decisions"] = json!({});
+        let mut provider = NativeGrossEvidenceProvider::new(scope(&input), &resolver).unwrap();
+        let mut project = |month, perspective, incoming| {
+            project_with_absences(month, perspective, &prefs, incoming, |m| {
+                provider
+                    .source(m)
+                    .map_err(|_| ProjectionError::InvalidSource)
+            })
+            .unwrap()
+        };
+        let earned = project("2026-09", SalaryPerspective::Earned, None);
+        assert_eq!(earned.pay["absencePayAmount"], 45.0, "{id}");
+        assert!(earned.available);
+        let september = project("2026-09", SalaryPerspective::Payout, None);
+        assert_eq!(
+            september
+                .outgoing_contributions
+                .iter()
+                .find(|c| c.group == "ABSENCE_PAY")
+                .unwrap()
+                .amount_cents,
+            4500
+        );
+        assert_eq!(
+            earned.pay["estimatedGrossAmount"].as_f64().unwrap()
+                - september.pay["estimatedGrossAmount"].as_f64().unwrap(),
+            45.0
+        );
+        let november = project("2026-11", SalaryPerspective::Payout, Some("2026-09"));
+        assert!(november.available);
+        let line = november
+            .contributions
+            .iter()
+            .find(|c| c.group == "ABSENCE_PAY")
+            .unwrap();
+        assert_eq!(
+            (
+                line.amount_cents,
+                line.claim_month.as_str(),
+                line.payment_month.as_deref()
+            ),
+            (4500, "2026-09", Some("2026-11"))
+        );
+        assert_eq!(november.pay["timePremiumAmount"], 0.0);
+        input["netSettings"]["month"] = json!("2026-09");
+        let net = |input: &Value| {
+            let scope = scope(input);
+            let profile = Arc::clone(&scope.profile);
+            let shifts = Arc::clone(&scope.shifts);
+            let mut provider = NativeGrossEvidenceProvider::new(scope, &resolver).unwrap();
+            calculate_automatic_net_pay_forecast(
+                "2026-09",
+                profile,
+                shifts,
+                &input["netSettings"],
+                &resolver,
+                &mut provider,
+            )
+        };
+        let with = net(&input);
+        for key in ["shifts", "assessmentShifts"] {
+            for row in input[key].as_array_mut().unwrap() {
+                row["absencePay"]["dailyRateCents"] = json!(0);
+            }
+        }
+        let without = net(&input);
+        for key in [
+            "grossCents",
+            "taxableGrossCents",
+            "socialInsuranceGrossCents",
+        ] {
+            let amounts = |v: &Value| {
+                v["result"]["pay"]["amounts"][key]
+                    .as_i64()
+                    .unwrap_or_else(|| panic!("{id} {key}: {}", v["result"]))
+            };
+            assert_eq!(amounts(&with) - amounts(&without), 4500, "{id} {key}");
+        }
+    }
+}

@@ -35,10 +35,12 @@ export function annualRustMonthTotals(
       if (typeof output[field] !== "number" || !Number.isFinite(output[field]))
         throw new Error("RUST_ANNUAL_MONTH_INVALID");
     const pay = output as Record<(typeof fields)[number], number>;
+    const absencePay = typeof output.absencePayAmount === "number" ? output.absencePayAmount : 0;
     estimatedGrossAmount += pay.estimatedGrossAmount;
     premiumAmount += pay.timePremiumAmount;
     overtimeAmount += pay.overtimeAmount;
-    allowanceAmount += pay.allowanceAmount + pay.tvoedAllowanceAmount + pay.careAllowanceAmount;
+    allowanceAmount +=
+      absencePay + pay.allowanceAmount + pay.tvoedAllowanceAmount + pay.careAllowanceAmount;
     availablePayMonthCount++;
     return {
       month,
@@ -49,7 +51,8 @@ export function annualRustMonthTotals(
         pay.overtimeAmount +
         pay.allowanceAmount +
         pay.tvoedAllowanceAmount +
-        pay.careAllowanceAmount,
+        pay.careAllowanceAmount +
+        absencePay,
     };
   });
   return {

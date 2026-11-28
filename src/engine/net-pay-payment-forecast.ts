@@ -50,6 +50,8 @@ function groupAmount(pay: MonthlyPayEstimate, group: Group): number {
     "_MONTHLY",
   );
   switch (group) {
+    case "ABSENCE_PAY":
+      return cents(pay.absencePayAmount ?? 0);
     case "BASE":
       return cents(pay.personalBaseAmount!);
     case "CARE_ALLOWANCE":
@@ -108,12 +110,12 @@ function completeShiftedBundle(
   )
     return null;
   const source = sources.get(variables[0].claimMonth);
-  if (!source || source.month === month) return null;
+  if (!source) return null;
   const lag = Temporal.PlainYearMonth.from(source.month).until(
     Temporal.PlainYearMonth.from(month),
     { largestUnit: "months" },
   ).months;
-  return lag === 1 || lag === 2 ? { source, lag: lag as 1 | 2 } : null;
+  return lag === 0 || lag === 1 || lag === 2 ? { source, lag: lag as 0 | 1 | 2 } : null;
 }
 
 /** Ordinary endpoints exclude one-offs and source personal deductions from both sides. */
@@ -162,6 +164,24 @@ function baseProof(
         regularMonthlySocialInsuranceGrossCents: proof.regularGrossCents,
       }),
     }),
+  };
+}
+
+/** U/K is ordinary taxable cash without SFN exemption. Keep the regular income and shift evidence intact. */
+function withoutAbsence(proof: AutomaticSalaryProof, absenceCents: number): AutomaticSalaryProof {
+  if (!absenceCents) return proof;
+  const amounts = proof.classification.amounts;
+  return {
+    ...proof,
+    classification: {
+      ...proof.classification,
+      amounts: {
+        ...amounts,
+        grossCents: amounts.grossCents - absenceCents,
+        taxableGrossCents: amounts.taxableGrossCents - absenceCents,
+        socialInsuranceGrossCents: amounts.socialInsuranceGrossCents - absenceCents,
+      },
+    },
   };
 }
 
@@ -244,7 +264,7 @@ function* sourceAdjustmentEstimateSteps(
   current: SalaryPaymentSource,
   currentProof: AutomaticSalaryProof,
   source: SalaryPaymentSource,
-  lag: 1 | 2,
+  lag: 0 | 1 | 2,
   selected: readonly SalaryPaymentContribution[],
   resolver: RuleResolver,
 ): Generator<number, AutomaticNetPayForecast, void> {
@@ -254,17 +274,20 @@ function* sourceAdjustmentEstimateSteps(
     result: { status: "unavailable", stage: "net-pay", reason },
     ...(recovery ? { recovery } : {}),
   });
-  const crossYear = source.month.slice(0, 4) !== month.slice(0, 4);
-  const sourceSettings = resolveNetPaySettings(source.month, input.sourceSettings)?.settings;
+  const sourcePriorYear = source.month.slice(0, 4) !== month.slice(0, 4);
+  const sourceSettings =
+    source.month === month
+      ? settings
+      : resolveNetPaySettings(source.month, input.sourceSettings)?.settings;
   if (sourceSettings?.version !== 2 || !sourceSettings.automation)
     return stop(`Für den Anspruchsmonat ${source.month} fehlen fortgeltende Netto-Grundlagen.`, {
       kind: "net-settings",
       month: source.month,
     });
-  const sourceResult = yield* prepareAutomaticSalaryProofSteps(
-    { ...source, settings: sourceSettings },
-    resolver,
-  );
+  const sourceResult =
+    source.month === month
+      ? currentProof
+      : yield* prepareAutomaticSalaryProofSteps({ ...source, settings: sourceSettings }, resolver);
   if (sourceResult.status !== "available")
     return {
       ...sourceResult.forecast,
@@ -276,6 +299,7 @@ function* sourceAdjustmentEstimateSteps(
   if (
     (projection.outgoingContributions ?? []).some(
       (line) =>
+        line.group !== "ABSENCE_PAY" &&
         line.paymentMonth !== Temporal.PlainYearMonth.from(month).add({ months: lag }).toString(),
     )
   )
@@ -294,7 +318,13 @@ function* sourceAdjustmentEstimateSteps(
   );
   const sourceFull = yield* finalizeAutomaticSalaryNetSteps(
     { month: source.month, settings: sourceOrdinary },
-    sourceResult,
+    withoutAbsence(
+      sourceResult,
+      groupAmount(source.pay, "ABSENCE_PAY") -
+        selected
+          .filter((line) => line.claimMonth === source.month && line.group === "ABSENCE_PAY")
+          .reduce((sum, line) => sum + line.amountCents, 0),
+    ),
   );
   if (currentBase.result.status !== "available") return currentBase;
   if (sourceBase.result.status !== "available" || sourceFull.result.status !== "available") {
@@ -306,7 +336,13 @@ function* sourceAdjustmentEstimateSteps(
     };
   }
   const bundleGross = selected
-    .filter((line) => line.claimMonth === source.month)
+    .filter(
+      (line) =>
+        line.claimMonth === source.month &&
+        line.group !== "BASE" &&
+        line.group !== "CARE_ALLOWANCE" &&
+        line.group !== "TARIFF_ALLOWANCE",
+    )
     .reduce((sum, line) => sum + line.amountCents, 0);
   if (
     sourceFull.result.pay.amounts.grossCents - sourceBase.result.pay.amounts.grossCents !==
@@ -318,6 +354,51 @@ function* sourceAdjustmentEstimateSteps(
     sourceFull.result.pay,
     sourceBase.result.pay,
   );
+  let priorYearTaxable = sourcePriorYear
+    ? sourceFull.result.pay.amounts.taxableGrossCents -
+      sourceBase.result.pay.amounts.taxableGrossCents
+    : 0;
+  let ordinaryTaxBase = sourcePriorYear ? currentBase.result.pay : pay;
+  const separateAbsences = selected.filter(
+    (line) =>
+      line.group === "ABSENCE_PAY" && line.claimMonth !== source.month && line.amountCents > 0,
+  );
+  for (const line of separateAbsences) {
+    const claim = projection.sources.find((s) => s.month === line.claimMonth)!;
+    const saved =
+      claim.month === month
+        ? settings
+        : resolveNetPaySettings(claim.month, input.sourceSettings)?.settings;
+    if (!saved?.automation)
+      return stop("Für den U/K-Anspruch aus " + claim.month + " fehlen die Netto-Angaben.", {
+        kind: "net-settings",
+        month: claim.month,
+      });
+    const proof =
+      claim.month === month
+        ? currentProof
+        : yield* prepareAutomaticSalaryProofSteps({ ...claim, settings: saved }, resolver);
+    if (proof.status !== "available") return proof.forecast;
+    const payroll = { month: claim.month, settings: ordinarySettings(saved, claim.month) };
+    const withUK = yield* finalizeAutomaticSalaryNetSteps(payroll, proof);
+    const withoutUK = yield* finalizeAutomaticSalaryNetSteps(
+      payroll,
+      withoutAbsence(proof, line.amountCents),
+    );
+    if (withUK.result.status !== "available") return withUK;
+    if (withoutUK.result.status !== "available") return withoutUK;
+    pay = addPayrollDifference(pay, withUK.result.pay, withoutUK.result.pay);
+    if (claim.month.slice(0, 4) !== month.slice(0, 4))
+      priorYearTaxable +=
+        withUK.result.pay.amounts.taxableGrossCents -
+        withoutUK.result.pay.amounts.taxableGrossCents;
+    else
+      ordinaryTaxBase = addPayrollDifference(
+        ordinaryTaxBase,
+        withUK.result.pay,
+        withoutUK.result.pay,
+      );
+  }
   // Estimate the bundle's withholding with its payout: recompute its marginal
   // deductions in the earned month (including that month's monthly allowance).
   // This does not assert when an employer actually withheld employee SV, nor
@@ -368,19 +449,18 @@ function* sourceAdjustmentEstimateSteps(
   let crossYearTaxEstimate: NonNullable<
     AutomaticNetPayForecast["payrollTimingEstimate"]
   >["crossYearTaxEstimate"];
-  if (crossYear) {
+  if (sourcePriorYear || priorYearTaxable > 0) {
     const regular = yield* finalizeAutomaticSalaryNetSteps(
       { month, settings: currentOrdinary },
       baseProof(currentProof, current.pay, settings, true),
     );
     if (regular.result.status !== "available") return regular;
     const estimate = estimateCrossYearArrearsTax(
-      currentBase.result.pay,
+      ordinaryTaxBase,
       regular.result.pay,
       { ...settings.profile, worksInSaxony: currentProof.profile.federalState === "SN" },
       settings,
-      sourceFull.result.pay.amounts.taxableGrossCents -
-        sourceBase.result.pay.amounts.taxableGrossCents,
+      priorYearTaxable,
       annualPayment?.netIncluded ? annualPayment.grossCents : 0,
     );
     pay = Object.freeze({
@@ -412,12 +492,21 @@ function* sourceAdjustmentEstimateSteps(
     regularGrossCents: currentProof.regularGrossCents,
     pensionOmitted: currentBase.pensionOmitted || sourceFull.pensionOmitted,
     ...(annualPayment ? { annualPayment } : {}),
-    payrollTimingEstimate: Object.freeze({
-      method: "SOURCE_ADJUSTMENT",
-      sourceMonth: source.month,
-      lag,
-      ...(crossYearTaxEstimate ? { crossYearTaxEstimate } : {}),
-    }),
+    ...(lag || separateAbsences.length
+      ? {
+          payrollTimingEstimate: Object.freeze({
+            method: "SOURCE_ADJUSTMENT",
+            sourceMonth: lag ? source.month : separateAbsences[0].claimMonth,
+            lag:
+              lag ||
+              (Temporal.PlainYearMonth.from(separateAbsences[0].claimMonth).until(
+                Temporal.PlainYearMonth.from(month),
+                { largestUnit: "months" },
+              ).months as 1 | 2),
+            ...(crossYearTaxEstimate ? { crossYearTaxEstimate } : {}),
+          }),
+        }
+      : {}),
     result: { status: "available", classification, pay },
   };
 }
@@ -490,6 +579,7 @@ export function* calculateAutomaticPaymentNetPayForecastSteps(
         pay.allowanceAmount,
         pay.overtimeAmount,
         pay.specialDutyAmount ?? 0,
+        pay.absencePayAmount ?? 0,
       ].reduce((sum, amount) => sum + cents(amount), 0) !== grossCents
     )
       return stop("Die Bestandteile passen nicht zum Auszahlungsbrutto.");
@@ -513,7 +603,8 @@ export function* calculateAutomaticPaymentNetPayForecastSteps(
     for (const line of outgoing) {
       if (
         line.claimMonth !== month ||
-        !SALARY_PAYMENT_GROUPS.some((group) => group === line.group) ||
+        (line.group !== "ABSENCE_PAY" &&
+          !SALARY_PAYMENT_GROUPS.some((group) => group === line.group)) ||
         !Number.isSafeInteger(line.amountCents) ||
         line.amountCents <= 0 ||
         seen.has(`${month}:${line.group}`) ||
@@ -530,7 +621,7 @@ export function* calculateAutomaticPaymentNetPayForecastSteps(
         return stop("Für diese Verzögerung fehlen Berechnungsgrundlagen der Sozialversicherung.");
     }
     if (
-      SALARY_PAYMENT_GROUPS.some(
+      ([...SALARY_PAYMENT_GROUPS, "ABSENCE_PAY"] as const).some(
         (group) =>
           selected
             .filter((line) => line.claimMonth === month && line.group === group)
@@ -543,7 +634,10 @@ export function* calculateAutomaticPaymentNetPayForecastSteps(
     )
       return stop("Die Zuordnung der aktuellen und verzögerten Ansprüche ist unvollständig.");
     const bundle = completeShiftedBundle(month, selected, sources);
-    if (bundle)
+    const hasAbsence = [...selected, ...outgoing].some(
+      (line) => line.group === "ABSENCE_PAY" && line.amountCents > 0,
+    );
+    if (bundle && (bundle.lag || hasAbsence))
       return yield* sourceAdjustmentEstimateSteps(
         input,
         current,
@@ -620,7 +714,7 @@ export function* calculateAutomaticPaymentNetPayForecastSteps(
           );
       }
       if (
-        SALARY_PAYMENT_GROUPS.some(
+        ([...SALARY_PAYMENT_GROUPS, "ABSENCE_PAY"] as const).some(
           (group) =>
             selected
               .filter((line) => line.claimMonth === month && line.group === group)

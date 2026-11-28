@@ -34,10 +34,18 @@ interface TvUkTable {
 }
 const tables: readonly TvUkTable[] = sourceTables;
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+// § 19 Abs. 2 TV-UK: price historical duties with the adjusted pay table.
+const absenceTable = Symbol("TV-UK table for continued pay");
+type TvUkResolver = RuleResolver & { readonly [absenceTable]?: TvUkTable };
+export function tvUkAbsenceResolver(date: string, resolver: RuleResolver): TvUkResolver | null {
+  const table = getTvUkNursingTable(date, resolver);
+  return table ? { ...resolver, [absenceTable]: table } : null;
+}
 export function getTvUkNursingTable(
   date: string,
-  resolver: RuleResolver = bundledRuleResolver,
+  resolver: TvUkResolver = bundledRuleResolver,
 ): TvUkTable | null {
+  if (resolver[absenceTable]) return resolver[absenceTable];
   const day = Temporal.PlainDate.from(date).toString();
   const exact = tables.find((table) => coversPayrollDate(table, day));
   const update = selectPayrollTable(resolver, "TVUK_PUK", day, exact);
