@@ -92,7 +92,7 @@ describe("Entry editor keyboard action", () => {
     });
     // An explicit fallback flexGrow: 0 wins over flex: 1 in native Yoga.
     expect(fields).toHaveStyle({ flexGrow: 1, flexShrink: 1, flexBasis: 0 });
-    expect(fields).toHaveProp("contentContainerStyle", { paddingBottom: 72 });
+    expect(fields).toHaveProp("contentContainerStyle", { paddingBottom: SPACING.md });
     expect(screen.getByTestId("test-edit-card")).toHaveStyle({
       borderBottomLeftRadius: 0,
       borderBottomRightRadius: 0,
@@ -106,6 +106,12 @@ describe("Entry editor keyboard action", () => {
     expect(screen.getByTestId("test-edit-keyboard-toolbar").parent).toBe(
       screen.getByTestId("test-edit-card"),
     );
+  });
+
+  it("keeps the quick sheet header below the safe area with the keyboard open", async () => {
+    const { screen } = await setup(true, true);
+    expect(screen.getByTestId("test-edit-safe-viewport")).toHaveStyle({ marginTop: 59 });
+    expect(screen.getByRole("button", { name: "Fertig, Tastatur schließen" })).toBeEnabled();
   });
 
   it("offers only keyboard dismissal while typing and restores the save action afterward", async () => {

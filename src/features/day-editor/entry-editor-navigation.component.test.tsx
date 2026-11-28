@@ -4,6 +4,8 @@ import { router, Stack } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import { Pressable, Text } from "react-native";
 
+import EntryTextEditorRoute from "../../../app/entry-text-editor";
+
 import type { Appointment, ShiftEntry } from "@/domain/types";
 import { DayEditorForm } from "@/features/day-editor/day-editor-form";
 import { entryEditorScreenOptions } from "@/features/day-editor/entry-edit-presentation";
@@ -51,6 +53,7 @@ function Layout() {
           name="appointment-editor"
           options={entryEditorScreenOptions("ios", "#f3f3f6")}
         />
+        <Stack.Screen name="entry-text-editor" options={{ presentation: "formSheet" }} />
       </Stack>
     </FeedbackProvider>
   );
@@ -114,12 +117,22 @@ describe("entry editor with real Expo Router navigation", () => {
         index: Home,
         "shift-editor": Shift,
         "appointment-editor": AppointmentEditor,
+        "entry-text-editor": EntryTextEditorRoute,
       });
       await fireEvent.press(screen.getByRole("button", { name: `${kind} öffnen` }));
       await waitFor(() =>
         expect(screen.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy(),
       );
-      if (edited) await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
+      if (edited) {
+        await fireEvent.press(screen.getByRole("button", { name: "Titel: Ohne Titel" }));
+        await waitFor(() => expect(screen.getByTestId("entry-text-sheet")).toBeTruthy());
+        await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
+        await fireEvent.press(screen.getByRole("button", { name: "Titel übernehmen" }));
+        await waitFor(() =>
+          expect(screen.getByRole("button", { name: "Titel: Arzttermin" })).toBeTruthy(),
+        );
+        expect(mockUpsertAppointment).not.toHaveBeenCalled();
+      }
       if (dismissal === "navigation") await act(() => router.back());
       else await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
       await act(async () => {});

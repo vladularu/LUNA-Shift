@@ -10,6 +10,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import type { Appointment, CalendarEntry, SaveAppointmentInput, ShiftEntry } from "@/domain/types";
 import { DayEditorScreen } from "@/features/day-editor/day-editor-screen";
+import {
+  clearEntryTextEditorRequest,
+  pendingEntryTextEditor,
+  type EntryTextKind,
+} from "@/features/day-editor/entry-text-editor-session";
 import { FeedbackProvider } from "@/ui/feedback";
 import { deletionFeedback, successFeedback } from "@/ui/haptics";
 
@@ -40,7 +45,7 @@ let mockRouteParams: {
 };
 
 jest.mock("expo-router", () => ({
-  router: { back: jest.fn(), dismissTo: jest.fn() },
+  router: { back: jest.fn(), dismissTo: jest.fn(), push: jest.fn() },
   Stack: {
     Screen: ({ options }: { options: { headerLeft?: () => React.ReactNode } }) =>
       options.headerLeft?.() ?? null,
@@ -92,6 +97,21 @@ jest.mock("@/ui/haptics", () => ({
   warningFeedback: jest.fn(),
 }));
 
+async function confirmEntryText(
+  screen: Awaited<ReturnType<typeof render>>,
+  kind: EntryTextKind,
+  value: string,
+) {
+  const name = kind === "title" ? /^Titel:/ : /^Notiz (hinzufügen|bearbeiten)/;
+  await fireEvent.press(screen.getByRole("button", { name }));
+  const href = jest.mocked(router.push).mock.lastCall?.[0];
+  const request = typeof href === "object" ? href.params?.request : undefined;
+  const textEditor = pendingEntryTextEditor(request);
+  if (!textEditor || textEditor.kind !== kind) throw new Error("Unexpected text editor request");
+  clearEntryTextEditorRequest(request);
+  await act(() => textEditor.onConfirm(value));
+}
+
 describe("DayEditorScreen", () => {
   beforeEach(() => {
     mockRemoveEntry.mockReset().mockResolvedValue(undefined);
@@ -101,6 +121,7 @@ describe("DayEditorScreen", () => {
     mockUpsertAppointment.mockReset();
     mockUpsertAppointment.mockResolvedValue({ id: "saved-appointment" } as Appointment);
     jest.mocked(router.back).mockClear();
+    jest.mocked(router.push).mockClear();
     jest.mocked(router.dismissTo).mockClear();
     jest.mocked(successFeedback).mockClear();
     mockBeforeRemoveListener = null;
@@ -165,13 +186,12 @@ describe("DayEditorScreen", () => {
       if (mode === "SHIFT") mockUpsertShift.mockRejectedValueOnce(new Error("offline database"));
       else mockUpsertAppointment.mockRejectedValueOnce(new Error("offline database"));
       const screen = await render(deletionScreen());
-      await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
-      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Entwurf behalten");
+      await confirmEntryText(screen, "note", "Entwurf behalten");
       const event = { preventDefault: jest.fn(), data: { action: { type: "GO_BACK" } } };
       await act(async () => {
         mockBeforeRemoveListener?.(event);
       });
-      expect(screen.getByDisplayValue("Entwurf behalten")).toBeTruthy();
+      expect(screen.getByText("Entwurf behalten")).toBeTruthy();
       expect(screen.getByText("Eintrag konnte nicht gespeichert werden.")).toBeTruthy();
       expect(mockNavigationDispatch).not.toHaveBeenCalled();
       expect(router.back).not.toHaveBeenCalled();
@@ -191,7 +211,7 @@ describe("DayEditorScreen", () => {
   it("blocks native dismissal of an invalid appointment before persistence", async () => {
     mockRouteParams = { date: "2026-08-20", mode: "APPOINTMENT" };
     const screen = await render(deletionScreen());
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "");
+    await confirmEntryText(screen, "title", "");
     const preventDefault = jest.fn();
     await act(async () => {
       mockBeforeRemoveListener?.({ preventDefault, data: { action: { type: "GO_BACK" } } });
@@ -200,7 +220,7 @@ describe("DayEditorScreen", () => {
     expect(mockUpsertAppointment).not.toHaveBeenCalled();
     expect(mockNavigationDispatch).not.toHaveBeenCalled();
     expect(router.back).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Titel")).toHaveProp("value", "");
+    expect(screen.getByRole("button", { name: "Titel: Ohne Titel" })).toBeEnabled();
   });
 
   function deletionEntry(kind: "SHIFT" | "APPOINTMENT"): CalendarEntry {
@@ -276,8 +296,7 @@ describe("DayEditorScreen", () => {
     expect(footer.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
     await fireEvent.press(card.getByRole("button", { name: "Dienst bearbeiten" }));
     expect(screen.getByText("Notiz behalten")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }));
-    await fireEvent.changeText(screen.getByLabelText("Notizen"), "Geänderte Übergabe");
+    await confirmEntryText(screen, "note", "Geänderte Übergabe");
     await dragEditorSheet(110);
     expect(screen.getByText("Zuschlag gesamt")).toBeTruthy();
     expect(screen.queryByText("Notiz behalten")).toBeNull();
@@ -361,12 +380,12 @@ describe("DayEditorScreen", () => {
     expect(screen.getByRole("button", { name: "Besprechungsort in Karten öffnen" })).toHaveStyle({
       height: 126,
     });
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Geänderter Termin");
+    await confirmEntryText(screen, "title", "Geänderter Termin");
     await dragEditorSheet(110, "appointment");
     expect(screen.getByText("Geänderter Termin")).toBeTruthy();
     expect(mockUpsertAppointment).not.toHaveBeenCalled();
     await dragEditorSheet(-110, "appointment");
-    expect(screen.getByLabelText("Titel")).toHaveProp("value", "Geänderter Termin");
+    expect(screen.getByRole("button", { name: "Titel: Geänderter Termin" })).toBeEnabled();
     await dragEditorSheet(110, "appointment");
     await dragEditorSheet(110, "appointment");
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
@@ -407,7 +426,7 @@ describe("DayEditorScreen", () => {
     const card = within(screen.getByTestId("appointment-edit-card"));
     const footer = within(screen.getByTestId("appointment-edit-close-arrival"));
     expect(screen.getByTestId("appointment-edit-backdrop")).toBeTruthy();
-    expect(card.getByLabelText("Titel")).toBeTruthy();
+    expect(card.getByRole("button", { name: /^Titel:/ })).toBeTruthy();
     expect(card.queryByRole("button", { name: "Schließen und speichern" })).toBeNull();
     expect(card.queryByRole("button", { name: "Termin bearbeiten" })).toBeNull();
     expect(footer.getByRole("button", { name: "Schließen und speichern" })).toBeTruthy();
@@ -416,7 +435,7 @@ describe("DayEditorScreen", () => {
     await dragEditorSheet(-110, "appointment");
     expect(card.getByRole("button", { name: "Speichern" })).toBeTruthy();
     await dragEditorSheet(110, "appointment");
-    expect(screen.getByLabelText("Titel")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Titel:/ })).toBeTruthy();
     expect(router.back).not.toHaveBeenCalled();
     await dragEditorSheet(110, "appointment");
 
@@ -434,14 +453,13 @@ describe("DayEditorScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Wiederholung schließen" }));
     await fireEvent.press(screen.getByRole("button", { name: "Erinnerung: Keine" }));
     await fireEvent.press(screen.getByRole("button", { name: "Erinnerung schließen" }));
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
+    await confirmEntryText(screen, "title", "Arzttermin");
     expect(mockBeforeRemoveListener).not.toBeNull();
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Ohne Titel");
+    await confirmEntryText(screen, "title", "Ohne Titel");
     await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", true);
     await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", false);
-    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
-    await fireEvent.changeText(screen.getByLabelText("Notizen"), "Notiz");
-    await fireEvent.changeText(screen.getByLabelText("Notizen"), "");
+    await confirmEntryText(screen, "note", "Notiz");
+    await confirmEntryText(screen, "note", "");
 
     expect(mockBeforeRemoveListener).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
@@ -486,12 +504,9 @@ describe("DayEditorScreen", () => {
       );
       expect(screen.getByText("Notiz behalten")).toBeTruthy();
       expect(mockBeforeRemoveListener).toBeNull();
-      await fireEvent.press(
-        screen.getByRole("button", { name: "Notiz bearbeiten: Notiz behalten" }),
-      );
-      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Neue Übergabe");
+      await confirmEntryText(screen, "note", "Neue Übergabe");
       expect(mockBeforeRemoveListener).not.toBeNull();
-      await fireEvent.changeText(screen.getByLabelText("Notizen"), "Notiz behalten");
+      await confirmEntryText(screen, "note", "Notiz behalten");
       expect(mockBeforeRemoveListener).toBeNull();
       await fireEvent.press(screen.getByRole("button", { name: "Speichern" }));
       await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
@@ -536,7 +551,7 @@ describe("DayEditorScreen", () => {
       expect(screen.getByRole("button", { name: "Speichern" })).toBeEnabled();
       expect(deletionFeedback).not.toHaveBeenCalled();
       expect(mockEntries).toEqual([entry]);
-      expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
+      expect(screen.getByText("Notiz behalten")).toBeTruthy();
     },
   );
 
@@ -559,7 +574,7 @@ describe("DayEditorScreen", () => {
       mockEntries = [];
       await screen.rerender(deletionScreen());
       expect(screen.queryByText("Eintrag nicht verfügbar")).toBeNull();
-      expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
+      expect(screen.getByText("Notiz behalten")).toBeTruthy();
       expect(screen.getByRole("button", { name: "Speichern" })).toBeDisabled();
       expect(router.back).not.toHaveBeenCalled();
       const preventDefault = jest.fn();
@@ -598,7 +613,7 @@ describe("DayEditorScreen", () => {
       confirm.onPress?.();
     });
     expect(screen.getByText("Eintrag konnte nicht gelöscht werden.")).toBeTruthy();
-    expect(screen.getByDisplayValue("Notiz behalten")).toBeTruthy();
+    expect(screen.getByText("Notiz behalten")).toBeTruthy();
     expect(router.back).not.toHaveBeenCalled();
     expect(deletionFeedback).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole("button", { name: "Dienst löschen" }));
@@ -791,7 +806,7 @@ describe("DayEditorScreen", () => {
 
     expect(screen.getByTestId("appointment-edit-overlay")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Termin bearbeiten" }));
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
+    await confirmEntryText(screen, "title", "Arzttermin");
     const preventDefault = jest.fn();
     await act(async () => {
       mockBeforeRemoveListener?.({
@@ -835,7 +850,7 @@ describe("DayEditorScreen", () => {
 
     expect(screen.getByTestId("appointment-edit-overlay")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Termin löschen" })).toBeNull();
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Physiotherapie");
+    await confirmEntryText(screen, "title", "Physiotherapie");
     await act(async () => {
       fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));
     });

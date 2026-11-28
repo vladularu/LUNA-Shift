@@ -1,9 +1,27 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import { describe, expect, it, jest } from "@jest/globals";
+import { router } from "expo-router";
+import EntryTextEditorRoute from "../../../app/entry-text-editor";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppointmentEditOverlay } from "@/features/day-editor/appointment-edit-overlay";
 import { CORNER_CURVE, RADII } from "@/theme/tokens";
+
+let mockTextRequest: string | undefined;
+jest.mock("expo-router", () => ({
+  Redirect: () => null,
+  router: { back: jest.fn(), push: jest.fn() },
+  useLocalSearchParams: () => ({ request: mockTextRequest }),
+}));
+
+function getTextRequest() {
+  const href = jest.mocked(router.push).mock.lastCall?.[0];
+  expect(href).toEqual({
+    pathname: "/entry-text-editor",
+    params: { request: expect.any(String) },
+  });
+  return typeof href === "object" ? (href.params?.request as string) : undefined;
+}
 
 async function renderOverlay(
   overrides: Partial<React.ComponentProps<typeof AppointmentEditOverlay>> = {},
@@ -36,7 +54,7 @@ async function renderOverlay(
     title: "Ohne Titel",
     ...overrides,
   };
-  const screen = await render(
+  const tree = (request?: string) => (
     <SafeAreaProvider
       initialMetrics={{
         frame: { x: 0, y: 0, width: 430, height: 932 },
@@ -44,9 +62,19 @@ async function renderOverlay(
       }}
     >
       <AppointmentEditOverlay {...props} />
-    </SafeAreaProvider>,
+      {request ? <EntryTextEditorRoute key={request} /> : null}
+    </SafeAreaProvider>
   );
-  return { props, screen };
+  const screen = await render(tree());
+  return {
+    props,
+    screen,
+    showTextSheet: async () => {
+      mockTextRequest = getTextRequest();
+      await screen.rerender(tree(mockTextRequest));
+    },
+    hideTextSheet: () => screen.rerender(tree()),
+  };
 }
 
 describe("AppointmentEditOverlay", () => {
@@ -62,13 +90,48 @@ describe("AppointmentEditOverlay", () => {
         name: "Notiz bearbeiten: Unterlagen mitbringen.\nEingang neben der Apotheke.",
       }),
     );
-    expect(screen.getByLabelText("Notizen")).toHaveProp("autoFocus", true);
-    expect(
-      screen.getByDisplayValue("Unterlagen mitbringen.\nEingang neben der Apotheke."),
-    ).toBeTruthy();
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/entry-text-editor",
+      params: { request: expect.any(String) },
+    });
     expect(screen.getByRole("button", { name: "Heppenheim in Karten öffnen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Heppenheim" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
+    expect(props.onRequestClose).not.toHaveBeenCalled();
+  });
+
+  it("opens separate title and note sheets and applies changes only on confirmation", async () => {
+    const { props, screen, showTextSheet, hideTextSheet } = await renderOverlay({
+      note: "Erste Zeile",
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Titel: Ohne Titel" }));
+    await showTextSheet();
+    expect(screen.getByRole("button", { name: "Titel übernehmen" })).toBeDisabled();
+    const title = screen.getByLabelText("Titel");
+    expect(title).toHaveProp("autoFocus", true);
+    await fireEvent.changeText(title, "Abgebrochener Titel");
+    expect(props.onTitleChange).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(props.onTitleChange).not.toHaveBeenCalled();
+    await hideTextSheet();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Titel: Ohne Titel" }));
+    await showTextSheet();
+    await fireEvent.changeText(screen.getByLabelText("Titel"), "Neuer Termin");
+    await fireEvent(screen.getByLabelText("Titel"), "submitEditing");
+    expect(props.onTitleChange).toHaveBeenCalledTimes(1);
+    expect(props.onTitleChange).toHaveBeenCalledWith("Neuer Termin");
+    await hideTextSheet();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Notiz bearbeiten: Erste Zeile" }));
+    await showTextSheet();
+    const note = screen.getByLabelText("Notizen");
+    expect(note).toHaveProp("submitBehavior", "newline");
+    expect(note).toHaveProp("value", "Erste Zeile");
+    await fireEvent.changeText(note, "");
+    expect(props.onNoteChange).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Notizen übernehmen" }));
+    expect(props.onNoteChange).toHaveBeenCalledWith("");
     expect(props.onRequestClose).not.toHaveBeenCalled();
   });
 
@@ -94,7 +157,7 @@ describe("AppointmentEditOverlay", () => {
     );
     expect(screen.getByText("Sa. 22. Aug.")).toBeTruthy();
     expect(screen.getByText("1h")).toBeTruthy();
-    expect(screen.getByDisplayValue("Ohne Titel")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Titel: Ohne Titel" })).toBeEnabled();
     expect(screen.getByRole("switch", { name: "Termin ganztägig" })).toBeTruthy();
     expect(screen.getByText("Start")).toBeTruthy();
     expect(screen.getByText("Ende")).toBeTruthy();
@@ -107,8 +170,6 @@ describe("AppointmentEditOverlay", () => {
     expect(screen.getByRole("button", { name: "Termin löschen" })).toBeTruthy();
     expect(screen.queryByText("Mehr hinzufügen")).toBeNull();
 
-    await fireEvent.changeText(screen.getByLabelText("Titel"), "Arzttermin");
-    expect(props.onTitleChange).toHaveBeenCalledWith("Arzttermin");
     await fireEvent(screen.getByRole("switch", { name: "Termin ganztägig" }), "valueChange", true);
     expect(props.onAllDayChange).toHaveBeenCalledWith(true);
     await fireEvent.press(screen.getByRole("button", { name: "Wiederholen: Niemals" }));
@@ -139,10 +200,6 @@ describe("AppointmentEditOverlay", () => {
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
     const deleteAction = screen.getByRole("button", { name: "Termin löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
-    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
-    const notes = screen.getByLabelText("Notizen");
-    expect(notes).toHaveStyle({ minHeight: 88 });
-    expect(within(notes.parent!).queryByRole("button", { name: "Termin löschen" })).toBeNull();
     await fireEvent.press(deleteAction);
     expect(props.onDelete).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByRole("button", { name: "Schließen und speichern" }));

@@ -18,7 +18,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   Easing,
   FadeIn,
@@ -49,8 +49,7 @@ import {
   useEntryEditCloseFooterMotion,
 } from "@/features/day-editor/entry-edit-overlay-motion";
 
-// Leave room below the focused field, with matching scrollable space at the end.
-const FOCUSED_FIELD_CLEARANCE = 72;
+const FOCUSED_FIELD_CLEARANCE = SPACING.md;
 const OVERVIEW_RADIUS = RADII.sheet + SPACING.sm;
 const OVERVIEW_HEIGHT_FRACTION = 0.54;
 const APPOINTMENT_FORM_HEIGHT_FRACTION = 0.68;
@@ -136,7 +135,8 @@ export function EntryEditOverlayFrame({
   const compactSheet = readOnly || overviewStage?.expanded === false;
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const viewportTop = Math.max(insets.top, 16);
+  const statusBarInset = Platform.OS === "ios" ? (initialWindowMetrics?.insets.top ?? 0) : 0;
+  const viewportTop = Math.max(insets.top, statusBarInset, SPACING.md);
   const expandedHeight = Math.max(0, height - viewportTop);
   const compactHeight = Math.min(
     height * (overviewStage?.compactHeightFraction ?? OVERVIEW_HEIGHT_FRACTION),
@@ -153,16 +153,26 @@ export function EntryEditOverlayFrame({
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
   const closingRef = useRef(false);
   const fieldsRef = useRef<ScrollView>(null);
-  const toolbarHeight = useRef(44);
+  const focusedField = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput>>(null);
+  const scrollOffset = useRef(0);
   const revealFocusedField = useCallback(() => {
-    const input = TextInput.State.currentlyFocusedInput();
-    if (input && keyboardVisible) {
-      fieldsRef.current?.scrollResponderScrollNativeHandleToKeyboard(
-        input,
-        toolbarHeight.current + FOCUSED_FIELD_CLEARANCE,
-        true,
-      );
-    }
+    const input = focusedField.current;
+    const scroll = fieldsRef.current;
+    const viewport = scroll?.getNativeScrollRef();
+    if (!keyboardVisible || !input || !scroll || !viewport) return;
+
+    viewport.measureInWindow((_x, top, _width, viewportHeight) => {
+      input.measureInWindow((_left, fieldTop, _fieldWidth, fieldHeight) => {
+        if (focusedField.current !== input || viewportHeight <= 0 || fieldHeight <= 0) return;
+        const bottom = top + viewportHeight - FOCUSED_FIELD_CLEARANCE;
+        const fieldBottom =
+          fieldTop + Math.min(fieldHeight, viewportHeight - FOCUSED_FIELD_CLEARANCE);
+        const delta = fieldTop < top ? fieldTop - top : Math.max(0, fieldBottom - bottom);
+        if (Math.abs(delta) >= 1) {
+          scroll.scrollTo({ y: Math.max(0, scrollOffset.current + delta), animated: true });
+        }
+      });
+    });
   }, [keyboardVisible]);
   useEffect(() => {
     // Recheck after native keyboard geometry has settled; onLayout can run earlier.
@@ -482,9 +492,7 @@ export function EntryEditOverlayFrame({
           testID={`${testIDPrefix}-safe-viewport`}
           style={[
             nativePresentation ? styles.nativeViewport : styles.scrollContent,
-            {
-              paddingTop: nativePresentation ? SPACING.sm : viewportTop,
-            },
+            nativePresentation ? { paddingTop: SPACING.sm } : { marginTop: viewportTop },
           ]}
         >
           <Animated.View
@@ -547,8 +555,18 @@ export function EntryEditOverlayFrame({
                     contentInsetAdjustmentBehavior="never"
                     keyboardDismissMode="interactive"
                     keyboardShouldPersistTaps="handled"
-                    onFocus={revealFocusedField}
+                    onBlur={() => {
+                      focusedField.current = null;
+                    }}
+                    onFocus={() => {
+                      focusedField.current = TextInput.State.currentlyFocusedInput();
+                      revealFocusedField();
+                    }}
                     onLayout={revealFocusedField}
+                    onScroll={({ nativeEvent }) => {
+                      scrollOffset.current = nativeEvent.contentOffset.y;
+                    }}
+                    scrollEventThrottle={16}
                   >
                     {cardContent}
                   </SoftScrollView>
@@ -556,10 +574,6 @@ export function EntryEditOverlayFrame({
                 {keyboardVisible && !closing ? (
                   <View
                     testID={`${testIDPrefix}-keyboard-toolbar`}
-                    onLayout={(event) => {
-                      toolbarHeight.current = event.nativeEvent.layout.height;
-                      revealFocusedField();
-                    }}
                     style={[
                       styles.keyboardToolbar,
                       { backgroundColor: palette.surface, borderColor: palette.border },
