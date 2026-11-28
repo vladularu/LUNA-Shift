@@ -157,6 +157,65 @@ describe("earned premium service workflow", () => {
     mockSetMonth.mockClear();
   });
 
+  it("shows earned night premiums when October vacation pay is unresolved", async () => {
+    const night = forecastShift({ id: "october-night", title: "Nachtdienst", date: "2026-10-12" });
+    mockEntries = [
+      night,
+      forecastShift({
+        id: "october-vacation",
+        date: "2026-10-13",
+        type: "VACATION",
+        allDay: true,
+        startTime: null,
+        endTime: null,
+        breakMinutes: 0,
+      }),
+    ];
+    const screen = await render(<PremiumDetailsScreen />);
+    expect(await screen.findByTestId("net-pay-service-details")).toBeTruthy();
+    expect(screen.queryByText(/fehlen geprüfte Tarifdaten/)).toBeNull();
+    expect(screen.getByText(/Aufschlag für Urlaub oder Krankheit/)).toBeTruthy();
+    const pay = calculateMonthlyPayEstimate("2026-10", [night], forecastProfile, null);
+    expect(pay.timePremiumAmount).toBeGreaterThan(0);
+    expect(screen.getByText(/Steuerfrei .*Steuerpflichtig/)).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        "Zeitzuschläge: " + netPayEuro(Math.round(pay.timePremiumAmount * 100)),
+      ),
+    ).toBeTruthy();
+  });
+
+  it("lists estimated October absence pay separately from the premiums of worked shifts", async () => {
+    mockPaymentPreferences = setSalaryPaymentLag(DEFAULT_SALARY_PAYMENT_PREFERENCES, "2026-10", 1);
+    const nights = ["2026-07-12", "2026-08-09", "2026-09-13", "2026-10-11"].map((date) =>
+      forecastShift({ id: date, date }),
+    );
+    mockEntries = [
+      ...nights,
+      ...[12, 13, 14, 15, 16].map((day) =>
+        forecastShift({
+          id: "vac-" + day,
+          date: "2026-10-" + day,
+          type: "VACATION",
+          allDay: true,
+          startTime: null,
+          endTime: null,
+        }),
+      ),
+    ];
+    const screen = await render(<PremiumDetailsScreen />);
+    const uk = await screen.findByRole("radio", { name: "U/K-Aufschlag" });
+    expect(screen.getByLabelText(/Zuschläge erarbeitet:/)).toBeTruthy();
+    expect(screen.getAllByText(/U\/K-Aufschlag · Urlaub/)).toHaveLength(5);
+    await fireEvent.press(uk);
+    expect(screen.getByLabelText(/U\/K-Aufschlag:/)).toBeTruthy();
+    expect(screen.getByText(/Steuerfrei 0,00.*Steuerpflichtig/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole("radio", { name: "Nacht" }));
+    expect(screen.queryByText(/U\/K-Aufschlag · Urlaub/)).toBeNull();
+    await fireEvent.press(uk);
+    await fireEvent.press(screen.getByRole("button", { name: /12\.10\.:/ }));
+    expect(await screen.findByText(/Auszahlung im November 2026/)).toBeTruthy();
+  });
   function standby(night = false) {
     const startTime = night ? "21:00" : "06:00";
     const endTime = night ? "06:00" : "14:00";

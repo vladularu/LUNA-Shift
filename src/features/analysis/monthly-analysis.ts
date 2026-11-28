@@ -1,3 +1,5 @@
+import { isTariffAbsence } from "@/domain/absence-pay";
+import { tariffAbsenceMonthPay } from "@/features/salary/salary-month-input";
 import { employmentProfileAt } from "@/domain/employment-history";
 import { selectTvhKrAssessmentShifts } from "@/engine/simple-tvh-kr-profile-pay";
 import { selectTvUkAssessmentShifts } from "@/engine/simple-tvuk-nursing-profile-pay";
@@ -110,6 +112,9 @@ function prepare(request: MonthlyAnalysisRequest) {
           },
           entryKeys.entries(complianceShifts.value),
           entryKeys.entries(allowanceShifts.value),
+          ...(monthlyEntries.monthShifts.some((e) => isTariffAbsence(e, profile))
+            ? [entryKeys.entries(entries), tariffDecisions]
+            : []),
           decision,
           workPatternSettings,
           ...(request.calculationIdentity ? [request.calculationIdentity] : []),
@@ -213,15 +218,24 @@ export function* calculateMonthlyAnalysisSteps(
     );
   const pay = allowanceShifts.ok
     ? captureRuleComputation(() =>
-        calculateMonthlyPayEstimate(
-          month,
-          monthlyEntries.monthShifts,
-          profile,
-          decision,
-          allowanceShifts.value,
-          workPatternSettings,
-          ruleResolver,
-        ),
+        monthlyEntries.monthShifts.some((e) => isTariffAbsence(e, profile))
+          ? tariffAbsenceMonthPay(
+              month,
+              profile,
+              request.entries,
+              request.tariffDecisions,
+              workPatternSettings,
+              ruleResolver,
+            )
+          : calculateMonthlyPayEstimate(
+              month,
+              monthlyEntries.monthShifts,
+              profile,
+              decision,
+              allowanceShifts.value,
+              workPatternSettings,
+              ruleResolver,
+            ),
       )
     : allowanceShifts;
   yield 0;

@@ -8,7 +8,16 @@ import { State } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import type { Appointment, CalendarEntry, SaveAppointmentInput, ShiftEntry } from "@/domain/types";
+import type {
+  Appointment,
+  CalendarEntry,
+  SaveAppointmentInput,
+  ShiftEntry,
+  UserProfile,
+} from "@/domain/types";
+import { EMPTY_ABSENCE_PAY } from "@/domain/absence-pay";
+import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
+import { DEFAULT_TVOED_WORK_PATTERN_SETTINGS as mockWorkPattern } from "@/engine/simple-pay";
 import { DayEditorScreen } from "@/features/day-editor/day-editor-screen";
 import {
   clearEntryTextEditorRequest,
@@ -21,6 +30,7 @@ import { deletionFeedback, successFeedback } from "@/ui/haptics";
 const mockUpsertShift = jest.fn<() => Promise<ShiftEntry>>();
 const mockUpsertAppointment = jest.fn<(input: SaveAppointmentInput) => Promise<Appointment>>();
 const mockRemoveEntry = jest.fn<(entry: CalendarEntry) => Promise<void>>();
+let mockProfile: UserProfile | null = null;
 let mockEntries: CalendarEntry[] = [];
 let mockBeforeRemoveListener:
   ((event: { preventDefault: () => void; data: { action: { type: string } } }) => void) | null =
@@ -79,7 +89,9 @@ jest.mock("@/application/pflegeshift-provider", () => ({
     upsertAppointment: mockUpsertAppointment,
     removeEntry: mockRemoveEntry,
   }),
-  usePflegeShiftProfile: () => ({ profile: null }),
+  usePflegeShiftProfile: () => ({ profile: mockProfile }),
+  usePflegeShiftTariff: () => ({ tariffDecisions: [], workPatternSettings: mockWorkPattern }),
+  usePflegeShiftTestData: () => ({ testMonths: [] }),
   usePflegeShiftStatus: () => ({ error: null, ready: true, reload: jest.fn() }),
   usePflegeShiftTemplates: () => ({ templates: [] }),
 }));
@@ -126,6 +138,7 @@ describe("DayEditorScreen", () => {
     jest.mocked(successFeedback).mockClear();
     mockBeforeRemoveListener = null;
     mockNavigationDispatch.mockClear();
+    mockProfile = null;
     mockEntries = [];
     mockRouteParams = { date: "2026-08-04", mode: "SHIFT" };
   });
@@ -269,6 +282,84 @@ describe("DayEditorScreen", () => {
       </SafeAreaProvider>
     );
   }
+
+  it.each(["VACATION", "SICK"] as const)(
+    "shows the saved %s day’s U/K amount directly in the calendar sheet",
+    async (type) => {
+      mockProfile =
+        type === "VACATION"
+          ? forecastProfile
+          : {
+              ...forecastProfile,
+              tariff: null,
+              vkaETariff: { payGroup: "E8", payLevel: 4, sector: "BT_K", tariffRegion: "OTHER" },
+            };
+      const entry = forecastShift({
+        id: "absence",
+        date: "2026-10-12",
+        type,
+        allDay: true,
+        startTime: null,
+        endTime: null,
+        absencePay:
+          type === "SICK" ? { ...EMPTY_ABSENCE_PAY, day: "PAID", dailyRateCents: 1442 } : null,
+      });
+      mockEntries = [
+        ...["2026-07-12", "2026-08-09", "2026-09-13"].map((date) =>
+          forecastShift({ id: date, date }),
+        ),
+        entry,
+      ];
+      mockRouteParams = { date: entry.date, mode: "SHIFT", entryId: entry.id };
+      const screen = await render(deletionScreen());
+      const card = within(screen.getByTestId("shift-edit-overview"));
+      expect(card.getByText("U/K-Aufschlag")).toBeTruthy();
+      const rate = card.getByText(type === "SICK" ? /14,42.*€/ : /ca\. [1-9]\d*,\d{2}.*€/).props
+        .children;
+      expect(card.queryByText(/Auszahlung/)).toBeNull();
+      expect(card.queryByText("Zuschlag gesamt")).toBeNull();
+      await fireEvent.press(screen.getByRole("button", { name: "Dienst bearbeiten" }));
+      expect(screen.getByText(rate)).toBeTruthy();
+    },
+  );
+
+  it("shows a duty-free absence without a payment month", async () => {
+    mockProfile = forecastProfile;
+    const entry = forecastShift({
+      id: "free",
+      date: "2026-10-12",
+      type: "VACATION",
+      allDay: true,
+      startTime: null,
+      endTime: null,
+      absencePay: { ...EMPTY_ABSENCE_PAY, day: "FREE" },
+    });
+    mockEntries = [entry];
+    mockRouteParams = { date: entry.date, mode: "SHIFT", entryId: entry.id };
+    const screen = await render(deletionScreen());
+    const card = within(screen.getByTestId("shift-edit-overview"));
+    expect(card.getByText("Kein Aufschlag")).toBeTruthy();
+    expect(card.queryByText(/Auszahlung/)).toBeNull();
+  });
+  it("explains a missing reference month directly on the vacation overview", async () => {
+    mockProfile = forecastProfile;
+    const entry = forecastShift({
+      id: "absence",
+      date: "2026-10-12",
+      type: "VACATION",
+      allDay: true,
+      startTime: null,
+      endTime: null,
+    });
+    mockEntries = [entry];
+    mockRouteParams = { date: entry.date, mode: "SHIFT", entryId: entry.id };
+    const screen = await render(deletionScreen());
+    const card = within(screen.getByTestId("shift-edit-overview"));
+    expect(card.getByText("Offen")).toBeTruthy();
+    expect(card.getByText(/Juli 2026/)).toBeTruthy();
+    expect(card.queryByText(/0,00.*€/)).toBeNull();
+    expect(card.queryByText(/Auszahlung/)).toBeNull();
+  });
 
   it("opens the full editor by button or swipe and keeps the draft when returning to the overview", async () => {
     const saved = deletionEntry("SHIFT");

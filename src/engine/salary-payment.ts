@@ -1,5 +1,6 @@
 import {
   SALARY_PAYMENT_GROUPS,
+  absencePaymentMonth,
   salaryComponentPaymentMonth,
   salaryPaymentSources,
   type SalaryPaymentContribution,
@@ -16,6 +17,7 @@ interface SalaryPaymentRequest {
   readonly month: string;
   readonly perspective: SalaryPerspective;
   readonly preferences: SalaryPaymentPreferences;
+  readonly absencePaymentMonths?: ReadonlyMap<string, string>;
   readonly source: (month: string) => SalaryPaymentSource;
 }
 
@@ -81,11 +83,15 @@ function independentlyKnown(source: SalaryPaymentSource, group: SalaryPaymentGro
 export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPaymentProjection {
   const { month, perspective, preferences } = request;
   const sources = salaryPaymentRequiredMonths(month, preferences, perspective).map(request.source);
+  const regularSourceCount = sources.length;
+  for (const claim of request.absencePaymentMonths?.keys() ?? []) {
+    if (!sources.some((s) => s.month === claim)) sources.push(request.source(claim));
+  }
   const byMonth = new Map(sources.map((source) => [source.month, source]));
   const current = byMonth.get(month)!;
   const sameMonth =
     perspective === "PAYOUT" &&
-    sources.length === 1 &&
+    regularSourceCount === 1 &&
     SALARY_PAYMENT_GROUPS.every(
       (group) => salaryComponentPaymentMonth(preferences, month, group) === month,
     );
@@ -160,7 +166,8 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
         );
       if (
         !source.pay.available &&
-        (source.pay.knownGrossAmount === undefined || group === "SPECIAL_DUTY")
+        (source.pay.knownGrossAmount === undefined ||
+          (group === "SPECIAL_DUTY" && !!source.pay.specialDutyNotes?.length))
       )
         issues.push({
           kind: "UNAVAILABLE",
@@ -205,6 +212,32 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
       if (source.pay.assessment.estimateNote) warnings.add(source.pay.assessment.estimateNote);
     }
   }
+  const absences = [];
+  const absencePaymentMonths =
+    request.absencePaymentMonths ??
+    new Map(
+      sources
+        .filter((source) => source.pay.absencePayAmount !== undefined)
+        .map((source) => [source.month, absencePaymentMonth(preferences, source.month)]),
+    );
+  for (const [claimMonth, paymentMonth] of absencePaymentMonths) {
+    const source = byMonth.get(claimMonth)!;
+    if (source.pay.absencePayAmount === undefined) continue;
+    const line: SalaryPaymentContribution = {
+      group: "ABSENCE_PAY",
+      claimMonth,
+      paymentMonth,
+      amountCents: Math.round(source.pay.absencePayAmount * 100),
+    };
+    if (perspective === "PAYOUT" && paymentMonth !== month) {
+      if (claimMonth === month && line.amountCents > 0) outgoingContributions.push(line);
+      continue;
+    }
+    absences.push(source.pay);
+    contributions.push(line);
+    for (const message of source.pay.absencePayNotes ?? [])
+      issues.push({ kind: "UNAVAILABLE", month: claimMonth, group: "ABSENCE_PAY", message });
+  }
   const sum = (...groups: readonly SalaryPaymentContribution["group"][]) =>
     contributions
       .filter((part) => groups.includes(part.group))
@@ -230,13 +263,24 @@ export function projectSalaryPayment(request: SalaryPaymentRequest): SalaryPayme
     issues.every(
       (issue) =>
         issue.kind === "UNAVAILABLE" &&
-        issue.group === "SPECIAL_DUTY" &&
+        (issue.group === "SPECIAL_DUTY" || issue.group === "ABSENCE_PAY") &&
         byMonth.get(issue.month)?.pay.knownGrossAmount !== undefined,
     )
       ? contributions.reduce((total, part) => total + part.amountCents, 0) / 100
       : undefined;
   const pay: MonthlyPayEstimate = {
     ...current.pay,
+    ...(current.pay.absencePayAmount !== undefined || absences.length > 0
+      ? {
+          absencePayAmount: absences.length ? sum("ABSENCE_PAY") : undefined,
+          absencePayDays: absences.length
+            ? absences.flatMap((pay) => pay.absencePayDays ?? [])
+            : undefined,
+          absencePayNotes: absences.length
+            ? absences.flatMap((pay) => pay.absencePayNotes ?? [])
+            : undefined,
+        }
+      : {}),
     ...(provisionalTariffMonths.length ? { provisionalTariffMonths } : {}),
     available,
     knownGrossAmount,

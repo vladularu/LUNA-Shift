@@ -49,7 +49,8 @@ function useOriginalRustAutomaticNetPay(
   perspective: SalaryPerspective = "PAYOUT",
 ): AutomaticNetPayForecast | null {
   const { entries } = usePflegeShiftEntries();
-  const { profile } = usePflegeShiftProfile();
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile();
+  const profile = calculationProfile ?? savedProfile;
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { resolver, diagnosis } = useRuleCatalogRuntime();
   const payment = useSalaryPaymentPreferences();

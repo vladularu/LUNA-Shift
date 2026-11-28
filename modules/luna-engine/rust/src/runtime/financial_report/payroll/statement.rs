@@ -85,6 +85,7 @@ fn part_label<'a>(
                     .ok_or_else(failure)?,
             )
         }
+        "ABSENCE_PAY" => Ok("Aufschlag Urlaub/Krankheit (§ 21)"),
         "PREMIUMS" => Ok("Zeitzuschläge"),
         "OVERTIME" => Ok("Überstunden"),
         _ => Ok("Bereitschaftsvergütung"),
@@ -196,6 +197,7 @@ pub(super) fn present(
                 "HOURLY_ALLOWANCE",
                 "OVERTIME",
                 "SPECIAL_DUTY",
+                "ABSENCE_PAY",
             ]
             .contains(&p.group.as_str())
         })
@@ -219,7 +221,13 @@ pub(super) fn present(
         let visible = source_parts
             .iter()
             .copied()
-            .filter(|p| p.amount_cents > 0)
+            .filter(|p| {
+                p.amount_cents > 0
+                    || (p.group == "ABSENCE_PAY"
+                        && source.pay()["absencePayDays"]
+                            .as_array()
+                            .is_some_and(|days| !days.is_empty()))
+            })
             .collect::<Vec<_>>();
         let opened = source_parts.iter().any(|p| open(projection, p));
         let open_parts = source_parts
@@ -230,8 +238,23 @@ pub(super) fn present(
         if visible.is_empty() && !opened {
             continue;
         }
-        let rows=visible.iter().map(|p|{let subtitle=if ["MONTHLY_ALLOWANCE","HOURLY_ALLOWANCE"].contains(&p.group.as_str()){Some(if open(projection,p){"Prüfung offen"}else if source.pay()["confirmedAllowance"].is_null(){"Geschätzt"}else{"Monatsangabe gespeichert"})}else{None};Ok(json!({"group":p.group,"label":part_label(p,projection)?,"amountCents":p.amount_cents,"subtitle":subtitle}))}).collect::<Result<Vec<_>,crate::runtime::report::ReportIssue>>()?;
-        groups.push(json!({"month":claim_month,"title":format!("Zulagen aus {}",title(claim_month)?),"rows":rows,"openLabel":if open_parts.is_empty(){None}else{Some(if open_parts.len()==1&&open_parts[0].group=="SPECIAL_DUTY"{"Bereitschaftsvergütung"}else{"Weitere Zulagen"})}}));
+        let rows=visible.iter().map(|p| {
+            let subtitle=match p.group.as_str() {
+                "ABSENCE_PAY" => {
+                    let days=source.pay()["absencePayDays"].as_array().ok_or_else(failure)?;
+                    let label=if days.len()==1 {"Ausfalltag"} else {"Ausfalltage"};
+                    let text=format!("{} {label}",days.len());
+                    Some(match days.first().and_then(|d|d["dailyRateCents"].as_i64()) {
+                        Some(cents) if days.iter().all(|d|d["dailyRateCents"]==cents) => format!("{text} × {},{:02} €",cents/100,cents%100),
+                        _=>text
+                    })
+                }
+                "MONTHLY_ALLOWANCE" | "HOURLY_ALLOWANCE"=> Some(if open(projection,p){"Prüfung offen"}else if source.pay()["confirmedAllowance"].is_null(){"Geschätzt"}else{"Monatsangabe gespeichert"}.to_owned()),
+                _=>None
+            };
+            Ok(json!({"group":p.group,"label":part_label(p,projection)?,"amountCents":p.amount_cents,"subtitle":subtitle}))
+        }).collect::<Result<Vec<_>,crate::runtime::report::ReportIssue>>()?;
+        groups.push(json!({"month":claim_month,"title":format!("Zulagen aus {}",title(claim_month)?),"rows":rows,"openLabel":if open_parts.is_empty(){None}else{Some(if open_parts.len()==1&&open_parts[0].group=="SPECIAL_DUTY"{"Bereitschaftsvergütung"}else if open_parts.len()==1 && open_parts[0].group=="ABSENCE_PAY" {"Aufschlag Urlaub/Krankheit (§ 21)"}else{"Weitere Zulagen"})}}));
     }
     let allowance = parts
         .iter()

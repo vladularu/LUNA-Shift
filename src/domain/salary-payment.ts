@@ -36,7 +36,8 @@ export interface SalaryPaymentSource {
 }
 
 export interface SalaryPaymentContribution {
-  readonly group: SalaryPaymentGroup | "BASE" | "CARE_ALLOWANCE" | "TARIFF_ALLOWANCE";
+  readonly group:
+    SalaryPaymentGroup | "ABSENCE_PAY" | "BASE" | "CARE_ALLOWANCE" | "TARIFF_ALLOWANCE";
   readonly claimMonth: string;
   readonly paymentMonth: string | null;
   readonly amountCents: number;
@@ -45,7 +46,7 @@ export interface SalaryPaymentContribution {
 export interface SalaryPaymentIssue {
   readonly kind: "UNCONFIGURED" | "MISSING_MONTH" | "UNAVAILABLE";
   readonly month: string;
-  readonly group?: SalaryPaymentGroup;
+  readonly group?: SalaryPaymentGroup | "ABSENCE_PAY";
   readonly message: string;
 }
 
@@ -220,6 +221,12 @@ export function salaryComponentPaymentMonth(
   // Without an explicit timing choice, preserve the existing same-month view.
   const lag = period === null ? 0 : period.delays[group];
   return lag == null ? null : addSalaryPaymentMonths(claimMonth, lag);
+}
+
+/** The saved premium rhythm reflects the employer's payout. Section 24 supplies the default. */
+export function absencePaymentMonth(preferences: SalaryPaymentPreferences, claimMonth: string) {
+  const lag = resolveSalaryPaymentPeriod(preferences, claimMonth)?.delays.PREMIUMS ?? 2;
+  return addSalaryPaymentMonths(claimMonth, lag);
 }
 
 /** One explicit choice applies to every possible source of the displayed payout. */

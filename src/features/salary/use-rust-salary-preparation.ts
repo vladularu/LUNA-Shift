@@ -35,7 +35,8 @@ export function useRustSalaryPreparation(
 ) {
   const db = useSQLiteContext(),
     status = usePflegeShiftStatus();
-  const { profile } = usePflegeShiftProfile(),
+  const { profile: savedProfile, calculationProfile } = usePflegeShiftProfile(),
+    profile = calculationProfile ?? savedProfile,
     { entries } = usePflegeShiftEntries();
   const { tariffDecisions, workPatternSettings } = usePflegeShiftTariff();
   const { testMonths: storedTests } = usePflegeShiftTestData();

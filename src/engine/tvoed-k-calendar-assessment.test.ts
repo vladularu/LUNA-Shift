@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_ABSENCE_PAY } from "@/domain/absence-pay";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
 import { calculateMonthlyPayEstimate, calculateMonthlyTvoedAssessment } from "./pay";
 import { bundledRuleResolver } from "@/rules/rule-resolver";
@@ -90,7 +91,14 @@ describe("shared BT-K monthly estimate", () => {
       while (!next.done) next = steps.next();
       return next.value;
     };
-    const entries = [...july, shift("2026-08-03", "SICK")];
+    // Isolate changes to the monthly shift allowance with a confirmed § 21 rate of zero.
+    const entries = [
+      ...july,
+      {
+        ...shift("2026-08-03", "SICK"),
+        absencePay: { ...EMPTY_ABSENCE_PAY, day: "PAID" as const, dailyRateCents: 0 },
+      },
+    ];
     for (const month of ["2026-07", "2026-08"]) {
       expect(report(entries).months.find((m) => m.month === month)?.estimatedGrossAmount).toBe(
         pay(entries, month).estimatedGrossAmount,

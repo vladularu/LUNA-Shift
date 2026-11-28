@@ -82,6 +82,47 @@ describe("complete prepared analysis salary", () => {
     };
   }
 
+  it("uses the calendar estimate for Build 57 payout and net when a VKA absence is recorded", async () => {
+    const template = paymentRequest();
+    const entries = ["07", "08", "09", "10", "11", "12"].map((m) =>
+      forecastShift({ date: "2026-" + m + "-12", id: m }),
+    );
+    entries.push(
+      forecastShift({
+        id: "vacation",
+        date: "2026-10-13",
+        type: "VACATION",
+        allDay: true,
+        startTime: null,
+        endTime: null,
+      }),
+    );
+    const input = { ...template, month: "2026-12", context: { ...template.context, entries } };
+    const unexpectedNative = async (): Promise<never> => {
+      throw new Error("Called Build 57 payroll for automatic absence");
+    };
+    const calculator = Object.assign(unexpectedNative, {
+      cacheIdentity: "build57",
+      prepare: unexpectedNative,
+    });
+    const steps = prepareAnalysisSalarySteps(
+      input,
+      analysisSalaryKey(input),
+      undefined,
+      calculator,
+    );
+    let next = steps.next();
+    while (!next.done) {
+      await next.value;
+      next = steps.next();
+    }
+    const rate = next.value.projection?.contributions.find(
+      (row) => row.group === "ABSENCE_PAY",
+    )?.amountCents;
+    expect(rate).toBeGreaterThan(0);
+    expect(next.value.forecast?.result.status).toBe("available");
+  });
+
   it("prepares payout from original claim months while annual reference amounts stay earned", () => {
     const input = paymentRequest();
     const actual = prepare(input).result;

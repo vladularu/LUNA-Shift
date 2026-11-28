@@ -375,11 +375,15 @@ describe("TVöD-P pay engine", () => {
     const result = calculateMonthlyPayEstimate(
       "2026-07",
       [shift()],
-      { ...profile, federalState: "BW" },
+      { ...profile, federalState: "NW", tariff: { ...profile.tariff!, tariffRegion: "KAV_BW" } },
       null,
     );
 
     expect(result.tvoedAllowanceAmount).toBe(17.5);
+    expect(
+      calculateMonthlyPayEstimate("2026-07", [shift()], { ...profile, federalState: "BW" }, null)
+        .tvoedAllowanceAmount,
+    ).toBe(12.5);
   });
 
   it("detects shift and alternating-shift patterns", () => {

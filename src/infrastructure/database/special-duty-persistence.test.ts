@@ -140,7 +140,7 @@ describe("special-duty storage", () => {
         calendarImage: null,
         calendarImageStrength: "medium",
       });
-      expect(cloud.backupVersion).toBe(24);
+      expect(cloud.backupVersion).toBe(25);
       await validatePrivateCloudDocument(cloud, LATEST_DATABASE_SCHEMA_VERSION, tvlSha256);
       await expect(
         validatePrivateCloudDocument(
@@ -150,7 +150,7 @@ describe("special-duty storage", () => {
         ),
       ).rejects.toThrow();
       const file = await exportTvlBackup(source);
-      expect(file.document.version).toBe(24);
+      expect(file.document.version).toBe(25);
       await restoreLocalBackup(target.db, await validateTvlBackup(file.serialized));
       expect((await listCalendarEntries(target.db)).find((row) => row.id === saved.id)?.kind).toBe(
         "SHIFT",

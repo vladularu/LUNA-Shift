@@ -93,6 +93,19 @@ function pay(v: unknown): boolean {
     ]) &&
     optional(v.knownGrossAmount, finite) &&
     optional(v.provisionalTariffMonths, (months) => list(months, month)) &&
+    optional(v.absencePayAmount, finite) &&
+    optional(v.absencePayNotes, (items) => list(items, text)) &&
+    optional(v.absencePayDays, (items) =>
+      list(
+        items,
+        (day) =>
+          record(day) &&
+          text(day.date) &&
+          text(day.eventStart) &&
+          cents(day.dailyRateCents) &&
+          typeof day.manual === "boolean",
+      ),
+    ) &&
     optional(v.specialDutyAmount, finite) &&
     optional(v.specialDutyBreakdowns, (items) => list(items, record)) &&
     optional(v.specialDutyNotes, (items) => list(items, text)) &&
@@ -135,9 +148,13 @@ function pay(v: unknown): boolean {
 function contribution(v: unknown): boolean {
   return (
     record(v) &&
-    [...SALARY_PAYMENT_GROUPS, "BASE", "CARE_ALLOWANCE", "TARIFF_ALLOWANCE"].includes(
-      String(v.group),
-    ) &&
+    [
+      ...SALARY_PAYMENT_GROUPS,
+      "ABSENCE_PAY",
+      "BASE",
+      "CARE_ALLOWANCE",
+      "TARIFF_ALLOWANCE",
+    ].includes(String(v.group)) &&
     month(v.claimMonth) &&
     (v.paymentMonth === null || month(v.paymentMonth)) &&
     cents(v.amountCents)
@@ -173,8 +190,11 @@ function projection(v: unknown, request?: AnalysisSalaryRequest): boolean {
         ["UNCONFIGURED", "MISSING_MONTH", "UNAVAILABLE"].includes(String(issue.kind)) &&
         month(issue.month) &&
         text(issue.message) &&
-        optional(issue.group, (group) =>
-          SALARY_PAYMENT_GROUPS.includes(group as (typeof SALARY_PAYMENT_GROUPS)[number]),
+        optional(
+          issue.group,
+          (group) =>
+            group === "ABSENCE_PAY" ||
+            SALARY_PAYMENT_GROUPS.includes(group as (typeof SALARY_PAYMENT_GROUPS)[number]),
         ),
     )
   )

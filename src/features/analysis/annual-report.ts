@@ -1,3 +1,5 @@
+import { isTariffAbsence } from "@/domain/absence-pay";
+import { tariffAbsenceMonthPay } from "@/features/salary/salary-month-input";
 import { restFindingKeys } from "@/engine/workplace-resolution";
 import { employmentProfileAt } from "@/domain/employment-history";
 import {
@@ -183,6 +185,8 @@ function* calculateAnnualMonthContribution(
   referenceDate: string,
   ruleResolver: RuleResolver,
   cached: CachedAnnualMonth,
+  entries: readonly CalendarEntry[],
+  tariffDecisions: readonly MonthlyTariffDecision[],
 ): Generator<number, AnnualMonthContribution, void> {
   profile = employmentProfileAt(profile, month + "-01");
   let summary =
@@ -237,7 +241,9 @@ function* calculateAnnualMonthContribution(
     };
   }
 
+  const absenceMonth = window.monthShifts.some((e) => isTariffAbsence(e, profile));
   let pay =
+    !absenceMonth &&
     cached.pay &&
     cached.pay.profile === profile &&
     cached.pay.decision === decision &&
@@ -247,15 +253,24 @@ function* calculateAnnualMonthContribution(
       ? cached.pay.value
       : null;
   if (pay === null) {
-    pay = calculateMonthlyPayEstimate(
-      month,
-      window.monthShifts,
-      profile,
-      decision,
-      window.allowanceShifts,
-      workPatternSettings,
-      ruleResolver,
-    );
+    pay = absenceMonth
+      ? tariffAbsenceMonthPay(
+          month,
+          profile,
+          entries,
+          tariffDecisions,
+          workPatternSettings,
+          ruleResolver,
+        )
+      : calculateMonthlyPayEstimate(
+          month,
+          window.monthShifts,
+          profile,
+          decision,
+          window.allowanceShifts,
+          workPatternSettings,
+          ruleResolver,
+        );
     cached.pay = {
       monthShifts: window.monthShifts,
       allowanceShifts: window.allowanceShifts,
@@ -290,7 +305,11 @@ function* calculateAnnualMonthContribution(
     );
     cached.shiftTypeAnalysis = { profile, entries: window.monthEntries, value: shiftTypeAnalysis };
   }
-  const allowanceAmount = pay.allowanceAmount + pay.tvoedAllowanceAmount + pay.careAllowanceAmount;
+  const allowanceAmount =
+    (pay.absencePayAmount ?? 0) +
+    pay.allowanceAmount +
+    pay.tvoedAllowanceAmount +
+    pay.careAllowanceAmount;
 
   return Object.freeze({
     shiftTypeAnalysis,
@@ -385,6 +404,8 @@ export function* buildAnnualReportSteps(
       referenceDate,
       ruleResolver,
       monthCache(cache, ruleResolver, month),
+      entries,
+      tariffDecisions,
     );
     let contribution: AnnualMonthContribution;
     while (true) {

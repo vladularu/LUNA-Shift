@@ -1,3 +1,4 @@
+import { needsCalendarSalaryInYear } from "./calendar-salary-projection";
 import type {
   CalendarEntry,
   MonthlyTariffDecision,
@@ -201,6 +202,8 @@ export function requestAnnualAnalysis(
   progress?: (value: AnnualReport) => void,
   calculator: AnnualRustCalculator | null = null,
 ) {
+  if (calculator && needsCalendarSalaryInYear(request.year, request.entries, request.profile))
+    calculator = null;
   const parts = annualMonthPartsSession(
     request.year,
     request.ruleResolver,

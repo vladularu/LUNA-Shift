@@ -50,7 +50,13 @@ impl Rows {
             *remaining = remaining.checked_sub(size + 1).ok_or_else(invalid)?;
             let object = row.as_object().ok_or_else(invalid)?;
             let id = row["id"].as_str().ok_or_else(invalid)?;
-            if object.len() != fields.len() + 1
+            if object.len()
+                != fields.len()
+                    + 1
+                    + usize::from(
+                        fields == calendar_rows::SHIFT_ROW_FIELDS
+                            && object.contains_key("absence_pay_json"),
+                    )
                 || fields.iter().any(|key| !object.contains_key(*key))
                 || !object.contains_key("test_run_id")
                 || id.len() > 256
@@ -234,6 +240,19 @@ impl NativeDayWriteSource {
                 } else {
                     0
                 });
+            if let Some(facts) = raw.get("absencePay") {
+                if !facts.is_null() {
+                    crate::net::absence_pay::validate(facts, &input).map_err(|_| invalid())?;
+                }
+                row["absence_pay_json"] = serialized(facts)?;
+            } else if let Some(old) = previous.filter(|old| old.get("absence_pay_json").is_some()) {
+                row["absence_pay_json"] =
+                    if old["type"] == row["type"] && old["date"] == row["date"] {
+                        old["absence_pay_json"].clone()
+                    } else {
+                        Value::Null
+                    };
+            }
             row["special_duty_json"] = serialized(&input["specialDuty"])?;
             ("UPSERT_SHIFT_ENTRY", calendar_rows::map_shift(&row)?)
         } else {

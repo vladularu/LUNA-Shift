@@ -93,6 +93,7 @@ pub struct NativeGrossEvidenceProvider<'a> {
     rule_failures: RuleFailureCache,
     recency: VecDeque<String>,
     pricing_passes: u64,
+    reference_depth: u8,
     reuse: Option<reuse::ReuseBinding>,
     #[cfg(test)]
     calculations: usize,
@@ -210,6 +211,14 @@ impl<'a> NativeGrossEvidenceProvider<'a> {
             } else {
                 Arc::clone(&scope.assessment_shifts)
             };
+        let mut regular_assessment_shifts = regular_assessment_shifts;
+        if scope.profile["tariff"].is_object() || scope.profile["vkaETariff"].is_object() {
+            for shift in scope.assessment_shifts.iter() {
+                if let Some(planned) = super::absence_pay::planned_assessment(shift) {
+                    Arc::make_mut(&mut regular_assessment_shifts).push(planned);
+                }
+            }
+        }
         Ok(Self {
             scope,
             resolver,
@@ -224,6 +233,7 @@ impl<'a> NativeGrossEvidenceProvider<'a> {
             rule_failures: RuleFailureCache::default(),
             recency: VecDeque::new(),
             pricing_passes: 0,
+            reference_depth: 0,
             reuse: None,
             #[cfg(test)]
             calculations: 0,
@@ -388,7 +398,52 @@ impl<'a> NativeGrossEvidenceProvider<'a> {
         };
         // The shared payload excludes source metadata. Every hit binds the current
         // snapshot's profile, employment periods and complete projected plan.
-        let core = Arc::unwrap_or_clone(core);
+        let mut core = Arc::unwrap_or_clone(core);
+        let shifts = Arc::clone(&self.scope.shifts);
+        let profile = Arc::clone(&self.scope.profile);
+        let resolver = self.resolver.clone();
+        let mut tariff_days = BTreeSet::new();
+        for shift in shifts.iter().filter(|s| super::absence_pay::absence(s)) {
+            if let Some(date) = shift["date"].as_str().filter(|d| d.starts_with(month))
+                && super::absence_pay::eligible(
+                    &self
+                        .profiles
+                        .at(date)
+                        .map_err(|_| GrossEvidenceError)?
+                        .calculation,
+                )
+            {
+                tariff_days.insert(date.to_owned());
+            }
+        }
+        if !tariff_days.is_empty() {
+            super::absence_pay::apply(
+                month,
+                &mut core.pay,
+                &shifts,
+                &profile["workingTimeTarget"]["context"],
+                |date| tariff_days.contains(date),
+                |date| {
+                    crate::rules::holidays::holiday_map_for_month(
+                        &date[..7],
+                        profile["federalState"].as_str()?,
+                        profile["holidayRegion"].as_str().unwrap_or("NONE"),
+                        resolver.as_ref(),
+                    )
+                    .ok()
+                    .map(|map| map.contains_key(date))
+                },
+                |reference| {
+                    if self.reference_depth >= 36 {
+                        return None;
+                    }
+                    self.reference_depth += 1;
+                    let pay = self.source(reference).ok().map(|source| source.pay);
+                    self.reference_depth -= 1;
+                    pay
+                },
+            );
+        }
         let evidence = Arc::new(GrossMonthEvidence {
             source: SalaryPaymentSource {
                 month: month.into(),
@@ -438,9 +493,11 @@ impl<'a> NativeGrossEvidenceProvider<'a> {
         profile: EmploymentProfileView,
         shifts: Arc<Vec<Value>>,
     ) -> Result<(), GrossEvidenceError> {
-        if self.months.contains_key(month) {
+        if self.source_views.contains_key(month) && self.months.contains_key(month) {
             return Err(GrossEvidenceError);
         }
+        // A reference month can have been priced before its presentation view was requested.
+        self.months.remove(month);
         self.source_views.insert(
             month.to_owned(),
             SourceView {

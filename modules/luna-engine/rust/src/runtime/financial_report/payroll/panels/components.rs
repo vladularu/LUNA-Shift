@@ -167,6 +167,7 @@ fn composition(input: &PanelInput<'_>) -> Result<Vec<Value>, ReportIssue> {
     for (key, label) in [
         ("overtimeAmount", "Überstunden"),
         ("specialDutyAmount", "Bereitschaftsvergütung"),
+        ("absencePayAmount", "Aufschlag Urlaub/Krankheit (§ 21)"),
     ] {
         let n = pay
             .get(key)

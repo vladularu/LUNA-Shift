@@ -1,7 +1,9 @@
+import { isTariffAbsence } from "@/domain/absence-pay";
 import { employmentMonthPeriods, employmentProfileAt } from "@/domain/employment-history";
 import { resolveRemunerationProfile } from "@/domain/remuneration-profile";
 import {
   SALARY_PAYMENT_GROUPS,
+  absencePaymentMonth,
   addSalaryPaymentMonths,
   resolveSalaryPaymentPeriod,
   validateSalaryPaymentPreferences,
@@ -142,8 +144,10 @@ function project(
   preferences: SalaryPaymentPreferences,
   perspective: SalaryPerspective,
   sources: readonly SalaryPaymentSource[],
+  absencePaymentMonths: ReadonlyMap<string, string>,
 ): SalaryPaymentProjection {
   const projection = projectSalaryPayment({
+    absencePaymentMonths,
     month,
     preferences,
     perspective,
@@ -198,9 +202,24 @@ export function* salaryPaymentInputSteps(
     cache,
   );
   const sources: SalaryPaymentSource[] = [];
-  for (const claimMonth of salaryPaymentRequiredMonths(month, effectivePreferences, perspective)) {
+  const claims = new Set(salaryPaymentRequiredMonths(month, effectivePreferences, perspective));
+  const absencePaymentMonths = new Map<string, string>();
+  for (const delta of perspective === "PAYOUT" ? [-2, -1, 0] : [0]) {
+    const claim = addSalaryPaymentMonths(month, delta);
+    const payout = absencePaymentMonth(preferences, claim);
+    if (claim !== month && payout !== month) continue;
+    if (
+      !actual.entries.some(
+        (entry) => entry.date.startsWith(claim) && isTariffAbsence(entry, profile),
+      )
+    )
+      continue;
+    absencePaymentMonths.set(claim, payout);
+    claims.add(claim);
+  }
+  for (const claimMonth of claims) {
     sources.push(yield* sourceSteps(claimMonth, profile, actual, cache, month));
     yield 0;
   }
-  return project(month, context, effectivePreferences, perspective, sources);
+  return project(month, context, effectivePreferences, perspective, sources, absencePaymentMonths);
 }

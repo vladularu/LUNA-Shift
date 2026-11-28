@@ -148,6 +148,7 @@ export function* prepareAutomaticSalaryProofSteps(
       return stop("Die vollständige Brutto-Gehaltsprognose fehlt.");
     const components = [
       pay.specialDutyAmount ?? 0,
+      pay.absencePayAmount ?? 0,
       pay.personalBaseAmount,
       pay.timePremiumAmount,
       pay.overtimeAmount,

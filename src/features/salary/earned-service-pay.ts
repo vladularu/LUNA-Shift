@@ -25,9 +25,11 @@ export function earnedSpecialDutyCents(line: SpecialDutyPayLine): number | null 
   );
 }
 
+export const ABSENCE_PAY_FILTER = "absence-pay";
 type EarnedServiceRow = Omit<ReturnType<typeof salaryServiceRows>[number], "amountCents"> & {
   readonly amountCents: number | null;
   readonly specialDuty?: SpecialDutyPayLine;
+  readonly absence?: NonNullable<MonthlyPayEstimate["absencePayDays"]>[number];
 };
 
 export function earnedServiceRows(
@@ -36,6 +38,18 @@ export function earnedServiceRows(
   shifts: readonly ShiftEntry[],
   filter: string | null,
 ): readonly EarnedServiceRow[] {
+  const absenceRows: EarnedServiceRow[] = (
+    filter === null || filter === ABSENCE_PAY_FILTER ? (pay?.absencePayDays ?? []) : []
+  ).map((day) => ({
+    id: "absence:" + day.date,
+    date: day.date,
+    shift: shifts.find((s) => s.date === day.date && s.type === day.type),
+    tax: null,
+    premiumLines: [],
+    amountCents: day.dailyRateCents,
+    absence: day,
+  }));
+  if (filter === ABSENCE_PAY_FILTER) return absenceRows;
   const premiums = salaryServiceRows(pay, classification, shifts, filter);
   const duties = pay?.specialDutyBreakdowns ?? [];
   const byId = new Map(shifts.map((shift) => [shift.id, shift]));
@@ -83,6 +97,7 @@ export function earnedServiceRows(
   return [
     ...(filter === null ? premiums.filter((row) => !specialIds.has(row.id)) : []),
     ...specialRows,
+    ...absenceRows,
   ].sort(
     (a, b) =>
       a.date.localeCompare(b.date) ||

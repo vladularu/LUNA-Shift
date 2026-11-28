@@ -62,6 +62,7 @@ function contribution(
     "_MONTHLY",
   );
   const amounts: Record<SalaryPaymentContribution["group"], number> = {
+    ABSENCE_PAY: pay.absencePayAmount ?? 0,
     BASE: pay.personalBaseAmount ?? 0,
     CARE_ALLOWANCE: pay.careAllowanceAmount,
     TARIFF_ALLOWANCE: pay.tvoedAllowanceAmount,

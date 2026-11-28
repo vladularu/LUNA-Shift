@@ -426,7 +426,7 @@ describe("TVöD-P pay engine", () => {
     const result = calculateMonthlyPayEstimate(
       "2026-07",
       [shift()],
-      { ...profile, federalState: "BW" },
+      { ...profile, federalState: "BW", tariff: { ...profile.tariff!, tariffRegion: "KAV_BW" } },
       null,
     );
 

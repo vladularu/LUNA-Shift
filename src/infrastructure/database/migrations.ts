@@ -16,7 +16,7 @@ import { migrateTariffAnnualClaims } from "./migration-21-tariff-annual-claims";
 import type { SQLiteDatabase } from "expo-sqlite";
 import { withImmediateTransaction } from "./transaction";
 
-export const LATEST_DATABASE_SCHEMA_VERSION = 35;
+export const LATEST_DATABASE_SCHEMA_VERSION = 36;
 
 const MIGRATION_1 = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -717,4 +717,22 @@ export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
   await migrateCalendarSharing(db, now);
   await migrateWorkingTimeTarget(db, now);
   await migrateSpecialDuties(db, now);
+  await withImmediateTransaction(db, async (transaction) => {
+    const applied = await transaction.getFirstAsync(
+      "SELECT version FROM schema_migrations WHERE version=36",
+    );
+    if (applied !== null) return;
+    const columns = await transaction.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(shift_entries)",
+    );
+    if (!columns.some((column) => column.name === "absence_pay_json"))
+      await transaction.execAsync(
+        "ALTER TABLE shift_entries ADD COLUMN absence_pay_json TEXT CHECK (absence_pay_json IS NULL OR json_valid(absence_pay_json))",
+      );
+    await transaction.runAsync(
+      "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+      36,
+      now,
+    );
+  });
 }

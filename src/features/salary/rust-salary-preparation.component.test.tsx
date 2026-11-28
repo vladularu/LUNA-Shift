@@ -1,5 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { setSalaryPaymentLag } from "@/domain/salary-payment";
+import { forecastProfile, forecastShift } from "@/engine/net-pay-tvoed-forecast-test-fixtures";
 import { createRuleResolver } from "@/rules/rule-resolver";
 import type {
   AnalysisSalaryRequest,
@@ -147,6 +149,44 @@ afterEach(() => {
 });
 
 describe("original salary hooks consume one complete native preparation", () => {
+  it("shows the same October U/K estimate in the configured November payout and prepared net on Build 57", async () => {
+    jest.restoreAllMocks();
+    const source = request();
+    const entries = ["07", "08", "09", "10", "11", "12"].map((m) =>
+      forecastShift({ id: m, date: "2026-" + m + "-06" }),
+    );
+    entries.push(
+      forecastShift({
+        id: "vac",
+        date: "2026-10-12",
+        type: "VACATION",
+        startTime: null,
+        endTime: null,
+        allDay: true,
+      }),
+    );
+    setRequest({
+      ...source,
+      profile: forecastProfile,
+      month: "2026-11",
+      payment: {
+        ...source.payment!,
+        preferences: setSalaryPaymentLag(source.payment!.preferences, "2026-11", 1),
+      },
+      context: { ...source.context, entries },
+    });
+    const hook = await renderHook(useAll);
+    await settle();
+    const calculation = hook.result.current.report.calculation;
+    expect(calculation?.ok).toBe(true);
+    if (!calculation?.ok) throw new Error("Auszahlungsprognose fehlt");
+    expect(
+      calculation.value.projection.contributions.find((c) => c.group === "ABSENCE_PAY")
+        ?.amountCents,
+    ).toBeGreaterThan(0);
+    expect(hook.result.current.net?.result.status).toBe("available");
+    expect(mockCalculator.prepare).not.toHaveBeenCalled();
+  });
   it("retains the current salary form while only committed net settings refresh", async () => {
     const hook = await renderHook(useAll);
     await settle();

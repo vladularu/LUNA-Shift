@@ -45,7 +45,12 @@
         "simulator": false,
         "env": {
           "LUNA_FULL_ENGINE": "1",
-          "LUNA_IOS_TARGETS": "aarch64-apple-ios"
+          "LUNA_IOS_TARGETS": "aarch64-apple-ios",
+          "EXPO_PUBLIC_RUST_MONTH_TRIAL": "1",
+          "EXPO_PUBLIC_RUST_NET_BRIDGE": "1",
+          "EXPO_PUBLIC_RUST_ANNUAL_BRIDGE": "1",
+          "EXPO_PUBLIC_RUST_CHECKS_BRIDGE": "1",
+          "EXPO_PUBLIC_RUST_SALARY_PREPARATION": "1"
         }
       },
       "channel": "preview"

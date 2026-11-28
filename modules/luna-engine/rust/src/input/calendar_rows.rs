@@ -129,9 +129,14 @@ pub(crate) fn map_shift_display(
         .unwrap_or(&row["title"]);
     let input = json!({"specialDuty":special,"id":row["id"],"date":row["date"],"templateId":row["template_id"],"title":title,"type":row["type"],"allDay":flag(&row["all_day"])||row["start_time"].is_null(),"startTime":row["start_time"],"endTime":row["end_time"],"breakMinutes":row["break_minutes"],"color":display("color"),"symbol":display("symbol"),"note":row["note"],"notification":notification,"alarmEnabled":flag(&row["alarm_enabled"]),"location":location,"overtimeMinutes":row["overtime_minutes"],"tariffOvertimeConfirmed":flag(&row["tariff_overtime_confirmed"]),"holidayPremiumMode":row["holiday_premium_mode"]});
     let v = calendar::validate_shift(&input)?;
-    Ok(
-        json!({"kind":"SHIFT","specialDuty":v["specialDuty"],"id":row["id"],"date":v["date"],"templateId":v["templateId"],"title":v["title"],"type":v["type"],"allDay":v["allDay"],"startTime":v["startTime"],"endTime":v["endTime"],"breakMinutes":v["breakMinutes"],"color":v["color"],"symbol":v["symbol"],"note":v["note"],"notification":v["notification"],"alarmEnabled":v["alarmEnabled"],"location":v["location"],"overtimeMinutes":v["overtimeMinutes"],"tariffOvertimeConfirmed":v["tariffOvertimeConfirmed"],"holidayPremiumMode":v["holidayPremiumMode"],"revision":row["revision"],"createdAt":row["created_at"],"updatedAt":row["updated_at"],"deletedAt":row["deleted_at"]}),
-    )
+    let mut result = json!({"kind":"SHIFT","specialDuty":v["specialDuty"],"id":row["id"],"date":v["date"],"templateId":v["templateId"],"title":v["title"],"type":v["type"],"allDay":v["allDay"],"startTime":v["startTime"],"endTime":v["endTime"],"breakMinutes":v["breakMinutes"],"color":v["color"],"symbol":v["symbol"],"note":v["note"],"notification":v["notification"],"alarmEnabled":v["alarmEnabled"],"location":v["location"],"overtimeMinutes":v["overtimeMinutes"],"tariffOvertimeConfirmed":v["tariffOvertimeConfirmed"],"holidayPremiumMode":v["holidayPremiumMode"],"revision":row["revision"],"createdAt":row["created_at"],"updatedAt":row["updated_at"],"deletedAt":row["deleted_at"]});
+    if !row["absence_pay_json"].is_null() {
+        let facts = parse_column(row, "absence_pay_json", "Abwesenheitsaufschlag")?;
+        crate::net::absence_pay::validate(&facts, &v)
+            .map_err(|_| invalid("Ungültige Angaben zum Abwesenheitsaufschlag."))?;
+        result["absencePay"] = facts;
+    }
+    Ok(result)
 }
 pub fn map_appointment(row: &Value) -> Result<Value, InputError> {
     if !row["all_day"]
@@ -176,8 +181,12 @@ pub fn map_tariff_decision(row: &Value) -> Result<Value, InputError> {
     )
 }
 fn exact(row: &Value, keys: &[&str]) -> bool {
-    row.as_object()
-        .is_some_and(|row| row.len() == keys.len() && keys.iter().all(|key| row.contains_key(*key)))
+    row.as_object().is_some_and(|row| {
+        row.len()
+            == keys.len()
+                + usize::from(keys == SHIFT_ROW_FIELDS && row.contains_key("absence_pay_json"))
+            && keys.iter().all(|key| row.contains_key(*key))
+    })
 }
 fn metadata(row: &Value) -> Result<(), InputError> {
     if !row["id"]

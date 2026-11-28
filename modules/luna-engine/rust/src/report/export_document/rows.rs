@@ -196,8 +196,10 @@ fn artifact_field(section: &str, field: &str) -> bool {
                     | "timePremiumAmount"
                     | "overtimeAmount"
                     | "specialDutyAmount"
+                    | "absencePayAmount"
                     | "annualPaymentAmount"
             ) || field.starts_with("specialDutyNotes")
+                || field.starts_with("absencePayNotes")
         }
         "Netto-Prognose" => matches!(
             field,

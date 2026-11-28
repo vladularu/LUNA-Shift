@@ -272,6 +272,9 @@ describe("buildAnnualReport", () => {
   it("isolates every annual calculation cache by resolver identity", () => {
     const cache = createAnnualReportComputationCache();
     const entries = [
+      ...["2025-10-06", "2025-11-03", "2025-12-01"].map((date) =>
+        shift("reference-" + date, date, "DAY"),
+      ),
       shift("new-year-vacation", "2026-01-01", "VACATION"),
       shift("long", "2026-01-02", "DAY", {
         startTime: "06:00",

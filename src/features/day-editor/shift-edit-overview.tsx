@@ -1,6 +1,8 @@
 import { StyleSheet, View } from "react-native";
 import { usePflegeShiftProfile } from "@/application/pflegeshift-provider";
 import { useRuleCatalogRuntime } from "@/application/rule-catalog-runtime-provider";
+import { absencePayTariffAt } from "@/domain/absence-pay";
+import { useAbsencePayPreview } from "./use-absence-pay-preview";
 import { employmentProfileAt } from "@/domain/employment-history";
 import { DUTY_LABELS } from "@/domain/special-duty";
 import type { ShiftEntry, UserProfile } from "@/domain/types";
@@ -48,7 +50,7 @@ export function ShiftEditOverview({
   const palette = usePalette();
   const { profile, calculationProfile } = usePflegeShiftProfile();
   const { resolver } = useRuleCatalogRuntime();
-  const premium = shiftOverviewPremium(shift, calculationProfile ?? profile, resolver);
+  const effectiveProfile = calculationProfile ?? profile;
   const { startTime, endTime, specialDuty } = shift;
   const showHours = !shift.allDay && !specialDuty && startTime !== null && endTime !== null;
   const timeLabel = showHours
@@ -79,28 +81,99 @@ export function ShiftEditOverview({
           {shift.breakMinutes} Min. Pause
         </Text>
       ) : null}
+      {effectiveProfile &&
+      (shift.type === "VACATION" || shift.type === "SICK") &&
+      absencePayTariffAt(effectiveProfile, shift.date) ? (
+        <AbsenceOverviewMetrics
+          shift={shift}
+          type={shift.type}
+          profile={effectiveProfile}
+          duration={duration}
+        />
+      ) : (
+        <OverviewMetrics
+          duration={duration}
+          durationLabel={specialDuty ? "Dauer" : "Arbeitszeit"}
+          label="Zuschlag gesamt"
+          amount={formatEuro(shiftOverviewPremium(shift, effectiveProfile, resolver))}
+        />
+      )}
+    </View>
+  );
+}
+
+function AbsenceOverviewMetrics({
+  shift,
+  type,
+  profile,
+  duration,
+}: {
+  readonly shift: ShiftEntry;
+  readonly type: "VACATION" | "SICK";
+  readonly profile: UserProfile;
+  readonly duration: string;
+}) {
+  const preview = useAbsencePayPreview({
+    original: shift,
+    type,
+    profile,
+    date: shift.date,
+    value: shift.absencePay ?? null,
+  });
+  return (
+    <OverviewMetrics
+      duration={duration}
+      durationLabel="Arbeitszeit"
+      label={preview.label ?? "U/K-Aufschlag"}
+      amount={preview.value}
+      detail={preview.reason}
+    />
+  );
+}
+
+function OverviewMetrics({
+  duration,
+  durationLabel,
+  label,
+  amount,
+  detail,
+}: {
+  readonly duration: string;
+  readonly durationLabel: string;
+  readonly label: string;
+  readonly amount: string;
+  readonly detail?: string;
+}) {
+  const palette = usePalette();
+  return (
+    <>
       <ResponsiveFieldRow style={styles.metrics}>
         <View style={styles.metric}>
           <Text style={[TYPOGRAPHY.screenTitle, styles.value, { color: palette.text }]}>
             {duration}
           </Text>
           <Text style={[TYPOGRAPHY.small, styles.centered, { color: palette.textMuted }]}>
-            {specialDuty ? "Dauer" : "Arbeitszeit"}
+            {durationLabel}
           </Text>
         </View>
         <View style={styles.metric}>
           <Text
             style={[TYPOGRAPHY.screenTitle, styles.value, { color: palette.text }]}
-            accessibilityLabel={premium === null ? "Nicht verfügbar" : undefined}
+            accessibilityLabel={amount === formatEuro(null) ? "Nicht verfügbar" : undefined}
           >
-            {formatEuro(premium)}
+            {amount}
           </Text>
           <Text style={[TYPOGRAPHY.small, styles.centered, { color: palette.textMuted }]}>
-            Zuschlag gesamt
+            {label}
           </Text>
         </View>
       </ResponsiveFieldRow>
-    </View>
+      {detail ? (
+        <Text style={[TYPOGRAPHY.small, styles.centered, { color: palette.textMuted }]}>
+          {detail}
+        </Text>
+      ) : null}
+    </>
   );
 }
 

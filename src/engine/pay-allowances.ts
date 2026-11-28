@@ -12,6 +12,13 @@ export interface AllowanceCalculationInput {
   readonly allowExpiredAllowances?: boolean;
 }
 
+/** TVöD BT-K § 52 Abs. 5, including the KAV BW protocol. */
+export function vkaEFixedAllowanceCents(selection: NonNullable<UserProfile["vkaETariff"]>) {
+  if (selection.sector !== "BT_K" || ["E1", "E2", "E3", "E4"].includes(selection.payGroup))
+    return 0;
+  return selection.tariffRegion === "KAV_BW" ? 3500 : 2500;
+}
+
 export interface MonthlyAllowanceAmounts {
   readonly allowanceAmount: number;
   readonly careAllowanceAmount: number;
@@ -41,12 +48,27 @@ export function applicableAllowanceRules(
   allowanceType: "alternating-shift" | "care" | "shift" | "tvoed",
   input: AllowanceCalculationInput,
 ): readonly RuleTariffPackage["rules"]["allowanceRules"][number][] {
+  // Older P catalogs encode the KAV Baden-Württemberg exception as two lists of states.
+  // Match the published allowance against the employer's tariff region even with those catalogs.
   return input.rulePackage.rules.allowanceRules.filter(
     (rule) =>
       rule.allowanceType === allowanceType &&
       rule.validFrom <= input.date &&
       (rule.validTo === null || input.date <= rule.validTo) &&
-      conditionsMatch(rule.conditions, input.profile, input.date, null, input.status),
+      (allowanceType === "tvoed" &&
+      rule.conditions.federalStates &&
+      !rule.conditions.tariffRegions &&
+      input.profile.tariff
+        ? rule.conditions.federalStates.includes("BW") ===
+            (input.profile.tariff.tariffRegion === "KAV_BW") &&
+          conditionsMatch(
+            { ...rule.conditions, federalStates: null },
+            input.profile,
+            input.date,
+            null,
+            input.status,
+          )
+        : conditionsMatch(rule.conditions, input.profile, input.date, null, input.status)),
   );
 }
 

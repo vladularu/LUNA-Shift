@@ -55,6 +55,7 @@ fn group_amount(pay: &Value, group: &str) -> Outcome<i64> {
     };
     let monthly = allowance.as_str().ok_or(Failure)?.ends_with("_MONTHLY");
     match group {
+        "ABSENCE_PAY" => pay.get("absencePayAmount").map(money).unwrap_or(Ok(0)),
         "BASE" => money(&pay["personalBaseAmount"]),
         "CARE_ALLOWANCE" => money(&pay["careAllowanceAmount"]),
         "TARIFF_ALLOWANCE" => money(&pay["tvoedAllowanceAmount"]),
@@ -575,12 +576,14 @@ impl<P: GrossEvidenceProvider + ?Sized> Context<'_, '_, P> {
             "allowanceAmount",
             "overtimeAmount",
             "specialDutyAmount",
+            "absencePayAmount",
         ] {
-            parts += if key == "specialDutyAmount" && pay[key].is_null() {
-                0
-            } else {
-                money(&pay[key])?
-            };
+            parts +=
+                if ["specialDutyAmount", "absencePayAmount"].contains(&key) && pay[key].is_null() {
+                    0
+                } else {
+                    money(&pay[key])?
+                };
         }
         if !super::js_truthy(&pay["available"])
             || pay["estimatedGrossAmount"].is_null()
@@ -616,9 +619,10 @@ impl<P: GrossEvidenceProvider + ?Sized> Context<'_, '_, P> {
         for line in outgoing {
             let key = format!("{month}:{}", line.group);
             if line.claim_month != month
-                || !PAYMENT_GROUPS
-                    .iter()
-                    .any(|group| group.label() == line.group)
+                || line.group != "ABSENCE_PAY"
+                    && !PAYMENT_GROUPS
+                        .iter()
+                        .any(|group| group.label() == line.group)
                 || line.amount_cents <= 0
                 || line.amount_cents > crate::money::MAX_SAFE_INTEGER
                 || seen.contains(&key)
@@ -640,18 +644,22 @@ impl<P: GrossEvidenceProvider + ?Sized> Context<'_, '_, P> {
                 ));
             }
         }
-        for group in PAYMENT_GROUPS {
+        for label in PAYMENT_GROUPS
+            .iter()
+            .map(|group| group.label())
+            .chain(["ABSENCE_PAY"])
+        {
             let included: i64 = selected
                 .iter()
-                .filter(|line| line.claim_month == month && line.group == group.label())
+                .filter(|line| line.claim_month == month && line.group == label)
                 .map(|line| line.amount_cents)
                 .sum();
             let excluded: i64 = outgoing
                 .iter()
-                .filter(|line| line.group == group.label())
+                .filter(|line| line.group == label)
                 .map(|line| line.amount_cents)
                 .sum();
-            if included + excluded != group_amount(current.pay(), group.label())? {
+            if included + excluded != group_amount(current.pay(), label)? {
                 return Ok(self.stop(
                     "Die Zuordnung der aktuellen und verzögerten Ansprüche ist unvollständig.",
                     "sfn",
@@ -667,7 +675,9 @@ impl<P: GrossEvidenceProvider + ?Sized> Context<'_, '_, P> {
                     .any(|group| group.label() == line.group)
             })
             .collect();
-        if variables.len() == PAYMENT_GROUPS.len()
+        if !selected.iter().any(|line| line.group == "ABSENCE_PAY")
+            && !outgoing.iter().any(|line| line.group == "ABSENCE_PAY")
+            && variables.len() == PAYMENT_GROUPS.len()
             && variables
                 .iter()
                 .map(|line| line.group.as_str())

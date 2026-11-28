@@ -252,6 +252,7 @@ fn prepare(
     }
     let zero = json!(0);
     let components = [
+        pay.get("absencePayAmount").unwrap_or(&zero),
         pay.get("specialDutyAmount")
             .filter(|v| !v.is_null())
             .unwrap_or(&zero),

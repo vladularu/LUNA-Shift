@@ -37,7 +37,7 @@ export function SalaryScreen({
 }
 
 function SalaryMonthPage({ view, month }: { readonly view: PayrollView; readonly month: string }) {
-  const { ready, error, reload, profile, calculation, retryRules, testMonths } =
+  const { ready, error, reload, profile, calculation, retryRules, testMonths, absenceNetBasis } =
     useSalaryReport(month);
   let content;
   if (error) content = <LoadFailureView message={error} onRetry={() => void reload()} />;
@@ -57,6 +57,7 @@ function SalaryMonthPage({ view, month }: { readonly view: PayrollView; readonly
         {testMonths.includes(month) ? <ReportTestBadge /> : null}
         <SalaryPayrollContent
           key={month}
+          absenceNetBasis={absenceNetBasis}
           view={view}
           projection={projection}
           month={month}

@@ -292,6 +292,32 @@ describe("integrated salary-to-net workflow", () => {
     return render(<SalaryDetailsScreen />);
   }
 
+  it("shows the known net and deductions for an October vacation day with an open § 21 rate", async () => {
+    mockEntries = [
+      forecastShift({ id: "october-night", date: "2026-10-12" }),
+      forecastShift({
+        id: "urlaub",
+        date: "2026-10-13",
+        type: "VACATION",
+        allDay: true,
+        startTime: null,
+        endTime: null,
+        breakMinutes: 0,
+      }),
+    ];
+    const screen = await netOverview("2026-10");
+    expect(
+      await screen.findByText(/Aufschlag nach § 21 für den 13.10.2026 ist noch offen/),
+    ).toBeTruthy();
+    expect(totals(screen).getByLabelText(/^Netto vorläufig: .*€/)).toBeTruthy();
+    expect(statement(screen).getByLabelText(/^Bekanntes Brutto: .*€/)).toBeTruthy();
+    expect(screen.queryByText("Die vollständige Brutto-Gehaltsprognose fehlt.")).toBeNull();
+    const detail = await details("deductions", "2026-10");
+    expect(
+      await detail.findByText(/Das vorläufige Netto berücksichtigt die bekannten Beträge/),
+    ).toBeTruthy();
+  });
+
   it("shows the payroll statement without tabs or extra payment cards at zero lag", async () => {
     mockParams = { month: "2026-07" };
     const screen = await render(<SalaryScreen />);

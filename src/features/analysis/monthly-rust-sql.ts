@@ -41,7 +41,7 @@ function array(select: string) {
   return `(SELECT json_group_array(json(encoded)) FROM (${select}))`;
 }
 const SHIFT =
-  "special_duty_json,id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,color,symbol,note,notification_json,alarm_enabled,location_json,overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,revision,created_at,updated_at,deleted_at";
+  "absence_pay_json,special_duty_json,id,date,template_id,title,type,all_day,start_time,end_time,break_minutes,color,symbol,note,notification_json,alarm_enabled,location_json,overtime_minutes,tariff_overtime_confirmed,holiday_premium_mode,revision,created_at,updated_at,deleted_at";
 const APPOINTMENT =
   "id,date,title,all_day,start_time,end_time,color,note,recurrence_frequency,recurrence_interval,notification_json,location_json,revision,created_at,updated_at,deleted_at";
 const PROFILE =

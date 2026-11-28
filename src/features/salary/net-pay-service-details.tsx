@@ -7,6 +7,9 @@ import { CORNER_CURVE, SELECTION_METRICS, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
 import { CardSeparator, EmptyState, SurfaceCard } from "@/ui/design-system";
 import { SelectionSheet } from "@/ui/selection-sheet";
+import { absencePaymentMonth } from "@/domain/salary-payment";
+import { formatMonthTitle } from "@/engine/calendar";
+import { useSalaryPaymentPreferences } from "./salary-payment-preferences";
 import { formatMinutes } from "@/engine/working-time";
 import { premiumCategory } from "@/engine/net-pay-premium-trace";
 import { buildPremiumBreakdown } from "@/features/analysis/premium-breakdown";
@@ -19,7 +22,7 @@ import {
   type SalaryClassification,
 } from "./salary-service-presentation";
 import { SALARY_PREMIUM_CATEGORIES } from "./net-pay-premium-details";
-import { earnedServiceRows, SPECIAL_DUTY_FILTER } from "./earned-service-pay";
+import { ABSENCE_PAY_FILTER, earnedServiceRows, SPECIAL_DUTY_FILTER } from "./earned-service-pay";
 import { SpecialDutyPayCard } from "./special-duty-pay-card";
 
 export function NetPayServiceDetails({
@@ -73,11 +76,18 @@ export function NetPayServiceDetails({
             (row) => row.amount > 0,
           )
         : [];
-  const categories = specialRows.length
-    ? [...premiumCategories, { key: SPECIAL_DUTY_FILTER, label: "Bereitschaften", amount: 0 }]
-    : premiumCategories;
+  const hasAbsence = allRows.some((row) => row.absence);
+  const categories = [
+    ...premiumCategories,
+    ...(specialRows.length
+      ? [{ key: SPECIAL_DUTY_FILTER, label: "Bereitschaften", amount: 0 }]
+      : []),
+    ...(hasAbsence
+      ? [{ key: ABSENCE_PAY_FILTER, label: "U/K-Aufschlag", amount: pay?.absencePayAmount ?? 0 }]
+      : []),
+  ];
   const activeFilter = categories.some((category) => category.key === filter) ? filter : null;
-  const rows = useMemo(
+  const rows = useMemo<ReturnType<typeof earnedServiceRows>>(
     () =>
       includeSpecialDutyPay
         ? earnedServiceRows(pay, classification, shifts, activeFilter)
@@ -85,7 +95,7 @@ export function NetPayServiceDetails({
     [pay, classification, shifts, activeFilter, includeSpecialDutyPay],
   );
   const totalCents =
-    specialRows.length || activeFilter !== null
+    hasAbsence || specialRows.length || activeFilter !== null
       ? rows.some((row) => row.amountCents === null)
         ? null
         : rows.reduce((sum, row) => sum + (row.amountCents ?? 0), 0)
@@ -101,15 +111,17 @@ export function NetPayServiceDetails({
   // A raw tariff key may share an SFN category with other keys (e.g. preholiday).
   // Show its tax split only when the classified cash identifies that selection exactly.
   const taxFreeCents =
-    classification === null
-      ? null
-      : activeFilter === null
-        ? classification.taxFreeCents
-        : activeFilter === SPECIAL_DUTY_FILTER
-          ? specialRows.reduce((sum, row) => sum + (row.tax?.taxFreeCents ?? 0), 0)
-          : taxLines.reduce((sum, line) => sum + line.paidPremiumCents, 0) === totalCents
-            ? taxLines.reduce((sum, line) => sum + line.taxFreeCents, 0)
-            : null;
+    activeFilter === ABSENCE_PAY_FILTER
+      ? 0
+      : classification === null
+        ? null
+        : activeFilter === null
+          ? classification.taxFreeCents
+          : activeFilter === SPECIAL_DUTY_FILTER
+            ? specialRows.reduce((sum, row) => sum + (row.tax?.taxFreeCents ?? 0), 0)
+            : taxLines.reduce((sum, line) => sum + line.paidPremiumCents, 0) === totalCents
+              ? taxLines.reduce((sum, line) => sum + line.taxFreeCents, 0)
+              : null;
   const interval = salaryShiftTime(selected?.shift);
   return (
     <>
@@ -117,16 +129,18 @@ export function NetPayServiceDetails({
         totalCents={totalCents}
         taxFreeCents={taxFreeCents}
         title={
-          specialRows.length && activeFilter === null
-            ? "Zuschläge erarbeitet"
-            : activeFilter === SPECIAL_DUTY_FILTER
-              ? "Bereitschaftsvergütung"
-              : "Zeitzuschläge"
+          activeFilter === ABSENCE_PAY_FILTER
+            ? "U/K-Aufschlag"
+            : (specialRows.length || hasAbsence) && activeFilter === null
+              ? "Zuschläge erarbeitet"
+              : activeFilter === SPECIAL_DUTY_FILTER
+                ? "Bereitschaftsvergütung"
+                : "Zeitzuschläge"
         }
       />
       {children}
       <View testID="net-pay-service-details" style={{ gap: SPACING.md }}>
-        {categories.length > 1 || specialRows.length ? (
+        {categories.length > 1 || specialRows.length || hasAbsence ? (
           <View
             accessibilityRole="radiogroup"
             accessibilityLabel="Zuschlagsart"
@@ -186,7 +200,12 @@ export function NetPayServiceDetails({
                     quiet
                     label={row.date ? salaryServiceDate(row.date, true) : "Dienst"}
                     value={row.amountCents === null ? "Noch offen" : netPayEuro(row.amountCents)}
-                    subtitle={`${row.shift?.title ?? "Dienst"} · ${time.interval}${time.nextDay ? " · Folgetag" : ""}`}
+                    subtitle={
+                      row.absence
+                        ? "U/K-Aufschlag · " +
+                          (row.absence.type === "SICK" ? "Krankheit" : "Urlaub")
+                        : `${row.shift?.title ?? "Dienst"} · ${time.interval}${time.nextDay ? " · Folgetag" : ""}`
+                    }
                     onPress={() => setSelectedId(row.id)}
                   />
                 </View>
@@ -208,7 +227,9 @@ export function NetPayServiceDetails({
           contentKey={selected?.id}
         >
           {() =>
-            selected?.specialDuty ? (
+            selected?.absence ? (
+              <AbsenceAmountRow day={selected.absence} />
+            ) : selected?.specialDuty ? (
               <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
                 <SpecialDutyPayCard lines={[selected.specialDuty]} />
                 <SalaryAmountRow
@@ -338,5 +359,30 @@ export function NetPayServiceDetails({
         </SelectionSheet>
       </View>
     </>
+  );
+}
+
+function AbsenceAmountRow({
+  day,
+}: {
+  day: NonNullable<MonthlyPayEstimate["absencePayDays"]>[number];
+}) {
+  const payment = useSalaryPaymentPreferences();
+  const month =
+    payment.ready && !payment.error
+      ? formatMonthTitle(absencePaymentMonth(payment.preferences, day.date.slice(0, 7)))
+      : null;
+  const details = [
+    day.type === "SICK" ? "Krankheit" : "Urlaub",
+    day.manual ? "laut Abrechnung" : "geschätzter Tagessatz",
+    "steuerpflichtig",
+    ...(month ? ["Auszahlung im " + month] : []),
+  ];
+  return (
+    <SalaryAmountRow
+      label="U/K-Aufschlag"
+      value={netPayEuro(day.dailyRateCents)}
+      subtitle={details.join(" · ")}
+    />
   );
 }

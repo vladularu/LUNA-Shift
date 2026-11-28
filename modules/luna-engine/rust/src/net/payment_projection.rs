@@ -202,12 +202,31 @@ pub fn project_salary_payment<F>(
     month: &str,
     perspective: SalaryPerspective,
     preferences: &PaymentPreferences,
+    provider: F,
+) -> Result<SalaryPaymentProjection, ProjectionError>
+where
+    F: FnMut(&str) -> Result<SalaryPaymentSource, ProjectionError>,
+{
+    project_with_absences(month, perspective, preferences, None, provider)
+}
+
+pub(crate) fn project_with_absences<F>(
+    month: &str,
+    perspective: SalaryPerspective,
+    preferences: &PaymentPreferences,
+    incoming: Option<&str>,
     mut provider: F,
 ) -> Result<SalaryPaymentProjection, ProjectionError>
 where
     F: FnMut(&str) -> Result<SalaryPaymentSource, ProjectionError>,
 {
-    let sources = salary_payment_required_months(month, preferences, perspective)?
+    let mut months = salary_payment_required_months(month, preferences, perspective)?;
+    if let Some(claim) = incoming
+        && !months.iter().any(|m| m == claim)
+    {
+        months.push(claim.to_owned());
+    }
+    let sources = months
         .iter()
         .map(|month| provider(month))
         .collect::<Result<Vec<_>, _>>()?;
@@ -220,7 +239,7 @@ where
         .copied()
         .ok_or(ProjectionError::MissingSource)?;
     let same_month = perspective == SalaryPerspective::Payout
-        && sources.len() == 1
+        && salary_payment_required_months(month, preferences, perspective)?.len() == 1
         && PAYMENT_GROUPS
             .into_iter()
             .map(|group| salary_component_payment_month(preferences, month, group))
@@ -306,7 +325,11 @@ where
             }
             let partial = source.pay.get("knownGrossAmount").is_some();
             if !super::js_truthy(&source.pay["available"])
-                && (!partial || group == PaymentGroup::SpecialDuty)
+                && (!partial
+                    || (group == PaymentGroup::SpecialDuty
+                        && source.pay["specialDutyNotes"]
+                            .as_array()
+                            .is_some_and(|notes| !notes.is_empty())))
             {
                 issues.push(json!({"kind":"UNAVAILABLE","month":claim,"group":group,"message":if partial {format!("Für Bereitschaften aus {claim} fehlen noch Abrechnungsangaben.")} else {format!("Ansprüche aus {claim} konnten nicht vollständig berechnet werden. Prüfe die Gehaltsangaben und Dienste dieses Monats.")}}));
             }
@@ -356,6 +379,41 @@ where
             }
         }
     }
+    let absence_line =
+        |source: &SalaryPaymentSource| -> Result<PaymentContribution, ProjectionError> {
+            Ok(PaymentContribution {
+                group: "ABSENCE_PAY".into(),
+                claim_month: source.month.clone(),
+                payment_month: Some(super::payment_schedule::add_salary_payment_months(
+                    &source.month,
+                    2,
+                )?),
+                amount_cents: cents(number(&source.pay["absencePayAmount"])?)?,
+            })
+        };
+    if perspective == SalaryPerspective::Payout && current.pay.get("absencePayAmount").is_some() {
+        let line = absence_line(current)?;
+        if line.amount_cents > 0 {
+            outgoing.push(line);
+        }
+    }
+    let absence_source = if perspective == SalaryPerspective::Earned {
+        Some(current)
+    } else {
+        incoming.and_then(|claim| by_month.get(claim).copied())
+    }
+    .filter(|s| s.pay.get("absencePayAmount").is_some());
+    if let Some(source) = absence_source {
+        contributions.push(absence_line(source)?);
+        for note in source.pay["absencePayNotes"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+        {
+            issues.push(json!({"kind":"UNAVAILABLE","month":source.month,"group":"ABSENCE_PAY","message":note}));
+        }
+    }
     let sum = |groups: &[&str]| {
         contributions
             .iter()
@@ -378,7 +436,7 @@ where
     let known_gross = if !available
         && issues.iter().all(|issue| {
             issue["kind"] == "UNAVAILABLE"
-                && issue["group"] == "SPECIAL_DUTY"
+                && (issue["group"] == "SPECIAL_DUTY" || issue["group"] == "ABSENCE_PAY")
                 && issue["month"]
                     .as_str()
                     .and_then(|month| by_month.get(month))
@@ -395,6 +453,12 @@ where
     };
     let mut pay = current.pay.clone();
     let object = pay.as_object_mut().ok_or(ProjectionError::InvalidSource)?;
+    for key in ["absencePayAmount", "absencePayDays", "absencePayNotes"] {
+        object.remove(key);
+        if let Some(value) = absence_source.and_then(|source| source.pay.get(key)) {
+            object.insert(key.to_owned(), value.clone());
+        }
+    }
     object.insert("available".into(), json!(available));
     if let Some(known) = known_gross {
         object.insert("knownGrossAmount".into(), euros(known));

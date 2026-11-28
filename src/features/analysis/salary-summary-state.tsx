@@ -27,6 +27,14 @@ export function salarySummaryPresentation(
           : "Für diesen Zeitraum fehlen geprüfte Tarifdaten",
     };
   }
+  if (!pay.available && pay.knownGrossAmount != null && pay.absencePayNotes?.length) {
+    return {
+      value: formatEuro(pay.knownGrossAmount),
+      visibleSummary: pay.specialDutyNotes?.length
+        ? "Bekanntes Brutto · Bereitschaft und U/K-Aufschlag offen"
+        : "Bekanntes Brutto · U/K-Aufschlag offen",
+    };
+  }
   if (!pay.available) {
     return {
       value: "Nicht verfügbar",

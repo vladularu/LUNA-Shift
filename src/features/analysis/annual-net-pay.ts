@@ -1,3 +1,4 @@
+import { needsCalendarSalaryInYear } from "./calendar-salary-projection";
 import {
   collectAnnualSalaryPayments,
   resolveNetPaySettings,
@@ -107,7 +108,8 @@ export function* annualNetPaySteps(
   }
   const result = summarizeAnnualNetPay(input.year, months);
   if (
-    input.year !== 2027 ||
+    (input.year !== 2027 &&
+      !needsCalendarSalaryInYear(input.year, input.context.entries, input.profile)) ||
     input.context.testMonths?.some((month) => month.startsWith(`${input.year}-`))
   )
     return result;

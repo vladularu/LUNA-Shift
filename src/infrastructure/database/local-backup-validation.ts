@@ -162,6 +162,7 @@ export const TEMPLATE_COLUMNS = [
 ] as const;
 
 export const SHIFT_COLUMNS = [
+  "absence_pay_json",
   "special_duty_json",
   "id",
   "date",
@@ -558,7 +559,11 @@ function specialDutyValue(row: Record<string, unknown>) {
   return validateSpecialDuty(json === null ? null : JSON.parse(json));
 }
 
-function validateShiftRow(value: unknown): BackupRow {
+function validateShiftRow(value: unknown, version: number): BackupRow {
+  if (version < 25 && value && typeof value === "object") {
+    if ("absence_pay_json" in value && value.absence_pay_json != null) return invalid();
+    value = { ...value, absence_pay_json: null };
+  }
   const row = exactRecord(value, SHIFT_COLUMNS);
   const id = stringValue(row, "id");
   if (requireNonEmpty(id, "ID") !== id) return invalid();
@@ -578,6 +583,7 @@ function validateShiftRow(value: unknown): BackupRow {
   const overtimeMinutes = integerValue(row, "overtime_minutes");
   const holidayPremiumMode = stringValue(row, "holiday_premium_mode");
   const validated = validateShift({
+    absencePay: JSON.parse(nullableStringValue(row, "absence_pay_json") ?? "null"),
     id,
     date,
     templateId,
@@ -947,6 +953,7 @@ export async function validateLocalBackup(
       root.version !== 20 &&
       root.version !== 21 &&
       root.version !== 22 &&
+      root.version !== 24 &&
       root.version !== 23 &&
       root.version !== LOCAL_BACKUP_VERSION
     ) {
@@ -963,6 +970,7 @@ export async function validateLocalBackup(
       return invalid("Das Backup stammt aus einer neueren LUNA-Shift-Version.");
     }
 
+    if (root.version >= 25 && (databaseSchemaVersion as number) < 36) return invalid();
     if (root.version >= 22 && (databaseSchemaVersion as number) < 35) return invalid();
     if (root.version >= 2 && (databaseSchemaVersion as number) < 14) return invalid();
     const data = exactRecord(root.data, [
@@ -1038,7 +1046,7 @@ export async function validateLocalBackup(
     );
     const shifts = Object.freeze(
       asArray(data.shifts).map((row) =>
-        validateShiftRow(upgradeDutyRow(row, root.version as number)),
+        validateShiftRow(upgradeDutyRow(row, root.version as number), root.version as number),
       ),
     );
     const appointments = Object.freeze(asArray(data.appointments).map(validateAppointmentRow));
