@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
+import { Keyboard, Platform, type KeyboardEvent } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TemplateEditorScreen } from "@/features/templates/template-editor-screen";
@@ -76,6 +77,52 @@ describe("TemplateEditorScreen compact layout", () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  it("keeps the template save action reachable while hiding deletion behind the keyboard", async () => {
+    mockParams = { id: "early" };
+    mockTemplates = [
+      {
+        id: "early",
+        name: "Früh",
+        type: "EARLY",
+        startTime: "07:00",
+        endTime: "15:00",
+        allDay: false,
+        breakMinutes: 30,
+        color: "#63A34A",
+        symbol: "sunny",
+        sortOrder: 10,
+        revision: 1,
+        createdAt: "2026-08-15T00:00:00.000Z",
+        updatedAt: "2026-08-15T00:00:00.000Z",
+        deletedAt: null,
+      },
+    ];
+    const listeners = jest.spyOn(Keyboard, "addListener");
+    const keyboardEvent: KeyboardEvent = {
+      duration: 250,
+      easing: "keyboard",
+      endCoordinates: { screenX: 0, screenY: 560, width: 390, height: 284 },
+    };
+    await renderEditor();
+    expect(screen.getByLabelText("Titel")).toHaveProp("returnKeyType", "done");
+    expect(screen.getByRole("button", { name: "Vorlage löschen" })).toBeEnabled();
+
+    await act(() => {
+      const show = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+      for (const [event, callback] of listeners.mock.calls)
+        if (event === show) callback(keyboardEvent);
+    });
+    expect(screen.queryByRole("button", { name: "Vorlage löschen" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Speichern und schließen" })).toBeEnabled();
+
+    await act(() => {
+      const hide = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+      for (const [event, callback] of listeners.mock.calls)
+        if (event === hide) callback(keyboardEvent);
+    });
+    expect(screen.getByRole("button", { name: "Vorlage löschen" })).toBeEnabled();
   });
 
   it("returns one level after saving from the replaced calendar picker", async () => {

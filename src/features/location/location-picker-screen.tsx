@@ -2,8 +2,8 @@ import { Text, TextInput } from "@/ui/text";
 import { INTER_FONTS } from "@/theme/shadcn";
 import Ionicons from "@/ui/icon";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Keyboard, Pressable, StyleSheet, View } from "react-native";
 
 import type { EntryLocation } from "@/domain/types";
 import {
@@ -17,7 +17,10 @@ import {
 import { renderSoftScrollView, SoftScrollAnchor, SoftScrollScope } from "@/ui/soft-scroll-layout";
 import { usePalette } from "@/theme/palette";
 import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
-import { BackFooterLayout } from "@/ui/back-footer-layout";
+import { TextEditorHeader } from "@/ui/text-editor-header";
+import { TEXT_EDITOR_STYLES } from "@/ui/text-editor-styles";
+import { SPACING } from "@/theme/tokens";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 type PickerRow =
   | { readonly id: "custom"; readonly kind: "CUSTOM"; readonly query: string }
@@ -29,6 +32,16 @@ type PickerRow =
 
 export function LocationPickerScreen() {
   const palette = usePalette();
+  const insets = useContext(SafeAreaInsetsContext);
+  const input = useRef<TextInput>(null);
+  const closed = useRef(false);
+  const pendingSearch = useRef(false);
+  useEffect(() => {
+    closed.current = false;
+    return () => {
+      closed.current = true;
+    };
+  }, []);
   const [initialQuery] = useState(() => consumeLocationPickerQuery().trim());
   const [query, setQuery] = useState(initialQuery);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
@@ -47,34 +60,35 @@ export function LocationPickerScreen() {
     ];
   }, [results, trimmedQuery]);
 
-  function choose(location: EntryLocation) {
-    publishLocationSelection(location);
+  function close(location?: EntryLocation | null) {
+    if (closed.current) return;
+    closed.current = true;
+    if (location !== undefined) publishLocationSelection(location);
+    Keyboard.dismiss();
     router.back();
   }
 
   function submitCustomLocation() {
-    if (!trimmedQuery) {
-      if (initialQuery) publishLocationSelection(null);
-      router.back();
-      return;
-    }
+    if (pendingSearch.current) return;
     if (trimmedQuery === initialQuery) {
-      router.back();
+      close();
       return;
     }
-    choose({ name: trimmedQuery });
+    close(trimmedQuery ? { name: trimmedQuery } : null);
   }
 
   function chooseSearchResult(result: LocationSearchResult) {
-    if (resolvingId) return;
+    if (closed.current || pendingSearch.current) return;
+    pendingSearch.current = true;
     setResolvingId(result.id);
     setSelectionError(null);
     void (async () => {
       try {
         const location = await resolveResult(result);
-        setResolvingId(null);
-        choose(location);
+        close(location);
       } catch {
+        if (closed.current) return;
+        pendingSearch.current = false;
         setResolvingId(null);
         setSelectionError("Adresse nicht verfügbar. Übernimm nur den Ortsnamen.");
       }
@@ -89,7 +103,7 @@ export function LocationPickerScreen() {
           accessibilityLabel={`„${item.query}“ als Ort übernehmen`}
           accessibilityRole="button"
           disabled={resolvingId !== null}
-          onPress={() => choose({ name: item.query })}
+          onPress={submitCustomLocation}
           style={({ pressed }) => [
             styles.resultRow,
             {
@@ -155,143 +169,103 @@ export function LocationPickerScreen() {
   }
 
   return (
-    <BackFooterLayout disabled={resolvingId !== null} onPress={() => router.back()}>
-      {(bottomPadding) => (
-        <View
-          style={[styles.container, { backgroundColor: palette.surface }]}
-          testID="location-picker"
-        >
-          <SoftScrollScope>
-            <SoftScrollAnchor>
-              <View style={styles.header} testID="location-picker-header">
-                <Text
-                  accessibilityRole="header"
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  style={[styles.title, { color: palette.text }]}
-                >
-                  Ort
-                </Text>
-              </View>
-
-              <View
-                style={[styles.inputRow, { borderBottomColor: palette.separator }]}
-                testID="location-picker-input-row"
-              >
-                <TextInput
-                  accessibilityLabel="Ort oder Adresse"
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  autoFocus
-                  maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  onChangeText={(value) => {
-                    setSelectionError(null);
-                    setQuery(value);
-                  }}
-                  onSubmitEditing={submitCustomLocation}
-                  placeholder="Ort oder Adresse"
-                  placeholderTextColor={palette.textMuted}
-                  returnKeyType="done"
-                  selectionColor={palette.primary}
-                  style={[styles.input, { color: palette.text }]}
-                  value={query}
-                />
-                {loading ? (
-                  <View
-                    accessibilityLabel="Adressen werden gesucht"
-                    accessibilityRole="progressbar"
-                  >
-                    <ActivityIndicator color={palette.primary} size="small" />
-                  </View>
-                ) : null}
-                {query.length > 0 ? (
-                  <Pressable
-                    accessibilityLabel="Ortseingabe löschen"
-                    accessibilityRole="button"
-                    hitSlop={8}
-                    onPress={() => {
-                      setSelectionError(null);
-                      setQuery("");
-                    }}
-                    style={({ pressed }) => [styles.clearButton, { opacity: pressed ? 0.55 : 1 }]}
-                  >
-                    <Ionicons color={palette.textMuted} name="close-circle" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-            </SoftScrollAnchor>
-            <FlatList
-              renderScrollComponent={renderSoftScrollView}
-              automaticallyAdjustKeyboardInsets
-              contentContainerStyle={[styles.resultsContent, { paddingBottom: bottomPadding }]}
-              data={rows}
-              initialNumToRender={6}
-              ItemSeparatorComponent={() => (
-                <View style={[styles.separator, { backgroundColor: palette.separator }]} />
-              )}
-              keyboardDismissMode="interactive"
-              keyboardShouldPersistTaps="handled"
-              keyExtractor={(item) => item.id}
-              ListFooterComponent={
-                (selectionError ?? error) ? (
-                  <Text
-                    accessibilityLiveRegion="polite"
-                    accessibilityRole="alert"
-                    maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                    style={[styles.error, { color: palette.textMuted }]}
-                  >
-                    {selectionError ?? error}
-                  </Text>
-                ) : null
-              }
-              renderItem={renderRow}
-              style={styles.results}
+    <View
+      style={[TEXT_EDITOR_STYLES.sheet, { backgroundColor: palette.surface }]}
+      testID="location-picker"
+    >
+      <SoftScrollScope>
+        <SoftScrollAnchor>
+          <TextEditorHeader
+            canConfirm={resolvingId === null && trimmedQuery !== initialQuery}
+            onCancel={() => close()}
+            onConfirm={submitCustomLocation}
+            testID="location-picker-header"
+            title="Ort"
+          />
+          <View
+            style={[TEXT_EDITOR_STYLES.field, { backgroundColor: palette.surfaceMuted }]}
+            testID="location-picker-input-row"
+          >
+            <TextInput
+              accessibilityLabel="Ort oder Adresse"
+              autoCapitalize="words"
+              autoCorrect={false}
+              autoFocus
+              editable={resolvingId === null}
+              keyboardAppearance={palette.dark ? "dark" : "light"}
+              ref={input}
+              maxFontSizeMultiplier={TEXT_MAX_SCALE}
+              onChangeText={(value) => {
+                setSelectionError(null);
+                setQuery(value);
+              }}
+              onSubmitEditing={submitCustomLocation}
+              placeholder="Ort oder Adresse"
+              placeholderTextColor={palette.textMuted}
+              returnKeyType="done"
+              submitBehavior="submit"
+              selectionColor={palette.primary}
+              style={[TEXT_EDITOR_STYLES.input, { color: palette.text }]}
+              value={query}
             />
-          </SoftScrollScope>
-        </View>
-      )}
-    </BackFooterLayout>
+            {loading ? (
+              <View accessibilityLabel="Adressen werden gesucht" accessibilityRole="progressbar">
+                <ActivityIndicator color={palette.primary} size="small" />
+              </View>
+            ) : null}
+            {query.length > 0 ? (
+              <Pressable
+                accessibilityLabel="Ortseingabe löschen"
+                accessibilityRole="button"
+                disabled={resolvingId !== null}
+                onPress={() => {
+                  setSelectionError(null);
+                  setQuery("");
+                  input.current?.focus();
+                }}
+                style={({ pressed }) => [TEXT_EDITOR_STYLES.clear, { opacity: pressed ? 0.55 : 1 }]}
+              >
+                <Ionicons color={palette.textMuted} name="close-circle" size={22} />
+              </Pressable>
+            ) : null}
+          </View>
+        </SoftScrollAnchor>
+        <FlatList
+          renderScrollComponent={renderSoftScrollView}
+          automaticallyAdjustKeyboardInsets
+          contentContainerStyle={[
+            styles.resultsContent,
+            { paddingBottom: Math.max(insets?.bottom ?? 0, SPACING.md) },
+          ]}
+          data={rows}
+          initialNumToRender={6}
+          ItemSeparatorComponent={() => (
+            <View style={[styles.separator, { backgroundColor: palette.separator }]} />
+          )}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          keyExtractor={(item) => item.id}
+          ListFooterComponent={
+            (selectionError ?? error) ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                accessibilityRole="alert"
+                maxFontSizeMultiplier={TEXT_MAX_SCALE}
+                style={[styles.error, { color: palette.textMuted }]}
+              >
+                {selectionError ?? error}
+              </Text>
+            ) : null
+          }
+          renderItem={renderRow}
+          style={styles.results}
+        />
+      </SoftScrollScope>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  header: {
-    minHeight: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontFamily: INTER_FONTS.semibold,
-    fontSize: TYPOGRAPHY.pickerValue.fontSize,
-    lineHeight: TYPOGRAPHY.bodyLarge.lineHeight,
-    fontWeight: "600",
-  },
-  inputRow: {
-    minHeight: 60,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingLeft: 22,
-    paddingRight: 10,
-  },
-  input: {
-    minHeight: 58,
-    flex: 1,
-    fontFamily: INTER_FONTS.regular,
-    fontSize: TYPOGRAPHY.sectionTitle.fontSize,
-    lineHeight: TYPOGRAPHY.button.lineHeight,
-    paddingVertical: 0,
-  },
-  clearButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   results: {
     flex: 1,
   },

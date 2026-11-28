@@ -71,6 +71,7 @@ export function CompactInputRow({
             maxLength={maxLength}
             onChangeText={onChangeText}
             placeholderTextColor={palette.textMuted}
+            returnKeyType={keyboardType === "number-pad" ? undefined : "done"}
             selectTextOnFocus={keyboardType === "number-pad"}
             style={{
               minWidth: keyboardType === "number-pad" ? 44 : 96,

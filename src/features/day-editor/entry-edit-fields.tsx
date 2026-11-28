@@ -1,6 +1,7 @@
-import { useState, type PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { Pressable, StyleSheet, View, type ViewProps } from "react-native";
 
+import { openEntryTextEditor } from "@/features/day-editor/entry-text-editor-session";
 import type { EntryLocation } from "@/domain/types";
 import { usePalette } from "@/theme/palette";
 import { SPACING } from "@/theme/tokens";
@@ -8,7 +9,7 @@ import { TEXT_MAX_SCALE, TYPOGRAPHY } from "@/theme/typography";
 import { SurfaceCard } from "@/ui/design-system";
 import { ResponsiveFieldRow, TimePickerField } from "@/ui/form-controls";
 import Ionicons from "@/ui/icon";
-import { Text, TextInput } from "@/ui/text";
+import { Text } from "@/ui/text";
 
 export function EntryEditGroup({
   children,
@@ -116,58 +117,36 @@ export function EntryEditNotesLocation({
   readonly testID: string;
 }) {
   const palette = usePalette();
-  const [expanded, setExpanded] = useState(false);
   const locationName = location?.name ?? null;
+
   return (
     <SurfaceCard testID={testID}>
-      {expanded ? (
-        <TextInput
-          accessibilityLabel="Notizen"
-          autoFocus
-          maxFontSizeMultiplier={TEXT_MAX_SCALE}
-          multiline
-          onChangeText={onNoteChange}
-          placeholder="Notizen"
-          placeholderTextColor={palette.textMuted}
-          style={[
-            ENTRY_EDIT_FIELD_STYLES.note,
-            { color: palette.text, borderBottomColor: palette.separator },
-          ]}
-          value={note}
+      <Pressable
+        accessibilityLabel={note ? `Notiz bearbeiten: ${note}` : "Notiz hinzufügen"}
+        accessibilityRole="button"
+        onPress={() => openEntryTextEditor("note", note, onNoteChange)}
+        style={({ pressed }) => [
+          ENTRY_EDIT_FIELD_STYLES.location,
+          { backgroundColor: pressed ? palette.surfaceMuted : "transparent" },
+        ]}
+      >
+        <Ionicons
+          accessibilityElementsHidden
+          name="file-document-outline"
+          size={18}
+          color={palette.textMuted}
         />
-      ) : (
-        <Pressable
-          accessibilityLabel={note ? `Notiz bearbeiten: ${note}` : "Notiz hinzufügen"}
-          accessibilityRole="button"
-          onPress={() => setExpanded(true)}
+        <Text
+          maxFontSizeMultiplier={TEXT_MAX_SCALE}
+          numberOfLines={2}
           style={[
-            ENTRY_EDIT_FIELD_STYLES.location,
-            { borderBottomWidth: 0, borderBottomColor: palette.separator },
+            ENTRY_EDIT_FIELD_STYLES.locationText,
+            { color: note ? palette.text : palette.textMuted },
           ]}
         >
-          <Ionicons
-            accessibilityElementsHidden
-            name="file-document-outline"
-            size={18}
-            color={palette.textMuted}
-          />
-          <Text
-            maxFontSizeMultiplier={TEXT_MAX_SCALE}
-            style={[
-              ENTRY_EDIT_FIELD_STYLES.locationText,
-              { color: note ? palette.text : palette.textMuted },
-            ]}
-          >
-            {note || "Notiz hinzufügen"}
-          </Text>
-          <Ionicons
-            accessibilityElementsHidden
-            name="chevron-forward"
-            size={16}
-            color={palette.textMuted}
-          />
-        </Pressable>
-      )}
+          {note || "Notiz hinzufügen"}
+        </Text>
+      </Pressable>
       <Pressable
         accessibilityLabel={`Ort: ${locationName ?? emptyLocationLabel}`}
         accessibilityRole="button"
@@ -192,12 +171,6 @@ export function EntryEditNotesLocation({
         >
           {locationName ?? "Ort"}
         </Text>
-        <Ionicons
-          accessibilityElementsHidden
-          name="chevron-forward"
-          size={16}
-          color={palette.textMuted}
-        />
       </Pressable>
     </SurfaceCard>
   );
@@ -247,14 +220,6 @@ export const ENTRY_EDIT_FIELD_STYLES = StyleSheet.create({
   label: { flexShrink: 1, ...TYPOGRAPHY.body },
   value: { flex: 1, ...TYPOGRAPHY.body, textAlign: "right", fontVariant: ["tabular-nums"] },
   timeRow: { minHeight: 48, justifyContent: "center", borderBottomWidth: 0 },
-  note: {
-    minHeight: 88,
-    borderBottomWidth: 0,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    ...TYPOGRAPHY.compact,
-    textAlignVertical: "top",
-  },
   location: {
     minHeight: 44,
     flexDirection: "row",

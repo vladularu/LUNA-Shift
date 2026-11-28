@@ -5,8 +5,8 @@
     {
       "path": "app/_layout.tsx",
       "kind": "modified",
-      "sha256": "9933b0145ff1040aa7d7f4e9455052530746d212b7ce650411cabd0ad5a293ea",
-      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Wählt auf dem iPhone den transparenten Host für eigene gespeicherte Dienste sowie bestehende und neue Termine."
+      "sha256": "a473f674be0463f74e9613dfc5a090ca8c271bb151d7eb5aee6474774490df49",
+      "reason": "Dienstplan-Check nutzt das native Hinweis-Popup und die weiche Scrollkante auf unterstützten iPhones. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Wählt auf dem iPhone den transparenten Host für eigene gespeicherte Dienste sowie bestehende und neue Termine. Titel, Notizen und Ort verwenden dieselbe native Formblatt-Konfiguration und dieselben Abstände des iOS-Stacks."
     },
     {
       "path": "app/check-issue.tsx",
@@ -19,6 +19,12 @@
       "kind": "modified",
       "sha256": "51973bdeb7ba77211e803d355f9cff2ff62b50385850d6ac444427e4ef7b70c7",
       "reason": "Dienstplan-Check local implementation: Use the common Dienstplan-Check settings route title. Local validation only; new iPhone acceptance and OTA approval remain separate."
+    },
+    {
+      "path": "app/entry-text-editor.tsx",
+      "kind": "added",
+      "sha256": "cb82c3c91366920bdaaf8e6c0e1e538ca0519b04b839690194a0d64510a10078",
+      "reason": "Öffnet die Eingabe über den Stack und übergibt bestätigten Text an den geöffneten Kalenderentwurf."
     },
     {
       "path": "app/onboarding.tsx",
@@ -9827,20 +9833,32 @@
     {
       "path": "src/features/day-editor/entry-edit-fields.tsx",
       "kind": "modified",
-      "sha256": "a3c4da906a1a9753d6bfcdab7b9799207c86d7d2772df8fbb21dea625bf36a45",
-      "reason": "Preview-only preservation of src/features/day-editor/entry-edit-fields.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up cleanup: remove only the unused separator destructuring binding in the preserved Preview variant; retain its prop contract and visible UI. No stored-data, native, dependency or TestFlight change."
+      "sha256": "f4e4f001d5ae67b34332f1e921eef166fdf80a12c351ff592c4ed08a3f0a4c38",
+      "reason": "Preview-only preservation of src/features/day-editor/entry-edit-fields.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Follow-up cleanup: remove only the unused separator destructuring binding in the preserved Preview variant; retain its prop contract and visible UI. No stored-data, native, dependency or TestFlight change. Ergänzt die Notizzeile für Dienste und Termine um eine mehrzeilige Eingabe mit optionalem Vollbild. Notizen und Ort reagieren auf die ganze Zeile. Die Vollbildnotiz bleibt über langes Drücken und eine VoiceOver-Aktion erreichbar. Die gesamte Notizzeile öffnet die mehrzeilige Eingabemaske wie beim Ort."
     },
     {
       "path": "src/features/day-editor/entry-edit-overlay-frame.tsx",
       "kind": "modified",
-      "sha256": "5e669b39eb2147fa463538f6fbb9277e5879e3d8d8218882f996c4500c9d22ae",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Platziert die Glasübersicht und den separaten Schließen-Button übereinander. Koppelt die Gesten an Übersicht, Bearbeitung und gemeinsames Schließen. Die kompakte Ansicht für Freigaben bietet nur Schließen und lässt sich nicht zum Editor erweitern."
+      "sha256": "245e7f000c533a5037287d01dbea6347abc24ed8e5526bdb7e907c4f3bfea22a",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Platziert die Glasübersicht und den separaten Schließen-Button übereinander. Koppelt die Gesten an Übersicht, Bearbeitung und gemeinsames Schließen. Die kompakte Ansicht für Freigaben bietet nur Schließen und lässt sich nicht zum Editor erweitern. Hält den kompakten Kalendereditor unter der Statusleiste und verschiebt Textfelder nur dann, wenn die Tastatur sie verdeckt."
     },
     {
       "path": "src/features/day-editor/entry-options.tsx",
       "kind": "modified",
       "sha256": "ce0d7304003af5154ea057d90f9d5ee7b9503cf8ef653d1b9fd64bbb36e2bc53",
       "reason": "Preview-only preservation of src/features/day-editor/entry-options.tsx byte-equivalent to the verified source archive for live Preview group 8487d18d-60b7-4774-bc82-dfe9a3a0675e. User explicitly requested retaining the separate Luftig appearance. Not a new Paket-1 design change and not part of its master integration. Preserve the accepted Preview active UI byte-for-byte at AST level and remove only the same proven-unused exports as the master cleanup. No app data, native config, package or TestFlight change. iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. iOS Preview header correction: include the top inset in the fixed header of the full-screen reminder, break, and alarm dialogs. Preview device acceptance pending."
+    },
+    {
+      "path": "src/features/day-editor/entry-text-editor-session.ts",
+      "kind": "added",
+      "sha256": "11e559c46519c53c067f0fac82d38f3d7444cd9cb71804b28319ba963895d529",
+      "reason": "Übergibt Texte und Rückgabeaktion lokal an die Eingabemaske. Die Navigation erhält nur die Kennung."
+    },
+    {
+      "path": "src/features/day-editor/entry-text-editor.tsx",
+      "kind": "added",
+      "sha256": "c8c5fd9d09e2a5aa3d6549eb0aadb8770a1b30f41e6b48948ed9f9f2b9c6c817",
+      "reason": "Bearbeitet Titel und Notizen mit nativer Tastatur in einem lokalen Entwurf, der erst beim Bestätigen übernommen wird. Bezieht die Safe Area direkt vom nativen Modal und hält die Kopfaktionen unter der Statusleiste. Verwendet im Eingabeblatt dieselbe Kopfzeile, dieselben Farben und dieselben Feldabstände wie die Ortssuche."
     },
     {
       "path": "src/features/day-editor/shift-edit-overlay.tsx",
@@ -9893,8 +9911,8 @@
     {
       "path": "src/features/location/location-picker-screen.tsx",
       "kind": "modified",
-      "sha256": "a45408eb6a93be0087fb3a22fab136f30294e3129fd94a4c3972b956c8d0e58e",
-      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
+      "sha256": "a860e903b63ff9a6e36a4f5f55d2e31abee6c80227ec15262a50558db28d40d6",
+      "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview. Legt Abbrechen und Übernehmen in die Kopfzeile der bestehenden Ortssuche und verwirft verspätete Antworten nach dem Schließen. Verwendet die bisherigen Feldstile aus der gemeinsamen Definition für Ort, Titel und Notizen."
     },
     {
       "path": "src/features/onboarding/onboarding-brand.tsx",
@@ -10323,6 +10341,12 @@
       "reason": "iOS Preview Build 56 source for the confirmed native soft scroll edge and fixed calendar preview."
     },
     {
+      "path": "src/features/templates/compact-input-row.tsx",
+      "kind": "modified",
+      "sha256": "e3fd645e64a6d59de8a1fdf8f9fb06aaf88532ad3a4fb8a4e2ca444379f2e746",
+      "reason": "Schließt die Tastatur bei der Titeleingabe über die iOS-Taste Fertig."
+    },
+    {
       "path": "src/features/templates/shift-template-list.tsx",
       "kind": "modified",
       "sha256": "2c10a6b59d94df47ee36a5121a0c5038a1a59cf6b52487e9f76897fa0df9dae5",
@@ -10331,8 +10355,8 @@
     {
       "path": "src/features/templates/template-editor-screen.tsx",
       "kind": "modified",
-      "sha256": "163d0cec78ec88396091a0723a943cd4b72a509d83bf295c5e800f55160fdfdb",
-      "reason": "Verified Preview Build 56 native entry type selection in the shift template editor."
+      "sha256": "7328f5330ba95e84802d9cab0fe10109a371b90547d8dfbc20bb216f1df0dc5e",
+      "reason": "Verified Preview Build 56 native entry type selection in the shift template editor. Blendet die Löschaktion aus, solange die Tastatur geöffnet ist, und lässt die Ortszeile direkt antippen."
     },
     {
       "path": "src/features/templates/templates-manager-screen.tsx",
@@ -10769,8 +10793,8 @@
     {
       "path": "src/features/day-editor/appointment-edit-overlay.tsx",
       "kind": "modified",
-      "sha256": "22ff9154f156244684cd1bf94de415e06e7916d8562486fb882a092e741060b9",
-      "reason": "Zeigt Titel, Zeiten und bei Koordinaten die kompakte Kartenkachel innerhalb der vorhandenen Höhe. Neue Termine öffnen direkt das Formular."
+      "sha256": "34df4a828d94cc174c83647d3441bef40c28e3eed53c171cf44570001ec86aa6",
+      "reason": "Zeigt Titel, Zeiten und bei Koordinaten die kompakte Kartenkachel innerhalb der vorhandenen Höhe. Neue Termine öffnen direkt das Formular. Ergänzt die direkte Titelbearbeitung um die native Tastaturaktion und den Vollbildeditor. Der Termin-Titel ist ohne Pfeil direkt editierbar. Die Beschriftung öffnet die Vollbildbearbeitung. Die gesamte Titelzeile öffnet die Eingabemaske wie beim Ort."
     },
     {
       "path": "src/features/day-editor/entry-edit-header.tsx",
@@ -10909,6 +10933,18 @@
       "kind": "modified",
       "sha256": "f5e8f34d0811a015231785b47431ea873dd193344e82be5b4f7d912d90acc513",
       "reason": "Zeigt geteilte Dienste und Termine als kompakte Nur-Lesen-Übersicht mit den freigegebenen Zeiten und Notizen."
+    },
+    {
+      "path": "src/ui/text-editor-header.tsx",
+      "kind": "added",
+      "sha256": "741de017d011bd16b0511ea7484c430236a7c4d5a0b3b032028d4b663eb7f209",
+      "reason": "Stellt die gemeinsamen Eingabeaktionen für Titel, Notizen und Ort im LUNA-Design bereit."
+    },
+    {
+      "path": "src/ui/text-editor-styles.ts",
+      "kind": "added",
+      "sha256": "34aa1b51c5432c09b521701c6d9c7861ce86373ab78e75701837aca2ca756b56",
+      "reason": "Definiert die gemeinsamen LUNA-Abstände und Eingabeflächen für die drei Eingabemasken."
     }
   ]
 }

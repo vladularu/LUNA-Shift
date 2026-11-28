@@ -1,9 +1,8 @@
 import { Switch } from "@/ui/switch";
-import { Text, TextInput } from "@/ui/text";
-import { INTER_FONTS } from "@/theme/shadcn";
+import { Text } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 
 import type { EntryLocation, EntryNotification, RecurrenceRule } from "@/domain/types";
 import { hasLocationCoordinates, LocationPreview } from "@/features/location/location-preview";
@@ -14,6 +13,7 @@ import {
 } from "@/features/day-editor/entry-edit-overlay-frame";
 import { entryEditDurationLabel } from "@/features/day-editor/entry-edit-overlay-pattern";
 import { notificationLabel, recurrenceLabel } from "@/features/day-editor/entry-options";
+import { openEntryTextEditor } from "@/features/day-editor/entry-text-editor-session";
 import { ShiftNotificationOverlay } from "@/features/day-editor/shift-notification-overlay";
 import { accessibleChipBackgroundColor, chipTextColor } from "@/theme/color-contrast";
 import { usePalette } from "@/theme/palette";
@@ -90,6 +90,7 @@ export function AppointmentEditOverlay({
     : accessibleChipBackgroundColor(appointmentColor);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [recurrenceVisible, setRecurrenceVisible] = useState(false);
+  const titleValue = title === "Ohne Titel" ? "" : title;
   const closePickers = () => {
     setNotificationVisible(false);
     setRecurrenceVisible(false);
@@ -144,23 +145,28 @@ export function AppointmentEditOverlay({
         overviewContent ?? (
           <View style={styles.body}>
             <EntryEditGroup testID="appointment-edit-title-group">
-              <View style={[styles.valueRow, { borderBottomWidth: 0 }]}>
+              <Pressable
+                accessibilityLabel={`Titel: ${titleValue || "Ohne Titel"}`}
+                accessibilityRole="button"
+                onPress={() => openEntryTextEditor("title", titleValue, onTitleChange)}
+                style={styles.valueRow}
+              >
                 <Text
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
                   style={[styles.rowLabel, { color: palette.text }]}
                 >
                   Titel
                 </Text>
-                <TextInput
-                  accessibilityLabel="Titel"
+                <Text
                   maxFontSizeMultiplier={TEXT_MAX_SCALE}
-                  maxLength={60}
-                  onChangeText={onTitleChange}
-                  selectTextOnFocus={title === "Ohne Titel"}
-                  style={[styles.titleInput, { color: palette.text }]}
-                  value={title}
-                />
-              </View>
+                  style={[
+                    styles.rowValue,
+                    { color: titleValue ? palette.text : palette.textMuted },
+                  ]}
+                >
+                  {titleValue || "Ohne Titel"}
+                </Text>
+              </Pressable>
             </EntryEditGroup>
             <EntryEditGroup testID="appointment-edit-time-group">
               <View style={[styles.valueRow, { borderBottomColor: palette.separator }]}>
@@ -276,16 +282,6 @@ const styles = StyleSheet.create({
   valueRow: ENTRY_EDIT_FIELD_STYLES.row,
   rowLabel: ENTRY_EDIT_FIELD_STYLES.label,
   rowValue: ENTRY_EDIT_FIELD_STYLES.value,
-  titleInput: {
-    minWidth: 0,
-    flex: 1,
-    paddingVertical: 8,
-    fontFamily: INTER_FONTS.medium,
-    fontSize: TYPOGRAPHY.body.fontSize,
-    lineHeight: TYPOGRAPHY.compact.lineHeight,
-    fontWeight: "500",
-    textAlign: "right",
-  },
   calendarValue: { minWidth: 0, flex: 1, flexDirection: "row", alignItems: "center", gap: 9 },
   calendarDot: { width: 9, height: 9, marginLeft: "auto", borderRadius: 5 },
   calendarLabel: { flex: 0 },

@@ -4,8 +4,8 @@ import { SelectionChip } from "@/ui/selection-option";
 import { Text, TextInput } from "@/ui/text";
 import Ionicons from "@/ui/icon";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
-import { Platform, Pressable, View, useWindowDimensions } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Keyboard, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 
 import {
@@ -79,6 +79,7 @@ function CompactActionRow({
   icon,
   label,
   onPress,
+  showArrow = true,
   testID,
   trailing,
   value,
@@ -88,6 +89,7 @@ function CompactActionRow({
   readonly icon?: keyof typeof Ionicons.glyphMap;
   readonly label: string;
   readonly onPress: () => void;
+  readonly showArrow?: boolean;
   readonly testID?: string;
   readonly trailing?: ReactNode;
   readonly value?: string;
@@ -149,12 +151,14 @@ function CompactActionRow({
         ) : null}
       </View>
       {trailing}
-      <Ionicons
-        accessibilityElementsHidden
-        color={palette.textMuted}
-        name={expanded ? "chevron-up" : "chevron-forward"}
-        size={17}
-      />
+      {showArrow ? (
+        <Ionicons
+          accessibilityElementsHidden
+          color={palette.textMuted}
+          name={expanded ? "chevron-up" : "chevron-forward"}
+          size={17}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -297,6 +301,21 @@ function TemplateEditorForm({
   const [symbolError, setSymbolError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardVisible(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const saveState = useRef<"IDLE" | "SAVING" | "DONE">("IDLE");
   const saveProgress = useRef<TemplateEditorSaveProgress | null>(null);
   const nameRef = useRef<TextInput>(null);
@@ -626,6 +645,7 @@ function TemplateEditorForm({
             icon="location-outline"
             label="Ort"
             onPress={openLocationPicker}
+            showArrow={false}
             testID="template-location-row"
             value={location?.name ?? "Kein Ort"}
           />
@@ -646,7 +666,7 @@ function TemplateEditorForm({
           {saving ? "Wird gespeichert …" : "Vorlage erstellen und eintragen"}
         </PrimaryButton>
       ) : null}
-      {existing ? (
+      {existing && !keyboardVisible ? (
         <PrimaryButton danger shape="pill" disabled={saving} onPress={confirmArchive}>
           Vorlage löschen
         </PrimaryButton>

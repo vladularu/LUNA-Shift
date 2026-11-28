@@ -198,6 +198,24 @@ describe("LocationPickerScreen", () => {
     expect(consumeLocationSelection()).toEqual({ name: "Hepp" });
   });
 
+  it("keeps the saved address on cancel and only publishes a confirmed input", async () => {
+    const location = { name: "Klinikum", address: "Hauptstraße 1", latitude: 50, longitude: 8 };
+    prepareLocationPicker(location);
+    const first = await render(<LocationPickerScreen />);
+    expect(first.getByRole("button", { name: "Ort übernehmen" })).toBeDisabled();
+    await fireEvent.press(first.getByRole("button", { name: "Ortseingabe löschen" }));
+    await fireEvent.press(first.getByRole("button", { name: "Abbrechen" }));
+    expect(consumeLocationSelection()).toBeUndefined();
+    await first.unmount();
+
+    prepareLocationPicker(location);
+    const second = await render(<LocationPickerScreen />);
+    await fireEvent.changeText(second.getByLabelText("Ort oder Adresse"), "  Station 2  ");
+    await fireEvent.press(second.getByRole("button", { name: "Ort übernehmen" }));
+    expect(consumeLocationSelection()).toEqual({ name: "Station 2" });
+    expect(router.back).toHaveBeenCalledTimes(2);
+  });
+
   it("removes an existing location only after submitting the cleared field", async () => {
     prepareLocationPicker({ name: "Klinikum" });
     const screen = await render(<LocationPickerScreen />);

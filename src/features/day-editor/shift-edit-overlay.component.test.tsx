@@ -1,6 +1,7 @@
 import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Notifications from "expo-notifications";
+import { router } from "expo-router";
 import { Linking, Platform } from "react-native";
 import { State } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
@@ -13,6 +14,11 @@ import {
 import { ShiftNotificationOverlay } from "@/features/day-editor/shift-notification-overlay";
 import { CORNER_CURVE, MINIMUM_TOUCH_TARGET, RADII, SPACING } from "@/theme/tokens";
 import { TYPOGRAPHY } from "@/theme/typography";
+
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn() },
+  useLocalSearchParams: () => ({}),
+}));
 
 let mockNativePresentation = true;
 jest.mock("@/features/day-editor/entry-edit-overlay-frame", () => {
@@ -100,8 +106,10 @@ describe("ShiftEditOverlay", () => {
         name: "Notiz bearbeiten: Übergabe\nSchlüssel auf Station 3 abholen.",
       }),
     );
-    expect(screen.getByLabelText("Notizen")).toHaveProp("autoFocus", true);
-    expect(screen.getByDisplayValue("Übergabe\nSchlüssel auf Station 3 abholen.")).toBeTruthy();
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/entry-text-editor",
+      params: { request: expect.any(String) },
+    });
     expect(screen.getByRole("button", { name: "Heppenheim in Karten öffnen" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Ort: Heppenheim" }));
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
@@ -193,10 +201,6 @@ describe("ShiftEditOverlay", () => {
     const deleteAction = screen.getByRole("button", { name: "Dienst löschen" });
     expect(deleteAction).toHaveStyle({ minHeight: 44 });
     expect(screen.queryByLabelText("Notizen")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Notiz hinzufügen" }));
-    const notes = screen.getByLabelText("Notizen");
-    expect(notes).toHaveStyle({ minHeight: 88 });
-    expect(within(notes.parent!).queryByRole("button", { name: "Dienst löschen" })).toBeNull();
     await fireEvent.press(deleteAction);
     expect(props.onLocationPress).toHaveBeenCalledTimes(1);
     expect(props.onDelete).toHaveBeenCalledTimes(1);

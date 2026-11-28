@@ -99,6 +99,16 @@ function ThemedApp() {
   const appearance = useAppearancePreferences();
   if (!appearance.ready) return <LoadingView />;
   const navigationTheme = dark ? DarkTheme : DefaultTheme;
+  const textEditorSheetOptions = {
+    headerShown: false,
+    presentation: "formSheet" as const,
+    contentStyle: { backgroundColor: palette.surface },
+    sheetAllowedDetents: [1],
+    sheetCornerRadius: 28,
+    sheetExpandsWhenScrolledToEdge: false,
+    sheetGrabberVisible: false,
+    sheetInitialDetentIndex: 0,
+  };
 
   return (
     <AppErrorBoundary>
@@ -333,19 +343,8 @@ function ThemedApp() {
                               contentStyle: { backgroundColor: palette.background },
                             }}
                           />
-                          <Stack.Screen
-                            name="location-picker"
-                            options={{
-                              headerShown: false,
-                              presentation: "formSheet",
-                              contentStyle: { backgroundColor: palette.surface },
-                              sheetAllowedDetents: [1],
-                              sheetCornerRadius: 28,
-                              sheetExpandsWhenScrolledToEdge: false,
-                              sheetGrabberVisible: false,
-                              sheetInitialDetentIndex: 0,
-                            }}
-                          />
+                          <Stack.Screen name="location-picker" options={textEditorSheetOptions} />
+                          <Stack.Screen name="entry-text-editor" options={textEditorSheetOptions} />
                           <Stack.Screen
                             name="salary"
                             options={{

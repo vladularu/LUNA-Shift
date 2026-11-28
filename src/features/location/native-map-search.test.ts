@@ -93,8 +93,15 @@ describe("native MapKit location search", () => {
     expect(swift).toContain("MKLocalSearch.Request(completion: completion)");
     expect(swift).toContain("if exportedResults.count == resultLimit");
     expect(swift).toContain("latitude: 51.1657, longitude: 10.4515");
-    expect(rootLayout).toMatch(
-      /name="location-picker"[\s\S]*sheetAllowedDetents: \[1\][\s\S]*sheetExpandsWhenScrolledToEdge: false/,
-    );
+    const textSheetOptions = rootLayout.match(
+      /const textEditorSheetOptions = \{([\s\S]*?)\n  \};/,
+    )?.[1];
+    expect(textSheetOptions).toContain('presentation: "formSheet"');
+    expect(textSheetOptions).toContain("sheetAllowedDetents: [1]");
+    expect(textSheetOptions).toContain("sheetCornerRadius: 28");
+    expect(textSheetOptions).toContain("sheetExpandsWhenScrolledToEdge: false");
+    expect(textSheetOptions).toContain("sheetGrabberVisible: false");
+    expect(rootLayout).toContain('name="location-picker" options={textEditorSheetOptions}');
+    expect(rootLayout).toContain('name="entry-text-editor" options={textEditorSheetOptions}');
   });
 });
